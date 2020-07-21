@@ -31,7 +31,7 @@ public class WebMVCFilterAutoConfigurationTest {
           .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class));
 
   @Test
-  public void should__initialize_web_mvc_tracing_filter_bean_when_web_is_enabled() {
+  public void should_initialize_web_mvc_tracing_filter_bean_when_web_is_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=true")
         .withUserConfiguration(WebMVCFilterAutoConfiguration.class)
