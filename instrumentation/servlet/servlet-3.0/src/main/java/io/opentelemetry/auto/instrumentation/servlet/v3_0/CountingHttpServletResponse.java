@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 public class CountingHttpServletResponse extends HttpServletResponseWrapper {
   private CountingServletOutputStream outputStream = null;
   private CountingPrintWriter printWriter = null;
+  private int errorLength = 0;
 
   /**
    * Constructs a response adaptor wrapping the given response.
@@ -55,16 +56,23 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
   }
 
   public int getContentLength() {
-    if (outputStream != null && printWriter != null) {
-      return outputStream.counter + printWriter.counter.get();
-    }
+    int contentLength = errorLength;
     if (outputStream != null) {
-      return outputStream.counter;
+      contentLength += outputStream.counter;
     }
     if (printWriter != null) {
-      return printWriter.counter.get();
+      contentLength += printWriter.counter.get();
     }
-    return 0;
+    return contentLength;
+  }
+
+  /** sendError bypasses the servlet response writers and writes directly to the response */
+  @Override
+  public void sendError(int sc, String msg) throws IOException {
+    super.sendError(sc, msg);
+    if (msg != null) {
+      errorLength += msg.length();
+    }
   }
 
   static class CountingServletOutputStream extends ServletOutputStream {

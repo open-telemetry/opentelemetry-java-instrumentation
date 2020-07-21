@@ -21,6 +21,7 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import okhttp3.Response
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import test.boot.SecurityConfig
@@ -91,7 +92,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, Response response = null) {
     trace.span(index) {
       operationName endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
       spanKind SERVER
@@ -108,6 +109,8 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        // exception bodies are not yet recorded
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${response?.body()?.contentLength() ?: 0}" || endpoint == EXCEPTION }
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.errored) {
