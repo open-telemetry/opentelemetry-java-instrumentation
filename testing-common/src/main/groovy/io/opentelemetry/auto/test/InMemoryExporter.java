@@ -90,28 +90,30 @@ public class InMemoryExporter implements SpanProcessor {
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
-    sd.getAttributes().forEach(new KeyValueConsumer<AttributeValue>() {
-      @Override
-      public void consume(String key, AttributeValue value) {
-        String sValue = null;
-        switch (value.getType()) {
-          case STRING:
-            sValue = value.getStringValue();
-            break;
-          case BOOLEAN:
-            sValue = String.valueOf(value.getBooleanValue());
-            break;
-          case LONG:
-            sValue = String.valueOf(value.getLongValue());
-            break;
-          case DOUBLE:
-            sValue = String.valueOf(value.getDoubleValue());
-            break;
-        }
+    sd.getAttributes()
+        .forEach(
+            new KeyValueConsumer<AttributeValue>() {
+              @Override
+              public void consume(String key, AttributeValue value) {
+                String sValue = null;
+                switch (value.getType()) {
+                  case STRING:
+                    sValue = value.getStringValue();
+                    break;
+                  case BOOLEAN:
+                    sValue = String.valueOf(value.getBooleanValue());
+                    break;
+                  case LONG:
+                    sValue = String.valueOf(value.getLongValue());
+                    break;
+                  case DOUBLE:
+                    sValue = String.valueOf(value.getDoubleValue());
+                    break;
+                }
 
-        log.debug("Attribute {}={}", key, sValue);
-      }
-    });
+                log.debug("Attribute {}={}", key, sValue);
+              }
+            });
     SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
       if (!spanOrders.containsKey(span.getSpanId())) {
