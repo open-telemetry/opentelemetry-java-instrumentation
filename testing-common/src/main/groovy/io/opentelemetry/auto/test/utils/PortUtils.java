@@ -47,6 +47,21 @@ public class PortUtils {
     }
   }
 
+  public static void waitForPortToOpen(final int port, final long timeout, final TimeUnit unit) {
+    final long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
+
+    while (!isPortOpen(port) && System.currentTimeMillis() < waitUntil) {
+      try {
+        TimeUnit.MILLISECONDS.sleep(100);
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Interrupted while waiting for " + port + " to be opened");
+      }
+    }
+
+    throw new RuntimeException("Timed out waiting for port " + port + " to be opened");
+  }
+
   public static void waitForPortToOpen(
       final int port, final long timeout, final TimeUnit unit, final Process process) {
     final long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
