@@ -115,7 +115,7 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
 
   static class CountingPrintWriter extends PrintWriter {
     // PrintWriter is synchronised, so the counter has to be atomic
-    private AtomicInteger counter = new AtomicInteger(0);
+    private final AtomicInteger counter = new AtomicInteger(0);
 
     /**
      * write(String s) and write(char[] buf) are not overridden because they delegate to another
