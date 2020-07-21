@@ -41,6 +41,11 @@ public abstract class HttpServerTestAdvice {
         return null;
       }
       Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
+
+      Span parentSpan = TRACER.getCurrentSpan();
+      if(parentSpan.getContext().isValid()){
+        parentSpan.end();
+      }
       return new SpanWithScope(span, currentContextWith(span));
     }
 
