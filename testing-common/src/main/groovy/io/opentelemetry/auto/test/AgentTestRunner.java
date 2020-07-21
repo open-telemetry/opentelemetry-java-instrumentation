@@ -145,14 +145,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
     return true;
   }
 
-  @BeforeClass
-  public static synchronized void agentSetup() {
-    if (activeTransformer == null) {
-      activeTransformer =
-          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
-    }
-  }
-
   public static synchronized void resetInstrumentation() {
     if (null != activeTransformer) {
       INSTRUMENTATION.removeTransformer(activeTransformer);
@@ -167,6 +159,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
    */
   @BeforeClass
   public void setupBeforeTests() {
+    if (activeTransformer == null) {
+      activeTransformer =
+          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
+    }
     TEST_LISTENER.activateTest(this);
   }
 
