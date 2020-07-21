@@ -22,7 +22,7 @@ if (project.ext.find("skipPublish") != true) {
 
 
 afterEvaluate {
-  archivesBaseName =  'opentelemetry-auto-' + archivesBaseName
+  archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
 
   byteBuddy {
     transformation {
@@ -74,6 +74,10 @@ task integrationTest(type: Test) {
   description = 'Runs instrumentation tests.'
   group = 'verification'
   shouldRunAfter test
+
+  testLogging {
+    showStandardStreams = true
+  }
 
   useJUnit {
     includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
