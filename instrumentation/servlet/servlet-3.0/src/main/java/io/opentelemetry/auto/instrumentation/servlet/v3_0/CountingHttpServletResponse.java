@@ -77,7 +77,7 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
 
   static class CountingServletOutputStream extends ServletOutputStream {
 
-    private ServletOutputStream delegate;
+    private final ServletOutputStream delegate;
     private int counter = 0;
 
     public CountingServletOutputStream(ServletOutputStream delegate) {
