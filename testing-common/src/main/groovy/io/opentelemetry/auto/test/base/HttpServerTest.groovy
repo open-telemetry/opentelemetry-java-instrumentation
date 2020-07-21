@@ -397,7 +397,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         }
         trace(it * 2 + 1, spanCount) {
           def spanIndex = 0
-          serverSpan(it, spanIndex++, traceID, parentID, method, endpoint, response)
+          serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
           if (hasHandlerSpan()) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -453,7 +453,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, Response response = null) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedServerSpanName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter

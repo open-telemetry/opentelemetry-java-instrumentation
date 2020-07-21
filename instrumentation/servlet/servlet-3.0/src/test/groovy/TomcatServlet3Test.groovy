@@ -164,7 +164,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
         basicSpan(it, 0, "TEST_SPAN")
       }
       trace(1, 2) {
-        serverSpan(it, 0, null, null, method, ERROR)
+        serverSpan(it, 0, null, null, method, response.body().contentLength(), ERROR)
         controllerSpan(it, 1, span(0))
       }
 

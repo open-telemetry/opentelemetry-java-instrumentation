@@ -18,7 +18,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import okhttp3.Response
 
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
@@ -117,7 +116,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, Response response = null) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "TestHandler.handle"
       spanKind SERVER
@@ -135,7 +134,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${response?.body()?.contentLength() ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
         "servlet.path" ''
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }

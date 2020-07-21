@@ -18,7 +18,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import okhttp3.Response
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
 import org.glassfish.embeddable.GlassFish
@@ -83,7 +82,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, Response response = null) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName entryPointName()
       spanKind SERVER
@@ -101,7 +100,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${response?.body()?.contentLength() ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
         if (endpoint.errored) {

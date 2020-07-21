@@ -19,7 +19,6 @@ package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -61,7 +60,7 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
       contentLength += outputStream.counter;
     }
     if (printWriter != null) {
-      contentLength += printWriter.counter.get();
+      contentLength += printWriter.counter;
     }
     return contentLength;
   }
@@ -114,8 +113,8 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
   }
 
   static class CountingPrintWriter extends PrintWriter {
-    // PrintWriter is synchronised, so the counter has to be atomic
-    private final AtomicInteger counter = new AtomicInteger(0);
+
+    private int counter = 0;
 
     /**
      * write(String s) and write(char[] buf) are not overridden because they delegate to another
@@ -128,19 +127,19 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
     @Override
     public void write(int c) {
       super.write(c);
-      counter.incrementAndGet();
+      counter++;
     }
 
     @Override
     public void write(char[] buf, int off, int len) {
       super.write(buf, off, len);
-      counter.addAndGet(len);
+      counter += len;
     }
 
     @Override
     public void write(String s, int off, int len) {
       super.write(s, off, len);
-      counter.addAndGet(len);
+      counter += len;
     }
   }
 }
