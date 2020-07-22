@@ -1,6 +1,6 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  springbootVersion = "2.+"
+  springbootVersion = "2.3.1.RELEASE"
 }
 
 group = 'io.opentelemetry.instrumentation'
