@@ -34,7 +34,7 @@ public class WebClientBeanPostProcessorTest {
 
   @Test
   public void
-      should_return_object_if_processed_bean_is_not_of_type_web_client_or_web_client_builder() {
+      should_return_object_if_processed_bean_is_NOT_of_type_WebClient_or_WebClientBuilder() {
     assertEquals(
         webClientBeanPostProcessor
             .postProcessAfterInitialization(new Object(), "testObject")
@@ -43,7 +43,7 @@ public class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  public void should_return_web_client_if_processed_bean_is_of_type_web_client() {
+  public void should_return_web_client_if_processed_bean_is_of_type_WebClient() {
     WebClient webClient = WebClient.create();
 
     assertTrue(
@@ -52,7 +52,7 @@ public class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  public void should_return_web_client_builder_if_processed_bean_is_of_type_web_client_builder() {
+  public void should_return_WebClientBuilder_if_processed_bean_is_of_type_WebClientBuilder() {
     WebClient.Builder webClientBuilder = WebClient.builder();
 
     assertTrue(
@@ -62,7 +62,7 @@ public class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  public void should_add_ONE_exchange_filter_to_web_client() {
+  public void should_add_ONE_exchange_filter_to_WebClient() {
     WebClient webClient = WebClient.create();
     Object processedWebClient =
         webClientBeanPostProcessor.postProcessAfterInitialization(webClient, "testWebClient");
@@ -79,7 +79,7 @@ public class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  public void should_add_ONE_exchange_filter_to_web_client_builder() {
+  public void should_add_ONE_exchange_filter_to_WebClientBuilder() {
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     webClientBeanPostProcessor.postProcessAfterInitialization(

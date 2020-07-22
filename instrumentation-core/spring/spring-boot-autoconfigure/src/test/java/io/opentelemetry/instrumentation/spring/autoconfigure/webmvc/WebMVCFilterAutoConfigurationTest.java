@@ -34,7 +34,7 @@ public class WebMVCFilterAutoConfigurationTest {
                   TracerAutoConfiguration.class, WebMVCFilterAutoConfiguration.class));
 
   @Test
-  public void should_initialize_web_mvc_tracing_filter_bean_when_web_is_enabled() {
+  public void should_initialize_WebMvcTracingFilter_bean_when_web_is_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=true")
         .run(
@@ -46,7 +46,7 @@ public class WebMVCFilterAutoConfigurationTest {
   }
 
   @Test
-  public void should_NOT_initialize_web_mvc_tracing_filter_bean_when_web_is_NOT_enabled() {
+  public void should_NOT_initialize_WebMvcTracingFilter_bean_when_web_is_NOT_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=false")
         .run(
@@ -55,5 +55,15 @@ public class WebMVCFilterAutoConfigurationTest {
                   "Application Context DOES NOT contain WebMVCTracingFilter bean",
                   context.containsBean("otelWebMVCTracingFilter"));
             });
+  }
+
+  @Test
+  public void should_initialize_WebMvcTracingFilter_bean_when_web_enabled_property_is_MISSING() {
+    this.contextRunner.run(
+        (context) -> {
+          assertNotNull(
+              "Application Context contains WebMVCTracingFilter bean",
+              context.getBean("otelWebMVCTracingFilter", WebMVCTracingFilter.class));
+        });
   }
 }

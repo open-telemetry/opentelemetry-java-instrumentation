@@ -33,7 +33,7 @@ public class RestTemplateBeanPostProcessorTest {
   @InjectMocks RestTemplateBeanPostProcessor restTemplateBeanPostProcessor;
 
   @Test
-  public void should_return_object_if_processed_bean_is_not_of_type_rest_template() {
+  public void should_return_object_if_processed_bean_is_not_of_type_RestTemplate() {
     assertEquals(
         restTemplateBeanPostProcessor
             .postProcessAfterInitialization(new Object(), "testObject")
@@ -42,7 +42,7 @@ public class RestTemplateBeanPostProcessorTest {
   }
 
   @Test
-  public void should_return_rest_template_if_processed_bean_is_of_type_rest_template() {
+  public void should_return_RestTemplate_if_processed_bean_is_of_type_RestTemplate() {
     assertTrue(
         restTemplateBeanPostProcessor.postProcessAfterInitialization(
                 new RestTemplate(), "testRestTemplate")
@@ -50,8 +50,7 @@ public class RestTemplateBeanPostProcessorTest {
   }
 
   @Test
-  public void
-      should_add_ONE_rest_template_interceptor_if_processed_bean_is_of_type_rest_template() {
+  public void should_add_ONE_RestTemplateInterceptor_if_processed_bean_is_of_type_RestTemplate() {
     RestTemplate restTemplate = new RestTemplate();
 
     restTemplateBeanPostProcessor.postProcessAfterInitialization(restTemplate, "testRestTemplate");

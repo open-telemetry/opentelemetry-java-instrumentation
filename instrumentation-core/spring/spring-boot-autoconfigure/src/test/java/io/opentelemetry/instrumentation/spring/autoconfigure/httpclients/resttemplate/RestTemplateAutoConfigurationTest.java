@@ -34,7 +34,7 @@ public class RestTemplateAutoConfigurationTest {
                   TracerAutoConfiguration.class, RestTemplateAutoConfiguration.class));
 
   @Test
-  public void should_initialize_rest_template_interceptor_bean_when_httpclients_are_enabled() {
+  public void should_initialize_RestTemplateInterceptor_bean_when_httpclients_are_ENABLED() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
         .run(
@@ -47,8 +47,7 @@ public class RestTemplateAutoConfigurationTest {
   }
 
   @Test
-  public void
-      should_NOT_initialize_rest_template_interceptor_bean_when_httpclients_are_NOT_enabled() {
+  public void should_NOT_initialize_RestTemplateInterceptor_bean_when_httpclients_are_DISABLED() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
         .run(
@@ -57,5 +56,17 @@ public class RestTemplateAutoConfigurationTest {
                   "Application Context DOES NOT contain otelRestTemplateBeanPostProcessor bean",
                   context.containsBean("otelRestTemplateBeanPostProcessor"));
             });
+  }
+
+  @Test
+  public void
+      should_initialize_RestTemplateInterceptor_bean_when_httpclients_enabled_property_is_MISSING() {
+    this.contextRunner.run(
+        (context) -> {
+          assertNotNull(
+              "Application Context contains RestTemplateBeanPostProcessor bean",
+              context.getBean(
+                  "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class));
+        });
   }
 }

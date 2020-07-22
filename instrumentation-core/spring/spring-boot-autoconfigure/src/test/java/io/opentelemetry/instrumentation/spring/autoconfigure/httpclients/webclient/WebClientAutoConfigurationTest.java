@@ -34,7 +34,7 @@ public class WebClientAutoConfigurationTest {
                   TracerAutoConfiguration.class, WebClientAutoConfiguration.class));
 
   @Test
-  public void should_initialize_web_client_bean_post_proccesor_when_httpclients_are_enabled() {
+  public void should_initialize_WebClientBeanPostProccesor_bean_when_httpclients_are_ENABLED() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
         .run(
@@ -48,7 +48,7 @@ public class WebClientAutoConfigurationTest {
 
   @Test
   public void
-      should_NOT_initialize_web_client_bean_post_proccesor_when_httpclients_are_NOT_enabled() {
+      should_NOT_initialize_WebClientBeanPostProccesor_bean_when_httpclients_are_DISABLED() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
         .run(
@@ -57,5 +57,16 @@ public class WebClientAutoConfigurationTest {
                   "Application Context DOES NOT contain otelWebClientBeanPostProcessor bean",
                   context.containsBean("otelWebClientBeanPostProcessor"));
             });
+  }
+
+  @Test
+  public void
+      should_initialize_WebClientBeanPostProccesor_bean_when_httpclients_enabled_property_is_MISSING() {
+    this.contextRunner.run(
+        (context) -> {
+          assertNotNull(
+              "Application Context contains WebClientBeanPostProcessor bean",
+              context.getBean("otelWebClientBeanPostProcessor", WebClientBeanPostProcessor.class));
+        });
   }
 }

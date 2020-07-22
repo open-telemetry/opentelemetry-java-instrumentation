@@ -41,7 +41,7 @@ public class TracerAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
   @Test
-  public void should_NOT_initalize_otel_tracer_if_tracer_bean_exists() {
+  public void should_NOT_initalize_otelTracer_if_tracer_bean_exists() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
@@ -58,7 +58,7 @@ public class TracerAutoConfigurationTest {
   }
 
   @Test
-  public void should_contain_otel_tracer_bean() {
+  public void should_contain_otelTracer_bean() {
     this.contextRunner
         .withUserConfiguration(TracerAutoConfiguration.class)
         .run(
