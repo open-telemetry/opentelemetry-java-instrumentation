@@ -25,16 +25,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+/** Spring Boot auto configuration test for {@link WebMVCFilterAutoConfiguration} */
 public class WebMVCFilterAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class));
+          .withConfiguration(
+              AutoConfigurations.of(
+                  TracerAutoConfiguration.class, WebMVCFilterAutoConfiguration.class));
 
   @Test
   public void should_initialize_web_mvc_tracing_filter_bean_when_web_is_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=true")
-        .withUserConfiguration(WebMVCFilterAutoConfiguration.class)
         .run(
             (context) -> {
               assertNotNull(
@@ -47,7 +49,6 @@ public class WebMVCFilterAutoConfigurationTest {
   public void should_NOT_initialize_web_mvc_tracing_filter_bean_when_web_is_NOT_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=false")
-        .withUserConfiguration(WebMVCFilterAutoConfiguration.class)
         .run(
             (context) -> {
               assertFalse(

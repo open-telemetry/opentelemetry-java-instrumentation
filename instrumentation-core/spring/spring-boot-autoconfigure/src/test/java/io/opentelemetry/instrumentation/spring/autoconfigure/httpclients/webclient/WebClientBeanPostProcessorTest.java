@@ -26,8 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/** Spring bean post processor test {@link WebClientBeanPostProcessor} */
 @RunWith(MockitoJUnitRunner.class)
-public class WebClientBeanProcessorTest {
+public class WebClientBeanPostProcessorTest {
 
   @InjectMocks WebClientBeanPostProcessor webClientBeanPostProcessor;
 

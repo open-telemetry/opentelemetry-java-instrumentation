@@ -24,17 +24,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+/** Spring Boot auto configuration test for {@link RestTemplateAutoConfiguration} */
 public class RestTemplateAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class));
+          .withConfiguration(
+              AutoConfigurations.of(
+                  TracerAutoConfiguration.class, RestTemplateAutoConfiguration.class));
 
   @Test
   public void should_initialize_rest_template_interceptor_bean_when_httpclients_are_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
-        .withUserConfiguration(RestTemplateAutoConfiguration.class)
         .run(
             (context) -> {
               assertNotNull(
@@ -49,7 +51,6 @@ public class RestTemplateAutoConfigurationTest {
       should_NOT_initialize_rest_template_interceptor_bean_when_httpclients_are_NOT_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
-        .withUserConfiguration(RestTemplateAutoConfiguration.class)
         .run(
             (context) -> {
               assertFalse(

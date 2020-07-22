@@ -24,17 +24,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+/** Spring Boot auto configuration test for {@link WebClientAutoConfiguration} */
 public class WebClientAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class));
+          .withConfiguration(
+              AutoConfigurations.of(
+                  TracerAutoConfiguration.class, WebClientAutoConfiguration.class));
 
   @Test
   public void should_initialize_web_client_bean_post_proccesor_when_httpclients_are_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
-        .withUserConfiguration(WebClientAutoConfiguration.class)
         .run(
             (context) -> {
               assertNotNull(
@@ -49,7 +51,6 @@ public class WebClientAutoConfigurationTest {
       should_NOT_initialize_web_client_bean_post_proccesor_when_httpclients_are_NOT_enabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
-        .withUserConfiguration(WebClientAutoConfiguration.class)
         .run(
             (context) -> {
               assertFalse(

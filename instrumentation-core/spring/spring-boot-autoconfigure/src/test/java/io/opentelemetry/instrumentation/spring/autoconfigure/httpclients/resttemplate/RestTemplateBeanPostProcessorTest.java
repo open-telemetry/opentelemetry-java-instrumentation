@@ -26,8 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.web.client.RestTemplate;
 
+/** Spring bean post processor test {@link RestTemplateBeanPostProcessor} */
 @RunWith(MockitoJUnitRunner.class)
-public class RestTemplateBeanProcessorTest {
+public class RestTemplateBeanPostProcessorTest {
 
   @InjectMocks RestTemplateBeanPostProcessor restTemplateBeanPostProcessor;
 
