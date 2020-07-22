@@ -98,7 +98,7 @@ jobs:
             GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
             ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
             << pipeline.parameters.gradle_flags >>
-            --max-workers=3
+            --max-workers=6
 
       - run:
           name: Collect Reports
