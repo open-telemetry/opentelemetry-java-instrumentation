@@ -72,6 +72,9 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     expect:
     new TraceAnnotationsInstrumentation().additionalTraceAnnotations == expected.toSet()
 
+    cleanup:
+    System.clearProperty("ota.trace.annotations")
+
     where:
     value                               | expected
     null                                | DEFAULT_ANNOTATIONS.toList()

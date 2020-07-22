@@ -20,12 +20,9 @@ if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
 
-tasks.withType(Test) {
-  forkEvery = 1
-}
 
 afterEvaluate {
-  archivesBaseName =  'opentelemetry-auto-' + archivesBaseName
+  archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
 
   byteBuddy {
     transformation {
@@ -60,3 +57,27 @@ afterEvaluate {
     testImplementation project(':utils:test-utils')
   }
 }
+
+tasks.withType(Test) {
+  if (it.name == 'test') {
+    useJUnit {
+      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
+  } else {
+    useJUnit {
+      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
+  }
+}
+
+task integrationTest(type: Test) {
+  description = 'Runs instrumentation tests.'
+  group = 'verification'
+  shouldRunAfter test
+
+  useJUnit {
+    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+  }
+}
+
+check.dependsOn integrationTest
