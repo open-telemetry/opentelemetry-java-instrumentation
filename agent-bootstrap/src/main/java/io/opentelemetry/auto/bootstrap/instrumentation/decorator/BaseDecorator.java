@@ -93,38 +93,22 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    String peerName = remoteAddress.getHostName();
-    String peerIp = remoteAddress.getHostAddress();
-    setPeer(span, peerName, peerIp);
+    setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
     return span;
-  }
-
-  private static void setPeer(final Span span, String peerName) {
-    assert span != null;
-    span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerName);
-    String peerService = mapToPeer(peerName);
-    if (peerService != null) {
-      span.setAttribute("peer.service", peerService);
-    }
   }
 
   public static void setPeer(final Span span, String peerName, String peerIp) {
     assert span != null;
-    if (peerIp == null) {
-      setPeer(span, peerName);
-    } else {
-      if (peerName != null && !peerName.equals(peerIp)) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerName);
-      }
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), peerIp);
-
-      String peerService = mapToPeer(peerName);
-      if (peerService == null) {
-        peerService = mapToPeer(peerIp);
-      }
-      if (peerService != null) {
-        span.setAttribute("peer.service", peerService);
-      }
+    if (peerName != null && !peerName.equals(peerIp)) {
+      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
+    }
+    if (peerIp != null) {
+      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
+    }
+    String peerService = mapToPeer(peerName);
+    peerService = (peerService == null) ? mapToPeer(peerIp) : peerService;
+    if (peerService != null) {
+      SemanticAttributes.PEER_SERVICE.set(span, peerService);
     }
   }
 

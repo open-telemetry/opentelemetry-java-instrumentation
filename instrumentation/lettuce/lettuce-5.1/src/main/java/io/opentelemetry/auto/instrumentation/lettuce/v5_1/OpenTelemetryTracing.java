@@ -98,7 +98,7 @@ public enum OpenTelemetryTracing implements Tracing {
     private final Context context;
 
     OpenTelemetryTraceContext() {
-      context = Context.current();
+      this.context = Context.current();
     }
 
     public Context getContext() {
