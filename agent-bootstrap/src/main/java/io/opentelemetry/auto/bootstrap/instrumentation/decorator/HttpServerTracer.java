@@ -70,7 +70,8 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     return startSpan(request, connection, spanName, -1);
   }
 
-  public Span startSpan(REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
+  public Span startSpan(
+      REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
     Span.Builder builder =
         tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(extract(request, getGetter()));
 
