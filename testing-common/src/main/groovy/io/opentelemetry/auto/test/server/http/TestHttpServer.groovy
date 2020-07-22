@@ -84,7 +84,7 @@ class TestHttpServer implements AutoCloseable {
     def port = internalServer.connectors[0].localPort
     address = new URI("http://localhost:${ port}")
 
-    PortUtils.waitForPortToOpen(port, 10, TimeUnit.SECONDS)
+    PortUtils.waitForPortToOpen(port, 20, TimeUnit.SECONDS)
     System.out.println("Started server $this on port ${address.getPort()}")
     return this
   }

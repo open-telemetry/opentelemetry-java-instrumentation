@@ -42,6 +42,16 @@ public abstract class HttpServerTestAdvice {
       }
       Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
 
+      /*
+      NB! This is a "hack" to debug flaky tests.
+      If we have a valid parent span at this point, then tests will fail, because they expect
+      "TEST_SPAN" from above to be a root span.
+      This failure is good because we must not have a valid span at this point.
+      Thus failure signal a span leak and we should investigate that.
+      But we want to have some debug information about this currently active span.
+      As span is not readable by default, the only way to obtain that information is pass
+      it to InMemorySpanExporter used by tests.
+      */
       Span parentSpan = TRACER.getCurrentSpan();
       if (parentSpan.getContext().isValid()) {
         parentSpan.end();

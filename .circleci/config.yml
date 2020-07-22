@@ -96,7 +96,7 @@ jobs:
           name: Run Tests
           command: >-
             GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
-            ./gradlew clean <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
+            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
             << pipeline.parameters.gradle_flags >>
             --max-workers=3
 
@@ -216,23 +216,23 @@ workflows:
             tags:
               only: /.*/
 
-#      - muzzle:
-#          requires:
-#            - build
-#          filters:
-#            branches:
-#              ignore: master
+      - muzzle:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: master
 
-#      - publish_master:
-#          requires:
-#            - test_8
-#            - test_latest
-#            - muzzle
-#          filters:
-#            branches:
-#              only: master
-#            tags:
-#              ignore: /.*/
+      - publish_master:
+          requires:
+            - test_8
+            - test_latest
+            - muzzle
+          filters:
+            branches:
+              only: master
+            tags:
+              ignore: /.*/
 
   nightly_snapshot:
     triggers:

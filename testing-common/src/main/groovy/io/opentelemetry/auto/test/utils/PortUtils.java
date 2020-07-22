@@ -50,7 +50,11 @@ public class PortUtils {
   public static void waitForPortToOpen(final int port, final long timeout, final TimeUnit unit) {
     final long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
 
-    while (!isPortOpen(port) && System.currentTimeMillis() < waitUntil) {
+    while (System.currentTimeMillis() < waitUntil) {
+      if (isPortOpen(port)) {
+        return;
+      }
+
       try {
         TimeUnit.MILLISECONDS.sleep(100);
       } catch (final InterruptedException e) {
