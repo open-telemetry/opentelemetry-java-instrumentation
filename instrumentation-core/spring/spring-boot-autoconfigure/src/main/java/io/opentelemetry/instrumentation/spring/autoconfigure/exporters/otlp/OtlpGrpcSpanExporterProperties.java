@@ -22,13 +22,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for {@link OTLPGrpcSpanExporter}
  *
- * <p>Get Exporter Service Name {@link getServiceName()}
+ * <p>Get Exporter Service Name
  *
- * <p>Get Exporter Host Name {@link getHost()}
+ * <p>Get Exporter Host Name
  *
- * <p>Get Exporter Port {@link getPort()}
+ * <p>Get Exporter Port
  *
- * <p>Get max wait time for Collector to process Span Batches {@link getDeadline()}
+ * <p>Get max wait time for Collector to process Span Batches
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.otlp")
 public final class OtlpGrpcSpanExporterProperties {
@@ -36,8 +36,10 @@ public final class OtlpGrpcSpanExporterProperties {
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-zipkin-otlp";
   private String host = "localhost";
+  /** Default end point in {@link OTLPGrpcSpanExporter.OTEL_OTLP_ENDPOINT} */
   private int port = 14250;
-  private Duration deadline = Duration.ofMillis(1000L);
+
+  private Duration deadline = Duration.ofSeconds(1);
 
   public boolean isEnabled() {
     return enabled;
