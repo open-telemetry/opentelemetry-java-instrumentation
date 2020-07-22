@@ -112,6 +112,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$forwardFromFileName"
           }
@@ -190,6 +191,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToHtml.jsp"
           }
@@ -243,6 +245,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToIncludeMulti.jsp"
           }
@@ -356,6 +359,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToJspForward.jsp"
           }
@@ -449,6 +453,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToCompileError.jsp"
             errorAttributes(JasperException, String)
@@ -515,6 +520,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 404
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" String
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToNonExistent.jsp"
           }
