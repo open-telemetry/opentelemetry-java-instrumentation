@@ -19,6 +19,7 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShaded;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShadedOrNull;
 
+import io.opentelemetry.auto.bootstrap.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;
@@ -147,9 +148,13 @@ class UnshadedSpan implements Span {
     private static final Logger log = LoggerFactory.getLogger(Builder.class);
 
     private final io.opentelemetry.trace.Span.Builder shadedBuilder;
+    private final ContextStore<Context, io.grpc.Context> contextStore;
 
-    Builder(final io.opentelemetry.trace.Span.Builder shadedBuilder) {
+    Builder(
+        final io.opentelemetry.trace.Span.Builder shadedBuilder,
+        ContextStore<Context, io.grpc.Context> contextStore) {
       this.shadedBuilder = shadedBuilder;
+      this.contextStore = contextStore;
     }
 
     @Override
@@ -170,7 +175,7 @@ class UnshadedSpan implements Span {
 
     @Override
     public Span.Builder setParent(Context context) {
-      shadedBuilder.setParent(toShaded(context));
+      shadedBuilder.setParent(contextStore.get(context));
       return this;
     }
 
