@@ -105,7 +105,9 @@ public abstract class BaseDecorator {
       SemanticAttributes.NET_PEER_IP.set(span, peerIp);
     }
     String peerService = mapToPeer(peerName);
-    peerService = (peerService == null) ? mapToPeer(peerIp) : peerService;
+    if (peerService == null) {
+      peerService = mapToPeer(peerIp);
+    }
     if (peerService != null) {
       SemanticAttributes.PEER_SERVICE.set(span, peerService);
     }
