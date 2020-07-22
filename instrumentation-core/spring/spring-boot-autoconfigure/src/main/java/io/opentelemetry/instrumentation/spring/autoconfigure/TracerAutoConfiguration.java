@@ -64,7 +64,6 @@ public class TracerAutoConfiguration {
   }
 
   private void addSpanProcessors(List<SpanExporter> spanExporters) {
-
     List<SpanProcessor> spanProcessors =
         spanExporters.stream()
             .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())

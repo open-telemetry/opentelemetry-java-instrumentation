@@ -22,13 +22,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for {@link JaegerSpanExporter}
  *
- * <p>Get Exporter Service Name {@link getServiceName()}
+ * <p>Get Exporter Service Name
  *
- * <p>Get Exporter Host Name {@link getHost()}
+ * <p>Get Exporter Host Name
  *
- * <p>Get Exporter Port {@link getPort()}
+ * <p>Get Exporter Port
  *
- * <p>Get max wait time for Collector to process Span Batches {@link getDeadline()}
+ * <p>Get max wait time for Collector to process Span Batches
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.jaeger")
 public final class JaegerSpanExporterProperties {
@@ -36,8 +36,10 @@ public final class JaegerSpanExporterProperties {
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-jaeger-exporter";
   private String host = "localhost";
+  /** Default port from {@link JaegerSpanExporter.DEFAULT_JAEGER_ENDPOINT} */
   private int port = 14250;
-  private Duration deadline = Duration.ofMillis(1000L);
+
+  private Duration deadline = Duration.ofSeconds(1);
 
   public boolean isEnabled() {
     return enabled;
