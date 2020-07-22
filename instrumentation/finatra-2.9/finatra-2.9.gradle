@@ -40,7 +40,7 @@ dependencies {
   testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
   latestDepTestImplementation project(':instrumentation:netty:netty-4.1')
-  latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
+  latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '20.6.+'
   latestDepTestImplementation(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0')
 }
 
