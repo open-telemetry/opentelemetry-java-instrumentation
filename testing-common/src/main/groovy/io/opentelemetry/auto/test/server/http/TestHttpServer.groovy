@@ -20,9 +20,11 @@ import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -79,7 +81,10 @@ class TestHttpServer implements AutoCloseable {
     // set after starting, otherwise two callbacks get added.
     internalServer.stopAtShutdown = true
 
-    address = new URI("http://localhost:${internalServer.connectors[0].localPort}")
+    def port = internalServer.connectors[0].localPort
+    address = new URI("http://localhost:${ port}")
+
+    PortUtils.waitForPortToOpen(port, 20, TimeUnit.SECONDS)
     System.out.println("Started server $this on port ${address.getPort()}")
     return this
   }

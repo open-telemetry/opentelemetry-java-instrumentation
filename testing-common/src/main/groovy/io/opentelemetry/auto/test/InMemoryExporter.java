@@ -23,6 +23,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -83,11 +85,12 @@ public class InMemoryExporter implements SpanProcessor {
   public void onEnd(final ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "<<< SPAN END: {} id={} traceid={} parent={}",
+        "<<< SPAN END: {} id={} traceid={} parent={}, attributes={}",
         sd.getName(),
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
-        sd.getParentSpanId().toLowerBase16());
+        sd.getParentSpanId().toLowerBase16(),
+        printSpanAttributes(sd));
     SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
       if (!spanOrders.containsKey(span.getSpanId())) {
@@ -113,6 +116,35 @@ public class InMemoryExporter implements SpanProcessor {
       needsSpanSorting.add(span.getTraceId());
       tracesLock.notifyAll();
     }
+  }
+
+  private String printSpanAttributes(SpanData sd) {
+    final StringBuilder attributes = new StringBuilder();
+    sd.getAttributes()
+        .forEach(
+            new KeyValueConsumer<AttributeValue>() {
+              @Override
+              public void consume(String key, AttributeValue value) {
+                String sValue = null;
+                switch (value.getType()) {
+                  case STRING:
+                    sValue = value.getStringValue();
+                    break;
+                  case BOOLEAN:
+                    sValue = String.valueOf(value.getBooleanValue());
+                    break;
+                  case LONG:
+                    sValue = String.valueOf(value.getLongValue());
+                    break;
+                  case DOUBLE:
+                    sValue = String.valueOf(value.getDoubleValue());
+                    break;
+                }
+
+                attributes.append(String.format("Attribute %s=%s", key, sValue));
+              }
+            });
+    return attributes.toString();
   }
 
   @Override
