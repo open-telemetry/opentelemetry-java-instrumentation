@@ -1,37 +1,31 @@
-plugins {
-  id 'org.springframework.boot' version '2.3.0.RELEASE'
-  id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-}
-
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  springbootVersion = "2.+"
 }
 
 group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 sourceCompatibility = '8'
 
-bootJar {
-  enabled = false
-}
-
 dependencies {
-  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
-  implementation "org.springframework.boot:spring-boot-starter-validation"
+  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: springbootVersion
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: springbootVersion
   
-  testImplementation('org.springframework.boot:spring-boot-starter-test') {
+  
+  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springbootVersion) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
   
-  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springbootVersion
   implementation project(':instrumentation-core:spring:spring-webmvc-3.1')
   implementation project(':instrumentation-core:spring:spring-web-3.1')
   
-  implementation 'org.springframework.boot:spring-boot-starter-webflux'
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: springbootVersion
   implementation project(':instrumentation-core:spring:spring-webflux-5.0')
-  
+    
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'

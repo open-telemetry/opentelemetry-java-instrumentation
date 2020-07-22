@@ -1,10 +1,6 @@
-plugins {
-  id 'org.springframework.boot' version '2.3.0.RELEASE'
-  id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-}
-
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  springbootVersion = "2.+"
 }
 
 group = 'io.opentelemetry.instrumentation'
@@ -13,12 +9,8 @@ apply from: "$rootDir/gradle/java.gradle"
 
 sourceCompatibility = '8'
 
-bootJar {
-  enabled = false
-}
-
 dependencies {
-  implementation 'org.springframework.boot:spring-boot-starter'
+  implementation "org.springframework.boot:spring-boot-starter:$springbootVersion"
   api project(':instrumentation-core:spring:starters:opentelemetry-starter-spring')
   api deps.opentelemetryZipkin
 }
