@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.context.Scope;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.Tracer;
@@ -23,9 +25,13 @@ import unshaded.io.opentelemetry.trace.Tracer;
 class UnshadedTracer implements Tracer {
 
   private final io.opentelemetry.trace.Tracer shadedTracer;
+  private final ContextStore<Context, io.grpc.Context> contextStore;
 
-  UnshadedTracer(final io.opentelemetry.trace.Tracer shadedTracer) {
+  UnshadedTracer(
+      final io.opentelemetry.trace.Tracer shadedTracer,
+      ContextStore<Context, io.grpc.Context> contextStore) {
     this.shadedTracer = shadedTracer;
+    this.contextStore = contextStore;
   }
 
   @Override
@@ -40,6 +46,6 @@ class UnshadedTracer implements Tracer {
 
   @Override
   public Span.Builder spanBuilder(final String spanName) {
-    return new UnshadedSpan.Builder(shadedTracer.spanBuilder(spanName));
+    return new UnshadedSpan.Builder(shadedTracer.spanBuilder(spanName), contextStore);
   }
 }
