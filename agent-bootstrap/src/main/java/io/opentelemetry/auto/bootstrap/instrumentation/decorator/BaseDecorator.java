@@ -83,8 +83,7 @@ public abstract class BaseDecorator {
         onPeerConnection(span, remoteAddress);
       } else {
         // Failed DNS lookup, the host string is the name.
-        String peerName = remoteConnection.getHostString();
-        setPeer(span, peerName, null);
+        setPeer(span, remoteConnection.getHostString(), null);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
