@@ -19,9 +19,9 @@ P1 (e.g. cannot GA without these):
   * For each instrumentation
     * Document any instrumentation-specific configuration
   * How to troubleshoot (start documenting common issues somewhere)
-* Library (manual) instrumentations for libraries commonly used with Spring
-  * Spring WebMVC, Spring WebFlux, Spring RestTemplate, Spring Kafka, Spring AMQP,
-    Reactor, JDBC, java.util.concurrent
+* Library (manual) instrumentations for a few libraries commonly used with Spring:
+  Spring WebMVC, Spring WebFlux, Spring RestTemplate, JDBC
+  * (this requirement is to ensure that we have a good path forward for supporting both auto and manual instrumentation)
 
 P2:
 * Contributor experience (tag "contributor experience" plus tag "cleanup" plus tag "sporadic test failure")
@@ -37,6 +37,8 @@ P3:
 * Auto-collected metrics
   * System / JVM metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/651)
   * Request metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/522, https://github.com/open-telemetry/opentelemetry-specification/pull/657)
+* Library (manual) instrumentations for more libraries commonly used with Spring
+  * Spring Kafka, Spring AMQP, Reactor, java.util.concurrent
 * Library (manual) instrumentations for libraries commonly used with Android
   * OkHttp, gRPC
 * Document the basic configuration points
