@@ -3,7 +3,7 @@ P1 (e.g. cannot GA without these):
   * OTLP, Jaeger and Zipkin
   * Spring Boot and Wildfly
     * (Wildfly chosen due to common javaagent issues around jboss modules and jboss logging)
-  * All Java LTS versions + latest Java version if non-LTS
+  * Java 8, 11, and the latest Java version
 * Benchmarking
   * Runtime overhead benchmark
   * Startup overhead benchmark
