@@ -7,27 +7,21 @@ P1 (e.g. cannot GA without these):
 * Benchmarking
   * Runtime overhead benchmark
   * Startup overhead benchmark
-* Implement all required semantic attributes
-  * Non-required semantic attributes are nice to have, but not required for GA
+* All captured span attributes must either be from semantic attributes or be instrumentation-specific
+  * TODO define convention for instrumentation-specific attributes, e.g. "elasticsearch.*"
 * Basic configuration points
   * Add custom auto-instrumentation
   * Ability to build "custom distro"
-* Documentation (tag "documentation" minus tag "contributor experience")
+* Documentation
   * All configuration options
     * Standard OpenTelemetry SDK + Exporter configuration options
     * Auto-instrumentation configuration options (e.g. disable/enable, peer.service mapping)
   * For each instrumentation
     * Document any instrumentation-specific configuration
-  * Document the basic configuration points (above)
-    * How to write your own auto-instrumentation
-      * (much of this can be shared with contributor documentation below)
-    * How to build your own "custom distro"
   * How to troubleshoot (start documenting common issues somewhere)
 * Library (manual) instrumentations for libraries commonly used with Spring
   * Spring WebMVC, Spring WebFlux, Spring RestTemplate, Spring Kafka, Spring AMQP,
     Reactor, JDBC, java.util.concurrent
-* Library (manual) instrumentations for libraries commonly used with Android
-  * OkHttp, gRPC
 
 P2:
 * Contributor experience (tag "contributor experience" plus tag "cleanup" plus tag "sporadic test failure")
@@ -43,6 +37,12 @@ P3:
 * Auto-collected metrics
   * System / JVM metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/651)
   * Request metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/522, https://github.com/open-telemetry/opentelemetry-specification/pull/657)
+* Library (manual) instrumentations for libraries commonly used with Android
+  * OkHttp, gRPC
+* Document the basic configuration points
+  * How to write your own auto-instrumentation
+    * (much of this can be shared with contributor documentation below)
+  * How to build your own "custom distro"
 * Complete instrumentation documentation, with commitment to keeping this up-to-date going forward
   * Document all spans that it captures
     * Span names
