@@ -54,7 +54,7 @@ public class OtlpGrpcSpanExporterAutoConfiguration {
 
     return OtlpGrpcSpanExporter.newBuilder()
         .setChannel(channel)
-        .setDeadlineMs(otlpGrpcSpanExporterProperties.getDeadline().toMillis())
+        .setDeadlineMs(otlpGrpcSpanExporterProperties.getSpanTimeout().toMillis())
         .build();
   }
 }
