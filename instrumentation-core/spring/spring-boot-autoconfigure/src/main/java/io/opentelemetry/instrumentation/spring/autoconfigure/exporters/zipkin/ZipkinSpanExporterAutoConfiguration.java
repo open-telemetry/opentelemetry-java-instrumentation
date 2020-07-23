@@ -48,11 +48,7 @@ public class ZipkinSpanExporterAutoConfiguration {
 
     return ZipkinSpanExporter.newBuilder()
         .setServiceName(zipkinSpanExporterProperties.getServiceName())
-        .setEndpoint(getEndpoint(zipkinSpanExporterProperties))
+        .setEndpoint(zipkinSpanExporterProperties.getEndpoint())
         .build();
-  }
-
-  private String getEndpoint(ZipkinSpanExporterProperties zipkinSpanExporterProperties) {
-    return zipkinSpanExporterProperties.getHost() + ":" + zipkinSpanExporterProperties.getPort();
   }
 }
