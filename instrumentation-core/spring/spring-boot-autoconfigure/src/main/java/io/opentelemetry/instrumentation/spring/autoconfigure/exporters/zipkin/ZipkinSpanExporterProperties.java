@@ -23,9 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>Get Exporter Service Name {@link getServiceName()}
  *
- * <p>Get Exporter Host Name {@link getHost()}
- *
- * <p>Get Exporter Port {@link getPort()}
+ * <p>Get Exporter Endpoint
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.zipkin")
 public class ZipkinSpanExporterProperties {
