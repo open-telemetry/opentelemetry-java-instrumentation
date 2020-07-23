@@ -34,7 +34,7 @@ public final class JaegerSpanExporterProperties {
   private boolean enabled = true;
   private String serviceName = "unknown";
   private String endpoint = "localhost:14250";
-  private Duration deadline = Duration.ofSeconds(1);
+  private Duration spanTimeout = Duration.ofSeconds(1);
 
   public boolean isEnabled() {
     return enabled;
@@ -60,11 +60,11 @@ public final class JaegerSpanExporterProperties {
     this.endpoint = endpoint;
   }
 
-  public Duration getDeadline() {
-    return deadline;
+  public Duration getSpanTimeout() {
+    return spanTimeout;
   }
 
-  public void setDeadline(Duration deadline) {
-    this.deadline = deadline;
+  public void setSpanTimeout(Duration spanTimeout) {
+    this.spanTimeout = spanTimeout;
   }
 }
