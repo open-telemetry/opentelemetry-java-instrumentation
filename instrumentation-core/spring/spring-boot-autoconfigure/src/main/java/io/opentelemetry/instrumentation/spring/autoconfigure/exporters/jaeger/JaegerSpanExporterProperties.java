@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public final class JaegerSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "otel-spring-boot-jaeger-exporter";
+  private String serviceName = "unknown";
   private String host = "localhost";
   /** Default port from {@link JaegerSpanExporter.DEFAULT_JAEGER_ENDPOINT} */
   private int port = 14250;
