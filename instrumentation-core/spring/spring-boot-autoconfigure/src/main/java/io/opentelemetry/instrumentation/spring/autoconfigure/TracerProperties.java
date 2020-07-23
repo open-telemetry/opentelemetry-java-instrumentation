@@ -32,11 +32,11 @@ public final class TracerProperties {
 
   private String name = "otel-spring-tracer";
 
-  /** 
-  * If Sample probability == 1: always sample
-  *
-  * <p> If Sample probability == 0: never sample 
-  */
+  /**
+   * If Sample probability == 1: always sample
+   *
+   * <p>If Sample probability == 0: never sample
+   */
   @DecimalMin("0.0")
   @DecimalMax("1.0")
   private double samplerProbability = 1.0;
