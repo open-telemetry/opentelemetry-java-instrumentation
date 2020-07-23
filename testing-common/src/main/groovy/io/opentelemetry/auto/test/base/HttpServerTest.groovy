@@ -253,7 +253,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == SUCCESS.body
 
     and:
-    assertTheTraces(1, traceId, parentId)
+    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
 
     where:
     method = "GET"
@@ -272,7 +272,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == endpoint.body
 
     and:
-    assertTheTraces(1, null, null, method, endpoint)
+    assertTheTraces(1, null, null, method, endpoint, null, response)
 
     where:
     method = "GET"
@@ -292,7 +292,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().contentLength() < 1 || redirectHasBody()
 
     and:
-    assertTheTraces(1, null, null, method, REDIRECT)
+    assertTheTraces(1, null, null, method, REDIRECT, null, response)
 
     where:
     method = "GET"
@@ -309,7 +309,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == ERROR.body
 
     and:
-    assertTheTraces(1, null, null, method, ERROR)
+    assertTheTraces(1, null, null, method, ERROR, null, response)
 
     where:
     method = "GET"
@@ -329,7 +329,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     and:
-    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body)
+    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
 
     where:
     method = "GET"
@@ -346,7 +346,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.code() == NOT_FOUND.status
 
     and:
-    assertTheTraces(1, null, null, method, NOT_FOUND)
+    assertTheTraces(1, null, null, method, NOT_FOUND, null, response)
 
     where:
     method = "GET"
@@ -364,7 +364,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == PATH_PARAM.body
 
     and:
-    assertTheTraces(1, null, null, method, PATH_PARAM)
+    assertTheTraces(1, null, null, method, PATH_PARAM, null, response)
 
     where:
     method = "GET"
@@ -373,7 +373,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
     def spanCount = 1 // server span
     if (hasHandlerSpan()) {
       spanCount++
@@ -387,7 +387,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount ++
+        spanCount++
       }
     }
     assertTraces(size * 2) {
@@ -397,7 +397,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         }
         trace(it * 2 + 1, spanCount) {
           def spanIndex = 0
-          serverSpan(it, spanIndex++, traceID, parentID, method, endpoint)
+          serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
           if (hasHandlerSpan()) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -453,7 +453,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedServerSpanName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter

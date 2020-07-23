@@ -16,21 +16,30 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.trace.Tracer;
 import unshaded.io.opentelemetry.trace.TracerProvider;
 
 public class UnshadedTracerProvider implements TracerProvider {
 
+  private final ContextStore<Context, io.grpc.Context> contextStore;
+
+  public UnshadedTracerProvider(ContextStore<Context, io.grpc.Context> contextStore) {
+    this.contextStore = contextStore;
+  }
+
   @Override
   public Tracer get(final String instrumentationName) {
     return new UnshadedTracer(
-        io.opentelemetry.OpenTelemetry.getTracerProvider().get(instrumentationName));
+        io.opentelemetry.OpenTelemetry.getTracerProvider().get(instrumentationName), contextStore);
   }
 
   @Override
   public Tracer get(final String instrumentationName, final String instrumentationVersion) {
     return new UnshadedTracer(
         io.opentelemetry.OpenTelemetry.getTracerProvider()
-            .get(instrumentationName, instrumentationVersion));
+            .get(instrumentationName, instrumentationVersion),
+        contextStore);
   }
 }

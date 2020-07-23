@@ -82,11 +82,9 @@ jar {
 }
 
 repositories {
+  mavenLocal()
   jcenter()
   mavenCentral()
-  maven {
-    url "https://adoptopenjdk.jfrog.io/adoptopenjdk/jmc-libs-snapshots"
-  }
   maven {
     url "https://repo.typesafe.com/typesafe/releases"
   }
@@ -97,7 +95,6 @@ repositories {
       includeGroup "io.opentelemetry"
     }
   }
-  mavenLocal()
 }
 
 dependencies {
@@ -263,6 +260,7 @@ def addTestRule(String testTaskName) {
 }
 
 addTestRule("test")
+addTestRule("integrationTest")
 addTestRule("latestDepTest")
 
 tasks.withType(Test).configureEach {

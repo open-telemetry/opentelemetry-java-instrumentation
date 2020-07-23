@@ -20,6 +20,7 @@ import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
@@ -37,6 +38,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onComplete(final AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
+      contentLengthHelper(span, event);
       servletHttpServerTracer.end(
           span, ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
     }
@@ -45,6 +47,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onTimeout(final AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
+      contentLengthHelper(span, event);
       servletHttpServerTracer.onTimeout(span, event.getAsyncContext().getTimeout());
     }
   }
@@ -52,6 +55,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onError(final AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
+      contentLengthHelper(span, event);
       servletHttpServerTracer.endExceptionally(
           span,
           event.getThrowable(),
@@ -63,5 +67,13 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onStartAsync(final AsyncEvent event) {
     event.getAsyncContext().addListener(this);
+  }
+
+  public static void contentLengthHelper(Span span, AsyncEvent event) {
+    final ServletResponse response = event.getSuppliedResponse();
+    if (response instanceof CountingHttpServletResponse) {
+      servletHttpServerTracer.setContentLength(
+          span, ((CountingHttpServletResponse) response).getContentLength());
+    }
   }
 }

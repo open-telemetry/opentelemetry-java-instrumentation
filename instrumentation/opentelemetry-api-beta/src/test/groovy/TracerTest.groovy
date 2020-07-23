@@ -181,6 +181,34 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
+  def "capture span with explicit parent from context"() {
+    when:
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
+    def parentSpan = tracer.spanBuilder("parent").startSpan()
+    def context = withSpan(parentSpan, Context.current())
+    def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
+    testSpan.end()
+    parentSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "parent"
+          parent()
+          attributes {
+          }
+        }
+        span(1) {
+          operationName "test"
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
   def "capture span with explicit no parent"() {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")

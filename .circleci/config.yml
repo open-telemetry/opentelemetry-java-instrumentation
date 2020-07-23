@@ -33,7 +33,7 @@ jobs:
           name: Build Project
           command: >-
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
-            ./gradlew clean build shadowJar -x test
+            ./gradlew clean build shadowJar -x test -x integrationTest
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
 
@@ -201,11 +201,8 @@ workflows:
       - default_test_job:
           requires:
             - build
-          prefixTestTask: true
-          name: test_<< matrix.testTask >>
-          matrix:
-            parameters:
-              testTask: ["8"]
+          name: test_8
+          testTask: testJava8 integrationTestJava8
           filters:
             tags:
               only: /.*/

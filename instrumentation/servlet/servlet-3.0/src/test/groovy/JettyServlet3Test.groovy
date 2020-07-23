@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import io.opentelemetry.auto.test.utils.ConfigUtils
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
-
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -31,8 +31,17 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
   static {
-    //We want to test spans produced by servlet instrumentation, not those of jetty
-    System.setProperty("ota.integration.jetty.enabled", "false")
+    ConfigUtils.updateConfig {
+      //We want to test spans produced by servlet instrumentation, not those of jetty
+      System.setProperty("ota.integration.jetty.enabled", "false")
+    }
+  }
+
+  @Override
+  def cleanupSpec() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("ota.integration.jetty.enabled")
+    }
   }
 
   @Override

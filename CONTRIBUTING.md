@@ -327,11 +327,7 @@ Suggested plugins and settings:
 * [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
   ![Recommended Settings](docs/contributing/save-actions.png)
 
-### Approvers and Maintainers
-
-Approvers:
-
-- [John Watson](https://github.com/jkwatson), New Relic
+### Maintainers, Approvers and Triagers
 
 Maintainers:
 
@@ -340,7 +336,15 @@ Maintainers:
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 - [Tyler Benson](https://github.com/tylerbenson), DataDog
 
-#### Become an Approver or a Maintainer
+Approvers:
+
+- [John Watson](https://github.com/jkwatson), New Relic
+
+Triagers:
+
+- [Sergei Malafeev](https://github.com/malafeev), Lightstep
+
+#### Become a Triager, Approver or Maintainer
 
 See the [community membership document](https://github.com/open-telemetry/community/blob/master/community-membership.md)
 in OpenTelemetry community repo.

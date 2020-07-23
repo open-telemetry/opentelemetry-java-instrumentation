@@ -19,9 +19,13 @@ import com.google.api.client.http.HttpResponse
 import spock.lang.Retry
 import spock.lang.Timeout
 
-@Retry(condition = { !invocation.method.name.contains('circular redirects') })
+@Retry(condition = { !invocation.method.name.contains('circular redirects') }, mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
 @Timeout(5)
 class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
+  def setup() {
+    TEST_WRITER.clear()
+  }
+
   @Override
   HttpResponse executeRequest(HttpRequest request) {
     return request.executeAsync().get()

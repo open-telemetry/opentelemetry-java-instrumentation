@@ -17,6 +17,7 @@
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
@@ -45,6 +46,13 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class JMS2Test extends AgentTestRunner {
+  static {
+    ConfigUtils.updateConfig {
+      System.setProperty("ota.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
+    }
+  }
+
+
   @Shared
   HornetQServer server
   @Shared
@@ -92,6 +100,9 @@ class JMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
+    ConfigUtils.updateConfig {
+      System.clearProperty("ota.trace.classes.exclude")
+    }
   }
 
   def "sending a message to #expectedSpanName generates spans"() {
