@@ -40,7 +40,6 @@ import java.lang.instrument.Instrumentation;
 import java.net.BindException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,6 +52,7 @@ import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
@@ -68,17 +68,17 @@ import org.spockframework.runtime.model.SpecMetadata;
  * <ul>
  *   <li>All {@link Instrumenter}s on the test classpath will be applied. Matching preloaded classes
  *       will be retransformed.
- *   <li>{@link AgentTestRunner#TEST_WRITER} will be registerd with the global tracer and available
+ *   <li>{@link AgentTestRunner#TEST_WRITER} will be registered with the global tracer and available
  *       in an initialized state.
  * </ul>
  */
+@Category(BytecodeTests.class)
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends AgentSpecification {
 
   private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
 
-  private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.
    *
@@ -145,16 +145,11 @@ public abstract class AgentTestRunner extends AgentSpecification {
     return true;
   }
 
-  @BeforeClass
-  public static synchronized void agentSetup() {
+  public static synchronized void resetInstrumentation() {
     if (null != activeTransformer) {
-      throw new IllegalStateException("transformer already in place: " + activeTransformer);
+      INSTRUMENTATION.removeTransformer(activeTransformer);
+      activeTransformer = null;
     }
-    assert ServiceLoader.load(Instrumenter.class, AgentTestRunner.class.getClassLoader())
-            .iterator()
-            .hasNext()
-        : "No instrumentation found";
-    activeTransformer = AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
   }
 
   /**
@@ -164,6 +159,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
    */
   @BeforeClass
   public void setupBeforeTests() {
+    if (activeTransformer == null) {
+      activeTransformer =
+          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
+    }
     TEST_LISTENER.activateTest(this);
   }
 
@@ -206,10 +205,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
   @AfterClass
   public static synchronized void agentCleanup() {
-    if (null != activeTransformer) {
-      INSTRUMENTATION.removeTransformer(activeTransformer);
-      activeTransformer = null;
-    }
     // Cleanup before assertion.
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";

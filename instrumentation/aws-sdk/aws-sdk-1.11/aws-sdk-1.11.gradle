@@ -74,4 +74,4 @@ dependencies {
   latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '+'
 }
 
-test.dependsOn test_before_1_11_106
+integrationTest.dependsOn test_before_1_11_106

@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.setPeer;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
@@ -92,7 +93,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), host);
+            setPeer(span, host, null);
           }
 
           DECORATE.onError(span, throwable);

@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.FilterConfig
@@ -28,8 +28,17 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class FilterTest extends AgentTestRunner {
   static {
-    System.setProperty("ota.integration.servlet-filter.enabled", "true")
+    ConfigUtils.updateConfig {
+      System.setProperty("ota.integration.servlet-filter.enabled", "true")
+    }
   }
+
+  def specCleanup() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("ota.integration.servlet-filter.enabled")
+    }
+  }
+
 
   def "test doFilter no-parent"() {
     when:

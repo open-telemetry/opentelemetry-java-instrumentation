@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-import com.google.api.client.http.HttpRequest
-import com.google.api.client.http.HttpResponse
-import spock.lang.Retry
-import spock.lang.Timeout
+package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-@Retry(condition = { !invocation.method.name.contains('circular redirects') }, mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
-@Timeout(5)
-class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
-  def setup() {
-    TEST_WRITER.clear()
-  }
+import io.opentelemetry.trace.Span;
 
-  @Override
-  HttpResponse executeRequest(HttpRequest request) {
-    return request.executeAsync().get()
+public abstract class BaseTracer {
+
+  protected BaseTracer() {}
+
+  public static void setPeer(final Span span, String peerName, String peerIp) {
+    BaseDecorator.setPeer(span, peerName, peerIp);
   }
 }

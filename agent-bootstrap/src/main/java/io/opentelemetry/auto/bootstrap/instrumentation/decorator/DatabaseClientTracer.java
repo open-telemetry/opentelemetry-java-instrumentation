@@ -34,7 +34,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
+public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
   // Keeps track of the client span for the current trace.
   private static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("opentelemetry-trace-client-span-key");
@@ -151,8 +151,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
 
   protected void onPeerConnection(final Span span, final InetAddress remoteAddress) {
     if (remoteAddress != null) {
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
+      setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
     }
   }
 

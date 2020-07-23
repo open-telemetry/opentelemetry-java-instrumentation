@@ -65,7 +65,9 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     public static void methodExit(
         @Advice.Return(readOnly = false)
             unshaded.io.opentelemetry.trace.TracerProvider tracerProvider) {
-      tracerProvider = new UnshadedTracerProvider();
+      ContextStore<Context, io.grpc.Context> contextStore =
+          InstrumentationContext.get(Context.class, io.grpc.Context.class);
+      tracerProvider = new UnshadedTracerProvider(contextStore);
     }
   }
 
