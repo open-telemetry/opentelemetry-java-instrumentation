@@ -22,7 +22,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.auto.tooling.log.LogContextScopeListener;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -55,7 +54,7 @@ public class Log4jMDCInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {LogContextScopeListener.class.getName()};
+    return new String[] {"io.opentelemetry.auto.tooling.log.LogContextScopeListener"};
   }
 
   public static class MDCContextAdvice {

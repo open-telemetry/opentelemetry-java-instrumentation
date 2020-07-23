@@ -44,6 +44,13 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
    */
   abstract get(String key)
 
+  /**
+   * Remove from the framework-specific context the value at the given key
+   */
+  abstract remove(String key)
+
+  abstract clear()
+
   static {
     ConfigUtils.updateConfig {
       System.setProperty("ota.logs.injection", "true")
@@ -138,5 +145,22 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     cleanup:
     mainSpan?.end()
     mainScope?.close()
+  }
+
+  def "modify thread context after clear of context map at the beginning of new thread"() {
+    def t1A
+    final Thread thread1 = new Thread() {
+      @Override
+      void run() {
+        clear()
+        put("a", "a thread1")
+        t1A = get("a")
+      }
+    }
+    thread1.start()
+    thread1.join()
+
+    expect:
+    t1A == "a thread1"
   }
 }
