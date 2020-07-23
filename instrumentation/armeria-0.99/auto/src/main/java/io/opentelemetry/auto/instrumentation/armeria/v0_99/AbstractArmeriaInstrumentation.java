@@ -33,6 +33,9 @@ public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Defaul
       packageName + ".shaded.server.ArmeriaServerTracer",
       packageName + ".shaded.server.ArmeriaServerTracer$ArmeriaGetter",
       packageName + ".shaded.server.OpenTelemetryService",
+      packageName + ".shaded.server.OpenTelemetryService$Decorator",
+      // .thenAccept(log -> lambda
+      packageName + ".shaded.server.OpenTelemetryService$1",
     };
   }
 }

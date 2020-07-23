@@ -36,12 +36,12 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   /** Creates a new tracing {@link HttpService} decorator using the default {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator() {
-    return service -> new OpenTelemetryService(service, new ArmeriaServerTracer());
+    return new Decorator(new ArmeriaServerTracer());
   }
 
   /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator(Tracer tracer) {
-    return service -> new OpenTelemetryService(service, new ArmeriaServerTracer(tracer));
+    return new Decorator(new ArmeriaServerTracer(tracer));
   }
 
   private final ArmeriaServerTracer serverTracer;
@@ -102,5 +102,19 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
         return paths.get(1) + paths.get(0);
     }
     return null;
+  }
+
+  private static class Decorator implements Function<HttpService, OpenTelemetryService> {
+
+    private final ArmeriaServerTracer serverTracer;
+
+    private Decorator(ArmeriaServerTracer serverTracer) {
+      this.serverTracer = serverTracer;
+    }
+
+    @Override
+    public OpenTelemetryService apply(HttpService httpService) {
+      return new OpenTelemetryService(httpService, serverTracer);
+    }
   }
 }
