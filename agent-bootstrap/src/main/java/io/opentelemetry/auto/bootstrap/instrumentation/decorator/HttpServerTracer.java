@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
-public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
+public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 

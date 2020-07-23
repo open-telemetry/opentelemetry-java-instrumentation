@@ -83,12 +83,7 @@ public abstract class BaseDecorator {
         onPeerConnection(span, remoteAddress);
       } else {
         // Failed DNS lookup, the host string is the name.
-        String hostString = remoteConnection.getHostString();
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostString);
-        String peerService = mapToPeer(hostString);
-        if (peerService != null) {
-          span.setAttribute("peer.service", peerService);
-        }
+        setPeer(span, remoteConnection.getHostString(), null);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
@@ -97,20 +92,25 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    String hostName = remoteAddress.getHostName();
-    if (!hostName.equals(remoteAddress.getHostAddress())) {
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
-    }
-    span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
+    setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
+    return span;
+  }
 
-    String peerService = mapToPeer(hostName);
+  public static void setPeer(final Span span, String peerName, String peerIp) {
+    assert span != null;
+    if (peerName != null && !peerName.equals(peerIp)) {
+      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
+    }
+    if (peerIp != null) {
+      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
+    }
+    String peerService = mapToPeer(peerName);
     if (peerService == null) {
-      peerService = mapToPeer(remoteAddress.getHostAddress());
+      peerService = mapToPeer(peerIp);
     }
     if (peerService != null) {
-      span.setAttribute("peer.service", peerService);
+      SemanticAttributes.PEER_SERVICE.set(span, peerService);
     }
-    return span;
   }
 
   public static void addThrowable(final Span span, final Throwable throwable) {
