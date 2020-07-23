@@ -48,8 +48,7 @@ public class OtlpGrpcSpanExporterAutoConfiguration {
   public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(
       OtlpGrpcSpanExporterProperties otlpGrpcSpanExporterProperties) {
     ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(
-                otlpGrpcSpanExporterProperties.getHost(), otlpGrpcSpanExporterProperties.getPort())
+        ManagedChannelBuilder.forTarget(otlpGrpcSpanExporterProperties.getEndpoint())
             .usePlaintext()
             .build();
 

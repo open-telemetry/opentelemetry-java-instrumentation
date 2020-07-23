@@ -36,7 +36,6 @@ public final class OtlpGrpcSpanExporterProperties {
   private boolean enabled = true;
   private String serviceName = "unknown";
   private String endpoint = "localhost:14250";
-
   private Duration deadline = Duration.ofSeconds(1);
 
   public boolean isEnabled() {
@@ -55,20 +54,12 @@ public final class OtlpGrpcSpanExporterProperties {
     this.serviceName = serviceName;
   }
 
-  public String getHost() {
-    return host;
+  public String getEndpoint() {
+    return endpoint;
   }
 
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
+  public void setEndpoint(String endpoint) {
+    this.endpoint = endpoint;
   }
 
   public Duration getDeadline() {

@@ -49,8 +49,7 @@ public class JaegerSpanExporterAutoConfiguration {
       JaegerSpanExporterProperties jaegerSpanExporterProperties) {
 
     ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(
-                jaegerSpanExporterProperties.getHost(), jaegerSpanExporterProperties.getPort())
+        ManagedChannelBuilder.forTarget(jaegerSpanExporterProperties.getEndpoint())
             .usePlaintext()
             .build();
 
