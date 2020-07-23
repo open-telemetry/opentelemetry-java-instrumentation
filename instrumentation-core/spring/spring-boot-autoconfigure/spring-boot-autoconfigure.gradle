@@ -18,21 +18,13 @@ dependencies {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
   
-  implementation(project(':instrumentation-core:spring:spring-webmvc-3.1')){
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
-  implementation(project(':instrumentation-core:spring:spring-web-3.1')){
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
-  implementation(project(':instrumentation-core:spring:spring-webflux-5.0')){
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
-  
-  compileOnly deps.opentelemetryZipkin
-  implementation group: 'io.zipkin.reporter2', name: 'zipkin-sender-okhttp3', version: '2.12.2'
+  implementation project(':instrumentation-core:spring:spring-webmvc-3.1')
+  implementation project(':instrumentation-core:spring:spring-web-3.1')
+  implementation project(':instrumentation-core:spring:spring-webflux-5.0')
   
   api deps.opentelemetryApi 
 
+  compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
@@ -40,8 +32,6 @@ dependencies {
   
   compileOnly deps.opentelemetryZipkin
   implementation group: 'io.zipkin.reporter2', name: 'zipkin-sender-okhttp3', version: '2.12.2'
-  
-  compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
 }
 
 test {
