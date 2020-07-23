@@ -60,7 +60,7 @@ public class TracerAutoConfigurationTest {
   @Test
   public void should_contain_otelTracer_bean() {
     this.contextRunner
-        .withUserConfiguration(TracerAutoConfiguration.class)
+        .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
             (context) -> {
               assertTrue(

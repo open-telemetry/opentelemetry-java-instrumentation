@@ -20,9 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
+import io.opentelemetry.trace.Tracer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,7 +31,10 @@ import org.springframework.web.client.RestTemplate;
 @RunWith(MockitoJUnitRunner.class)
 public class RestTemplateBeanPostProcessorTest {
 
-  @InjectMocks RestTemplateBeanPostProcessor restTemplateBeanPostProcessor;
+  @Mock Tracer tracer;
+
+  RestTemplateBeanPostProcessor restTemplateBeanPostProcessor =
+      new RestTemplateBeanPostProcessor(tracer);
 
   @Test
   public void should_return_object_if_processed_bean_is_not_of_type_RestTemplate() {

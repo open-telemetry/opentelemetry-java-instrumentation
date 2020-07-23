@@ -20,9 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
+import io.opentelemetry.trace.Tracer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -30,7 +31,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RunWith(MockitoJUnitRunner.class)
 public class WebClientBeanPostProcessorTest {
 
-  @InjectMocks WebClientBeanPostProcessor webClientBeanPostProcessor;
+  @Mock Tracer tracer;
+
+  WebClientBeanPostProcessor webClientBeanPostProcessor = new WebClientBeanPostProcessor(tracer);
 
   @Test
   public void
