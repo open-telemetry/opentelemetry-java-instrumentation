@@ -1,6 +1,7 @@
 group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   api deps.opentelemetryApi
