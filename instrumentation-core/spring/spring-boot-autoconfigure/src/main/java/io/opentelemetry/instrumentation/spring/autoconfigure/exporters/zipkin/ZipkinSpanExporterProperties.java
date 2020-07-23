@@ -50,19 +50,11 @@ public class ZipkinSpanExporterProperties {
     this.serviceName = serviceName;
   }
 
-  public String getHost() {
-    return host;
+  public String getEndpoint() {
+    return endpoint;
   }
 
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
+  public void setEndpoint(String endpoint) {
+    this.endpoint = endpoint;
   }
 }
