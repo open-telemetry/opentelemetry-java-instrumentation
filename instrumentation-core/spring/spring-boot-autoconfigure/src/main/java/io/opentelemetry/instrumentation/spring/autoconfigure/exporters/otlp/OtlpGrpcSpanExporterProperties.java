@@ -24,9 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>Get Exporter Service Name
  *
- * <p>Get Exporter Host Name
- *
- * <p>Get Exporter Port
+ * <p>Get Exporter Endpoint
  *
  * <p>Get max wait time for Collector to process Span Batches
  */
