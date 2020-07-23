@@ -29,11 +29,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
-  // TODO: Add support for Span Batch Processor
 
   private String name = "otel-spring-tracer";
 
-  /** If Sample probability == 1: always sample If Sample probability == 0: never sample */
+  /** 
+  * If Sample probability == 1: always sample
+  *
+  * <p> If Sample probability == 0: never sample 
+  */
   @DecimalMin("0.0")
   @DecimalMax("1.0")
   private double samplerProbability = 1.0;
