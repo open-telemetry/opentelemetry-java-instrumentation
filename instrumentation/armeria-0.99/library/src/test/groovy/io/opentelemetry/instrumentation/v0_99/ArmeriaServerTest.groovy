@@ -26,4 +26,12 @@ class ArmeriaServerTest extends AbstractArmeriaServerTest implements Instrumenta
   void configureServer(ServerBuilder sb) {
     sb.decorator(OpenTelemetryService.newDecorator())
   }
+
+  def childSetupSpec() {
+    server.before()
+  }
+
+  def cleanupSpec() {
+    server.after()
+  }
 }

@@ -26,7 +26,6 @@ import com.linecorp.armeria.testing.junit4.server.ServerRule
 import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.junit.ClassRule
 import spock.lang.Ignore
 import spock.lang.Shared
 
@@ -36,9 +35,10 @@ abstract class AbstractArmeriaServerTest extends InstrumentationSpecification {
 
   abstract void configureServer(ServerBuilder sb)
 
-  @ClassRule
+  // We cannot annotate with @ClassRule since then Armeria will be class loaded before bytecode
+  // instrumentation is set up by the Spock trait.
   @Shared
-  ServerRule server = new ServerRule() {
+  protected ServerRule server = new ServerRule() {
     @Override
     protected void configure(ServerBuilder sb) throws Exception {
       sb.service("/exact", { ctx, req -> HttpResponse.of(HttpStatus.OK) })

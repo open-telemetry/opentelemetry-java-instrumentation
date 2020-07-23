@@ -25,7 +25,13 @@ import org.junit.runner.RunWith
 @RunWith(SpockRunner)
 class ArmeriaServerTest extends AbstractArmeriaServerTest implements AgentTestTrait {
   @Override
-  void configureServer(ServerBuilder sb) {
-    System.out.println(sb);
+  void configureServer(ServerBuilder sb) {}
+
+  def childSetupSpec() {
+    server.before()
+  }
+
+  def childCleanupSpec() {
+    server.after()
   }
 }

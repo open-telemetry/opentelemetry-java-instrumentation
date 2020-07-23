@@ -28,6 +28,7 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
@@ -101,8 +102,17 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
 
   // TODO should end methods remove SPAN attribute from request as well?
   public void end(Span span, int responseStatus) {
+    end(span, responseStatus, -1);
+  }
+
+  // TODO should end methods remove SPAN attribute from request as well?
+  public void end(Span span, int responseStatus, long timestamp) {
     setStatus(span, responseStatus);
-    span.end();
+    if (timestamp >= 0) {
+      span.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
+    } else {
+      span.end();
+    }
   }
 
   /** Ends given span exceptionally with default response status code 500. */
@@ -111,6 +121,10 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
   }
 
   public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
+    endExceptionally(span, throwable, responseStatus, -1);
+  }
+
+  public void endExceptionally(Span span, Throwable throwable, int responseStatus, long timestamp) {
     if (responseStatus == 200) {
       // TODO I think this is wrong.
       // We must report that response status that was actually sent to end user
@@ -118,7 +132,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
       responseStatus = 500;
     }
     onError(span, unwrapThrowable(throwable));
-    end(span, responseStatus);
+    end(span, responseStatus, timestamp);
   }
 
   public Span getCurrentSpan() {

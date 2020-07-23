@@ -59,9 +59,8 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     // Always available in practice.
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
-    Span span =
-        serverTracer.startSpan(
-            req, ctx, spanName, TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros));
+    long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
+    Span span = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
 
     // For non-recording spans, nothing special to do.
     if (!span.isRecording()) {
@@ -75,10 +74,12 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
         .thenAccept(
             log -> {
               HttpStatus status = log.responseHeaders().status();
+              long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
               if (log.responseCause() != null) {
-                serverTracer.endExceptionally(span, log.responseCause(), status.code());
+                serverTracer.endExceptionally(
+                    span, log.responseCause(), status.code(), requestEndTimeNanos);
               } else {
-                serverTracer.end(span, status.code());
+                serverTracer.end(span, status.code(), requestEndTimeNanos);
               }
             });
 
