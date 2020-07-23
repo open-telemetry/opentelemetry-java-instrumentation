@@ -1,6 +1,5 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  springbootVersion = "2.3.1.RELEASE"
 }
 
 group = 'io.opentelemetry.instrumentation'
@@ -10,7 +9,7 @@ apply from: "$rootDir/gradle/java.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  implementation group: "org.springframework.boot", name: "spring-boot-starter", version: springbootVersion
+  implementation group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
   api project(':instrumentation-core:spring:starters:opentelemetry-starter-spring')
   api deps.opentelemetryOtlp
 }

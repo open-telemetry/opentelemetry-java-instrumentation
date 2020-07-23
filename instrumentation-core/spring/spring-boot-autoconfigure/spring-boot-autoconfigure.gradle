@@ -1,6 +1,5 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  springbootVersion = "2.3.1.RELEASE"
 }
 
 group = 'io.opentelemetry.instrumentation'
@@ -11,11 +10,11 @@ apply from: "$rootDir/gradle/publish.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springbootVersion
-  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: springbootVersion
+  implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
+  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
   
-  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springbootVersion) {
+  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
   
