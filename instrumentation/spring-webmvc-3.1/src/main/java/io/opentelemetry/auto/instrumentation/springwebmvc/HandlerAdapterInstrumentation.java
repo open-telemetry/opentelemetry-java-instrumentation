@@ -16,13 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -32,7 +29,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -63,7 +59,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".SpringWebMvcDecorator"};
+    return new String[] {packageName + ".SpringWebMvcTracer"};
   }
 
   @Override
@@ -82,22 +78,17 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
     public static SpanWithScope nameResourceAndStartSpan(
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
-      // Name the parent span based on the matching pattern
-      Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
-      if (parentContext instanceof Context) {
-        DECORATE.onRequest(getSpan((Context) parentContext), request);
-      }
+      Span serverSpan = TRACER.getCurrentServerSpan();
+      if (serverSpan != null) {
+        // Name the parent span based on the matching pattern
+        TRACER.onRequest(serverSpan, request);
+        // Now create a span for handler/controller execution.
+        Span span = TRACER.startHandlerSpan(handler);
 
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+        return new SpanWithScope(span, currentContextWith(span));
+      } else {
         return null;
       }
-
-      // Now create a span for handler/controller execution.
-
-      Span span = TRACER.spanBuilder(DECORATE.spanNameOnHandle(handler)).startSpan();
-      DECORATE.afterStart(span);
-
-      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -107,9 +98,11 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         return;
       }
       Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable == null) {
+        TRACER.end(span);
+      } else {
+        TRACER.endExceptionally(span, throwable);
+      }
       spanWithScope.closeScope();
     }
   }

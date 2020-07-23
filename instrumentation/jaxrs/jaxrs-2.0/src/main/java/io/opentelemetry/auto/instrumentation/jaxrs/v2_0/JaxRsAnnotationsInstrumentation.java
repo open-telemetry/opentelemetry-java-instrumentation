@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -77,7 +76,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     return new String[] {
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsDecorator",
+      packageName + ".JaxRsAnnotationsTracer",
     };
   }
 
@@ -113,7 +112,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
           asyncResponse = (AsyncResponse) arg;
           contextStore = InstrumentationContext.get(AsyncResponse.class, Span.class);
           if (contextStore.get(asyncResponse) != null) {
-            /**
+            /*
              * We are probably in a recursive call and don't want to start a new span because it
              * would replace the existing span in the asyncResponse and cause it to never finish. We
              * could work around this by using a list instead, but we likely don't want the extra
@@ -129,12 +128,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return null;
       }
 
-      // Rename the parent span according to the path represented by these annotations.
-      Span parent = TRACER.getCurrentSpan();
-
-      Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
-      DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
-      DECORATE.afterStart(span);
+      Span span = TRACER.startSpan(target.getClass(), method);
 
       if (contextStore != null && asyncResponse != null) {
         contextStore.put(asyncResponse, span);
@@ -155,9 +149,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
         spanWithScope.closeScope();
         return;
       }
@@ -167,8 +159,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, null);
       }
       if (asyncResponse == null || !asyncResponse.isSuspended()) {
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(span);
       }
       spanWithScope.closeScope();
       // else span finished by AsyncResponseAdvice

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -65,7 +65,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     return new String[] {
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsDecorator",
+      packageName + ".JaxRsAnnotationsTracer",
     };
   }
 
@@ -95,8 +95,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(span);
       }
     }
   }
@@ -114,9 +113,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
       }
     }
   }
@@ -133,8 +130,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       if (span != null) {
         contextStore.put(asyncResponse, null);
         span.setAttribute("canceled", true);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(span);
       }
     }
   }

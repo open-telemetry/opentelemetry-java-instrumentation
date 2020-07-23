@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -58,7 +57,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
     return new String[] {
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsDecorator",
+      packageName + ".JaxRsAnnotationsTracer",
       AbstractRequestContextInstrumentation.class.getName() + "$RequestFilterHelper",
     };
   }
@@ -75,28 +74,18 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
   public static class RequestFilterHelper {
     public static SpanWithScope createOrUpdateAbortSpan(
-        final ContainerRequestContext context, final Class resourceClass, final Method method) {
+        final ContainerRequestContext context, final Class<?> resourceClass, final Method method) {
 
       if (method != null && resourceClass != null) {
-        context.setProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED, true);
-        // The ordering of the specific and general abort instrumentation is unspecified
-        // The general instrumentation (ContainerRequestFilterInstrumentation) saves spans
-        // properties if it ran first
-        Span parent = (Span) context.getProperty(JaxRsAnnotationsDecorator.ABORT_PARENT);
-        Span span = (Span) context.getProperty(JaxRsAnnotationsDecorator.ABORT_SPAN);
+        context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
+        Span parent = TRACER.getCurrentServerSpan();
+        Span span = TRACER.getCurrentSpan();
 
         if (span == null) {
-          parent = TRACER.getCurrentSpan();
-          span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
-
-          SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
-
-          DECORATE.afterStart(span);
-          DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
-
-          return scope;
+          span = TRACER.startSpan(resourceClass, method);
+          return new SpanWithScope(span, currentContextWith(span));
         } else {
-          DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
+          TRACER.updateSpanNames(span, parent, resourceClass, method);
           return null;
         }
       } else {
@@ -112,11 +101,11 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        DECORATE.onError(span, throwable);
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
 
-      DECORATE.beforeFinish(span);
-      span.end();
       spanWithScope.closeScope();
     }
   }

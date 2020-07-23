@@ -16,13 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.finatra;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 
-public class FinatraDecorator extends BaseDecorator {
-  public static final FinatraDecorator DECORATE = new FinatraDecorator();
+public class FinatraTracer extends BaseTracer {
+  public static final FinatraTracer TRACER = new FinatraTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.finatra-2.9");
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.finatra-2.9";
+  }
 }
