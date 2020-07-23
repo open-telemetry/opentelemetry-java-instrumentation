@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public final class OtlpGrpcSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "otel-spring-boot-zipkin-otlp";
+  private String serviceName = "unknown";
   private String host = "localhost";
   /** Default end point in {@link OTLPGrpcSpanExporter.OTEL_OTLP_ENDPOINT} */
   private int port = 14250;
