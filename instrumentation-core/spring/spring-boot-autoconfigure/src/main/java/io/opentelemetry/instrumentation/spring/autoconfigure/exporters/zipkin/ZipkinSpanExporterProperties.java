@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "otel-spring-boot-zipkin-exporter";
+  private String serviceName = "unknown";
   private String endpoint = "http://localhost:14250";
 
   public boolean isEnabled() {
