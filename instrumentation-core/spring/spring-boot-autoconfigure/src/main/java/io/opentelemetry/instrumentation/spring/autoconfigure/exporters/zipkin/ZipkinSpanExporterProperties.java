@@ -32,9 +32,7 @@ public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-zipkin-exporter";
-  private String host = "http://localhost";
-  /** Default end point in {@link ZipkinSpanExporter.OTEL_ZIPKIN_ENDPOINT} */
-  private int port = 14250;
+  private String endpoint = "http://localhost:14250";
 
   public boolean isEnabled() {
     return enabled;
