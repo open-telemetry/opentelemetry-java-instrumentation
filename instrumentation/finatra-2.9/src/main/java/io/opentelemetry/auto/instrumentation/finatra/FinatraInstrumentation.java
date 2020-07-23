@@ -87,8 +87,6 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       Span serverSpan = TRACER.getCurrentServerSpan();
       if (serverSpan != null) {
         serverSpan.updateName(routeInfo.path());
-      } else {
-        throw new IllegalStateException();
       }
 
       Span span = TRACER.startSpan(clazz);

@@ -17,10 +17,6 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.grpc.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import java.lang.reflect.Method;
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
@@ -60,15 +56,9 @@ public abstract class BaseTracer {
   }
 
   /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
-  public Span getCurrentServerSpan() {
-    Span result = CONTEXT_SERVER_SPAN_KEY.get(Context.current());
-    System.out.println(
-        Thread.currentThread().getId()
-            + " getCurrentServerSpan = "
-            + Context.current()
-            + " server span = "
-            + result);
-    return result;
+  // TODO when all decorator are replaced with tracers, make this method instance
+  public static Span getCurrentServerSpan() {
+    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
   }
 
   protected abstract String getInstrumentationName();
