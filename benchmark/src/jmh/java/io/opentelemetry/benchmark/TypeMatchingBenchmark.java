@@ -86,4 +86,12 @@ public class TypeMatchingBenchmark {
     }
     System.out.println("[loaded: " + successCount + ", failed to load: " + errorCount + "]");
   }
+
+  @Fork(jvmArgsAppend = "-javaagent:/path/to/opentelemetry-javaagent-master.jar")
+  public static class WithAgentMaster extends TypeMatchingBenchmark {}
+
+  @Fork(
+      jvmArgsAppend =
+          "-javaagent:/path/to/opentelemetry-java-instrumentation/java-agent/build/libs/opentelemetry-javaagent.jar")
+  public static class WithAgent extends TypeMatchingBenchmark {}
 }

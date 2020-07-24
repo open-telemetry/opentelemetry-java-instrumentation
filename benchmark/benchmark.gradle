@@ -26,9 +26,6 @@ jmh {
 //  jvmArgs += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+DebugNonSafepoints", "-XX:StartFlightRecording=delay=5s,dumponexit=true,name=jmh-benchmark,filename=$rootDir/benchmark/build/reports/jmh/jmh-benchmark.jfr"]
 //  jvmArgs += ["-agentpath:$rootDir/benchmark/src/jmh/resources/libasyncProfiler.so=start,collapsed,file=$rootDir/benchmark/build/reports/jmh/profiler.txt"]
 
-  // uncomment to use for TypeMatchingBenchmark
-//  jvmArgs += ["-javaagent:${project(':opentelemetry-javaagent').buildDir}/libs/opentelemetry-javaagent-${project.version}-all.jar".toString(), "-Dota.exporter=logging"]
-
   // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
   failOnError = true
   warmup = '5s' // Time to spend at each warmup iteration.
