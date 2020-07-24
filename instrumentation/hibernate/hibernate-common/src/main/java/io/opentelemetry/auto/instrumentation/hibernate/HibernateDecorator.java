@@ -32,7 +32,7 @@ public class HibernateDecorator extends OrmClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.hibernate");
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return null;
   }
 
@@ -42,7 +42,7 @@ public class HibernateDecorator extends OrmClientDecorator {
   }
 
   @Override
-  protected String dbInstance(final Object o) {
+  protected String dbName(final Object o) {
     return null;
   }
 

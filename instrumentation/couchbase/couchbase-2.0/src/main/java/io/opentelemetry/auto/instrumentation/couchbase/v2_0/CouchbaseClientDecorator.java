@@ -22,7 +22,7 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "couchbase";
   }
 
@@ -32,7 +32,7 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String dbInstance(final Object o) {
+  protected String dbName(final Object o) {
     return null;
   }
 }

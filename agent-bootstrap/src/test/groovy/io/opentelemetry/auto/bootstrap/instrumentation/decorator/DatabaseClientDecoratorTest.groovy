@@ -18,6 +18,7 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
@@ -29,7 +30,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(SemanticAttributes.DB_TYPE.key(), "test-db")
+    1 * span.setAttribute(StringAttributeSetter.create("db.system").key(), "test-db")
     0 * _
 
     where:
@@ -46,8 +47,8 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     then:
     if (session) {
       1 * span.setAttribute(SemanticAttributes.DB_USER.key(), session.user)
-      1 * span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), session.instance)
-      1 * span.setAttribute(SemanticAttributes.DB_URL.key(), session.url)
+      1 * span.setAttribute(StringAttributeSetter.create("db.name").key(), session.name)
+      1 * span.setAttribute(StringAttributeSetter.create("db.connection_string").key(), session.connectionString)
     }
     0 * _
 
@@ -55,8 +56,8 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     session << [
       null,
       [user: "test-user"],
-      [instance: "test-instance", url: "test:"],
-      [user: "test-user", instance: "test-instance"]
+      [name: "test-name", connectionString: "test:"],
+      [user: "test-user", name: "test-name"]
     ]
   }
 
@@ -106,7 +107,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     return new DatabaseClientDecorator<Map>() {
 
       @Override
-      protected String dbType() {
+      protected String dbSystem() {
         return "test-db"
       }
 
@@ -116,13 +117,13 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String dbInstance(Map map) {
-        return map.instance
+      protected String dbName(Map map) {
+        return map.name
       }
 
       @Override
-      protected String dbUrl(Map map) {
-        return map.url
+      protected String dbConnectionString(Map map) {
+        return map.connectionString
       }
     }
   }

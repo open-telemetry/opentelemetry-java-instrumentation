@@ -43,7 +43,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
       }
 
       @Override
-      protected String dbType() {
+      protected String dbSystem() {
         return "test-db"
       }
 
@@ -53,7 +53,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
       }
 
       @Override
-      protected String dbInstance(Object o) {
+      protected String dbName(Object o) {
         return "test-user"
       }
     }

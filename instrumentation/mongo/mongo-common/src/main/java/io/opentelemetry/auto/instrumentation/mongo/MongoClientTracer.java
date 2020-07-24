@@ -42,7 +42,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "mongo";
   }
 
@@ -52,7 +52,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbInstance(final CommandStartedEvent event) {
+  protected String dbName(final CommandStartedEvent event) {
     // Use description if set.
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
@@ -85,7 +85,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbUrl(final CommandStartedEvent event) {
+  protected String dbConnectionString(final CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();

@@ -28,6 +28,7 @@ import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -170,7 +171,7 @@ public enum OpenTelemetryTracing implements Tracing {
               .spanBuilder("REDIS")
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
-              .setAttribute(SemanticAttributes.DB_TYPE.key(), "redis");
+              .setAttribute(StringAttributeSetter.create("db.system").key(), "redis");
     }
 
     @Override
@@ -289,7 +290,8 @@ public enum OpenTelemetryTracing implements Tracing {
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
+      span.setAttribute(
+          StringAttributeSetter.create("db.connection_string").key(), redisUrl.toString());
     }
 
     private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
@@ -310,7 +312,8 @@ public enum OpenTelemetryTracing implements Tracing {
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
+      span.setAttribute(
+          StringAttributeSetter.create("db.connection_string").key(), redisUrl.toString());
     }
   }
 }

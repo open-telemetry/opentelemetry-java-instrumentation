@@ -28,7 +28,7 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.geode-1.7");
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "geode";
   }
 
@@ -38,7 +38,7 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   }
 
   @Override
-  protected String dbInstance(final Region region) {
+  protected String dbName(final Region region) {
     return region.getName();
   }
 }

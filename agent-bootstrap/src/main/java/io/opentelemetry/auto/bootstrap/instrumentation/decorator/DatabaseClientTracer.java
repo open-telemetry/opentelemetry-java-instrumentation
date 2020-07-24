@@ -28,6 +28,7 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
@@ -54,7 +55,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
         tracer
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
-            .setAttribute(SemanticAttributes.DB_TYPE.key(), dbType())
+            .setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem())
             .startSpan();
 
     if (connection != null) {
@@ -107,15 +108,16 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
 
   protected Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(SemanticAttributes.DB_TYPE.key(), dbType());
+    span.setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem());
     return span;
   }
 
   /** This should be called when the connection is being used, not when it's created. */
   protected Span onConnection(final Span span, final CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
-    span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), dbInstance(connection));
-    span.setAttribute(SemanticAttributes.DB_URL.key(), dbUrl(connection));
+    span.setAttribute(StringAttributeSetter.create("db.name").key(), dbName(connection));
+    span.setAttribute(
+        StringAttributeSetter.create("db.connection_string").key(), dbConnectionString(connection));
     return span;
   }
 
@@ -168,14 +170,14 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
 
   protected abstract String normalizeQuery(QUERY query);
 
-  protected abstract String dbType();
+  protected abstract String dbSystem();
 
   protected abstract String dbUser(CONNECTION connection);
 
-  protected abstract String dbInstance(CONNECTION connection);
+  protected abstract String dbName(CONNECTION connection);
 
   // TODO make abstract after implementing in all subclasses
-  protected String dbUrl(final CONNECTION connection) {
+  protected String dbConnectionString(final CONNECTION connection) {
     return null;
   }
 

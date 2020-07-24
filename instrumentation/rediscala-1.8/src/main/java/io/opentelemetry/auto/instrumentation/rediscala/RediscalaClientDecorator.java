@@ -31,7 +31,7 @@ public class RediscalaClientDecorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rediscala-1.8");
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "redis";
   }
 
@@ -41,7 +41,7 @@ public class RediscalaClientDecorator
   }
 
   @Override
-  protected String dbInstance(final RedisCommand<? extends RedisReply, ?> session) {
+  protected String dbName(final RedisCommand<? extends RedisReply, ?> session) {
     return null;
   }
 }

@@ -39,7 +39,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "cassandra";
   }
 
@@ -49,7 +49,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String dbInstance(final CqlSession session) {
+  protected String dbName(final CqlSession session) {
     return session.getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 

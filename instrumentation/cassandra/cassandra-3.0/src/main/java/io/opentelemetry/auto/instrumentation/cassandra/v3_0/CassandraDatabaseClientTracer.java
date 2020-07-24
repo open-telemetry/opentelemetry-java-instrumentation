@@ -37,7 +37,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
   }
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "cassandra";
   }
 
@@ -47,7 +47,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
   }
 
   @Override
-  protected String dbInstance(final Session session) {
+  protected String dbName(final Session session) {
     return session.getLoggedKeyspace();
   }
 

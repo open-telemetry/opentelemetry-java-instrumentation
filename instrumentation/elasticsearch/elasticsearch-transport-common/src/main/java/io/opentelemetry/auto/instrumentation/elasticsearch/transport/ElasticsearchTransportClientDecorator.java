@@ -29,7 +29,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.elasticsearch");
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "elasticsearch";
   }
 
@@ -39,7 +39,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
   }
 
   @Override
-  protected String dbInstance(final Object o) {
+  protected String dbName(final Object o) {
     return null;
   }
 
