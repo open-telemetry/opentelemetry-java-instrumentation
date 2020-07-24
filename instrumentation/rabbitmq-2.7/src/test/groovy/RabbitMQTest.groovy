@@ -15,7 +15,6 @@
  */
 
 import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.AlreadyClosedException
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
@@ -28,6 +27,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.time.Duration
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -38,16 +38,13 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
 
-import java.time.Duration
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
-// Do not run tests locally on Java7 since testcontainers are not compatible with Java7
-// It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
-@Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
+// Do not run tests on Java7 since testcontainers are not compatible with Java7
+@Requires({ jvm.java8Compatible })
 class RabbitMQTest extends AgentTestRunner {
 
   /*
@@ -66,38 +63,25 @@ class RabbitMQTest extends AgentTestRunner {
   Channel channel = conn.createChannel()
 
   def setupSpec() {
-
-    /*
-      CI will provide us with rabbitmq container running along side our build.
-      When building locally, however, we need to take matters into our own hands
-      and we use 'testcontainers' for this.
-     */
-    if ("true" != System.getenv("CI")) {
-      rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
-        .withExposedPorts(defaultRabbitMQPort)
-        .withStartupTimeout(Duration.ofSeconds(120))
-//        .withLogConsumer { output ->
-//        print output.utf8String
-//      }
-      rabbbitMQContainer.start()
-      rabbitmqAddress = new InetSocketAddress(
-        rabbbitMQContainer.containerIpAddress,
-        rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
-      )
-    }
+    rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
+      .withExposedPorts(defaultRabbitMQPort)
+      .withStartupTimeout(Duration.ofSeconds(120))
+    rabbbitMQContainer.start()
+    rabbitmqAddress = new InetSocketAddress(
+      rabbbitMQContainer.containerIpAddress,
+      rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
+    )
   }
 
   def cleanupSpec() {
-    if (rabbbitMQContainer) {
-      rabbbitMQContainer.stop()
-    }
+    rabbbitMQContainer.stop()
   }
 
   def cleanup() {
     try {
       channel.close()
       conn.close()
-    } catch (AlreadyClosedException | ShutdownSignalException e) {
+    } catch (ShutdownSignalException ignored) {
       // Ignore
     }
   }

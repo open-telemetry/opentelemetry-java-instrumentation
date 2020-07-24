@@ -73,7 +73,7 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew testJava${{ matrix.java }}
+        run: ./gradlew integrationTestJava${{ matrix.java }} testJava${{ matrix.java }}
 
   testLatestDep:
     needs: build
