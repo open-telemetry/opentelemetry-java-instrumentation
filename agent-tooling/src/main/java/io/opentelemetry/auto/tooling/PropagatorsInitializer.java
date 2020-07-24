@@ -22,6 +22,7 @@ import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
+import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class PropagatorsInitializer {
   private static final String B3 = "b3";
   private static final String B3_SINGLE = "b3single";
   private static final String JAEGER = "jaeger";
+  private static final String OT_TRACER = "ottracer";
 
   private static final Map<String, HttpTextFormat> TEXTMAP_PROPAGATORS =
       ImmutableMap.of(
@@ -46,7 +48,9 @@ public class PropagatorsInitializer {
           B3_SINGLE,
           B3Propagator.getSingleHeaderPropagator(),
           JAEGER,
-          new JaegerPropagator());
+          new JaegerPropagator(),
+          OT_TRACER,
+          OtTracerPropagator.getInstance());
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
   public static void initializePropagators(List<String> propagators) {
