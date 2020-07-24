@@ -915,7 +915,7 @@ public enum JDBCConnectionUrlParser {
         return type;
       case "apachehbase": // Apache HBase
         return "hbase";
-      case "amazondynamodb": // Microsoft Amazon DynamoDB
+      case "amazondynamodb": // Amazon DynamoDB
         return "dynamodb";
       case "hive2": // Apache Hive
         return "hive";
