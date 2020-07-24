@@ -57,7 +57,7 @@ public class WebApplicationContextInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringWebMvcDecorator",
+      packageName + ".SpringWebMvcTracer",
       packageName + ".HandlerMappingResourceNameFilter",
       packageName + ".HandlerMappingResourceNameFilter$BeanDefinition",
     };

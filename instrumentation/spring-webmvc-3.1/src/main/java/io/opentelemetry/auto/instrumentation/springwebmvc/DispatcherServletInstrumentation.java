@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -56,7 +55,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringWebMvcDecorator", packageName + ".HandlerMappingResourceNameFilter"
+      packageName + ".SpringWebMvcTracer", packageName + ".HandlerMappingResourceNameFilter"
     };
   }
 
@@ -110,9 +109,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      Span span = TRACER.spanBuilder(DECORATE.spanNameOnRender(mv)).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onRender(span, mv);
+      Span span = TRACER.startSpan(mv);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
@@ -120,9 +117,11 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable == null) {
+        TRACER.end(span);
+      } else {
+        TRACER.endExceptionally(span, throwable);
+      }
       spanWithScope.closeScope();
     }
   }
@@ -134,7 +133,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        DECORATE.addThrowable(span, exception);
+        TRACER.addThrowable(span, exception);
       }
     }
   }

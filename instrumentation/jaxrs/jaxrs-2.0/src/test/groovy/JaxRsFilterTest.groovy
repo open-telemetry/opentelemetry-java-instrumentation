@@ -16,6 +16,13 @@
 
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.auto.test.AgentTestRunner
+import javax.ws.rs.client.Entity
+import javax.ws.rs.container.ContainerRequestContext
+import javax.ws.rs.container.ContainerRequestFilter
+import javax.ws.rs.container.PreMatching
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.Provider
 import org.jboss.resteasy.core.Dispatcher
 import org.jboss.resteasy.mock.MockDispatcherFactory
 import org.jboss.resteasy.mock.MockHttpRequest
@@ -24,15 +31,7 @@ import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.ws.rs.client.Entity
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 @Unroll
@@ -57,7 +56,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     def responseStatus
 
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    runUnderTrace("test.span") {
+    runUnderServerTrace("test.span") {
       (responseText, responseStatus) = makeRequest(resource)
     }
 
@@ -114,7 +113,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     def responseStatus
 
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    runUnderTrace("test.span") {
+    runUnderServerTrace("test.span") {
       (responseText, responseStatus) = makeRequest(resource)
     }
 

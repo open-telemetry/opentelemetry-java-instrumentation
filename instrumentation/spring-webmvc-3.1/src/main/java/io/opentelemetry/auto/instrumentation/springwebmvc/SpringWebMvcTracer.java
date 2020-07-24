@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -30,13 +28,21 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.Controller;
 
-public class SpringWebMvcDecorator extends BaseDecorator {
+public class SpringWebMvcTracer extends BaseTracer {
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
-  public static final SpringWebMvcDecorator DECORATE = new SpringWebMvcDecorator();
+  public static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
 
-  public Span onRequest(final Span span, final HttpServletRequest request) {
+  public Span startHandlerSpan(Object handler) {
+    return tracer.spanBuilder(spanNameOnHandle(handler)).startSpan();
+  }
+
+  public Span startSpan(ModelAndView mv) {
+    Span span = tracer.spanBuilder(spanNameOnRender(mv)).startSpan();
+    onRender(span, mv);
+    return span;
+  }
+
+  public void onRequest(final Span span, final HttpServletRequest request) {
     if (request != null) {
       Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
@@ -44,10 +50,9 @@ public class SpringWebMvcDecorator extends BaseDecorator {
         span.updateName(bestMatchingPattern.toString());
       }
     }
-    return span;
   }
 
-  public String spanNameOnHandle(final Object handler) {
+  private String spanNameOnHandle(final Object handler) {
     Class<?> clazz;
     String methodName;
 
@@ -74,10 +79,10 @@ public class SpringWebMvcDecorator extends BaseDecorator {
       methodName = "<annotation>";
     }
 
-    return DECORATE.spanNameForMethod(clazz, methodName);
+    return spanNameForMethod(clazz, methodName);
   }
 
-  public String spanNameOnRender(final ModelAndView mv) {
+  private String spanNameOnRender(final ModelAndView mv) {
     String viewName = mv.getViewName();
     if (viewName != null) {
       return "Render " + viewName;
@@ -90,12 +95,16 @@ public class SpringWebMvcDecorator extends BaseDecorator {
     return "Render <unknown>";
   }
 
-  public Span onRender(final Span span, final ModelAndView mv) {
+  private void onRender(final Span span, final ModelAndView mv) {
     span.setAttribute("view.name", mv.getViewName());
     View view = mv.getView();
     if (view != null) {
       span.setAttribute("view.type", spanNameForClass(view.getClass()));
     }
-    return span;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-webmvc-3.1";
   }
 }

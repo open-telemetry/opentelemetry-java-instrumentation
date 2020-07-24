@@ -70,7 +70,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {LogContextScopeListener.class.getName()};
+    return new String[] {"io.opentelemetry.auto.tooling.log.LogContextScopeListener"};
   }
 
   public static class MDCAdvice {

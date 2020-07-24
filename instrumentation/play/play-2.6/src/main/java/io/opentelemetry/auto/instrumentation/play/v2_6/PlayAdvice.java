@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_6;
 
-import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayTracer.DECORATE;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -30,9 +29,8 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    Span span = TRACER.spanBuilder("play.request").startSpan();
-    DECORATE.afterStart(span);
+  public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
+    Span span = DECORATE.startSpan("play.request");
 
     return new SpanWithScope(span, currentContextWith(span));
   }
@@ -42,7 +40,7 @@ public class PlayAdvice {
       @Advice.Enter final SpanWithScope playControllerScope,
       @Advice.This final Object thisAction,
       @Advice.Thrown final Throwable throwable,
-      @Advice.Argument(0) final Request req,
+      @Advice.Argument(0) final Request<?> req,
       @Advice.Return(readOnly = false) final Future<Result> responseFuture) {
     Span playControllerSpan = playControllerScope.getSpan();
 
@@ -52,16 +50,14 @@ public class PlayAdvice {
     if (throwable == null) {
       responseFuture.onComplete(
           new RequestCompleteCallback(playControllerSpan),
-          ((Action) thisAction).executionContext());
+          ((Action<?>) thisAction).executionContext());
     } else {
-      DECORATE.onError(playControllerSpan, throwable);
-      DECORATE.beforeFinish(playControllerSpan);
-      playControllerSpan.end();
+      DECORATE.endExceptionally(playControllerSpan, throwable);
     }
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
-    Span rootSpan = TRACER.getCurrentSpan();
+    Span rootSpan = DECORATE.getCurrentServerSpan();
     // set the span name on the upstream akka/netty span
     DECORATE.updateSpanName(rootSpan, req);
   }

@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.google.auto.service.AutoService;
@@ -44,16 +43,8 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
     public static SpanWithScope createGenericSpan(
         @Advice.This final ContainerRequestContext context) {
 
-      if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null) {
-        Span parent = TRACER.getCurrentSpan();
-        Span span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
-
-        // Save spans so a more specific instrumentation can run later
-        context.setProperty(JaxRsAnnotationsDecorator.ABORT_PARENT, parent);
-        context.setProperty(JaxRsAnnotationsDecorator.ABORT_SPAN, span);
-
-        Class filterClass =
-            (Class) context.getProperty(JaxRsAnnotationsDecorator.ABORT_FILTER_CLASS);
+      if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null) {
+        Class filterClass = (Class) context.getProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS);
         Method method = null;
         try {
           method = filterClass.getMethod("filter", ContainerRequestContext.class);
@@ -62,12 +53,9 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
+        Span span = TRACER.startSpan(filterClass, method);
 
-        DECORATE.afterStart(span);
-        DECORATE.onJaxRsSpan(span, parent, filterClass, method);
-
-        return scope;
+        return new SpanWithScope(span, currentContextWith(span));
       }
 
       return null;
@@ -82,11 +70,11 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        DECORATE.onError(span, throwable);
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
 
-      DECORATE.beforeFinish(span);
-      span.end();
       spanWithScope.closeScope();
     }
   }

@@ -16,12 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
 
-import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.FilterChain;
@@ -44,18 +41,14 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
       final FilterChain filterChain)
       throws ServletException, IOException {
 
-    Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
-    Span parentSpan = null;
-    if (parentContext instanceof Context) {
-      parentSpan = TracingContextUtils.getSpan((Context) parentContext);
-    }
+    Span serverSpan = TRACER.getCurrentServerSpan();
 
-    if (handlerMappings != null && parentSpan != null) {
+    if (handlerMappings != null && serverSpan != null) {
       try {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          DECORATE.onRequest(parentSpan, request);
+          TRACER.onRequest(serverSpan, request);
         }
       } catch (final Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore

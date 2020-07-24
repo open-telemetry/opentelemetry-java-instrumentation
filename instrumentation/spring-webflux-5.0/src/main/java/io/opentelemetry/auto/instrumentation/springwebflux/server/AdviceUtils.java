@@ -39,8 +39,6 @@ public class AdviceUtils {
 
   public static final String CONTEXT_ATTRIBUTE =
       "io.opentelemetry.auto.instrumentation.springwebflux.Context";
-  public static final String PARENT_CONTEXT_ATTRIBUTE =
-      "io.opentelemetry.auto.instrumentation.springwebflux.ParentContext";
 
   public static String parseOperationName(final Object handler) {
     String className = DECORATE.spanNameForClass(handler.getClass());
