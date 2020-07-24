@@ -19,7 +19,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import org.junit.ClassRule
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class JerseyTest extends AgentTestRunner {
@@ -35,7 +35,7 @@ class JerseyTest extends AgentTestRunner {
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderTrace("test.span") {
+    def response = runUnderServerTrace("test.span") {
       resources.client().resource(resource).post(String)
     }
 
@@ -70,7 +70,7 @@ class JerseyTest extends AgentTestRunner {
 
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderTrace("test.span") {
+    def response = runUnderServerTrace("test.span") {
       resources.client().resource(resource).post(String)
     }
 

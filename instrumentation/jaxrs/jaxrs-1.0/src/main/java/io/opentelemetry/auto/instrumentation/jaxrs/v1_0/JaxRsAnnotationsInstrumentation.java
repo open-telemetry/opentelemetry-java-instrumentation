@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v1_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -46,8 +45,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
 
-  private static final String JAX_ENDPOINT_OPERATION_NAME = "jax-rs.request";
-
   public JaxRsAnnotationsInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-annotations");
   }
@@ -72,7 +69,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     return new String[] {
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsDecorator",
+      packageName + ".JaxRsAnnotationsTracer",
     };
   }
 
@@ -103,12 +100,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return null;
       }
 
-      // Rename the parent span according to the path represented by these annotations.
-      Span parent = TRACER.getCurrentSpan();
-
-      Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
-      DECORATE.onControllerStart(span, parent, target.getClass(), method);
-      DECORATE.afterStart(span);
+      Span span = TRACER.startSpan(target.getClass(), method);
 
       return new SpanWithScope(span, currentContextWith(span));
     }
@@ -122,9 +114,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       CallDepthThreadLocalMap.reset(Path.class);
 
       Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable == null) {
+        TRACER.end(span);
+      } else {
+        TRACER.endExceptionally(span, throwable);
+      }
       spanWithScope.closeScope();
     }
   }

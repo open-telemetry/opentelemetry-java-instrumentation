@@ -17,9 +17,8 @@
 package io.opentelemetry.auto.instrumentation.play.v2_6;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -30,8 +29,8 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public class PlayDecorator extends BaseDecorator {
-  public static final PlayDecorator DECORATE = new PlayDecorator();
+public class PlayTracer extends BaseTracer {
+  public static final PlayTracer DECORATE = new PlayTracer();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.6");
@@ -79,11 +78,14 @@ public class PlayDecorator extends BaseDecorator {
   }
 
   @Override
-  public Span onError(final Span span, Throwable throwable) {
-    span.setStatus(Status.UNKNOWN);
-    if (throwable != null
-        // This can be moved to instanceof check when using Java 8.
-        && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.play-2.6";
+  }
+
+  @Override
+  protected Throwable unwrapThrowable(Throwable throwable) {
+    // This can be moved to instanceof check when using Java 8.
+    if (throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
         && throwable.getCause() != null) {
       throwable = throwable.getCause();
     }
@@ -92,6 +94,6 @@ public class PlayDecorator extends BaseDecorator {
         && throwable.getCause() != null) {
       throwable = throwable.getCause();
     }
-    return super.onError(span, throwable);
+    return throwable;
   }
 }

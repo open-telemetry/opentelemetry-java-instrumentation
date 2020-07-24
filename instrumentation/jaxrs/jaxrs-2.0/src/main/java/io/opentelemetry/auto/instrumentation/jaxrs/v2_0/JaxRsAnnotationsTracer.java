@@ -18,12 +18,10 @@ package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.WeakMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -31,42 +29,38 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class JaxRsAnnotationsDecorator extends BaseDecorator {
+public class JaxRsAnnotationsTracer extends BaseTracer {
   public static final String ABORT_FILTER_CLASS =
       "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.class";
   public static final String ABORT_HANDLED =
       "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.handled";
-  public static final String ABORT_PARENT =
-      "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.parent";
-  public static final String ABORT_SPAN =
-      "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.span";
 
-  public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-2.0");
+  public static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
 
   private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
-  public void onJaxRsSpan(
-      final Span span, final Span parent, final Class target, final Method method) {
+  public Span startSpan(final Class<?> target, final Method method) {
+    // We create span and immediately update its name
+    // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
+    // well.
+    Span span = tracer.spanBuilder("jax-rs.request").startSpan();
+    updateSpanNames(span, getCurrentServerSpan(), target, method);
+    return span;
+  }
 
-    String spanName = getPathSpanName(target, method);
-    updateParent(parent, spanName);
-
+  public void updateSpanNames(
+      final Span span, final Span serverSpan, final Class<?> target, final Method method) {
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
-    boolean isRootScope = !parent.getContext().isValid();
-    if (isRootScope && !spanName.isEmpty()) {
-      span.updateName(spanName);
+    String pathBasedSpanName = getPathSpanName(target, method);
+    if (serverSpan == null) {
+      updateSpanName(span, pathBasedSpanName);
     } else {
-      span.updateName(DECORATE.spanNameForMethod(target, method));
+      updateSpanName(serverSpan, pathBasedSpanName);
+      updateSpanName(span, TRACER.spanNameForMethod(target, method));
     }
   }
 
-  private void updateParent(final Span span, final String spanName) {
-    if (span == null) {
-      return;
-    }
+  private void updateSpanName(final Span span, final String spanName) {
     if (!spanName.isEmpty()) {
       span.updateName(spanName);
     }
@@ -93,7 +87,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       String httpMethod = null;
       Path methodPath = null;
       Path classPath = findClassPath(target);
-      for (Class currentClass : new ClassHierarchyIterable(target)) {
+      for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
         Method currentMethod;
         if (currentClass.equals(target)) {
           currentMethod = method;
@@ -204,5 +198,10 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
     spanName = spanNameBuilder.toString().trim();
     return spanName;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jaxrs-2.0";
   }
 }

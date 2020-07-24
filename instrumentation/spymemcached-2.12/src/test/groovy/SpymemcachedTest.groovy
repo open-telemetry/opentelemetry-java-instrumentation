@@ -19,6 +19,11 @@ import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.time.Duration
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -31,19 +36,12 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
 
-import java.time.Duration
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.locks.ReentrantLock
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
-// Do not run tests locally on Java7 since testcontainers are not compatible with Java7
-// It is fine to run on CI because CI provides memcached externally, not through testcontainers
-@Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
+// Do not run tests on Java7 since testcontainers are not compatible with Java7
+@Requires({ jvm.java8Compatible })
 class SpymemcachedTest extends AgentTestRunner {
 
   @Shared
@@ -69,11 +67,11 @@ class SpymemcachedTest extends AgentTestRunner {
   def setupSpec() {
 
     /*
-      CI will provide us with memcached container running along side our build.
-      When building locally, however, we need to take matters into our own hands
+      CircleCI will provide us with memcached container running along side our build.
+      When building locally and in GitHub actions, however, we need to take matters into our own hands
       and we use 'testcontainers' for this.
      */
-    if ("true" != System.getenv("CI")) {
+    if ("true" != System.getenv("CIRCLECI")) {
       memcachedContainer = new GenericContainer('memcached:latest')
         .withExposedPorts(defaultMemcachedPort)
         .withStartupTimeout(Duration.ofSeconds(120))

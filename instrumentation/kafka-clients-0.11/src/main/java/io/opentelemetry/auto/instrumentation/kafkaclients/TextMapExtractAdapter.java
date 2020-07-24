@@ -31,6 +31,10 @@ public class TextMapExtractAdapter implements HttpTextFormat.Getter<Headers> {
     if (header == null) {
       return null;
     }
-    return new String(header.value(), StandardCharsets.UTF_8);
+    byte[] value = header.value();
+    if (value == null) {
+      return null;
+    }
+    return new String(value, StandardCharsets.UTF_8);
   }
 }
