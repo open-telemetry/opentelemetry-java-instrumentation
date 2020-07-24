@@ -63,18 +63,28 @@ class RabbitMQTest extends AgentTestRunner {
   Channel channel = conn.createChannel()
 
   def setupSpec() {
-    rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
-      .withExposedPorts(defaultRabbitMQPort)
-      .withStartupTimeout(Duration.ofSeconds(120))
-    rabbbitMQContainer.start()
-    rabbitmqAddress = new InetSocketAddress(
-      rabbbitMQContainer.containerIpAddress,
-      rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
-    )
+
+    /*
+      CircleCI will provide us with rabbitmq container running along side our build.
+      When building locally and in GitHub actions, however, we need to take matters into our own hands
+      and we use 'testcontainers' for this.
+     */
+    if ("true" != System.getenv("CIRCLECI")) {
+      rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
+        .withExposedPorts(defaultRabbitMQPort)
+        .withStartupTimeout(Duration.ofSeconds(120))
+      rabbbitMQContainer.start()
+      rabbitmqAddress = new InetSocketAddress(
+        rabbbitMQContainer.containerIpAddress,
+        rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
+      )
+    }
   }
 
   def cleanupSpec() {
-    rabbbitMQContainer.stop()
+    if (rabbbitMQContainer) {
+      rabbbitMQContainer.stop()
+    }
   }
 
   def cleanup() {

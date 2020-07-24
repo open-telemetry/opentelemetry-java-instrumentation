@@ -65,18 +65,28 @@ class SpymemcachedTest extends AgentTestRunner {
   InetSocketAddress memcachedAddress = new InetSocketAddress("127.0.0.1", defaultMemcachedPort)
 
   def setupSpec() {
-    memcachedContainer = new GenericContainer('memcached:latest')
-      .withExposedPorts(defaultMemcachedPort)
-      .withStartupTimeout(Duration.ofSeconds(120))
-    memcachedContainer.start()
-    memcachedAddress = new InetSocketAddress(
-      memcachedContainer.containerIpAddress,
-      memcachedContainer.getMappedPort(defaultMemcachedPort)
-    )
+
+    /*
+      CircleCI will provide us with memcached container running along side our build.
+      When building locally and in GitHub actions, however, we need to take matters into our own hands
+      and we use 'testcontainers' for this.
+     */
+    if ("true" != System.getenv("CIRCLECI")) {
+      memcachedContainer = new GenericContainer('memcached:latest')
+        .withExposedPorts(defaultMemcachedPort)
+        .withStartupTimeout(Duration.ofSeconds(120))
+      memcachedContainer.start()
+      memcachedAddress = new InetSocketAddress(
+        memcachedContainer.containerIpAddress,
+        memcachedContainer.getMappedPort(defaultMemcachedPort)
+      )
+    }
   }
 
   def cleanupSpec() {
-    memcachedContainer.stop()
+    if (memcachedContainer) {
+      memcachedContainer.stop()
+    }
   }
 
   ReentrantLock queueLock
