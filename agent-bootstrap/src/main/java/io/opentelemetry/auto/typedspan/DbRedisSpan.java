@@ -25,20 +25,28 @@ import java.util.logging.Logger;
  * <b>Required attributes:</b>
  *
  * <ul>
- *   <li>db.system: An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+ *   <li>db.system: An identifier for the database management system (DBMS) product being used. See
+ *       below for a list of well-known identifiers.
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+ *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the
+ *       name of the database being accessed. For commands that switch the database, this should be
+ *       set to the target database (even if the command fails).
  *   <li>db.statement: The database statement being executed.
- *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
+ *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command
+ *       name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+ *       `findAndModify`.
  *   <li>net.peer.name: Remote hostname or similar, see note below.
- *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
+ *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or
+ *       [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
  *   <li>net.peer.port: Remote port number.
  *   <li>net.transport: Transport protocol used. See note below.
- *   <li>db.redis.database_index: The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
+ *   <li>db.redis.database_index: The index of the database being accessed as used in the [`SELECT`
+ *       command](https://redis.io/commands/select), provided as an integer. To be used instead of
+ *       the generic `db.name` attribute.
  * </ul>
  *
  * <b>Additional constraints</b>
@@ -66,7 +74,6 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     NET_PEER_PORT,
     NET_TRANSPORT,
     DB_REDIS_DATABASE_INDEX;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -94,6 +101,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(DbRedisSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected DbRedisSpan(Span span, AttributeStatus status) {
@@ -101,23 +109,25 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link DbRedisSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link DbRedisSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link DbRedisSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link DbRedisSpan} object.
+   */
   public static DbRedisSpanBuilder createDbRedisSpanBuilder(Tracer tracer, String spanName) {
     return new DbRedisSpanBuilder(tracer, spanName);
   }
 
   /**
-	 * Creates a {@link DbRedisSpan} from a {@link DbSpan}.
-	 * @param builder {@link DbSpan.DbSpanBuilder} to use.
-	 * @return a {@link DbRedisSpan} object built from a {@link DbSpan}.
-	 */
+   * Creates a {@link DbRedisSpan} from a {@link DbSpan}.
+   *
+   * @param builder {@link DbSpan.DbSpanBuilder} to use.
+   * @return a {@link DbRedisSpan} object built from a {@link DbSpan}.
+   */
   public static DbRedisSpanBuilder createDbRedisSpanBuilder(DbSpan.DbSpanBuilder builder) {
-	  // we accept a builder from Db since DbRedis "extends" Db
+    // we accept a builder from Db since DbRedis "extends" Db
     return new DbRedisSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -140,8 +150,8 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -173,10 +183,11 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     }
   }
 
-
   /**
    * Sets db.system.
-   * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+   *
+   * @param dbSystem An identifier for the database management system (DBMS) product being used. See
+   *     below for a list of well-known identifiers.
    */
   @Override
   public DbRedisSemanticConvention setDbSystem(String dbSystem) {
@@ -187,8 +198,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.connection_string.
+   *
    * @param dbConnectionString The connection string used to connect to the database.
-   * <p> It is recommended to remove embedded credentials.
+   *     <p>It is recommended to remove embedded credentials.
    */
   @Override
   public DbRedisSemanticConvention setDbConnectionString(String dbConnectionString) {
@@ -199,6 +211,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.user.
+   *
    * @param dbUser Username for accessing the database.
    */
   @Override
@@ -210,7 +223,10 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.jdbc.driver_classname.
-   * @param dbJdbcDriverClassname The fully-qualified class name of the [Java Database Connectivity (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver used to connect.
+   *
+   * @param dbJdbcDriverClassname The fully-qualified class name of the [Java Database Connectivity
+   *     (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver used to
+   *     connect.
    */
   @Override
   public DbRedisSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
@@ -221,8 +237,11 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.name.
-   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-   * <p> In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+   *
+   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+   *     name of the database being accessed. For commands that switch the database, this should be
+   *     set to the target database (even if the command fails).
+   *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
    */
   @Override
   public DbRedisSemanticConvention setDbName(String dbName) {
@@ -233,8 +252,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.statement.
+   *
    * @param dbStatement The database statement being executed.
-   * <p> The value may be sanitized to exclude sensitive information.
+   *     <p>The value may be sanitized to exclude sensitive information.
    */
   @Override
   public DbRedisSemanticConvention setDbStatement(String dbStatement) {
@@ -245,8 +265,13 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.operation.
-   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-   * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+   *
+   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+   *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+   *     `findAndModify`.
+   *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT`
+   *     or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement`
+   *     just to get this property (the back end can do that if required).
    */
   @Override
   public DbRedisSemanticConvention setDbOperation(String dbOperation) {
@@ -257,6 +282,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -268,7 +294,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public DbRedisSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -279,6 +307,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -290,6 +319,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -301,7 +331,10 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
   /**
    * Sets db.redis.database_index.
-   * @param dbRedisDatabaseIndex The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
+   *
+   * @param dbRedisDatabaseIndex The index of the database being accessed as used in the [`SELECT`
+   *     command](https://redis.io/commands/select), provided as an integer. To be used instead of
+   *     the generic `db.name` attribute.
    */
   @Override
   public DbRedisSemanticConvention setDbRedisDatabaseIndex(long dbRedisDatabaseIndex) {
@@ -310,11 +343,8 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link DbRedisSpan}.
-	 */
-	public static class DbRedisSpanBuilder {
+  /** Builder class for {@link DbRedisSpan}. */
+  public static class DbRedisSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -333,13 +363,13 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     }
 
     /** sets the {@link Span} parent. */
-    public DbRedisSpanBuilder setParent(Span parent){
+    public DbRedisSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public DbRedisSpanBuilder setParent(SpanContext remoteParent){
+    public DbRedisSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -356,10 +386,11 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
       return new DbRedisSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets db.system.
-     * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+     *
+     * @param dbSystem An identifier for the database management system (DBMS) product being used.
+     *     See below for a list of well-known identifiers.
      */
     public DbRedisSpanBuilder setDbSystem(String dbSystem) {
       status.set(AttributeStatus.DB_SYSTEM);
@@ -369,8 +400,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.connection_string.
+     *
      * @param dbConnectionString The connection string used to connect to the database.
-     * <p> It is recommended to remove embedded credentials.
+     *     <p>It is recommended to remove embedded credentials.
      */
     public DbRedisSpanBuilder setDbConnectionString(String dbConnectionString) {
       status.set(AttributeStatus.DB_CONNECTION_STRING);
@@ -380,6 +412,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.user.
+     *
      * @param dbUser Username for accessing the database.
      */
     public DbRedisSpanBuilder setDbUser(String dbUser) {
@@ -390,7 +423,10 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.jdbc.driver_classname.
-     * @param dbJdbcDriverClassname The fully-qualified class name of the [Java Database Connectivity (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver used to connect.
+     *
+     * @param dbJdbcDriverClassname The fully-qualified class name of the [Java Database
+     *     Connectivity (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver
+     *     used to connect.
      */
     public DbRedisSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
       status.set(AttributeStatus.DB_JDBC_DRIVER_CLASSNAME);
@@ -400,8 +436,11 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.name.
-     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-     * <p> In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+     *
+     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+     *     name of the database being accessed. For commands that switch the database, this should
+     *     be set to the target database (even if the command fails).
+     *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
      */
     public DbRedisSpanBuilder setDbName(String dbName) {
       status.set(AttributeStatus.DB_NAME);
@@ -411,8 +450,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.statement.
+     *
      * @param dbStatement The database statement being executed.
-     * <p> The value may be sanitized to exclude sensitive information.
+     *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbRedisSpanBuilder setDbStatement(String dbStatement) {
       status.set(AttributeStatus.DB_STATEMENT);
@@ -422,8 +462,13 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.operation.
-     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-     * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+     *
+     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+     *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+     *     `findAndModify`.
+     *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like
+     *     `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of
+     *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbRedisSpanBuilder setDbOperation(String dbOperation) {
       status.set(AttributeStatus.DB_OPERATION);
@@ -433,6 +478,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbRedisSpanBuilder setNetPeerName(String netPeerName) {
@@ -443,7 +489,9 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbRedisSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -453,6 +501,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public DbRedisSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -463,6 +512,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public DbRedisSpanBuilder setNetTransport(String netTransport) {
@@ -473,13 +523,15 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
 
     /**
      * Sets db.redis.database_index.
-     * @param dbRedisDatabaseIndex The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
+     *
+     * @param dbRedisDatabaseIndex The index of the database being accessed as used in the [`SELECT`
+     *     command](https://redis.io/commands/select), provided as an integer. To be used instead of
+     *     the generic `db.name` attribute.
      */
     public DbRedisSpanBuilder setDbRedisDatabaseIndex(long dbRedisDatabaseIndex) {
       status.set(AttributeStatus.DB_REDIS_DATABASE_INDEX);
       internalBuilder.setAttribute("db.redis.database_index", dbRedisDatabaseIndex);
       return this;
     }
-
   }
 }
