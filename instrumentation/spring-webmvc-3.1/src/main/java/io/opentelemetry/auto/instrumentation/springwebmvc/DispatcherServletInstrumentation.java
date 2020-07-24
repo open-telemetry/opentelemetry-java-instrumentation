@@ -133,7 +133,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        // TODO sooo this adds throwable but does not end the span?
         TRACER.addThrowable(span, exception);
       }
     }
