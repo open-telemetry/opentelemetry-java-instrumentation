@@ -42,7 +42,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         @Advice.This final ContainerRequestContext context) {
       UriInfo uriInfo = context.getUriInfo();
 
-      if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null
+      if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
           && uriInfo instanceof ResourceInfo) {
 
         ResourceInfo resourceInfo = (ResourceInfo) uriInfo;

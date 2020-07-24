@@ -22,14 +22,11 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
@@ -78,6 +75,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return withScopedContext(newContext);
   }
 
+  @Override
   public Span getCurrentSpan() {
     return tracer.getCurrentSpan();
   }
@@ -88,18 +86,17 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   // TODO make abstract when implemented in all subclasses
+  @Override
   protected String getInstrumentationName() {
     return null;
   }
 
-  private String getVersion() {
-    return null;
-  }
-
+  @Override
   public void end(Span span) {
     span.end();
   }
 
+  @Override
   public void endExceptionally(Span span, Throwable throwable) {
     onError(span, throwable);
     end(span);
@@ -119,23 +116,13 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return span;
   }
 
-  protected Span onError(final Span span, final Throwable throwable) {
-    assert span != null;
+  @Override
+  protected void onError(final Span span, final Throwable throwable) {
     if (throwable != null) {
       span.setStatus(Status.UNKNOWN);
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }
-    return span;
-  }
-
-  protected static void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
-
-    StringWriter errorString = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
 
   protected void onPeerConnection(Span span, final CONNECTION connection) {

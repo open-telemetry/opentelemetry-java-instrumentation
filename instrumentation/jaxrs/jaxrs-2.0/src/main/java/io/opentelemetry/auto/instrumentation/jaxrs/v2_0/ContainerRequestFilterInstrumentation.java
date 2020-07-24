@@ -71,7 +71,7 @@ public class ContainerRequestFilterInstrumentation extends Instrumenter.Default 
     public static void setFilterClass(
         @Advice.This final ContainerRequestFilter filter,
         @Advice.Argument(0) final ContainerRequestContext context) {
-      context.setProperty(JaxRsAnnotationsDecorator.ABORT_FILTER_CLASS, filter.getClass());
+      context.setProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS, filter.getClass());
     }
   }
 }
