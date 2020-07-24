@@ -36,12 +36,18 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   /** Creates a new tracing {@link HttpService} decorator using the default {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator() {
-    return new Decorator(new ArmeriaServerTracer());
+    return newDecorator(new ArmeriaServerTracer());
   }
 
   /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator(Tracer tracer) {
-    return new Decorator(new ArmeriaServerTracer(tracer));
+    return newDecorator(new ArmeriaServerTracer(tracer));
+  }
+
+  /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
+  public static Function<? super HttpService, OpenTelemetryService> newDecorator(
+      ArmeriaServerTracer serverTracer) {
+    return new Decorator(serverTracer);
   }
 
   private final ArmeriaServerTracer serverTracer;
@@ -62,26 +68,21 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
     Span span = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
 
-    // For non-recording spans, nothing special to do.
-    if (!span.isRecording()) {
-      try (Scope ignored = serverTracer.startScope(span, ctx)) {
-        return unwrap().serve(ctx, req);
-      }
+    if (span.isRecording()) {
+      ctx.log()
+          .whenComplete()
+          .thenAccept(
+              log -> {
+                HttpStatus status = log.responseHeaders().status();
+                long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
+                if (log.responseCause() != null) {
+                  serverTracer.endExceptionally(
+                      span, log.responseCause(), status.code(), requestEndTimeNanos);
+                } else {
+                  serverTracer.end(span, status.code(), requestEndTimeNanos);
+                }
+              });
     }
-
-    ctx.log()
-        .whenComplete()
-        .thenAccept(
-            log -> {
-              HttpStatus status = log.responseHeaders().status();
-              long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
-              if (log.responseCause() != null) {
-                serverTracer.endExceptionally(
-                    span, log.responseCause(), status.code(), requestEndTimeNanos);
-              } else {
-                serverTracer.end(span, status.code(), requestEndTimeNanos);
-              }
-            });
 
     try (Scope ignored = serverTracer.startScope(span, ctx)) {
       return unwrap().serve(ctx, req);
