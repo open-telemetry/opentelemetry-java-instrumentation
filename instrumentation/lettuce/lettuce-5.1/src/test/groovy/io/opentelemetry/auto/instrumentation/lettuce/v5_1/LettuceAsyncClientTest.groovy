@@ -166,7 +166,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
             "db.connection_string" "redis://127.0.0.1:$port"
             "db.system" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<TESTSETKEY> value<TESTSETVAL>"
