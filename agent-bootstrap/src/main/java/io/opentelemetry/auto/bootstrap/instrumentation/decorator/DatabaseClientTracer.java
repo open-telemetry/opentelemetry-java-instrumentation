@@ -149,7 +149,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   // TODO: "When it's impossible to get any meaningful representation of the span name, it can be
-  // populated using the same value as db.instance" (c) spec
+  // populated using the same value as db.name" (c) spec
   protected String spanName(final String query) {
     return query == null ? DB_QUERY : query;
   }

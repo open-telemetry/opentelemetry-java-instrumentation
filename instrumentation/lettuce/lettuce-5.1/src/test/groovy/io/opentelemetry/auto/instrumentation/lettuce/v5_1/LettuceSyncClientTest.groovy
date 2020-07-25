@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.ClientOptions
-
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
@@ -147,8 +146,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "SET key<TESTSETKEY> value<TESTSETVAL>"
           }
           event(0) {
@@ -161,6 +160,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
       }
     }
   }
+
   def "set command localhost"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(embeddedDbLocalhostUri)
@@ -181,8 +181,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.peer.ip" "127.0.0.1"
             "net.peer.name" "localhost"
             "net.peer.port" port
-            "db.url" "redis://localhost:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://localhost:$port"
+            "db.system" "redis"
             "db.statement" "SET key<TESTSETKEY> value<TESTSETVAL>"
           }
           event(0) {
@@ -212,8 +212,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "GET key<TESTKEY>"
           }
           event(0) {
@@ -243,8 +243,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "GET key<NON_EXISTENT_KEY>"
           }
           event(0) {
@@ -274,9 +274,9 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
+            "db.connection_string" "redis://127.0.0.1:$port"
             "db.statement" "RANDOMKEY"
-            "db.type" "redis"
+            "db.system" "redis"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -305,8 +305,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "LPUSH key<TESTLIST> value<TESTLIST ELEMENT>"
           }
           event(0) {
@@ -336,8 +336,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "HMSET key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
           }
           event(0) {
@@ -367,8 +367,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
-            "db.url" "redis://127.0.0.1:$port"
-            "db.type" "redis"
+            "db.connection_string" "redis://127.0.0.1:$port"
+            "db.system" "redis"
             "db.statement" "HGETALL key<TESTHM>"
           }
           event(0) {
