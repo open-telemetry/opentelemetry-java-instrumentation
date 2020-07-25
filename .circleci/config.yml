@@ -171,20 +171,6 @@ jobs:
           command: ./gradlew -Prelease.useLastTag=true final
           no_output_timeout: 6h
 
-  patch_release:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - restore_cache:
-          <<: *cache_keys
-
-      - run: ./gradlew -Prelease.useLastTag=true -Prelease.scope=patch final
-
-
 workflows:
   build_test_deploy:
     jobs:
@@ -249,15 +235,5 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              # Only for major and minor releases
-              only: /^v.*\.0$/
-
-  patch_release:
-    jobs:
-      - patch_release:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              # Only for major and minor releases
-              only: /^v.*\.[1-9]+$/
+              # As long as we don't have support branches, we release all tags in the same manner
+              only: /^v.*$/
