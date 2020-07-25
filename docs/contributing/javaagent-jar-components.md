@@ -61,4 +61,3 @@ following "clusters" of classes:
 - `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and available in bootstrap classloader.
 - `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its dependencies.
 Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.
-
