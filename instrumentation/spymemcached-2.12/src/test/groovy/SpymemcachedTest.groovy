@@ -18,12 +18,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import java.time.Duration
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.locks.ReentrantLock
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -35,6 +30,12 @@ import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
+
+import java.time.Duration
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
