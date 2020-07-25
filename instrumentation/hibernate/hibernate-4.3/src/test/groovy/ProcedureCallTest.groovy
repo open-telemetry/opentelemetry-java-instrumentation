@@ -16,6 +16,7 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -101,11 +102,11 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "{call TEST_PROC()}"
-            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
           }
         }
         span(3) {

@@ -284,9 +284,9 @@ class MongoClientTest extends MongoBaseTest {
         "${SemanticAttributes.DB_STATEMENT.key()}" {
           it.replace(" ", "") == statement
         }
-        "${SemanticAttributes.DB_URL.key()}" "mongodb://localhost:" + port
-        "${SemanticAttributes.DB_TYPE.key()}" "mongo"
-        "${SemanticAttributes.DB_INSTANCE.key()}" instance
+        "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
+        "${StringAttributeSetter.create("db.system").key()}" "mongo"
+        "${StringAttributeSetter.create("db.name").key()}" instance
       }
     }
   }

@@ -27,6 +27,7 @@ import com.lambdaworks.redis.protocol.AsyncCommand
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
@@ -133,7 +134,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
           }
@@ -166,7 +167,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
             errorAttributes RedisConnectionException, String
@@ -190,7 +191,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -223,7 +224,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -270,7 +271,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -303,7 +304,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
@@ -355,7 +356,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET"
           }
         }
@@ -366,7 +367,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL"
           }
         }
@@ -407,7 +408,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "DEL"
             errorAttributes(IllegalStateException, "TestException")
           }
@@ -443,7 +444,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SADD"
             "db.command.cancelled" true
           }
@@ -464,7 +465,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
           }
         }
@@ -485,7 +486,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
           }
         }

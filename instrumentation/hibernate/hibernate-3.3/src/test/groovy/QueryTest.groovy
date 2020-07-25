@@ -62,11 +62,11 @@ class QueryTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
           }
         }
         span(3) {
@@ -99,11 +99,11 @@ class QueryTest extends AbstractHibernateTest {
             spanKind CLIENT
             childOf span(1)
             attributes {
-              "${SemanticAttributes.DB_TYPE.key()}" "sql"
-              "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+              "${StringAttributeSetter.create("db.system").key()}" "sql"
+              "${StringAttributeSetter.create("db.name").key()}" "db1"
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-              "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
+              "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
             }
           }
         }
@@ -171,11 +171,11 @@ class QueryTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
           }
         }
         span(3) {

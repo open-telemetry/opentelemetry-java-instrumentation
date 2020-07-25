@@ -638,7 +638,7 @@ class SpymemcachedTest extends AgentTestRunner {
       errored(error != null && error != "canceled")
 
       attributes {
-        "${SemanticAttributes.DB_TYPE.key()}" "memcached"
+        "${StringAttributeSetter.create("db.system").key()}" "memcached"
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

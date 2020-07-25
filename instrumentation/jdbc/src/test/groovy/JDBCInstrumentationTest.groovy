@@ -21,12 +21,6 @@ import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import java.sql.CallableStatement
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Statement
-import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -35,6 +29,13 @@ import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 import test.TestConnection
+
+import javax.sql.DataSource
+import java.sql.CallableStatement
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Statement
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -202,13 +203,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
           }
         }
       }
@@ -258,13 +259,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
           }
         }
       }
@@ -306,13 +307,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
 
           }
         }
@@ -355,13 +356,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
 
           }
         }
@@ -404,13 +405,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
 
           }
         }
@@ -456,13 +457,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
 
           }
         }
@@ -523,13 +524,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (prepareStatement) {
             } else {
             }
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             if (username != null) {
               "${SemanticAttributes.DB_USER.key()}" username
             }
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" url
+            "${StringAttributeSetter.create("db.connection_string").key()}" url
 
           }
         }
@@ -627,9 +628,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" "testdb://localhost"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "testdb://localhost"
           }
         }
       }
@@ -687,11 +688,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "sql"
-            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
 
           }
         }
@@ -703,11 +704,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             spanKind CLIENT
             errored false
             attributes {
-              "${SemanticAttributes.DB_TYPE.key()}" "sql"
-              "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+              "${StringAttributeSetter.create("db.system").key()}" "sql"
+              "${StringAttributeSetter.create("db.name").key()}" dbName.toLowerCase()
               "${SemanticAttributes.DB_USER.key()}" "SA"
               "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
-              "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
+              "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
 
             }
           }
