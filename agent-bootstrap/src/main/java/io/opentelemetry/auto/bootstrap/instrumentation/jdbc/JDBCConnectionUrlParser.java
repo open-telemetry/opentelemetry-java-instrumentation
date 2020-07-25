@@ -906,6 +906,7 @@ public enum JDBCConnectionUrlParser {
       case Constants.COUCHDB: // CouchDB
       case Constants.DB2: // IBM Db2
       case Constants.DERBY: // Apache Derby
+      case Constants.GEODE: // Apache Geode
       case Constants.H2: // H2 Database
       case Constants.HSQLDB: // Hyper SQL Database
       case Constants.MARIADB: // MariaDB

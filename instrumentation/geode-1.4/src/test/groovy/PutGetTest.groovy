@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
 import spock.lang.Shared
@@ -132,8 +134,8 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "geode"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "test-region"
+            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.name").key()}" "test-region"
           }
         }
         span(2) {
@@ -141,8 +143,8 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "geode"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "test-region"
+            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.name").key()}" "test-region"
           }
         }
         span(3) {
@@ -150,8 +152,8 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "geode"
-            "${SemanticAttributes.DB_INSTANCE.key()}" "test-region"
+            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.name").key()}" "test-region"
             if (query != null) {
               "${SemanticAttributes.DB_STATEMENT.key()}" query
             }
