@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.hibernate.Query
 import org.hibernate.Session
 

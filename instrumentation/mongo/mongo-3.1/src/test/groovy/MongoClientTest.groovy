@@ -23,6 +23,7 @@ import com.mongodb.client.MongoDatabase
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
