@@ -28,7 +28,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -46,7 +45,7 @@ import org.apache.geode.cache.Region;
 @AutoService(Instrumenter.class)
 public class GeodeInstrumentation extends Instrumenter.Default {
   public GeodeInstrumentation() {
-    super(Constants.GEODE, "geode-client");
+    super("geode", "geode-client");
   }
 
   @Override

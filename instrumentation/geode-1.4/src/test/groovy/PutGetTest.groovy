@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.opentelemetry.trace.attributes.StringAttributeSetter
@@ -134,7 +133,7 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.system").key()}" "geode"
             "${StringAttributeSetter.create("db.name").key()}" "test-region"
           }
         }
@@ -143,7 +142,7 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.system").key()}" "geode"
             "${StringAttributeSetter.create("db.name").key()}" "test-region"
           }
         }
@@ -152,7 +151,7 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" Constants.GEODE
+            "${StringAttributeSetter.create("db.system").key()}" "geode"
             "${StringAttributeSetter.create("db.name").key()}" "test-region"
             if (query != null) {
               "${SemanticAttributes.DB_STATEMENT.key()}" query
