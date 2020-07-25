@@ -28,8 +28,8 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,17 +84,17 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
      * need to use that state.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope enter(@Advice.This final ForkJoinTask thiz) {
+    public static Scope enter(@Advice.This final ForkJoinTask thiz) {
       ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
-      SpanWithScope scope = AdviceUtils.startTaskScope(contextStore, thiz);
+      Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);
       if (thiz instanceof Runnable) {
         ContextStore<Runnable, State> runnableContextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        SpanWithScope newScope = AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
+        Scope newScope = AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
-            newScope.closeScope();
+            newScope.close();
           } else {
             scope = newScope;
           }
@@ -103,10 +103,10 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
       if (thiz instanceof Callable) {
         ContextStore<Callable, State> callableContextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        SpanWithScope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
+        Scope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
         if (null != newScope) {
           if (null != scope) {
-            newScope.closeScope();
+            newScope.close();
           } else {
             scope = newScope;
           }
@@ -116,7 +116,7 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final SpanWithScope scope) {
+    public static void exit(@Advice.Enter final Scope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }
