@@ -88,6 +88,9 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
+In order to configure the service name for the OTLP exporter, you must add `service.name` key
+to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTE=service.name=myservice`.
+
 #### Logging exporter
 
 The logging exporter simply prints the name of the span along with its
@@ -97,6 +100,15 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+
+#### OpenTelemetry Resource
+
+The [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md)
+is a representation of the entity producing telemetry.
+
+| System property | Environment variable     | Purpose                                                                      |
+|-----------------|--------------------------|------------------------------------------------------------------------------|
+| (not yet)       | OTEL_RESOURCE_ATTRIBUTES | Used to specify resource attributes in format: key1=val1,key2=val2,key3=val3 |
 
 #### Batch span processor
 
