@@ -33,8 +33,8 @@ ext {
     opentelemetrySdk               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
     opentelemetrySdkAutoConfig     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetryOther),
     opentelemetryJaeger            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
-    opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetry),
-    opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
+    opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
+    opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
 
     // General
     slf4j                          : "org.slf4j:slf4j-api:${versions.slf4j}",
