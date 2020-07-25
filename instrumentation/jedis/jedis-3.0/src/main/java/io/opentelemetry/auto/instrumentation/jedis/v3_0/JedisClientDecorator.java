@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 import io.opentelemetry.trace.Tracer;
 import redis.clients.jedis.Connection;
 
@@ -29,7 +30,7 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
 
   @Override
   protected String dbSystem() {
-    return "redis";
+    return Constants.REDIS;
   }
 
   @Override

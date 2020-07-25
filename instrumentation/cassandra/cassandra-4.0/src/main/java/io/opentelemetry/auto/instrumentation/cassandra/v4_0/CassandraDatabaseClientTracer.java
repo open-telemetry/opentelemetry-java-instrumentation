@@ -21,6 +21,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -40,7 +41,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
 
   @Override
   protected String dbSystem() {
-    return "cassandra";
+    return Constants.CASSANDRA;
   }
 
   @Override

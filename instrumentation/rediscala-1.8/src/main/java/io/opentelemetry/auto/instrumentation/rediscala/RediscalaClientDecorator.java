@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.rediscala;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 import io.opentelemetry.trace.Tracer;
 import redis.RedisCommand;
 import redis.protocol.RedisReply;
@@ -32,7 +33,7 @@ public class RediscalaClientDecorator
 
   @Override
   protected String dbSystem() {
-    return "redis";
+    return Constants.REDIS;
   }
 
   @Override

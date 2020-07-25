@@ -31,6 +31,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -43,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   public CouchbaseNetworkInstrumentation() {
-    super("couchbase");
+    super(Constants.COUCHBASE);
   }
 
   @Override

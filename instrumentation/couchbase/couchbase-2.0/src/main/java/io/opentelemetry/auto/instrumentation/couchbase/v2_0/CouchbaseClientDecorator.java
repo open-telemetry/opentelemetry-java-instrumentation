@@ -17,13 +17,14 @@
 package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
 
   @Override
   protected String dbSystem() {
-    return "couchbase";
+    return Constants.COUCHBASE;
   }
 
   @Override
