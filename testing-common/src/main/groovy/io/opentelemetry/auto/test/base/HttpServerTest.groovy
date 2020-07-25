@@ -231,7 +231,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     and:
-    assertTheTraces(count)
+    assertTheTraces(count, null, null, method, SUCCESS, null, responses[0])
 
     where:
     method = "GET"

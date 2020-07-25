@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
 import com.twitter.util.Closable
@@ -26,7 +27,6 @@ import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeoutException
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
@@ -117,7 +117,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { responseContentLength ?: 0 || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
