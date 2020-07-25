@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.hibernate.LockMode
 import org.hibernate.MappingException
 import org.hibernate.Query

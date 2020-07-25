@@ -17,6 +17,7 @@
 package springdata
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 

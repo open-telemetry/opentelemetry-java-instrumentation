@@ -22,6 +22,7 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import reactor.core.scheduler.Schedulers
 import redis.embedded.RedisServer
 import spock.lang.Shared

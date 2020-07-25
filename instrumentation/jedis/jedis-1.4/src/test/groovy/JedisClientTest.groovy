@@ -17,6 +17,7 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared

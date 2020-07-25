@@ -17,6 +17,7 @@
 package springdata
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
