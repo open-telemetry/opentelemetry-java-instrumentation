@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.twitter.finatra.http.HttpServer
 import com.twitter.util.Await
 import com.twitter.util.Closable
