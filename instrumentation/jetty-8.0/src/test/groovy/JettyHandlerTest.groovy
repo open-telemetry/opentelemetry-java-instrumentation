@@ -134,7 +134,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { responseContentLength ?: 0 || endpoint == EXCEPTION }
         "servlet.path" ''
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
