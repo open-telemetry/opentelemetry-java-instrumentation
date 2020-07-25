@@ -22,20 +22,21 @@ If the concrete DBMS is known to the instrumentation, its specific identifier MU
 | `"db2"`               | IBM Db2                   |                                |
 | `"derby"`             | Apache Derby              |                                |
 | `"dynamodb"`          | Amazon DynamoDB           |                                |
-| `"h2"`                | H2 Database               |  not on [database.md]          |
+| `"h2"`                | H2 Database               | not on [database.md]           |
 | `"hbase"`             | HBase                     |                                |
 | `"hive"`              | Apache Hive               |                                |
-| `"hsqldb"`            | Hyper SQL Database        |  not on [database.md]          |
+| `"hsqldb"`            | Hyper SQL Database        | not on [database.md]           |
 | `"mariadb"`           | MariaDB                   |                                |
 | `"mongodb"`           | MongoDB                   |                                |
 | `"mssql"`             | Microsoft SQL Server      |                                |
 | `"mysql"`             | MySQL                     |                                |
 | `"neo4j"`             | Neo4j                     |                                |
 | `"oracle"`            | Oracle Database           |                                |
+| `"other_sql"`         | Some other SQL Database   | Fallback only. See note above. |
 | `"postgresql"`        | PostgreSQL                |                                |
+| `"redis"`             | Redis                     |                                |
+| `"sap"`               | SAP                       | not on [database.md]           |
 | `"sqlite"`            | SQLite                    |                                |
 | `"teradata"`          | Teradata                  |                                |
-| `"other_sql"`         | Some other SQL Database   | Fallback only. See note above. |
-| `"redis"`             | Redis                     |                                |
 
 [database.md]: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
