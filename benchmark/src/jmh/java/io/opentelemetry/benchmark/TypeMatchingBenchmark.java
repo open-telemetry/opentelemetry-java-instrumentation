@@ -31,9 +31,6 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
 @BenchmarkMode(Mode.SingleShotTime)
@@ -41,21 +38,18 @@ import org.openjdk.jmh.annotations.Warmup;
 @Warmup(iterations = 0)
 @Measurement(iterations = 1)
 @OutputTimeUnit(MILLISECONDS)
-@State(Scope.Thread)
 public class TypeMatchingBenchmark {
 
-  private Set<String> classNames;
+  private static final Set<String> classNames;
 
-  @Setup
-  public void setup() throws IOException {
+  static {
     classNames = new HashSet<>();
     String classPath = System.getProperty("java.class.path");
     for (String path : classPath.split(File.pathSeparator)) {
       if (!path.endsWith(".jar")) {
         continue;
       }
-      JarFile jarFile = new JarFile(path);
-      try {
+      try (JarFile jarFile = new JarFile(path)) {
         Enumeration<JarEntry> e = jarFile.entries();
         while (e.hasMoreElements()) {
           JarEntry jarEntry = e.nextElement();
@@ -66,25 +60,21 @@ public class TypeMatchingBenchmark {
             classNames.add(name);
           }
         }
-      } finally {
-        jarFile.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     }
   }
 
   @Benchmark
-  public void loadLotsOfClasses() {
-    int successCount = 0;
-    int errorCount = 0;
+  public void loadLotsOfClasses() throws ClassNotFoundException {
     for (String className : classNames) {
       try {
         Class.forName(className, false, TypeMatchingBenchmark.class.getClassLoader());
-        successCount++;
-      } catch (Throwable t) {
-        errorCount++;
+      } catch (NoClassDefFoundError e) {
+        // many classes in the jar files have optional dependencies which are not present
       }
     }
-    System.out.println("[loaded: " + successCount + ", failed to load: " + errorCount + "]");
   }
 
   @Fork(jvmArgsAppend = "-javaagent:/path/to/opentelemetry-javaagent-master.jar")
