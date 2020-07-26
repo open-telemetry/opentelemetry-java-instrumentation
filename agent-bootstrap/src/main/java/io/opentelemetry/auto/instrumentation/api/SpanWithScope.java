@@ -27,13 +27,10 @@ import io.opentelemetry.trace.Span;
  *
  * <pre>
  *   &#64;Advice.OnMethodEnter(...)
- *   public static CallDepth onEnter(
- *       ...
- *       &#64;Advice.Local("otelSpan") Span span,
- *       &#64;Advice.Local("otelScope") Scope scope) {
+ *     public static SpanWithScope onEnter(...) {
  *     ...
- *     span = ...
- *     scope = ...
+ *     Span span = ...
+ *     return new SpanWithScope(span, currentContextWith(span));
  *   }
  *
  *   &#64;Advice.OnMethodExit(...)
@@ -52,7 +49,7 @@ import io.opentelemetry.trace.Span;
  *
  * <pre>
  *   &#64;Advice.OnMethodEnter(...)
- *   public static CallDepth onEnter(
+ *   public static void onEnter(
  *       ...
  *       &#64;Advice.Local("otelSpan") Span span,
  *       &#64;Advice.Local("otelScope") Scope scope) {
