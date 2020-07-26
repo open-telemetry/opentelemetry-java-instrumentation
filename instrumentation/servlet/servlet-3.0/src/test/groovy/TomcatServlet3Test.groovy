@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.google.common.io.Files
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
