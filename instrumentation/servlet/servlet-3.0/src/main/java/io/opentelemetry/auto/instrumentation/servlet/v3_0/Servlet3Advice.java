@@ -58,7 +58,9 @@ public class Servlet3Advice {
     scope = TRACER.startScope(span, httpServletRequest);
     if (!(response instanceof CountingHttpServletResponse)) {
       response = new CountingHttpServletResponse((HttpServletResponse) response);
-      request = new CountingHttpServletRequest((HttpServletRequest) request, (HttpServletResponse) response);
+      request =
+          new CountingHttpServletRequest(
+              (HttpServletRequest) request, (HttpServletResponse) response);
     }
   }
 

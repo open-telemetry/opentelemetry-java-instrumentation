@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
+
 import com.google.common.io.Files
-import javax.servlet.Servlet
-import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
@@ -29,6 +28,9 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import javax.servlet.Servlet
+import javax.servlet.ServletException
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -134,7 +136,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
           basicSpan(it, 0, "TEST_SPAN")
         }
         trace(it * 2 + 1, 2) {
-          serverSpan(it, 0)
+          serverSpan(it, 0, null, null, "GET", SUCCESS.body.length())
           controllerSpan(it, 1, span(0))
         }
 
