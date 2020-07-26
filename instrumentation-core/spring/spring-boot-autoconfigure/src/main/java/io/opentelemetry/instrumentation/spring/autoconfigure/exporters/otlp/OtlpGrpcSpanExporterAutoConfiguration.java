@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration;
     prefix = "opentelemetry.trace.exporter.otlp",
     name = "enabled",
     matchIfMissing = true)
-@ConditionalOnClass(OtlpGrpcSpanExporter.class)
+@ConditionalOnClass({OtlpGrpcSpanExporter.class, ManagedChannel.class})
 public class OtlpGrpcSpanExporterAutoConfiguration {
 
   @Bean
