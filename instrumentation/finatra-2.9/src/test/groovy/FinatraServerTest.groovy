@@ -116,7 +116,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
