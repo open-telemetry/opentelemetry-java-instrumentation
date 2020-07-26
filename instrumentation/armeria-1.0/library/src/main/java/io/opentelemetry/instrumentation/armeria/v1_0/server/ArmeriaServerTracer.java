@@ -17,19 +17,17 @@
 package io.opentelemetry.instrumentation.armeria.v1_0.server;
 
 import com.linecorp.armeria.common.HttpRequest;
-import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.armeria.v1_0.internal.ContextUtil;
 import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 
 public class ArmeriaServerTracer
-    extends HttpServerTracer<HttpRequest, ServiceRequestContext, RequestContext> {
+    extends HttpServerTracer<HttpRequest, ServiceRequestContext, Void> {
 
   ArmeriaServerTracer() {}
 
@@ -38,8 +36,8 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  public Context getServerContext(RequestContext ctx) {
-    return ContextUtil.getContext(ctx);
+  public Context getServerContext(Void ctx) {
+    return null;
   }
 
   @Override
@@ -88,9 +86,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  protected void attachServerContext(Context context, RequestContext ctx) {
-    ContextUtil.attachContext(context, ctx);
-  }
+  protected void attachServerContext(Context context, Void ctx) {}
 
   private enum ArmeriaGetter implements Getter<HttpRequest> {
     INSTANCE;

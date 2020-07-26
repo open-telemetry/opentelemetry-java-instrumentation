@@ -27,6 +27,7 @@ import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -84,7 +85,7 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
               });
     }
 
-    try (Scope ignored = serverTracer.startScope(span, ctx)) {
+    try (Scope ignored = TracingContextUtils.currentContextWith(span)) {
       return unwrap().serve(ctx, req);
     }
   }
