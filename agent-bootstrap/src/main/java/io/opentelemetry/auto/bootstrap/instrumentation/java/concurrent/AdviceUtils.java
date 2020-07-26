@@ -47,10 +47,4 @@ public class AdviceUtils {
     }
     return null;
   }
-
-  public static void endTaskScope(final Scope scope) {
-    if (scope != null) {
-      scope.close();
-    }
-  }
 }

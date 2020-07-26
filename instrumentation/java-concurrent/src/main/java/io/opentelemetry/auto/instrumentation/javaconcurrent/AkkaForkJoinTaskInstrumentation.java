@@ -126,7 +126,9 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter final Scope scope) {
-      AdviceUtils.endTaskScope(scope);
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }
