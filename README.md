@@ -156,7 +156,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
-| [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+ (not including 4.x yet)   |
+| [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
 | [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 2.0+ (not including 7.x yet)   |
@@ -179,8 +179,8 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
-| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
-| [Kubernetes](https://github.com/kubernetes-client/java)                                                                               | 7.0.0+                         |
+| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
+| [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
