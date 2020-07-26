@@ -19,7 +19,62 @@ package io.opentelemetry.auto.instrumentation.api;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
-// intentionally (for now) not implementing Closeable since not clear what it would close
+/**
+ * This is deprecated.
+ *
+ * <p>Originally, we used {@code SpanWithScope} to pass the {@link Span} and {@link Scope} between
+ * {@code @Advice.OnMethodEnter} and {@code @Advice.OnMethodExit}, e.g.
+ *
+ * <pre>
+ *   &#64;Advice.OnMethodEnter(...)
+ *   public static CallDepth onEnter(
+ *       ...
+ *       &#64;Advice.Local("otelSpan") Span span,
+ *       &#64;Advice.Local("otelScope") Scope scope) {
+ *     ...
+ *     span = ...
+ *     scope = ...
+ *   }
+ *
+ *   &#64;Advice.OnMethodExit(...)
+ *   public static void stopSpan(
+ *       ...
+ *       &#64;Advice.Enter final SpanWithScope spanWithScope) {
+ *     Span span = spanWithScope.getSpan();
+ *     ...
+ *     span.end();
+ *     spanWithScope.closeScope();
+ *   }
+ * </pre>
+ *
+ * But we are (slowly) migrating to a new style using {@code @Advice.Local} that doesn't require
+ * {@code SpanWithScope} anymore, e.g.
+ *
+ * <pre>
+ *   &#64;Advice.OnMethodEnter(...)
+ *   public static CallDepth onEnter(
+ *       ...
+ *       &#64;Advice.Local("otelSpan") Span span,
+ *       &#64;Advice.Local("otelScope") Scope scope) {
+ *     ...
+ *     span = ...
+ *     scope = ...
+ *   }
+ *
+ *   &#64;Advice.OnMethodExit
+ *   public static void onExit(
+ *       ...
+ *       &#64;Advice.Local("otelSpan") Span span,
+ *       &#64;Advice.Local("otelScope") Scope scope) {
+ *       ...
+ *     span.end();
+ *     scope.close();
+ *   }
+ * </pre>
+ *
+ * @deprecated
+ */
+@Deprecated
 public class SpanWithScope {
   private final Span span;
   private final Scope scope;
