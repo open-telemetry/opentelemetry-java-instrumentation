@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration;
     prefix = "opentelemetry.trace.exporter.jaeger",
     name = "enabled",
     matchIfMissing = true)
-@ConditionalOnClass(JaegerGrpcSpanExporter.class)
+@ConditionalOnClass({JaegerGrpcSpanExporter.class, ManagedChannel.class})
 public class JaegerSpanExporterAutoConfiguration {
 
   @Bean
