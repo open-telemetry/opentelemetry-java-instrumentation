@@ -170,7 +170,6 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
-| [java.util.logging](https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html)           | Java 7+                        |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
@@ -182,8 +181,6 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
 | [Kubernetes](https://github.com/kubernetes-client/java)                                                                               | 7.0.0+                         |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
-| [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
-| [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
