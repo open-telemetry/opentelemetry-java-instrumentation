@@ -70,7 +70,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   }
 
   public static void contentLengthHelper(Span span, AsyncEvent event) {
-    final ServletResponse response = event.getSuppliedResponse();
+    ServletResponse response = event.getSuppliedResponse();
     if (response instanceof CountingHttpServletResponse) {
       servletHttpServerTracer.setContentLength(
           span, ((CountingHttpServletResponse) response).getContentLength());

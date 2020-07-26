@@ -35,7 +35,7 @@ public class Servlet3Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin final Method method,
-      @Advice.Argument(0) final ServletRequest request,
+      @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
@@ -56,7 +56,10 @@ public class Servlet3Advice {
 
     span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
     scope = TRACER.startScope(span, httpServletRequest);
-    response = new CountingHttpServletResponse((HttpServletResponse) response);
+    if (!(response instanceof CountingHttpServletResponse)) {
+      response = new CountingHttpServletResponse((HttpServletResponse) response);
+      request = new CountingHttpServletRequest((HttpServletRequest) request, (HttpServletResponse) response);
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
