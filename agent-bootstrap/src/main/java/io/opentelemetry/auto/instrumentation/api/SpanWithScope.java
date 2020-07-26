@@ -44,8 +44,7 @@ import io.opentelemetry.trace.Span;
  *   }
  * </pre>
  *
- * But we are (slowly) migrating to a new style using {@code @Advice.Local} that doesn't require
- * {@code SpanWithScope} anymore, e.g.
+ * We are (slowly) migrating to a new pattern using `@Advice.Local`:
  *
  * <pre>
  *   &#64;Advice.OnMethodEnter(...)
@@ -68,6 +67,15 @@ import io.opentelemetry.trace.Span;
  *     scope.close();
  *   }
  * </pre>
+ *
+ * This new pattern has the following benefits:
+ *
+ * <ul>
+ *   <li>The new pattern is more efficient since it doesn't require instantiating the {@code
+ *       SpanWithScope} holder object
+ *   <li>The new pattern extends nicely in the common case where we also need to pass {@link
+ *       io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth} between the methods
+ * </ul>
  *
  * @deprecated
  */
