@@ -52,7 +52,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
         tracer
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
-            .setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem())
+            .setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem(connection))
             .startSpan();
 
     if (connection != null) {
@@ -103,12 +103,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     end(span);
   }
 
-  protected Span afterStart(final Span span) {
-    assert span != null;
-    span.setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem());
-    return span;
-  }
-
   /** This should be called when the connection is being used, not when it's created. */
   protected Span onConnection(final Span span, final CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
@@ -156,7 +150,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   protected abstract String normalizeQuery(QUERY query);
 
-  protected abstract String dbSystem();
+  protected abstract String dbSystem(CONNECTION connection);
 
   protected abstract String dbUser(CONNECTION connection);
 

@@ -15,12 +15,12 @@
  */
 
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo
-import io.opentelemetry.auto.util.test.AgentSpecification
 import spock.lang.Shared
+import spock.lang.Specification
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser.parse
 
-class JDBCConnectionUrlParserTest extends AgentSpecification {
+class JDBCConnectionUrlParserTest extends Specification {
 
   @Shared
   def stdProps = {
@@ -105,21 +105,21 @@ class JDBCConnectionUrlParserTest extends AgentSpecification {
       "address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW" | null     | "mysql:replication://mdb.host:3306"                                | "mysql"      | "replication" | "mdbuser"     | "mdb.host"                                | 3306  | null                               | "mdbdb"
 
     //https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url
-    "jdbc:microsoft:sqlserver://;"                                                                    | null     | "sqlserver://localhost:1433"                                       | "mssql"      | null          | null          | "localhost"                               | 1433  | null                               | null
-    "jdbc:microsoft:sqlserver://;"                                                                    | stdProps | "sqlserver://stdServerName:9999"                                   | "mssql"      | null          | "stdUserName" | "stdServerName"                           | 9999  | null                               | "stdDatabaseName"
+    "jdbc:microsoft:sqlserver://;"                                                                    | null     | "microsoft:sqlserver://localhost:1433"                             | "mssql"      | "sqlserver"   | null          | "localhost"                               | 1433  | null                               | null
+    "jdbc:microsoft:sqlserver://;"                                                                    | stdProps | "microsoft:sqlserver://stdServerName:9999"                         | "mssql"      | "sqlserver"   | "stdUserName" | "stdServerName"                           | 9999  | null                               | "stdDatabaseName"
     "jdbc:sqlserver://ss.host\\ssinstance:44;databaseName=ssdb;user=ssuser;password=pw"               | null     | "sqlserver://ss.host:44"                                           | "mssql"      | null          | "ssuser"      | "ss.host"                                 | 44    | "ssinstance"                       | "ssdb"
     "jdbc:sqlserver://;serverName=ss.host\\ssinstance:44;DatabaseName=;"                              | null     | "sqlserver://ss.host:44"                                           | "mssql"      | null          | null          | "ss.host"                                 | 44    | "ssinstance"                       | null
     "jdbc:sqlserver://ss.host;serverName=althost;DatabaseName=ssdb;"                                  | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
-    "jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;"   | null     | "sqlserver://ss.host:44"                                           | "mssql"      | null          | "ssuser"      | "ss.host"                                 | 44    | null                               | "ssdb"
+    "jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;"   | null     | "microsoft:sqlserver://ss.host:44"                                 | "mssql"      | "sqlserver"   | "ssuser"      | "ss.host"                                 | 44    | null                               | "ssdb"
 
     // http://jtds.sourceforge.net/faq.html#urlFormat
-    "jdbc:jtds:sqlserver://ss.host/ssdb"                                                              | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host:1433/ssdb"                                                         | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;user=ssuser"                                             | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | "ssuser"      | "ss.host"                                 | 1433  | null                               | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;user=ssuser"                                             | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | "ssuser"      | "ss.host"                                 | 1433  | null                               | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance"                                          | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | null          | "ss.host"                                 | 1433  | "ssinstance"                       | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host:1444/ssdb;instance=ssinstance"                                     | null     | "sqlserver://ss.host:1444"                                         | "mssql"      | null          | null          | "ss.host"                                 | 1444  | "ssinstance"                       | "ssdb"
-    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;instance=ssinstance;user=ssuser"                         | null     | "sqlserver://ss.host:1433"                                         | "mssql"      | null          | "ssuser"      | "ss.host"                                 | 1433  | "ssinstance"                       | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host/ssdb"                                                              | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host:1433/ssdb"                                                         | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;user=ssuser"                                             | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | "ssuser"      | "ss.host"                                 | 1433  | null                               | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;user=ssuser"                                             | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | "ssuser"      | "ss.host"                                 | 1433  | null                               | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance"                                          | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | null          | "ss.host"                                 | 1433  | "ssinstance"                       | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host:1444/ssdb;instance=ssinstance"                                     | null     | "jtds:sqlserver://ss.host:1444"                                    | "mssql"      | "sqlserver"   | null          | "ss.host"                                 | 1444  | "ssinstance"                       | "ssdb"
+    "jdbc:jtds:sqlserver://ss.host:1433/ssdb;instance=ssinstance;user=ssuser"                         | null     | "jtds:sqlserver://ss.host:1433"                                    | "mssql"      | "sqlserver"   | "ssuser"      | "ss.host"                                 | 1433  | "ssinstance"                       | "ssdb"
 
     // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
     // https://docs.oracle.com/cd/B28359_01/java.111/b31224/jdbcthin.htm

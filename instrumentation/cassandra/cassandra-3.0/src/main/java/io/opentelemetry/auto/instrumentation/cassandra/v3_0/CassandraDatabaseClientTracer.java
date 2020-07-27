@@ -38,7 +38,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
   }
 
   @Override
-  protected String dbSystem() {
+  protected String dbSystem(final Session session) {
     return DbSystem.CASSANDRA;
   }
 

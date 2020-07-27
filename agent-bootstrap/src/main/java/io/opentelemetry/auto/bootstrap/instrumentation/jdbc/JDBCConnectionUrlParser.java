@@ -124,7 +124,7 @@ public enum JDBCConnectionUrlParser {
   MODIFIED_URL_LIKE() {
     @Override
     DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
-      String system;
+      String type;
       String serverName = "";
       Integer port = null;
       String name = null;
@@ -135,10 +135,10 @@ public enum JDBCConnectionUrlParser {
         return builder;
       }
 
-      system = jdbcUrl.substring(0, hostIndex);
+      type = jdbcUrl.substring(0, hostIndex);
 
       String[] split;
-      if (system.equals(DbSystem.DB2) || system.equals(DbSystem.AS400)) {
+      if (type.equals(DbSystem.DB2) || type.equals(DbSystem.AS400)) {
         if (jdbcUrl.contains("=")) {
           int paramLoc = jdbcUrl.lastIndexOf(":");
           split = new String[] {jdbcUrl.substring(0, paramLoc), jdbcUrl.substring(paramLoc + 1)};
@@ -193,11 +193,11 @@ public enum JDBCConnectionUrlParser {
         builder.port(port);
       }
 
-      return builder.system(system);
+      return builder;
     }
   },
 
-  POSTGRES(DbSystem.POSTGRESQL) {
+  POSTGRES("postgresql") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 5432;
 
@@ -214,7 +214,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MYSQL(DbSystem.MYSQL, DbSystem.MARIADB) {
+  MYSQL("mysql", "mariadb") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 3306;
 
@@ -227,9 +227,10 @@ public enum JDBCConnectionUrlParser {
       if (dbInfo.getPort() == null) {
         builder.port(DEFAULT_PORT);
       }
+
       int protoLoc = jdbcUrl.indexOf("://");
-      int typeEndLoc = dbInfo.getSystem().length();
-      if (protoLoc > typeEndLoc) {
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (typeEndLoc < protoLoc) {
         return MARIA_SUBPROTO
             .doParse(jdbcUrl.substring(protoLoc + 3), builder)
             .subtype(jdbcUrl.substring(typeEndLoc + 1, protoLoc));
@@ -339,7 +340,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  SAP(DbSystem.SAP) {
+  SAP("sap") {
     private static final String DEFAULT_HOST = "localhost";
 
     @Override
@@ -352,13 +353,12 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MSSQLSERVER(DbSystem.MSSQL) {
+  MSSQLSERVER("jtds", "microsoft", "sqlserver") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 1433;
 
     @Override
     DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
-      builder.system("sqlserver");
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -367,20 +367,23 @@ public enum JDBCConnectionUrlParser {
         builder.port(DEFAULT_PORT);
       }
 
-      if (jdbcUrl.startsWith("microsoft:")) {
-        jdbcUrl = jdbcUrl.substring("microsoft:".length());
-      } else if (jdbcUrl.startsWith("jtds:")) {
-        return JTDS_URL_LIKE.doParse(jdbcUrl, builder);
+      int typeLoc = jdbcUrl.indexOf(":"); // type
+      int subtypeLoc = jdbcUrl.indexOf(":", typeLoc + 1); // subtype
+      int hostLoc = jdbcUrl.indexOf("//");
+      if (subtypeLoc != -1 && typeLoc != -1 && typeLoc < subtypeLoc && subtypeLoc < hostLoc) {
+        String subtype = jdbcUrl.substring(typeLoc + 1, subtypeLoc);
+        builder.subtype(subtype);
       }
-      if (!jdbcUrl.startsWith("sqlserver://")) {
-        return builder;
+
+      if (jdbcUrl.startsWith("jtds:")) {
+        return JTDS_URL_LIKE.doParse(jdbcUrl, builder);
       }
 
       return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
     }
   },
 
-  DB2(DbSystem.DB2, DbSystem.AS400) {
+  DB2("db2", "as400") {
     private static final int DEFAULT_PORT = 50000;
 
     @Override
@@ -393,7 +396,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  ORACLE(DbSystem.ORACLE) {
+  ORACLE("oracle") {
     private static final int DEFAULT_PORT = 1521;
 
     @Override
@@ -548,7 +551,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  H2(DbSystem.H2) {
+  H2("h2") {
     private static final int DEFAULT_PORT = 8082;
 
     @Override
@@ -608,7 +611,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  HSQL(DbSystem.HSQLDB) {
+  HSQL("hsqldb") {
     private static final String DEFAULT_USER = "SA";
     private static final int DEFAULT_PORT = 9001;
 
@@ -657,7 +660,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  DERBY(DbSystem.DERBY) {
+  DERBY("derby") {
     private static final String DEFAULT_USER = "APP";
     private static final int DEFAULT_PORT = 1527;
 
@@ -777,31 +780,27 @@ public enum JDBCConnectionUrlParser {
       return DEFAULT;
     }
 
-    String baseSystem = jdbcUrl.substring(0, typeLoc);
-    baseSystem = toDbSystem(baseSystem);
-    DBInfo.Builder parsedProps = DEFAULT.toBuilder().system(baseSystem);
+    String type = jdbcUrl.substring(0, typeLoc);
+    String system = toDbSystem(type);
+    DBInfo.Builder parsedProps = DEFAULT.toBuilder().system(system);
     populateStandardProperties(parsedProps, props);
 
     try {
-      if (typeParsers.containsKey(baseSystem)) {
+      if (typeParsers.containsKey(type)) {
         // Delegate to specific parser
-        return withUrl(typeParsers.get(baseSystem).doParse(jdbcUrl, parsedProps));
+        return withUrl(typeParsers.get(type).doParse(jdbcUrl, parsedProps), type);
       }
-      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps));
+      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
     } catch (final Exception e) {
       ExceptionLogger.LOGGER.debug("Error parsing URL", e);
       return parsedProps.build();
     }
   }
 
-  private static DBInfo withUrl(final DBInfo.Builder builder) {
+  private static DBInfo withUrl(final DBInfo.Builder builder, String type) {
     DBInfo info = builder.build();
-    String system = info.getSystem();
-    if (system == null) {
-      return builder.build();
-    }
     StringBuilder url = new StringBuilder();
-    url.append(system);
+    url.append(type);
     url.append(':');
     String subtype = info.getSubtype();
     if (subtype != null) {
@@ -818,7 +817,7 @@ public enum JDBCConnectionUrlParser {
         url.append(port);
       }
     }
-    return builder.shortUrl(url.toString()).system(toDbSystem(system)).build();
+    return builder.shortUrl(url.toString()).build();
   }
 
   // Source: https://stackoverflow.com/a/13592567

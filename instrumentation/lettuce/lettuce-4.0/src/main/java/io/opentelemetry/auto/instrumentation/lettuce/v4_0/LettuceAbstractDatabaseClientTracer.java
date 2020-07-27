@@ -27,7 +27,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
     extends DatabaseClientTracer<RedisURI, QUERY> {
 
   @Override
-  protected String dbSystem() {
+  protected String dbSystem(final RedisURI connection) {
     return DbSystem.REDIS;
   }
 

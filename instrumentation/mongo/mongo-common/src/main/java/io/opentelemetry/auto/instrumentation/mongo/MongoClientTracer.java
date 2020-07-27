@@ -23,6 +23,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +43,8 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbSystem() {
-    return "mongo";
+  protected String dbSystem(final CommandStartedEvent event) {
+    return DbSystem.MONGODB;
   }
 
   @Override

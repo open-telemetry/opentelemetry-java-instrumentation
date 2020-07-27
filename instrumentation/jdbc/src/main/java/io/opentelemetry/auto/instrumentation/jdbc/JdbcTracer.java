@@ -40,8 +40,8 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbSystem() {
-    return "sql";
+  protected String dbSystem(final DBInfo info) {
+    return info.getSystem();
   }
 
   @Override

@@ -30,7 +30,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected String dbSystem() {
+  protected String dbSystem(final RedisURI connection) {
     return DbSystem.REDIS;
   }
 
