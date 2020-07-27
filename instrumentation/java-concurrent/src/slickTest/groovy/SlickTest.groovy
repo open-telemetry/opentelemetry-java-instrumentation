@@ -49,7 +49,7 @@ class SlickTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "h2"
             "${StringAttributeSetter.create("db.name").key()}" SlickUtils.Db()
             "${SemanticAttributes.DB_USER.key()}" SlickUtils.Username()
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(SlickUtils.TestQuery())
