@@ -895,7 +895,7 @@ public enum JDBCConnectionUrlParser {
 
   /**
    * see {@link <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/709293fe132709705f0e0dd4252992e87a6ec899/specification/trace/semantic_conventions/database.md">specification</a>}
+   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md">specification</a>}
    */
   private static String updateDbSystem(final String type) {
     switch (type) {
