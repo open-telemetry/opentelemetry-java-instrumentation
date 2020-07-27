@@ -138,7 +138,7 @@ public enum JDBCConnectionUrlParser {
       type = jdbcUrl.substring(0, hostIndex);
 
       String[] split;
-      if (type.equals(DbSystem.DB2) || type.equals(DbSystem.AS400)) {
+      if (type.equals("db2") || type.equals("as400")) {
         if (jdbcUrl.contains("=")) {
           int paramLoc = jdbcUrl.lastIndexOf(":");
           split = new String[] {jdbcUrl.substring(0, paramLoc), jdbcUrl.substring(paramLoc + 1)};
