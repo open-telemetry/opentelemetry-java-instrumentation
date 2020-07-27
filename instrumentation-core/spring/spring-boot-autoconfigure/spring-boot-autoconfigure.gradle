@@ -10,8 +10,9 @@ apply from: "$rootDir/gradle/publish.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
-  implementation "org.springframework.boot:spring-boot-starter-validation"
+  implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
+  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
+  implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
   
   testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
@@ -29,14 +30,14 @@ dependencies {
    
   compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-logging", version:"0.6.0"
   
-  api deps.opentelemetryApi 
-
-  compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.6.0"
-  compileOnly deps.opentelemetryJaeger
-  compileOnly deps.opentelemetryOtlp
-  compileOnly deps.opentelemetryZipkin
-  
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
+  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-jaeger", version:"0.6.0"
+  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-otlp", version:"0.6.0"
+  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-zipkin", version:"0.6.0"
+  
+  //compileOnly deps.opentelemetryJaeger
+  //compileOnly deps.opentelemetryOtlp
+  //compileOnly deps.opentelemetryZipkin
 }
 
 test {
