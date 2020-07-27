@@ -9,7 +9,9 @@ configurations.all {
 ext {
   versions = [
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
-    opentelemetry: '0.7.0-20200721.021000-20',
+    opentelemetry: '0.7.0-20200723.154929-27',
+    // Snapshot versions can often get split into two suffixes
+    opentelemetryOther: '0.7.0-20200723.154929-26',
 
     slf4j        : "1.7.30",
     guava        : "20.0", // Last version to support Java 7
@@ -26,13 +28,13 @@ ext {
   deps = [
     // OpenTelemetry
     opentelemetryApi               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
-    opentelemetryApiAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetry),
-    opentelemetryTraceProps        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
+    opentelemetryApiAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
+    opentelemetryTraceProps        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetryOther),
     opentelemetrySdk               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
-    opentelemetrySdkAutoConfig     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetry),
+    opentelemetrySdkAutoConfig     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetryOther),
     opentelemetryJaeger            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
-    opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetry),
-    opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
+    opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
+    opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
 
     // General
     slf4j                          : "org.slf4j:slf4j-api:${versions.slf4j}",

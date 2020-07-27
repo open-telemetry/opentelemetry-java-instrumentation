@@ -109,7 +109,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION || endpoint == ERROR }
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.errored) {

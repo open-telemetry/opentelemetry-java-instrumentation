@@ -111,6 +111,11 @@ class UnshadedSpan implements Span {
   }
 
   @Override
+  public void recordException(Throwable throwable) {
+    shadedSpan.recordException(throwable);
+  }
+
+  @Override
   public void updateName(final String name) {
     shadedSpan.updateName(name);
   }

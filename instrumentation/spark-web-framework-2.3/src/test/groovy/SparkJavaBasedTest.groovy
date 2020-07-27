@@ -51,7 +51,8 @@ class SparkJavaBasedTest extends AgentTestRunner {
 
     expect:
     port != 0
-    response.body().string() == "Hello asdf1234"
+    def content = response.body.string()
+    content == "Hello asdf1234"
 
     assertTraces(1) {
       trace(0, 1) {
@@ -64,6 +65,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/param/asdf1234"
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" content.length()
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "servlet.path" ''
