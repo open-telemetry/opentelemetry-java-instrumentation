@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kubernetes;
+package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.auto.instrumentation.kubernetes.KubernetesClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.kubernetes.KubernetesClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesClientDecorator.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;

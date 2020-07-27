@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kubernetes;
+package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -37,7 +37,7 @@ import okhttp3.Interceptor;
 public class KubernetesClientInstrumentation extends Instrumenter.Default {
 
   public KubernetesClientInstrumentation() {
-    super("kubernetes");
+    super("kubernetes-client");
   }
 
   @Override

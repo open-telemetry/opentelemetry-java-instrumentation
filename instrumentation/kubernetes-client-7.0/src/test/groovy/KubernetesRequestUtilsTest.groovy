@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.kubernetes.KubernetesRequestDigest
-import io.opentelemetry.auto.instrumentation.kubernetes.KubernetesResource
-import io.opentelemetry.auto.instrumentation.kubernetes.KubernetesVerb
+import io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesRequestDigest
+import io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesResource
+import io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesVerb
 import spock.lang.Specification
 
 class KubernetesRequestUtilsTest extends Specification {
