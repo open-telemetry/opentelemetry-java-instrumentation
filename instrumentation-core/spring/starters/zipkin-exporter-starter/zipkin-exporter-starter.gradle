@@ -11,7 +11,7 @@ sourceCompatibility = '8'
 
 dependencies {
   api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
-  api project(':instrumentation-core:spring:starters:opentelemetry-starter-spring')
+  api project(':instrumentation-core:spring:starters:spring-starter')
   api deps.opentelemetryZipkin
 }
 
