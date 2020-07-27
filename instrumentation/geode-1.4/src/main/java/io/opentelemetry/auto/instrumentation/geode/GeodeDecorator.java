@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.geode;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Tracer;
 import org.apache.geode.cache.Region;
 
@@ -29,7 +30,7 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
 
   @Override
   protected String dbSystem() {
-    return "geode";
+    return DbSystem.GEODE;
   }
 
   @Override

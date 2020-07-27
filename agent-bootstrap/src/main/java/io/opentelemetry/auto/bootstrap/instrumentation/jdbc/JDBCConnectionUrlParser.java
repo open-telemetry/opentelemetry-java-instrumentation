@@ -892,31 +892,16 @@ public enum JDBCConnectionUrlParser {
   private static String toDbSystem(final String type) {
     switch (type) {
       case DbSystem.AS400: // IBM AS400 Database
-      case DbSystem.CASSANDRA: // Cassandra
-      case DbSystem.COSMOSDB: // Microsoft Azure Cosmos DB
-      case DbSystem.COUCHBASE: // Couchbase
-      case DbSystem.COUCHDB: // CouchDB
       case DbSystem.DB2: // IBM Db2
+        return DbSystem.DB2;
       case DbSystem.DERBY: // Apache Derby
       case DbSystem.H2: // H2 Database
       case DbSystem.HSQLDB: // Hyper SQL Database
       case DbSystem.MARIADB: // MariaDB
-      case DbSystem.MONGODB: // MongoDB
       case DbSystem.MYSQL: // MySQL
-      case DbSystem.NEO4J: // Neo4j
       case DbSystem.ORACLE: // Oracle Database
       case DbSystem.POSTGRESQL: // PostgreSQL
-      case DbSystem.REDIS: // Redis
-      case DbSystem.SAP: // SAP HANA
-      case DbSystem.SQLITE: // SQLite
-      case DbSystem.TERADATA: // Teradata
         return type;
-      case "apachehbase": // Apache HBase
-        return DbSystem.HBASE;
-      case "amazondynamodb": // Amazon DynamoDB
-        return DbSystem.DYNAMODB;
-      case "hive2": // Apache Hive
-        return DbSystem.HIVE;
       case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
