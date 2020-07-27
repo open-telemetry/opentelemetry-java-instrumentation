@@ -70,7 +70,6 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
-            // Optional
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
