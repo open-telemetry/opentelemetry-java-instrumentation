@@ -27,8 +27,8 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
@@ -64,15 +64,17 @@ public final class CallableInstrumentation extends Instrumenter.Default {
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope enter(@Advice.This final Callable thiz) {
+    public static Scope enter(@Advice.This final Callable thiz) {
       ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final SpanWithScope scope) {
-      AdviceUtils.endTaskScope(scope);
+    public static void exit(@Advice.Enter final Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

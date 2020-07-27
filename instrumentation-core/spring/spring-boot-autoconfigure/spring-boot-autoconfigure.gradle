@@ -18,21 +18,25 @@ bootJar {
 }
 
 dependencies {
-  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
+  implementation "org.springframework.boot:spring-boot-starter-validation"
   
   testImplementation('org.springframework.boot:spring-boot-starter-test') {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
   
-  implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation project(':instrumentation-core:spring:spring-webmvc-3.1')
   implementation project(':instrumentation-core:spring:spring-web-3.1')
-  
-  implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation project(':instrumentation-core:spring:spring-webflux-5.0')
   
   api deps.opentelemetryApi 
-  api "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
+
+  compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.6.0"
+  compileOnly deps.opentelemetryJaeger
+  compileOnly deps.opentelemetryOtlp
+  compileOnly deps.opentelemetryZipkin
+  
+  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
 }
 
 test {
