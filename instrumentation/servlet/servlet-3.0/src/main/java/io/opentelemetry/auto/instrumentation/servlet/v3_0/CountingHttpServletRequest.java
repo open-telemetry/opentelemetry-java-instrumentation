@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * TODO(anuraaga): Implement counting, for now it just ensures startAsync is called with the wrapped
- * objects.
+ * objects to allow counting the response.
  */
 public class CountingHttpServletRequest extends HttpServletRequestWrapper {
 

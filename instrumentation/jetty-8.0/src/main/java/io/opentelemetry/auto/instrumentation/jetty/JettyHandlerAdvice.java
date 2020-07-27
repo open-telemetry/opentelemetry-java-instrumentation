@@ -26,7 +26,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -95,14 +94,8 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      contentLengthHelper(span, response);
+      JettyHttpServerTracer.contentLengthHelper(span, response);
       TRACER.end(span, response.getStatus());
-    }
-  }
-
-  public static void contentLengthHelper(Span span, ServletResponse response) {
-    if (response instanceof CountingHttpServletResponse) {
-      TRACER.setContentLength(span, ((CountingHttpServletResponse) response).getContentLength());
     }
   }
 }
