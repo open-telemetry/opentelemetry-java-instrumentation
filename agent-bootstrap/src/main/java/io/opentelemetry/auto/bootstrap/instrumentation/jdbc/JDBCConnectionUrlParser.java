@@ -367,11 +367,10 @@ public enum JDBCConnectionUrlParser {
         builder.port(DEFAULT_PORT);
       }
 
-      int typeLoc = jdbcUrl.indexOf(":"); // type
-      int subtypeLoc = jdbcUrl.indexOf(":", typeLoc + 1); // subtype
-      int hostLoc = jdbcUrl.indexOf("//");
-      if (subtypeLoc != -1 && typeLoc != -1 && typeLoc < subtypeLoc && subtypeLoc < hostLoc) {
-        String subtype = jdbcUrl.substring(typeLoc + 1, subtypeLoc);
+      int protoLoc = jdbcUrl.indexOf("://");
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (protoLoc > typeEndLoc) {
+        String subtype = jdbcUrl.substring(typeEndLoc + 1, protoLoc);
         builder.subtype(subtype);
       }
 
