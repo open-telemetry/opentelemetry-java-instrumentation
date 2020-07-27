@@ -268,6 +268,12 @@ class TomcatServlet3TestAsync extends TomcatServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.Async
   }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
 }
 
 class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
@@ -275,6 +281,12 @@ class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 
@@ -370,6 +382,12 @@ class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 

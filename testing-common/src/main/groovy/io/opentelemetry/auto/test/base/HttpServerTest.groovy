@@ -462,7 +462,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         parent()
       }
-      if (endpoint == EXCEPTION) {
+      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {

@@ -23,6 +23,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -111,11 +112,13 @@ class Netty41ClientTest extends HttpClientTest {
             operationName "CONNECT"
             childOf span(0)
             errored true
-            attributes {
-              "error.type" AbstractChannel.AnnotatedConnectException.name
-              "error.stack" String
-              // slightly different message on windows
-              "error.msg" ~/Connection refused:( no further information:)? localhost\/[0-9.:]+:$UNUSABLE_PORT/
+            event(0) {
+              eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+              attributes {
+                "${SemanticAttributes.EXCEPTION_TYPE.key()}" AbstractChannel.AnnotatedConnectException.canonicalName
+                "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" ~/Connection refused:( no further information:)? localhost\/[0-9.:]+:$UNUSABLE_PORT/
+                "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              }
             }
           }
         }

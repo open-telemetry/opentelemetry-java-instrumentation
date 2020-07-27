@@ -96,6 +96,9 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -107,11 +110,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION || endpoint == ERROR || endpoint == NOT_FOUND || endpoint == REDIRECT }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

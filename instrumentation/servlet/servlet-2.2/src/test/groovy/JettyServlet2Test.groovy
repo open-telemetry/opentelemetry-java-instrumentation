@@ -109,6 +109,9 @@ class JettyServlet2Test extends HttpServerTest<Server> {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
         // No peer port
@@ -117,11 +120,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "servlet.context" "/$CONTEXT"
         "servlet.path" endpoint.path
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -101,17 +102,19 @@ class Netty40ClientTest extends HttpClientTest {
             operationName "CONNECT"
             childOf span(0)
             errored true
-            attributes {
-              Class errorClass = ConnectException
-              try {
-                errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
-              } catch (ClassNotFoundException e) {
-                // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
+            Class errorClass = ConnectException
+            try {
+              errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
+            } catch (ClassNotFoundException e) {
+              // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
+            }
+            event(0) {
+              eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+              attributes {
+                "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorClass.name
+                "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/
+                "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
               }
-              "error.type" errorClass.name
-              "error.stack" String
-              // slightly different message on windows
-              "error.msg" ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/
             }
           }
         }

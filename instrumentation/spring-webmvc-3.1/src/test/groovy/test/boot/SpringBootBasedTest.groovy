@@ -154,6 +154,9 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -164,11 +167,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
         "servlet.path" endpoint.path
         "servlet.context" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

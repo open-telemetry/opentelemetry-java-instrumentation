@@ -152,7 +152,7 @@ class SpanAssert {
     event(index) {
       eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
       attributes {
-        "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorType.name
+        "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorType.canonicalName
         "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
         if (message != null) {
           "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" message

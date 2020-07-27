@@ -124,11 +124,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || /* async */ it == null }
         "servlet.context" ""
         "servlet.path" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

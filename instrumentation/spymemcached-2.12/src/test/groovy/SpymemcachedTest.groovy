@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -25,6 +24,7 @@ import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
 import net.spy.memcached.DefaultConnectionFactory
 import net.spy.memcached.MemcachedClient
+import net.spy.memcached.internal.CheckedOperationTimeoutException
 import net.spy.memcached.ops.Operation
 import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
