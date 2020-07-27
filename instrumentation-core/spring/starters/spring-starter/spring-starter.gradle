@@ -13,11 +13,7 @@ dependencies {
   api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
   api project(':instrumentation-core:spring:spring-boot-autoconfigure')
   
-  //api deps.opentelemetryApi
-  //implementation deps.opentelemetrySdk
-  api group: "io.opentelemetry", name: "opentelemetry-api", version:"0.6.0"
-  implementation group: "io.opentelemetry", name: "opentelemetry-sdk", version:"0.6.0"
-  
-  // TO DO: Add opentelemetryLogging to dependencies.gradle
-  api group: "io.opentelemetry", name: "opentelemetry-exporters-logging", version:"0.6.0"
+  api deps.opentelemetryApi
+  api deps.opentelemetryLogging
+  api deps.opentelemetrySdk
 }

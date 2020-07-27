@@ -13,9 +13,7 @@ sourceCompatibility = '8'
 dependencies {
   api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
   api project(':instrumentation-core:spring:starters:opentelemetry-starter-spring')
-  
-  //api deps.opentelemetryJaeger
-  api group: "io.opentelemetry", name: "opentelemetry-exporters-jaeger", version:"0.6.0"
+  api deps.opentelemetryJaeger
   implementation group: "io.grpc", name: "grpc-netty-shaded", version: "1.30.2"
 }
 
