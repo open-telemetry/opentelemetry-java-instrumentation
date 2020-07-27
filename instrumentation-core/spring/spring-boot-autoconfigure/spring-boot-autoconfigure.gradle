@@ -31,13 +31,9 @@ dependencies {
   compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-logging", version:"0.6.0"
   
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
-  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-jaeger", version:"0.6.0"
-  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-otlp", version:"0.6.0"
-  compileOnly group: "io.opentelemetry", name: "opentelemetry-exporters-zipkin", version:"0.6.0"
-  
-  //compileOnly deps.opentelemetryJaeger
-  //compileOnly deps.opentelemetryOtlp
-  //compileOnly deps.opentelemetryZipkin
+  compileOnly deps.opentelemetryJaeger
+  compileOnly deps.opentelemetryOtlp
+  compileOnly deps.opentelemetryZipkin
 }
 
 test {
