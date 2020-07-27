@@ -20,7 +20,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 
@@ -39,7 +39,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
 
   @Override
   protected String dbSystem() {
-    return Constants.CASSANDRA;
+    return DbSystem.CASSANDRA;
   }
 
   @Override

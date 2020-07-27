@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 
@@ -31,7 +31,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
 
   @Override
   protected String dbSystem() {
-    return Constants.REDIS;
+    return DbSystem.REDIS;
   }
 
   @Override

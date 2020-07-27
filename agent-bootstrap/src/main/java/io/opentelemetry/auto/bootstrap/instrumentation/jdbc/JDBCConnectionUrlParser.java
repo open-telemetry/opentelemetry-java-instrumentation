@@ -138,7 +138,7 @@ public enum JDBCConnectionUrlParser {
       system = jdbcUrl.substring(0, hostIndex);
 
       String[] split;
-      if (system.equals(Constants.DB2) || system.equals(Constants.AS400)) {
+      if (system.equals(DbSystem.DB2) || system.equals(DbSystem.AS400)) {
         if (jdbcUrl.contains("=")) {
           int paramLoc = jdbcUrl.lastIndexOf(":");
           split = new String[] {jdbcUrl.substring(0, paramLoc), jdbcUrl.substring(paramLoc + 1)};
@@ -197,7 +197,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  POSTGRES(Constants.POSTGRESQL) {
+  POSTGRES(DbSystem.POSTGRESQL) {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 5432;
 
@@ -214,7 +214,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MYSQL(Constants.MYSQL, Constants.MARIADB) {
+  MYSQL(DbSystem.MYSQL, DbSystem.MARIADB) {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 3306;
 
@@ -339,7 +339,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  SAP(Constants.SAP) {
+  SAP(DbSystem.SAP) {
     private static final String DEFAULT_HOST = "localhost";
 
     @Override
@@ -352,7 +352,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MSSQLSERVER(Constants.MSSQL) {
+  MSSQLSERVER(DbSystem.MSSQL) {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 1433;
 
@@ -380,7 +380,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  DB2(Constants.DB2, Constants.AS400) {
+  DB2(DbSystem.DB2, DbSystem.AS400) {
     private static final int DEFAULT_PORT = 50000;
 
     @Override
@@ -393,7 +393,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  ORACLE(Constants.ORACLE) {
+  ORACLE(DbSystem.ORACLE) {
     private static final int DEFAULT_PORT = 1521;
 
     @Override
@@ -548,7 +548,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  H2(Constants.H2) {
+  H2(DbSystem.H2) {
     private static final int DEFAULT_PORT = 8082;
 
     @Override
@@ -585,13 +585,13 @@ public enum JDBCConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(Constants.H2).subtype("tcp");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("tcp");
       } else if (h2Url.startsWith("ssl:")) {
         DBInfo dbInfo = builder.build();
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(Constants.H2).subtype("ssl");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("ssl");
       } else {
         builder.subtype("file").host(null).port(null);
         int propLoc = h2Url.indexOf(";");
@@ -608,7 +608,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  HSQL(Constants.HSQLDB) {
+  HSQL(DbSystem.HSQLDB) {
     private static final String DEFAULT_USER = "SA";
     private static final int DEFAULT_PORT = 9001;
 
@@ -633,28 +633,22 @@ public enum JDBCConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(Constants.HSQLDB).subtype("hsql");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system(Constants.HSQLDB)
-            .subtype("hsqls");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(Constants.HSQLDB).subtype("http");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system(Constants.HSQLDB)
-            .subtype("https");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("https");
       } else {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
@@ -663,7 +657,7 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  DERBY(Constants.DERBY) {
+  DERBY(DbSystem.DERBY) {
     private static final String DEFAULT_USER = "APP";
     private static final int DEFAULT_PORT = 1527;
 
@@ -899,38 +893,38 @@ public enum JDBCConnectionUrlParser {
    */
   private static String updateDbSystem(final String type) {
     switch (type) {
-      case Constants.AS400: // IBM AS400 Database
-      case Constants.CASSANDRA: // Cassandra
-      case Constants.COSMOSDB: // Microsoft Azure Cosmos DB
-      case Constants.COUCHBASE: // Couchbase
-      case Constants.COUCHDB: // CouchDB
-      case Constants.DB2: // IBM Db2
-      case Constants.DERBY: // Apache Derby
-      case Constants.H2: // H2 Database
-      case Constants.HSQLDB: // Hyper SQL Database
-      case Constants.MARIADB: // MariaDB
-      case Constants.MONGODB: // MongoDB
-      case Constants.MYSQL: // MySQL
-      case Constants.NEO4J: // Neo4j
-      case Constants.ORACLE: // Oracle Database
-      case Constants.POSTGRESQL: // PostgreSQL
-      case Constants.REDIS: // Redis
-      case Constants.SAP: // SAP HANA
-      case Constants.SQLITE: // SQLite
-      case Constants.TERADATA: // Teradata
+      case DbSystem.AS400: // IBM AS400 Database
+      case DbSystem.CASSANDRA: // Cassandra
+      case DbSystem.COSMOSDB: // Microsoft Azure Cosmos DB
+      case DbSystem.COUCHBASE: // Couchbase
+      case DbSystem.COUCHDB: // CouchDB
+      case DbSystem.DB2: // IBM Db2
+      case DbSystem.DERBY: // Apache Derby
+      case DbSystem.H2: // H2 Database
+      case DbSystem.HSQLDB: // Hyper SQL Database
+      case DbSystem.MARIADB: // MariaDB
+      case DbSystem.MONGODB: // MongoDB
+      case DbSystem.MYSQL: // MySQL
+      case DbSystem.NEO4J: // Neo4j
+      case DbSystem.ORACLE: // Oracle Database
+      case DbSystem.POSTGRESQL: // PostgreSQL
+      case DbSystem.REDIS: // Redis
+      case DbSystem.SAP: // SAP HANA
+      case DbSystem.SQLITE: // SQLite
+      case DbSystem.TERADATA: // Teradata
         return type;
       case "apachehbase": // Apache HBase
-        return Constants.HBASE;
+        return DbSystem.HBASE;
       case "amazondynamodb": // Amazon DynamoDB
-        return Constants.DYNAMODB;
+        return DbSystem.DYNAMODB;
       case "hive2": // Apache Hive
-        return Constants.HIVE;
+        return DbSystem.HIVE;
       case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
-        return Constants.MSSQL;
+        return DbSystem.MSSQL;
       default:
-        return Constants.OTHER_SQL; // Unknown DBMS
+        return DbSystem.OTHER_SQL; // Unknown DBMS
     }
   }
 }

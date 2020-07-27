@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -45,7 +45,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public final class JedisInstrumentation extends Instrumenter.Default {
 
   public JedisInstrumentation() {
-    super("jedis", Constants.REDIS);
+    super("jedis", DbSystem.REDIS);
   }
 
   @Override

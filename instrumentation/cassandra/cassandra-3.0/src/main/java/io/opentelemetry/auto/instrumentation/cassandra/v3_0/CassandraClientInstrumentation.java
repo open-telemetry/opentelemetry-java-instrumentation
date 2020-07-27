@@ -24,7 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CassandraClientInstrumentation extends Instrumenter.Default {
 
   public CassandraClientInstrumentation() {
-    super(Constants.CASSANDRA);
+    super(DbSystem.CASSANDRA);
   }
 
   @Override

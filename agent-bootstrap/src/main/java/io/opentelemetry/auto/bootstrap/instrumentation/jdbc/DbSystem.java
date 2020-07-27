@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.jdbc;
 
-public final class Constants {
+public final class DbSystem {
 
   public static final String AS400 = "as400";
   public static final String CASSANDRA = "cassandra";

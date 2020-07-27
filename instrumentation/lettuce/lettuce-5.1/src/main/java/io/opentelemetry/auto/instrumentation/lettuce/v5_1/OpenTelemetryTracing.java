@@ -23,7 +23,7 @@ import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.Constants;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
@@ -169,10 +169,10 @@ public enum OpenTelemetryTracing implements Tracing {
       // the span starts.
       spanBuilder =
           TRACER
-              .spanBuilder(Constants.REDIS)
+              .spanBuilder(DbSystem.REDIS)
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
-              .setAttribute(StringAttributeSetter.create("db.system").key(), Constants.REDIS);
+              .setAttribute(StringAttributeSetter.create("db.system").key(), DbSystem.REDIS);
     }
 
     @Override
