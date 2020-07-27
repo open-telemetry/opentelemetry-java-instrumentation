@@ -19,7 +19,9 @@ publishing {
         from components.java
       }
 
-      artifactId = artifactPrefix(project) + artifactId
+      afterEvaluate {
+        artifactId = artifactPrefix(project) + archivesBaseName
+      }
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'
