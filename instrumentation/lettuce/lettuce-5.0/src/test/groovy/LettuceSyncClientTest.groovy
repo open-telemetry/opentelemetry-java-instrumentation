@@ -31,320 +31,320 @@ import java.util.concurrent.CompletionException
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceSyncClientTest extends AgentTestRunner {
-    public static final String PEER_NAME = "localhost"
-    public static final String PEER_IP = "127.0.0.1"
-    public static final int DB_INDEX = 0
-    // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-    public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
+  public static final String PEER_NAME = "localhost"
+  public static final String PEER_IP = "127.0.0.1"
+  public static final int DB_INDEX = 0
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
-    @Shared
-    int port
-    @Shared
-    int incorrectPort
-    @Shared
-    String dbAddr
-    @Shared
-    String dbAddrNonExistent
-    @Shared
-    String dbUriNonExistent
-    @Shared
-    String embeddedDbUri
+  @Shared
+  int port
+  @Shared
+  int incorrectPort
+  @Shared
+  String dbAddr
+  @Shared
+  String dbAddrNonExistent
+  @Shared
+  String dbUriNonExistent
+  @Shared
+  String embeddedDbUri
 
-    @Shared
-    RedisServer redisServer
+  @Shared
+  RedisServer redisServer
 
-    @Shared
-    Map<String, String> testHashMap = [
-            firstname: "John",
-            lastname : "Doe",
-            age      : "53"
-    ]
+  @Shared
+  Map<String, String> testHashMap = [
+    firstname: "John",
+    lastname : "Doe",
+    age      : "53"
+  ]
 
-    RedisClient redisClient
-    StatefulConnection connection
-    RedisCommands<String, ?> syncCommands
+  RedisClient redisClient
+  StatefulConnection connection
+  RedisCommands<String, ?> syncCommands
 
-    def setupSpec() {
-        port = PortUtils.randomOpenPort()
-        incorrectPort = PortUtils.randomOpenPort()
-        dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
-        dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
-        dbUriNonExistent = "redis://" + dbAddrNonExistent
-        embeddedDbUri = "redis://" + dbAddr
+  def setupSpec() {
+    port = PortUtils.randomOpenPort()
+    incorrectPort = PortUtils.randomOpenPort()
+    dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
+    dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
+    embeddedDbUri = "redis://" + dbAddr
 
-        redisServer = RedisServer.builder()
-        // bind to localhost to avoid firewall popup
-                .setting("bind " + PEER_NAME)
-        // set max memory to avoid problems in CI
-                .setting("maxmemory 128M")
-                .port(port).build()
-    }
+    redisServer = RedisServer.builder()
+    // bind to localhost to avoid firewall popup
+      .setting("bind " + PEER_NAME)
+    // set max memory to avoid problems in CI
+      .setting("maxmemory 128M")
+      .port(port).build()
+  }
 
-    def setup() {
-        redisClient = RedisClient.create(embeddedDbUri)
+  def setup() {
+    redisClient = RedisClient.create(embeddedDbUri)
 
-        redisServer.start()
-        connection = redisClient.connect()
-        syncCommands = connection.sync()
+    redisServer.start()
+    connection = redisClient.connect()
+    syncCommands = connection.sync()
 
-        syncCommands.set("TESTKEY", "TESTVAL")
-        syncCommands.hmset("TESTHM", testHashMap)
+    syncCommands.set("TESTKEY", "TESTVAL")
+    syncCommands.hmset("TESTHM", testHashMap)
 
-        // 2 sets + 1 connect trace
-        TEST_WRITER.waitForTraces(3)
-        TEST_WRITER.clear()
-    }
+    // 2 sets + 1 connect trace
+    TEST_WRITER.waitForTraces(3)
+    TEST_WRITER.clear()
+  }
 
-    def cleanup() {
-        connection.close()
-        redisServer.stop()
-    }
+  def cleanup() {
+    connection.close()
+    redisServer.stop()
+  }
 
-    def "connect"() {
-        setup:
-        RedisClient testConnectionClient = RedisClient.create(embeddedDbUri)
-        testConnectionClient.setOptions(CLIENT_OPTIONS)
+  def "connect"() {
+    setup:
+    RedisClient testConnectionClient = RedisClient.create(embeddedDbUri)
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
 
-        when:
-        StatefulConnection connection = testConnectionClient.connect()
+    when:
+    StatefulConnection connection = testConnectionClient.connect()
 
-        then:
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "CONNECT"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
-                        "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
-                        "${SemanticAttributes.NET_PEER_PORT.key()}" port
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
-                        "db.redis.dbIndex" 0
-                    }
-                }
-            }
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "CONNECT"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
+            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
+            "db.redis.dbIndex" 0
+          }
         }
-
-        cleanup:
-        connection.close()
+      }
     }
 
-    def "connect exception"() {
-        setup:
-        RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent)
-        testConnectionClient.setOptions(CLIENT_OPTIONS)
+    cleanup:
+    connection.close()
+  }
 
-        when:
-        testConnectionClient.connect()
+  def "connect exception"() {
+    setup:
+    RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent)
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
 
-        then:
-        thrown RedisConnectionException
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "CONNECT"
-                    spanKind CLIENT
-                    errored true
-                    attributes {
-                        "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
-                        "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
-                        "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
-                        "db.redis.dbIndex" 0
-                        errorAttributes CompletionException, String
-                    }
-                }
-            }
+    when:
+    testConnectionClient.connect()
+
+    then:
+    thrown RedisConnectionException
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "CONNECT"
+          spanKind CLIENT
+          errored true
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
+            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
+            "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
+            "db.redis.dbIndex" 0
+            errorAttributes CompletionException, String
+          }
         }
+      }
     }
+  }
 
-    def "set command"() {
-        setup:
-        String res = syncCommands.set("TESTSETKEY", "TESTSETVAL")
+  def "set command"() {
+    setup:
+    String res = syncCommands.set("TESTSETKEY", "TESTSETVAL")
 
-        expect:
-        res == "OK"
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "SET"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-                    }
-                }
-            }
+    expect:
+    res == "OK"
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "SET"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+          }
         }
+      }
     }
+  }
 
-    def "get command"() {
-        setup:
-        String res = syncCommands.get("TESTKEY")
+  def "get command"() {
+    setup:
+    String res = syncCommands.get("TESTKEY")
 
-        expect:
-        res == "TESTVAL"
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "GET"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
-                    }
-                }
-            }
+    expect:
+    res == "TESTVAL"
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "GET"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+          }
         }
+      }
     }
+  }
 
-    def "get non existent key command"() {
-        setup:
-        String res = syncCommands.get("NON_EXISTENT_KEY")
+  def "get non existent key command"() {
+    setup:
+    String res = syncCommands.get("NON_EXISTENT_KEY")
 
-        expect:
-        res == null
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "GET"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
-                    }
-                }
-            }
+    expect:
+    res == null
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "GET"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+          }
         }
+      }
     }
+  }
 
-    def "command with no arguments"() {
-        setup:
-        def keyRetrieved = syncCommands.randomkey()
+  def "command with no arguments"() {
+    setup:
+    def keyRetrieved = syncCommands.randomkey()
 
-        expect:
-        keyRetrieved != null
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "RANDOMKEY"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
-                    }
-                }
-            }
+    expect:
+    keyRetrieved != null
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "RANDOMKEY"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
+          }
         }
+      }
     }
+  }
 
-    def "list command"() {
-        setup:
-        long res = syncCommands.lpush("TESTLIST", "TESTLIST ELEMENT")
+  def "list command"() {
+    setup:
+    long res = syncCommands.lpush("TESTLIST", "TESTLIST ELEMENT")
 
-        expect:
-        res == 1
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "LPUSH"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "LPUSH"
-                    }
-                }
-            }
+    expect:
+    res == 1
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "LPUSH"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "LPUSH"
+          }
         }
+      }
     }
+  }
 
-    def "hash set command"() {
-        setup:
-        def res = syncCommands.hmset("user", testHashMap)
+  def "hash set command"() {
+    setup:
+    def res = syncCommands.hmset("user", testHashMap)
 
-        expect:
-        res == "OK"
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "HMSET"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET"
-                    }
-                }
-            }
+    expect:
+    res == "OK"
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "HMSET"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET"
+          }
         }
+      }
     }
+  }
 
-    def "hash getall command"() {
-        setup:
-        Map<String, String> res = syncCommands.hgetall("TESTHM")
+  def "hash getall command"() {
+    setup:
+    Map<String, String> res = syncCommands.hgetall("TESTHM")
 
-        expect:
-        res == testHashMap
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "HGETALL"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL"
-                    }
-                }
-            }
+    expect:
+    res == testHashMap
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "HGETALL"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL"
+          }
         }
+      }
     }
+  }
 
-    def "debug segfault command (returns void) with no argument should produce span"() {
-        setup:
-        syncCommands.debugSegfault()
+  def "debug segfault command (returns void) with no argument should produce span"() {
+    setup:
+    syncCommands.debugSegfault()
 
-        expect:
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "DEBUG"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
-                    }
-                }
-            }
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "DEBUG"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
+          }
         }
+      }
     }
+  }
 
-    def "shutdown command (returns void) should produce a span"() {
-        setup:
-        syncCommands.shutdown(false)
+  def "shutdown command (returns void) should produce a span"() {
+    setup:
+    syncCommands.shutdown(false)
 
-        expect:
-        assertTraces(1) {
-            trace(0, 1) {
-                span(0) {
-                    operationName "SHUTDOWN"
-                    spanKind CLIENT
-                    errored false
-                    attributes {
-                        "${StringAttributeSetter.create("db.system").key()}" "redis"
-                        "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
-                    }
-                }
-            }
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "SHUTDOWN"
+          spanKind CLIENT
+          errored false
+          attributes {
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
+          }
         }
+      }
     }
+  }
 }
