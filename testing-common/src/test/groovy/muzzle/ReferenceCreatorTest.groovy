@@ -22,6 +22,7 @@ import static muzzle.TestClasses.MethodBodyAdvice
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
+import spock.lang.Ignore
 
 class ReferenceCreatorTest extends AgentTestRunner {
   def "method body creates references"() {
@@ -79,6 +80,25 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
     expect:
     references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
+  }
+
+  def "instanceof creates references"() {
+    setup:
+    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(TestClasses.InstanceofAdvice.getName(), this.getClass().getClassLoader())
+
+    expect:
+    references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
+  }
+
+  // TODO: remove ignore when we drop java 7 support.
+  @Ignore
+  def "invokedynamic creates references"() {
+    setup:
+    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(TestClasses.InDyAdvice.getName(), this.getClass().getClassLoader())
+
+    expect:
+    references.get('muzzle.TestClasses$MethodBodyAdvice$SomeImplementation') != null
+    references.get('muzzle.TestClasses$MethodBodyAdvice$B') != null
   }
 
   private static Reference.Method findMethod(Set<Reference.Method> methods, String methodName, String methodDesc) {
