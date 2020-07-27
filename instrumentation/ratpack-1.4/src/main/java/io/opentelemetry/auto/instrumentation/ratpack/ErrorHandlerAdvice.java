@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import ratpack.handling.Context;
 
 public class ErrorHandlerAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void captureThrowable(
       @Advice.Argument(0) final Context ctx, @Advice.Argument(1) final Throwable throwable) {
     Optional<Span> span = ctx.maybeGet(Span.class);

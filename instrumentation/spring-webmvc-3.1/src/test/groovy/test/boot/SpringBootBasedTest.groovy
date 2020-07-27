@@ -135,12 +135,10 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       operationName "TestController.${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
-      childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
+      childOf((SpanData) parent)
     }
   }
 

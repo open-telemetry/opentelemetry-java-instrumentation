@@ -83,7 +83,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
             "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "$MoreAttributes.ERROR_MSG" "Server Error"
           }
         }
         server.distributedRequestSpan(it, 1, span(0))

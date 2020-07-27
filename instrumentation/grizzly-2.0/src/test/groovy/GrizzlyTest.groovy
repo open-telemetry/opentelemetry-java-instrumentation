@@ -111,4 +111,10 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
   String expectedServerSpanName(String method, ServerEndpoint endpoint) {
     return "HttpCodecFilter.handleRead"
   }
+
+  @Override
+  boolean testException() {
+    // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
 }

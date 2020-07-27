@@ -130,11 +130,11 @@ class HystrixTest extends AgentTestRunner {
           operationName "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
           errored true
+          errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            errorAttributes(IllegalArgumentException)
           }
         }
         span(2) {

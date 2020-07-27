@@ -115,17 +115,13 @@ class HttpServletTest extends AgentTestRunner {
           operationName "HttpServlet.service"
           childOf span(0)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
         span(2) {
           operationName "${servlet.class.name}.doGet"
           childOf span(1)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
       }
     }

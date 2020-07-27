@@ -92,10 +92,8 @@ class TraceUtils {
       }
       operationName operation
       errored exception != null
-      attributes {
-        if (exception) {
-          errorAttributes(exception.class, exception.message)
-        }
+      if (exception) {
+        errorEvent(exception.class, exception.message)
       }
     }
   }

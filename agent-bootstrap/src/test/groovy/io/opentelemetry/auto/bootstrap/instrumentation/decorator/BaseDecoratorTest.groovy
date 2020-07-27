@@ -96,9 +96,7 @@ class BaseDecoratorTest extends AgentSpecification {
     then:
     if (error) {
       1 * span.setStatus(Status.UNKNOWN)
-      1 * span.setAttribute(MoreAttributes.ERROR_TYPE, error.getClass().getName())
-      1 * span.setAttribute(MoreAttributes.ERROR_STACK, _)
-      1 * span.setAttribute(MoreAttributes.ERROR_MSG, null)
+      1 * span.recordException(error)
     }
     0 * _
 
@@ -113,9 +111,7 @@ class BaseDecoratorTest extends AgentSpecification {
     then:
     1 * span.setStatus(status)
     if (error) {
-      1 * span.setAttribute(MoreAttributes.ERROR_TYPE, error.getClass().getName())
-      1 * span.setAttribute(MoreAttributes.ERROR_STACK, _)
-      1 * span.setAttribute(MoreAttributes.ERROR_MSG, null)
+      1 * span.recordException(error)
     }
     0 * _
 

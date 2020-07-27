@@ -21,6 +21,8 @@ import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.attributes.SemanticAttributes
+
 import java.util.regex.Pattern
 
 import static AttributesAssert.assertAttributes
@@ -136,6 +138,27 @@ class SpanAssert {
       assert span.status == Status.OK
     }
     checked.status = true
+  }
+
+  def errorEvent(Class<Throwable> errorType) {
+    errorEvent(errorType, null)
+  }
+
+  def errorEvent(Class<Throwable> errorType, message) {
+    errorEvent(errorType, message, 0)
+  }
+
+  def errorEvent(Class<Throwable> errorType, message, int index) {
+    event(index) {
+      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      attributes {
+        "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorType.name
+        "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+        if (message != null) {
+          "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" message
+        }
+      }
+    }
   }
 
   void assertDefaults() {
