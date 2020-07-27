@@ -778,7 +778,7 @@ public enum JDBCConnectionUrlParser {
     }
 
     String baseSystem = jdbcUrl.substring(0, typeLoc);
-    baseSystem = updateDbSystem(baseSystem);
+    baseSystem = toDbSystem(baseSystem);
     DBInfo.Builder parsedProps = DEFAULT.toBuilder().system(baseSystem);
     populateStandardProperties(parsedProps, props);
 
@@ -818,7 +818,7 @@ public enum JDBCConnectionUrlParser {
         url.append(port);
       }
     }
-    return builder.shortUrl(url.toString()).system(updateDbSystem(system)).build();
+    return builder.shortUrl(url.toString()).system(toDbSystem(system)).build();
   }
 
   // Source: https://stackoverflow.com/a/13592567
@@ -891,7 +891,7 @@ public enum JDBCConnectionUrlParser {
    * see {@link <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/709293fe132709705f0e0dd4252992e87a6ec899/specification/trace/semantic_conventions/database.md">specification</a>}
    */
-  private static String updateDbSystem(final String type) {
+  private static String toDbSystem(final String type) {
     switch (type) {
       case DbSystem.AS400: // IBM AS400 Database
       case DbSystem.CASSANDRA: // Cassandra
