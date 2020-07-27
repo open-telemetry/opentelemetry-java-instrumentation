@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kubernetes;
+package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 class ParseKubernetesResourceException extends Exception {}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kubernetes;
+package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kubernetes;
+package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
@@ -27,7 +27,7 @@ public class KubernetesClientDecorator extends HttpClientDecorator<Request, Resp
   public static final KubernetesClientDecorator DECORATE = new KubernetesClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kubernetes");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kubernetes-client-7.0");
 
   @Override
   protected String method(final Request httpRequest) {
