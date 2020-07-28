@@ -92,6 +92,11 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
+  public void recordException(Throwable throwable) {
+    delegate.recordException(throwable);
+  }
+
+  @Override
   public void updateName(final String name) {
     delegate.updateName(name);
   }
