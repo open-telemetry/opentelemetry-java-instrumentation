@@ -65,7 +65,7 @@ public class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  public void should_add_ONE_exchange_filter_to_WebClient() {
+  public void should_add_exchange_filter_to_WebClient() {
     WebClient webClient = WebClient.create();
     Object processedWebClient =
         webClientBeanPostProcessor.postProcessAfterInitialization(webClient, "testWebClient");
