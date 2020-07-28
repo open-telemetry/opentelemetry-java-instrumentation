@@ -83,4 +83,4 @@ task integrationTest(type: Test) {
   }
 }
 
-check.dependsOn integrationTest
+test.finalizedBy integrationTest
