@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.netty.channel.AbstractChannel
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
