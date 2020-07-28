@@ -40,8 +40,8 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbType() {
-    return "sql";
+  protected String dbSystem(final DBInfo info) {
+    return info.getSystem();
   }
 
   @Override
@@ -50,9 +50,9 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbInstance(final DBInfo info) {
-    if (info.getInstance() != null) {
-      return info.getInstance();
+  protected String dbName(final DBInfo info) {
+    if (info.getName() != null) {
+      return info.getName();
     } else {
       return info.getDb();
     }
@@ -65,7 +65,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbUrl(final DBInfo info) {
+  protected String dbConnectionString(final DBInfo info) {
     return info.getShortUrl();
   }
 

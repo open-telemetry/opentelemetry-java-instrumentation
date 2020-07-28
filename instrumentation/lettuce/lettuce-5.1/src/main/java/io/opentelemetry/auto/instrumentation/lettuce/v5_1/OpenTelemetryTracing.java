@@ -23,11 +23,13 @@ import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -167,10 +169,10 @@ public enum OpenTelemetryTracing implements Tracing {
       // the span starts.
       spanBuilder =
           TRACER
-              .spanBuilder("REDIS")
+              .spanBuilder("redis")
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
-              .setAttribute(SemanticAttributes.DB_TYPE.key(), "redis");
+              .setAttribute(StringAttributeSetter.create("db.system").key(), DbSystem.REDIS);
     }
 
     @Override
@@ -289,7 +291,8 @@ public enum OpenTelemetryTracing implements Tracing {
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
+      span.setAttribute(
+          StringAttributeSetter.create("db.connection_string").key(), redisUrl.toString());
     }
 
     private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
@@ -310,7 +313,8 @@ public enum OpenTelemetryTracing implements Tracing {
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
+      span.setAttribute(
+          StringAttributeSetter.create("db.connection_string").key(), redisUrl.toString());
     }
   }
 }

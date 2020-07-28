@@ -20,6 +20,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
@@ -129,8 +130,8 @@ class CassandraClientTest extends AgentTestRunner {
         "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
         "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
         "${SemanticAttributes.NET_PEER_PORT.key()}" EmbeddedCassandraServerHelper.getNativeTransportPort()
-        "${SemanticAttributes.DB_TYPE.key()}" "cassandra"
-        "${SemanticAttributes.DB_INSTANCE.key()}" keyspace
+        "${StringAttributeSetter.create("db.system").key()}" "cassandra"
+        "${StringAttributeSetter.create("db.name").key()}" keyspace
         "${SemanticAttributes.DB_STATEMENT.key()}" statement
       }
     }

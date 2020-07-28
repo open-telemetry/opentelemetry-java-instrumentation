@@ -17,6 +17,7 @@
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -39,9 +40,9 @@ class CouchbaseSpanUtil {
         "${SemanticAttributes.NET_PEER_NAME.key()}" { it == "localhost" || it == "127.0.0.1" || it == null }
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || Number }
 
-        "${SemanticAttributes.DB_TYPE.key()}" "couchbase"
+        "${StringAttributeSetter.create("db.system").key()}" "couchbase"
         if (bucketName != null) {
-          "${SemanticAttributes.DB_INSTANCE.key()}" bucketName
+          "${StringAttributeSetter.create("db.name").key()}" bucketName
         }
 
         // Because of caching, not all requests hit the server so this tag may be absent

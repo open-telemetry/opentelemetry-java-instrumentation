@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.geode;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Tracer;
 import org.apache.geode.cache.Region;
 
@@ -28,8 +29,8 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.geode-1.7");
 
   @Override
-  protected String dbType() {
-    return "geode";
+  protected String dbSystem() {
+    return DbSystem.GEODE;
   }
 
   @Override
@@ -38,7 +39,7 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   }
 
   @Override
-  protected String dbInstance(final Region region) {
+  protected String dbName(final Region region) {
     return region.getName();
   }
 }

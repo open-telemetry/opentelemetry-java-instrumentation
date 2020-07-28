@@ -32,6 +32,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
           TRACER
               .spanBuilder(method.getName())
               .setSpanKind(CLIENT)
-              .setAttribute(SemanticAttributes.DB_INSTANCE.key(), thiz.getName())
+              .setAttribute(StringAttributeSetter.create("db.name").key(), thiz.getName())
               .startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
@@ -134,7 +135,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
           TRACER
               .spanBuilder(method.getName())
               .setSpanKind(CLIENT)
-              .setAttribute(SemanticAttributes.DB_INSTANCE.key(), thiz.getName())
+              .setAttribute(StringAttributeSetter.create("db.name").key(), thiz.getName())
               .setAttribute(SemanticAttributes.DB_STATEMENT.key(), query)
               .startSpan();
       DECORATE.afterStart(span);

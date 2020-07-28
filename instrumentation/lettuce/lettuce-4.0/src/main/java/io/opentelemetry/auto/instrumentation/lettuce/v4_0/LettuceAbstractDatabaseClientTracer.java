@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -26,8 +27,8 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
     extends DatabaseClientTracer<RedisURI, QUERY> {
 
   @Override
-  protected String dbType() {
-    return "redis";
+  protected String dbSystem(final RedisURI connection) {
+    return DbSystem.REDIS;
   }
 
   @Override
@@ -36,7 +37,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected String dbInstance(final RedisURI connection) {
+  protected String dbName(final RedisURI connection) {
     return null;
   }
 

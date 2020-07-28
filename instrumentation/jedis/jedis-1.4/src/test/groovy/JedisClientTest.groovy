@@ -17,6 +17,7 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
@@ -64,8 +65,8 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
-            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -87,8 +88,8 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
-            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -98,8 +99,8 @@ class JedisClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
-            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -121,8 +122,8 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
-            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -132,8 +133,8 @@ class JedisClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           attributes {
-            "${SemanticAttributes.DB_TYPE.key()}" "redis"
-            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }

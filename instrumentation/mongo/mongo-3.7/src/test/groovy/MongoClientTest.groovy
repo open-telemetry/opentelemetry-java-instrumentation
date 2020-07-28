@@ -24,6 +24,7 @@ import com.mongodb.client.MongoDatabase
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -293,9 +294,9 @@ class MongoClientTest extends MongoBaseTest {
         "${SemanticAttributes.DB_STATEMENT.key()}" {
           it.replace(" ", "") == statement
         }
-        "${SemanticAttributes.DB_TYPE.key()}" "mongo"
-        "${SemanticAttributes.DB_URL.key()}" "mongodb://localhost:" + port
-        "${SemanticAttributes.DB_INSTANCE.key()}" instance
+        "${StringAttributeSetter.create("db.system").key()}" "mongodb"
+        "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
+        "${StringAttributeSetter.create("db.name").key()}" instance
       }
     }
   }
