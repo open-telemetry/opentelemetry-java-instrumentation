@@ -22,7 +22,8 @@ ext {
     bytebuddy    : "1.10.10",
     scala        : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
     kotlin       : "1.3.72",
-    coroutines   : "1.3.0"
+    coroutines   : "1.3.0",
+    springboot   : "2.3.1.RELEASE",
   ]
 
   deps = [
@@ -35,6 +36,7 @@ ext {
     opentelemetryJaeger            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
     opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
     opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
+    opentelemetryLogging           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetryOther),
 
     // General
     slf4j                          : "org.slf4j:slf4j-api:${versions.slf4j}",

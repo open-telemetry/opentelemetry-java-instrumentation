@@ -159,6 +159,11 @@ include ':instrumentation-core:spring:spring-web-3.1'
 include ':instrumentation-core:spring:spring-webflux-5.0'
 include ':instrumentation-core:spring:spring-webmvc-3.1'
 
+include ':instrumentation-core:spring:starters:spring-starter'
+include ':instrumentation-core:spring:starters:jaeger-exporter-starter'
+include ':instrumentation-core:spring:starters:otlp-exporter-starter'
+include ':instrumentation-core:spring:starters:zipkin-exporter-starter'
+
 // exporter adapters
 include ":auto-exporters"
 include ":auto-exporters:jaeger"

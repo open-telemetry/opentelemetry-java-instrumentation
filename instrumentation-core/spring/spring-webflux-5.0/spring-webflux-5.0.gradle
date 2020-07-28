@@ -7,9 +7,10 @@ ext {
   noShadowPublish = true
 }
 
-apply from: "$rootDir/gradle/java.gradle"
-
 group = 'io.opentelemetry.instrumentation'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   compileOnly project(':auto-bootstrap')
@@ -24,7 +25,6 @@ shadowJar {
   configurations = []
   relocate 'io.opentelemetry.instrumentation.springwebflux.client', 'io.opentelemetry.auto.instrumentation.springwebflux.client.shaded'
 }
-
 
 testSets {
   latestDepTest {
