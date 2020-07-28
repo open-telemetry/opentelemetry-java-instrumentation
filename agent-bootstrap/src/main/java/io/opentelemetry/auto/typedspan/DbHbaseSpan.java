@@ -19,93 +19,11 @@ package io.opentelemetry.auto.typedspan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
-import java.util.logging.Logger;
 
-/**
- * <b>Required attributes:</b>
- *
- * <ul>
- *   <li>db.system: An identifier for the database management system (DBMS) product being used. See
- *       below for a list of well-known identifiers.
- *   <li>db.hbase.namespace: The [HBase namespace](https://hbase.apache.org/book.html#_namespace)
- *       being accessed. To be used instead of the generic `db.name` attribute.
- * </ul>
- *
- * <b>Conditional attributes:</b>
- *
- * <ul>
- *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the
- *       name of the database being accessed. For commands that switch the database, this should be
- *       set to the target database (even if the command fails).
- *   <li>db.statement: The database statement being executed.
- *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command
- *       name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
- *       `findAndModify`.
- *   <li>net.peer.name: Remote hostname or similar, see note below.
- *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or
- *       [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
- *   <li>net.peer.port: Remote port number.
- *   <li>net.transport: Transport protocol used. See note below.
- * </ul>
- *
- * <b>Additional constraints</b>
- *
- * <p>At least one of the following must be set:
- *
- * <ul>
- *   <li>net.peer.name
- *   <li>net.peer.ip
- * </ul>
- */
 public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConvention {
 
-  enum AttributeStatus {
-    EMPTY,
-    DB_SYSTEM,
-    DB_CONNECTION_STRING,
-    DB_USER,
-    DB_JDBC_DRIVER_CLASSNAME,
-    DB_NAME,
-    DB_STATEMENT,
-    DB_OPERATION,
-    NET_PEER_NAME,
-    NET_PEER_IP,
-    NET_PEER_PORT,
-    NET_TRANSPORT,
-    DB_HBASE_NAMESPACE;
-
-    @SuppressWarnings("ImmutableEnumChecker")
-    private long flag;
-
-    AttributeStatus() {
-      this.flag = 1L << this.ordinal();
-    }
-
-    public boolean isSet(AttributeStatus attribute) {
-      return (this.flag & attribute.flag) > 0;
-    }
-
-    public void set(AttributeStatus attribute) {
-      this.flag |= attribute.flag;
-    }
-
-    public void set(long attribute) {
-      this.flag = attribute;
-    }
-
-    public long getValue() {
-      return flag;
-    }
-  }
-
-  @SuppressWarnings("unused")
-  private static final Logger logger = Logger.getLogger(DbHbaseSpan.class.getName());
-
-  public final AttributeStatus status;
-
-  protected DbHbaseSpan(Span span, AttributeStatus status) {
+  protected DbHbaseSpan(Span span) {
     super(span);
-    this.status = status;
   }
 
   /**
@@ -115,7 +33,7 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    * @param spanName Name for the {@link Span}
    * @return a {@link DbHbaseSpan} object.
    */
-  public static DbHbaseSpanBuilder createDbHbaseSpanBuilder(Tracer tracer, String spanName) {
+  public static DbHbaseSpanBuilder createDbHbaseSpan(Tracer tracer, String spanName) {
     return new DbHbaseSpanBuilder(tracer, spanName);
   }
 
@@ -125,9 +43,9 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    * @param builder {@link DbSpan.DbSpanBuilder} to use.
    * @return a {@link DbHbaseSpan} object built from a {@link DbSpan}.
    */
-  public static DbHbaseSpanBuilder createDbHbaseSpanBuilder(DbSpan.DbSpanBuilder builder) {
+  public static DbHbaseSpanBuilder createDbHbaseSpan(DbSpan.DbSpanBuilder builder) {
     // we accept a builder from Db since DbHbase "extends" Db
-    return new DbHbaseSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
+    return new DbHbaseSpanBuilder(builder.getSpanBuilder());
   }
 
   /** @return the Span used internally */
@@ -138,48 +56,8 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
 
   /** Terminates the Span. Here there is the checking for required attributes. */
   @Override
-  @SuppressWarnings("UnnecessaryParentheses")
   public void end() {
     delegate.end();
-
-    // required attributes
-    if (!this.status.isSet(AttributeStatus.DB_SYSTEM)) {
-      logger.warning("Wrong usage - Span missing db.system attribute");
-    }
-    if (!this.status.isSet(AttributeStatus.DB_HBASE_NAMESPACE)) {
-      logger.warning("Wrong usage - Span missing db.hbase.namespace attribute");
-    }
-    // extra constraints.
-    {
-      boolean flag =
-          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
-              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
-      if (flag) {
-        logger.info("Constraint not respected!");
-      }
-    }
-    // conditional attributes
-    if (!this.status.isSet(AttributeStatus.DB_NAME)) {
-      logger.info("WARNING! Missing db.name attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.DB_STATEMENT)) {
-      logger.info("WARNING! Missing db.statement attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.DB_OPERATION)) {
-      logger.info("WARNING! Missing db.operation attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.NET_PEER_NAME)) {
-      logger.info("WARNING! Missing net.peer.name attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.NET_PEER_IP)) {
-      logger.info("WARNING! Missing net.peer.ip attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.NET_PEER_PORT)) {
-      logger.info("WARNING! Missing net.peer.port attribute!");
-    }
-    if (!this.status.isSet(AttributeStatus.NET_TRANSPORT)) {
-      logger.info("WARNING! Missing net.transport attribute!");
-    }
   }
 
   /**
@@ -190,7 +68,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbSystem(String dbSystem) {
-    status.set(AttributeStatus.DB_SYSTEM);
     delegate.setAttribute("db.system", dbSystem);
     return this;
   }
@@ -203,7 +80,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbConnectionString(String dbConnectionString) {
-    status.set(AttributeStatus.DB_CONNECTION_STRING);
     delegate.setAttribute("db.connection_string", dbConnectionString);
     return this;
   }
@@ -215,7 +91,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbUser(String dbUser) {
-    status.set(AttributeStatus.DB_USER);
     delegate.setAttribute("db.user", dbUser);
     return this;
   }
@@ -229,7 +104,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    status.set(AttributeStatus.DB_JDBC_DRIVER_CLASSNAME);
     delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
     return this;
   }
@@ -244,7 +118,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbName(String dbName) {
-    status.set(AttributeStatus.DB_NAME);
     delegate.setAttribute("db.name", dbName);
     return this;
   }
@@ -257,7 +130,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbStatement(String dbStatement) {
-    status.set(AttributeStatus.DB_STATEMENT);
     delegate.setAttribute("db.statement", dbStatement);
     return this;
   }
@@ -274,7 +146,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbOperation(String dbOperation) {
-    status.set(AttributeStatus.DB_OPERATION);
     delegate.setAttribute("db.operation", dbOperation);
     return this;
   }
@@ -286,7 +157,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setNetPeerName(String netPeerName) {
-    status.set(AttributeStatus.NET_PEER_NAME);
     delegate.setAttribute("net.peer.name", netPeerName);
     return this;
   }
@@ -299,7 +169,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setNetPeerIp(String netPeerIp) {
-    status.set(AttributeStatus.NET_PEER_IP);
     delegate.setAttribute("net.peer.ip", netPeerIp);
     return this;
   }
@@ -311,7 +180,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setNetPeerPort(long netPeerPort) {
-    status.set(AttributeStatus.NET_PEER_PORT);
     delegate.setAttribute("net.peer.port", netPeerPort);
     return this;
   }
@@ -323,7 +191,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setNetTransport(String netTransport) {
-    status.set(AttributeStatus.NET_TRANSPORT);
     delegate.setAttribute("net.transport", netTransport);
     return this;
   }
@@ -336,7 +203,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    */
   @Override
   public DbHbaseSemanticConvention setDbHbaseNamespace(String dbHbaseNamespace) {
-    status.set(AttributeStatus.DB_HBASE_NAMESPACE);
     delegate.setAttribute("db.hbase.namespace", dbHbaseNamespace);
     return this;
   }
@@ -345,15 +211,13 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
   public static class DbHbaseSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
-    protected AttributeStatus status = AttributeStatus.EMPTY;
 
     protected DbHbaseSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public DbHbaseSpanBuilder(Span.Builder spanBuilder, long attributes) {
+    public DbHbaseSpanBuilder(Span.Builder spanBuilder) {
       this.internalBuilder = spanBuilder;
-      this.status.set(attributes);
     }
 
     public Span.Builder getSpanBuilder() {
@@ -381,7 +245,7 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
     /** starts the span */
     public DbHbaseSpan start() {
       // check for sampling relevant field here, but there are none.
-      return new DbHbaseSpan(this.internalBuilder.startSpan(), status);
+      return new DbHbaseSpan(this.internalBuilder.startSpan());
     }
 
     /**
@@ -391,7 +255,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     See below for a list of well-known identifiers.
      */
     public DbHbaseSpanBuilder setDbSystem(String dbSystem) {
-      status.set(AttributeStatus.DB_SYSTEM);
       internalBuilder.setAttribute("db.system", dbSystem);
       return this;
     }
@@ -403,7 +266,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     <p>It is recommended to remove embedded credentials.
      */
     public DbHbaseSpanBuilder setDbConnectionString(String dbConnectionString) {
-      status.set(AttributeStatus.DB_CONNECTION_STRING);
       internalBuilder.setAttribute("db.connection_string", dbConnectionString);
       return this;
     }
@@ -414,7 +276,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      * @param dbUser Username for accessing the database.
      */
     public DbHbaseSpanBuilder setDbUser(String dbUser) {
-      status.set(AttributeStatus.DB_USER);
       internalBuilder.setAttribute("db.user", dbUser);
       return this;
     }
@@ -427,7 +288,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     used to connect.
      */
     public DbHbaseSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      status.set(AttributeStatus.DB_JDBC_DRIVER_CLASSNAME);
       internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
       return this;
     }
@@ -441,7 +301,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
      */
     public DbHbaseSpanBuilder setDbName(String dbName) {
-      status.set(AttributeStatus.DB_NAME);
       internalBuilder.setAttribute("db.name", dbName);
       return this;
     }
@@ -453,7 +312,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbHbaseSpanBuilder setDbStatement(String dbStatement) {
-      status.set(AttributeStatus.DB_STATEMENT);
       internalBuilder.setAttribute("db.statement", dbStatement);
       return this;
     }
@@ -469,7 +327,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbHbaseSpanBuilder setDbOperation(String dbOperation) {
-      status.set(AttributeStatus.DB_OPERATION);
       internalBuilder.setAttribute("db.operation", dbOperation);
       return this;
     }
@@ -480,7 +337,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbHbaseSpanBuilder setNetPeerName(String netPeerName) {
-      status.set(AttributeStatus.NET_PEER_NAME);
       internalBuilder.setAttribute("net.peer.name", netPeerName);
       return this;
     }
@@ -492,7 +348,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbHbaseSpanBuilder setNetPeerIp(String netPeerIp) {
-      status.set(AttributeStatus.NET_PEER_IP);
       internalBuilder.setAttribute("net.peer.ip", netPeerIp);
       return this;
     }
@@ -503,7 +358,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      * @param netPeerPort Remote port number.
      */
     public DbHbaseSpanBuilder setNetPeerPort(long netPeerPort) {
-      status.set(AttributeStatus.NET_PEER_PORT);
       internalBuilder.setAttribute("net.peer.port", netPeerPort);
       return this;
     }
@@ -514,7 +368,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      * @param netTransport Transport protocol used. See note below.
      */
     public DbHbaseSpanBuilder setNetTransport(String netTransport) {
-      status.set(AttributeStatus.NET_TRANSPORT);
       internalBuilder.setAttribute("net.transport", netTransport);
       return this;
     }
@@ -526,7 +379,6 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      *     being accessed. To be used instead of the generic `db.name` attribute.
      */
     public DbHbaseSpanBuilder setDbHbaseNamespace(String dbHbaseNamespace) {
-      status.set(AttributeStatus.DB_HBASE_NAMESPACE);
       internalBuilder.setAttribute("db.hbase.namespace", dbHbaseNamespace);
       return this;
     }
