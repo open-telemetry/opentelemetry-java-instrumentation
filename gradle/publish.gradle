@@ -19,7 +19,9 @@ publishing {
         from components.java
       }
 
-      artifactId = artifactPrefix(project) + artifactId
+      afterEvaluate {
+        artifactId = artifactPrefix(project, archivesBaseName) + archivesBaseName
+      }
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'
@@ -57,7 +59,10 @@ publishing {
   }
 }
 
-private String artifactPrefix(Project p) {
+private String artifactPrefix(Project p, String archivesBaseName) {
+  if (archivesBaseName.startsWith("opentelemetry")) {
+    return ''
+  }
   if (p.name.startsWith("opentelemetry")) {
     return ''
   }
