@@ -147,6 +147,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored true
+          errorEvent CompletionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
             "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
@@ -154,7 +155,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
-            errorAttributes CompletionException, String
           }
         }
       }

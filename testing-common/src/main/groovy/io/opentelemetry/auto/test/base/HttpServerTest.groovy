@@ -231,7 +231,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     and:
-    assertTheTraces(count)
+    assertTheTraces(count, null, null, method, SUCCESS, null, responses[0])
 
     where:
     method = "GET"
@@ -427,12 +427,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     trace.span(index) {
       operationName "controller"
       errored errorMessage != null
-      childOf((SpanData) parent)
-      attributes {
-        if (errorMessage) {
-          errorAttributes(Exception, errorMessage)
-        }
+      if (errorMessage) {
+        errorEvent(Exception, errorMessage)
       }
+      childOf((SpanData) parent)
     }
   }
 
@@ -464,6 +462,16 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
+        event(0) {
+          eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+          attributes {
+            "${SemanticAttributes.EXCEPTION_TYPE.key()}" { it == null || it == Exception.name }
+            "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { it == null || it == EXCEPTION.body }
+            "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" { it == null || it instanceof String }
+          }
+        }
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
@@ -472,11 +480,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
-        }
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
         }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {

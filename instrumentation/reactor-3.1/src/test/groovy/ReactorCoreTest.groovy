@@ -122,10 +122,8 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           errored true
+          errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           parent()
-          attributes {
-            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
-          }
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
@@ -155,10 +153,8 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           errored true
+          errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           parent()
-          attributes {
-            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
-          }
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't

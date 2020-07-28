@@ -143,13 +143,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored true
+          errorEvent RedisConnectionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
-            errorAttributes RedisConnectionException, String
           }
         }
       }

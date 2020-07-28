@@ -100,9 +100,7 @@ class FilterTest extends AgentTestRunner {
           operationName "${filter.class.simpleName}.doFilter"
           childOf span(0)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
       }
     }

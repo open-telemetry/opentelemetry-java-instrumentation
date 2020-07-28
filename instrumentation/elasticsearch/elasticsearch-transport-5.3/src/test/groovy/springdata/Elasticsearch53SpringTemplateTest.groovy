@@ -108,12 +108,12 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           errored true
+          errorEvent IndexNotFoundException, "no such index"
           attributes {
             "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
-            errorAttributes IndexNotFoundException, "no such index"
           }
         }
       }

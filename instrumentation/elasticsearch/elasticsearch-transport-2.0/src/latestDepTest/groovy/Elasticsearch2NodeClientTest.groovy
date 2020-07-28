@@ -111,12 +111,12 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           errored true
+          errorEvent IndexNotFoundException, "no such index"
           attributes {
             "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
-            errorAttributes IndexNotFoundException, "no such index"
           }
         }
       }

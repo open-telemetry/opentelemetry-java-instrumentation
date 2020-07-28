@@ -1,9 +1,6 @@
 name: Nightly build
 
 on:
-  push:
-    branches:
-      - master
   schedule:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"

@@ -638,6 +638,18 @@ class SpymemcachedTest extends AgentTestRunner {
       spanKind CLIENT
       errored(error != null && error != "canceled")
 
+      if (error == "timeout") {
+        errorEvent(
+          CheckedOperationTimeoutException,
+          "Operation timed out. - failing node: ${memcachedAddress.address}:${memcachedAddress.port}")
+      }
+
+      if (error == "long key") {
+        errorEvent(
+          IllegalArgumentException,
+          "Key is too long (maxlen = 250)")
+      }
+
       attributes {
         "${StringAttributeSetter.create("db.system").key()}" "memcached"
 
@@ -651,18 +663,6 @@ class SpymemcachedTest extends AgentTestRunner {
 
         if (result == "miss") {
           "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.MISS
-        }
-
-        if (error == "timeout") {
-          errorAttributes(
-            CheckedOperationTimeoutException,
-            "Operation timed out. - failing node: ${memcachedAddress.address}:${memcachedAddress.port}")
-        }
-
-        if (error == "long key") {
-          errorAttributes(
-            IllegalArgumentException,
-            "Key is too long (maxlen = 250)")
         }
       }
     }

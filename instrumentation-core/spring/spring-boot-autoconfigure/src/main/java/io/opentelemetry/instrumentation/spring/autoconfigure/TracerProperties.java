@@ -16,18 +16,30 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration for OpenTelemetry Tracer
  *
- * <p>Configures LoggingExporter and sets default tracer name
+ * <p>Get Tracer Name
+ *
+ * <p>Get Sampling Probability
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
 
   private String name = "otel-spring-tracer";
-  private boolean loggingExporterEnabled = true;
+
+  /**
+   * If Sample probability == 1: always sample
+   *
+   * <p>If Sample probability == 0: never sample
+   */
+  @DecimalMin("0.0")
+  @DecimalMax("1.0")
+  private double samplerProbability = 1.0;
 
   public String getName() {
     return name;
@@ -37,11 +49,11 @@ public final class TracerProperties {
     this.name = name;
   }
 
-  public boolean isLoggingExporterEnabled() {
-    return loggingExporterEnabled;
+  public double getSamplerProbability() {
+    return samplerProbability;
   }
 
-  public void setLoggingExporterEnabled(boolean loggingExporterEnabled) {
-    this.loggingExporterEnabled = loggingExporterEnabled;
+  public void setSamplerProbability(double samplerProbability) {
+    this.samplerProbability = samplerProbability;
   }
 }

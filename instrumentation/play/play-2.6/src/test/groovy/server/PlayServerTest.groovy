@@ -92,10 +92,8 @@ class PlayServerTest extends HttpServerTest<Server> {
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
     }
   }

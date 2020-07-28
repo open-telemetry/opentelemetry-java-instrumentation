@@ -176,11 +176,11 @@ class HystrixObservableTest extends AgentTestRunner {
           operationName "ExampleGroup.HystrixObservableTest\$2.execute"
           childOf span(0)
           errored true
+          errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            errorAttributes(IllegalArgumentException)
           }
         }
         span(2) {
@@ -267,30 +267,28 @@ class HystrixObservableTest extends AgentTestRunner {
           operationName "parent"
           parent()
           errored true
-          attributes {
-            errorAttributes(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
-          }
+          errorEvent(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
         }
         span(1) {
           operationName "FailingGroup.HystrixObservableTest\$3.execute"
           childOf span(0)
           errored true
+          errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            errorAttributes(IllegalArgumentException)
           }
         }
         span(2) {
           operationName "FailingGroup.HystrixObservableTest\$3.fallback"
           childOf span(1)
           errored true
+          errorEvent(UnsupportedOperationException, "No fallback available.")
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            errorAttributes(UnsupportedOperationException, "No fallback available.")
           }
         }
       }

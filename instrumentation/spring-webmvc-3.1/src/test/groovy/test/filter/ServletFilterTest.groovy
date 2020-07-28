@@ -82,10 +82,8 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
     }
   }
@@ -102,6 +100,9 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -109,14 +110,9 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION || endpoint == ERROR }
         "servlet.path" endpoint.path
         "servlet.context" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

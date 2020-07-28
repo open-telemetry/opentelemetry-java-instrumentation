@@ -18,6 +18,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import spock.lang.Shared
 
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
@@ -38,7 +39,8 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JettyHandlerTest extends HttpServerTest<Server> {
 
-  static errorHandler = new ErrorHandler() {
+  @Shared
+  ErrorHandler errorHandler = new ErrorHandler() {
     @Override
     protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
       Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
@@ -48,6 +50,9 @@ class JettyHandlerTest extends HttpServerTest<Server> {
       }
     }
   }
+
+  @Shared
+  TestHandler testHandler = new TestHandler()
 
   @Override
   Server startServer(int port) {
@@ -59,7 +64,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   }
 
   AbstractHandler handler() {
-    TestHandler.INSTANCE
+    testHandler
   }
 
   @Override
@@ -102,8 +107,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   }
 
   static class TestHandler extends AbstractHandler {
-    static final TestHandler INSTANCE = new TestHandler()
-
     @Override
     void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
       if (baseRequest.dispatcherType != DispatcherType.ERROR) {
@@ -121,6 +124,9 @@ class JettyHandlerTest extends HttpServerTest<Server> {
       operationName "TestHandler.handle"
       spanKind SERVER
       errored endpoint.errored
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       if (parentID != null) {
         traceId traceID
         parentId parentID
@@ -134,13 +140,8 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { "${responseContentLength ?: 0}" || endpoint == EXCEPTION }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION }
         "servlet.path" ''
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

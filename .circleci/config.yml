@@ -33,7 +33,7 @@ jobs:
           name: Build Project
           command: >-
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
-            ./gradlew clean build shadowJar -x test -x integrationTest
+            ./gradlew clean build shadowJar -x test
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
 
@@ -171,25 +171,6 @@ jobs:
           command: ./gradlew -Prelease.useLastTag=true final
           no_output_timeout: 6h
 
-  patch_release:
-    <<: *defaults
-    steps:
-      - checkout
-      - run: |
-          if [[ $(git tag --points-at HEAD | grep "^v") ]]; then
-              echo "Don't make patch release on commit which already has version tag"
-              circleci-agent step halt
-          fi
-
-      - attach_workspace:
-          at: .
-
-      - restore_cache:
-          <<: *cache_keys
-
-      - run: ./gradlew -Prelease.scope=patch final
-
-
 workflows:
   build_test_deploy:
     jobs:
@@ -202,7 +183,7 @@ workflows:
           requires:
             - build
           name: test_8
-          testTask: testJava8 integrationTestJava8
+          testTask: testJava8
           filters:
             tags:
               only: /.*/
@@ -254,61 +235,5 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              # Only for major and minor releases
-              only: /^v.*\.0$/
-
-  patch_release:
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - default_test_job:
-          requires:
-            - build
-          prefixTestTask: true
-          name: test_<< matrix.testTask >>
-          matrix:
-            parameters:
-              testTask: ["7", "8", "14"]
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - default_test_job:
-          requires:
-            - build
-          name: test_11
-          testTask: test jacocoTestReport jacocoTestCoverageVerification
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - default_test_job:
-          requires:
-            - build
-          name: test_latest
-          testTask: latestDepTest
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - muzzle:
-          requires:
-            - build
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - patch_release:
-          requires:
-            - test_7
-            - test_8
-            - test_11
-            - test_14
-            - test_latest
-            - muzzle
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
+              # As long as we don't have support branches, we release all tags in the same manner
+              only: /^v.*$/

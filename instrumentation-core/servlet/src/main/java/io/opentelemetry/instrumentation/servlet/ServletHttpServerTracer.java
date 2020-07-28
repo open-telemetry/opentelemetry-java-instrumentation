@@ -110,6 +110,6 @@ public abstract class ServletHttpServerTracer
   }
 
   public void setContentLength(Span span, int length) {
-    SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(span, String.valueOf(length));
+    SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(span, length);
   }
 }

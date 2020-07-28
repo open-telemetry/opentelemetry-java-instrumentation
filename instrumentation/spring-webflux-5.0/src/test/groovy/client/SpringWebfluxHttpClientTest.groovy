@@ -54,6 +54,9 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
         operationName "HTTP $method"
         spanKind CLIENT
         errored exception != null
+        if (exception) {
+          errorEvent(exception.class, exception.message)
+        }
         attributes {
           "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
           "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port
@@ -67,9 +70,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
           if (tagQueryString) {
             "$MoreAttributes.HTTP_QUERY" uri.query
             "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-          }
-          if (exception) {
-            errorAttributes(exception.class, exception.message)
           }
         }
       }

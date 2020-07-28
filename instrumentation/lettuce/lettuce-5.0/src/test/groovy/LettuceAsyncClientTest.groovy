@@ -170,6 +170,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored true
+          errorEvent CompletionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
             "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
@@ -177,7 +178,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
-            errorAttributes CompletionException, String
           }
         }
       }
@@ -413,10 +413,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "DEL"
           spanKind CLIENT
           errored true
+          errorEvent(IllegalStateException, "TestException")
           attributes {
             "${StringAttributeSetter.create("db.system").key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "DEL"
-            errorAttributes(IllegalStateException, "TestException")
           }
         }
       }

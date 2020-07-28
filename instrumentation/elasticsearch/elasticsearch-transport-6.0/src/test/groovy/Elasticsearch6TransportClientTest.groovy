@@ -128,12 +128,12 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           errored true
+          errorEvent RemoteTransportException, String
           attributes {
             "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
-            errorAttributes RemoteTransportException, String
           }
         }
       }

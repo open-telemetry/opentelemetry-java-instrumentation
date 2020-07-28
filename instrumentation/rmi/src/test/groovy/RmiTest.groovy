@@ -113,17 +113,13 @@ class RmiTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored true
-          attributes {
-            errorAttributes(RuntimeException, String)
-          }
+          errorEvent(RuntimeException, String)
         }
         span(2) {
           operationName "Server.exceptional"
           spanKind SERVER
           errored true
-          attributes {
-            errorAttributes(RuntimeException, String)
-          }
+          errorEvent(RuntimeException, String)
         }
       }
     }

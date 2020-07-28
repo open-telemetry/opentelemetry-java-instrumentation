@@ -19,6 +19,8 @@ package io.opentelemetry.auto.instrumentation.jetty;
 import static io.opentelemetry.auto.instrumentation.jetty.JettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
+import io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletRequest;
+import io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse;
 import io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -34,18 +36,24 @@ public class JettyHandlerAdvice {
   public static void onEnter(
       @Advice.Origin final Method method,
       @Advice.This final Object source,
-      @Advice.Argument(2) final HttpServletRequest httpServletRequest,
+      @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
+      @Advice.Argument(value = 3, readOnly = false) HttpServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    Context attachedContext = TRACER.getServerContext(httpServletRequest);
+    Context attachedContext = TRACER.getServerContext(request);
     if (attachedContext != null) {
       // We are inside nested handler, don't create new span
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
-    scope = TRACER.startScope(span, httpServletRequest);
+    span = TRACER.startSpan(request, request, method);
+    scope = TRACER.startScope(span, request);
+
+    if (!(response instanceof CountingHttpServletResponse)) {
+      response = new CountingHttpServletResponse(response);
+      request = new CountingHttpServletRequest(request, response);
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -86,6 +94,7 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+      JettyHttpServerTracer.contentLengthHelper(span, response);
       TRACER.end(span, response.getStatus());
     }
   }

@@ -44,11 +44,9 @@ public class ClassRetransformingBenchmark {
     state.inst.retransformClasses(TracedClass.class);
   }
 
-  @Fork(jvmArgsAppend = "-javaagent:/path/to/opentelemetry-javaagent-master.jar")
-  public static class WithAgentMaster extends ClassRetransformingBenchmark {}
-
   @Fork(
       jvmArgsAppend =
-          "-javaagent:/path/to/opentelemetry-java-instrumentation/java-agent/build/libs/opentelemetry-javaagent.jar")
+          "-javaagent:/path/to/opentelemetry-java-instrumentation"
+              + "/opentelemetry-javaagent/build/libs/opentelemetry-javaagent.jar")
   public static class WithAgent extends ClassRetransformingBenchmark {}
 }

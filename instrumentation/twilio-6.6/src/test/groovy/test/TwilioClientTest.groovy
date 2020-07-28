@@ -544,18 +544,14 @@ class TwilioClientTest extends AgentTestRunner {
         span(0) {
           operationName "test"
           errored true
+          errorEvent(ApiException, "Testing Failure")
           parent()
-          attributes {
-            errorAttributes(ApiException, "Testing Failure")
-          }
         }
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
-          attributes {
-            errorAttributes(ApiException, "Testing Failure")
-          }
+          errorEvent(ApiException, "Testing Failure")
         }
       }
     }
@@ -700,26 +696,20 @@ class TwilioClientTest extends AgentTestRunner {
         span(0) {
           operationName "test"
           errored true
+          errorEvent(ApiException, "Testing Failure")
           parent()
-          attributes {
-            errorAttributes(ApiException, "Testing Failure")
-          }
         }
         span(1) {
           operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored true
-          attributes {
-            errorAttributes(ApiException, "Testing Failure")
-          }
+          errorEvent(ApiException, "Testing Failure")
         }
         span(2) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
-          attributes {
-            errorAttributes(ApiException, "Testing Failure")
-          }
+          errorEvent(ApiException, "Testing Failure")
         }
       }
     }

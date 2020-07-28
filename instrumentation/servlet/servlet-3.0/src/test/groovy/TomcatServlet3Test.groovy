@@ -15,8 +15,6 @@
  */
 
 import com.google.common.io.Files
-import javax.servlet.Servlet
-import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
@@ -29,6 +27,9 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import javax.servlet.Servlet
+import javax.servlet.ServletException
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -134,7 +135,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
           basicSpan(it, 0, "TEST_SPAN")
         }
         trace(it * 2 + 1, 2) {
-          serverSpan(it, 0)
+          serverSpan(it, 0, null, null, "GET", SUCCESS.body.length())
           controllerSpan(it, 1, span(0))
         }
 
@@ -267,6 +268,12 @@ class TomcatServlet3TestAsync extends TomcatServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.Async
   }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
 }
 
 class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
@@ -274,6 +281,12 @@ class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 
@@ -369,6 +382,12 @@ class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 

@@ -424,6 +424,9 @@ abstract class HttpClientTest extends AgentTestRunner {
       operationName expectedOperationName(method)
       spanKind CLIENT
       errored exception != null
+      if (exception) {
+        errorEvent(exception.class, exception.message)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
@@ -439,9 +442,6 @@ abstract class HttpClientTest extends AgentTestRunner {
         if (tagQueryString) {
           "$MoreAttributes.HTTP_QUERY" uri.query
           "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-        }
-        if (exception) {
-          errorAttributes(exception.class, exception.message)
         }
       }
     }

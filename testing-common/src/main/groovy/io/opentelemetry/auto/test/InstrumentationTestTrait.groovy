@@ -34,10 +34,14 @@ trait InstrumentationTestTrait {
   def setupSpec() {
     instrumentationTestRunner = new InstrumentationTestRunnerImpl()
     testWriter = InstrumentationTestRunner.TEST_WRITER
+
+    childSetupSpec()
   }
 
   def setup() {
     instrumentationTestRunner.beforeTest()
+
+    childSetup()
   }
 
   /**

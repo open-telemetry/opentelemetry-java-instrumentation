@@ -88,6 +88,9 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
+In order to configure the service name for the OTLP exporter, you must add `service.name` key
+to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTE=service.name=myservice`.
+
 #### Logging exporter
 
 The logging exporter simply prints the name of the span along with its
@@ -97,6 +100,15 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+
+#### OpenTelemetry Resource
+
+The [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md)
+is a representation of the entity producing telemetry.
+
+| System property | Environment variable     | Purpose                                                                      |
+|-----------------|--------------------------|------------------------------------------------------------------------------|
+| (not yet)       | OTEL_RESOURCE_ATTRIBUTES | Used to specify resource attributes in format: key1=val1,key2=val2,key3=val3 |
 
 #### Batch span processor
 
@@ -143,8 +155,9 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
+| [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
-| [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+ (not including 4.x yet)   |
+| [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
 | [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 2.0+ (not including 7.x yet)   |
@@ -158,7 +171,6 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
-| [java.util.logging](https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html)           | Java 7+                        |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
@@ -167,11 +179,9 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
-| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
-| [Kubernetes](https://github.com/kubernetes-client/java)                                                                               | 7.0.0+                         |
+| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
+| [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
-| [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
-| [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |

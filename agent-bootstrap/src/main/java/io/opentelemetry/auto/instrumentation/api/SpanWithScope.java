@@ -19,7 +19,67 @@ package io.opentelemetry.auto.instrumentation.api;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
-// intentionally (for now) not implementing Closeable since not clear what it would close
+/**
+ * This is deprecated.
+ *
+ * <p>Originally, we used {@code SpanWithScope} to pass the {@link Span} and {@link Scope} between
+ * {@code @Advice.OnMethodEnter} and {@code @Advice.OnMethodExit}, e.g.
+ *
+ * <pre>
+ *   &#64;Advice.OnMethodEnter(...)
+ *     public static SpanWithScope onEnter(...) {
+ *     ...
+ *     Span span = ...
+ *     return new SpanWithScope(span, currentContextWith(span));
+ *   }
+ *
+ *   &#64;Advice.OnMethodExit(...)
+ *   public static void stopSpan(
+ *       ...
+ *       &#64;Advice.Enter final SpanWithScope spanWithScope) {
+ *     Span span = spanWithScope.getSpan();
+ *     ...
+ *     span.end();
+ *     spanWithScope.closeScope();
+ *   }
+ * </pre>
+ *
+ * We are (slowly) migrating to a new pattern using `@Advice.Local`:
+ *
+ * <pre>
+ *   &#64;Advice.OnMethodEnter(...)
+ *   public static void onEnter(
+ *       ...
+ *       &#64;Advice.Local("otelSpan") Span span,
+ *       &#64;Advice.Local("otelScope") Scope scope) {
+ *     ...
+ *     span = ...
+ *     scope = ...
+ *   }
+ *
+ *   &#64;Advice.OnMethodExit
+ *   public static void onExit(
+ *       ...
+ *       &#64;Advice.Local("otelSpan") Span span,
+ *       &#64;Advice.Local("otelScope") Scope scope) {
+ *       ...
+ *     span.end();
+ *     scope.close();
+ *   }
+ * </pre>
+ *
+ * This new pattern has the following benefits:
+ *
+ * <ul>
+ *   <li>The new pattern is more efficient since it doesn't require instantiating the {@code
+ *       SpanWithScope} holder object
+ *   <li>The new pattern extends nicely in the common case where we also need to pass {@link
+ *       io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth} between the methods
+ * </ul>
+ *
+ * @deprecated
+ */
+@Deprecated
 public class SpanWithScope {
   private final Span span;
   private final Scope scope;

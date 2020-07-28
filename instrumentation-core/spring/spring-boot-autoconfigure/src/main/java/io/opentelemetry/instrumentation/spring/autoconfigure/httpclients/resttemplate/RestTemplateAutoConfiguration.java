@@ -29,7 +29,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Configures {@link RestTemplate} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to {@link RestTemplate} upon initialization.
+ * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
  */
 @Configuration
 @ConditionalOnClass(RestTemplate.class)
