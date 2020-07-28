@@ -891,17 +891,23 @@ public enum JDBCConnectionUrlParser {
    */
   private static String toDbSystem(final String type) {
     switch (type) {
-      case DbSystem.AS400: // IBM AS400 Database
-      case DbSystem.DB2: // IBM Db2
+      case "as400": // IBM AS400 Database
+      case "db2": // IBM Db2
         return DbSystem.DB2;
-      case DbSystem.DERBY: // Apache Derby
-      case DbSystem.H2: // H2 Database
-      case DbSystem.HSQLDB: // Hyper SQL Database
-      case DbSystem.MARIADB: // MariaDB
-      case DbSystem.MYSQL: // MySQL
-      case DbSystem.ORACLE: // Oracle Database
-      case DbSystem.POSTGRESQL: // PostgreSQL
-        return type;
+      case "derby": // Apache Derby
+        return DbSystem.DERBY;
+      case "h2": // H2 Database
+        return DbSystem.H2;
+      case "hsqldb": // Hyper SQL Database
+        return DbSystem.HSQLDB;
+      case "mariadb": // MariaDB
+        return DbSystem.MARIADB;
+      case "mysql": // MySQL
+        return DbSystem.MYSQL;
+      case "oracle": // Oracle Database
+        return DbSystem.ORACLE;
+      case "postgresql": // PostgreSQL
+        return DbSystem.POSTGRESQL;
       case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
