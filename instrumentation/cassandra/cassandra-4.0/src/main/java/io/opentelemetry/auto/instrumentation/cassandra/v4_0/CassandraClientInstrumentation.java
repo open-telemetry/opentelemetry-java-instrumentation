@@ -23,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
@@ -34,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CassandraClientInstrumentation extends Instrumenter.Default {
 
   public CassandraClientInstrumentation() {
-    super(DbSystem.CASSANDRA);
+    super("cassandra");
   }
 
   @Override

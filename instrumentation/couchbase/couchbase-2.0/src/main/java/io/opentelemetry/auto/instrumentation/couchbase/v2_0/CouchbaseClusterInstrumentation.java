@@ -27,7 +27,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -41,7 +40,7 @@ import rx.Observable;
 public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
   public CouchbaseClusterInstrumentation() {
-    super(DbSystem.COUCHBASE);
+    super("couchbase");
   }
 
   @Override
