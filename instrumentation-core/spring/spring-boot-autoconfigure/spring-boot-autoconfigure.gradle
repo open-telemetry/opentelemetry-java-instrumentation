@@ -34,7 +34,7 @@ dependencies {
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
 
-testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
   testImplementation deps.opentelemetrySdk
 }
 
