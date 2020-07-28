@@ -286,7 +286,7 @@ class MongoClientTest extends MongoBaseTest {
           it.replace(" ", "") == statement
         }
         "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
-        "${StringAttributeSetter.create("db.system").key()}" "mongo"
+        "${StringAttributeSetter.create("db.system").key()}" "mongodb"
         "${StringAttributeSetter.create("db.name").key()}" instance
       }
     }

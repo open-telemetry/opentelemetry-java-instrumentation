@@ -331,7 +331,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "${SemanticAttributes.NET_PEER_PORT.key()}" port
         "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
         "${SemanticAttributes.DB_STATEMENT.key()}" statementEval
-        "${StringAttributeSetter.create("db.system").key()}" "mongo"
+        "${StringAttributeSetter.create("db.system").key()}" "mongodb"
         "${StringAttributeSetter.create("db.name").key()}" instance
       }
     }
