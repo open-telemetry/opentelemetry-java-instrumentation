@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.Query
 import org.hibernate.Session

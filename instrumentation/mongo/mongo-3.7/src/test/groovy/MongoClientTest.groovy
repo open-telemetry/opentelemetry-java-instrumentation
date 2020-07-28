@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.mongodb.ConnectionString
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoClient

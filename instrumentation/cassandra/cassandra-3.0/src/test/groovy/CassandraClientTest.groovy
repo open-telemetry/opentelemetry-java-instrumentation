@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import io.opentelemetry.auto.test.AgentTestRunner

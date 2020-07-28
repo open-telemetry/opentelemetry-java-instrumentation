@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes

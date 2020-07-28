@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import akka.actor.ActorSystem
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils

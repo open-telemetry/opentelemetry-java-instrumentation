@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
