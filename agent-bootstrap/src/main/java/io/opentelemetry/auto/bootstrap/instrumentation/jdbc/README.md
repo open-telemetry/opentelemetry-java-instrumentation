@@ -6,7 +6,5 @@ The latest specification for `db.system` is [database.md].
 
 | Value for `db.system` | Product name              | Note                           |
 | :-------------------- | :------------------------ | :----------------------------- |
-| `"as400"`             | IBM AS400 Database        | not on [database.md]           |
 | `"h2"`                | H2 Database               | not on [database.md]           |
 | `"hsqldb"`            | Hyper SQL Database        | not on [database.md]           |
-| `"sap"`               | SAP                       | not on [database.md]           |
