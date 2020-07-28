@@ -22,36 +22,36 @@ public class DBInfo {
 
   public static final DBInfo DEFAULT = new Builder().build();
 
-  private final String type;
+  private final String system;
   private final String subtype;
   private final String shortUrl; // "type:[subtype:]//host:port"
   private final String user;
-  private final String instance;
+  private final String name;
   private final String db;
   private final String host;
   private final Integer port;
 
   public DBInfo(
-      String type,
+      String system,
       String subtype,
       String shortUrl,
       String user,
-      String instance,
+      String name,
       String db,
       String host,
       Integer port) {
-    this.type = type;
+    this.system = system;
     this.subtype = subtype;
     this.shortUrl = shortUrl;
     this.user = user;
-    this.instance = instance;
+    this.name = name;
     this.db = db;
     this.host = host;
     this.port = port;
   }
 
-  public String getType() {
-    return type;
+  public String getSystem() {
+    return system;
   }
 
   public String getSubtype() {
@@ -66,8 +66,8 @@ public class DBInfo {
     return user;
   }
 
-  public String getInstance() {
-    return instance;
+  public String getName() {
+    return name;
   }
 
   public String getDb() {
@@ -84,11 +84,11 @@ public class DBInfo {
 
   public Builder toBuilder() {
     return new Builder()
-        .type(type)
+        .system(system)
         .subtype(subtype)
         .shortUrl(shortUrl)
         .user(user)
-        .instance(instance)
+        .name(name)
         .db(db)
         .host(host)
         .port(port);
@@ -103,11 +103,11 @@ public class DBInfo {
       return false;
     }
     DBInfo dbInfo = (DBInfo) o;
-    return Objects.equals(type, dbInfo.type)
+    return Objects.equals(system, dbInfo.system)
         && Objects.equals(subtype, dbInfo.subtype)
         && Objects.equals(shortUrl, dbInfo.shortUrl)
         && Objects.equals(user, dbInfo.user)
-        && Objects.equals(instance, dbInfo.instance)
+        && Objects.equals(name, dbInfo.name)
         && Objects.equals(db, dbInfo.db)
         && Objects.equals(host, dbInfo.host)
         && Objects.equals(port, dbInfo.port);
@@ -115,21 +115,21 @@ public class DBInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, subtype, shortUrl, user, instance, db, host, port);
+    return Objects.hash(system, subtype, shortUrl, user, name, db, host, port);
   }
 
   public static class Builder {
-    private String type;
+    private String system;
     private String subtype;
     private String shortUrl;
     private String user;
-    private String instance;
+    private String name;
     private String db;
     private String host;
     private Integer port;
 
-    public Builder type(String type) {
-      this.type = type;
+    public Builder system(String system) {
+      this.system = system;
       return this;
     }
 
@@ -148,8 +148,8 @@ public class DBInfo {
       return this;
     }
 
-    public Builder instance(String instance) {
-      this.instance = instance;
+    public Builder name(String name) {
+      this.name = name;
       return this;
     }
 
@@ -169,7 +169,7 @@ public class DBInfo {
     }
 
     public DBInfo build() {
-      return new DBInfo(type, subtype, shortUrl, user, instance, db, host, port);
+      return new DBInfo(system, subtype, shortUrl, user, name, db, host, port);
     }
   }
 }

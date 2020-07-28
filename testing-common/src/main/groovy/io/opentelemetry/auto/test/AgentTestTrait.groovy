@@ -35,7 +35,6 @@ trait AgentTestTrait {
     agentTestRunner = new AgentTestRunnerImpl()
     testWriter = AgentTestRunner.TEST_WRITER
 
-    AgentTestRunner.agentSetup()
     agentTestRunner.setupBeforeTests()
 
     childSetupSpec()
@@ -50,6 +49,8 @@ trait AgentTestTrait {
   def cleanupSpec() {
     agentTestRunner.cleanUpAfterTests()
     AgentTestRunner.agentCleanup()
+
+    childCleanupSpec()
   }
 
   /**

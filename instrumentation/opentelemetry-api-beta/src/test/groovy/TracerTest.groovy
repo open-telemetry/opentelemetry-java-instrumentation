@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import unshaded.io.grpc.Context
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.context.Scope
@@ -181,6 +182,34 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
+  def "capture span with explicit parent from context"() {
+    when:
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
+    def parentSpan = tracer.spanBuilder("parent").startSpan()
+    def context = withSpan(parentSpan, Context.current())
+    def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
+    testSpan.end()
+    parentSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "parent"
+          parent()
+          attributes {
+          }
+        }
+        span(1) {
+          operationName "test"
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
   def "capture span with explicit no parent"() {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")
@@ -252,6 +281,32 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "test2"
           parent()
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "capture exception()"() {
+    when:
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
+    def testSpan = tracer.spanBuilder("test").startSpan()
+    testSpan.recordException(new IllegalStateException())
+    testSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "test"
+          event(0) {
+            eventName("exception")
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" "java.lang.IllegalStateException"
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
           attributes {
           }
         }

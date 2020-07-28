@@ -231,7 +231,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     and:
-    assertTheTraces(count)
+    assertTheTraces(count, null, null, method, SUCCESS, null, responses[0])
 
     where:
     method = "GET"
@@ -253,7 +253,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == SUCCESS.body
 
     and:
-    assertTheTraces(1, traceId, parentId)
+    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
 
     where:
     method = "GET"
@@ -272,7 +272,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == endpoint.body
 
     and:
-    assertTheTraces(1, null, null, method, endpoint)
+    assertTheTraces(1, null, null, method, endpoint, null, response)
 
     where:
     method = "GET"
@@ -292,7 +292,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().contentLength() < 1 || redirectHasBody()
 
     and:
-    assertTheTraces(1, null, null, method, REDIRECT)
+    assertTheTraces(1, null, null, method, REDIRECT, null, response)
 
     where:
     method = "GET"
@@ -309,7 +309,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == ERROR.body
 
     and:
-    assertTheTraces(1, null, null, method, ERROR)
+    assertTheTraces(1, null, null, method, ERROR, null, response)
 
     where:
     method = "GET"
@@ -329,7 +329,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     and:
-    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body)
+    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
 
     where:
     method = "GET"
@@ -346,7 +346,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.code() == NOT_FOUND.status
 
     and:
-    assertTheTraces(1, null, null, method, NOT_FOUND)
+    assertTheTraces(1, null, null, method, NOT_FOUND, null, response)
 
     where:
     method = "GET"
@@ -364,7 +364,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     response.body().string() == PATH_PARAM.body
 
     and:
-    assertTheTraces(1, null, null, method, PATH_PARAM)
+    assertTheTraces(1, null, null, method, PATH_PARAM, null, response)
 
     where:
     method = "GET"
@@ -373,7 +373,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
     def spanCount = 1 // server span
     if (hasHandlerSpan()) {
       spanCount++
@@ -387,7 +387,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount ++
+        spanCount++
       }
     }
     assertTraces(size * 2) {
@@ -397,7 +397,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         }
         trace(it * 2 + 1, spanCount) {
           def spanIndex = 0
-          serverSpan(it, spanIndex++, traceID, parentID, method, endpoint)
+          serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
           if (hasHandlerSpan()) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
@@ -427,12 +427,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     trace.span(index) {
       operationName "controller"
       errored errorMessage != null
-      childOf((SpanData) parent)
-      attributes {
-        if (errorMessage) {
-          errorAttributes(Exception, errorMessage)
-        }
+      if (errorMessage) {
+        errorEvent(Exception, errorMessage)
       }
+      childOf((SpanData) parent)
     }
   }
 
@@ -453,7 +451,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedServerSpanName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
@@ -464,6 +462,16 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
+        event(0) {
+          eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+          attributes {
+            "${SemanticAttributes.EXCEPTION_TYPE.key()}" { it == null || it == Exception.name }
+            "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { it == null || it == EXCEPTION.body }
+            "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" { it == null || it instanceof String }
+          }
+        }
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
@@ -472,11 +480,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
-        }
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
         }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {

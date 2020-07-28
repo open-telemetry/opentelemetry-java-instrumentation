@@ -78,9 +78,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
           operationName HttpClientDecorator.DEFAULT_SPAN_NAME
           spanKind CLIENT
           errored true
-          attributes {
-            errorAttributes(NullPointerException)
-          }
+          errorEvent(NullPointerException)
         }
       }
     }

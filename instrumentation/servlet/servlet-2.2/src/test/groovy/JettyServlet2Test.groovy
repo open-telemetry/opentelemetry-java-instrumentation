@@ -18,6 +18,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import javax.servlet.http.HttpServletRequest
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
@@ -97,7 +98,7 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName 'HttpServlet.service'
       spanKind SERVER
@@ -108,6 +109,9 @@ class JettyServlet2Test extends HttpServerTest<Server> {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
         // No peer port
@@ -116,11 +120,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "servlet.context" "/$CONTEXT"
         "servlet.path" endpoint.path
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

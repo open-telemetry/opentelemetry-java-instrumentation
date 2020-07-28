@@ -23,7 +23,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.RequestBody
-import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
@@ -99,7 +98,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         basicSpan(it, 0, "TEST_SPAN")
       }
       trace(1, 1) {
-        serverSpan(it, 0, null, null, "POST", LOGIN)
+        serverSpan(it, 0, null, null, "POST", response.body()?.contentLength(), LOGIN)
       }
     }
 
@@ -136,17 +135,15 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       operationName "TestController.${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
-      childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
+      childOf((SpanData) parent)
     }
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
       spanKind SERVER
@@ -157,19 +154,19 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        // exception bodies are not yet recorded
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
         "servlet.path" endpoint.path
         "servlet.context" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

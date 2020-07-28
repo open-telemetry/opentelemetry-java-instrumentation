@@ -45,21 +45,19 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          attributes {
-            errorAttributes ConnectException, String
-          }
+          errorEvent ConnectException, String
         }
         span(1) {
           operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored true
+          errorEvent ConnectException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" UNUSABLE_PORT
             "${SemanticAttributes.HTTP_URL.key()}" "$url/"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            errorAttributes ConnectException, String
           }
         }
       }
@@ -90,20 +88,18 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          attributes {
-            errorAttributes IllegalArgumentException, String
-          }
+          errorEvent IllegalArgumentException, String
         }
         span(1) {
           operationName "file.request"
           spanKind CLIENT
           childOf span(0)
           errored true
+          errorEvent IllegalArgumentException, String
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key()}" 80
             // FIXME: These attributes really make no sense for non-http connections, why do we set them?
             "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            errorAttributes IllegalArgumentException, String
           }
         }
       }
@@ -130,9 +126,7 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          attributes {
-            errorAttributes ClassNotFoundException, String
-          }
+          errorEvent ClassNotFoundException, String
         }
       }
     }

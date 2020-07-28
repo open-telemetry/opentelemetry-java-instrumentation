@@ -17,8 +17,9 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_1.server;
 
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
+import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -33,11 +34,11 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     Channel channel = ctx.channel();
 
     if (!(msg instanceof HttpRequest)) {
-      Span serverSpan = TRACER.getServerSpan(channel);
-      if (serverSpan == null) {
+      Context serverContext = TRACER.getServerContext(channel);
+      if (serverContext == null) {
         ctx.fireChannelRead(msg);
       } else {
-        try (Scope ignored = currentContextWith(serverSpan)) {
+        try (Scope ignored = withScopedContext(serverContext)) {
           ctx.fireChannelRead(msg);
         }
       }

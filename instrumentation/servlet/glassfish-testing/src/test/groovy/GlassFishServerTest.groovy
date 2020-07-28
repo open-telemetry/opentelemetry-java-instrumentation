@@ -25,7 +25,10 @@ import org.glassfish.embeddable.GlassFishProperties
 import org.glassfish.embeddable.GlassFishRuntime
 import org.glassfish.embeddable.archive.ScatteredArchive
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -82,7 +85,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName entryPointName()
       spanKind SERVER
@@ -93,19 +96,20 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
       } else {
         parent()
       }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        // exception bodies are not yet recorded
+        // TODO(anuraaga): Bodies do seem to be recorded for these endpoints here, update to make assertion more precise.
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION || endpoint == ERROR || endpoint == NOT_FOUND || endpoint == REDIRECT }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

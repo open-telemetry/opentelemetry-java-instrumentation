@@ -18,26 +18,27 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.trace.attributes.StringAttributeSetter;
 
 /** @deprecated use {@link DatabaseClientTracer} instead. */
 @Deprecated
 public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorator {
 
-  protected abstract String dbType();
+  protected abstract String dbSystem();
 
   protected abstract String dbUser(CONNECTION connection);
 
-  protected abstract String dbInstance(CONNECTION connection);
+  protected abstract String dbName(CONNECTION connection);
 
   // TODO make abstract after implementing in all subclasses
-  protected String dbUrl(final CONNECTION connection) {
+  protected String dbConnectionString(final CONNECTION connection) {
     return null;
   }
 
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(SemanticAttributes.DB_TYPE.key(), dbType());
+    span.setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem());
     return super.afterStart(span);
   }
 
@@ -46,8 +47,10 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
     assert span != null;
     if (connection != null) {
       span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
-      span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), dbInstance(connection));
-      span.setAttribute(SemanticAttributes.DB_URL.key(), dbUrl(connection));
+      span.setAttribute(StringAttributeSetter.create("db.name").key(), dbName(connection));
+      span.setAttribute(
+          StringAttributeSetter.create("db.connection_string").key(),
+          dbConnectionString(connection));
     }
     return span;
   }

@@ -16,8 +16,10 @@
 
 package io.opentelemetry.auto.test.utils
 
+import io.grpc.Context
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.context.Scope
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -25,7 +27,9 @@ import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
 import java.util.concurrent.Callable
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
+import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 class TraceUtils {
 
@@ -33,6 +37,29 @@ class TraceUtils {
   }
 
   private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
+
+  static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
+    try {
+      //TODO following two lines are duplicated from io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer
+      //Find a way to put this management into one place.
+      def span = TRACER.spanBuilder(rootOperationName).setSpanKind(Span.Kind.SERVER).startSpan()
+      Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))
+
+      Scope scope = withScopedContext(newContext)
+
+      try {
+        return r.call()
+      } catch (final Exception e) {
+        DECORATE.onError(span, e)
+        throw e
+      } finally {
+        scope.close()
+        span.end()
+      }
+    } catch (Throwable t) {
+      throw ExceptionUtils.sneakyThrow(t)
+    }
+  }
 
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     try {
@@ -65,10 +92,8 @@ class TraceUtils {
       }
       operationName operation
       errored exception != null
-      attributes {
-        if (exception) {
-          errorAttributes(exception.class, exception.message)
-        }
+      if (exception) {
+        errorEvent(exception.class, exception.message)
       }
     }
   }

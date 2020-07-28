@@ -114,6 +114,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
           }
@@ -174,6 +175,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/getQuery.jsp"
           }
@@ -231,6 +233,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/post.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/post.jsp"
           }
@@ -279,21 +282,27 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
+          event(0) {
+            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+                return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+              }
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+                return errorMessageOptional || tagErrorMsg instanceof String
+              }
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            "error.type" { String tagExceptionType ->
-              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
-            }
-            "error.msg" { String tagErrorMsg ->
-              return errorMessageOptional || tagErrorMsg instanceof String
-            }
-            "error.stack" String
           }
         }
         span(1) {
@@ -310,16 +319,21 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /$jspFileName"
           errored true
+          event(0) {
+            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+                return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+              }
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+                return errorMessageOptional || tagErrorMsg instanceof String
+              }
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            "error.type" { String tagExceptionType ->
-              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
-            }
-            "error.msg" { String tagErrorMsg ->
-              return errorMessageOptional || tagErrorMsg instanceof String
-            }
-            "error.stack" String
           }
         }
       }
@@ -358,6 +372,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeHtml.jsp"
           }
@@ -411,6 +426,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeMulti.jsp"
           }
@@ -496,26 +512,27 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            errorAttributes(JasperException, String)
           }
         }
         span(1) {
           childOf span(0)
           operationName "Compile /$jspFileName"
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            errorAttributes(JasperException, String)
           }
         }
       }
@@ -557,6 +574,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$staticFile"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$staticFile"
           }

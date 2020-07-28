@@ -59,6 +59,10 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       "io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
       "io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletRequest",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse$CountingServletOutputStream",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse$CountingPrintWriter",
       packageName + ".JettyHttpServerTracer",
     };
   }

@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import io.grpc.Context;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.function.BiConsumer;
@@ -50,11 +51,11 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         if (context != null) {
           Span span = TracingContextUtils.getSpan(context);
           span.setAttribute("request.predicate", predicateString);
-        }
-        Context parentContext =
-            (Context) serverRequest.attributes().get(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE);
-        if (parentContext != null) {
-          TracingContextUtils.getSpan(parentContext).updateName(parseRoute(predicateString));
+
+          Span serverSpan = BaseTracer.CONTEXT_SERVER_SPAN_KEY.get(context);
+          if (serverSpan != null) {
+            serverSpan.updateName(parseRoute(predicateString));
+          }
         }
       }
     }

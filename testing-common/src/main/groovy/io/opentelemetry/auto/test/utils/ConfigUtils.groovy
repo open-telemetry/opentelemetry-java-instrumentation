@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.test.AgentTestRunner
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 
@@ -56,6 +57,7 @@ class ConfigUtils {
   static updateConfig(final Callable r) {
     r.call()
     resetConfig()
+    AgentTestRunner.resetInstrumentation()
   }
 
   /**

@@ -23,6 +23,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +43,8 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbType() {
-    return "mongo";
+  protected String dbSystem(final CommandStartedEvent event) {
+    return DbSystem.MONGODB;
   }
 
   @Override
@@ -52,7 +53,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbInstance(final CommandStartedEvent event) {
+  protected String dbName(final CommandStartedEvent event) {
     // Use description if set.
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
@@ -85,7 +86,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbUrl(final CommandStartedEvent event) {
+  protected String dbConnectionString(final CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();

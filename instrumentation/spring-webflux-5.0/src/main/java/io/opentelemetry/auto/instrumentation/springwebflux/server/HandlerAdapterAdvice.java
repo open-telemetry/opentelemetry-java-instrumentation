@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringW
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TracingContextUtils;
@@ -59,12 +60,13 @@ public class HandlerAdapterAdvice {
       spanWithScope = new SpanWithScope(span, currentContextWith(span));
     }
 
-    Context parentContext = exchange.getAttribute(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE);
-    PathPattern bestPattern = exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-    if (parentContext != null && bestPattern != null) {
-      // TODO this is wrong span to update. We should update the outermost server span
-      String spanName = bestPattern.getPatternString();
-      TracingContextUtils.getSpan(parentContext).updateName(spanName);
+    if (context != null) {
+      Span serverSpan = BaseTracer.CONTEXT_SERVER_SPAN_KEY.get(context);
+      PathPattern bestPattern =
+          exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      if (serverSpan != null && bestPattern != null) {
+        serverSpan.updateName(bestPattern.getPatternString());
+      }
     }
 
     return spanWithScope;

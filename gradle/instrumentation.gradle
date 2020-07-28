@@ -15,18 +15,18 @@ byteBuddy {
   }
 }
 
+// TODO(anuraaga): This needs to be added before adding publish.gradle, clean up this ordering restraint.
+afterEvaluate {
+  archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
+}
+
 apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
 
-tasks.withType(Test) {
-  forkEvery = 1
-}
 
 afterEvaluate {
-  archivesBaseName =  'opentelemetry-auto-' + archivesBaseName
-
   byteBuddy {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
@@ -60,3 +60,27 @@ afterEvaluate {
     testImplementation project(':utils:test-utils')
   }
 }
+
+tasks.withType(Test) {
+  if (it.name == 'test') {
+    useJUnit {
+      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
+  } else {
+    useJUnit {
+      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
+  }
+}
+
+task integrationTest(type: Test) {
+  description = 'Runs instrumentation tests.'
+  group = 'verification'
+  shouldRunAfter test
+
+  useJUnit {
+    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+  }
+}
+
+test.finalizedBy integrationTest

@@ -42,19 +42,6 @@ class AttributesAssert {
     asserter.assertAttributesAllVerified()
   }
 
-  def errorAttributes(Class<Throwable> errorType) {
-    errorAttributes(errorType, null)
-  }
-
-  def errorAttributes(Class<Throwable> errorType, message) {
-    attribute("error.type", errorType.name)
-    attribute("error.stack", String)
-
-    if (message != null) {
-      attribute("error.msg", message)
-    }
-  }
-
   def attribute(String name, value) {
     if (value == null) {
       return

@@ -36,7 +36,6 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -143,7 +142,6 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
           // for a failed request.  Thus, check the response code
           if (response != null && !response.isSuccessStatusCode()) {
             span.setStatus(Status.UNKNOWN);
-            span.setAttribute(MoreAttributes.ERROR_MSG, response.getStatusMessage());
           }
 
           DECORATE.beforeFinish(span);

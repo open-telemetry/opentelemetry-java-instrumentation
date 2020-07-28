@@ -65,7 +65,7 @@ public enum JDBCConnectionUrlParser {
           builder.port(uri.getPort());
         }
 
-        return builder.type(uri.getScheme());
+        return builder.system(uri.getScheme());
       } catch (final Exception e) {
         return builder;
       }
@@ -92,7 +92,7 @@ public enum JDBCConnectionUrlParser {
         Map<String, String> props = splitQuery(split[1], ";");
         populateStandardProperties(builder, props);
         if (props.containsKey("instance")) {
-          builder.instance(props.get("instance"));
+          builder.name(props.get("instance"));
         }
       }
 
@@ -127,7 +127,7 @@ public enum JDBCConnectionUrlParser {
       String type;
       String serverName = "";
       Integer port = null;
-      String instanceName = null;
+      String name = null;
 
       int hostIndex = jdbcUrl.indexOf("://");
 
@@ -164,7 +164,7 @@ public enum JDBCConnectionUrlParser {
 
       int instanceLoc = serverName.indexOf("/");
       if (instanceLoc > 1) {
-        instanceName = serverName.substring(instanceLoc + 1);
+        name = serverName.substring(instanceLoc + 1);
         serverName = serverName.substring(0, instanceLoc);
       }
 
@@ -177,12 +177,12 @@ public enum JDBCConnectionUrlParser {
 
       instanceLoc = serverName.indexOf("\\");
       if (instanceLoc > 1) {
-        instanceName = serverName.substring(instanceLoc + 1);
+        name = serverName.substring(instanceLoc + 1);
         serverName = serverName.substring(0, instanceLoc);
       }
 
-      if (instanceName != null) {
-        builder.instance(instanceName);
+      if (name != null) {
+        builder.name(name);
       }
 
       if (!serverName.isEmpty()) {
@@ -193,7 +193,7 @@ public enum JDBCConnectionUrlParser {
         builder.port(port);
       }
 
-      return builder.type(type);
+      return builder;
     }
   },
 
@@ -227,9 +227,10 @@ public enum JDBCConnectionUrlParser {
       if (dbInfo.getPort() == null) {
         builder.port(DEFAULT_PORT);
       }
+
       int protoLoc = jdbcUrl.indexOf("://");
-      int typeEndLoc = dbInfo.getType().length();
-      if (protoLoc > typeEndLoc) {
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (typeEndLoc < protoLoc) {
         return MARIA_SUBPROTO
             .doParse(jdbcUrl.substring(protoLoc + 3), builder)
             .subtype(jdbcUrl.substring(typeEndLoc + 1, protoLoc));
@@ -352,13 +353,12 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MSSQLSERVER("microsoft", "sqlserver", "jtds") {
+  MSSQLSERVER("jtds", "microsoft", "sqlserver") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 1433;
 
     @Override
     DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
-      builder.type("sqlserver");
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -367,13 +367,15 @@ public enum JDBCConnectionUrlParser {
         builder.port(DEFAULT_PORT);
       }
 
-      if (jdbcUrl.startsWith("microsoft:")) {
-        jdbcUrl = jdbcUrl.substring("microsoft:".length());
-      } else if (jdbcUrl.startsWith("jtds:")) {
-        return JTDS_URL_LIKE.doParse(jdbcUrl, builder);
+      int protoLoc = jdbcUrl.indexOf("://");
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (protoLoc > typeEndLoc) {
+        String subtype = jdbcUrl.substring(typeEndLoc + 1, protoLoc);
+        builder.subtype(subtype);
       }
-      if (!jdbcUrl.startsWith("sqlserver://")) {
-        return builder;
+
+      if (jdbcUrl.startsWith("jtds:")) {
+        return JTDS_URL_LIKE.doParse(jdbcUrl, builder);
       }
 
       return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
@@ -473,7 +475,7 @@ public enum JDBCConnectionUrlParser {
       if (port != null) {
         builder.port(port);
       }
-      return builder.instance(instance);
+      return builder.name(instance);
     }
   },
 
@@ -541,7 +543,7 @@ public enum JDBCConnectionUrlParser {
 
       Matcher instanceMatcher = INSTANCE_REGEX.matcher(atSplit[1]);
       if (instanceMatcher.find()) {
-        builder.instance(instanceMatcher.group(1));
+        builder.name(instanceMatcher.group(1));
       }
 
       return builder;
@@ -585,13 +587,13 @@ public enum JDBCConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2").subtype("tcp");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("tcp");
       } else if (h2Url.startsWith("ssl:")) {
         DBInfo dbInfo = builder.build();
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2").subtype("ssl");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("ssl");
       } else {
         builder.subtype("file").host(null).port(null);
         int propLoc = h2Url.indexOf(";");
@@ -602,7 +604,7 @@ public enum JDBCConnectionUrlParser {
         }
       }
       if (!instance.isEmpty()) {
-        builder.instance(instance);
+        builder.name(instance);
       }
       return builder;
     }
@@ -633,27 +635,27 @@ public enum JDBCConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("hsql");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("hsqls");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("http");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("https");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("https");
       } else {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
       }
-      return builder.instance(instance);
+      return builder.name(instance);
     }
   },
 
@@ -736,7 +738,7 @@ public enum JDBCConnectionUrlParser {
       if (host != null) {
         builder.host(host);
       }
-      return builder.instance(instance);
+      return builder.name(instance);
     }
   };
 
@@ -777,28 +779,25 @@ public enum JDBCConnectionUrlParser {
       return DEFAULT;
     }
 
-    String baseType = jdbcUrl.substring(0, typeLoc);
-    DBInfo.Builder parsedProps = DEFAULT.toBuilder().type(baseType);
+    String type = jdbcUrl.substring(0, typeLoc);
+    String system = toDbSystem(type);
+    DBInfo.Builder parsedProps = DEFAULT.toBuilder().system(system);
     populateStandardProperties(parsedProps, props);
 
     try {
-      if (typeParsers.containsKey(baseType)) {
+      if (typeParsers.containsKey(type)) {
         // Delegate to specific parser
-        return withUrl(typeParsers.get(baseType).doParse(jdbcUrl, parsedProps));
+        return withUrl(typeParsers.get(type).doParse(jdbcUrl, parsedProps), type);
       }
-      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps));
+      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
     } catch (final Exception e) {
       ExceptionLogger.LOGGER.debug("Error parsing URL", e);
       return parsedProps.build();
     }
   }
 
-  private static DBInfo withUrl(final DBInfo.Builder builder) {
+  private static DBInfo withUrl(final DBInfo.Builder builder, String type) {
     DBInfo info = builder.build();
-    String type = info.getType();
-    if (type == null) {
-      return builder.build();
-    }
     StringBuilder url = new StringBuilder();
     url.append(type);
     url.append(':');
@@ -883,6 +882,38 @@ public enum JDBCConnectionUrlParser {
           ExceptionLogger.LOGGER.debug("Error parsing portNumber property: " + portNumber, e);
         }
       }
+    }
+  }
+
+  /**
+   * see {@link <a
+   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md">specification</a>}
+   */
+  private static String toDbSystem(final String type) {
+    switch (type) {
+      case "as400": // IBM AS400 Database
+      case "db2": // IBM Db2
+        return DbSystem.DB2;
+      case "derby": // Apache Derby
+        return DbSystem.DERBY;
+      case "h2": // H2 Database
+        return DbSystem.H2;
+      case "hsqldb": // Hyper SQL Database
+        return DbSystem.HSQLDB;
+      case "mariadb": // MariaDB
+        return DbSystem.MARIADB;
+      case "mysql": // MySQL
+        return DbSystem.MYSQL;
+      case "oracle": // Oracle Database
+        return DbSystem.ORACLE;
+      case "postgresql": // PostgreSQL
+        return DbSystem.POSTGRESQL;
+      case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
+      case "microsoft":
+      case "sqlserver": // Microsoft SQL Server
+        return DbSystem.MSSQL;
+      default:
+        return DbSystem.OTHER_SQL; // Unknown DBMS
     }
   }
 }

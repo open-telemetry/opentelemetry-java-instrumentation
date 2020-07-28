@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
 import io.opentelemetry.trace.Tracer;
 import redis.clients.jedis.Connection;
 
@@ -28,8 +29,8 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jedis-1.4");
 
   @Override
-  protected String dbType() {
-    return "redis";
+  protected String dbSystem() {
+    return DbSystem.REDIS;
   }
 
   @Override
@@ -38,12 +39,12 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   }
 
   @Override
-  protected String dbInstance(final Connection connection) {
+  protected String dbName(final Connection connection) {
     return null;
   }
 
   @Override
-  protected String dbUrl(final Connection connection) {
+  protected String dbConnectionString(final Connection connection) {
     return connection.getHost() + ":" + connection.getPort();
   }
 }

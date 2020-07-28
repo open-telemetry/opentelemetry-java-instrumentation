@@ -35,11 +35,10 @@ public class Servlet3Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin final Method method,
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response,
+      @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
+      @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -57,6 +56,12 @@ public class Servlet3Advice {
 
     span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
     scope = TRACER.startScope(span, httpServletRequest);
+    if (!(response instanceof CountingHttpServletResponse)) {
+      response = new CountingHttpServletResponse((HttpServletResponse) response);
+      request =
+          new CountingHttpServletRequest(
+              (HttpServletRequest) request, (HttpServletResponse) response);
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -77,8 +82,8 @@ public class Servlet3Advice {
     }
 
     TRACER.setPrincipal(span, (HttpServletRequest) request);
-
     if (throwable != null) {
+      contentLengthHelper(span, response);
       TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());
       return;
     }
@@ -97,7 +102,14 @@ public class Servlet3Advice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+      contentLengthHelper(span, response);
       TRACER.end(span, ((HttpServletResponse) response).getStatus());
+    }
+  }
+
+  public static void contentLengthHelper(Span span, ServletResponse response) {
+    if (response instanceof CountingHttpServletResponse) {
+      TRACER.setContentLength(span, ((CountingHttpServletResponse) response).getContentLength());
     }
   }
 }

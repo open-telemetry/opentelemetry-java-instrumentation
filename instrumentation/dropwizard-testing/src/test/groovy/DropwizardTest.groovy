@@ -95,17 +95,15 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       operationName "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
-      childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
+      childOf((SpanData) parent)
     }
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
       spanKind SERVER
@@ -122,13 +120,10 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        // exception bodies are not yet recorded
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || /* async */ it == null }
         "servlet.context" ""
         "servlet.path" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

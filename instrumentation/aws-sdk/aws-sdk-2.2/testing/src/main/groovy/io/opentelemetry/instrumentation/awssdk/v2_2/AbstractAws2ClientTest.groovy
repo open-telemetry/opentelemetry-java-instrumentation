@@ -288,6 +288,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           operationName "S3.GetObject"
           spanKind CLIENT
           errored true
+          errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           parent()
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
@@ -298,7 +299,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
-            errorAttributes SdkClientException, "Unable to execute HTTP request: Read timed out"
           }
         }
       }

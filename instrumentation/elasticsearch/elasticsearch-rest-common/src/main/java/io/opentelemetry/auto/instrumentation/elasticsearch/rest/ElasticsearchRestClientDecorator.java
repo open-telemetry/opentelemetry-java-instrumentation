@@ -31,7 +31,7 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.elasticsearch");
 
   @Override
-  protected String dbType() {
+  protected String dbSystem() {
     return "elasticsearch";
   }
 
@@ -41,7 +41,7 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String dbInstance(final Object o) {
+  protected String dbName(final Object o) {
     return null;
   }
 
@@ -53,7 +53,7 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
 
   public Span onResponse(final Span span, final Response response) {
     if (response != null && response.getHost() != null) {
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), response.getHost().getHostName());
+      setPeer(span, response.getHost().getHostName(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.getHost().getPort());
     }
     return span;

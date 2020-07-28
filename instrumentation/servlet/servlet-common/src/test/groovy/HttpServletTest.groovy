@@ -16,7 +16,7 @@
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.AgentTestRunner
-
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -25,8 +25,17 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {
-    System.setProperty("ota.integration.servlet-service.enabled", "true")
+    ConfigUtils.updateConfig {
+      System.setProperty("ota.integration.servlet-service.enabled", "true")
+    }
   }
+
+  def specCleanup() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("ota.integration.servlet-service.enabled")
+    }
+  }
+
 
   def req = Mock(HttpServletRequest) {
     getMethod() >> "GET"
@@ -106,17 +115,13 @@ class HttpServletTest extends AgentTestRunner {
           operationName "HttpServlet.service"
           childOf span(0)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
         span(2) {
           operationName "${servlet.class.name}.doGet"
           childOf span(1)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
       }
     }

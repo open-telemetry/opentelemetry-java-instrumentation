@@ -225,6 +225,7 @@ class AWS1ClientTest extends AgentTestRunner {
           operationName "$service.$operation"
           spanKind CLIENT
           errored true
+          errorEvent SdkClientException, ~/Unable to execute HTTP request/
           parent()
           attributes {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:${UNUSABLE_PORT}/"
@@ -238,7 +239,6 @@ class AWS1ClientTest extends AgentTestRunner {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
-            errorAttributes SdkClientException, ~/Unable to execute HTTP request/
           }
         }
       }
@@ -271,6 +271,7 @@ class AWS1ClientTest extends AgentTestRunner {
           operationName "S3.HeadBucket"
           spanKind CLIENT
           errored true
+          errorEvent RuntimeException, "bad handler"
           parent()
           attributes {
             "${SemanticAttributes.HTTP_URL.key()}" "https://s3.amazonaws.com/"
@@ -280,7 +281,6 @@ class AWS1ClientTest extends AgentTestRunner {
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "HeadBucketRequest"
             "aws.agent" "java-aws-sdk"
-            errorAttributes RuntimeException, "bad handler"
           }
         }
       }
@@ -314,6 +314,11 @@ class AWS1ClientTest extends AgentTestRunner {
           operationName "S3.GetObject"
           spanKind CLIENT
           errored true
+          try {
+            errorEvent AmazonClientException, ~/Unable to execute HTTP request/
+          } catch (AssertionError e) {
+            errorEvent SdkClientException, "Unable to execute HTTP request: Request did not complete before the request timeout configuration."
+          }
           parent()
           attributes {
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address/"
@@ -325,11 +330,6 @@ class AWS1ClientTest extends AgentTestRunner {
             "aws.operation" "GetObjectRequest"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            try {
-              errorAttributes AmazonClientException, ~/Unable to execute HTTP request/
-            } catch (AssertionError e) {
-              errorAttributes SdkClientException, "Unable to execute HTTP request: Request did not complete before the request timeout configuration."
-            }
           }
         }
       }
