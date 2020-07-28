@@ -185,13 +185,13 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
+          if (grpcStatus.cause != null) {
+            errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
+          }
           attributes {
             "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            if (grpcStatus.cause != null) {
-              errorAttributes grpcStatus.cause.class, grpcStatus.cause.message
-            }
           }
         }
       }
@@ -269,13 +269,13 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
+          if (grpcStatus.cause != null) {
+            errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
+          }
           attributes {
             "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            if (grpcStatus.cause != null) {
-              errorAttributes grpcStatus.cause.class, grpcStatus.cause.message
-            }
           }
         }
       }

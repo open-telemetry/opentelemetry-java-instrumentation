@@ -1,0 +1,18 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+group = 'io.opentelemetry.instrumentation'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+sourceCompatibility = '8'
+
+dependencies {
+  api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
+  api project(':instrumentation-core:spring:starters:spring-starter')
+  api deps.opentelemetryOtlp
+  implementation group: "io.grpc", name: "grpc-netty-shaded", version: "1.30.2"
+}
+

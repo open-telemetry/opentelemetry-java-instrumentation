@@ -447,6 +447,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -456,7 +457,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/forwards/forwardToCompileError.jsp"
-            errorAttributes(JasperException, String)
           }
         }
         span(1) {
@@ -473,21 +473,21 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /forwards/forwardToCompileError.jsp"
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            errorAttributes(JasperException, String)
           }
         }
         span(3) {
           childOf span(2)
           operationName "Compile /compileError.jsp"
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            errorAttributes(JasperException, String)
           }
         }
       }

@@ -69,6 +69,12 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
   }
 
   @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
+
+  @Override
   boolean testPathParam() {
     return true
   }

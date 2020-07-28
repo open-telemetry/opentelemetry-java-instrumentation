@@ -216,9 +216,9 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           errored true
+          errorEvent(ResponseStatusException, String)
           attributes {
             "handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
-            errorAttributes(ResponseStatusException, String)
           }
         }
       }
@@ -309,6 +309,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           errored true
+          errorEvent(RuntimeException, "bad things happen")
           attributes {
             if (annotatedMethod == null) {
               // Functional API
@@ -320,7 +321,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               // Annotation API
               "handler.type" TestController.getName()
             }
-            errorAttributes(RuntimeException, "bad things happen")
           }
         }
       }

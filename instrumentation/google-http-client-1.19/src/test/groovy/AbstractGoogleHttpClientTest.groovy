@@ -18,7 +18,6 @@ import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
@@ -83,7 +82,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
             "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "$MoreAttributes.ERROR_MSG" "Server Error"
           }
         }
         server.distributedRequestSpan(it, 1, span(0))

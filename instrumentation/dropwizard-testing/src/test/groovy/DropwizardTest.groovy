@@ -95,12 +95,10 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       operationName "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
-      childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
+      childOf((SpanData) parent)
     }
   }
 
@@ -126,11 +124,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || /* async */ it == null }
         "servlet.context" ""
         "servlet.path" ""
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }

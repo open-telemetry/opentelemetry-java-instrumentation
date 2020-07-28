@@ -121,9 +121,7 @@ class HttpServletResponseTest extends AgentTestRunner {
           operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           errored true
-          attributes {
-            errorAttributes(ex.class, ex.message)
-          }
+          errorEvent(ex.class, ex.message)
         }
       }
     }

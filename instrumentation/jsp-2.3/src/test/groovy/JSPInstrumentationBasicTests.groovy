@@ -282,6 +282,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
+          event(0) {
+            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+                return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+              }
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+                return errorMessageOptional || tagErrorMsg instanceof String
+              }
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -291,13 +303,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            "error.type" { String tagExceptionType ->
-              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
-            }
-            "error.msg" { String tagErrorMsg ->
-              return errorMessageOptional || tagErrorMsg instanceof String
-            }
-            "error.stack" String
           }
         }
         span(1) {
@@ -314,16 +319,21 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /$jspFileName"
           errored true
+          event(0) {
+            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+                return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+              }
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+                return errorMessageOptional || tagErrorMsg instanceof String
+              }
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            "error.type" { String tagExceptionType ->
-              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
-            }
-            "error.msg" { String tagErrorMsg ->
-              return errorMessageOptional || tagErrorMsg instanceof String
-            }
-            "error.stack" String
           }
         }
       }
@@ -502,6 +512,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -511,18 +522,17 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            errorAttributes(JasperException, String)
           }
         }
         span(1) {
           childOf span(0)
           operationName "Compile /$jspFileName"
           errored true
+          errorEvent(JasperException, String)
           attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            errorAttributes(JasperException, String)
           }
         }
       }
