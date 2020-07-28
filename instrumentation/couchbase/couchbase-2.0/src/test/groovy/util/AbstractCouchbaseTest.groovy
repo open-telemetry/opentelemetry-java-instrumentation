@@ -31,7 +31,6 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -127,9 +126,9 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "${StringAttributeSetter.create("db.system").key()}" "couchbase"
+        "${SemanticAttributes.DB_SYSTEM.key()}" "couchbase"
         if (bucketName != null) {
-          "${StringAttributeSetter.create("db.name").key()}" bucketName
+          "${SemanticAttributes.DB_NAME.key()}" bucketName
         }
         "${SemanticAttributes.DB_STATEMENT.key()}" name
       }

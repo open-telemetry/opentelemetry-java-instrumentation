@@ -25,6 +25,6 @@ public class JaegerExporterFactory implements SpanExporterFactory {
 
   @Override
   public SpanExporter fromConfig(final Config config) {
-    return JaegerGrpcSpanExporter.Builder.fromEnv().build();
+    return (SpanExporter) JaegerGrpcSpanExporter.newBuilder();
   }
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -82,11 +82,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }
@@ -113,11 +113,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }
@@ -144,11 +144,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
         span(2) { // update
@@ -156,11 +156,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^update /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }
@@ -185,11 +185,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }
@@ -214,11 +214,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
         span(2) { // delete
@@ -226,11 +226,11 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }

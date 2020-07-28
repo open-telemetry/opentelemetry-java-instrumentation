@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.hibernate.Criteria
 import org.hibernate.Session
 import org.hibernate.criterion.Order
@@ -59,11 +59,11 @@ class CriteriaTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
         span(3) {

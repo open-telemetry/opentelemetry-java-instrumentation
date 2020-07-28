@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -40,9 +40,9 @@ class CouchbaseSpanUtil {
         "${SemanticAttributes.NET_PEER_NAME.key()}" { it == "localhost" || it == "127.0.0.1" || it == null }
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || Number }
 
-        "${StringAttributeSetter.create("db.system").key()}" "couchbase"
+        "${SemanticAttributes.DB_SYSTEM.key()}" "couchbase"
         if (bucketName != null) {
-          "${StringAttributeSetter.create("db.name").key()}" bucketName
+          "${SemanticAttributes.DB_NAME.key()}" bucketName
         }
 
         // Because of caching, not all requests hit the server so this tag may be absent

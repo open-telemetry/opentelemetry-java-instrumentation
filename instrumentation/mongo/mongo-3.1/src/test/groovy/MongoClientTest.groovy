@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoTimeoutException
@@ -23,7 +24,6 @@ import com.mongodb.client.MongoDatabase
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -285,9 +285,9 @@ class MongoClientTest extends MongoBaseTest {
         "${SemanticAttributes.DB_STATEMENT.key()}" {
           it.replace(" ", "") == statement
         }
-        "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
-        "${StringAttributeSetter.create("db.system").key()}" "mongodb"
-        "${StringAttributeSetter.create("db.name").key()}" instance
+        "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "mongodb://localhost:" + port
+        "${SemanticAttributes.DB_SYSTEM.key()}" "mongodb"
+        "${SemanticAttributes.DB_NAME.key()}" instance
       }
     }
   }

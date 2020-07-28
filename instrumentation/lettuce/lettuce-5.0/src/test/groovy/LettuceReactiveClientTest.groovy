@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
@@ -22,7 +23,6 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import reactor.core.scheduler.Schedulers
 import redis.embedded.RedisServer
 import spock.lang.Shared
@@ -112,7 +112,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -136,7 +136,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -168,7 +168,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -198,7 +198,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
@@ -218,7 +218,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
             "db.command.results.count" 157
           }
@@ -239,7 +239,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
             "db.command.cancelled" true
             "db.command.results.count" 2
@@ -273,7 +273,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
           }
         }
@@ -293,7 +293,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
           }
         }
@@ -324,7 +324,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -334,7 +334,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -365,7 +365,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -375,7 +375,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -407,7 +407,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -417,7 +417,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }

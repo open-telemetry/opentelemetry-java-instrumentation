@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
@@ -65,8 +65,8 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -88,8 +88,8 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -99,8 +99,8 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
@@ -122,8 +122,8 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
@@ -133,8 +133,8 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "localhost:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
