@@ -169,7 +169,7 @@ public enum OpenTelemetryTracing implements Tracing {
       // the span starts.
       spanBuilder =
           TRACER
-              .spanBuilder(DbSystem.REDIS)
+              .spanBuilder("redis")
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
               .setAttribute(StringAttributeSetter.create("db.system").key(), DbSystem.REDIS);
