@@ -231,9 +231,7 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           errored(true)
-          attributes {
-            errorAttributes(MappingException, "Unknown entity: java.lang.Long")
-          }
+          errorEvent(MappingException, "Unknown entity: java.lang.Long")
         }
         span(2) {
           operationName "Transaction.commit"

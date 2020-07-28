@@ -110,12 +110,7 @@ class Netty41ClientTest extends HttpClientTest {
             operationName "CONNECT"
             childOf span(0)
             errored true
-            attributes {
-              "error.type" AbstractChannel.AnnotatedConnectException.name
-              "error.stack" String
-              // slightly different message on windows
-              "error.msg" ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/
-            }
+            errorEvent(AbstractChannel.AnnotatedConnectException, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
           }
         }
       }

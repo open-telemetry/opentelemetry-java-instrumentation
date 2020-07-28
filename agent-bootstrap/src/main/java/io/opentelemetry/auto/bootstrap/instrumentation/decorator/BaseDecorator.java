@@ -21,14 +21,11 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -114,12 +111,7 @@ public abstract class BaseDecorator {
   }
 
   public static void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
-
-    StringWriter errorString = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
+    span.recordException(throwable);
   }
 
   /**

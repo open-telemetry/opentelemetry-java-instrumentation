@@ -18,12 +18,9 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 
@@ -127,12 +124,7 @@ public abstract class BaseTracer {
   }
 
   public void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
-
-    StringWriter errorString = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
+    span.recordException(throwable);
   }
 
   public static void setPeer(final Span span, String peerName, String peerIp) {

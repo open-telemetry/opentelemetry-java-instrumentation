@@ -367,6 +367,9 @@ class RabbitMQTest extends AgentTestRunner {
       }
 
       errored exception != null
+      if (exception) {
+        errorEvent(exception.class, errorMsg)
+      }
 
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key()}" { it == null || it instanceof String }
@@ -398,9 +401,6 @@ class RabbitMQTest extends AgentTestRunner {
             break
           default:
             "amqp.command" { it == null || it == resource }
-        }
-        if (exception) {
-          errorAttributes(exception.class, errorMsg)
         }
       }
     }

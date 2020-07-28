@@ -125,10 +125,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      attributes {
-        if (endpoint == EXCEPTION) {
-          errorAttributes(Exception, EXCEPTION.body)
-        }
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
       }
     }
   }
@@ -136,5 +134,12 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
   @Override
   String expectedServerSpanName(String method, ServerEndpoint endpoint) {
     return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
+  }
+
+  @Override
+  boolean testException() {
+    // TODO(anuraaga): We record exception both in the ratpack controller and in the error handler.
+    // Do we need the latter? https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/810
+    return false
   }
 }

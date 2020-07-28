@@ -152,9 +152,7 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           errored(true)
-          attributes {
-            errorAttributes(SQLGrammarException, "could not prepare statement")
-          }
+          errorEvent(SQLGrammarException, "could not prepare statement")
         }
         span(2) {
           operationName "Transaction.commit"

@@ -127,6 +127,12 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.Async
   }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
 }
 
 class JettyServlet3TestFakeAsync extends JettyServlet3Test {
@@ -134,6 +140,12 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 
@@ -206,6 +218,12 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
   }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
+  }
 }
 
 class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
@@ -225,6 +243,12 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+
+  @Override
+  boolean testException() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
+    return false
   }
 }
 

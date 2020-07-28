@@ -163,13 +163,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored true
+          errorEvent RedisConnectionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
-            errorAttributes RedisConnectionException, String
           }
         }
       }
@@ -406,10 +406,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "DEL"
           spanKind CLIENT
           errored true
+          errorEvent(IllegalStateException, "TestException")
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "DEL"
-            errorAttributes(IllegalStateException, "TestException")
           }
         }
       }

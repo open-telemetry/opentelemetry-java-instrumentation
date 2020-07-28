@@ -64,18 +64,15 @@ abstract class AbstractArmeriaServerTest extends InstrumentationSpecification {
           operationName(spanName)
           spanKind SERVER
           errored code != 200
+          if (path == "/exception") {
+            errorEvent(IllegalStateException, "illegal")
+          }
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
-
-            if (path == "/exception") {
-              "error.type" String
-              "error.msg" String
-              "error.stack" String
-            }
           }
         }
       }

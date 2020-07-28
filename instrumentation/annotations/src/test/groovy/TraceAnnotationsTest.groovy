@@ -100,9 +100,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello.sayERROR"
           errored true
-          attributes {
-            errorAttributes(error.class)
-          }
+          errorEvent(error.class)
         }
       }
     }
