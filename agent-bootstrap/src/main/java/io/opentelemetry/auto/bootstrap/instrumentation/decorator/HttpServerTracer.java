@@ -45,6 +45,8 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
 
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
 
+  protected static final String USER_AGENT = "User-Agent";
+
   public HttpServerTracer() {
     super();
   }
@@ -74,6 +76,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     Span span = builder.startSpan();
     onConnection(span, connection);
     onRequest(span, request);
+    onConnectionAndRequest(span, connection, request);
 
     return span;
   }
@@ -150,7 +153,10 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
   // TODO use semantic attributes
   protected void onRequest(final Span span, final REQUEST request) {
     SemanticAttributes.HTTP_METHOD.set(span, method(request));
-
+    String userAgent = requestHeader(request, USER_AGENT);
+    if (userAgent != null) {
+      SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
+    }
     // Copy of HttpClientDecorator url handling
     try {
       URI url = url(request);
@@ -195,6 +201,59 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     // TODO set resource name from URL.
   }
 
+  protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
+    String flavor = flavor(connection, request);
+    if (flavor != null) {
+      SemanticAttributes.HTTP_FLAVOR.set(span, flavor);
+    }
+    SemanticAttributes.HTTP_CLIENT_IP.set(span, clientIP(connection, request));
+  }
+
+  protected String clientIP(CONNECTION connection, REQUEST request) {
+    // try Forwarded
+    String forwarded = requestHeader(request, "Forwarded");
+    if (forwarded != null) {
+      forwarded = extractForwardedFor(forwarded);
+      if (forwarded != null) {
+        return forwarded;
+      }
+    }
+
+    // try X-Forwarded-For
+    forwarded = requestHeader(request, "X-Forwarded-For");
+    if (forwarded != null) {
+      // may be split by ,
+      int endIndex = forwarded.indexOf(',');
+      if (endIndex > 0) {
+        forwarded = forwarded.substring(0, endIndex);
+      }
+      if (!forwarded.isEmpty()) {
+        return forwarded;
+      }
+    }
+
+    // fallback to peer IP if there are no proxy headers
+    return peerHostIP(connection);
+  }
+
+  private static String extractForwardedFor(String forwarded) {
+    int start = forwarded.toLowerCase().indexOf("for=");
+    if (start < 0) {
+      return null;
+    }
+    start += 4; // start is now the index after for=
+    if (start >= forwarded.length() - 1) { // the value after for= must not be empty
+      return null;
+    }
+    for (int i = start; i < forwarded.length() - 1; i++) {
+      char c = forwarded.charAt(i);
+      if (c == ',' || c == ';') {
+        return forwarded.substring(start, i);
+      }
+    }
+    return forwarded.substring(start);
+  }
+
   private <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
@@ -214,11 +273,15 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
 
   protected abstract String peerHostIP(CONNECTION connection);
 
+  protected abstract String flavor(CONNECTION connection, REQUEST request);
+
   protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract String method(REQUEST request);
+
+  protected abstract String requestHeader(REQUEST request, String name);
 
   /**
    * Stores given context in the given request-response-loop storage in implementation specific way.

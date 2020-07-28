@@ -58,8 +58,18 @@ class SpringWebMvcServerTracer
   }
 
   @Override
+  protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
+    return httpServletRequest.getHeader(name);
+  }
+
+  @Override
   protected void attachServerContext(Context context, HttpServletRequest request) {
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
+  }
+
+  @Override
+  protected String flavor(HttpServletRequest connection, HttpServletRequest request) {
+    return connection.getProtocol();
   }
 
   @Override

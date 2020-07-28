@@ -39,6 +39,11 @@ public class NettyHttpServerTracer
   }
 
   @Override
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.headers().get(name);
+  }
+
+  @Override
   protected void attachServerContext(Context context, ChannelTraceContext channelTraceContext) {
     channelTraceContext.setContext(context);
   }
@@ -65,6 +70,11 @@ public class NettyHttpServerTracer
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
     }
     return null;
+  }
+
+  @Override
+  protected String flavor(Channel channel, HttpRequest request) {
+    return request.getProtocolVersion().toString();
   }
 
   @Override
