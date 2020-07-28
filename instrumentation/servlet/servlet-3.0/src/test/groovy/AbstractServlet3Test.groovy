@@ -83,14 +83,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         parent()
       }
       if (endpoint == EXCEPTION) {
-        event(0) {
-          eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-          attributes {
-            "${SemanticAttributes.EXCEPTION_TYPE.key()}" { it == null || it == Exception.name }
-            "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { it == null || it == EXCEPTION.body }
-            "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" { it == null || it instanceof String }
-          }
-        }
+        errorEvent(Exception, EXCEPTION.body)
       }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional

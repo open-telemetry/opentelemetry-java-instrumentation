@@ -16,8 +16,6 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span

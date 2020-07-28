@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.netty.channel.AbstractChannel
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
@@ -23,7 +24,6 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -112,14 +112,7 @@ class Netty41ClientTest extends HttpClientTest {
             operationName "CONNECT"
             childOf span(0)
             errored true
-            event(0) {
-              eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-              attributes {
-                "${SemanticAttributes.EXCEPTION_TYPE.key()}" AbstractChannel.AnnotatedConnectException.canonicalName
-                "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" ~/Connection refused:( no further information:)? localhost\/[0-9.:]+:$UNUSABLE_PORT/
-                "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
-              }
-            }
+            errorEvent(AbstractChannel.AnnotatedConnectException, ~/Connection refused:( no further information:)? localhost\/[0-9.:]+:$UNUSABLE_PORT/)
           }
         }
       }

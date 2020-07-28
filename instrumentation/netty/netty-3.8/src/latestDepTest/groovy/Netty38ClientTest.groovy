@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Response
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -104,14 +104,7 @@ class Netty38ClientTest extends HttpClientTest {
           } catch (ClassNotFoundException e) {
             // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
           }
-          event(0) {
-            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-            attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorClass.name
-              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
-            }
-          }
+          errorEvent(errorClass, ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/)
         }
       }
     }
