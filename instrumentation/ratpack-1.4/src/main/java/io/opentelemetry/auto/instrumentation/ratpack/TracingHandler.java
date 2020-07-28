@@ -67,10 +67,7 @@ public final class TracingHandler implements Handler {
 
     try (Scope ignored = currentContextWith(ratpackSpan)) {
       ctx.next();
-    } catch (final Throwable e) {
-      DECORATE.onError(ratpackSpan, e);
-      // will be finished in above response handler
-      throw e;
+      // exceptions are captured by ServerErrorHandlerInstrumentation
     }
   }
 }
