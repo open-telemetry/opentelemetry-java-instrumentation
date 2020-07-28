@@ -16,21 +16,29 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
 
-public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, HttpMethod> {
-  public static final CommonsHttpClientDecorator DECORATE = new CommonsHttpClientDecorator();
+public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod> {
+  public static final CommonsHttpClientTracer TRACER = new CommonsHttpClientTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-2.0");
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.apache-httpclient-2.0";
+  }
+
+  public Depth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
+  }
 
   @Override
   protected String method(final HttpMethod httpMethod) {
@@ -63,5 +71,10 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
   protected String responseHeader(HttpMethod httpMethod, String name) {
     Header header = httpMethod.getResponseHeader(name);
     return header != null ? header.getValue() : null;
+  }
+
+  @Override
+  protected Setter<HttpMethod> getSetter() {
+    return HttpHeadersInjectAdapter.SETTER;
   }
 }

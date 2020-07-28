@@ -16,14 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.CommonsHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.CommonsHttpClientDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -31,10 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -43,7 +35,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 
 @AutoService(Instrumenter.class)
@@ -67,7 +58,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".CommonsHttpClientDecorator", packageName + ".HttpHeadersInjectAdapter",
+      packageName + ".CommonsHttpClientTracer", packageName + ".HttpHeadersInjectAdapter",
     };
   }
 
@@ -84,47 +75,36 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class ExecAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(@Advice.Argument(1) final HttpMethod httpMethod) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
-      if (callDepth > 0) {
-        return null;
+    public static void methodEnter(
+        @Advice.Argument(1) final HttpMethod httpMethod,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+
+      callDepth = TRACER.getCallDepth();
+      if (callDepth.getAndIncrement() == 0) {
+        span = TRACER.startSpan(httpMethod);
+        if (span.getContext().isValid()) {
+          scope = TRACER.startScope(span, httpMethod);
+        }
       }
-
-      Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForRequest(httpMethod))
-              .setSpanKind(CLIENT)
-              .startSpan();
-
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, httpMethod);
-
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, httpMethod, SETTER);
-      Scope scope = withScopedContext(context);
-
-      return new SpanWithScope(span, scope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Argument(1) final HttpMethod httpMethod,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      if (spanWithScope == null) {
-        return;
-      }
-      CallDepthThreadLocalMap.reset(HttpClient.class);
-
-      try {
-        Span span = spanWithScope.getSpan();
-        DECORATE.onResponse(span, httpMethod);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-      } finally {
-        spanWithScope.closeScope();
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        if (throwable == null) {
+          TRACER.end(span, httpMethod);
+        } else {
+          TRACER.endExceptionally(span, httpMethod, throwable);
+        }
       }
     }
   }
