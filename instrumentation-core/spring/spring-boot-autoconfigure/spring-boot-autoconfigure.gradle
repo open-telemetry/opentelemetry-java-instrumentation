@@ -13,26 +13,28 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-  
+
   testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
-  
-  implementation(project(':instrumentation-core:spring:spring-webmvc-3.1')){
+
+  implementation(project(':instrumentation-core:spring:spring-webmvc-3.1')) {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
-  implementation(project(':instrumentation-core:spring:spring-web-3.1')){
+  implementation(project(':instrumentation-core:spring:spring-web-3.1')) {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
-  implementation(project(':instrumentation-core:spring:spring-webflux-5.0')){
+  implementation(project(':instrumentation-core:spring:spring-webflux-5.0')) {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
-   
+
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
   compileOnly deps.opentelemetryLogging
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
+
+  testImplementation deps.opentelemetrySdk
 }
 
 test {
