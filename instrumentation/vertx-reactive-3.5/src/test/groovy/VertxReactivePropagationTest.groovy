@@ -83,7 +83,7 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           childOf span(2)
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test?shutdown=true"
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"

@@ -63,7 +63,7 @@ class QueryTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "h2"
             "${StringAttributeSetter.create("db.name").key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
@@ -100,7 +100,7 @@ class QueryTest extends AbstractHibernateTest {
             spanKind CLIENT
             childOf span(1)
             attributes {
-              "${StringAttributeSetter.create("db.system").key()}" "sql"
+              "${StringAttributeSetter.create("db.system").key()}" "h2"
               "${StringAttributeSetter.create("db.name").key()}" "db1"
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
@@ -172,7 +172,7 @@ class QueryTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "h2"
             "${StringAttributeSetter.create("db.name").key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /

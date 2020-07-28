@@ -102,7 +102,7 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "{call TEST_PROC()}"

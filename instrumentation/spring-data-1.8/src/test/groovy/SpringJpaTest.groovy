@@ -82,7 +82,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
@@ -113,7 +113,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
@@ -144,7 +144,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
@@ -156,7 +156,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^update /
@@ -185,7 +185,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
@@ -214,7 +214,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
@@ -226,7 +226,7 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /

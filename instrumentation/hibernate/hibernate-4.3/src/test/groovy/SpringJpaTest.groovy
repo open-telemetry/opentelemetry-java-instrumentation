@@ -50,7 +50,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
@@ -76,7 +76,7 @@ class SpringJpaTest extends AgentTestRunner {
             operationName "call next value for hibernate_sequence"
             spanKind CLIENT
             attributes {
-              "${StringAttributeSetter.create("db.system").key()}" "sql"
+              "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
               "${StringAttributeSetter.create("db.name").key()}" "test"
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" "call next value for hibernate_sequence"
@@ -90,7 +90,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
@@ -113,7 +113,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
@@ -126,7 +126,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "update Customer set firstName=?, lastName=? where id=?"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "update Customer set firstName=?, lastName=? where id=?"
@@ -149,7 +149,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
@@ -170,7 +170,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
@@ -183,7 +183,7 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "delete from Customer where id=?"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "sql"
+            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
             "${StringAttributeSetter.create("db.name").key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "delete from Customer where id=?"
