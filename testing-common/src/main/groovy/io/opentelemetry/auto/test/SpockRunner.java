@@ -52,7 +52,8 @@ public class SpockRunner extends Sputnik {
     "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.instrumentation.api",
-    "io.opentelemetry.auto.shaded"
+    "io.opentelemetry.auto.shaded",
+    "io.opentelemetry.auto.typedspan",
   };
 
   private static final String[] TEST_BOOTSTRAP_PREFIXES;

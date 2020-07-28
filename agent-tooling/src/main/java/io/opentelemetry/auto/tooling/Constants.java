@@ -35,7 +35,8 @@ public final class Constants {
     "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.instrumentation.api",
-    "io.opentelemetry.auto.shaded"
+    "io.opentelemetry.auto.shaded",
+    "io.opentelemetry.auto.typedspan",
   };
 
   // This is used in IntegrationTestUtils.java
