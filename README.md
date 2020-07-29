@@ -61,20 +61,20 @@ behavior you may find.
 A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
 only supports gRPC as its communications protocol.
 
-| System property                  | Environment variable             | Purpose                                                              |
-|----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter=jaeger              | OTA_EXPORTER=jaeger              | To select Jaeger exporter                                            |
-| JAEGER_ENDPOINT                  | JAEGER_ENDPOINT                  | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
-| JAEGER_SERVICE_NAME              | JAEGER_SERVICE_NAME              | The service name of this JVM instance                                |
+| System property          | Environment variable | Purpose                                                                                            |
+|--------------------------|----------------------|----------------------------------------------------------------------------------------------------|
+| ota.exporter=jaeger      | OTA_EXPORTER=jaeger  | To select Jaeger exporter                                                                          |
+| otel.jaeger.endpoint     | JAEGER_ENDPOINT      | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
+| otel.jaeger.service.name | JAEGER_SERVICE_NAME  | The service name of this JVM instance, default is "unknown".                                       |
 
 #### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
-| System property                  | Environment variable             | Purpose                                                              |
-|----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
-| otel.zipkin.endpoint             | OTEL_ZIPKIN_ENDPOINT             | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
-| otel.zipkin.service.name         | OTEL_ZIPKIN_SERVICE_NAME         | The service name of this JVM instance                                |
+| System property          | Environment variable     | Purpose                                                                                                               |
+|--------------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| ota.exporter=zipkin      | OTA_EXPORTER=zipkin      | To select Zipkin exporter                                                                                             |
+| otel.zipkin.endpoint     | OTEL_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to, default is "http://localhost:9411/api/v2/spans". Currently only HTTP is supported. |
+| otel.zipkin.service.name | OTEL_ZIPKIN_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                                          |
 
 #### OTLP exporter
 
@@ -83,7 +83,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | System property                  | Environment variable             | Purpose                                                                 |
 |----------------------------------|----------------------------------|-------------------------------------------------------------------------|
 | ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                              |
-| otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to.                                        |
+| otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to, default is "localhost:55680"           |
 | otel.otlp.use.tls                | OTEL_OTLP_USE_TLS                | To use or not TLS, default is false.                                    |
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
@@ -106,9 +106,9 @@ attributes to stdout. It is used mainly for testing and debugging.
 The [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md)
 is a representation of the entity producing telemetry.
 
-| System property | Environment variable     | Purpose                                                                      |
-|-----------------|--------------------------|------------------------------------------------------------------------------|
-| (not yet)       | OTEL_RESOURCE_ATTRIBUTES | Used to specify resource attributes in format: key1=val1,key2=val2,key3=val3 |
+| System property          | Environment variable     | Purpose                                                                      |
+|--------------------------|--------------------------|------------------------------------------------------------------------------|
+| otel.resource.attributes | OTEL_RESOURCE_ATTRIBUTES | Used to specify resource attributes in format: key1=val1,key2=val2,key3=val3 |
 
 #### Batch span processor
 
