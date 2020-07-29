@@ -236,7 +236,8 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     return peerHostIP(connection);
   }
 
-  private static String extractForwardedFor(String forwarded) {
+  // VisibleForTesting
+  static String extractForwardedFor(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
       return null;
@@ -248,6 +249,9 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     for (int i = start; i < forwarded.length() - 1; i++) {
       char c = forwarded.charAt(i);
       if (c == ',' || c == ';') {
+        if (i == start) { // empty string
+          return null;
+        }
         return forwarded.substring(start, i);
       }
     }
