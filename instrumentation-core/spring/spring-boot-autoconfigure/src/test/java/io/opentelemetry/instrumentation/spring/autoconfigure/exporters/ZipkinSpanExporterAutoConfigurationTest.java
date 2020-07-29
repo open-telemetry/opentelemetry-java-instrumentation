@@ -16,20 +16,19 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link ZipkinSpanExporter}. */
-public class ZipkinSpanExporterAutoConfigurationTest {
+class ZipkinSpanExporterAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -38,19 +37,21 @@ public class ZipkinSpanExporterAutoConfigurationTest {
                   TracerAutoConfiguration.class, ZipkinSpanExporterAutoConfiguration.class));
 
   @Test
-  public void should_initialize_ZipkinSpanExporter_bean_when_exporters_are_ENABLED() {
+  @DisplayName("when exporters are ENABLED should initialize ZipkinSpanExporter bean")
+  public void shouldInitializeZipkinSpanExporterBeanWhenExportersAreEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.zipkin.enabled=true")
         .run(
             (context) -> {
-              assertNotNull(
-                  "Application Context contains ZipkinSpanExporter bean",
-                  context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class));
+              assertThat(context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class))
+                  .isNotNull();
             });
   }
 
   @Test
-  public void should_initialize_ZipkinSpanExporter_bean_with_property_values() {
+  @DisplayName(
+      "when opentelemetry.trace.exporter.zipkin properties are set should initialize ZipkinSpanExporterProperties with property values")
+  public void shouldInitializeZipkinSpanExporterBeanWithPropertyValues() {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.zipkin.enabled=true",
@@ -58,42 +59,32 @@ public class ZipkinSpanExporterAutoConfigurationTest {
             "opentelemetry.trace.exporter.zipkin.endpoint=http://localhost:8080/test")
         .run(
             (context) -> {
-              ZipkinSpanExporter zipkinBean =
-                  context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class);
-              assertNotNull("Application Context contains ZipkinSpanExporter bean", zipkinBean);
-
               ZipkinSpanExporterProperties zipkinSpanExporterProperties =
                   context.getBean(ZipkinSpanExporterProperties.class);
-              assertEquals(
-                  "Service Name is set in ZipkinSpanExporterProperties",
-                  "test",
-                  zipkinSpanExporterProperties.getServiceName());
-              assertEquals(
-                  "Endpoint is set in ZipkinSpanExporterProperties",
-                  "http://localhost:8080/test",
-                  zipkinSpanExporterProperties.getEndpoint());
+              assertThat(zipkinSpanExporterProperties.getServiceName()).isEqualTo("test");
+              assertThat(zipkinSpanExporterProperties.getEndpoint())
+                  .isEqualTo("http://localhost:8080/test");
             });
   }
 
   @Test
-  public void should_NOT_initialize_ZipkinSpanExporter_bean_when_exporters_are_DISABLED() {
+  @DisplayName("when exporters are DISABLED should NOT initialize ZipkinSpanExporter bean")
+  public void shouldNotInitializeZipkinSpanExporterBeanWhenExportersAreDisabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporter.zipkin.enabled=false")
         .run(
             (context) -> {
-              assertFalse(
-                  "Application Context DOES NOT contain otelZipkinSpanExporter bean",
-                  context.containsBean("otelZipkinSpanExporter"));
+              assertThat(context.containsBean("otelZipkinSpanExporter")).isFalse();
             });
   }
 
   @Test
-  public void should_initialize_ZipkinSpanExporter_bean_when_zipkin_enabled_property_is_MISSING() {
+  @DisplayName("when zipkin enabled property is MISSING should initialize ZipkinSpanExporter bean")
+  public void shouldInitializeZipkinSpanExporterBeanWhenZipkinEnabledPropertyIsMissing() {
     this.contextRunner.run(
         (context) -> {
-          assertNotNull(
-              "Application Context contains otelZipkinSpanExporter bean",
-              context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class));
+          assertThat(context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class))
+              .isNotNull();
         });
   }
 }
