@@ -9,9 +9,9 @@ configurations.all {
 ext {
   versions = [
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
-    opentelemetry     : '0.7.0-20200727.220734-34',
+    opentelemetry     : '0.7.0-20200729.192920-38',
     // Snapshot versions can often get split into two suffixes
-    opentelemetryOther: '0.7.0-20200727.220734-33',
+    opentelemetryOther: '0.7.0-20200729.192920-37',
 
     slf4j             : "1.7.30",
     guava             : "20.0", // Last version to support Java 7
