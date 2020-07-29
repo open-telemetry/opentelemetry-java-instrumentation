@@ -101,6 +101,14 @@ attributes to stdout. It is used mainly for testing and debugging.
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
+#### Propagator
+
+The propagator controls which distributed tracing header format is used.
+
+| System property | Environment variable | Purpose                                                                                 |
+|-----------------|----------------------|-----------------------------------------------------------------------------------------|
+| ota.propagators | OTA_PROPAGATORS      | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger". |
+
 #### OpenTelemetry Resource
 
 The [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md)
