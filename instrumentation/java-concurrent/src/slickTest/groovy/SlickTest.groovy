@@ -17,7 +17,6 @@
 import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -49,11 +48,11 @@ class SlickTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" SlickUtils.Db()
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" SlickUtils.Db()
             "${SemanticAttributes.DB_USER.key()}" SlickUtils.Username()
             "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(SlickUtils.TestQuery())
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
       }

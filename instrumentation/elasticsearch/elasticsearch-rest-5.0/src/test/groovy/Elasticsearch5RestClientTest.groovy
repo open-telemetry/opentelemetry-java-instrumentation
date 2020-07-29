@@ -18,7 +18,6 @@ import groovy.json.JsonSlurper
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
@@ -108,7 +107,7 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
             "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
           }
         }
         span(1) {
