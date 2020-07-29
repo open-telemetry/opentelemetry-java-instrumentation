@@ -20,16 +20,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.exporters.otlp.OtlpGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterProperties;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-/** Spring Boot auto configuration test for {@link JaegerGrpcSpanExporter}. */
+/** Spring Boot auto configuration test for {@link OtlpGrpcSpanExporterAutoConfiguration}. */
 public class OtlpGrpcSpanExporterAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
@@ -39,68 +39,67 @@ public class OtlpGrpcSpanExporterAutoConfigurationTest {
                   TracerAutoConfiguration.class, OtlpGrpcSpanExporterAutoConfiguration.class));
 
   @Test
-  public void should_initialize_JaegerGrpcSpanExporter_bean_when_exporters_are_ENABLED() {
+  public void should_initialize_OtlpGrpcSpanExporter_bean_when_exporters_are_ENABLED() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.exporters.jaeger.enabled=true")
+        .withPropertyValues("opentelemetry.trace.exporters.otlp.enabled=true")
         .run(
             (context) -> {
               assertNotNull(
-                  "Application Context contains JaegerGrpcSpanExporter bean",
-                  context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class));
+                  "Application Context contains OtlpGrpcSpanExporter bean",
+                  context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class));
             });
   }
 
   @Test
-  public void should_initialize_JaegerGrpcSpanExporter_bean_with_property_values() {
+  public void should_initialize_OtlpGrpcSpanExporter_bean_with_property_values() {
     this.contextRunner
         .withPropertyValues(
-            "opentelemetry.trace.exporter.jaeger.enabled=true",
-            "opentelemetry.trace.exporter.jaeger.servicename=test",
-            "opentelemetry.trace.exporter.jaeger.endpoint=localhost:8080/test",
-            "opentelemetry.trace.exporter.jaeger.spantimeout=69s")
+            "opentelemetry.trace.exporter.otlp.enabled=true",
+            "opentelemetry.trace.exporter.otlp.servicename=test",
+            "opentelemetry.trace.exporter.otlp.endpoint=localhost:8080/test",
+            "opentelemetry.trace.exporter.otlp.spantimeout=420ms")
         .run(
             (context) -> {
-              JaegerGrpcSpanExporter jaegerBean =
-                  context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class);
-              assertNotNull("Application Context contains JaegerGrpcSpanExporter bean", jaegerBean);
+              OtlpGrpcSpanExporter otlpBean =
+                  context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class);
+              assertNotNull("Application Context contains OtlpGrpcSpanExporter bean", otlpBean);
 
-              JaegerSpanExporterProperties jaegerSpanExporterProperties =
-                  context.getBean(JaegerSpanExporterProperties.class);
+              OtlpGrpcSpanExporterProperties otlpSpanExporterProperties =
+                  context.getBean(OtlpGrpcSpanExporterProperties.class);
               assertEquals(
-                  "Service Name is set in JaegerSpanExporterProperties",
+                  "Service Name is set in OtlpGrpcSpanExporterProperties",
                   "test",
-                  jaegerSpanExporterProperties.getServiceName());
+                  otlpSpanExporterProperties.getServiceName());
               assertEquals(
-                  "Endpoint is set in JaegerSpanExporterProperties",
+                  "Endpoint is set in OtlpGrpcSpanExporterProperties",
                   "localhost:8080/test",
-                  jaegerSpanExporterProperties.getEndpoint());
+                  otlpSpanExporterProperties.getEndpoint());
               assertEquals(
-                  "Span Timeout is set in JaegerSpanExporterProperties",
-                  Duration.ofSeconds(69),
-                  jaegerSpanExporterProperties.getSpanTimeout());
+                  "Span Timeout is set in OtlpGrpcSpanExporterProperties",
+                  Duration.ofMillis(420),
+                  otlpSpanExporterProperties.getSpanTimeout());
             });
   }
 
   @Test
-  public void should_NOT_initialize_JaegerGrpcSpanExporter_bean_when_exporters_are_DISABLED() {
+  public void should_NOT_initialize_OtlpGrpcSpanExporter_bean_when_exporters_are_DISABLED() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.exporter.jaeger.enabled=false")
+        .withPropertyValues("opentelemetry.trace.exporter.otlp.enabled=false")
         .run(
             (context) -> {
               assertFalse(
-                  "Application Context DOES NOT contain otelJaegerGrpcSpanExporter bean",
-                  context.containsBean("otelJaegerSpanExporter"));
+                  "Application Context DOES NOT contain otelOtlpGrpcSpanExporter bean",
+                  context.containsBean("otelOtlpGrpcSpanExporter"));
             });
   }
 
   @Test
-  public void
-      should_initialize_JaegerGrpcSpanExporter_bean_when_jaeger_enabled_property_is_MISSING() {
+  public void should_initialize_OtlpGrpcSpanExporter_bean_when_otlp_enabled_property_is_MISSING() {
     this.contextRunner.run(
         (context) -> {
           assertNotNull(
-              "Application Context contains otelJaegerSpanExporter bean",
-              context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class));
+              "Application Context contains otelOtlpGrpcSpanExporter bean",
+              context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class));
         });
   }
 }
