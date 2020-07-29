@@ -55,7 +55,7 @@ public class ZipkinSpanExporterAutoConfigurationTest {
         .withPropertyValues(
             "opentelemetry.trace.exporter.zipkin.enabled=true",
             "opentelemetry.trace.exporter.zipkin.servicename=test",
-            "opentelemetry.trace.exporter.zipkin.endpoint=localhost:8080/test")
+            "opentelemetry.trace.exporter.zipkin.endpoint=http://localhost:8080/test")
         .run(
             (context) -> {
               ZipkinSpanExporter zipkinBean =
@@ -70,7 +70,7 @@ public class ZipkinSpanExporterAutoConfigurationTest {
                   zipkinSpanExporterProperties.getServiceName());
               assertEquals(
                   "Endpoint is set in ZipkinSpanExporterProperties",
-                  "localhost:8080/test",
+                  "http://localhost:8080/test",
                   zipkinSpanExporterProperties.getEndpoint());
             });
   }
