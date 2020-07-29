@@ -16,10 +16,8 @@
 
 package springdata
 
-
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -93,7 +91,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           errored true
           errorEvent IndexNotFoundException, "no such index"
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -141,7 +139,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -153,7 +151,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -164,7 +162,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -180,7 +178,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
             "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
             "${SemanticAttributes.NET_PEER_PORT.key()}" 0
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -192,7 +190,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             "elasticsearch.request.indices" indexName
@@ -204,7 +202,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -219,7 +217,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -295,7 +293,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

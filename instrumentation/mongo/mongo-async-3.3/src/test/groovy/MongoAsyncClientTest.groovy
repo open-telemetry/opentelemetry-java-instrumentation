@@ -27,7 +27,6 @@ import com.mongodb.connection.ClusterSettings
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -329,10 +328,10 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
         "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
         "${SemanticAttributes.NET_PEER_PORT.key()}" port
-        "${StringAttributeSetter.create("db.connection_string").key()}" "mongodb://localhost:" + port
+        "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "mongodb://localhost:" + port
         "${SemanticAttributes.DB_STATEMENT.key()}" statementEval
-        "${StringAttributeSetter.create("db.system").key()}" "mongodb"
-        "${StringAttributeSetter.create("db.name").key()}" instance
+        "${SemanticAttributes.DB_SYSTEM.key()}" "mongodb"
+        "${SemanticAttributes.DB_NAME.key()}" instance
       }
     }
   }

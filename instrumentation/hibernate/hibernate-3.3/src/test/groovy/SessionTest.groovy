@@ -15,7 +15,6 @@
  */
 
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import org.hibernate.LockMode
 import org.hibernate.MappingException
 import org.hibernate.Query
@@ -76,11 +75,11 @@ class SessionTest extends AbstractHibernateTest {
             spanKind CLIENT
             childOf span(1)
             attributes {
-              "${StringAttributeSetter.create("db.system").key()}" "h2"
-              "${StringAttributeSetter.create("db.name").key()}" "db1"
+              "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+              "${SemanticAttributes.DB_NAME.key()}" "db1"
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-              "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+              "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
             }
           }
           span(3) {
@@ -151,11 +150,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(2)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
       }
@@ -217,11 +216,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
         span(3) {
@@ -235,11 +234,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(3)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
       }
@@ -349,11 +348,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(2)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
       }
@@ -421,11 +420,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
         span(3) {
@@ -508,11 +507,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(4)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
         span(6) {
@@ -520,11 +519,11 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(4)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "h2"
-            "${StringAttributeSetter.create("db.name").key()}" "db1"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
+            "${SemanticAttributes.DB_NAME.key()}" "db1"
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
-            "${StringAttributeSetter.create("db.connection_string").key()}" "h2:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
           }
         }
         span(7) {

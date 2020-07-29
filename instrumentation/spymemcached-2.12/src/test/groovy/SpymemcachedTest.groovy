@@ -18,7 +18,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.trace.attributes.StringAttributeSetter
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -651,7 +651,7 @@ class SpymemcachedTest extends AgentTestRunner {
       }
 
       attributes {
-        "${StringAttributeSetter.create("db.system").key()}" "memcached"
+        "${SemanticAttributes.DB_SYSTEM.key()}" "memcached"
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

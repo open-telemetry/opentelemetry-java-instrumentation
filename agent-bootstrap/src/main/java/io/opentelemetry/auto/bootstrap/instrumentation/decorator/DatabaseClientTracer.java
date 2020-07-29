@@ -27,7 +27,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
@@ -52,7 +51,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
         tracer
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
-            .setAttribute(StringAttributeSetter.create("db.system").key(), dbSystem(connection))
+            .setAttribute(SemanticAttributes.DB_SYSTEM.key(), dbSystem(connection))
             .startSpan();
 
     if (connection != null) {
@@ -106,9 +105,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   /** This should be called when the connection is being used, not when it's created. */
   protected Span onConnection(final Span span, final CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
-    span.setAttribute(StringAttributeSetter.create("db.name").key(), dbName(connection));
+    span.setAttribute(SemanticAttributes.DB_NAME.key(), dbName(connection));
     span.setAttribute(
-        StringAttributeSetter.create("db.connection_string").key(), dbConnectionString(connection));
+        SemanticAttributes.DB_CONNECTION_STRING.key(), dbConnectionString(connection));
     return span;
   }
 

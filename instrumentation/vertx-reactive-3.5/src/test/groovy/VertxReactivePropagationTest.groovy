@@ -18,7 +18,6 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import io.vertx.reactivex.core.Vertx
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -83,11 +82,11 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           childOf span(2)
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test?shutdown=true"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test?shutdown=true"
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }
