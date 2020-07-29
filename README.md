@@ -39,14 +39,14 @@ Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dota.exporter=zipkin
+     -Dotel.exporter=zipkin
      -jar myapp.jar
 ```
 
-External exporter jar can be specified via `ota.exporter.jar` system property:
+External exporter jar can be specified via `otel.exporter.jar` system property:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dota.exporter.jar=path/to/external-exporter.jar
+     -Dotel.exporter.jar=path/to/external-exporter.jar
      -jar myapp.jar
 ```
 
@@ -63,7 +63,7 @@ only supports gRPC as its communications protocol.
 
 | System property          | Environment variable     | Purpose                                                                                            |
 |--------------------------|--------------------------|----------------------------------------------------------------------------------------------------|
-| ota.exporter=jaeger      | OTA_EXPORTER=jaeger      | To select Jaeger exporter                                                                          |
+| otel.exporter=jaeger     | OTEL_EXPORTER=jaeger     | To select Jaeger exporter                                                                          |
 | otel.jaeger.endpoint     | OTEL_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
 | otel.jaeger.service.name | OTEL_JAEGER_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                       |
 
@@ -72,7 +72,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 
 | System property          | Environment variable     | Purpose                                                                                                               |
 |--------------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| ota.exporter=zipkin      | OTA_EXPORTER=zipkin      | To select Zipkin exporter                                                                                             |
+| otel.exporter=zipkin     | OTEL_EXPORTER=zipkin     | To select Zipkin exporter                                                                                             |
 | otel.zipkin.endpoint     | OTEL_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to, default is "http://localhost:9411/api/v2/spans". Currently only HTTP is supported. |
 | otel.zipkin.service.name | OTEL_ZIPKIN_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                                          |
 
@@ -82,7 +82,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 
 | System property                  | Environment variable             | Purpose                                                                 |
 |----------------------------------|----------------------------------|-------------------------------------------------------------------------|
-| ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                              |
+| otel.exporter=otlp (default)     | OTEL_EXPORTER=otlp               | To select OpenTelemetry exporter (default)                              |
 | otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to, default is "localhost:55680"           |
 | otel.otlp.use.tls                | OTEL_OTLP_USE_TLS                | To use or not TLS, default is false.                                    |
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
@@ -96,18 +96,18 @@ to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL
 The logging exporter simply prints the name of the span along with its
 attributes to stdout. It is used mainly for testing and debugging.
 
-| System property             | Environment variable        | Purpose                                                                      |
-|-----------------------------|-----------------------------|------------------------------------------------------------------------------|
-| ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
-| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+| System property              | Environment variable         | Purpose                                                                      |
+|------------------------------|------------------------------|------------------------------------------------------------------------------|
+| otel.exporter=logging        | OTEL_EXPORTER=logging        | To select logging exporter                                                   |
+| otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
 #### Propagator
 
 The propagator controls which distributed tracing header format is used.
 
-| System property | Environment variable | Purpose                                                                                 |
-|-----------------|----------------------|-----------------------------------------------------------------------------------------|
-| ota.propagators | OTA_PROPAGATORS      | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger". |
+| System property  | Environment variable | Purpose                                                                                 |
+|------------------|----------------------|-----------------------------------------------------------------------------------------|
+| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger". |
 
 #### OpenTelemetry Resource
 
@@ -154,7 +154,7 @@ The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/open
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
 Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
-provide the path to a JAR file including an SPI implementation using the system property `ota.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.auto.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.auto.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
 ## Supported Java libraries and frameworks
 
@@ -220,8 +220,8 @@ For this reason the following instrumentations are disabled by default:
 - `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
-To enable them, add `ota.integration.<name>.enabled` system property:
-`-Dota.integration.jdbc-datasource.enabled=true`
+To enable them, add `otel.integration.<name>.enabled` system property:
+`-Dotel.integration.jdbc-datasource.enabled=true`
 
 #### Grizzly instrumentation
 
@@ -231,7 +231,7 @@ Servlet-based applications, you get better experience from Servlet-specific
 support. As these two instrumentations conflict with each other, more generic
 instrumentation for Grizzly http server is disabled by default. If needed,
 you can enable it by add the following system property:
-`-Dota.integration.grizzly.enabled=true`
+`-Dotel.integration.grizzly.enabled=true`
 
 ## Manually instrumenting
 
