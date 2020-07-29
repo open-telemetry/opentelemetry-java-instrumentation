@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link LoggingSpanExporter}. */
-public class LoggingSpanExporterAutoConfigurationTest {
+class LoggingSpanExporterAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -37,7 +37,7 @@ public class LoggingSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize LoggingSpanExporter bean")
-  public void shouldInitializeLoggingSpanExporterBeanWhenExportersAreEnabled() {
+  void shouldInitializeLoggingSpanExporterBeanWhenExportersAreEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.logging.enabled=true")
         .run(
@@ -49,7 +49,7 @@ public class LoggingSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are DISABLED should NOT initialize LoggingSpanExporter bean")
-  public void shouldNotInitializeLoggingSpanExporterBeanWhenExportersAreDisabled() {
+  void shouldNotInitializeLoggingSpanExporterBeanWhenExportersAreDisabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporter.logging.enabled=false")
         .run(
@@ -61,7 +61,7 @@ public class LoggingSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when exporter enabled property is MISSING should initialize LoggingSpanExporter bean")
-  public void shouldInitializeLoggingSpanExporterBeanWhenExporterPropertyIsMissing() {
+  void shouldInitializeLoggingSpanExporterBeanWhenExporterPropertyIsMissing() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelLoggingSpanExporter", LoggingSpanExporter.class))

@@ -39,7 +39,7 @@ class JaegerSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize JaegerGrpcSpanExporter bean")
-  public void shouldInitializeJaegerGrpcSpanExporterBeanWhenExportersAreEnabled() {
+   void shouldInitializeJaegerGrpcSpanExporterBeanWhenExportersAreEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.jaeger.enabled=true")
         .run(
@@ -52,7 +52,7 @@ class JaegerSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when opentelemetry.trace.exporter.jaeger properties are set should initialize JaegerSpanExporterProperties")
-  public void shouldInitializeJaegerGrpcSpanExporterBeanWithPropertyValues() {
+   void shouldInitializeJaegerGrpcSpanExporterBeanWithPropertyValues() {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.jaeger.enabled=true",
@@ -73,7 +73,7 @@ class JaegerSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are DISABLED should NOT initialize JaegerGrpcSpanExporter bean")
-  public void shouldNotInitializeJaegerGrpcSpanExporterBeanWhenExportersAreDisabled() {
+   void shouldNotInitializeJaegerGrpcSpanExporterBeanWhenExportersAreDisabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporter.jaeger.enabled=false")
         .run(
@@ -85,7 +85,7 @@ class JaegerSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when jaeger enabled property is MISSING should initialize JaegerGrpcSpanExporter bean")
-  public void shouldInitializeJaegerGrpcSpanExporterBeanWhenJaegerEnabledPropertyIsMissing() {
+   void shouldInitializeJaegerGrpcSpanExporterBeanWhenJaegerEnabledPropertyIsMissing() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
