@@ -61,11 +61,11 @@ behavior you may find.
 A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
 only supports gRPC as its communications protocol.
 
-| System property          | Environment variable | Purpose                                                                                            |
-|--------------------------|----------------------|----------------------------------------------------------------------------------------------------|
-| ota.exporter=jaeger      | OTA_EXPORTER=jaeger  | To select Jaeger exporter                                                                          |
-| otel.jaeger.endpoint     | JAEGER_ENDPOINT      | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
-| otel.jaeger.service.name | JAEGER_SERVICE_NAME  | The service name of this JVM instance, default is "unknown".                                       |
+| System property          | Environment variable     | Purpose                                                                                            |
+|--------------------------|--------------------------|----------------------------------------------------------------------------------------------------|
+| ota.exporter=jaeger      | OTA_EXPORTER=jaeger      | To select Jaeger exporter                                                                          |
+| otel.jaeger.endpoint     | OTEL_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
+| otel.jaeger.service.name | OTEL_JAEGER_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                       |
 
 #### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
