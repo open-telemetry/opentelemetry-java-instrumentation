@@ -71,6 +71,11 @@ public class ArmeriaServerTracer
   }
 
   @Override
+  protected String flavor(ServiceRequestContext ctx, HttpRequest req) {
+    return ctx.sessionProtocol().toString();
+  }
+
+  @Override
   protected Getter<HttpRequest> getGetter() {
     return ArmeriaGetter.INSTANCE;
   }
@@ -83,6 +88,11 @@ public class ArmeriaServerTracer
   @Override
   protected String method(HttpRequest req) {
     return req.method().name();
+  }
+
+  @Override
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.headers().get(name);
   }
 
   @Override
