@@ -52,7 +52,7 @@ class JaegerSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when opentelemetry.trace.exporter.jaeger properties are set should initialize JaegerSpanExporterProperties")
-  void shouldInitializeJaegerGrpcSpanExporterBeanWithPropertyValues() {
+  void handlesProperties() {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.jaeger.enabled=true",
