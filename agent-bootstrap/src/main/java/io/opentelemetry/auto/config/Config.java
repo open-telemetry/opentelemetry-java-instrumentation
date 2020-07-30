@@ -192,8 +192,8 @@ public class Config {
 
     traceMethods = getSettingFromEnvironment(TRACE_METHODS, DEFAULT_TRACE_METHODS);
     traceAnnotatedMethodsExclude =
-        getSettingFromEnvironment(TRACE_ANNOTATED_METHODS_EXCLUDE,
-            DEFAULT_TRACE_ANNOTATED_METHODS_EXCLUDE);
+        getSettingFromEnvironment(
+            TRACE_ANNOTATED_METHODS_EXCLUDE, DEFAULT_TRACE_ANNOTATED_METHODS_EXCLUDE);
 
     traceExecutorsAll =
         getBooleanSettingFromEnvironment(TRACE_EXECUTORS_ALL, DEFAULT_TRACE_EXECUTORS_ALL);

@@ -7,7 +7,7 @@ where `id` is the instrumentation `id`:
 
 [TODO add table here with all instrumentation ids]
 
-### Even more fine-grained control 
+### Even more fine-grained control
 
 You can also exclude specific classes from being instrumented.
 
