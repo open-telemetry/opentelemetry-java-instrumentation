@@ -36,7 +36,8 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static final Logger log = LoggerFactory.getLogger(AgentClassLoader.class);
 
-  private static final String AGENT_INITIALIZER_JAR = System.getProperty("otel.initializer.jar", "");
+  private static final String AGENT_INITIALIZER_JAR =
+      System.getProperty("otel.initializer.jar", "");
 
   // Calling java.lang.instrument.Instrumentation#appendToBootstrapClassLoaderSearch
   // adds a jar to the bootstrap class lookup, but not to the resource lookup.
