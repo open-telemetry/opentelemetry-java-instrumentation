@@ -89,7 +89,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
 In order to configure the service name for the OTLP exporter, you must add `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTE=service.name=myservice`.
+to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
 #### Logging exporter
 
