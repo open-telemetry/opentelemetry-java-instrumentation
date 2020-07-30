@@ -35,8 +35,8 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
 
     processBuilder.environment().put("JAVA_OPTS",
       defaultJavaProperties.join(" ")
-        + " -Dota.exporter.jar=${exporterPath}"
-        + " -Dota.exporter.logging.prefix=LOGGED_SPAN"
+        + " -Dotel.exporter.jar=${exporterPath}"
+        + " -Dotel.exporter.logging.prefix=LOGGED_SPAN"
         + " -Dconfig.file=${workingDirectory}/conf/application.conf -Dhttp.port=${httpPort}"
         + " -Dhttp.address=127.0.0.1")
     return processBuilder
