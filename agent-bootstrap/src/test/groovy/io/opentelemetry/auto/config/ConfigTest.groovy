@@ -36,9 +36,9 @@ class ConfigTest extends AgentSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private static final TRACE_ENABLED_ENV = "OTA_TRACE_ENABLED"
-  private static final TRACE_METHODS_ENV = "OTA_TRACE_METHODS"
-  private static final ENDPOINT_PEER_NAME_MAPPING_ENV = "OTA_ENDPOINT_PEER_SERVICE_MAPPING"
+  private static final TRACE_ENABLED_ENV = "OTEL_TRACE_ENABLED"
+  private static final TRACE_METHODS_ENV = "OTEL_TRACE_METHODS"
+  private static final ENDPOINT_PEER_NAME_MAPPING_ENV = "OTEL_ENDPOINT_PEER_SERVICE_MAPPING"
 
   def "verify defaults"() {
     when:
@@ -191,9 +191,9 @@ class ConfigTest extends AgentSpecification {
 
   def "verify integration config"() {
     setup:
-    environmentVariables.set("OTA_INTEGRATION_ORDER_ENABLED", "false")
-    environmentVariables.set("OTA_INTEGRATION_TEST_ENV_ENABLED", "true")
-    environmentVariables.set("OTA_INTEGRATION_DISABLED_ENV_ENABLED", "false")
+    environmentVariables.set("OTEL_INTEGRATION_ORDER_ENABLED", "false")
+    environmentVariables.set("OTEL_INTEGRATION_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("OTEL_INTEGRATION_DISABLED_ENV_ENABLED", "false")
 
     System.setProperty("otel.integration.order.enabled", "true")
     System.setProperty("otel.integration.test-prop.enabled", "true")
@@ -256,7 +256,7 @@ class ConfigTest extends AgentSpecification {
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/java-tracer.properties")
-    environmentVariables.set("OTA_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
+    environmentVariables.set("OTEL_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
@@ -267,7 +267,7 @@ class ConfigTest extends AgentSpecification {
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
     System.clearProperty(PREFIX + TRACE_METHODS)
-    environmentVariables.clear("OTA_TRACE_METHODS")
+    environmentVariables.clear("OTEL_TRACE_METHODS")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {

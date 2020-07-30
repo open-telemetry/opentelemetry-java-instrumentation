@@ -365,7 +365,7 @@ public class Config {
 
   /**
    * Converts the property name, e.g. 'trace.enabled' into a public environment variable name, e.g.
-   * `OTA_TRACE_ENABLED`.
+   * `OTEL_TRACE_ENABLED`.
    *
    * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
