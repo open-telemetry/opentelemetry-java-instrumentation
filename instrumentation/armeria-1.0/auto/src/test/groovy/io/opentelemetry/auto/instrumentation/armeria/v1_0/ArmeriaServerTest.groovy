@@ -21,7 +21,7 @@ import io.opentelemetry.auto.test.AgentTestTrait
 import io.opentelemetry.auto.test.BytecodeTests
 import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.instrumentation.armeria.v1_0.AbstractArmeriaServerTest
-import org.junit.experimental.categories.Category;
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 
 @Category(BytecodeTests)
