@@ -38,8 +38,8 @@ import org.gradle.jvm.tasks.Jar;
 public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   /**
-   * An exact copy of {@code io.opentelemetry.auto.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}.
-   * We can't reference it directly since this file needs to be compiled before the other packages.
+   * An exact copy of {@code io.opentelemetry.auto.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. We
+   * can't reference it directly since this file needs to be compiled before the other packages.
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "io.opentelemetry.auto.common.exec",
