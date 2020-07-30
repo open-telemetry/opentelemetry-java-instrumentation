@@ -28,6 +28,11 @@ public class HttpServerTracerTest {
   }
 
   @Test
+  public void extractForwardedForCaps() {
+    assertEquals("1.1.1.1", HttpServerTracer.extractForwardedFor("For=1.1.1.1"));
+  }
+
+  @Test
   public void extractForwardedForMalformed() {
     assertNull(HttpServerTracer.extractForwardedFor("for=;for=1.1.1.1"));
   }
