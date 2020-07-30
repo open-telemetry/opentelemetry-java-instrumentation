@@ -1,5 +1,6 @@
 // common gradle file for instrumentation
 
+apply plugin: 'io.opentelemetry.auto.auto-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
@@ -24,7 +25,6 @@ apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
-
 
 afterEvaluate {
   byteBuddy {
