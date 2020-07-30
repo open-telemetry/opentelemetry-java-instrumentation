@@ -39,7 +39,7 @@ class JaegerSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize JaegerGrpcSpanExporter bean")
-  void shouldInitializeJaegerGrpcSpanExporterBeanWhenExportersAreEnabled() {
+  void exportersEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.jaeger.enabled=true")
         .run(
