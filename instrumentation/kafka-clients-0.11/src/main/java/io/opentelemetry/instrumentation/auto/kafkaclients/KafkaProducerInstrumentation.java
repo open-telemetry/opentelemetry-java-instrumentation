@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.kafkaclients;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapInjectAdapter.SETTER;
@@ -86,12 +87,13 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
+      Context parent = Context.current();
       Span span =
           TRACER.spanBuilder(DECORATE.spanNameOnProduce(record)).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onProduce(span, record);
 
-      callback = new ProducerCallback(callback, span);
+      callback = new ProducerCallback(callback, parent, span);
 
       boolean isTombstone = record.value() == null && !record.headers().iterator().hasNext();
       if (isTombstone) {
@@ -147,24 +149,27 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
   public static class ProducerCallback implements Callback {
     private final Callback callback;
+    private final Context parent;
     private final Span span;
 
-    public ProducerCallback(Callback callback, Span span) {
+    public ProducerCallback(Callback callback, Context parent, Span span) {
       this.callback = callback;
+      this.parent = parent;
       this.span = span;
     }
 
     @Override
     public void onCompletion(RecordMetadata metadata, Exception exception) {
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.onError(span, exception);
-        try {
-          if (callback != null) {
+      DECORATE.onError(span, exception);
+      DECORATE.beforeFinish(span);
+      span.end();
+      if (callback != null) {
+        if (parent != null) {
+          try (Scope scope = withScopedContext(parent)) {
             callback.onCompletion(metadata, exception);
           }
-        } finally {
-          DECORATE.beforeFinish(span);
-          span.end();
+        } else {
+          callback.onCompletion(metadata, exception);
         }
       }
     }
