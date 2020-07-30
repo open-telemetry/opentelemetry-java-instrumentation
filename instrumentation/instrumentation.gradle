@@ -15,7 +15,7 @@ buildscript {
 plugins {
   id "com.github.johnrengelman.shadow"
 }
-apply plugin: 'java-library'
+apply from: "$rootDir/gradle/java.gradle"
 
 Project instr_project = project
 subprojects {

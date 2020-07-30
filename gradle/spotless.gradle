@@ -20,7 +20,7 @@ spotless {
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
   }
   format 'misc', {
-    target '**/.gitignore', '**/*.md', '**/*.sh'
+    target '.gitignore', '*.md', 'docs/**/*.md', '*.sh'
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()
