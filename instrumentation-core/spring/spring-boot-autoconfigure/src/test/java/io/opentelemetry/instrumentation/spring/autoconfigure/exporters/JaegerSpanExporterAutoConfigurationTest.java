@@ -66,8 +66,7 @@ class JaegerSpanExporterAutoConfigurationTest {
               assertThat(jaegerSpanExporterProperties.getServiceName()).isEqualTo("test");
               assertThat(jaegerSpanExporterProperties.getEndpoint())
                   .isEqualTo("localhost:8080/test");
-              assertThat(jaegerSpanExporterProperties.getSpanTimeout())
-                  .isEqualTo(Duration.ofMillis(420));
+              assertThat(jaegerSpanExporterProperties.getSpanTimeout()).hasMillis(420);
             });
   }
 
