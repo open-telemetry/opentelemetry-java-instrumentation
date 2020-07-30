@@ -56,6 +56,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   static {
     ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
   }
+  protected static final String TEST_CLIENT_IP = "1.1.1.1"
+  protected static final String TEST_USER_AGENT = "test-user-agent"
 
   @Shared
   SERVER server
@@ -207,6 +209,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     return new Request.Builder()
       .url(url)
       .method(method, body)
+      .header("User-Agent", TEST_USER_AGENT)
+      .header("X-Forwarded-For", TEST_CLIENT_IP)
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
@@ -475,9 +479,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP } // Optional
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+        "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
