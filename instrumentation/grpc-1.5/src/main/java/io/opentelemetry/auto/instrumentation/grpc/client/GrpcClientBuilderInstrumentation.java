@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -46,7 +47,8 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("io.grpc.ManagedChannelBuilder"));
+    return extendsClass(named("io.grpc.ManagedChannelBuilder"))
+        .and(declaresField(named("interceptors")));
   }
 
   @Override
