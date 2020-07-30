@@ -30,13 +30,16 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.tasks.Jar;
 
+/**
+ * {@link Plugin} to initialize projects that implement auto instrumentation using bytecode
+ * manipulation. Currently builds the special bootstrap classpath that is needed by bytecode tests.
+ */
+// TODO(anuraaga): Migrate more build logic into this plugin to avoid having two places for it.
 public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   /**
    * An exact copy of {@code io.opentelemetry.auto.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}.
-   *
-   * <p>This list is needed to initialize the bootstrap classpath because Utils' static initializer
-   * references bootstrap classes (e.g. AgentClassLoader).
+   * We can't reference it directly since this file needs to be compiled before the other packages.
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "io.opentelemetry.auto.common.exec",
@@ -48,6 +51,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
     "io.opentelemetry.auto.typedspan",
   };
 
+  // Aditional classes we need only for tests and aren't shared with the agent business logic.
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
 
   static {
