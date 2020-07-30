@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -27,8 +28,6 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,11 +37,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
-public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
-
-  public GrpcClientBuilderInstrumentation() {
-    super("grpc", "grpc-client");
-  }
+public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClientInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -50,33 +45,10 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".GrpcClientDecorator",
-      packageName + ".GrpcInjectAdapter",
-      packageName + ".TracingClientInterceptor",
-      packageName + ".TracingClientInterceptor$TracingClientCall",
-      packageName + ".TracingClientInterceptor$TracingClientCallListener",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
-    };
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "io.grpc.ManagedChannelBuilder", InetSocketAddress.class.getName());
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
-    map.put(
-        isMethod().and(named("build")),
-        GrpcClientBuilderInstrumentation.class.getName() + "$AddInterceptorAdvice");
-    map.put(
+    return singletonMap(
         isMethod().and(named("forAddress").and(ElementMatchers.takesArguments(2))),
-        GrpcClientBuilderInstrumentation.class.getName() + "$ForAddressAdvice");
-    return map;
+        GrpcClientBuilderForAddressInstrumentation.class.getName() + "$ForAddressAdvice");
   }
 
   public static class AddInterceptorAdvice {
