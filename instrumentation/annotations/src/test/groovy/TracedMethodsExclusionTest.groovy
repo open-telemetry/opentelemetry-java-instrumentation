@@ -22,15 +22,15 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.trace.methods", "${TestClass.name}[included,excluded]")
-      System.setProperty("ota.trace.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
+      System.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
+      System.setProperty("otel.trace.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.methods")
-      System.clearProperty("ota.trace.methods.exclude")
+      System.clearProperty("otel.trace.methods")
+      System.clearProperty("otel.trace.methods.exclude")
     }
   }
 

@@ -30,7 +30,7 @@ class LogLevelTest extends Specification {
   0: DEBUG Logs
    */
 
-  def "ota.trace.debug false"() {
+  def "otel.trace.debug false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dota.trace.debug=false", "-Dota.trace.enabled=false"] as String[]
@@ -39,7 +39,7 @@ class LogLevelTest extends Specification {
       , true) == 1
   }
 
-  def "SLF4J DEBUG && ota.trace.debug is false"() {
+  def "SLF4J DEBUG && otel.trace.debug is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dota.trace.debug=false", "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dota.trace.enabled=false"] as String[]
@@ -48,7 +48,7 @@ class LogLevelTest extends Specification {
       , true) == 0
   }
 
-  def "ota.trace.debug is false && OTA_TRACE_DEBUG is true"() {
+  def "otel.trace.debug is false && OTA_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dota.trace.debug=false", "-Dota.trace.enabled=false"] as String[]
@@ -57,7 +57,7 @@ class LogLevelTest extends Specification {
       , true) == 1
   }
 
-  def "ota.trace.debug is true"() {
+  def "otel.trace.debug is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dota.trace.debug=true", "-Dota.trace.enabled=false"] as String[]
@@ -76,7 +76,7 @@ class LogLevelTest extends Specification {
       , true) == 0
   }
 
-  def "ota.trace.debug is true && OTA_TRACE_DEBUG is false"() {
+  def "otel.trace.debug is true && OTA_TRACE_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dota.trace.debug=true", "-Dota.trace.enabled=false"] as String[]

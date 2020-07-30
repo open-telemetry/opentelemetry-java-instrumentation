@@ -50,7 +50,7 @@ public class Config {
   private static final MethodHandles.Lookup PUBLIC_LOOKUP = MethodHandles.publicLookup();
 
   /** Config keys below */
-  private static final String PREFIX = "ota.";
+  private static final String PREFIX = "otel.";
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
@@ -289,7 +289,7 @@ public class Config {
   }
 
   /**
-   * Helper method that takes the name, adds a "ota." prefix then checks for System Properties of
+   * Helper method that takes the name, adds a "otel." prefix then checks for System Properties of
    * that name. If none found, the name is converted to an Environment Variable and used to check
    * the env. If none of the above returns a value, then an optional properties file if checked. If
    * setting is not configured in either location, <code>defaultValue</code> is returned.
@@ -378,7 +378,7 @@ public class Config {
 
   /**
    * Converts the property name, e.g. 'trace.config' into a public system property name, e.g.
-   * `ota.trace.config`.
+   * `otel.trace.config`.
    *
    * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name

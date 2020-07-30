@@ -27,12 +27,12 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
+      System.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
     }
   }
 
   def specCleanup() {
-    System.clearProperty("ota.trace.annotations")
+    System.clearProperty("otel.trace.annotations")
   }
 
   def "method with disabled NewRelic annotation should be ignored"() {
@@ -63,9 +63,9 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     setup:
     ConfigUtils.updateConfig {
       if (value) {
-        System.properties.setProperty("ota.trace.annotations", value)
+        System.properties.setProperty("otel.trace.annotations", value)
       } else {
-        System.clearProperty("ota.trace.annotations")
+        System.clearProperty("otel.trace.annotations")
       }
     }
 
@@ -73,7 +73,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     new TraceAnnotationsInstrumentation().additionalTraceAnnotations == expected.toSet()
 
     cleanup:
-    System.clearProperty("ota.trace.annotations")
+    System.clearProperty("otel.trace.annotations")
 
     where:
     value                               | expected

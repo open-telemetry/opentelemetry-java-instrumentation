@@ -143,14 +143,14 @@ class SqlNormalizerTest extends AgentSpecification {
   def "config can disable sql normalizer"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("ota." + Config.SQL_NORMALIZER_ENABLED, "false")
+      System.setProperty("otel." + Config.SQL_NORMALIZER_ENABLED, "false")
     }
     try {
       String s = "SELECT * FROM TABLE WHERE FIELD = 1234"
       assert s == JDBCUtils.normalizeSql(s)
     } finally {
       ConfigUtils.updateConfig {
-        System.setProperty("ota." + Config.SQL_NORMALIZER_ENABLED, "true")
+        System.setProperty("otel." + Config.SQL_NORMALIZER_ENABLED, "true")
       }
     }
   }

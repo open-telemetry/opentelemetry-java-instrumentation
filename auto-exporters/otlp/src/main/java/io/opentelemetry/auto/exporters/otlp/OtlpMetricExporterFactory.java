@@ -29,7 +29,7 @@ public class OtlpMetricExporterFactory implements MetricExporterFactory {
   public MetricExporter fromConfig(final Config config) {
     String otlpEndpoint = config.getString(OTLP_ENDPOINT, "localhost:55680");
     if (otlpEndpoint.isEmpty()) {
-      throw new IllegalStateException("ota.exporter.otlp.endpoint is required");
+      throw new IllegalStateException("otel.exporter.otlp.endpoint is required");
     }
     return OtlpGrpcMetricExporter.newBuilder()
         .setChannel(ManagedChannelBuilder.forTarget(otlpEndpoint).usePlaintext().build())

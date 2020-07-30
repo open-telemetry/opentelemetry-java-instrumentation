@@ -44,13 +44,13 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 class JDBCInstrumentationTest extends AgentTestRunner {
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.integration.jdbc-datasource.enabled", "true")
+      System.setProperty("otel.integration.jdbc-datasource.enabled", "true")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.integration.jdbc-datasource.enabled")
+      System.clearProperty("otel.integration.jdbc-datasource.enabled")
     }
   }
 

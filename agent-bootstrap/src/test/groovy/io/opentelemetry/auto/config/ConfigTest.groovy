@@ -195,9 +195,9 @@ class ConfigTest extends AgentSpecification {
     environmentVariables.set("OTA_INTEGRATION_TEST_ENV_ENABLED", "true")
     environmentVariables.set("OTA_INTEGRATION_DISABLED_ENV_ENABLED", "false")
 
-    System.setProperty("ota.integration.order.enabled", "true")
-    System.setProperty("ota.integration.test-prop.enabled", "true")
-    System.setProperty("ota.integration.disabled-prop.enabled", "false")
+    System.setProperty("otel.integration.order.enabled", "true")
+    System.setProperty("otel.integration.test-prop.enabled", "true")
+    System.setProperty("otel.integration.disabled-prop.enabled", "false")
 
     expect:
     Config.get().isIntegrationEnabled(integrationNames, defaultEnabled) == expected
