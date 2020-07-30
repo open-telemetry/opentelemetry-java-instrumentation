@@ -80,8 +80,7 @@ spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules
   // and would be missed otherwise
   format 'misc', {
-    target '**/.gitignore', '**/*.md', '**/*.sh'
-    targetExclude 'smoke-tests/**/build/**'
+    target '.gitignore', '*.md', 'docs/**/*.md'
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()

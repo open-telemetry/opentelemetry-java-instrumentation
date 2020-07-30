@@ -19,6 +19,12 @@ spotless {
     ktlint().userData(['indent_size': '2', 'continuation_indent_size': '2'])
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
   }
+  format 'misc', {
+    target '**/.gitignore', '**/*.md', '**/*.sh'
+    indentWithSpaces()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }
 
 task formatCode(dependsOn: ['spotlessApply'])
