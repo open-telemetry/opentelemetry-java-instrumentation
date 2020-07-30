@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
@@ -38,19 +39,17 @@ public class PropagatorsInitializer {
   private static final String B3_SINGLE = "b3single";
   private static final String JAEGER = "jaeger";
   private static final String OT_TRACER = "ottracer";
+  private static final String XRAY = "xray";
 
   private static final Map<String, HttpTextFormat> TEXTMAP_PROPAGATORS =
-      ImmutableMap.of(
-          TRACE_CONTEXT,
-          new HttpTraceContext(),
-          B3,
-          B3Propagator.getMultipleHeaderPropagator(),
-          B3_SINGLE,
-          B3Propagator.getSingleHeaderPropagator(),
-          JAEGER,
-          new JaegerPropagator(),
-          OT_TRACER,
-          OtTracerPropagator.getInstance());
+      ImmutableMap.<String, HttpTextFormat>builder()
+          .put(TRACE_CONTEXT, new HttpTraceContext())
+          .put(B3, B3Propagator.getMultipleHeaderPropagator())
+          .put(B3_SINGLE, B3Propagator.getSingleHeaderPropagator())
+          .put(JAEGER, new JaegerPropagator())
+          .put(OT_TRACER, OtTracerPropagator.getInstance())
+          .put(XRAY, new AwsXRayPropagator())
+          .build();
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
   public static void initializePropagators(List<String> propagators) {
