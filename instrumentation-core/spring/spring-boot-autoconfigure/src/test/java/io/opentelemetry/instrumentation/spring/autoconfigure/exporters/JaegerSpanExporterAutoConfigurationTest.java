@@ -85,7 +85,7 @@ class JaegerSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when jaeger enabled property is MISSING should initialize JaegerGrpcSpanExporter bean")
-  void shouldInitializeJaegerGrpcSpanExporterBeanWhenJaegerEnabledPropertyIsMissing() {
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
