@@ -105,9 +105,12 @@ attributes to stdout. It is used mainly for testing and debugging.
 
 The propagator controls which distributed tracing header format is used.
 
-| System property  | Environment variable | Purpose                                                                                 |
-|------------------|----------------------|-----------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger". |
+If this is set to a comma-delimited list of the values, the multi-propagator will be used.
+[TODO link to specification that explains multi-propagator behavior, see [tracking issue](https://github.com/open-telemetry/opentelemetry-specification/issues/496) for now]
+
+| System property  | Environment variable | Purpose                                                                                                     |
+|------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
+| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger", "ottracer", "xray". |
 
 #### OpenTelemetry Resource
 
