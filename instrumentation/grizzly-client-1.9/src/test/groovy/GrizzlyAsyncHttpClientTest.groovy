@@ -27,7 +27,7 @@ import spock.lang.Shared
 class GrizzlyAsyncHttpClientTest extends HttpClientTest {
 
   static {
-    System.setProperty("ota.integration.grizzly-client.enabled", "true")
+    System.setProperty("otel.integration.grizzly-client.enabled", "true")
   }
 
   @AutoCleanup

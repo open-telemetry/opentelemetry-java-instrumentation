@@ -396,7 +396,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "read message without context propagation"
     ConfigUtils.updateConfig {
-      System.setProperty("ota."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
+      System.setProperty("otel."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
     }
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
@@ -447,7 +447,7 @@ class KafkaClientTest extends AgentTestRunner {
     producerFactory.stop()
     container?.stop()
     ConfigUtils.updateConfig {
-      System.clearProperty("ota."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
+      System.clearProperty("otel."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
     }
 
   }

@@ -31,13 +31,13 @@ class SpringListenerJMS2Test extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
+      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
     }
   }
 
   def cleanupSpec() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.classes.exclude")
+      System.clearProperty("otel.trace.classes.exclude")
     }
   }
 

@@ -29,13 +29,13 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 class FilterTest extends AgentTestRunner {
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.integration.servlet-filter.enabled", "true")
+      System.setProperty("otel.integration.servlet-filter.enabled", "true")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.integration.servlet-filter.enabled")
+      System.clearProperty("otel.integration.servlet-filter.enabled")
     }
   }
 
