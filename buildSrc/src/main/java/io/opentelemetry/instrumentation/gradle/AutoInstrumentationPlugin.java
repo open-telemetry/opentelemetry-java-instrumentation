@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.gradle.instrumentation;
+package io.opentelemetry.instrumentation.gradle;
 
 import static java.util.stream.Collectors.toList;
 

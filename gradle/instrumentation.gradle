@@ -1,6 +1,6 @@
 // common gradle file for instrumentation
 
-apply plugin: 'io.opentelemetry.auto.auto-instrumentation'
+apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 

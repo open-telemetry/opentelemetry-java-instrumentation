@@ -11,8 +11,8 @@ gradlePlugin {
       implementationClass = "MuzzlePlugin"
     }
     create("auto-instrumentation-plugin") {
-      id = "io.opentelemetry.auto.auto-instrumentation"
-      implementationClass = "io.opentelemetry.auto.gradle.instrumentation.AutoInstrumentationPlugin"
+      id = "io.opentelemetry.instrumentation.auto-instrumentation"
+      implementationClass = "io.opentelemetry.instrumentation.gradle.AutoInstrumentationPlugin"
     }
   }
 }
