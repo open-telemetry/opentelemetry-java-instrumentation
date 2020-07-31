@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.gradle;
 
 import static java.util.stream.Collectors.toList;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import org.gradle.api.Plugin;
@@ -150,8 +151,9 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
                   });
 
               task.dependsOn(bootstrapJar);
-              task.jvmArgs("-Xbootclasspath/a:" + project.file("build/libs/" + bootstrapJarName));
-              System.out.println(String.join(" ", task.getAllJvmArgs()));
+              task.jvmArgs(
+                  "-Xbootclasspath/a:"
+                      + new File(project.getBuildDir(), "libs/" + bootstrapJarName));
             });
   }
 
