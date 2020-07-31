@@ -43,7 +43,7 @@ public abstract class AbstractTraceAnnotationInstrumentation extends Instrumente
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
+        MethodsConfigurationParser.parse(Config.get().getTraceAnnotatedMethodsExclude());
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =
