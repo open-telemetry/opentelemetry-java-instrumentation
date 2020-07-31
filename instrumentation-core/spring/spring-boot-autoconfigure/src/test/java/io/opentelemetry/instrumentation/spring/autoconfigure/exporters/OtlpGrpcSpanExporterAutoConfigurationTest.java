@@ -57,7 +57,7 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
             "opentelemetry.trace.exporter.otlp.enabled=true",
             "opentelemetry.trace.exporter.otlp.servicename=test",
             "opentelemetry.trace.exporter.otlp.endpoint=localhost:8080/test",
-            "opentelemetry.trace.exporter.otlp.spantimeout=69s")
+            "opentelemetry.trace.exporter.otlp.spantimeout=69ms")
         .run(
             (context) -> {
               OtlpGrpcSpanExporterProperties otlpSpanExporterProperties =
