@@ -33,14 +33,14 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   static {
     ConfigUtils.updateConfig {
       //We want to test spans produced by servlet instrumentation, not those of jetty
-      System.setProperty("ota.integration.jetty.enabled", "false")
+      System.setProperty("otel.integration.jetty.enabled", "false")
     }
   }
 
   @Override
   def cleanupSpec() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.integration.jetty.enabled")
+      System.clearProperty("otel.integration.jetty.enabled")
     }
   }
 

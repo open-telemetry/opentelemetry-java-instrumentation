@@ -24,7 +24,10 @@ import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
+import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator;
+import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator.Builder;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -60,23 +63,26 @@ public class PropagatorsInitializer {
 
     DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
 
-    boolean addedPropagator = false;
+    List<HttpTextFormat> textPropagators = new ArrayList<>(propagators.size());
     for (String propagatorId : propagators) {
       HttpTextFormat textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
       if (textPropagator != null) {
-        if (addedPropagator) {
-          log.warn(
-              "Only one propagator per concern can be added, " + textPropagator + " is ignored");
-          continue;
-        }
-        propagatorsBuilder.addHttpTextFormat(textPropagator);
+        textPropagators.add(textPropagator);
         log.info("Added " + textPropagator + " propagator");
-        addedPropagator = true;
       } else {
         log.warn("No matching propagator for " + propagatorId);
       }
     }
-
+    if (textPropagators.size() > 1) {
+      Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
+      for (HttpTextFormat textPropagator : textPropagators) {
+        traceMultiPropagatorBuilder.addPropagator(textPropagator);
+      }
+      propagatorsBuilder.addHttpTextFormat(traceMultiPropagatorBuilder.build());
+    } else if (textPropagators.size() == 1) {
+      propagatorsBuilder.addHttpTextFormat(textPropagators.get(0));
+    }
+    // Register it in the global propagators:
     OpenTelemetry.setPropagators(propagatorsBuilder.build());
   }
 }

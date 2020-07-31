@@ -32,7 +32,7 @@ jobs:
       - run:
           name: Build Project
           command: >-
-            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
+            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dotel.forkedMaxHeapSize=1G -Dotel.forkedMinHeapSize=64M"
             ./gradlew clean build shadowJar -x test
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
@@ -95,7 +95,7 @@ jobs:
       - run:
           name: Run Tests
           command: >-
-            GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
+            GRADLE_OPTS="-Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
             ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
             << pipeline.parameters.gradle_flags >>
             --max-workers=6
@@ -132,7 +132,7 @@ jobs:
           name: Verify Muzzle
           command: >-
             SKIP_BUILDSCAN="true"
-            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
+            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
             ./gradlew `circleci tests split workspace/build/muzzleTasks | xargs` --parallel --stacktrace --no-daemon --max-workers=16
 
   publish: &publish
@@ -214,19 +214,6 @@ workflows:
               only: master
             tags:
               ignore: /.*/
-
-  nightly_snapshot:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - depends-on-otel-java-snapshot
-    jobs:
-      - default_test_job:
-          name: test_11
-          testTask: test jacocoTestReport jacocoTestCoverageVerification
 
   release:
     jobs:

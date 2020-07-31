@@ -26,13 +26,13 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 class HttpServletTest extends AgentTestRunner {
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.integration.servlet-service.enabled", "true")
+      System.setProperty("otel.integration.servlet-service.enabled", "true")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.integration.servlet-service.enabled")
+      System.clearProperty("otel.integration.servlet-service.enabled")
     }
   }
 
