@@ -86,8 +86,8 @@ jobs:
     steps:
       - checkout
 
-      - attach_workspace:
-          at: .
+      #- attach_workspace:
+      #    at: .
 
       - restore_cache:
           <<: *cache_keys
@@ -174,35 +174,35 @@ jobs:
 workflows:
   build_test_deploy:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
+      #- build:
+      #    filters:
+      #      tags:
+      #        only: /.*/
 
-      - default_test_job:
-          requires:
-            - build
-          name: test_8
-          testTask: testJava8
-          filters:
-            tags:
-              only: /.*/
+      #- default_test_job:
+      #    requires:
+      #      - build
+      #    name: test_8
+      #    testTask: testJava8
+      #    filters:
+      #      tags:
+      #        only: /.*/
 
       - default_test_job:
           requires:
             - build
           name: test_latest
-          testTask: latestDepTest
+          testTask: :instrumentation:grpc-1.5:latestDepTest
           filters:
             tags:
               only: /.*/
 
-      - muzzle:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
+      #- muzzle:
+      #    requires:
+      #      - build
+      #    filters:
+      #      branches:
+      #        ignore: master
 
       - publish_master:
           requires:
