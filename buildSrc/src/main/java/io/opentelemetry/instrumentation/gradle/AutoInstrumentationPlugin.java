@@ -124,9 +124,8 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
                     jar.getArchiveFileName().set(bootstrapJarName);
                     jar.setIncludeEmptyDirs(false);
                     // Classpath is ordered in priority, but later writes into the JAR would take
-                    // priority,
-                    // so we exclude the later ones (we need this to make sure logback is picked
-                    // up).
+                    // priority, so we exclude the later ones (we need this to make sure logback is
+                    // picked up).
                     jar.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
                     jar.from(
                         project.files(
