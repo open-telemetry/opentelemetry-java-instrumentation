@@ -32,7 +32,7 @@ jobs:
       - run:
           name: Build Project
           command: >-
-            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
+            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dotel.forkedMaxHeapSize=1G -Dotel.forkedMinHeapSize=64M"
             ./gradlew clean build shadowJar -x test
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
@@ -86,8 +86,8 @@ jobs:
     steps:
       - checkout
 
-      #- attach_workspace:
-      #    at: .
+      - attach_workspace:
+          at: .
 
       - restore_cache:
           <<: *cache_keys
@@ -95,8 +95,8 @@ jobs:
       - run:
           name: Run Tests
           command: >-
-            GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
-            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >> --info
+            GRADLE_OPTS="-Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
+            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
             << pipeline.parameters.gradle_flags >>
             --max-workers=6
 
@@ -132,7 +132,7 @@ jobs:
           name: Verify Muzzle
           command: >-
             SKIP_BUILDSCAN="true"
-            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
+            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
             ./gradlew `circleci tests split workspace/build/muzzleTasks | xargs` --parallel --stacktrace --no-daemon --max-workers=16
 
   publish: &publish
@@ -174,59 +174,46 @@ jobs:
 workflows:
   build_test_deploy:
     jobs:
-      #- build:
-      #    filters:
-      #      tags:
-      #        only: /.*/
-
-      #- default_test_job:
-      #    requires:
-      #      - build
-      #    name: test_8
-      #    testTask: testJava8
-      #    filters:
-      #      tags:
-      #        only: /.*/
-
-      - default_test_job:
-          #requires:
-          #  - build
-          name: test_latest
-          testTask: :instrumentation:grpc-1.5:latestDepTest
+      - build:
           filters:
             tags:
               only: /.*/
 
-      #- muzzle:
-      #    requires:
-      #      - build
-      #    filters:
-      #      branches:
-      #        ignore: master
+      - default_test_job:
+          requires:
+            - build
+          name: test_8
+          testTask: testJava8
+          filters:
+            tags:
+              only: /.*/
 
-      #- publish_master:
-      #    requires:
-      #      - test_8
-      #      - test_latest
-      #      - muzzle
-      #    filters:
-      #      branches:
-      #        only: master
-      #      tags:
-      #        ignore: /.*/
+      - default_test_job:
+          requires:
+            - build
+          name: test_latest
+          testTask: latestDepTest
+          filters:
+            tags:
+              only: /.*/
 
-  nightly_snapshot:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
+      - muzzle:
+          requires:
+            - build
           filters:
             branches:
-              only:
-                - depends-on-otel-java-snapshot
-    jobs:
-      - default_test_job:
-          name: test_11
-          testTask: test jacocoTestReport jacocoTestCoverageVerification
+              ignore: master
+
+      - publish_master:
+          requires:
+            - test_8
+            - test_latest
+            - muzzle
+          filters:
+            branches:
+              only: master
+            tags:
+              ignore: /.*/
 
   release:
     jobs:
