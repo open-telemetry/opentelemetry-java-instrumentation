@@ -21,6 +21,6 @@ which could have unknown side-effects.
 If you find yourself needing to use this, it would be great if you could drop us an issue explaining why,
 so that we can try to come up with a better solution to address your need.
 
-| System property       | Environment variable  | Purpose                                                                                                                         |
-|-----------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| trace.classes.exclude | TRACE_CLASSES_EXCLUDE | Exclude methods with the `@WithSpan` annotation, the format "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+| System property       | Environment variable  | Purpose                                                                                           |
+|-----------------------|-----------------------|---------------------------------------------------------------------------------------------------|
+| trace.classes.exclude | TRACE_CLASSES_EXCLUDE | Suppresses all instrumentation for specific classes, format is "my.package.MyClass,my.package2.*" |

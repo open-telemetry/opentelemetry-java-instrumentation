@@ -274,15 +274,14 @@ public class MyClass {
 Each time the application invokes the annotated method, it creates a span
 that denote its duration and provides any thrown exceptions.
 
-#### Configuration
+#### Suppressing `@WithSpan` instrumentation
 
-The `@WithSpan` annotation requires code changes to implement. You can
-disable the annotation at runtime via the exclude configuration or
-environment variables:
+This is useful in case you have code that is over-instrumented using `@WithSpan`,
+and you want to suppress some of them without modifying the code.
 
-| System property                 | Environment variable            | Purpose                                                                                                                         |
-|---------------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Exclude methods with the `@WithSpan` annotation, the format "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+| System property                 | Environment variable            | Purpose                                                                                                                                  |
+|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods, format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 
 ## Troubleshooting
