@@ -19,6 +19,7 @@ function save_reports () {
     report_path=$REPORTS_DIR/$project_to_save
     mkdir -p $report_path
     cp -r workspace/$project_to_save/build/reports/* $report_path/
+    cp workspace/$project_to_save/build/libs/*-bootstrap.jar $report_path/
 }
 
 shopt -s globstar
