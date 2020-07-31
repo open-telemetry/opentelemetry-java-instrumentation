@@ -63,7 +63,7 @@ public class PropagatorsInitializer {
 
     DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
 
-    List<HttpTextFormat> textPropagators = new ArrayList<>();
+    List<HttpTextFormat> textPropagators = new ArrayList<>(propagators.size());
     for (String propagatorId : propagators) {
       HttpTextFormat textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
       if (textPropagator != null) {
