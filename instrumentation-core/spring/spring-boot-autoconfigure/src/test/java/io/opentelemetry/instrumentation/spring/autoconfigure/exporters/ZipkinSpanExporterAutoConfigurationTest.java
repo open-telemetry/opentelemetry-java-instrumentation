@@ -38,7 +38,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize ZipkinSpanExporter bean")
-  void shouldInitializeZipkinSpanExporterBeanWhenExportersAreEnabled() {
+  void exportersEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.zipkin.enabled=true")
         .run(
@@ -51,7 +51,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when opentelemetry.trace.exporter.zipkin properties are set should initialize ZipkinSpanExporterProperties with property values")
-  void shouldInitializeZipkinSpanExporterBeanWithPropertyValues() {
+  void handlesProperties() {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.zipkin.enabled=true",
@@ -69,7 +69,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are DISABLED should NOT initialize ZipkinSpanExporter bean")
-  void shouldNotInitializeZipkinSpanExporterBeanWhenExportersAreDisabled() {
+  void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporter.zipkin.enabled=false")
         .run(
@@ -80,7 +80,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when zipkin enabled property is MISSING should initialize ZipkinSpanExporter bean")
-  void shouldInitializeZipkinSpanExporterBeanWhenZipkinEnabledPropertyIsMissing() {
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class))

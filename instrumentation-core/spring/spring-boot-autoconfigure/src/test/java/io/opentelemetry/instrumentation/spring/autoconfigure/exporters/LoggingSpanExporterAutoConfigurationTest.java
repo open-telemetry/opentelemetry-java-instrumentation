@@ -37,7 +37,7 @@ class LoggingSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize LoggingSpanExporter bean")
-  void shouldInitializeLoggingSpanExporterBeanWhenExportersAreEnabled() {
+  void exportersEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporters.logging.enabled=true")
         .run(
@@ -49,7 +49,7 @@ class LoggingSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are DISABLED should NOT initialize LoggingSpanExporter bean")
-  void shouldNotInitializeLoggingSpanExporterBeanWhenExportersAreDisabled() {
+  void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.exporter.logging.enabled=false")
         .run(
@@ -61,7 +61,7 @@ class LoggingSpanExporterAutoConfigurationTest {
   @Test
   @DisplayName(
       "when exporter enabled property is MISSING should initialize LoggingSpanExporter bean")
-  void shouldInitializeLoggingSpanExporterBeanWhenExporterPropertyIsMissing() {
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelLoggingSpanExporter", LoggingSpanExporter.class))
