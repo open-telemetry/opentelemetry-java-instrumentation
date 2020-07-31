@@ -150,7 +150,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
                   });
 
               task.dependsOn(bootstrapJar);
-              task.jvmArgs("-Xbootclasspath/a:build/libs/" + bootstrapJarName);
+              task.jvmArgs("-Xbootclasspath/a:" + project.file("build/libs/" + bootstrapJarName));
             });
   }
 
