@@ -231,12 +231,12 @@ public class Agent {
   }
 
   /**
-   * Determine if we should log in debug level according to ota.trace.debug
+   * Determine if we should log in debug level according to otel.trace.debug
    *
    * @return true if we should
    */
   private static boolean isDebugMode() {
-    String tracerDebugLevelSysprop = "ota.trace.debug";
+    String tracerDebugLevelSysprop = "otel.trace.debug";
     String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
 
     if (tracerDebugLevelProp != null) {
@@ -259,7 +259,7 @@ public class Agent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    String tracerCustomLogManSysprop = "ota.app.customlogmanager";
+    String tracerCustomLogManSysprop = "otel.app.customlogmanager";
     String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
     String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());

@@ -42,7 +42,7 @@ import static context.ContextTestInstrumentation.UntransformableKeyClass
 class FieldBackedProviderTest extends AgentTestRunner {
 
   static {
-    System.setProperty("ota.integration.context-test-instrumentation.enabled", "true")
+    System.setProperty("otel.integration.context-test-instrumentation.enabled", "true")
   }
 
   @Override
@@ -209,11 +209,11 @@ class FieldBackedProviderTest extends AgentTestRunner {
  * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
  * Instead we have to configure this via Gradle. Ideally we should not have to do this.
  */
-@Requires({ "false" == System.getProperty("ota.trace.runtime.context.field.injection") })
+@Requires({ "false" == System.getProperty("otel.trace.runtime.context.field.injection") })
 class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
 
   static {
-    System.setProperty("ota.integration.context-test-instrumentation.enabled", "true")
+    System.setProperty("otel.integration.context-test-instrumentation.enabled", "true")
   }
 
   @Override

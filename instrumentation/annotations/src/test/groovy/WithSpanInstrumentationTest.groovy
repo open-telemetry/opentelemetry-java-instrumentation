@@ -26,15 +26,15 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
-      System.setProperty("ota.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
+      System.setProperty("otel.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
+      System.setProperty("otel.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.classes.exclude")
-      System.clearProperty("ota.trace.annotated.methods.exclude")
+      System.clearProperty("otel.trace.classes.exclude")
+      System.clearProperty("otel.trace.annotated.methods.exclude")
     }
   }
 

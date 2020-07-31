@@ -25,7 +25,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
 
   static {
     //We want to test spans produced by servlet instrumentation, not those of jetty
-    System.setProperty("ota.integration.jetty.enabled", "false")
+    System.setProperty("otel.integration.jetty.enabled", "false")
   }
 
   @Override

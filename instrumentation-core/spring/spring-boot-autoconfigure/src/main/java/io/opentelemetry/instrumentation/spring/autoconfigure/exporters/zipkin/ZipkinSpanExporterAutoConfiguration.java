@@ -43,7 +43,7 @@ public class ZipkinSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public ZipkinSpanExporter otelZipKinSpanExporter(
+  public ZipkinSpanExporter otelZipkinSpanExporter(
       ZipkinSpanExporterProperties zipkinSpanExporterProperties) {
 
     return ZipkinSpanExporter.newBuilder()

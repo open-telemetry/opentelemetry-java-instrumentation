@@ -23,13 +23,13 @@ class TraceConfigTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("ota.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
+      System.setProperty("otel.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.methods")
+      System.clearProperty("otel.trace.methods")
     }
   }
 

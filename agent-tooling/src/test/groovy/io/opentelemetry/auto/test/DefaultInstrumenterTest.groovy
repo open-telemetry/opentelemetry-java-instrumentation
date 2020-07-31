@@ -34,8 +34,8 @@ class DefaultInstrumenterTest extends AgentSpecification {
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
   def setup() {
-    assert System.getenv().findAll { it.key.startsWith("OTA_") }.isEmpty()
-    assert System.getProperties().findAll { it.key.toString().startsWith("ota.") }.isEmpty()
+    assert System.getenv().findAll { it.key.startsWith("OTEL_") }.isEmpty()
+    assert System.getProperties().findAll { it.key.toString().startsWith("otel.") }.isEmpty()
   }
 
   def "default enabled"() {
@@ -74,7 +74,7 @@ class DefaultInstrumenterTest extends AgentSpecification {
 
   def "default disabled can override to enabled"() {
     setup:
-    System.setProperty("ota.integration.test.enabled", "$enabled")
+    System.setProperty("otel.integration.test.enabled", "$enabled")
     def target = new TestDefaultInstrumenter("test") {
       @Override
       protected boolean defaultEnabled() {
@@ -94,7 +94,7 @@ class DefaultInstrumenterTest extends AgentSpecification {
   def "configure default sys prop as #value"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("ota.integrations.enabled", value)
+      System.setProperty("otel.integrations.enabled", value)
     }
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
@@ -112,7 +112,7 @@ class DefaultInstrumenterTest extends AgentSpecification {
 
   def "configure default env var as #value"() {
     setup:
-    environmentVariables.set("OTA_INTEGRATIONS_ENABLED", value)
+    environmentVariables.set("OTEL_INTEGRATIONS_ENABLED", value)
     ConfigUtils.resetConfig()
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
@@ -130,8 +130,8 @@ class DefaultInstrumenterTest extends AgentSpecification {
 
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
-    System.setProperty("ota.integrations.enabled", "false")
-    System.setProperty("ota.integration.${value}.enabled", "true")
+    System.setProperty("otel.integrations.enabled", "false")
+    System.setProperty("otel.integration.${value}.enabled", "true")
     def target = new TestDefaultInstrumenter(name, altName)
     target.instrument(new AgentBuilder.Default())
 
@@ -152,13 +152,13 @@ class DefaultInstrumenterTest extends AgentSpecification {
 
   def "configure env var enabled for #value when default is disabled"() {
     setup:
-    environmentVariables.set("OTA_INTEGRATIONS_ENABLED", "false")
-    environmentVariables.set("OTA_INTEGRATION_${value}_ENABLED", "true")
+    environmentVariables.set("OTEL_INTEGRATIONS_ENABLED", "false")
+    environmentVariables.set("OTEL_INTEGRATION_${value}_ENABLED", "true")
     def target = new TestDefaultInstrumenter(name, altName)
     target.instrument(new AgentBuilder.Default())
 
     expect:
-    System.getenv("OTA_INTEGRATION_${value}_ENABLED") == "true"
+    System.getenv("OTEL_INTEGRATION_${value}_ENABLED") == "true"
     target.enabled == enabled
     target.applyCalled == enabled
 

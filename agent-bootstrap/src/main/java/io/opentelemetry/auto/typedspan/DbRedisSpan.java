@@ -114,7 +114,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
    *     name of the database being accessed. For commands that switch the database, this should be
    *     set to the target database (even if the command fails).
-   *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+   *     <p>In some SQL databases, the database name to be used is called "schema name".
    */
   @Override
   public DbRedisSemanticConvention setDbName(String dbName) {
@@ -299,7 +299,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
      *     name of the database being accessed. For commands that switch the database, this should
      *     be set to the target database (even if the command fails).
-     *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+     *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbRedisSpanBuilder setDbName(String dbName) {
       internalBuilder.setAttribute("db.name", dbName);

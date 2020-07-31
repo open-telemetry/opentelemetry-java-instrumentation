@@ -29,7 +29,7 @@ import io.opentelemetry.sdk.trace.config.TraceConfig;
  * io.opentelemetry.OpenTelemetry#setPropagators(ContextPropagators)} can be used as well.
  *
  * <p>An implementation of {@link TracerCustomizer} can either be provided as part of an initializer
- * JAR, using the {@code ota.initializer.jar} property or can be included in the same JAR as the
+ * JAR, using the {@code otel.initializer.jar} property or can be included in the same JAR as the
  * agent in a redistribution.
  */
 public interface TracerCustomizer {
