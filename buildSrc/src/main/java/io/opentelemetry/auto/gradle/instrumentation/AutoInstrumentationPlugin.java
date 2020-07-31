@@ -91,40 +91,6 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   public void apply(Project project) {
     project.getPlugins().apply(JavaLibraryPlugin.class);
 
-    TaskProvider<Jar> createTestBootstrapJar =
-        project.getTasks().register("createTestBootstrapJar", Jar.class);
-
-    Configuration testClasspath =
-        project.getConfigurations().getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME);
-
-    createTestBootstrapJar.configure(
-        jar -> {
-          jar.dependsOn(testClasspath.getBuildDependencies());
-          jar.getArchiveFileName().set("test-bootstrap.jar");
-          jar.setIncludeEmptyDirs(false);
-          // Classpath is ordered in priority, but later writes into the JAR would take priority,
-          // so we exclude the later ones (we need this to make sure logback is picked up).
-          jar.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
-          jar.from(
-              project.files(
-                  // Needs to be a Callable so it's executed lazily at runtime, instead of
-                  // configuration time where the classpath may still be getting built up.
-                  (Callable<?>)
-                      () ->
-                          testClasspath.resolve().stream()
-                              .filter(
-                                  file -> !file.isDirectory() && file.getName().endsWith(".jar"))
-                              .map(project::zipTree)
-                              .collect(toList())));
-
-          jar.eachFile(
-              file -> {
-                if (!isBootstrapClass(file.getPath())) {
-                  file.exclude();
-                }
-              });
-        });
-
     project
         .getTasks()
         .withType(
@@ -132,10 +98,60 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
             task -> {
               // TODO(anuraaga): This check should probably be made more precise or remove entirely.
               // Need to check the impact of the latter first.
-              if (!task.getName().equals("test")) {
-                task.dependsOn(createTestBootstrapJar);
-                task.jvmArgs("-Xbootclasspath/a:build/libs/test-bootstrap.jar");
+              if (task.getName().equals("test")) {
+                return;
               }
+
+              TaskProvider<Jar> bootstrapJar =
+                  project.getTasks().register(task.getName() + "BootstrapJar", Jar.class);
+
+              Configuration testClasspath =
+                  project.getConfigurations().findByName(task.getName() + "RuntimeClasspath");
+              if (testClasspath == null) {
+                // Same classpath as default test task
+                testClasspath =
+                    project
+                        .getConfigurations()
+                        .findByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+              }
+
+              String bootstrapJarName = task.getName() + "-bootstrap.jar";
+
+              Configuration testClasspath0 = testClasspath;
+              bootstrapJar.configure(
+                  jar -> {
+                    jar.dependsOn(testClasspath0.getBuildDependencies());
+                    jar.getArchiveFileName().set(bootstrapJarName);
+                    jar.setIncludeEmptyDirs(false);
+                    // Classpath is ordered in priority, but later writes into the JAR would take
+                    // priority,
+                    // so we exclude the later ones (we need this to make sure logback is picked
+                    // up).
+                    jar.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
+                    jar.from(
+                        project.files(
+                            // Needs to be a Callable so it's executed lazily at runtime, instead of
+                            // configuration time where the classpath may still be getting built up.
+                            (Callable<?>)
+                                () ->
+                                    testClasspath0.resolve().stream()
+                                        .filter(
+                                            file ->
+                                                !file.isDirectory()
+                                                    && file.getName().endsWith(".jar"))
+                                        .map(project::zipTree)
+                                        .collect(toList())));
+
+                    jar.eachFile(
+                        file -> {
+                          if (!isBootstrapClass(file.getPath())) {
+                            file.exclude();
+                          }
+                        });
+                  });
+
+              task.dependsOn(bootstrapJar);
+              task.jvmArgs("-Xbootclasspath/a:build/libs/" + bootstrapJarName);
             });
   }
 
