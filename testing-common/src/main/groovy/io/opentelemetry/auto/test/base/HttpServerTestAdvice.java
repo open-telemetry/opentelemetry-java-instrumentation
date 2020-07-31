@@ -40,22 +40,12 @@ public abstract class HttpServerTestAdvice {
         // Skip if not running the HttpServerTest.
         return null;
       }
-      Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
-
-      /*
-      NB! This is a "hack" to debug flaky tests.
-      If we have a valid parent span at this point, then tests will fail, because they expect
-      "TEST_SPAN" from above to be a root span.
-      This failure is good because we must not have a valid span at this point.
-      Thus failure signal a span leak and we should investigate that.
-      But we want to have some debug information about this currently active span.
-      As span is not readable by default, the only way to obtain that information is pass
-      it to InMemorySpanExporter used by tests.
-      */
-      Span parentSpan = TRACER.getCurrentSpan();
-      if (parentSpan.getContext().isValid()) {
-        parentSpan.end();
-      }
+      // forcing "no parent" here in case there is a context leak into the app server's thread pool.
+      // preventing context leak into app server's thread pool in the first place is difficult.
+      // and at the same time, the point of this "test" instrumentation is to ensure that the SERVER
+      // span created downstream ignores it's parent (this TEST_SPAN) so that the server
+      // instrumentation is not affected by such a leak
+      Span span = TRACER.spanBuilder("TEST_SPAN").setNoParent().startSpan();
       return new SpanWithScope(span, currentContextWith(span));
     }
 
