@@ -67,6 +67,8 @@ public class HystrixInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
       "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
       packageName + ".HystrixDecorator",
+      packageName + ".HystrixDecorator$1",
+      packageName + ".HystrixDecorator$ResourceNameCacheKey",
       packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
     };
   }

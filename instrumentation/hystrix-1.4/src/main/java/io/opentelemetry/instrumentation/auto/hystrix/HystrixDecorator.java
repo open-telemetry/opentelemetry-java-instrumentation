@@ -17,9 +17,11 @@
 package io.opentelemetry.instrumentation.auto.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
+import io.opentelemetry.instrumentation.api.FixedSizeCache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
+import java.util.Objects;
 
 public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
@@ -30,13 +32,57 @@ public class HystrixDecorator extends BaseDecorator {
     extraTags = Config.get().isHystrixTagsEnabled();
   }
 
+  private static final FixedSizeCache<ResourceNameCacheKey, String> RESOURCE_NAME_CACHE =
+      new FixedSizeCache<>(64);
+
+  private static final FixedSizeCache.ToString<ResourceNameCacheKey> TO_STRING =
+      new FixedSizeCache.ToString<>();
+
+  private static final class ResourceNameCacheKey {
+    private final String group;
+    private final String command;
+    private final String methodName;
+
+    private ResourceNameCacheKey(String group, String command, String methodName) {
+      this.group = group;
+      this.command = command;
+      this.methodName = methodName;
+    }
+
+    @Override
+    public String toString() {
+      return group + "." + command + "." + methodName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ResourceNameCacheKey cacheKey = (ResourceNameCacheKey) o;
+      return group.equals(cacheKey.group)
+          && command.equals(cacheKey.command)
+          && methodName.equals(cacheKey.methodName);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(group, command, methodName);
+    }
+  }
+
   public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {
     if (command != null) {
       String commandName = command.getCommandKey().name();
       String groupName = command.getCommandGroup().name();
       boolean circuitOpen = command.isCircuitBreakerOpen();
 
-      String spanName = groupName + "." + commandName + "." + methodName;
+      String spanName =
+          RESOURCE_NAME_CACHE.computeIfAbsent(
+              new ResourceNameCacheKey(groupName, commandName, methodName), TO_STRING);
 
       span.updateName(spanName);
       if (extraTags) {
