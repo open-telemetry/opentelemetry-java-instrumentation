@@ -89,7 +89,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
 In order to configure the service name for the OTLP exporter, you must add `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTE=service.name=myservice`.
+to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
 #### Logging exporter
 
@@ -100,6 +100,14 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+
+#### Propagator
+
+The propagator controls which distributed tracing header format is used.
+
+| System property | Environment variable | Purpose                                                                                 |
+|-----------------|----------------------|-----------------------------------------------------------------------------------------|
+| ota.propagators | OTA_PROPAGATORS      | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger". |
 
 #### OpenTelemetry Resource
 
@@ -225,6 +233,10 @@ instrumentation for Grizzly http server is disabled by default. If needed,
 you can enable it by add the following system property:
 `-Dota.integration.grizzly.enabled=true`
 
+### Suppressing specific auto-instrumentation
+
+See [Suppressing specific auto-instrumentation](docs/suppressing-instrumentation.md)
+
 ## Manually instrumenting
 
 > :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
@@ -262,16 +274,14 @@ public class MyClass {
 Each time the application invokes the annotated method, it creates a span
 that denote its duration and provides any thrown exceptions.
 
-#### Configuration
+#### Suppressing `@WithSpan` instrumentation
 
-The `@WithSpan` annotation requires code changes to implement. You can
-disable the annotation at runtime via the exclude configuration or
-environment variables:
+This is useful in case you have code that is over-instrumented using `@WithSpan`,
+and you want to suppress some of them without modifying the code.
 
-| System property                  | Environment variable             | Purpose                                                              |
-|----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| trace.classes.exclude            | TRACE_CLASSES_EXCLUDE            | Exclude classes with the `@WithSpan` annotation                      |
-| trace.methods.exclude            | TRACE_METHODS_EXCLUDE            | Exclude methods with the `@WithSpan` annotation                      |
+| System property                 | Environment variable            | Purpose                                                                                                                                  |
+|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods, format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 
 ## Troubleshooting

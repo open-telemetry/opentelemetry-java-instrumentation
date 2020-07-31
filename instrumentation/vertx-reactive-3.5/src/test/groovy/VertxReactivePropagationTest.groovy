@@ -18,7 +18,6 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import io.vertx.reactivex.core.Vertx
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -69,10 +68,13 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           parent()
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         basicSpan(it, 1, "VertxReactiveWebServer.handleListProducts", span(0))
@@ -83,11 +85,11 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           childOf span(2)
           errored false
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "hsqldb"
-            "${StringAttributeSetter.create("db.name").key()}" "test?shutdown=true"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key()}" "test?shutdown=true"
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"
-            "${StringAttributeSetter.create("db.connection_string").key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
           }
         }
       }

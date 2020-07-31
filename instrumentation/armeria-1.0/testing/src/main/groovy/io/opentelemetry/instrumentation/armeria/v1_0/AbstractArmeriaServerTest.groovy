@@ -73,6 +73,9 @@ abstract class AbstractArmeriaServerTest extends InstrumentationSpecification {
             "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "h2c"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
       }
@@ -111,6 +114,9 @@ abstract class AbstractArmeriaServerTest extends InstrumentationSpecification {
             "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
       }

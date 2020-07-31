@@ -112,4 +112,14 @@ public abstract class ServletHttpServerTracer
   public void setContentLength(Span span, int length) {
     SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(span, length);
   }
+
+  @Override
+  protected String flavor(HttpServletRequest connection, HttpServletRequest request) {
+    return connection.getProtocol();
+  }
+
+  @Override
+  protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
+    return httpServletRequest.getHeader(name);
+  }
 }

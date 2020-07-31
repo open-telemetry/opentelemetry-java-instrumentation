@@ -70,7 +70,7 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew integrationTestJava${{ matrix.java }} testJava${{ matrix.java }}
+        run: ./gradlew testJava${{ matrix.java }}
 
   testLatestDep:
     needs: build
@@ -97,3 +97,20 @@ jobs:
 
       - name: Test with Gradle
         run: ./gradlew latestDepTest
+
+  issue:
+    name: Open issue on failure
+    needs: [test, testLatestDep]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v1
+      - uses: actions/checkout@v2
+      - uses: JasonEtco/create-an-issue@v2
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/workflows/nightly-failed.md

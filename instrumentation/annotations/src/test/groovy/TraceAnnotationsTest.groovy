@@ -25,7 +25,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.annotations")
+      System.clearProperty("otel.trace.annotations")
     }
   }
 

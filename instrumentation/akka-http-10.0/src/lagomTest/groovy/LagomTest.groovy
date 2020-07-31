@@ -82,6 +82,8 @@ class LagomTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "ws://localhost:${server.port()}/echo"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 101
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
           }
         }
         span(1) {
@@ -117,6 +119,8 @@ class LagomTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "ws://localhost:${server.port()}/error"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
           }
         }
       }

@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.StringAttributeSetter
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -86,7 +86,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -111,7 +111,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           errored true
           errorEvent IndexNotFoundException, "no such index"
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -170,7 +170,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -182,7 +182,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -197,7 +197,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -214,7 +214,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -225,7 +225,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "elasticsearch"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

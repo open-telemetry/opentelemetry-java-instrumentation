@@ -114,7 +114,7 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
    * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
    *     name of the database being accessed. For commands that switch the database, this should be
    *     set to the target database (even if the command fails).
-   *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+   *     <p>In some SQL databases, the database name to be used is called "schema name".
    */
   @Override
   public DbHbaseSemanticConvention setDbName(String dbName) {
@@ -298,7 +298,7 @@ public class DbHbaseSpan extends DelegatingSpan implements DbHbaseSemanticConven
      * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
      *     name of the database being accessed. For commands that switch the database, this should
      *     be set to the target database (even if the command fails).
-     *     <p>In some SQL databases, the database name to be used is called &#34;schema name&#34;.
+     *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbHbaseSpanBuilder setDbName(String dbName) {
       internalBuilder.setAttribute("db.name", dbName);

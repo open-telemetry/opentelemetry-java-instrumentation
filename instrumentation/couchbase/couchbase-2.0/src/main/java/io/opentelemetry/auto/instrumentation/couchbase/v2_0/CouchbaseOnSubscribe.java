@@ -22,7 +22,6 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import io.opentelemetry.trace.attributes.StringAttributeSetter;
 import java.lang.reflect.Method;
 import rx.Observable;
 
@@ -55,7 +54,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   protected void afterStart(final Span span) {
     super.afterStart(span);
 
-    span.setAttribute(StringAttributeSetter.create("db.name").key(), bucket);
+    span.setAttribute(SemanticAttributes.DB_NAME.key(), bucket);
     span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), query);
   }
 }

@@ -35,6 +35,11 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
+  protected String requestHeader(HttpRequestPacket httpRequestPacket, String name) {
+    return httpRequestPacket.getHeader(name);
+  }
+
+  @Override
   protected void attachServerContext(Context context, FilterChainContext filterChainContext) {
     filterChainContext.getAttributes().setAttribute(CONTEXT_ATTRIBUTE, context);
   }
@@ -59,6 +64,11 @@ public class GrizzlyHttpServerTracer
   @Override
   protected String peerHostIP(final HttpRequestPacket httpRequest) {
     return httpRequest.getLocalHost();
+  }
+
+  @Override
+  protected String flavor(HttpRequestPacket connection, HttpRequestPacket request) {
+    return connection.getProtocolString();
   }
 
   @Override

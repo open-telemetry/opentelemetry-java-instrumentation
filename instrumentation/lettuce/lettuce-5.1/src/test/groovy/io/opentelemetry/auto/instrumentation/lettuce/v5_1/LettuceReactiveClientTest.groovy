@@ -117,8 +117,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<TESTSETKEY> value<TESTSETVAL>"
           }
           event(0) {
@@ -151,8 +151,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<TESTKEY>"
           }
           event(0) {
@@ -193,8 +193,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<NON_EXISTENT_KEY>"
           }
           event(0) {
@@ -233,9 +233,9 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -263,9 +263,9 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -316,8 +316,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<a> value<1>"
           }
           event(0) {
@@ -336,8 +336,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<a>"
           }
           event(0) {
@@ -377,8 +377,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<a> value<1>"
           }
           event(0) {
@@ -397,8 +397,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<a>"
           }
           event(0) {
@@ -439,8 +439,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<a> value<1>"
           }
           event(0) {
@@ -459,8 +459,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "db.connection_string" "redis://127.0.0.1:$port"
-            "db.system" "redis"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<a>"
           }
           event(0) {

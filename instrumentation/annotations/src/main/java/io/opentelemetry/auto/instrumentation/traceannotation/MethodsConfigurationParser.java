@@ -48,7 +48,7 @@ public class MethodsConfigurationParser {
    * keys are class names and corresponding value is a set of methods for that class.
    *
    * <p>Strings of such format are used e.g. to configure {@link Config#getTraceMethods()} and
-   * {@link Config#getTraceMethodsExclude()}
+   * {@link Config#getTraceAnnotatedMethodsExclude()}
    */
   public static Map<String, Set<String>> parse(String configString) {
     if (configString == null || configString.trim().isEmpty()) {

@@ -20,7 +20,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link OTLPGrpcSpanExporter}
+ * Configuration for {@link OtlpGrpcSpanExporter}
  *
  * <p>Get Exporter Service Name
  *

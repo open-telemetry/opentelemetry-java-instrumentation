@@ -18,7 +18,6 @@ import akka.actor.ActorSystem
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.attributes.StringAttributeSetter
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority
 import redis.RedisClient
@@ -89,7 +88,7 @@ class RediscalaClientTest extends AgentTestRunner {
           operationName "Set"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Set"
           }
         }
@@ -117,7 +116,7 @@ class RediscalaClientTest extends AgentTestRunner {
           operationName "Set"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Set"
           }
         }
@@ -127,7 +126,7 @@ class RediscalaClientTest extends AgentTestRunner {
           operationName "Get"
           spanKind CLIENT
           attributes {
-            "${StringAttributeSetter.create("db.system").key()}" "redis"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Get"
           }
         }
