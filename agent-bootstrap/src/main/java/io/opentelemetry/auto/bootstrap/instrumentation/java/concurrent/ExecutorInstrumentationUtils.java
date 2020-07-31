@@ -22,12 +22,21 @@ import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.trace.Span;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
+
+  // locations where the context was propagated to another thread (tracking multiple steps is
+  // helpful in akka where there is so much recursive async spawning of new work)
+  public static final Context.Key<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
+      Context.key("thread-propagation-locations");
+  private static final boolean THREAD_PROPAGATION_DEBUGGER =
+      Boolean.getBoolean("otel.threadPropagationDebugger");
 
   private static final Logger log = LoggerFactory.getLogger(ExecutorInstrumentationUtils.class);
 
@@ -70,12 +79,20 @@ public class ExecutorInstrumentationUtils {
    * @param <T> task class type
    * @param contextStore context storage
    * @param task task instance
-   * @param context current span
+   * @param context current context
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final Context context) {
+      final ContextStore<T, State> contextStore, final T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
+    if (THREAD_PROPAGATION_DEBUGGER) {
+      List<StackTraceElement[]> location = THREAD_PROPAGATION_LOCATIONS.get(context);
+      if (location == null) {
+        location = new CopyOnWriteArrayList<>();
+        context = context.withValue(THREAD_PROPAGATION_LOCATIONS, location);
+      }
+      location.add(0, new Exception().getStackTrace());
+    }
     state.setParentSpan(context);
     return state;
   }

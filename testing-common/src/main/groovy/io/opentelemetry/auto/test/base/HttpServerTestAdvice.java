@@ -18,16 +18,26 @@ package io.opentelemetry.auto.test.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import java.util.Iterator;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class HttpServerTestAdvice {
 
+  // needs to be public otherwise IllegalAccessError from inlined advice below
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+
+  // needs to be public otherwise IllegalAccessError from inlined advice below
+  public static final Logger log = LoggerFactory.getLogger(HttpServerTestAdvice.class);
 
   /**
    * This advice should be applied at the root of a http server request to validate the
@@ -40,22 +50,25 @@ public abstract class HttpServerTestAdvice {
         // Skip if not running the HttpServerTest.
         return null;
       }
-      Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
 
-      /*
-      NB! This is a "hack" to debug flaky tests.
-      If we have a valid parent span at this point, then tests will fail, because they expect
-      "TEST_SPAN" from above to be a root span.
-      This failure is good because we must not have a valid span at this point.
-      Thus failure signal a span leak and we should investigate that.
-      But we want to have some debug information about this currently active span.
-      As span is not readable by default, the only way to obtain that information is pass
-      it to InMemorySpanExporter used by tests.
-      */
-      Span parentSpan = TRACER.getCurrentSpan();
-      if (parentSpan.getContext().isValid()) {
-        parentSpan.end();
+      List<StackTraceElement[]> location =
+          ExecutorInstrumentationUtils.THREAD_PROPAGATION_LOCATIONS.get(Context.current());
+      if (location != null) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<StackTraceElement[]> i = location.iterator();
+        while (i.hasNext()) {
+          for (StackTraceElement ste : i.next()) {
+            sb.append("\n");
+            sb.append(ste);
+          }
+          if (i.hasNext()) {
+            sb.append("\nwhich was propagated from:");
+          }
+        }
+        log.error("a context leak was detected. it was propagated from:{}", sb);
       }
+
+      Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
       return new SpanWithScope(span, currentContextWith(span));
     }
 
