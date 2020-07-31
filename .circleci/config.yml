@@ -96,7 +96,7 @@ jobs:
           name: Run Tests
           command: >-
             GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
-            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
+            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >> --info
             << pipeline.parameters.gradle_flags >>
             --max-workers=6
 
@@ -189,8 +189,8 @@ workflows:
       #        only: /.*/
 
       - default_test_job:
-          requires:
-            - build
+          #requires:
+          #  - build
           name: test_latest
           testTask: :instrumentation:grpc-1.5:latestDepTest
           filters:
@@ -204,16 +204,16 @@ workflows:
       #      branches:
       #        ignore: master
 
-      - publish_master:
-          requires:
-            - test_8
-            - test_latest
-            - muzzle
-          filters:
-            branches:
-              only: master
-            tags:
-              ignore: /.*/
+      #- publish_master:
+      #    requires:
+      #      - test_8
+      #      - test_latest
+      #      - muzzle
+      #    filters:
+      #      branches:
+      #        only: master
+      #      tags:
+      #        ignore: /.*/
 
   nightly_snapshot:
     triggers:
