@@ -215,19 +215,6 @@ workflows:
             tags:
               ignore: /.*/
 
-  nightly_snapshot:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - depends-on-otel-java-snapshot
-    jobs:
-      - default_test_job:
-          name: test_11
-          testTask: test jacocoTestReport jacocoTestCoverageVerification
-
   release:
     jobs:
       - release:
