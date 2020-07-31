@@ -83,8 +83,7 @@ public class Servlet3Advice {
 
     TRACER.setPrincipal(span, (HttpServletRequest) request);
     if (throwable != null) {
-      contentLengthHelper(span, response);
-      TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());
+      TRACER.endExceptionally(span, throwable, (HttpServletResponse) response);
       return;
     }
 
@@ -102,14 +101,7 @@ public class Servlet3Advice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      contentLengthHelper(span, response);
-      TRACER.end(span, ((HttpServletResponse) response).getStatus());
-    }
-  }
-
-  public static void contentLengthHelper(Span span, ServletResponse response) {
-    if (response instanceof CountingHttpServletResponse) {
-      TRACER.setContentLength(span, ((CountingHttpServletResponse) response).getContentLength());
+      TRACER.end(span, (HttpServletResponse) response);
     }
   }
 }

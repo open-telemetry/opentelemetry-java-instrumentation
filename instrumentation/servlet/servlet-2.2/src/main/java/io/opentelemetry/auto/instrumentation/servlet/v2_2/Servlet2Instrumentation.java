@@ -63,6 +63,7 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
     return new String[] {
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
+      packageName + ".ResponseWithStatus",
       packageName + ".Servlet2HttpServerTracer"
     };
   }

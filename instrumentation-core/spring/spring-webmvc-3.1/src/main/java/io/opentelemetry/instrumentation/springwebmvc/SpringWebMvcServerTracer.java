@@ -24,9 +24,11 @@ import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 class SpringWebMvcServerTracer
-    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
+    extends HttpServerTracer<
+        HttpServletRequest, HttpServletResponse, HttpServletRequest, HttpServletRequest> {
 
   public SpringWebMvcServerTracer(Tracer tracer) {
     super(tracer);
@@ -60,6 +62,11 @@ class SpringWebMvcServerTracer
   @Override
   protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
     return httpServletRequest.getHeader(name);
+  }
+
+  @Override
+  protected int responseStatus(HttpServletResponse httpServletResponse) {
+    return httpServletResponse.getStatus();
   }
 
   @Override
