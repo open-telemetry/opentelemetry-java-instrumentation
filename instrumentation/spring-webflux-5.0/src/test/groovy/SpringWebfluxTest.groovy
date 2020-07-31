@@ -76,6 +76,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -140,6 +143,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -209,6 +215,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 404
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -250,6 +259,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 202
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -296,6 +308,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -359,6 +374,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 307
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -385,6 +403,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" finalUrl
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         span(1) {
@@ -426,6 +447,9 @@ class SpringWebfluxTest extends AgentTestRunner {
               "${SemanticAttributes.HTTP_URL.key()}" url
               "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
               "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+              "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+              "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+              "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
             }
           }
           span(1) {

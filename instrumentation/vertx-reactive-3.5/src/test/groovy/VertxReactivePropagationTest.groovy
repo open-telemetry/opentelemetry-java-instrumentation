@@ -68,10 +68,13 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           parent()
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.HTTP_URL.key()}" url
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
         basicSpan(it, 1, "VertxReactiveWebServer.handleListProducts", span(0))

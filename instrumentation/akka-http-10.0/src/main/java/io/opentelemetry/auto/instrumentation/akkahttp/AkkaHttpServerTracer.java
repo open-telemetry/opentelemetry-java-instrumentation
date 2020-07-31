@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
+import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
@@ -29,6 +30,11 @@ public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequ
   @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.method().value();
+  }
+
+  @Override
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.getHeader(name).map(HttpHeader::value).orElse(null);
   }
 
   @Override
@@ -47,6 +53,11 @@ public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequ
   @Override
   protected String peerHostIP(final HttpRequest httpRequest) {
     return null;
+  }
+
+  @Override
+  protected String flavor(HttpRequest connection, HttpRequest request) {
+    return connection.protocol().value();
   }
 
   @Override
