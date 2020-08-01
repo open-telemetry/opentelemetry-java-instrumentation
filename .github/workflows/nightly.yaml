@@ -70,7 +70,11 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew testJava${{ matrix.java }}
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew testJava${{ matrix.java }}
+          timeout_minutes: 60
+          max_attempts: 3
 
   testLatestDep:
     needs: build
@@ -96,7 +100,11 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew latestDepTest
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew latestDepTest
+          timeout_minutes: 60
+          max_attempts: 3
 
   issue:
     name: Open issue on failure
