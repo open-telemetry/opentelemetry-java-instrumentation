@@ -47,13 +47,9 @@ public class OtlpGrpcSpanExporterAutoConfiguration {
   @ConditionalOnMissingBean
   public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(
       OtlpGrpcSpanExporterProperties otlpGrpcSpanExporterProperties) {
-    ManagedChannel channel =
-        ManagedChannelBuilder.forTarget(otlpGrpcSpanExporterProperties.getEndpoint())
-            .usePlaintext()
-            .build();
 
     return OtlpGrpcSpanExporter.newBuilder()
-        .setChannel(channel)
+        .setEndpoint(otlpGrpcSpanExporterProperties.getEndpoint())
         .setDeadlineMs(otlpGrpcSpanExporterProperties.getSpanTimeout().toMillis())
         .build();
   }

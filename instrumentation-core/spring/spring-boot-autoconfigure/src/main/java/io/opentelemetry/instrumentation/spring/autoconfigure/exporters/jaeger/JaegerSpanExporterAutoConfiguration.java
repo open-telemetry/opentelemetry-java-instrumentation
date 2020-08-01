@@ -48,15 +48,10 @@ public class JaegerSpanExporterAutoConfiguration {
   public JaegerGrpcSpanExporter otelJaegerSpanExporter(
       JaegerSpanExporterProperties jaegerSpanExporterProperties) {
 
-    ManagedChannel channel =
-        ManagedChannelBuilder.forTarget(jaegerSpanExporterProperties.getEndpoint())
-            .usePlaintext()
-            .build();
-
     return JaegerGrpcSpanExporter.newBuilder()
         .setServiceName(jaegerSpanExporterProperties.getServiceName())
         .setDeadlineMs(jaegerSpanExporterProperties.getSpanTimeout().toMillis())
-        .setChannel(channel)
+        .setEndpoint(jaegerSpanExporterProperties.getEndpoint())
         .build();
   }
 }
