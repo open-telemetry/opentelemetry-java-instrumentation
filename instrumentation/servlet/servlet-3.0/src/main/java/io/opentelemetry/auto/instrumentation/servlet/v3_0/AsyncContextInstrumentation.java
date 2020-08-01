@@ -19,7 +19,9 @@ package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -29,6 +31,7 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;
@@ -83,11 +86,11 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
    */
   public static class DispatchAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean enter(
+    public static Scope enter(
         @Advice.This final AsyncContext context, @Advice.AllArguments final Object[] args) {
       int depth = CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
       if (depth > 0) {
-        return false;
+        return null;
       }
 
       ServletRequest request = context.getRequest();
@@ -105,13 +108,16 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
         request.setAttribute(CONTEXT_ATTRIBUTE, currentContext);
       }
 
-      return true;
+      // AsyncContext.dispatch() is known to sometimes leak context into Tomcat's thread pool,
+      // and we don't need context propagation downstream from here anyways
+      return withScopedContext(Context.ROOT);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final boolean topLevel) {
-      if (topLevel) {
+    public static void exit(@Advice.Enter final Scope scope) {
+      if (scope != null) {
         CallDepthThreadLocalMap.reset(AsyncContext.class);
+        scope.close();
       }
     }
   }
