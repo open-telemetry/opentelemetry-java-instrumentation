@@ -180,12 +180,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
 
   def "context classes are redefine safe"() {
     when:
-    try {
-      ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))
-      ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(UntransformableKeyClass, ClasspathUtils.convertToByteArray(UntransformableKeyClass)))
-    } catch(Throwable t) {
-      // Expected
-    }
+    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))
+    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(UntransformableKeyClass, ClasspathUtils.convertToByteArray(UntransformableKeyClass)))
 
     then:
     new KeyClass().isInstrumented()
