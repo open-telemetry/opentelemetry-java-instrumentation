@@ -47,14 +47,10 @@ public class ExecutorInstrumentationUtils {
     }
 
     Span span = TRACER.getCurrentSpan();
-    Class<?> taskClass = task.getClass();
-    Class<?> enclosingClass = taskClass.getEnclosingClass();
+    Class<?> enclosingClass = task.getClass().getEnclosingClass();
 
     return span.getContext().isValid()
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task)
-        // TODO Workaround for
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-        && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
         // Don't instrument the executor's own runnables.  These runnables may never return until
         // netty shuts down.  Any created continuations will be open until that time preventing
         // traces from being reported
