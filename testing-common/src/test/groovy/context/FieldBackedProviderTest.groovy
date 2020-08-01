@@ -178,6 +178,9 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass().incrementContextCount() == 1
   }
 
+  // NB: This test will fail if some other agent is also running that fills the class structure
+  // before we can. A likely culprit is jacoco if you start seeing failure here due to a change
+  // make sure jacoco exclusion is working.
   def "context classes are redefine safe"() {
     when:
     ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))
