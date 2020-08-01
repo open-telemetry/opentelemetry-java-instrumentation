@@ -17,7 +17,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.otlp.OtlpGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
