@@ -77,6 +77,11 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
   private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
 
+  static {
+    // always run with the thread propagation debugger to help track down sporadic test failures
+    System.setProperty("otel.threadPropagationDebugger", "true");
+  }
+
   /**
    * For test runs, agent's global tracer will report to this list writer.
    *
