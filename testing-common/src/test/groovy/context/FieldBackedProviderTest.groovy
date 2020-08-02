@@ -17,6 +17,7 @@
 package context
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.BytecodeTests
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
@@ -24,6 +25,7 @@ import net.bytebuddy.utility.JavaModule
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
+import org.junit.experimental.categories.Category
 import spock.lang.Requires
 
 import java.lang.instrument.ClassDefinition
@@ -39,6 +41,7 @@ import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
 import static context.ContextTestInstrumentation.KeyClass
 import static context.ContextTestInstrumentation.UntransformableKeyClass
 
+@Category(BytecodeTests)
 class FieldBackedProviderTest extends AgentTestRunner {
 
   static {
@@ -175,6 +178,10 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass().incrementContextCount() == 1
   }
 
+  // NB: This test will fail if some other agent is also running that modifies the class structure
+  // in a way that is incompatible with redefining the class back to its original bytecode.
+  // A likely culprit is jacoco if you start seeing failure here due to a change make sure jacoco
+  // exclusion is working.
   def "context classes are redefine safe"() {
     when:
     ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))

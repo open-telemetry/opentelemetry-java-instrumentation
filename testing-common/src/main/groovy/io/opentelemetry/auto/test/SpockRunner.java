@@ -16,16 +16,10 @@
 
 package io.opentelemetry.auto.test;
 
-import com.google.common.reflect.ClassPath;
-import io.opentelemetry.auto.test.utils.ClasspathUtils;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.jar.JarFile;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import org.junit.runner.notification.RunNotifier;
@@ -87,8 +81,6 @@ public class SpockRunner extends Sputnik {
     for (int i = 0; i < testBS.length; ++i) {
       TEST_BOOTSTRAP_PREFIXES[i + BOOTSTRAP_PACKAGE_PREFIXES_COPY.length] = testBS[i];
     }
-
-    setupBootstrapClasspath();
   }
 
   private final InstrumentationClassLoader customLoader;
@@ -161,33 +153,6 @@ public class SpockRunner extends Sputnik {
     } finally {
       Thread.currentThread().setContextClassLoader(contextLoader);
     }
-  }
-
-  private static void setupBootstrapClasspath() {
-    try {
-      final File bootstrapJar = createBootstrapJar();
-      ByteBuddyAgent.getInstrumentation()
-          .appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-      // Utils cannot be referenced before this line, as its static initializers load bootstrap
-      // classes (for example, the bootstrap proxy).
-      io.opentelemetry.auto.tooling.Utils.getBootstrapProxy().addURL(bootstrapJar.toURI().toURL());
-    } catch (final IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static File createBootstrapJar() throws IOException {
-    final Set<String> bootstrapClasses = new HashSet<>();
-    for (final ClassPath.ClassInfo info : ClasspathUtils.getTestClasspath().getAllClasses()) {
-      // if info starts with bootstrap prefix: add to bootstrap jar
-      if (isBootstrapClass(info.getName())) {
-        bootstrapClasses.add(info.getResourceName());
-      }
-    }
-    return new File(
-        ClasspathUtils.createJarWithClasses(
-                AgentTestRunner.class.getClassLoader(), bootstrapClasses.toArray(new String[0]))
-            .getFile());
   }
 
   /** Run test classes in a classloader which loads test classes before delegating. */
