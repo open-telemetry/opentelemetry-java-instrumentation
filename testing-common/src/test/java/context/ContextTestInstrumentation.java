@@ -195,10 +195,8 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   }
 
   /**
-   * A class which cannot be transformed by our instrumentation. {@link KeyClass} is an empty object
-   * meaning it has one field available for us to add context through redefinition. {@link
-   * UntransformableKeyClass} has an implicit reference to its parent class, {@link KeyClass} and
-   * thus has no available space for us to add context via redefinition.
+   * A class which will not be transformed by our instrumentation due to {@link
+   * FieldBackedProviderTest#shouldTransformClass(String, ClassLoader)}.
    */
   public static class UntransformableKeyClass extends KeyClass {
     @Override
