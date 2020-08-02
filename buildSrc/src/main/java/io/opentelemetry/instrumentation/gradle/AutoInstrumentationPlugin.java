@@ -97,12 +97,6 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
         .withType(
             Test.class,
             task -> {
-              // TODO(anuraaga): This check should probably be made more precise or remove entirely.
-              // Need to check the impact of the latter first.
-              if (task.getName().equals("test")) {
-                return;
-              }
-
               TaskProvider<Jar> bootstrapJar =
                   project.getTasks().register(task.getName() + "BootstrapJar", Jar.class);
 

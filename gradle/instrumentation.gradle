@@ -60,27 +60,3 @@ afterEvaluate {
     testImplementation project(':utils:test-utils')
   }
 }
-
-tasks.withType(Test) {
-  if (it.name == 'test') {
-    useJUnit {
-      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  } else {
-    useJUnit {
-      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  }
-}
-
-task integrationTest(type: Test) {
-  description = 'Runs instrumentation tests.'
-  group = 'verification'
-  shouldRunAfter test
-
-  useJUnit {
-    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-  }
-}
-
-test.dependsOn integrationTest

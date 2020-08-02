@@ -52,7 +52,6 @@ import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
@@ -72,7 +71,6 @@ import org.spockframework.runtime.model.SpecMetadata;
  *       in an initialized state.
  * </ul>
  */
-@Category(BytecodeTests.class)
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends AgentSpecification {
