@@ -32,7 +32,7 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Build with Gradle
-        run: ./gradlew assemble testClasses
+        run: ./gradlew assemble testClasses --stacktrace
 
   test:
     needs: build
@@ -72,7 +72,7 @@ jobs:
       - name: Test with Gradle
         uses: nick-invision/retry@v1
         with:
-          command: ./gradlew testJava${{ matrix.java }}
+          command: ./gradlew testJava${{ matrix.java }} --stacktrace
           timeout_minutes: 60
           max_attempts: 3
 
@@ -102,7 +102,7 @@ jobs:
       - name: Test with Gradle
         uses: nick-invision/retry@v1
         with:
-          command: ./gradlew latestDepTest
+          command: ./gradlew latestDepTest --stacktrace
           timeout_minutes: 60
           max_attempts: 3
 
