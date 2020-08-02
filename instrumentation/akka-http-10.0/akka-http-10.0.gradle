@@ -92,8 +92,8 @@ dependencies {
   latestDepTestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '+'
 }
 
-integrationTest.dependsOn lagomTest
-integrationTest.dependsOn version101Test
+test.dependsOn lagomTest
+test.dependsOn version101Test
 
 compileVersion101TestGroovy {
   classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))

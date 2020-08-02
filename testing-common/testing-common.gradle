@@ -70,31 +70,6 @@ tasks.register("testDisabledFieldInjection", Test) {
   includes = ["context/FieldBackedProviderFieldInjectionDisabledTest.class"]
 }
 test.dependsOn(testDisabledFieldInjection)
+test.forkEvery 1
 
 javadoc.enabled = false
-
-// TODO(anuraaga): Consolidate with the copied block in instrumentation.gradle
-tasks.withType(Test) {
-  if (it.name == 'test') {
-    useJUnit {
-      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  } else {
-    useJUnit {
-      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  }
-}
-
-task integrationTest(type: Test) {
-  description = 'Runs instrumentation tests.'
-  group = 'verification'
-  shouldRunAfter test
-  forkEvery 1
-
-  useJUnit {
-    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-  }
-}
-
-test.dependsOn integrationTest
