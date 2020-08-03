@@ -17,7 +17,6 @@
 package io.opentelemetry.instrumentation.springwebflux.client;
 
 import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
@@ -36,10 +35,6 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   public WebClientTracingFilter(Tracer tracer) {
     this.tracer = tracer;
-  }
-
-  public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    addFilter(exchangeFilterFunctions, TRACER);
   }
 
   public static void addFilter(
