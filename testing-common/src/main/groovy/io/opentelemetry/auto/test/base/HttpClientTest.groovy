@@ -42,7 +42,7 @@ import static org.junit.Assume.assumeTrue
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 1000
-  protected static final BASIC_AUTH_KEY = "custom authorization header"
+  protected static final BASIC_AUTH_KEY = "custom-authorization-header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
   @AutoCleanup
@@ -225,7 +225,11 @@ abstract class HttpClientTest extends AgentTestRunner {
     // This test should handle both types or we should unify how the clients work
 
     given:
-    assumeTrue(testRedirects())
+    if (!testRedirects()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRedirects())
     def uri = server.address.resolve("/redirect")
 
     when:
@@ -247,7 +251,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with 2 redirects"() {
     given:
-    assumeTrue(testRedirects())
+    if (!testRedirects()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRedirects())
     def uri = server.address.resolve("/another-redirect")
 
     when:
@@ -270,7 +278,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with circular redirects"() {
     given:
-    assumeTrue(testRedirects() && testCircularRedirects())
+    if (!testRedirects() || !testCircularRedirects()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRedirects() && testCircularRedirects())
     def uri = server.address.resolve("/circular-redirect")
 
     when:
@@ -295,10 +307,15 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "redirect #method to secured endpoint copies auth header"() {
     given:
-    assumeTrue(testRedirects())
+    if (!testRedirects()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRedirects())
     def uri = server.address.resolve("/to-secured")
 
     when:
+
     def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
 
     then:
@@ -317,7 +334,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error (unopened port)"() {
     given:
-    assumeTrue(testConnectionFailure())
+    if (!testConnectionFailure()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testConnectionFailure())
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
 
     when:
@@ -343,7 +364,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error dropped request"() {
     given:
-    assumeTrue(testRemoteConnection())
+    if (!testRemoteConnection()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRemoteConnection())
     // https://stackoverflow.com/a/100859
     def uri = new URI("http://www.google.com:81/")
 
@@ -368,7 +393,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error non routable address"() {
     given:
-    assumeTrue(testRemoteConnection())
+    if (!testRemoteConnection()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRemoteConnection())
     def uri = new URI("https://192.0.2.1/")
 
     when:
@@ -394,7 +423,11 @@ abstract class HttpClientTest extends AgentTestRunner {
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
   def "test https request"() {
     given:
-    assumeTrue(testRemoteConnection())
+    if (!testRemoteConnection()) {
+      return
+    }
+    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
+    // assumeTrue(testRemoteConnection())
     def uri = new URI("https://www.google.com/")
 
     when:

@@ -18,7 +18,3 @@ dependencies {
   
   testImplementation group: 'org.springframework', name: 'spring-test', version: '3.1.0.RELEASE'
 }
-
-test {
-  useJUnitPlatform()
-}

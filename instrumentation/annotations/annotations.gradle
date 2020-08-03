@@ -28,3 +28,4 @@ dependencies {
     transitive = false
   }
 }
+test.forkEvery 1

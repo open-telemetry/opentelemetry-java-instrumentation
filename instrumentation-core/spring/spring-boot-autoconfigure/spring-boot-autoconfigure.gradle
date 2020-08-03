@@ -43,7 +43,3 @@ dependencies {
   testImplementation deps.opentelemetryOtlp
   testImplementation deps.opentelemetryZipkin
 }
-
-test {
-  useJUnitPlatform()
-}
