@@ -1,5 +1,5 @@
 ext {
-  javaSubPackage = ''
+  javaSubPackage = 'servlet'
 }
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
