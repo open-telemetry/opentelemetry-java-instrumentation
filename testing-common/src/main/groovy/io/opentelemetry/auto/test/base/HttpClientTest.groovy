@@ -383,7 +383,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, ConnectException)
       }
     }
 
@@ -411,7 +411,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, ConnectException)
       }
     }
 
@@ -446,7 +446,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, def exception = null) {
     def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
@@ -458,7 +458,11 @@ abstract class HttpClientTest extends AgentTestRunner {
       spanKind CLIENT
       errored exception != null
       if (exception) {
-        errorEvent(exception.class, exception.message)
+        if (exception instanceof Class) {
+          errorEvent(exception, String)
+        } else {
+          errorEvent(exception.class, exception.message)
+        }
       }
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
