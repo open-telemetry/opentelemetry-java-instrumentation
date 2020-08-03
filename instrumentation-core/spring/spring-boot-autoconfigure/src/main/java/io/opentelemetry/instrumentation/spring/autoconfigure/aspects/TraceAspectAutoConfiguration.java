@@ -17,6 +17,9 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.trace.Tracer;
+
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +28,11 @@ import org.springframework.context.annotation.Configuration;
 /** Configures {@link WithSpanAspect} */
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
-@ConditionalOnProperty(prefix = "opentelemetry.trace.aspects", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "opentelemetry.trace.aspects",
+    name = "enabled",
+    matchIfMissing = true)
+@ConditionalOnClass({Aspect.class})
 public class TraceAspectAutoConfiguration {
 
   @Bean

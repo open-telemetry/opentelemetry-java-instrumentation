@@ -36,34 +36,11 @@ public class WithSpanAspect {
     this.tracer = tracer;
   }
 
-  //	@Pointcut("within(@io.opentelemetry.extensions.auto.annotations.WithSpan *)")
-  //	public void beanAnnotatedWithSpan() {
-  //	}
-  //
-  //	@Pointcut("execution(public * *(..))")
-  //	public void publicMethod() {
-  //	}
-  //
-  //	@Pointcut("publicMethod() && beanAnnotatedWithSpan()")
-  //	public void publicMethodInsideAClassMarkedWithSpan() {
-  //	}
-  //
-  //	@Pointcut("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
-  //	public void traceMethod() {
-  //	}
-
   @Around("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
   public Object traceMethod(final ProceedingJoinPoint pjp) throws Throwable {
-    MethodSignature signature = (MethodSignature) pjp.getSignature();
-    Method method = signature.getMethod();
-    WithSpan withSpan = method.getAnnotation(WithSpan.class);
 
-    String spanName = withSpan.value();
-    if (spanName.isEmpty()) {
-      spanName = method.getName();
-    }
+    Span span = tracer.spanBuilder(getSpanName(pjp)).startSpan();
 
-    Span span = tracer.spanBuilder(spanName).startSpan();
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
@@ -72,6 +49,18 @@ public class WithSpanAspect {
     } finally {
       span.end();
     }
+  }
+
+  private String getSpanName(final ProceedingJoinPoint pjp) {
+    MethodSignature signature = (MethodSignature) pjp.getSignature();
+    Method method = signature.getMethod();
+    WithSpan withSpan = method.getAnnotation(WithSpan.class);
+
+    String spanName = withSpan.value();
+    if (spanName.isEmpty()) {
+      spanName = method.getName();
+    }
+    return spanName;
   }
 
   private static void errorHandler(Span span, Throwable t) {
