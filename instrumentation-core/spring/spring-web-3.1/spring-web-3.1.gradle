@@ -1,4 +1,6 @@
+ext{
   noShadow = true
+}
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
