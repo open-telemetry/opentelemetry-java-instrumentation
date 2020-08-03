@@ -47,7 +47,7 @@ class TracerAutoConfigurationTest {
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
             (context) -> {
-              assertThat(context.containsBean("customTestTracer")).isEqualTo(true);
+              assertThat(context.containsBean("customTestTracer")).isTrue();
               assertThat(context.containsBean("otelTracer")).isFalse();
             });
   }
