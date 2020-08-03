@@ -16,12 +16,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Tracer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -41,45 +40,39 @@ public class TracerAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
   @Test
-  public void should_NOT_initalize_otelTracer_if_tracer_bean_exists() {
+  @DisplayName("when Application Context contains Tracer bean should NOT initalize otelTracer")
+  public void customTracer() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
             (context) -> {
-              assertTrue(
-                  "Application Context contains customTestTracer bean",
-                  context.containsBean("customTestTracer"));
-
-              assertFalse(
-                  "Application Context DOES NOT contain the otelTracer bean defined in TracerAutoConfiguration",
-                  context.containsBean("otelTracer"));
+              assertThat(context.containsBean("customTestTracer")).isEqualTo(true);
+              assertThat(context.containsBean("otelTracer")).isEqualTo(false);
             });
   }
 
   @Test
-  public void should_contain_otelTracer_bean() {
+  @DisplayName("when Application Context DOES NOT contain Tracer bean should initialize otelTracer")
+  public void initalizeTracer() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
             (context) -> {
-              assertTrue(
-                  "Application Context contains otelTracer bean",
-                  context.containsBean("otelTracer"));
+              assertThat(context.containsBean("otelTracer")).isEqualTo(true);
             });
   }
 
   @Test
-  public void should_set_tracer_name() {
+  @DisplayName("when opentelemetry.trace.tracer.name is set should initialize tracer with name")
+  public void withTracerNameProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.tracer.name=testTracer")
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
             (context) -> {
-              assertEquals(
-                  "Application Context sets the Tracer with name to testTracer",
-                  context.getBean("otelTracer", Tracer.class),
-                  OpenTelemetry.getTracer("testTracer"));
+              assertThat(context.getBean("otelTracer", Tracer.class))
+                  .isEqualTo(OpenTelemetry.getTracer("testTracer"));
             });
   }
 }
