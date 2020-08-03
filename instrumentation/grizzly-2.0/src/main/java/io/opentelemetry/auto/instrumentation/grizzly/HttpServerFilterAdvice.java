@@ -30,7 +30,7 @@ public class HttpServerFilterAdvice {
       @Advice.Argument(2) final HttpResponsePacket response) {
     Span span = TRACER.getServerSpan(ctx);
     if (span != null) {
-      TRACER.end(span, response.getStatus());
+      TRACER.end(span, response);
     }
   }
 }

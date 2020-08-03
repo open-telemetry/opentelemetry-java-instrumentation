@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.armeria.v1_0.server;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.Route;
@@ -74,13 +73,12 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
           .whenComplete()
           .thenAccept(
               log -> {
-                HttpStatus status = log.responseHeaders().status();
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {
                   serverTracer.endExceptionally(
-                      span, log.responseCause(), status.code(), requestEndTimeNanos);
+                      span, log.responseCause(), log, requestEndTimeNanos);
                 } else {
-                  serverTracer.end(span, status.code(), requestEndTimeNanos);
+                  serverTracer.end(span, log, requestEndTimeNanos);
                 }
               });
     }

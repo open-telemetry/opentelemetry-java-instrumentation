@@ -16,17 +16,23 @@
 
 package io.opentelemetry.auto.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
+import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2HttpServerTracer extends ServletHttpServerTracer<ResponseWithStatus> {
-  public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
+public class ResponseWithStatus {
 
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.servlet-2.2";
+  private final HttpServletResponse response;
+  private final int status;
+
+  public ResponseWithStatus(HttpServletResponse response, int status) {
+    this.response = response;
+    this.status = status;
   }
 
-  @Override
-  protected int responseStatus(ResponseWithStatus responseWithStatus) {
-    return responseWithStatus.getStatus();
+  HttpServletResponse getResponse() {
+    return response;
+  }
+
+  int getStatus() {
+    return status;
   }
 }
