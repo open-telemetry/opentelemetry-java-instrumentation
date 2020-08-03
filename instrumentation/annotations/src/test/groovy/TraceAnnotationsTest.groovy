@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
