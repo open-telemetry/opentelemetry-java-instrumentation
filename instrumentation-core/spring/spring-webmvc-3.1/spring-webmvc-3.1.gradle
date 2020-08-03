@@ -1,8 +1,8 @@
-group = 'io.opentelemetry.instrumentation'
-
-apply from: "$rootDir/gradle/java.gradle"
+ext {
+  noShadowPublish = false
+  javaSubPackage = 'spring-webmvc'
+}
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
-apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   api project(':instrumentation-core:servlet')

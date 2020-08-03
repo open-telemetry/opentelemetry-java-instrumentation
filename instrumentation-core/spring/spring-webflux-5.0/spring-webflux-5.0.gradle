@@ -1,25 +1,11 @@
-plugins {
-  id "com.github.johnrengelman.shadow"
-}
-
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  noShadowPublish = true
+  javaSubPackage = 'springwebflux.client'
 }
 
-group = 'io.opentelemetry.instrumentation'
-
-apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
-apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
   compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
-}
-
-shadowJar {
-  archiveClassifier = 'agent'
-  configurations = []
-  relocate 'io.opentelemetry.instrumentation.springwebflux.client', 'io.opentelemetry.auto.instrumentation.springwebflux.client.shaded'
 }

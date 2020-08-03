@@ -1,9 +1,10 @@
-group = 'io.opentelemetry.instrumentation'
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  noShadowPublish = false
+  javaSubPackage = 'spring-web'
+}
 
-apply plugin: 'java'
-apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
-apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   compileOnly "org.springframework:spring-web:3.1.0.RELEASE"
