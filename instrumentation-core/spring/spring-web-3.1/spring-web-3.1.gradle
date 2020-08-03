@@ -1,7 +1,6 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  noShadowPublish = false
-  javaSubPackage = 'spring-web'
+  javaSubPackage = ''
 }
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"

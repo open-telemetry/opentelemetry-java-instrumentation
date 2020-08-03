@@ -1,6 +1,5 @@
 ext {
-  noShadowPublish = false
-  javaSubPackage = 'servlet'
+  javaSubPackage = ''
 }
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 

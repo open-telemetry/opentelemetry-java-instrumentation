@@ -1,6 +1,5 @@
 ext {
-  noShadowPublish = false
-  javaSubPackage = 'spring-webmvc'
+  javaSubPackage = ''
 }
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
