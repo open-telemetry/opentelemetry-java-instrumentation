@@ -16,16 +16,16 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link RestTemplateAutoConfiguration} */
-public class RestTemplateAutoConfigurationTest {
+class RestTemplateAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -34,39 +34,40 @@ public class RestTemplateAutoConfigurationTest {
                   TracerAutoConfiguration.class, RestTemplateAutoConfiguration.class));
 
   @Test
-  public void should_initialize_RestTemplateInterceptor_bean_when_httpclients_are_ENABLED() {
+  @DisplayName("when httpclients are ENABLED should initialize RestTemplateInterceptor bean")
+  void httpClientsEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
         .run(
             (context) -> {
-              assertNotNull(
-                  "Application Context contains RestTemplateBeanPostProcessor bean",
-                  context.getBean(
-                      "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class));
+              assertThat(
+                      context.getBean(
+                          "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
+                  .isNotNull();
             });
   }
 
   @Test
-  public void should_NOT_initialize_RestTemplateInterceptor_bean_when_httpclients_are_DISABLED() {
+  @DisplayName("when httpclients are DISABLED should NOT initialize RestTemplateInterceptor bean")
+  void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
         .run(
             (context) -> {
-              assertFalse(
-                  "Application Context DOES NOT contain otelRestTemplateBeanPostProcessor bean",
-                  context.containsBean("otelRestTemplateBeanPostProcessor"));
+              assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse();
             });
   }
 
   @Test
-  public void
-      should_initialize_RestTemplateInterceptor_bean_when_httpclients_enabled_property_is_MISSING() {
+  @DisplayName(
+      "when httpclients enabled property is MISSING should initialize RestTemplateInterceptor bean")
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
-          assertNotNull(
-              "Application Context contains RestTemplateBeanPostProcessor bean",
-              context.getBean(
-                  "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class));
+          assertThat(
+                  context.getBean(
+                      "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
+              .isNotNull();
         });
   }
 }

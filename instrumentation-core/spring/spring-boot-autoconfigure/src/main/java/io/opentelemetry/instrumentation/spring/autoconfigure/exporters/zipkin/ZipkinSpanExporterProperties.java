@@ -16,6 +16,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
+import static io.opentelemetry.exporters.zipkin.ZipkinSpanExporter.DEFAULT_ENDPOINT;
+import static io.opentelemetry.exporters.zipkin.ZipkinSpanExporter.DEFAULT_SERVICE_NAME;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -29,8 +32,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "unknown";
-  private String endpoint = "http://localhost:14250";
+  private String serviceName = DEFAULT_SERVICE_NAME;
+  private String endpoint = DEFAULT_ENDPOINT;
 
   public boolean isEnabled() {
     return enabled;

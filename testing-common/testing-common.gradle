@@ -1,3 +1,4 @@
+apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
 apply from: "$rootDir/gradle/java.gradle"
 
 minimumBranchCoverage = 0.5
@@ -69,6 +70,6 @@ tasks.register("testDisabledFieldInjection", Test) {
   includes = ["context/FieldBackedProviderFieldInjectionDisabledTest.class"]
 }
 test.dependsOn(testDisabledFieldInjection)
+test.forkEvery 1
 
 javadoc.enabled = false
-test.forkEvery = 1

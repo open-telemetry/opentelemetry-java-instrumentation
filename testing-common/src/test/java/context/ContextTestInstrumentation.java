@@ -194,7 +194,10 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     }
   }
 
-  /** A class which cannot be transformed by our instrumentation. */
+  /**
+   * A class which will not be transformed by our instrumentation due to {@link
+   * FieldBackedProviderTest#shouldTransformClass(String, ClassLoader)}.
+   */
   public static class UntransformableKeyClass extends KeyClass {
     @Override
     public boolean isInstrumented() {

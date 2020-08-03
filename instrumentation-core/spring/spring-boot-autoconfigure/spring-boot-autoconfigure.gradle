@@ -14,10 +14,6 @@ dependencies {
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
-  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
-    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-  }
-
   implementation(project(':instrumentation-core:spring:spring-webmvc-3.1')) {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
@@ -35,7 +31,17 @@ dependencies {
   compileOnly deps.opentelemetryZipkin
 
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
+  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
+  
   testImplementation deps.opentelemetrySdk
+  testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
+  testImplementation group: "io.grpc", name: "grpc-netty-shaded", version: "1.24.0"
+  testImplementation deps.opentelemetryLogging
+  testImplementation deps.opentelemetryJaeger
+  testImplementation deps.opentelemetryOtlp
+  testImplementation deps.opentelemetryZipkin
 }
 
 test {

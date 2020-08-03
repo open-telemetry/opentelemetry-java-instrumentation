@@ -32,7 +32,7 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Build with Gradle
-        run: ./gradlew assemble testClasses
+        run: ./gradlew assemble testClasses --stacktrace
 
   test:
     needs: build
@@ -70,7 +70,11 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew testJava${{ matrix.java }}
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew testJava${{ matrix.java }} --stacktrace
+          timeout_minutes: 60
+          max_attempts: 3
 
   testLatestDep:
     needs: build
@@ -96,4 +100,25 @@ jobs:
             build-${{ env.cache-name }}-
 
       - name: Test with Gradle
-        run: ./gradlew latestDepTest
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew latestDepTest --stacktrace
+          timeout_minutes: 60
+          max_attempts: 3
+
+  issue:
+    name: Open issue on failure
+    needs: [test, testLatestDep]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v1
+      - uses: actions/checkout@v2
+      - uses: JasonEtco/create-an-issue@v2
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/workflows/nightly-failed.md

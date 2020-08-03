@@ -52,7 +52,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     Span span = DECORATE.getOrCreateSpan(request, tracer);
     DECORATE.afterStart(span);
 
-    try (Scope scope = TRACER.withSpan(span)) {
+    try (Scope scope = tracer.withSpan(span)) {
       ClientRequest mutatedRequest =
           ClientRequest.from(request)
               .headers(httpHeaders -> DECORATE.inject(Context.current(), httpHeaders))

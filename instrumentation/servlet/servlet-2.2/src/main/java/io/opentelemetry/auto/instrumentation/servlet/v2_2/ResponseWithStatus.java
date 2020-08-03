@@ -14,11 +14,25 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.test;
+package io.opentelemetry.auto.instrumentation.servlet.v2_2;
 
-/**
- * This interface serves as a junit category to mark tests requiring bytecode modifications.
- *
- * <p>The only real usage is for Gradle build to separate them from all other tests.
- */
-public interface BytecodeTests {}
+import javax.servlet.http.HttpServletResponse;
+
+public class ResponseWithStatus {
+
+  private final HttpServletResponse response;
+  private final int status;
+
+  public ResponseWithStatus(HttpServletResponse response, int status) {
+    this.response = response;
+    this.status = status;
+  }
+
+  HttpServletResponse getResponse() {
+    return response;
+  }
+
+  int getStatus() {
+    return status;
+  }
+}
