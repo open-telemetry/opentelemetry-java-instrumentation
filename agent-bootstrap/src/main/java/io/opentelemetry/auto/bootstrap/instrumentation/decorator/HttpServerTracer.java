@@ -105,7 +105,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   // TODO should end methods remove SPAN attribute from request as well?
   public void end(Span span, RESPONSE response, long timestamp) {
     setStatus(span, responseStatus(response));
-    commonEnd(span, timestamp);
+    endSpan(span, timestamp);
   }
 
   /**
@@ -135,7 +135,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     } else {
       setStatus(span, responseStatus(response));
     }
-    commonEnd(span, timestamp);
+    endSpan(span, timestamp);
   }
 
   public Span getServerSpan(STORAGE storage) {
@@ -283,7 +283,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
-  private static void commonEnd(Span span, long timestamp) {
+  private static void endSpan(Span span, long timestamp) {
     if (timestamp >= 0) {
       span.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
     } else {
