@@ -14,6 +14,8 @@ dependencies {
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
   implementation project(':instrumentation-core:spring:spring-webmvc-3.1') 
   implementation project(':instrumentation-core:spring:spring-web-3.1')
   implementation project(':instrumentation-core:spring:spring-webflux-5.0')
@@ -24,6 +26,7 @@ dependencies {
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
 
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
   testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
