@@ -1,5 +1,4 @@
 ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
   javaSubPackage = ''
 }
 
