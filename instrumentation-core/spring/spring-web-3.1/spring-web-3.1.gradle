@@ -2,24 +2,9 @@ group = 'io.opentelemetry.instrumentation'
 
 apply plugin: 'java'
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
-  
-  // copy-paste from instrumentation-core-aws-sdk:aws-sdk-2.2-core:
-  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
-  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
-  // the agent, like Agent.
-  api project(':auto-bootstrap')
-  
-  api "org.springframework:spring-web:3.1.0.RELEASE"
-  api deps.opentelemetryApi
-
-  testImplementation "org.springframework:spring-test:3.1.0.RELEASE"
-}
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
+  compileOnly "org.springframework:spring-web:3.1.0.RELEASE"
 }

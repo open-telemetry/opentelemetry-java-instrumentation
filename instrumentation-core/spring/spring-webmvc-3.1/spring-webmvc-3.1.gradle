@@ -1,24 +1,13 @@
 group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
-  // copy-paste from instrumentation-core-aws-sdk:aws-sdk-2.2-core:
-  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
-  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
-  // the agent, like Agent.
-  api project(':auto-bootstrap')
-
-  api deps.opentelemetryApi
-  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'
-  
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
   api project(':instrumentation-core:servlet')
   
-  testImplementation group: 'org.springframework', name: 'spring-test', version: '3.1.0.RELEASE'
+  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }
 
-test {
-  useJUnitPlatform()
-}
