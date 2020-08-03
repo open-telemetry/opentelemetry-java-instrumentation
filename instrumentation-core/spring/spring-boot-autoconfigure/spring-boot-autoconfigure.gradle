@@ -11,6 +11,7 @@ sourceCompatibility = '8'
 
 dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
+  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
