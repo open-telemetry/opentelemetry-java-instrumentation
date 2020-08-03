@@ -106,7 +106,8 @@ attributes to stdout. It is used mainly for testing and debugging.
 The propagator controls which distributed tracing header format is used.
 
 If this is set to a comma-delimited list of the values, the multi-propagator will be used.
-[TODO link to specification that explains multi-propagator behavior, see [tracking issue](https://github.com/open-telemetry/opentelemetry-specification/issues/496) for now]
+The multi-propagator will try to extract the context from incoming requests using each of the configured propagator formats (in order), stopping after the first successful context extraction.
+The multi-propagator will inject the context into outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Purpose                                                                                                     |
 |------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
