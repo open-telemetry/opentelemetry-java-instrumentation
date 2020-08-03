@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 
 /** Spring Boot auto configuration test for {@link TracerAutoConfiguration} */
-public class TracerAutoConfigurationTest {
+class TracerAutoConfigurationTest {
   @TestConfiguration
   static class CustomTracerConfiguration {
     @Bean
@@ -41,7 +41,7 @@ public class TracerAutoConfigurationTest {
 
   @Test
   @DisplayName("when Application Context contains Tracer bean should NOT initalize otelTracer")
-  public void customTracer() {
+  void customTracer() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
@@ -54,7 +54,7 @@ public class TracerAutoConfigurationTest {
 
   @Test
   @DisplayName("when Application Context DOES NOT contain Tracer bean should initialize otelTracer")
-  public void initalizeTracer() {
+  void initalizeTracer() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(
@@ -65,7 +65,7 @@ public class TracerAutoConfigurationTest {
 
   @Test
   @DisplayName("when opentelemetry.trace.tracer.name is set should initialize tracer with name")
-  public void withTracerNameProperty() {
+  void withTracerNameProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.tracer.name=testTracer")
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))

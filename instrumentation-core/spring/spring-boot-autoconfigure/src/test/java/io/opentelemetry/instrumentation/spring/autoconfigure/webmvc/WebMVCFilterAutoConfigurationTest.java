@@ -26,7 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link WebMVCFilterAutoConfiguration} */
-public class WebMVCFilterAutoConfigurationTest {
+class WebMVCFilterAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(
@@ -35,7 +35,7 @@ public class WebMVCFilterAutoConfigurationTest {
 
   @Test
   @DisplayName("when web is ENABLED should initialize WebMvcTracingFilter bean")
-  public void webEnabled() {
+  void webEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=true")
         .run(
@@ -47,7 +47,7 @@ public class WebMVCFilterAutoConfigurationTest {
 
   @Test
   @DisplayName("when web is DISABLED should NOT initialize WebMvcTracingFilter bean")
-  public void disabledProperty() {
+  void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.web.enabled=false")
         .run(
@@ -58,7 +58,7 @@ public class WebMVCFilterAutoConfigurationTest {
 
   @Test
   @DisplayName("when web property is MISSING should initialize WebMvcTracingFilter bean")
-  public void noProperty() {
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
           assertThat(context.getBean("otelWebMVCTracingFilter", WebMVCTracingFilter.class))

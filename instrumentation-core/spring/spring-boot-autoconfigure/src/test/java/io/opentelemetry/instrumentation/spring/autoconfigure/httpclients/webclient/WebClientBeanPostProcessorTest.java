@@ -29,7 +29,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 /** Spring bean post processor test {@link WebClientBeanPostProcessor} */
 @RunWith(MockitoJUnitRunner.class)
-public class WebClientBeanPostProcessorTest {
+class WebClientBeanPostProcessorTest {
 
   @Mock Tracer tracer;
 
@@ -38,7 +38,7 @@ public class WebClientBeanPostProcessorTest {
   @Test
   @DisplayName(
       "when processed bean is NOT of type WebClient or WebClientBuilder should return Object")
-  public void returnsObject() {
+  void returnsObject() {
 
     assertThat(
             webClientBeanPostProcessor.postProcessAfterInitialization(new Object(), "testObject"))
@@ -47,7 +47,7 @@ public class WebClientBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is of type WebClient should return WebClient")
-  public void returnsWebClient() {
+  void returnsWebClient() {
     assertThat(
             webClientBeanPostProcessor.postProcessAfterInitialization(
                 WebClient.create(), "testWebClient"))
@@ -56,7 +56,7 @@ public class WebClientBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is of type WebClientBuilder should return WebClientBuilder")
-  public void returnsWebClientBuilder() {
+  void returnsWebClientBuilder() {
     assertThat(
             webClientBeanPostProcessor.postProcessAfterInitialization(
                 WebClient.builder(), "testWebClientBuilder"))
@@ -65,7 +65,7 @@ public class WebClientBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is of type WebClient should add exchange filter to WebClient")
-  public void addsExchangeFilterWebClient() {
+  void addsExchangeFilterWebClient() {
     WebClient webClient = WebClient.create();
     Object processedWebClient =
         webClientBeanPostProcessor.postProcessAfterInitialization(webClient, "testWebClient");
@@ -86,7 +86,7 @@ public class WebClientBeanPostProcessorTest {
   @Test
   @DisplayName(
       "when processed bean is of type WebClientBuilder should add ONE exchange filter to WebClientBuilder")
-  public void addsExchangeFilterWebClientBuilder() {
+  void addsExchangeFilterWebClientBuilder() {
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     webClientBeanPostProcessor.postProcessAfterInitialization(

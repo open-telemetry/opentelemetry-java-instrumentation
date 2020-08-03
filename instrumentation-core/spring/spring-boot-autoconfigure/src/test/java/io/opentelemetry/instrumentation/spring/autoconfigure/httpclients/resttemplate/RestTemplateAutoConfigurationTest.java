@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link RestTemplateAutoConfiguration} */
-public class RestTemplateAutoConfigurationTest {
+class RestTemplateAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()

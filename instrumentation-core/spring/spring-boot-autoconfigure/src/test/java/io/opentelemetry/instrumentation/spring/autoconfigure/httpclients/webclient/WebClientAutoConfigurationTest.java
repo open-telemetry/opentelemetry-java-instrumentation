@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /** Spring Boot auto configuration test for {@link WebClientAutoConfiguration} */
-public class WebClientAutoConfigurationTest {
+class WebClientAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -35,7 +35,7 @@ public class WebClientAutoConfigurationTest {
 
   @Test
   @DisplayName("when httpclients are ENABLED should initialize WebClientBeanPostProccesor bean")
-  public void httpClientsEnabled() {
+  void httpClientsEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
         .run(
@@ -50,7 +50,7 @@ public class WebClientAutoConfigurationTest {
   @Test
   @DisplayName(
       "when httpclients are DISABLED should NOT initialize WebClientBeanPostProccesor bean")
-  public void disabledProperty() {
+  void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
         .run(
@@ -62,7 +62,7 @@ public class WebClientAutoConfigurationTest {
   @Test
   @DisplayName(
       "when httpclients enabled property is MISSING should initialize WebClientBeanPostProccesor bean")
-  public void noProperty() {
+  void noProperty() {
     this.contextRunner.run(
         (context) -> {
           assertThat(

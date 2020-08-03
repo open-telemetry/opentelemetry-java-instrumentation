@@ -29,7 +29,7 @@ import org.springframework.web.client.RestTemplate;
 
 /** Spring bean post processor test {@link RestTemplateBeanPostProcessor} */
 @RunWith(MockitoJUnitRunner.class)
-public class RestTemplateBeanPostProcessorTest {
+class RestTemplateBeanPostProcessorTest {
   @Mock Tracer tracer;
 
   RestTemplateBeanPostProcessor restTemplateBeanPostProcessor =
@@ -37,7 +37,7 @@ public class RestTemplateBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is not of type RestTemplate should return object")
-  public void returnsObject() {
+  void returnsObject() {
     assertThat(
             restTemplateBeanPostProcessor.postProcessAfterInitialization(
                 new Object(), "testObject"))
@@ -46,7 +46,7 @@ public class RestTemplateBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is of type RestTemplate should return RestTemplate")
-  public void returnsRestTemplate() {
+  void returnsRestTemplate() {
     assertThat(
             restTemplateBeanPostProcessor.postProcessAfterInitialization(
                 new RestTemplate(), "testRestTemplate"))
@@ -55,7 +55,7 @@ public class RestTemplateBeanPostProcessorTest {
 
   @Test
   @DisplayName("when processed bean is of type RestTemplate should add ONE RestTemplateInterceptor")
-  public void addsRestTemplateInterceptor() {
+  void addsRestTemplateInterceptor() {
     RestTemplate restTemplate = new RestTemplate();
 
     restTemplateBeanPostProcessor.postProcessAfterInitialization(restTemplate, "testRestTemplate");
