@@ -47,7 +47,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
     "io.opentelemetry.auto.slf4j",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.instrumentation.api",
+    "io.opentelemetry.instrumentation.auto.api",
   };
 
   // Aditional classes we need only for tests and aren't shared with the agent business logic.
@@ -55,6 +55,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   static {
     final String[] testBS = {
+      "io.opentelemetry.instrumentation.library.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API (context prop)

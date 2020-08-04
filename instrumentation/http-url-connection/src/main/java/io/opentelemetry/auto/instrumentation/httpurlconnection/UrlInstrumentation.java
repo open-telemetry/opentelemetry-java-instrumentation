@@ -28,9 +28,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.InternalJarURLHandler;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URL;

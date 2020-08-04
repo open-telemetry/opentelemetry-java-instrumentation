@@ -17,39 +17,39 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 
 class ClassLoadingTest extends AgentTestRunner {
-    def "delegates to bootstrap class loader for agent classes"() {
-        setup:
-        def classLoader = new NonDelegatingURLClassLoader()
+  def "delegates to bootstrap class loader for agent classes"() {
+    setup:
+    def classLoader = new NonDelegatingURLClassLoader()
 
-        when:
-        Class<?> clazz
-        try {
-            clazz = Class.forName("io.opentelemetry.instrumentation.api.MoreAttributes", false, classLoader)
-        } catch (ClassNotFoundException e) {
-        }
-
-        then:
-        assert clazz != null
-        assert clazz.getClassLoader() == null
+    when:
+    Class<?> clazz
+    try {
+      clazz = Class.forName("io.opentelemetry.instrumentation.auto.api.concurrent.State", false, classLoader)
+    } catch (ClassNotFoundException e) {
     }
 
-    static class NonDelegatingURLClassLoader extends URLClassLoader {
+    then:
+    assert clazz != null
+    assert clazz.getClassLoader() == null
+  }
 
-        NonDelegatingURLClassLoader() {
-            super(new URL[0])
-        }
+  static class NonDelegatingURLClassLoader extends URLClassLoader {
 
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            synchronized (getClassLoadingLock(name)) {
-                Class<?> clazz = findLoadedClass(name)
-                if (clazz == null) {
-                    clazz = findClass(name)
-                }
-                if (resolve) {
-                    resolveClass(clazz)
-                }
-                return clazz
-            }
-        }
+    NonDelegatingURLClassLoader() {
+      super(new URL[0])
     }
+
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      synchronized (getClassLoadingLock(name)) {
+        Class<?> clazz = findLoadedClass(name)
+        if (clazz == null) {
+          clazz = findClass(name)
+        }
+        if (resolve) {
+          resolveClass(clazz)
+        }
+        return clazz
+      }
+    }
+  }
 }

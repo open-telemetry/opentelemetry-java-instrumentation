@@ -19,7 +19,7 @@ package io.opentelemetry.auto.test.base
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.library.api.MoreAttributes
-import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.library.api.config.Config
 import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -431,8 +431,8 @@ abstract class HttpClientTest extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         if (userAgent) {

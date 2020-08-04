@@ -16,7 +16,6 @@
 
 package io.opentelemetry.instrumentation.auto.api
 
-import io.opentelemetry.instrumentation.auto.api.WeakMap
 import spock.lang.Specification
 
 class WeakMapTest extends Specification {

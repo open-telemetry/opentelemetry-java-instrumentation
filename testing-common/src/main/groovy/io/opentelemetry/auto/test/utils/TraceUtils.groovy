@@ -41,7 +41,7 @@ class TraceUtils {
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
+      //TODO following two lines are duplicated from io.opentelemetry.instrumentation.library.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
       def span = TRACER.spanBuilder(rootOperationName).setSpanKind(Span.Kind.SERVER).startSpan()
       Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))

@@ -39,7 +39,7 @@ folder inside final jar file, called`inst`.
 In addition, the extension of all class files is changed from `class` to `classdata`.
 This ensures that general classloaders cannot find nor load these classes.
 - When `io.opentelemetry.auto.bootstrap.Agent` starts up, it creates an
-instance of `io.opentelemetry.auto.bootstrap.AgentClassLoader`, loads an
+instance of `io.opentelemetry.instrumentation.auto.api.AgentClassLoader`, loads an
 `io.opentelemetry.auto.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the

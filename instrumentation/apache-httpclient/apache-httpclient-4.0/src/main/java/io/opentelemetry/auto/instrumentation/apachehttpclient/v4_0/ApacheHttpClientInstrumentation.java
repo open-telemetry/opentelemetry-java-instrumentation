@@ -63,11 +63,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.ApacheHttpClientDecorator",
-      packageName + ".shaded.HttpHeadersInjectAdapter",
-      packageName + ".shaded.HostAndRequestAsHttpUriRequest",
-      packageName + ".shaded.ApacheHttpClientHelper",
-      packageName + ".shaded.WrappingStatusSettingResponseHandler",
+      packageName + ".ApacheHttpClientDecorator",
+      packageName + ".HttpHeadersInjectAdapter",
+      packageName + ".HostAndRequestAsHttpUriRequest",
+      packageName + ".ApacheHttpClientHelper",
+      packageName + ".WrappingStatusSettingResponseHandler",
     };
   }
 

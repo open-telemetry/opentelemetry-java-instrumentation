@@ -45,7 +45,7 @@ public class SpockRunner extends Sputnik {
     "io.opentelemetry.auto.slf4j",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.instrumentation.api",
+    "io.opentelemetry.instrumentation.auto.api",
   };
 
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
@@ -53,6 +53,7 @@ public class SpockRunner extends Sputnik {
   static {
     ByteBuddyAgent.install();
     final String[] testBS = {
+      "io.opentelemetry.instrumentation.library.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API (context prop)

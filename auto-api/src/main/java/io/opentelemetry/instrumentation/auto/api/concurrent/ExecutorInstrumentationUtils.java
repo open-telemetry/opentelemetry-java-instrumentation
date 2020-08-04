@@ -19,8 +19,8 @@ package io.opentelemetry.instrumentation.auto.api.concurrent;
 import static io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils.TRACER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.WeakMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.trace.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

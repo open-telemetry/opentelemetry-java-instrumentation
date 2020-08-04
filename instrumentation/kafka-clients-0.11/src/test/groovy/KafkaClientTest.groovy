@@ -16,7 +16,7 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.library.api.config.Config
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer

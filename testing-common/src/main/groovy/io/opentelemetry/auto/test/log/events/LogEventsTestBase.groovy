@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.test.log.events
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.library.api.config.Config
 import spock.lang.Unroll
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride

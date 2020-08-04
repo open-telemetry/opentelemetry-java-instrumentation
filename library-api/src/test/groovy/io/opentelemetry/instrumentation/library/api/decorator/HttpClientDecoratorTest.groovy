@@ -16,9 +16,8 @@
 
 package io.opentelemetry.instrumentation.library.api.decorator
 
-
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.library.api.MoreAttributes
+import io.opentelemetry.instrumentation.library.api.config.Config
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared

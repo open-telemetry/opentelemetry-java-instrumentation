@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.bootstrap;
+package io.opentelemetry.instrumentation.auto.api;
 
-import io.opentelemetry.instrumentation.auto.api.Pair;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +31,7 @@ import java.util.jar.JarFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO remove this from api
 public class InternalJarURLHandler extends URLStreamHandler {
 
   private static final Logger log = LoggerFactory.getLogger(InternalJarURLHandler.class);
@@ -44,7 +44,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
   private WeakReference<Pair<String, JarEntry>> cache = NULL;
 
-  InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
+  public InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
     name = internalJarFileName;
     notFound = new FileNotInInternalJar(internalJarFileName);
     JarFile jarFile = null;

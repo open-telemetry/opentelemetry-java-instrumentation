@@ -61,7 +61,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
     return namedNoneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.auto.bootstrap.AgentClassLoader")
+            "io.opentelemetry.instrumentation.auto.api.AgentClassLoader")
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 

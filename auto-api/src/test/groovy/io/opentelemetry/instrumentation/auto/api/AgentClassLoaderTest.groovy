@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.bootstrap
+package io.opentelemetry.instrumentation.auto.api
 
 import spock.lang.Specification
 import spock.lang.Timeout

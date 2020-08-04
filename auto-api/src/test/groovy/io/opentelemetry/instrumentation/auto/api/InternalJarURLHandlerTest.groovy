@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package datadog.trace.bootstrap
+package io.opentelemetry.instrumentation.auto.api
 
-import io.opentelemetry.auto.bootstrap.InternalJarURLHandler
 import io.opentelemetry.auto.util.test.AgentSpecification
 import spock.lang.Shared
 

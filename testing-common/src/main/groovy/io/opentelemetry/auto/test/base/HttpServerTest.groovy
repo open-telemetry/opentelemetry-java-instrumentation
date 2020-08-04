@@ -480,8 +480,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP }
         // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP }
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status

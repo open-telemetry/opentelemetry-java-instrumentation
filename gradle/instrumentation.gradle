@@ -38,7 +38,6 @@ afterEvaluate {
   dependencies {
     implementation project(':library-api')
     implementation project(':auto-api')
-    implementation project(':auto-bootstrap')
     // Apply common dependencies for instrumentation.
     implementation(project(':auto-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing

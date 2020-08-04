@@ -19,8 +19,8 @@ package io.opentelemetry.auto.instrumentation.rmi.context.server;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.GETTER;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
-import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
+import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 
 import io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload;
 import io.opentelemetry.trace.SpanContext;

@@ -16,8 +16,8 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.concurrent.CallableWrapper
-import io.opentelemetry.instrumentation.api.concurrent.RunnableWrapper
+import io.opentelemetry.instrumentation.auto.api.concurrent.CallableWrapper
+import io.opentelemetry.instrumentation.auto.api.concurrent.RunnableWrapper
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Shared
 

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.instrumentation.api.jdbc.DBInfo
+import io.opentelemetry.instrumentation.auto.api.jdbc.DBInfo
 import spock.lang.Shared
 import spock.lang.Specification
 
-import static io.opentelemetry.instrumentation.api.jdbc.JDBCConnectionUrlParser.parse
+import static io.opentelemetry.instrumentation.auto.api.jdbc.JDBCConnectionUrlParser.parse
 
 class JDBCConnectionUrlParserTest extends Specification {
 
