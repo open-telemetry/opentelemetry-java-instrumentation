@@ -3,6 +3,7 @@ ext{
 }
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
+archivesBaseName = "spring-web"
 
 dependencies {
   compileOnly "org.springframework:spring-web:3.1.0.RELEASE"

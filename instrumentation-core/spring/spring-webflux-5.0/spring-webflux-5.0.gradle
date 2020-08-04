@@ -4,6 +4,7 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
+archivesBaseName = "spring-webflux"
 
 dependencies {
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
