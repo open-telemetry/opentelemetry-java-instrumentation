@@ -18,13 +18,15 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
+import akka.http.scaladsl.model.HttpResponse;
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequest, Void> {
+public class AkkaHttpServerTracer
+    extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
   public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
 
   @Override
@@ -35,6 +37,11 @@ public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequ
   @Override
   protected String requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeader(name).map(HttpHeader::value).orElse(null);
+  }
+
+  @Override
+  protected int responseStatus(HttpResponse httpResponse) {
+    return httpResponse.status().intValue();
   }
 
   @Override

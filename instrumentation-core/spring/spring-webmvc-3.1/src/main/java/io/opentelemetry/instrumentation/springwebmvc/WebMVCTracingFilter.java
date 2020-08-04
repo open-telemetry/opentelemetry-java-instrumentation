@@ -45,9 +45,9 @@ public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered
 
     try (Scope ignored = tracer.startScope(serverSpan, request)) {
       filterChain.doFilter(request, response);
-      tracer.end(serverSpan, response.getStatus());
+      tracer.end(serverSpan, response);
     } catch (Throwable t) {
-      tracer.endExceptionally(serverSpan, t, response.getStatus());
+      tracer.endExceptionally(serverSpan, t, response);
       throw t;
     }
   }

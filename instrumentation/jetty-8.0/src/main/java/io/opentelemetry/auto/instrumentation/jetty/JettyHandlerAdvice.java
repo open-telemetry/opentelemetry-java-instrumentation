@@ -76,7 +76,7 @@ public class JettyHandlerAdvice {
     TRACER.setPrincipal(span, request);
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable, response.getStatus());
+      TRACER.endExceptionally(span, throwable, response);
       return;
     }
 
@@ -94,8 +94,7 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      JettyHttpServerTracer.contentLengthHelper(span, response);
-      TRACER.end(span, response.getStatus());
+      TRACER.end(span, response);
     }
   }
 }

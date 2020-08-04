@@ -69,10 +69,12 @@ public class Servlet2Advice {
     Integer responseStatus =
         InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
+    ResponseWithStatus responseWithStatus =
+        new ResponseWithStatus((HttpServletResponse) response, responseStatus);
     if (throwable == null) {
-      TRACER.end(span, responseStatus);
+      TRACER.end(span, responseWithStatus);
     } else {
-      TRACER.endExceptionally(span, throwable, responseStatus);
+      TRACER.endExceptionally(span, throwable, responseWithStatus);
     }
   }
 }

@@ -21,15 +21,14 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTrace
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public abstract class ServletHttpServerTracer
-    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
+public abstract class ServletHttpServerTracer<RESPONSE>
+    extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
   @Override
   protected String getVersion() {
@@ -107,10 +106,6 @@ public abstract class ServletHttpServerTracer
     if (principal != null) {
       span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
     }
-  }
-
-  public void setContentLength(Span span, int length) {
-    SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(span, length);
   }
 
   @Override
