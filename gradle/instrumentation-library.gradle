@@ -7,8 +7,6 @@ group = 'io.opentelemetry.instrumentation'
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
-apply plugin: 'com.github.johnrengelman.shadow'
-
 archivesBaseName = projectDir.parentFile.name
 
 dependencies {
@@ -24,12 +22,17 @@ dependencies {
   testImplementation project(':testing-common')
 }
 
-shadowJar {
-  archiveClassifier = 'agent'
+if (!ext.properties.noShadow) {
 
-  configurations = []
+  apply plugin: 'com.github.johnrengelman.shadow'
 
-  relocate "io.opentelemetry.instrumentation.${javaSubPackage}", "io.opentelemetry.auto.instrumentation.${javaSubPackage}.shaded"
+  shadowJar {
+    archiveClassifier = 'agent'
+
+    configurations = []
+
+    relocate "io.opentelemetry.instrumentation.${javaSubPackage}", "io.opentelemetry.auto.instrumentation.${javaSubPackage}.shaded"
+  }
 }
 
 afterEvaluate {
