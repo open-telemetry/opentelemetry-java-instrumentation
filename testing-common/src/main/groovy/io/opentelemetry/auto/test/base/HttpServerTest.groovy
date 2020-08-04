@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.test.base
 
-import ch.qos.logback.classic.Level
+
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -51,9 +51,9 @@ import static org.junit.Assume.assumeTrue
 abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   public static final Logger SERVER_LOGGER = LoggerFactory.getLogger("http-server")
-  static {
-    ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
-  }
+//  static {
+//    ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
+//  }
   protected static final String TEST_CLIENT_IP = "1.1.1.1"
   protected static final String TEST_USER_AGENT = "test-user-agent"
 

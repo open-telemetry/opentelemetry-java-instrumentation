@@ -16,8 +16,6 @@
 
 package io.opentelemetry.auto.test;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -107,8 +105,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
   static {
     INSTRUMENTATION = ByteBuddyAgent.getInstrumentation();
 
-    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
-    ((Logger) LoggerFactory.getLogger("io.opentelemetry.auto")).setLevel(Level.DEBUG);
+    //    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
+    //    ((Logger) LoggerFactory.getLogger("io.opentelemetry.auto")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new InMemoryExporter();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);

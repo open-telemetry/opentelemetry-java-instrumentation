@@ -8,6 +8,7 @@ dependencies {
 
   implementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
   implementation deps.slf4j
+  implementation "org.testcontainers:testcontainers:1.14.3"
 }
 
 subprojects { subProject ->
