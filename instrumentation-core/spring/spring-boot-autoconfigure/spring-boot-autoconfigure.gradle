@@ -34,7 +34,7 @@ dependencies {
   
   testImplementation deps.opentelemetrySdk
   testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
-  testImplementation group: "io.grpc", name: "grpc-netty-shaded", version: '1.30.2'
+  testImplementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
   testImplementation deps.opentelemetryLogging
   testImplementation deps.opentelemetryJaeger
   testImplementation deps.opentelemetryOtlp
