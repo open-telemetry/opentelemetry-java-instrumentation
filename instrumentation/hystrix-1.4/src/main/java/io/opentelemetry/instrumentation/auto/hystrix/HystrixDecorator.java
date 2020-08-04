@@ -17,11 +17,18 @@
 package io.opentelemetry.instrumentation.auto.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
+
+  private final boolean extraTags;
+
+  private HystrixDecorator() {
+    extraTags = Config.get().isHystrixTagsEnabled();
+  }
 
   public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {
     if (command != null) {
@@ -32,9 +39,11 @@ public class HystrixDecorator extends BaseDecorator {
       String spanName = groupName + "." + commandName + "." + methodName;
 
       span.updateName(spanName);
-      span.setAttribute("hystrix.command", commandName);
-      span.setAttribute("hystrix.group", groupName);
-      span.setAttribute("hystrix.circuit-open", circuitOpen);
+      if (extraTags) {
+        span.setAttribute("hystrix.command", commandName);
+        span.setAttribute("hystrix.group", groupName);
+        span.setAttribute("hystrix.circuit-open", circuitOpen);
+      }
     }
   }
 }
