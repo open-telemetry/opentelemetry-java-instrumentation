@@ -21,7 +21,7 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;

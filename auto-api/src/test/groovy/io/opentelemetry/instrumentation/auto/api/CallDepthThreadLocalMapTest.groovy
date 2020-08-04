@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.library.api
+package io.opentelemetry.instrumentation.auto.api
 
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap
 import spock.lang.Specification

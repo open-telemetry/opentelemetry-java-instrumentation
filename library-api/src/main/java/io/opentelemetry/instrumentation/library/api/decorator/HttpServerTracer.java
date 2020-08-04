@@ -26,7 +26,7 @@ import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.instrumentation.library.api.MoreAttributes;
-import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.config.Config;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;

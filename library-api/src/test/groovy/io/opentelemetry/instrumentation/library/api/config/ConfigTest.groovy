@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.library.api.decorator.config
+package io.opentelemetry.instrumentation.library.api.config
 
 import io.opentelemetry.auto.util.test.AgentSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
-import static io.opentelemetry.instrumentation.api.config.Config.CONFIGURATION_FILE
-import static io.opentelemetry.instrumentation.api.config.Config.ENDPOINT_PEER_SERVICE_MAPPING
-import static io.opentelemetry.instrumentation.api.config.Config.HTTP_CLIENT_ERROR_STATUSES
-import static io.opentelemetry.instrumentation.api.config.Config.HTTP_SERVER_ERROR_STATUSES
-import static io.opentelemetry.instrumentation.api.config.Config.PREFIX
-import static io.opentelemetry.instrumentation.api.config.Config.RUNTIME_CONTEXT_FIELD_INJECTION
-import static io.opentelemetry.instrumentation.api.config.Config.TRACE_ENABLED
-import static io.opentelemetry.instrumentation.api.config.Config.TRACE_METHODS
+import static io.opentelemetry.instrumentation.library.api.config.Config.CONFIGURATION_FILE
+import static io.opentelemetry.instrumentation.library.api.config.Config.ENDPOINT_PEER_SERVICE_MAPPING
+import static io.opentelemetry.instrumentation.library.api.config.Config.HTTP_CLIENT_ERROR_STATUSES
+import static io.opentelemetry.instrumentation.library.api.config.Config.HTTP_SERVER_ERROR_STATUSES
+import static io.opentelemetry.instrumentation.library.api.config.Config.PREFIX
+import static io.opentelemetry.instrumentation.library.api.config.Config.RUNTIME_CONTEXT_FIELD_INJECTION
+import static io.opentelemetry.instrumentation.library.api.config.Config.TRACE_ENABLED
+import static io.opentelemetry.instrumentation.library.api.config.Config.TRACE_METHODS
 
 class ConfigTest extends AgentSpecification {
   @Rule

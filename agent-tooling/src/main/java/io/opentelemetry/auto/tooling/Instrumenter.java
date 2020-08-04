@@ -29,7 +29,7 @@ import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.auto.tooling.context.NoopContextProvider;
 import io.opentelemetry.auto.tooling.muzzle.Reference;
 import io.opentelemetry.auto.tooling.muzzle.ReferenceMatcher;
-import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.config.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;

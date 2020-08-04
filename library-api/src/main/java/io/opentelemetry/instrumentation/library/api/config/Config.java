@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.library.api.decorator.config;
+package io.opentelemetry.instrumentation.library.api.config;
 
 import java.io.File;
 import java.io.FileNotFoundException;
