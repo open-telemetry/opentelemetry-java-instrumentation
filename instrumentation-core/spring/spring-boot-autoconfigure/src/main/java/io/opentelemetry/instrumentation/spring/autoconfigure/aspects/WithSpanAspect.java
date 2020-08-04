@@ -27,6 +27,13 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
+/**
+ * Uses Spring-AOP to wrap methods and constructors marked by {@link WithSpan} in a {@link
+ * io.opentelemetry.trace.Span}.
+ *
+ * <p>Ensure constructors/methods annotated with {@link WithSpan} are implemented on beans managed
+ * by the Spring container.
+ */
 @Aspect
 public class WithSpanAspect {
 
@@ -63,7 +70,7 @@ public class WithSpanAspect {
     return spanName;
   }
 
-  private static void errorHandler(Span span, Throwable t) {
+  private void errorHandler(Span span, Throwable t) {
     String message = t.getMessage();
     span.addEvent(message);
     span.setAttribute("error", true);
