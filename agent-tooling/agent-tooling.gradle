@@ -11,8 +11,9 @@ configurations {
 }
 
 dependencies {
-  implementation(project(':auto-bootstrap'))
-  implementation(project(':utils:thread-utils'))
+  implementation project(':auto-bootstrap')
+  implementation project(':instrumentation-api')
+  implementation project(':utils:thread-utils')
 
   implementation deps.opentelemetryApi
   implementation deps.opentelemetrySdk

@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.traceannotation;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;

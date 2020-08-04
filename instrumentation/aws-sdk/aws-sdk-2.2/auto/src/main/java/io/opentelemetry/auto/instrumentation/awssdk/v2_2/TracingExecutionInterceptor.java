@@ -16,13 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
+import static io.opentelemetry.instrumentation.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.bootstrap.WeakMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.awssdk.v2_2.shaded.AwsSdk;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import java.io.InputStream;
 import java.nio.ByteBuffer;

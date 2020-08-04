@@ -33,11 +33,9 @@ public final class Constants {
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.instrumentation.api",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.auto.typedspan",
+    "io.opentelemetry.instrumentation.api",
   };
 
   // This is used in IntegrationTestUtils.java

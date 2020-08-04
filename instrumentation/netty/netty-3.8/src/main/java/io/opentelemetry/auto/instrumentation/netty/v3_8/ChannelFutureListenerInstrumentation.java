@@ -25,11 +25,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.Map;

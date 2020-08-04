@@ -23,12 +23,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
-import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.api.concurrent.AdviceUtils;
+import io.opentelemetry.instrumentation.api.concurrent.State;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;

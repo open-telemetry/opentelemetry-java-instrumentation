@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
 import net.bytebuddy.asm.Advice;
 
 public class RedisConnectionAdvice {

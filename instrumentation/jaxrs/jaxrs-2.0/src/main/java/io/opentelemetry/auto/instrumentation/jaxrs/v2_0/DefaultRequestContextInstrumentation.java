@@ -20,8 +20,8 @@ import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsT
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;

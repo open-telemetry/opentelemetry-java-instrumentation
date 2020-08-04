@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

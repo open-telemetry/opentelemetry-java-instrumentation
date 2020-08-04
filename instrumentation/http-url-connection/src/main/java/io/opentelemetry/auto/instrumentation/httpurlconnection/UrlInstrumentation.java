@@ -16,9 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.setPeer;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
+import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.setPeer;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

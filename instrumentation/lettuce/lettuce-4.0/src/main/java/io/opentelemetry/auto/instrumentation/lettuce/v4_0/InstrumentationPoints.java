@@ -25,7 +25,7 @@ import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.EnumSet;
 import java.util.Set;

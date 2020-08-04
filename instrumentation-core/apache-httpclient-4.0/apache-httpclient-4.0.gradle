@@ -1,24 +1,11 @@
-plugins {
-  id "com.github.johnrengelman.shadow"
-}
-
 ext {
-  noShadowPublish = true
+  javaSubPackage = 'apachehttpclient.v4_0'
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 group = 'io.opentelemetry.instrumentation'
 
-shadowJar {
-  archiveClassifier = 'agent'
-  configurations = []
-  relocate 'io.opentelemetry.instrumentation.apachehttpclient.v4_0', 'io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded'
-}
-
 dependencies {
-  compileOnly project(':auto-bootstrap')
-  compileOnly deps.opentelemetryApi
-    
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 }

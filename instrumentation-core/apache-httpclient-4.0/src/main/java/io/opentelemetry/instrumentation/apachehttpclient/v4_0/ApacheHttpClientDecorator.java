@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;

@@ -10,12 +10,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 archivesBaseName = projectDir.parentFile.name
 
 dependencies {
-  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
-  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
-  // the agent, like Agent.
-  api(project(':auto-bootstrap')){
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
+  api project(':instrumentation-api')
 
   api deps.opentelemetryApi
 
@@ -36,5 +31,5 @@ if (!ext.properties.noShadow) {
 }
 
 afterEvaluate {
-  archivesBaseName =  'opentelemetry-' + archivesBaseName
+  archivesBaseName = 'opentelemetry-' + archivesBaseName
 }

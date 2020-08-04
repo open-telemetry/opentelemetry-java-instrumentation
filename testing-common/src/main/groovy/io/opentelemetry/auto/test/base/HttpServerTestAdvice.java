@@ -20,8 +20,8 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.Iterator;

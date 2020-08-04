@@ -26,10 +26,10 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;

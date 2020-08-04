@@ -15,36 +15,32 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import org.jboss.modules.ModuleFinder
-import org.jboss.modules.ModuleIdentifier
-import org.jboss.modules.ModuleLoadException
-import org.jboss.modules.ModuleLoader
-import org.jboss.modules.ModuleSpec
+import org.jboss.modules.*
 
 class JBossClassloadingTest extends AgentTestRunner {
-  def "delegates to bootstrap class loader for agent classes"() {
-    setup:
-    def moduleFinders = new ModuleFinder[1]
-    moduleFinders[0] = new ModuleFinder() {
-      @Override
-      ModuleSpec findModule(ModuleIdentifier identifier, ModuleLoader delegateLoader) throws ModuleLoadException {
-        return ModuleSpec.build(identifier).create()
-      }
-    }
-    def moduleLoader = new ModuleLoader(moduleFinders)
-    def moduleId = ModuleIdentifier.fromString("test")
-    def testModule = moduleLoader.loadModule(moduleId)
-    def classLoader = testModule.getClassLoader()
+    def "delegates to bootstrap class loader for agent classes"() {
+        setup:
+        def moduleFinders = new ModuleFinder[1]
+        moduleFinders[0] = new ModuleFinder() {
+            @Override
+            ModuleSpec findModule(ModuleIdentifier identifier, ModuleLoader delegateLoader) throws ModuleLoadException {
+                return ModuleSpec.build(identifier).create()
+            }
+        }
+        def moduleLoader = new ModuleLoader(moduleFinders)
+        def moduleId = ModuleIdentifier.fromString("test")
+        def testModule = moduleLoader.loadModule(moduleId)
+        def classLoader = testModule.getClassLoader()
 
-    when:
-    Class<?> clazz
-    try {
-      clazz = Class.forName("io.opentelemetry.auto.instrumentation.api.MoreAttributes", false, classLoader)
-    } catch (ClassNotFoundException e) {
-    }
+        when:
+        Class<?> clazz
+        try {
+            clazz = Class.forName("io.opentelemetry.instrumentation.api.MoreAttributes", false, classLoader)
+        } catch (ClassNotFoundException e) {
+        }
 
-    then:
-    assert clazz != null
-    assert clazz.getClassLoader() == null
-  }
+        then:
+        assert clazz != null
+        assert clazz.getClassLoader() == null
+    }
 }

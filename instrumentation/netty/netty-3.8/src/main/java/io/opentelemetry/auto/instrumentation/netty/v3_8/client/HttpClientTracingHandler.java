@@ -16,9 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
-import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.util.CombinedSimpleChannelHandler;
+import io.opentelemetry.instrumentation.api.ContextStore;
 import org.jboss.netty.channel.Channel;
 
 public class HttpClientTracingHandler

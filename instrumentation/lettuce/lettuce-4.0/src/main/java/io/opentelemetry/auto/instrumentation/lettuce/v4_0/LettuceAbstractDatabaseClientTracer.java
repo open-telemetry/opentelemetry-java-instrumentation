@@ -17,8 +17,8 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
+import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;

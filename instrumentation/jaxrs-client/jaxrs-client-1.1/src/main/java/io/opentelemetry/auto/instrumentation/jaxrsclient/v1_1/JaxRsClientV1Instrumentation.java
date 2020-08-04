@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.TRACER;
@@ -24,6 +23,7 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -37,8 +37,8 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

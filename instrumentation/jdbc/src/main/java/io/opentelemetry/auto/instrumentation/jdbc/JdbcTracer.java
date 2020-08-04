@@ -18,11 +18,11 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.jdbc.DBInfo;
+import io.opentelemetry.instrumentation.api.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.sql.Connection;

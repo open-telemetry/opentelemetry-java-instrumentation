@@ -19,9 +19,9 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShadedOrNull;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toUnshaded;
 
-import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.NoopScope;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.UnshadedScope;
+import io.opentelemetry.instrumentation.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;

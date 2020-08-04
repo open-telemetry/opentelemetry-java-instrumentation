@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.instrumentation.api.ContextStore;
 import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.context.propagation.ContextPropagators;
 import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;

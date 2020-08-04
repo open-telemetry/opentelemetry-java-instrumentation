@@ -19,10 +19,10 @@ package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;

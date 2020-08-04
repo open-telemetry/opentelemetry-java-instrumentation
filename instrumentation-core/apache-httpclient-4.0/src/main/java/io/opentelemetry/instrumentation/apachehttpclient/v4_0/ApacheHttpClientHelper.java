@@ -21,10 +21,10 @@ import static io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpC
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.http.HttpResponse;

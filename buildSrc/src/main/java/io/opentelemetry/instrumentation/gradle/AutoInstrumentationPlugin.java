@@ -45,11 +45,9 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.instrumentation.api",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.auto.typedspan",
+    "io.opentelemetry.instrumentation.api",
   };
 
   // Aditional classes we need only for tests and aren't shared with the agent business logic.

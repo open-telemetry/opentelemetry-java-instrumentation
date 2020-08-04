@@ -43,11 +43,9 @@ public class SpockRunner extends Sputnik {
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.instrumentation.api",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.auto.typedspan",
+    "io.opentelemetry.instrumentation.api",
   };
 
   private static final String[] TEST_BOOTSTRAP_PREFIXES;

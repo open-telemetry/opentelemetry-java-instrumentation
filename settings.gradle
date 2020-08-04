@@ -26,6 +26,8 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
+include ':instrumentation-api'
+
 // misc
 include ':testing-common'
 include ':utils:test-utils'

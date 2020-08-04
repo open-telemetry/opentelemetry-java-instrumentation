@@ -34,7 +34,6 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.client.HttpClientTracingHandler;
@@ -43,6 +42,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_0.server.HttpServerRespons
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.HttpServerTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;

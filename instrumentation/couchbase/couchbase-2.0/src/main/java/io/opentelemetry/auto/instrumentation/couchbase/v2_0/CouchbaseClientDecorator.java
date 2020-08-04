@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DbSystem;
+import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
+import io.opentelemetry.instrumentation.api.jdbc.DbSystem;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
