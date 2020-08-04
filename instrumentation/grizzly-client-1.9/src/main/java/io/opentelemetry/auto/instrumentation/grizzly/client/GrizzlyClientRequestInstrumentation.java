@@ -30,9 +30,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class ClientRequestInstrumentation extends Instrumenter.Default {
+public final class GrizzlyClientRequestInstrumentation extends Instrumenter.Default {
 
-  public ClientRequestInstrumentation() {
+  public GrizzlyClientRequestInstrumentation() {
     super("grizzly-client", "ning");
   }
 
@@ -48,7 +48,9 @@ public final class ClientRequestInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".ClientDecorator", packageName + ".InjectAdapter"};
+    return new String[] {
+      packageName + ".GrizzlyClientTracer", packageName + ".GrizzlyInjectAdapter"
+    };
   }
 
   @Override
@@ -63,6 +65,6 @@ public final class ClientRequestInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("com.ning.http.client.Request")))
             .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
-        packageName + ".ClientRequestAdvice");
+        packageName + ".GrizzlyClientRequestAdvice");
   }
 }

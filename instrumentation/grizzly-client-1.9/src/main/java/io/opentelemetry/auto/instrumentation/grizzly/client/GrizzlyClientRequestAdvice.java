@@ -16,25 +16,18 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly.client;
 
-import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.grizzly.client.InjectAdapter.SETTER;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+import static io.opentelemetry.auto.instrumentation.grizzly.client.GrizzlyClientTracer.TRACER;
 
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
-public class ClientRequestAdvice {
+public class GrizzlyClientRequestAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
@@ -42,22 +35,10 @@ public class ClientRequestAdvice {
       @Advice.Argument(1) final AsyncHandler<?> handler) {
     Context parentContext = Context.current();
 
-    Span span =
-        TRACER
-            .spanBuilder(DECORATE.spanNameForRequest(request))
-            .setSpanKind(CLIENT)
-            .setParent(getSpan(parentContext))
-            .startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, request);
-
+    Span span = TRACER.startSpan(request);
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
         .put(handler, Pair.of(parentContext, span));
-
-    Context newContext = withSpan(span, parentContext);
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(newContext, request, SETTER);
-    return withScopedContext(newContext);
+    return TRACER.startScope(span, request);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
