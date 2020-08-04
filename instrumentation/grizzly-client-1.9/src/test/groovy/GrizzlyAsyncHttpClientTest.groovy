@@ -20,10 +20,13 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
+import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.auto.test.base.HttpClientTest
+import org.junit.runner.RunWith
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
+@RunWith(SpockRunner)
 class GrizzlyAsyncHttpClientTest extends HttpClientTest {
 
   static {

@@ -10,6 +10,8 @@ excludedClassesCoverage += [
   'io.opentelemetry.auto.test.AgentTestRunner',
   'io.opentelemetry.auto.test.InstrumentationTestRunner',
   'io.opentelemetry.auto.test.InMemoryExporter.*',
+  'io.opentelemetry.auto.test.SpockRunner',
+  'io.opentelemetry.auto.test.SpockRunner.*',
   'io.opentelemetry.auto.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent
   'context.ContextTestInstrumentation**',
