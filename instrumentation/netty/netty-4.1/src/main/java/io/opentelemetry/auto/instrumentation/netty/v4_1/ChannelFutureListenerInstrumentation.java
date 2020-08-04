@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -105,12 +104,9 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       }
       Scope parentScope = currentContextWith(parentSpan);
 
-      Span errorSpan =
-          NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
+      Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT");
       try (Scope ignored = currentContextWith(errorSpan)) {
-        NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
-        NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
-        errorSpan.end();
+        NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
       }
 
       return parentScope;

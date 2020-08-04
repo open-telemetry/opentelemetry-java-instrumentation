@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
@@ -59,13 +57,9 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(null);
     }
 
-    Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    try (Scope scope = TRACER.withSpan(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-      DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
-
+    Span span = TRACER.startSpan(request);
+    span = TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+    try (Scope scope = currentContextWith(span)) {
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
         Context context = withSpan(span, Context.current());
@@ -79,9 +73,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       try {
         ctx.write(msg, prm);
       } catch (final Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
         throw throwable;
       }
     } finally {
