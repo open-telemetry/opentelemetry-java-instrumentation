@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -66,7 +66,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       packageName + ".AbstractNettyAdvice",
       packageName + ".ChannelTraceContext",
       packageName + ".ChannelTraceContext$Factory",
-      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".client.NettyHttpClientTracer",
       packageName + ".server.NettyHttpServerTracer",
       packageName + ".server.NettyRequestExtractAdapter"
     };
@@ -111,14 +111,11 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      Scope parentScope = NettyHttpClientDecorator.TRACER.withSpan(continuation);
+      Scope parentScope = currentContextWith(continuation);
 
-      Span errorSpan =
-          NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      try (Scope scope = NettyHttpClientDecorator.TRACER.withSpan(errorSpan)) {
-        NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
-        NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
-        errorSpan.end();
+      Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT");
+      try (Scope scope = currentContextWith(errorSpan)) {
+        NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
       }
 
       return parentScope;

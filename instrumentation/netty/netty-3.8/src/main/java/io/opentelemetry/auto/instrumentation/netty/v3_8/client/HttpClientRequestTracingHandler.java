@@ -16,10 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -57,21 +56,16 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     Scope parentScope = null;
     Span continuation = channelTraceContext.getConnectionContinuation();
     if (continuation != null) {
-      parentScope = TRACER.withSpan(continuation);
+      parentScope = currentContextWith(continuation);
       channelTraceContext.setConnectionContinuation(null);
     }
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
-
-    Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    try (Scope scope = TRACER.withSpan(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-      DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-
+    Span span = TRACER.startSpan(request);
+    span = TRACER.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    try (Scope scope = currentContextWith(span)) {
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
 
@@ -80,9 +74,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       try {
         ctx.sendDownstream(msg);
       } catch (final Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
         throw throwable;
       }
     } finally {

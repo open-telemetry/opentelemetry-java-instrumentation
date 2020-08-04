@@ -16,14 +16,14 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer.TRACER;
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -54,15 +54,13 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
     boolean finishSpan = msg.getMessage() instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      try (Scope scope = TRACER.withSpan(span)) {
-        DECORATE.onResponse(span, (HttpResponse) msg.getMessage());
-        DECORATE.beforeFinish(span);
-        span.end();
+      try (Scope scope = TracingContextUtils.currentContextWith(span)) {
+        TRACER.end(span, (HttpResponse) msg.getMessage());
       }
     }
 
     // We want the callback in the scope of the parent, not the client span
-    try (Scope scope = TRACER.withSpan(parent)) {
+    try (Scope scope = TracingContextUtils.currentContextWith(parent)) {
       ctx.sendUpstream(msg);
     }
   }

@@ -18,19 +18,15 @@ package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final NettyHttpClientDecorator DECORATE = new NettyHttpClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-3.8");
+public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+  public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
@@ -60,5 +56,15 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.headers().get(name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.netty-3.8";
   }
 }

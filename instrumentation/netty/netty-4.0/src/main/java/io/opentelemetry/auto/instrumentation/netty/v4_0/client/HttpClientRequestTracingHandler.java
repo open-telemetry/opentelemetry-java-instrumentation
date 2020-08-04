@@ -58,7 +58,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
     try {
       Span span = TRACER.startSpan(request);
-      TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+      span = TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
 
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
