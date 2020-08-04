@@ -17,11 +17,17 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -59,8 +65,10 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
-    return null;
+  public Scope startScope(Span span, HttpRequest request) {
+    Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
+    return withScopedContext(context);
   }
 
   @Override

@@ -119,8 +119,8 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
   }
 
-  public Span onPeerConnection(Span span, final CONNECTION connection) {
-    return onPeerConnection(span, peerAddress(connection));
+  public void onPeerConnection(final Span span, final CONNECTION connection) {
+    onPeerConnection(span, peerAddress(connection));
   }
 
   protected void onStatement(final Span span, final String statement) {

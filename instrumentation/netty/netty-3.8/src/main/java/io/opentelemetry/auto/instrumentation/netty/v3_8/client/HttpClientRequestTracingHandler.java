@@ -17,12 +17,8 @@
 package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
@@ -59,24 +55,18 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       parentScope = currentContextWith(continuation);
       channelTraceContext.setConnectionContinuation(null);
     }
+    channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
 
     HttpRequest request = (HttpRequest) msg.getMessage();
-
-    channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
     Span span = TRACER.startSpan(request);
-    span = TRACER.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-    try (Scope scope = currentContextWith(span)) {
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
+    TRACER.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
+    try (Scope scope = TRACER.startScope(span, request)) {
       channelTraceContext.setClientSpan(span);
-
-      try {
-        ctx.sendDownstream(msg);
-      } catch (final Throwable throwable) {
-        TRACER.endExceptionally(span, throwable);
-        throw throwable;
-      }
+      ctx.sendDownstream(msg);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     } finally {
       if (parentScope != null) {
         parentScope.close();

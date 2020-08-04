@@ -53,7 +53,9 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   protected abstract String responseHeader(RESPONSE response, String name);
 
-  protected abstract HttpTextFormat.Setter<REQUEST> getSetter();
+  protected HttpTextFormat.Setter<REQUEST> getSetter() {
+    throw new UnsupportedOperationException();
+  }
 
   public Span startSpan(REQUEST request) {
     return startSpan(request, spanNameForRequest(request));

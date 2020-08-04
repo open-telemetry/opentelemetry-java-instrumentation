@@ -131,7 +131,7 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
@@ -143,13 +143,11 @@ public abstract class BaseTracer {
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
-    return span;
   }
 
-  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public void onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
-    return span;
   }
 
   public void setPeer(final Span span, String peerName, String peerIp) {
