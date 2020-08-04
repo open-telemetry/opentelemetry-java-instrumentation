@@ -20,7 +20,7 @@ import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
+import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer

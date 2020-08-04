@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.springscheduling;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 

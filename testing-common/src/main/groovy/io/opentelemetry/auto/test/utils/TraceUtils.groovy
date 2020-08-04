@@ -20,8 +20,8 @@ import io.grpc.Context
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.context.Scope
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer
+import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator
+import io.opentelemetry.instrumentation.library.api.decorator.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer

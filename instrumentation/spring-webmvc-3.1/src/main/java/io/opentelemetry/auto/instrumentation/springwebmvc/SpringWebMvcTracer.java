@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.library.api.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;

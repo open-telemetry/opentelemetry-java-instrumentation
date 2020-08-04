@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
 
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import software.amazon.awssdk.core.interceptor.Context;

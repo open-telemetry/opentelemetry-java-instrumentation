@@ -27,7 +27,7 @@ import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus

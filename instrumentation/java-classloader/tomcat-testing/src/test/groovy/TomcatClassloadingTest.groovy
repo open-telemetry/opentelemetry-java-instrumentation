@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.MoreAttributes
+import io.opentelemetry.instrumentation.library.api.MoreAttributes
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader

@@ -21,7 +21,7 @@ import static io.opentelemetry.OpenTelemetry.getTracerProvider;
 import static io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;

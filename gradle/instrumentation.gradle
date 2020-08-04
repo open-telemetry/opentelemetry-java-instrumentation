@@ -36,7 +36,7 @@ afterEvaluate {
   }
 
   dependencies {
-    implementation project(':instrumentation-api')
+    implementation project(':library-api')
     implementation project(':auto-api')
     implementation project(':auto-bootstrap')
     // Apply common dependencies for instrumentation.

@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDec
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
+import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

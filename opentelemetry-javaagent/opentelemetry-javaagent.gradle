@@ -94,7 +94,7 @@ tasks.withType(ShadowJar).configureEach {
 dependencies {
   testImplementation project(':auto-bootstrap')
   testImplementation project(':auto-api')
-  testImplementation project(':instrumentation-api')
+  testImplementation project(':library-api')
   testImplementation project(':utils:test-utils')
 
   testImplementation deps.testLogging

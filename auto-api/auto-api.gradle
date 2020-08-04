@@ -7,7 +7,7 @@ dependencies {
   api deps.opentelemetryApi
   compileOnly deps.opentelemetrySdk
   implementation deps.slf4j
-  implementation project(':instrumentation-api')
+  implementation project(':library-api')
 
   testImplementation project(':testing-common')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'

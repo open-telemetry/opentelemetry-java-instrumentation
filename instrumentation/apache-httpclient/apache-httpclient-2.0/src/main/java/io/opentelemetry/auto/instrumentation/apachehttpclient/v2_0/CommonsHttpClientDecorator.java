@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

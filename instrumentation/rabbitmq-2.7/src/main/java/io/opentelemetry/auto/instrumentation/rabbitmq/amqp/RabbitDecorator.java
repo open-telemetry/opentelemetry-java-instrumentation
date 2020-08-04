@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

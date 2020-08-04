@@ -20,7 +20,7 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.net.URI;

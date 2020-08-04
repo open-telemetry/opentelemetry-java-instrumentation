@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import okhttp3.Request;

@@ -33,7 +33,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;

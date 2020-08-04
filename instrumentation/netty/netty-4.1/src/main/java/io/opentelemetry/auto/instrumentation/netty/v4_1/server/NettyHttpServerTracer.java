@@ -24,7 +24,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.library.api.decorator.HttpServerTracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;

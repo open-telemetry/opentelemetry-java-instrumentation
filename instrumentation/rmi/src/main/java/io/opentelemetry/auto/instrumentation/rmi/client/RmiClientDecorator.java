@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.client;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Tracer;
 
 public class RmiClientDecorator extends ClientDecorator {

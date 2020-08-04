@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {

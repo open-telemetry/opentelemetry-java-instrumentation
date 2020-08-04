@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
-import io.opentelemetry.instrumentation.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;

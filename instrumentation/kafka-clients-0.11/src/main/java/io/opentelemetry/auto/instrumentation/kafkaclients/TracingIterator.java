@@ -18,11 +18,11 @@ package io.opentelemetry.auto.instrumentation.kafkaclients;
 
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
+import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.instrumentation.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;

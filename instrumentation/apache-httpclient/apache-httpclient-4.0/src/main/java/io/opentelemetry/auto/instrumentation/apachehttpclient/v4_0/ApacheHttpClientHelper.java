@@ -22,7 +22,7 @@ import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;

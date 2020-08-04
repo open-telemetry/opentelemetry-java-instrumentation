@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.library.api.decorator.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DBInfo;

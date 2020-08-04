@@ -29,7 +29,7 @@ import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;

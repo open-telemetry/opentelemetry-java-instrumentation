@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.typed.server.http;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
+import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 
 import io.opentelemetry.auto.typed.server.ServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;

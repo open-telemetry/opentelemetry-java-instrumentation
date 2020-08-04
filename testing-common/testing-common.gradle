@@ -36,7 +36,7 @@ dependencies {
 
   implementation project(':auto-bootstrap')
   implementation project(':auto-api')
-  implementation project(':instrumentation-api')
+  implementation project(':library-api')
   implementation(project(':auto-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'

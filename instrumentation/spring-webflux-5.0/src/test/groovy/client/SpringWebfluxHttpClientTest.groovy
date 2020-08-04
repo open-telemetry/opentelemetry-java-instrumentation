@@ -18,7 +18,7 @@ package client
 
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.api.MoreAttributes
+import io.opentelemetry.instrumentation.library.api.MoreAttributes
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse

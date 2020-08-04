@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
+import static io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;

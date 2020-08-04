@@ -27,7 +27,7 @@ import io.opentelemetry.auto.tooling.Instrumenter.Default;
 import io.opentelemetry.auto.tooling.Utils;
 import io.opentelemetry.instrumentation.api.ContextStore;
 import io.opentelemetry.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.api.decorator.config.Config;
+import io.opentelemetry.instrumentation.library.api.decorator.config.Config;
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;

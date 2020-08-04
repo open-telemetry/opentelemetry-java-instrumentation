@@ -26,7 +26,7 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
-include ':instrumentation-api'
+include ':library-api'
 include ':auto-api'
 
 // misc
