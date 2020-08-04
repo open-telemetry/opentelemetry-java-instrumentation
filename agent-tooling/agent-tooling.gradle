@@ -32,3 +32,16 @@ dependencies {
   instrumentationMuzzle configurations.implementation
 }
 
+test {
+  filter {
+    excludeTestsMatching 'HelperInjectionTest'
+  }
+}
+
+// Needs a fresh classloader.
+def testHelperInjection = tasks.register('testHelperInjection', Test) {
+  filter {
+    includeTestsMatching 'HelperInjectionTest'
+  }
+}
+test.dependsOn(testHelperInjection)

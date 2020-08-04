@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicReference
 import static io.opentelemetry.auto.test.utils.ClasspathUtils.isClassLoaded
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
-import static org.junit.Assume.assumeTrue
 
 class HelperInjectionTest extends AgentSpecification {
 
@@ -40,7 +39,6 @@ class HelperInjectionTest extends AgentSpecification {
   def "helpers injected to non-delegating classloader"() {
     setup:
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    assumeTrue(!isClassLoaded(helperClassName, Utils.getAgentClassLoader()))
     HelperInjector injector = new HelperInjector("test", helperClassName)
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 

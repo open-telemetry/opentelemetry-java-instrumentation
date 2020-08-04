@@ -28,4 +28,17 @@ dependencies {
     transitive = false
   }
 }
-test.forkEvery 1
+
+test {
+  filter {
+    excludeTestsMatching 'TraceProvidersTest'
+  }
+}
+
+// Needs a fresh classloader.
+def testTraceProviders = tasks.register('testTraceProviders', Test) {
+  filter {
+    includeTestsMatching 'TraceProvidersTest'
+  }
+}
+test.dependsOn(testTraceProviders)
