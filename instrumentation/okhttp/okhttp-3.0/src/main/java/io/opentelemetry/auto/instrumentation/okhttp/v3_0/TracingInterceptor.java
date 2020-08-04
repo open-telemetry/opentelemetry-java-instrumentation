@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.auto.instrumentation.okhttp.v3_0.OkHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.okhttp.v3_0.OkHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.okhttp.v3_0.OkHttpClientTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -35,15 +33,7 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(final Chain chain) throws IOException {
-    Span span =
-        TRACER
-            .spanBuilder(DECORATE.spanNameForRequest(chain.request()))
-            .setSpanKind(CLIENT)
-            .startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, chain.request());
-
+    Span span = TRACER.startSpan(chain.request());
     Context context = withSpan(span, Context.current());
 
     Request.Builder requestBuilder = chain.request().newBuilder();
@@ -51,17 +41,14 @@ public class TracingInterceptor implements Interceptor {
         .getHttpTextFormat()
         .inject(context, requestBuilder, RequestBuilderInjectAdapter.SETTER);
 
-    Response response;
+    Response response = null;
     try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(requestBuilder.build());
     } catch (final Exception e) {
-      DECORATE.onError(span, e);
-      span.end();
+      TRACER.endExceptionally(span, e);
       throw e;
     }
-    DECORATE.onResponse(span, response);
-    DECORATE.beforeFinish(span);
-    span.end();
+    TRACER.end(span, response);
     return response;
   }
 }

@@ -47,7 +47,7 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".RequestBuilderInjectAdapter",
-      packageName + ".OkHttpClientDecorator",
+      packageName + ".OkHttpClientTracer",
       packageName + ".TracingInterceptor",
     };
   }
