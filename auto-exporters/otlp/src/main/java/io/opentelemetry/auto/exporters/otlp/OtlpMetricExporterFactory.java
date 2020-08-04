@@ -16,23 +16,18 @@
 
 package io.opentelemetry.auto.exporters.otlp;
 
-import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
 import io.opentelemetry.sdk.extensions.auto.config.Config;
 import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
 public class OtlpMetricExporterFactory implements MetricExporterFactory {
-  private static final String OTLP_ENDPOINT = "otlp.endpoint";
 
   @Override
   public MetricExporter fromConfig(final Config config) {
-    String otlpEndpoint = config.getString(OTLP_ENDPOINT, "localhost:55680");
-    if (otlpEndpoint.isEmpty()) {
-      throw new IllegalStateException("otel.exporter.otlp.endpoint is required");
-    }
     return OtlpGrpcMetricExporter.newBuilder()
-        .setChannel(ManagedChannelBuilder.forTarget(otlpEndpoint).usePlaintext().build())
+        .readEnvironmentVariables()
+        .readSystemProperties()
         .build();
   }
 }
