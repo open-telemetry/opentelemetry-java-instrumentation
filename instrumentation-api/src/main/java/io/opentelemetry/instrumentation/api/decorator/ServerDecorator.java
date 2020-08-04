@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.api.decorator;
 
 import io.opentelemetry.trace.Span;
 
+@Deprecated
 public abstract class ServerDecorator extends BaseDecorator {
 
   @Override

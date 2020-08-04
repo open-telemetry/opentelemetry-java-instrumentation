@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.play.v2_4;
 import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;

@@ -26,7 +26,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import org.jboss.netty.channel.Channel;

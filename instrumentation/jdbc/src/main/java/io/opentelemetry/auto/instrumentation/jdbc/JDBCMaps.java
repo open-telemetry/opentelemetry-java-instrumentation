@@ -16,10 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.api.WeakMap.Provider.newWeakMap;
+import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.instrumentation.api.WeakMap;
-import io.opentelemetry.instrumentation.api.jdbc.DBInfo;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.instrumentation.auto.api.jdbc.DBInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 

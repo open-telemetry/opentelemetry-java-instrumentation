@@ -38,7 +38,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

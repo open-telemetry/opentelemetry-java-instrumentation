@@ -26,8 +26,8 @@ import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagatio
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.ContextStore;
-import io.opentelemetry.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

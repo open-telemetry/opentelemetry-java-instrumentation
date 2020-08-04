@@ -35,6 +35,7 @@ dependencies {
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
   implementation project(':auto-bootstrap')
+  implementation project(':auto-api')
   implementation project(':instrumentation-api')
   implementation(project(':auto-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead

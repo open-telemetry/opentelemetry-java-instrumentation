@@ -25,7 +25,7 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
 
-import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;

@@ -28,7 +28,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;

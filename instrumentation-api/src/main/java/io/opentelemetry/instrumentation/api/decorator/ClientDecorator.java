@@ -23,6 +23,7 @@ import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 
+@Deprecated
 public abstract class ClientDecorator extends BaseDecorator {
 
   // Keeps track of the client span in a subtree corresponding to a client request.

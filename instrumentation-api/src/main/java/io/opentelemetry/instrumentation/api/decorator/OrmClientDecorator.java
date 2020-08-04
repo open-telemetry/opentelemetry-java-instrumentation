@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
+@Deprecated
 public abstract class OrmClientDecorator extends DatabaseClientDecorator {
 
   public abstract String entityName(final Object entity);

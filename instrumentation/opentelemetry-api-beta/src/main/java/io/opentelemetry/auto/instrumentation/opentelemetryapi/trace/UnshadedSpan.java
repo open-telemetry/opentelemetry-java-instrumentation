@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShaded;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShadedOrNull;
 
-import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;

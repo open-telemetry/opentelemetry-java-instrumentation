@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 

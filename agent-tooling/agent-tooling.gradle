@@ -12,6 +12,7 @@ configurations {
 
 dependencies {
   implementation project(':auto-bootstrap')
+  implementation project(':auto-api')
   implementation project(':instrumentation-api')
   implementation project(':utils:thread-utils')
 

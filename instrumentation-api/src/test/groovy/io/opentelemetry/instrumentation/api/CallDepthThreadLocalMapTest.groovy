@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.api
 
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap
 import spock.lang.Specification
 
 class CallDepthThreadLocalMapTest extends Specification {

@@ -20,7 +20,7 @@ import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor;
-import io.opentelemetry.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.util.concurrent.TimeUnit;
 
 class WeakMapSuppliers {

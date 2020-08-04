@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.api.decorator;
 
 import io.opentelemetry.instrumentation.api.MoreAttributes;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.decorator.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientDecorator.class);

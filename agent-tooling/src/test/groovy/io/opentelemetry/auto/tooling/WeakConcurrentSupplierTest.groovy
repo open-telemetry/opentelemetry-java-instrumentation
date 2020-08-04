@@ -18,7 +18,7 @@ package io.opentelemetry.auto.tooling
 
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
-import io.opentelemetry.instrumentation.api.WeakMap
+import io.opentelemetry.instrumentation.auto.api.WeakMap
 import spock.lang.Retry
 import spock.lang.Shared
 

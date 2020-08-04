@@ -42,7 +42,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerRequest
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;

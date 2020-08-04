@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import io.opentelemetry.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.trace.Tracer;
 import unshaded.io.opentelemetry.trace.TracerProvider;

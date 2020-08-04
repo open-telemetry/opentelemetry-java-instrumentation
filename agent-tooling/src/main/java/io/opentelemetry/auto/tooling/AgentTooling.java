@@ -20,7 +20,7 @@ import io.opentelemetry.auto.bootstrap.WeakCache;
 import io.opentelemetry.auto.bootstrap.WeakCache.Provider;
 import io.opentelemetry.auto.tooling.bytebuddy.AgentCachingPoolStrategy;
 import io.opentelemetry.auto.tooling.bytebuddy.AgentLocationStrategy;
-import io.opentelemetry.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 

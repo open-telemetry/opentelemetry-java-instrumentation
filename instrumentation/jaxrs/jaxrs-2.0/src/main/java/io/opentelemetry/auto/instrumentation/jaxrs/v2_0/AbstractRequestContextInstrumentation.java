@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;

@@ -24,8 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
-import io.opentelemetry.instrumentation.api.concurrent.GenericRunnable;
+import io.opentelemetry.instrumentation.auto.api.concurrent.ExecutorInstrumentationUtils;
+import io.opentelemetry.instrumentation.auto.api.concurrent.GenericRunnable;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

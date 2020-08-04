@@ -26,8 +26,8 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import khttp.KHttp;

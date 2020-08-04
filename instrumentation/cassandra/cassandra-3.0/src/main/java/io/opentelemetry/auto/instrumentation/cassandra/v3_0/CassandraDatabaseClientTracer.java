@@ -20,7 +20,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 

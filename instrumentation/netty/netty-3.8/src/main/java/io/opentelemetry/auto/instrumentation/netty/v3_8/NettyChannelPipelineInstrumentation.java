@@ -31,9 +31,9 @@ import io.opentelemetry.auto.instrumentation.netty.v3_8.server.HttpServerRequest
 import io.opentelemetry.auto.instrumentation.netty.v3_8.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.server.HttpServerTracingHandler;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.api.ContextStore;
-import io.opentelemetry.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

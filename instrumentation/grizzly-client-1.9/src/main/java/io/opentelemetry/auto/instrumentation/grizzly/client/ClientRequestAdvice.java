@@ -29,8 +29,8 @@ import com.ning.http.client.Request;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.api.Pair;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.Pair;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 

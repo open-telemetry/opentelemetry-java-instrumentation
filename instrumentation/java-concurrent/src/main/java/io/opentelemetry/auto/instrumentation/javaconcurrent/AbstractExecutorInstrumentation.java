@@ -21,7 +21,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.decorator.config.Config;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;

@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.tooling.muzzle;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.util.Collections;
 import java.util.WeakHashMap;
 import net.bytebuddy.build.Plugin;

@@ -35,6 +35,7 @@ subprojects {
 
 dependencies {
   implementation project(':instrumentation-api')
+  implementation project(':auto-api')
   implementation(project(':auto-tooling')) {
     exclude module: ':auto-bootstrap'
   }

@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.Pair;
+import io.opentelemetry.instrumentation.auto.api.Pair;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;

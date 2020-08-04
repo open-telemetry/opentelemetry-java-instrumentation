@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.rediscala;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
-import io.opentelemetry.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Tracer;
 import redis.RedisCommand;
 import redis.protocol.RedisReply;

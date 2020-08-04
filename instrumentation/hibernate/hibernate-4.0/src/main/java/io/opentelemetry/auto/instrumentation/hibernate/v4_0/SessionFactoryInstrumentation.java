@@ -28,8 +28,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.ContextStore;
-import io.opentelemetry.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -17,9 +17,9 @@
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-import static io.opentelemetry.instrumentation.api.WeakMap.Provider.newWeakMap;
+import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;

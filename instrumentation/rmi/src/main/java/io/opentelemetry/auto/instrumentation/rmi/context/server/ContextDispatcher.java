@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.G
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
+import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 
 import io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload;
 import io.opentelemetry.trace.SpanContext;

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.bootstrap;
 
-import io.opentelemetry.instrumentation.api.Pair;
+import io.opentelemetry.instrumentation.auto.api.Pair;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
