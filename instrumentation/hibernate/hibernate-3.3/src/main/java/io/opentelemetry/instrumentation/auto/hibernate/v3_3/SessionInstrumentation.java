@@ -154,20 +154,21 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
         @Advice.This Object session,
-        @Advice.Origin("#m") String name,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Origin("Session.#m") String operationName,
         @Advice.Argument(0) Object entity) {
 
-      boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
+      boolean startSpan = !SCOPE_ONLY_METHODS.contains(methodName);
       if (session instanceof Session) {
         ContextStore<Session, Span> contextStore =
             InstrumentationContext.get(Session.class, Span.class);
         return SessionMethodUtils.startScopeFrom(
-            contextStore, (Session) session, "Session." + name, entity, startSpan);
+            contextStore, (Session) session, operationName, entity, startSpan);
       } else if (session instanceof StatelessSession) {
         ContextStore<StatelessSession, Span> contextStore =
             InstrumentationContext.get(StatelessSession.class, Span.class);
         return SessionMethodUtils.startScopeFrom(
-            contextStore, (StatelessSession) session, "Session." + name, entity, startSpan);
+            contextStore, (StatelessSession) session, operationName, entity, startSpan);
       }
       return null;
     }
@@ -177,9 +178,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
-        @Advice.Origin("#m") String name) {
+        @Advice.Origin("Session.#m") String operationName) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, operationName, returned);
     }
   }
 

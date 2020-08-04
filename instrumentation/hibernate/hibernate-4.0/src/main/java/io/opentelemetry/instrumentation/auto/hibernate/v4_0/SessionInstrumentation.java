@@ -142,14 +142,15 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
         @Advice.This SharedSessionContract session,
-        @Advice.Origin("#m") String name,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Origin("Session.#m") String operationName,
         @Advice.Argument(0) Object entity) {
 
-      boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
+      boolean startSpan = !SCOPE_ONLY_METHODS.contains(methodName);
       ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
       return SessionMethodUtils.startScopeFrom(
-          contextStore, session, "Session." + name, entity, startSpan);
+          contextStore, session, operationName, entity, startSpan);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -157,9 +158,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
-        @Advice.Origin("#m") String name) {
+        @Advice.Origin("Session.#m") String operationName) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, operationName, returned);
     }
   }
 
