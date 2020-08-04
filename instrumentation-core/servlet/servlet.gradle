@@ -2,6 +2,7 @@ ext {
   javaSubPackage = 'servlet'
 }
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
+archivesBaseName = "servlet"
 
 dependencies {
   implementation deps.slf4j
