@@ -23,9 +23,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
+import org.glassfish.grizzly.http.HttpResponsePacket;
 
 public class GrizzlyHttpServerTracer
-    extends HttpServerTracer<HttpRequestPacket, HttpRequestPacket, FilterChainContext> {
+    extends HttpServerTracer<
+        HttpRequestPacket, HttpResponsePacket, HttpRequestPacket, FilterChainContext> {
 
   public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
@@ -37,6 +39,11 @@ public class GrizzlyHttpServerTracer
   @Override
   protected String requestHeader(HttpRequestPacket httpRequestPacket, String name) {
     return httpRequestPacket.getHeader(name);
+  }
+
+  @Override
+  protected int responseStatus(HttpResponsePacket httpResponsePacket) {
+    return httpResponsePacket.getStatus();
   }
 
   @Override

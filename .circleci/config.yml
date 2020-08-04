@@ -188,15 +188,6 @@ workflows:
             tags:
               only: /.*/
 
-      - default_test_job:
-          requires:
-            - build
-          name: test_latest
-          testTask: latestDepTest
-          filters:
-            tags:
-              only: /.*/
-
       - muzzle:
           requires:
             - build
@@ -207,7 +198,6 @@ workflows:
       - publish_master:
           requires:
             - test_8
-            - test_latest
             - muzzle
           filters:
             branches:

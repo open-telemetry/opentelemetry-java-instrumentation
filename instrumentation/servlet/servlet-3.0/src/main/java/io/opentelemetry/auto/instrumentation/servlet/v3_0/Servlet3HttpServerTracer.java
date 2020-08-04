@@ -22,9 +22,11 @@ import io.grpc.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
+public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServletResponse> {
 
   public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
@@ -38,10 +40,43 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
     return connection.getRemotePort();
   }
 
+  @Override
+  protected int responseStatus(HttpServletResponse httpServletResponse) {
+    return httpServletResponse.getStatus();
+  }
+
+  @Override
+  public void endExceptionally(
+      Span span, Throwable throwable, HttpServletResponse response, long timestamp) {
+    captureContentLength(span, response);
+    if (response.isCommitted()) {
+      super.endExceptionally(span, throwable, response, timestamp);
+    } else {
+      // passing null response to super, in order to capture as 500 / INTERNAL, due to servlet spec
+      // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
+      // "If a servlet generates an error that is not handled by the error page mechanism as
+      // described above, the container must ensure to send a response with status 500."
+      super.endExceptionally(span, throwable, null, timestamp);
+    }
+  }
+
+  @Override
+  public void end(Span span, HttpServletResponse response, long timestamp) {
+    captureContentLength(span, response);
+    super.end(span, response, timestamp);
+  }
+
   public void onTimeout(Span span, long timeout) {
     span.setStatus(Status.DEADLINE_EXCEEDED);
     span.setAttribute("timeout", timeout);
     span.end();
+  }
+
+  private static void captureContentLength(Span span, HttpServletResponse response) {
+    if (response instanceof CountingHttpServletResponse) {
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(
+          span, ((CountingHttpServletResponse) response).getContentLength());
+    }
   }
 
   /*
@@ -56,7 +91,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
 
   In this case we have to put the span from the request into current context before continuing.
   */
-  public boolean needsRescoping(Context attachedContext) {
+  public static boolean needsRescoping(Context attachedContext) {
     return !sameTrace(getSpan(Context.current()), getSpan(attachedContext));
   }
 

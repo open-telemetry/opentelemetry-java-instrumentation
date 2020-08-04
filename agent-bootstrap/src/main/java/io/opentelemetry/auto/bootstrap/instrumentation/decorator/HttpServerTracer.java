@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
-public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends BaseTracer {
+public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
@@ -93,39 +93,49 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     return withScopedContext(newContext);
   }
 
+  /**
+   * Convenience method. Delegates to {@link #end(Span, Object, long)}, passing {@code timestamp}
+   * value of {@code -1}.
+   */
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, int responseStatus) {
-    end(span, responseStatus, -1);
+  public void end(Span span, RESPONSE response) {
+    end(span, response, -1);
   }
 
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, int responseStatus, long timestamp) {
-    setStatus(span, responseStatus);
-    if (timestamp >= 0) {
-      span.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
-    } else {
-      span.end();
-    }
+  public void end(Span span, RESPONSE response, long timestamp) {
+    setStatus(span, responseStatus(response));
+    endSpan(span, timestamp);
   }
 
-  /** Ends given span exceptionally with default response status code 500. */
+  /**
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE)}, passing
+   * {@code response} value of {@code null}.
+   */
   public void endExceptionally(Span span, Throwable throwable) {
-    endExceptionally(span, throwable, 500);
+    endExceptionally(span, throwable, null);
   }
 
-  public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
-    endExceptionally(span, throwable, responseStatus, -1);
+  /**
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE, long)},
+   * passing {@code timestamp} value of {@code -1}.
+   */
+  public void endExceptionally(Span span, Throwable throwable, RESPONSE response) {
+    endExceptionally(span, throwable, response, -1);
   }
 
-  public void endExceptionally(Span span, Throwable throwable, int responseStatus, long timestamp) {
-    if (responseStatus == 200) {
-      // TODO I think this is wrong.
-      // We must report that response status that was actually sent to end user
-      // We may change span status, but not http_status attribute
-      responseStatus = 500;
-    }
+  /**
+   * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
+   * and the {@link Span} status will be set to {@link io.opentelemetry.trace.Status#INTERNAL}.
+   */
+  public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
     onError(span, unwrapThrowable(throwable));
-    end(span, responseStatus, timestamp);
+    if (response == null) {
+      setStatus(span, 500);
+    } else {
+      setStatus(span, responseStatus(response));
+    }
+    endSpan(span, timestamp);
   }
 
   public Span getServerSpan(STORAGE storage) {
@@ -267,10 +277,18 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
     return span.getContext();
   }
 
-  private void setStatus(Span span, int status) {
+  private static void setStatus(Span span, int status) {
     SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
     // TODO status_message
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
+  }
+
+  private static void endSpan(Span span, long timestamp) {
+    if (timestamp >= 0) {
+      span.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
+    } else {
+      span.end();
+    }
   }
 
   protected abstract Integer peerPort(CONNECTION connection);
@@ -286,6 +304,8 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> extends Bas
   protected abstract String method(REQUEST request);
 
   protected abstract String requestHeader(REQUEST request, String name);
+
+  protected abstract int responseStatus(RESPONSE response);
 
   /**
    * Stores given context in the given request-response-loop storage in implementation specific way.

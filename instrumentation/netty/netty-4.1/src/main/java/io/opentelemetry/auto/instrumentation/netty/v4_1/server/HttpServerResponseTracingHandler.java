@@ -45,6 +45,6 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, ((HttpResponse) msg).status().code());
+    TRACER.end(span, (HttpResponse) msg);
   }
 }
