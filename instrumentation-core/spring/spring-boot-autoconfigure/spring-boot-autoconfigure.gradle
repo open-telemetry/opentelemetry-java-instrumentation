@@ -11,10 +11,10 @@ sourceCompatibility = '8'
 
 dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-
+  
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
   compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
   implementation project(':instrumentation-core:spring:spring-webmvc-3.1') 
