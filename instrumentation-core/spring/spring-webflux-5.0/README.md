@@ -69,7 +69,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
    @Bean
-   public WebClient webClient(Tracer tracer) {
+   public WebClient.Builder webClient(Tracer tracer) {
       
       WebClient webClient = WebClient.create();
       WebClientTracingFilter webClientTracingFilter = new WebClientTracingFilter(tracer);
