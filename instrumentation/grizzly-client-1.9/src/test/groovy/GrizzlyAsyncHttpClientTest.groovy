@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
+import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.AutoCleanup
@@ -42,7 +44,15 @@ class GrizzlyAsyncHttpClientTest extends HttpClientTest {
     }
     Request request = requestBuilder.build()
 
-    def handler = new AsyncCompletionHandlerMock(callback)
+    def handler = new AsyncCompletionHandler() {
+      @Override
+      Object onCompleted(Response response) throws Exception {
+        if (callback != null) {
+          callback()
+        }
+        return response
+      }
+    }
 
     def response = client.executeRequest(request, handler).get()
     response.statusCode
