@@ -260,8 +260,8 @@ class KafkaClientTest extends AgentTestRunner {
     received.value() == null
     received.key() == null
 
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         // PRODUCER span 0
         span(0) {
           operationName SHARED_TOPIC
@@ -272,16 +272,12 @@ class KafkaClientTest extends AgentTestRunner {
             "tombstone" true
           }
         }
-      }
-      // when a user consumes a tombstone a new trace is started
-      // because context can't be propagated safely
-      trace(1, 1) {
         // CONSUMER span 0
-        span(0) {
+        span(1) {
           operationName SHARED_TOPIC
           spanKind CONSUMER
           errored false
-          parent()
+          childOf span(0)
           attributes {
             "partition" { it >= 0 }
             "offset" 0
@@ -291,9 +287,6 @@ class KafkaClientTest extends AgentTestRunner {
         }
       }
     }
-
-    def headers = received.headers()
-    !headers.iterator().hasNext()
 
     cleanup:
     producerFactory.stop()

@@ -91,9 +91,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         long startTimeMillis = System.currentTimeMillis();
         spanBuilder.setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis));
         Span span = spanBuilder.startSpan();
-        // tombstone checking logic here because it can only be inferred
-        // from the record itself
-        if (next.value() == null && !next.headers().iterator().hasNext()) {
+        if (next.value() == null) {
           span.setAttribute("tombstone", true);
         }
         decorator.afterStart(span);
