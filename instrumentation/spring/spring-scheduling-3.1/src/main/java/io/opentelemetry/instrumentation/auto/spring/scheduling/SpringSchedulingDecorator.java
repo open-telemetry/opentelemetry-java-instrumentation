@@ -34,7 +34,7 @@ public class SpringSchedulingDecorator extends BaseDecorator {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
       return spanNameForMethod(scheduledMethodRunnable.getMethod());
     } else {
-      return spanNameForClass(runnable.getClass()) + "/run";
+      return spanNameForMethod(runnable.getClass(), "run");
     }
   }
 }
