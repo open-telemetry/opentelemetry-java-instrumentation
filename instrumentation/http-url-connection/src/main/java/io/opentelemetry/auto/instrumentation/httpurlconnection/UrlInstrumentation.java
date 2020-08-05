@@ -17,9 +17,7 @@
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.setPeer;
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
@@ -63,7 +61,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".HttpUrlConnectionDecorator",
+      packageName + ".HttpUrlConnectionTracer",
     };
   }
 
@@ -85,8 +83,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
-
+        Span span = TRACER.startSpan(protocol + ".request");
         try (Scope scope = currentContextWith(span)) {
           span.setAttribute(SemanticAttributes.HTTP_URL.key(), url.toString());
           span.setAttribute(
@@ -96,8 +93,9 @@ public class UrlInstrumentation extends Instrumenter.Default {
             setPeer(span, host, null);
           }
 
-          DECORATE.onError(span, throwable);
-          span.end();
+          if (throwable != null) {
+            TRACER.endExceptionally(span, throwable);
+          }
         }
       }
     }
