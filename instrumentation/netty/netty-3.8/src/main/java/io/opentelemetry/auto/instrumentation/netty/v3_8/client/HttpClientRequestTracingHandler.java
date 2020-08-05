@@ -64,18 +64,17 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     Span span = TRACER.startSpan(request);
-    try (Scope scope = currentContextWith(span)) {
-      TRACER.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
+    TRACER.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
 
-      channelTraceContext.setClientSpan(span);
-      try {
-        ctx.sendDownstream(msg);
-      } catch (final Throwable throwable) {
-        TRACER.endExceptionally(span, throwable);
-        throw throwable;
-      }
+    channelTraceContext.setClientSpan(span);
+
+    try (Scope scope = currentContextWith(span)) {
+      ctx.sendDownstream(msg);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     } finally {
       if (parentScope != null) {
         parentScope.close();
