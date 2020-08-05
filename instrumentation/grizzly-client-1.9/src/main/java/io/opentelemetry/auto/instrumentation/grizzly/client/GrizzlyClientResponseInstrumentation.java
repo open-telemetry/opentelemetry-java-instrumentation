@@ -60,7 +60,9 @@ public final class GrizzlyClientResponseInstrumentation extends Instrumenter.Def
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".GrizzlyClientTracer"};
+    return new String[] {
+      packageName + ".GrizzlyClientTracer", packageName + ".GrizzlyInjectAdapter"
+    };
   }
 
   @Override
