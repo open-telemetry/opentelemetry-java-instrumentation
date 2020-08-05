@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
-import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
-import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.auto.test.base.HttpClientTest
-import org.junit.runner.RunWith
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-@RunWith(SpockRunner)
 class GrizzlyAsyncHttpClientTest extends HttpClientTest {
 
   static {
@@ -51,23 +46,6 @@ class GrizzlyAsyncHttpClientTest extends HttpClientTest {
 
     def response = client.executeRequest(request, handler).get()
     response.statusCode
-  }
-
-  class AsyncCompletionHandlerMock extends AsyncCompletionHandler<Response> {
-
-    private Closure callback
-
-    AsyncCompletionHandlerMock(Closure callback) {
-      this.callback = callback
-    }
-
-    @Override
-    Response onCompleted(Response response) throws Exception {
-      if (callback != null) {
-        callback()
-      }
-      return response
-    }
   }
 
   @Override
