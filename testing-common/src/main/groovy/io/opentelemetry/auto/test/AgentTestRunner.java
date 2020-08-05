@@ -80,6 +80,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
   static {
     // always run with the thread propagation debugger to help track down sporadic test failures
     System.setProperty("otel.threadPropagationDebugger", "true");
+    System.setProperty("otel.internal.failOnContextLeak", "true");
   }
 
   /**
