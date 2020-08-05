@@ -48,7 +48,7 @@ dependencies {
   latestDepTestImplementation group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
 }
 
-integrationTest.dependsOn resteasy31Test
+test.dependsOn resteasy31Test
 
 // Until custom source sets can use minJavaVersionForTests separately from other tests
 // force this one test to run on java8 only

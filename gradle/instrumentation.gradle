@@ -1,5 +1,6 @@
 // common gradle file for instrumentation
 
+apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
@@ -24,7 +25,6 @@ apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
-
 
 afterEvaluate {
   byteBuddy {
@@ -60,27 +60,3 @@ afterEvaluate {
     testImplementation project(':utils:test-utils')
   }
 }
-
-tasks.withType(Test) {
-  if (it.name == 'test') {
-    useJUnit {
-      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  } else {
-    useJUnit {
-      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-    }
-  }
-}
-
-task integrationTest(type: Test) {
-  description = 'Runs instrumentation tests.'
-  group = 'verification'
-  shouldRunAfter test
-
-  useJUnit {
-    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
-  }
-}
-
-test.dependsOn integrationTest

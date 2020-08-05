@@ -10,6 +10,10 @@ gradlePlugin {
       id = "muzzle"
       implementationClass = "MuzzlePlugin"
     }
+    create("auto-instrumentation-plugin") {
+      id = "io.opentelemetry.instrumentation.auto-instrumentation"
+      implementationClass = "io.opentelemetry.instrumentation.gradle.AutoInstrumentationPlugin"
+    }
   }
 }
 

@@ -28,9 +28,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class NettyHttpServerTracer
-    extends HttpServerTracer<HttpRequest, Channel, ChannelTraceContext> {
+    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, ChannelTraceContext> {
   public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
@@ -41,6 +42,11 @@ public class NettyHttpServerTracer
   @Override
   protected String requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().get(name);
+  }
+
+  @Override
+  protected int responseStatus(HttpResponse httpResponse) {
+    return httpResponse.getStatus().getCode();
   }
 
   @Override

@@ -16,55 +16,55 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
 import io.opentelemetry.trace.Tracer;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
-/** Spring bean post processor test {@link RestTemplateBeanPostProcessor} */
-@RunWith(MockitoJUnitRunner.class)
-public class RestTemplateBeanPostProcessorTest {
-
+@ExtendWith(MockitoExtension.class)
+class RestTemplateBeanPostProcessorTest {
   @Mock Tracer tracer;
 
   RestTemplateBeanPostProcessor restTemplateBeanPostProcessor =
       new RestTemplateBeanPostProcessor(tracer);
 
   @Test
-  public void should_return_object_if_processed_bean_is_not_of_type_RestTemplate() {
-    assertEquals(
-        restTemplateBeanPostProcessor
-            .postProcessAfterInitialization(new Object(), "testObject")
-            .getClass(),
-        Object.class);
+  @DisplayName("when processed bean is not of type RestTemplate should return object")
+  void returnsObject() {
+    assertThat(
+            restTemplateBeanPostProcessor.postProcessAfterInitialization(
+                new Object(), "testObject"))
+        .isExactlyInstanceOf(Object.class);
   }
 
   @Test
-  public void should_return_RestTemplate_if_processed_bean_is_of_type_RestTemplate() {
-    assertTrue(
-        restTemplateBeanPostProcessor.postProcessAfterInitialization(
-                new RestTemplate(), "testRestTemplate")
-            instanceof RestTemplate);
+  @DisplayName("when processed bean is of type RestTemplate should return RestTemplate")
+  void returnsRestTemplate() {
+    assertThat(
+            restTemplateBeanPostProcessor.postProcessAfterInitialization(
+                new RestTemplate(), "testRestTemplate"))
+        .isInstanceOf(RestTemplate.class);
   }
 
   @Test
-  public void should_add_ONE_RestTemplateInterceptor_if_processed_bean_is_of_type_RestTemplate() {
+  @DisplayName("when processed bean is of type RestTemplate should add ONE RestTemplateInterceptor")
+  void addsRestTemplateInterceptor() {
     RestTemplate restTemplate = new RestTemplate();
 
     restTemplateBeanPostProcessor.postProcessAfterInitialization(restTemplate, "testRestTemplate");
     restTemplateBeanPostProcessor.postProcessAfterInitialization(restTemplate, "testRestTemplate");
     restTemplateBeanPostProcessor.postProcessAfterInitialization(restTemplate, "testRestTemplate");
 
-    assertEquals(
-        restTemplate.getInterceptors().stream()
-            .filter(rti -> rti instanceof RestTemplateInterceptor)
-            .count(),
-        1);
+    assertThat(
+            restTemplate.getInterceptors().stream()
+                .filter(rti -> rti instanceof RestTemplateInterceptor)
+                .count())
+        .isEqualTo(1);
   }
 }

@@ -1,14 +1,11 @@
-group = 'io.opentelemetry.instrumentation'
-
-apply from: "$rootDir/gradle/java.gradle"
-apply from: "$rootDir/gradle/publish.gradle"
+ext {
+  javaSubPackage = 'servlet'
+}
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+archivesBaseName = "servlet"
 
 dependencies {
-  api deps.opentelemetryApi
-  api project(':auto-bootstrap')
-
   implementation deps.slf4j
 
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 }
-

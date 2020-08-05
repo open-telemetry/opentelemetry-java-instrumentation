@@ -21,6 +21,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
@@ -29,7 +30,8 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class NettyHttpServerTracer extends HttpServerTracer<HttpRequest, Channel, Channel> {
+public class NettyHttpServerTracer
+    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Channel> {
   public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
@@ -40,6 +42,11 @@ public class NettyHttpServerTracer extends HttpServerTracer<HttpRequest, Channel
   @Override
   protected String requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().get(name);
+  }
+
+  @Override
+  protected int responseStatus(HttpResponse httpResponse) {
+    return httpResponse.status().code();
   }
 
   @Override

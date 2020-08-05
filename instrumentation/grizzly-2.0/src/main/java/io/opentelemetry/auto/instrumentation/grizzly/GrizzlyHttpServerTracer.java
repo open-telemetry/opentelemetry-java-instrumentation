@@ -23,9 +23,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
+import org.glassfish.grizzly.http.HttpResponsePacket;
 
 public class GrizzlyHttpServerTracer
-    extends HttpServerTracer<HttpRequestPacket, HttpRequestPacket, FilterChainContext> {
+    extends HttpServerTracer<
+        HttpRequestPacket, HttpResponsePacket, HttpRequestPacket, FilterChainContext> {
 
   public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
@@ -37,6 +39,11 @@ public class GrizzlyHttpServerTracer
   @Override
   protected String requestHeader(HttpRequestPacket httpRequestPacket, String name) {
     return httpRequestPacket.getHeader(name);
+  }
+
+  @Override
+  protected int responseStatus(HttpResponsePacket httpResponsePacket) {
+    return httpResponsePacket.getStatus();
   }
 
   @Override
@@ -54,16 +61,16 @@ public class GrizzlyHttpServerTracer
   protected URI url(final HttpRequestPacket httpRequest) throws URISyntaxException {
     return new URI(
         (httpRequest.isSecure() ? "https://" : "http://")
-            + httpRequest.getRemoteHost()
+            + httpRequest.serverName()
             + ":"
-            + httpRequest.getLocalPort()
+            + httpRequest.getServerPort()
             + httpRequest.getRequestURI()
             + (httpRequest.getQueryString() != null ? "?" + httpRequest.getQueryString() : ""));
   }
 
   @Override
   protected String peerHostIP(final HttpRequestPacket httpRequest) {
-    return httpRequest.getLocalHost();
+    return httpRequest.getRemoteAddress();
   }
 
   @Override
@@ -88,6 +95,6 @@ public class GrizzlyHttpServerTracer
 
   @Override
   protected Integer peerPort(final HttpRequestPacket httpRequest) {
-    return httpRequest.getLocalPort();
+    return httpRequest.getRemotePort();
   }
 }

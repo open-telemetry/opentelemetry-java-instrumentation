@@ -58,6 +58,6 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, ((HttpResponse) msg.getMessage()).getStatus().getCode());
+    TRACER.end(span, (HttpResponse) msg.getMessage());
   }
 }

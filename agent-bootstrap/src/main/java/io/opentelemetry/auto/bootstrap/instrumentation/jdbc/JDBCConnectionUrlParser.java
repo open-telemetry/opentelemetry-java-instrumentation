@@ -18,7 +18,6 @@ package io.opentelemetry.auto.bootstrap.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo.DEFAULT;
 
-import io.opentelemetry.auto.bootstrap.ExceptionLogger;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -29,6 +28,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Structured as an enum instead of a class hierarchy to allow iterating through the parsers
@@ -742,6 +743,8 @@ public enum JDBCConnectionUrlParser {
     }
   };
 
+  private static final Logger log = LoggerFactory.getLogger(JDBCConnectionUrlParser.class);
+
   private static final Map<String, JDBCConnectionUrlParser> typeParsers = new HashMap<>();
 
   static {
@@ -791,7 +794,7 @@ public enum JDBCConnectionUrlParser {
       }
       return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
     } catch (final Exception e) {
-      ExceptionLogger.LOGGER.debug("Error parsing URL", e);
+      log.debug("Error parsing URL", e);
       return parsedProps.build();
     }
   }
@@ -870,7 +873,7 @@ public enum JDBCConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (final NumberFormatException e) {
-          ExceptionLogger.LOGGER.debug("Error parsing portnumber property: " + portNumber, e);
+          log.debug("Error parsing portnumber property: " + portNumber, e);
         }
       }
 
@@ -879,7 +882,7 @@ public enum JDBCConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (final NumberFormatException e) {
-          ExceptionLogger.LOGGER.debug("Error parsing portNumber property: " + portNumber, e);
+          log.debug("Error parsing portNumber property: " + portNumber, e);
         }
       }
     }

@@ -16,19 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.jetty;
 
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse;
 import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
-import io.opentelemetry.trace.Span;
-import javax.servlet.ServletResponse;
 
 public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
   public static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();
-
-  public static void contentLengthHelper(Span span, ServletResponse response) {
-    if (response instanceof CountingHttpServletResponse) {
-      TRACER.setContentLength(span, ((CountingHttpServletResponse) response).getContentLength());
-    }
-  }
 
   @Override
   protected String getInstrumentationName() {

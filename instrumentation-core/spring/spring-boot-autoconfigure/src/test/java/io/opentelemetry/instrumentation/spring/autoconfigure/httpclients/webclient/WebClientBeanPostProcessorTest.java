@@ -16,73 +16,76 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
 import io.opentelemetry.trace.Tracer;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/** Spring bean post processor test {@link WebClientBeanPostProcessor} */
-@RunWith(MockitoJUnitRunner.class)
-public class WebClientBeanPostProcessorTest {
+@ExtendWith(MockitoExtension.class)
+class WebClientBeanPostProcessorTest {
 
   @Mock Tracer tracer;
 
   WebClientBeanPostProcessor webClientBeanPostProcessor = new WebClientBeanPostProcessor(tracer);
 
   @Test
-  public void
-      should_return_object_if_processed_bean_is_NOT_of_type_WebClient_or_WebClientBuilder() {
-    assertEquals(
-        webClientBeanPostProcessor
-            .postProcessAfterInitialization(new Object(), "testObject")
-            .getClass(),
-        Object.class);
+  @DisplayName(
+      "when processed bean is NOT of type WebClient or WebClientBuilder should return Object")
+  void returnsObject() {
+
+    assertThat(
+            webClientBeanPostProcessor.postProcessAfterInitialization(new Object(), "testObject"))
+        .isExactlyInstanceOf(Object.class);
   }
 
   @Test
-  public void should_return_web_client_if_processed_bean_is_of_type_WebClient() {
-    WebClient webClient = WebClient.create();
-
-    assertTrue(
-        webClientBeanPostProcessor.postProcessAfterInitialization(webClient, "testWebClient")
-            instanceof WebClient);
+  @DisplayName("when processed bean is of type WebClient should return WebClient")
+  void returnsWebClient() {
+    assertThat(
+            webClientBeanPostProcessor.postProcessAfterInitialization(
+                WebClient.create(), "testWebClient"))
+        .isInstanceOf(WebClient.class);
   }
 
   @Test
-  public void should_return_WebClientBuilder_if_processed_bean_is_of_type_WebClientBuilder() {
-    WebClient.Builder webClientBuilder = WebClient.builder();
-
-    assertTrue(
-        webClientBeanPostProcessor.postProcessAfterInitialization(
-                webClientBuilder, "testWebClientBuilder")
-            instanceof WebClient.Builder);
+  @DisplayName("when processed bean is of type WebClientBuilder should return WebClientBuilder")
+  void returnsWebClientBuilder() {
+    assertThat(
+            webClientBeanPostProcessor.postProcessAfterInitialization(
+                WebClient.builder(), "testWebClientBuilder"))
+        .isInstanceOf(WebClient.Builder.class);
   }
 
   @Test
-  public void should_add_exchange_filter_to_WebClient() {
+  @DisplayName("when processed bean is of type WebClient should add exchange filter to WebClient")
+  void addsExchangeFilterWebClient() {
     WebClient webClient = WebClient.create();
     Object processedWebClient =
         webClientBeanPostProcessor.postProcessAfterInitialization(webClient, "testWebClient");
 
-    assertTrue(processedWebClient instanceof WebClient);
+    assertThat(processedWebClient).isInstanceOf(WebClient.class);
     ((WebClient) processedWebClient)
         .mutate()
         .filters(
             functions -> {
-              assertEquals(
-                  functions.stream().filter(wctf -> wctf instanceof WebClientTracingFilter).count(),
-                  1);
+              assertThat(
+                      functions.stream()
+                          .filter(wctf -> wctf instanceof WebClientTracingFilter)
+                          .count())
+                  .isEqualTo(1);
             });
   }
 
   @Test
-  public void should_add_ONE_exchange_filter_to_WebClientBuilder() {
+  @DisplayName(
+      "when processed bean is of type WebClientBuilder should add ONE exchange filter to WebClientBuilder")
+  void addsExchangeFilterWebClientBuilder() {
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     webClientBeanPostProcessor.postProcessAfterInitialization(
@@ -94,8 +97,9 @@ public class WebClientBeanPostProcessorTest {
 
     webClientBuilder.filters(
         functions -> {
-          assertEquals(
-              functions.stream().filter(wctf -> wctf instanceof WebClientTracingFilter).count(), 1);
+          assertThat(
+                  functions.stream().filter(wctf -> wctf instanceof WebClientTracingFilter).count())
+              .isEqualTo(1);
         });
   }
 }

@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.armeria.v1_0.server;
 
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
@@ -27,7 +28,7 @@ import java.net.SocketAddress;
 import java.net.URI;
 
 public class ArmeriaServerTracer
-    extends HttpServerTracer<HttpRequest, ServiceRequestContext, Void> {
+    extends HttpServerTracer<HttpRequest, RequestLog, ServiceRequestContext, Void> {
 
   ArmeriaServerTracer() {}
 
@@ -93,6 +94,11 @@ public class ArmeriaServerTracer
   @Override
   protected String requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().get(name);
+  }
+
+  @Override
+  protected int responseStatus(RequestLog httpResponse) {
+    return httpResponse.responseHeaders().status().code();
   }
 
   @Override
