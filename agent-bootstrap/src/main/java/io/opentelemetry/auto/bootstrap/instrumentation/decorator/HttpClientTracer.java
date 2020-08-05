@@ -36,7 +36,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
+public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -87,7 +87,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    */
   private Span startSpan(REQUEST request, String name) {
     Context context = Context.current();
-    Span clientSpan = ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = ClientTracer.CONTEXT_CLIENT_SPAN_KEY.get(context);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
@@ -100,7 +100,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  private Span onRequest(final Span span, final REQUEST request) {
+  public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));

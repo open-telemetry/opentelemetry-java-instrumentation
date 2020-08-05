@@ -16,9 +16,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientTracer.TRACER;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -41,9 +40,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    Span span =
-        ClientDecorator.getOrCreateSpan(DECORATE.spanName(executionAttributes), AwsSdk.tracer());
-    DECORATE.afterStart(span);
+    Span span = TRACER.getOrCreateSpan(TRACER.spanName(executionAttributes), AwsSdk.tracer());
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -53,9 +50,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
 
     if (span != null) {
-      DECORATE.onRequest(span, context.httpRequest());
-      DECORATE.onSdkRequest(span, context.request());
-      DECORATE.onAttributes(span, executionAttributes);
+      TRACER.onRequest(span, context.httpRequest());
+      TRACER.onSdkRequest(span, context.request());
+      TRACER.onAttributes(span, executionAttributes);
     }
   }
 
@@ -64,16 +61,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
-      try {
-        executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-        DECORATE.afterExecution(span, context.httpRequest());
-        // Call onResponse on both types of responses:
-        DECORATE.onSdkResponse(span, context.response());
-        DECORATE.onResponse(span, context.httpResponse());
-        DECORATE.beforeFinish(span);
-      } finally {
-        span.end();
-      }
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+      TRACER.afterExecution(span, context.httpRequest());
+      // Call onResponse on both types of responses:
+      TRACER.onSdkResponse(span, context.response());
+      TRACER.end(span, context.httpResponse());
     }
   }
 
@@ -82,13 +74,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
-      try {
-        executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-        DECORATE.onError(span, context.exception());
-        DECORATE.beforeFinish(span);
-      } finally {
-        span.end();
-      }
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+      TRACER.endExceptionally(span, context.exception());
     }
   }
 }

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -29,8 +29,8 @@ import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
-  static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
+final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpResponse> {
+  static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -117,5 +117,10 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
 
   private static String header(SdkHttpHeaders headers, String name) {
     return headers.firstMatchingHeader(name).orElse(null);
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.aws-sdk-2.2";
   }
 }

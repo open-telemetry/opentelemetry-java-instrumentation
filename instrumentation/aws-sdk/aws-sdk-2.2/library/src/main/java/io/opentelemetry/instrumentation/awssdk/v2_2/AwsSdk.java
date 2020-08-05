@@ -40,12 +40,12 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
  */
 public class AwsSdk {
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.aws-sdk-2.2");
+  private static final Tracer tracer =
+      OpenTelemetry.getTracerProvider().get(AwsSdkClientTracer.TRACER.getInstrumentationName());
 
   /** Returns the {@link Tracer} used to instrument the AWS SDK. */
   public static Tracer tracer() {
-    return TRACER;
+    return tracer;
   }
 
   /**
