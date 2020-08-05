@@ -116,8 +116,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         parent()
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" TEST_CLIENT_IP
         // dropwizard reports peer ip as the client ip
+        "${SemanticAttributes.NET_PEER_IP.key()}" TEST_CLIENT_IP
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
