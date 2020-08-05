@@ -1,6 +1,6 @@
 # Manual Instrumentation for Spring-Web
 
-Provides OpenTelemetry tracing for spring-web RestControllers by leveraging spring-web [filters](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter).  
+Provides OpenTelemetry instrumentation for Spring's RestTemplate.  
 
 ## Quickstart
 
