@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.setPeer;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -27,6 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -90,7 +90,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            setPeer(span, host, null);
+            BaseTracer.setPeer(span, host, null);
           }
 
           if (throwable != null) {

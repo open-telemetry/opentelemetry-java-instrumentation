@@ -150,7 +150,7 @@ public abstract class BaseTracer {
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
-  public void setPeer(final Span span, String peerName, String peerIp) {
+  public static void setPeer(final Span span, String peerName, String peerIp) {
     assert span != null;
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
@@ -167,7 +167,7 @@ public abstract class BaseTracer {
     }
   }
 
-  protected String mapToPeer(String endpoint) {
+  protected static String mapToPeer(String endpoint) {
     if (endpoint == null) {
       return null;
     }
