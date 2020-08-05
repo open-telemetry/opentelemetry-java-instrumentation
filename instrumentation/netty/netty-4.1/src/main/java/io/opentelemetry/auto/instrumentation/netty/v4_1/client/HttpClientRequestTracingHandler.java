@@ -69,14 +69,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       } catch (final Throwable throwable) {
         TRACER.endExceptionally(span, throwable);
         throw throwable;
-      } finally {
-        if (null != parentScope) {
-          parentScope.close();
-        }
-
-        if (null != currentScope) {
-          currentScope.close();
-        }
+      }
+    } finally {
+      if (null != parentScope) {
+        parentScope.close();
       }
     }
   }
