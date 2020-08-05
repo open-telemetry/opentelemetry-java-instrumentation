@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for enabling aspects. */
-@ConfigurationProperties(prefix = "opentelemetry.trace.httpclients")
+@ConfigurationProperties(prefix = "opentelemetry.trace.aspects")
 public final class TraceAspectProperties {
   private boolean enabled;
 
