@@ -17,12 +17,16 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientTracer.TRACER;
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -54,12 +58,14 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     Span span = TRACER.startSpan(request);
-    TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
-    Scope currentScope = null;
     try (Scope scope = currentContextWith(span)) {
+      TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
-        currentScope = TRACER.startScope(span, request);
+        Context context = withSpan(span, Context.current());
+        OpenTelemetry.getPropagators()
+            .getHttpTextFormat()
+            .inject(context, request.headers(), SETTER);
       }
 
       ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);

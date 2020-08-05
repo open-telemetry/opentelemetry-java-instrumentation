@@ -54,9 +54,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
     boolean finishSpan = msg.getMessage() instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      try (Scope scope = TracingContextUtils.currentContextWith(span)) {
-        TRACER.end(span, (HttpResponse) msg.getMessage());
-      }
+      TRACER.end(span, (HttpResponse) msg.getMessage());
     }
 
     // We want the callback in the scope of the parent, not the client span

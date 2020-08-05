@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -48,11 +47,6 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
-  }
-
-  @Override
-  protected Setter<Request> getSetter() {
-    return null;
   }
 
   @Override

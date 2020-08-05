@@ -41,7 +41,7 @@ public class TracingInterceptor implements Interceptor {
         .getHttpTextFormat()
         .inject(context, requestBuilder, RequestBuilderInjectAdapter.SETTER);
 
-    Response response = null;
+    Response response;
     try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(requestBuilder.build());
     } catch (final Exception e) {

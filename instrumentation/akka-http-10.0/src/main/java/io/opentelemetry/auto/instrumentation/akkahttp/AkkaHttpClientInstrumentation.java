@@ -29,7 +29,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
@@ -84,15 +84,16 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
-      if (callDepth == 0) {
+      callDepth = TRACER.getCallDepth();
+      if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(request);
 
         Context context = withSpan(span, Context.current());
@@ -113,19 +114,16 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Return final Future<HttpResponse> responseFuture,
         @Advice.Thrown final Throwable throwable,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        if (throwable == null) {
+          responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
+        } else {
+          TRACER.endExceptionally(span, throwable);
+        }
       }
-      CallDepthThreadLocalMap.reset(HttpExt.class);
-
-      if (throwable == null) {
-        responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
-      } else {
-        TRACER.endExceptionally(span, throwable);
-      }
-
-      scope.close();
     }
   }
 

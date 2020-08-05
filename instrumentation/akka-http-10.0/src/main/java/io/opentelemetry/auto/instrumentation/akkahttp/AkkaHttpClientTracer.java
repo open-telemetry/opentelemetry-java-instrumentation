@@ -17,14 +17,21 @@
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
+import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
   public static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+
+  public Depth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(HttpExt.class);
+  }
 
   @Override
   protected String method(final HttpRequest httpRequest) {
