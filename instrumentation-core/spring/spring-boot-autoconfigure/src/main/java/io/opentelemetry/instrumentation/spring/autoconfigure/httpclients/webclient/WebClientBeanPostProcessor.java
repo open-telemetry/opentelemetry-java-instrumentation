@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
-import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
+import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import java.util.function.Consumer;
