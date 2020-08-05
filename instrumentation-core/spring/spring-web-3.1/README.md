@@ -1,4 +1,4 @@
-# spring-web
+# Manual Instrumentation for Spring-Web
 
 Provides OpenTelemetry tracing for spring-web RestController by leveraging spring-web [filters](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/OncePerRequestFilter.html).  
 
@@ -6,9 +6,11 @@ Provides OpenTelemetry tracing for spring-web RestController by leveraging sprin
 
 ### Add the dependencies to your project.
 
-Replace `SPRING_VERSION` with the version of spring you're using. Minimum version: 3.1
+Replace `SPRING_VERSION` with the version of spring you're using. 
+`Minimum version: 3.1`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry). Minimum version: 0.7
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry). 
+`Minimum version: 0.7.0`
 
 For Maven add to your `pom.xml`:
 ```xml
@@ -49,7 +51,7 @@ runtime 'org.springframework:spring-web:SPRING_VERSION'
 #### RestTemplateInterceptor
 
 RestTemplateInterceptor adds OpenTelemetry client spans to requests sent using RestTemplate by implementing the [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html) to 
-interface. Examples are shown below:
+interface. An example are shown below:
 
 ##### Usage
 
