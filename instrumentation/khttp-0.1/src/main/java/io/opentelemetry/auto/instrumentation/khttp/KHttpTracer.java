@@ -16,18 +16,20 @@
 
 package io.opentelemetry.auto.instrumentation.khttp;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import khttp.KHttp;
 import khttp.responses.Response;
 
-public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response> {
-  public static final KHttpDecorator DECORATE = new KHttpDecorator();
+public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
+  public static final KHttpTracer TRACER = new KHttpTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.khttp-0.1");
+  public Depth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(KHttp.class);
+  }
 
   @Override
   protected String method(RequestWrapper requestWrapper) {
@@ -52,5 +54,10 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   @Override
   protected String responseHeader(Response response, String name) {
     return response.getHeaders().get(name);
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.khttp-0.1";
   }
 }
