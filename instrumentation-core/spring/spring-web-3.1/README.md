@@ -10,7 +10,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry). 
-`Minimum version: 0.7.0`
+`Minimum version: 0.8.0`
 
 For Maven add to your `pom.xml`:
 ```xml
@@ -83,4 +83,4 @@ public class RestTemplateConfig {
 
 ### Starter Guide
 
-Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out the opentelemetry [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
