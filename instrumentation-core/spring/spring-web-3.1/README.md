@@ -1,15 +1,15 @@
 # Manual Instrumentation for Spring-Web
 
-Provides OpenTelemetry instrumentation for Spring's RestTemplate.  
+Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 
 ## Quickstart
 
 ### Add these dependencies to your project.
 
-Replace `SPRING_VERSION` with the version of spring you're using. 
+Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry). 
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
 `Minimum version: 0.8.0`
 
 For Maven add to your `pom.xml`:
@@ -21,13 +21,13 @@ For Maven add to your `pom.xml`:
     <artifactId>opentelemetry-spring-web-3.1</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-  
+
    <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-sdk</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-  
+
   <!-- spring web -->
   <dependency>
     <groupId>org.springframework</groupId>
@@ -35,7 +35,7 @@ For Maven add to your `pom.xml`:
     <version>SPRING_VERSION</version>
     <scope>runtime</scope>
   </dependency>
-  
+
 </dependencies>
 ```
 
@@ -50,7 +50,7 @@ runtime 'org.springframework:spring-web:SPRING_VERSION'
 
 #### RestTemplateInterceptor
 
-RestTemplateInterceptor adds OpenTelemetry client spans to requests sent using RestTemplate by implementing the [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html) 
+RestTemplateInterceptor adds OpenTelemetry client spans to requests sent using RestTemplate by implementing the [ClientHttpRequestInterceptor](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/http/client/ClientHttpRequestInterceptor.html)
 interface. An example is shown below:
 
 ##### Usage
@@ -71,7 +71,7 @@ public class RestTemplateConfig {
 
    @Bean
    public RestTemplate restTemplate(Tracer tracer) {
-      
+
       RestTemplate restTemplate = new RestTemplate();
       RestTemplateInterceptor restTemplateInterceptor = new RestTemplateInterceptor(tracer);
       restTemplate.getInterceptors().add(restTemplateInterceptor);
