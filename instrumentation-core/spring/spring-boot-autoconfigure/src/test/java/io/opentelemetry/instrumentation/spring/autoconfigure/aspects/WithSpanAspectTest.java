@@ -38,84 +38,82 @@ import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 
 @ExtendWith(MockitoExtension.class)
 public class WithSpanAspectTest {
-	static class WithSpanTester {
-		@WithSpan
-		public String testWithSpan() {
-			return "Span with name testWithSpan was created";
-		}
+  static class WithSpanTester {
+    @WithSpan
+    public String testWithSpan() {
+      return "Span with name testWithSpan was created";
+    }
 
-		@WithSpan("greatestSpanEver")
-		public String testWithSpanWithValue() {
-			return "Span with name greatestSpanEver was created";
-		}
-		
-		@WithSpan
-		public String testWithSpanWithException() throws Exception {
-			throw new Exception("Test @WithSpan With Exception");
-		}
-	}
+    @WithSpan("greatestSpanEver")
+    public String testWithSpanWithValue() {
+      return "Span with name greatestSpanEver was created";
+    }
 
-	@Mock
-	private Tracer tracer;
-	@Mock
-	private Span span;
-	@Mock
-	private Span.Builder spanBuilder;
-	@Mock
-	private Scope scope;
-	@Mock
-	private ProceedingJoinPoint pjp;
-	@Mock
-	private MethodSignature signature;
+    @WithSpan
+    public String testWithSpanWithException() throws Exception {
+      throw new Exception("Test @WithSpan With Exception");
+    }
+  }
 
-	private WithSpanTester withSpanTester;
+  @Mock private Tracer tracer;
+  @Mock private Span span;
+  @Mock private Span.Builder spanBuilder;
+  @Mock private Scope scope;
+  @Mock private ProceedingJoinPoint pjp;
+  @Mock private MethodSignature signature;
 
-	@BeforeEach
-	void setup() {
-		when(tracer.spanBuilder(any())).thenReturn(spanBuilder);
-		when(spanBuilder.setSpanKind(any())).thenReturn(spanBuilder);
-		when(spanBuilder.startSpan()).thenReturn(span);
-		when(tracer.withSpan(span)).thenReturn(scope);
+  private WithSpanTester withSpanTester;
 
-		AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
-		WithSpanAspect aspect = new WithSpanAspect(tracer);
-		factory.addAspect(aspect);
+  @BeforeEach
+  void setup() {
+    when(tracer.spanBuilder(any())).thenReturn(spanBuilder);
+    when(spanBuilder.setSpanKind(any())).thenReturn(spanBuilder);
+    when(spanBuilder.startSpan()).thenReturn(span);
+    when(tracer.withSpan(span)).thenReturn(scope);
 
-		withSpanTester = factory.getProxy();
-	}
+    AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
+    WithSpanAspect aspect = new WithSpanAspect(tracer);
+    factory.addAspect(aspect);
 
-	@Test
-	@DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
-	void withSpan() throws Throwable {
+    withSpanTester = factory.getProxy();
+  }
 
-		withSpanTester.testWithSpan();
+  @Test
+  @DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
+  void withSpan() throws Throwable {
 
-		verify(tracer, times(1)).spanBuilder("WithSpanTester.testWithSpan");
-		verify(spanBuilder, times(1)).startSpan();
-		verify(span, times(1)).end();
-	}
+    withSpanTester.testWithSpan();
 
-	@Test
-	@DisplayName("when @WithSpan value is set should wrap method execution in a Span with custom name")
-	void withSpanName() throws Throwable {
+    verify(tracer, times(1)).spanBuilder("WithSpanTester.testWithSpan");
+    verify(spanBuilder, times(1)).startSpan();
+    verify(span, times(1)).end();
+  }
 
-		withSpanTester.testWithSpanWithValue();
+  @Test
+  @DisplayName(
+      "when @WithSpan value is set should wrap method execution in a Span with custom name")
+  void withSpanName() throws Throwable {
 
-		verify(tracer, times(1)).spanBuilder("greatestSpanEver");
-		verify(spanBuilder, times(1)).startSpan();
-		verify(span, times(1)).end();
-	}
+    withSpanTester.testWithSpanWithValue();
 
-	@Test
-	@DisplayName("when method is annotated with @WithSpan AND an exception is thrown span should record the exception")
-	void withSpanError() throws Throwable {
-		
-		assertThatThrownBy(() -> {
-			withSpanTester.testWithSpanWithException();
-		}).isInstanceOf(Exception.class);
-		
-		verify(spanBuilder, times(1)).startSpan();
-		verify(span, times(1)).recordException(any());
-		verify(span, times(1)).end();
-	}
+    verify(tracer, times(1)).spanBuilder("greatestSpanEver");
+    verify(spanBuilder, times(1)).startSpan();
+    verify(span, times(1)).end();
+  }
+
+  @Test
+  @DisplayName(
+      "when method is annotated with @WithSpan AND an exception is thrown span should record the exception")
+  void withSpanError() throws Throwable {
+
+    assertThatThrownBy(
+            () -> {
+              withSpanTester.testWithSpanWithException();
+            })
+        .isInstanceOf(Exception.class);
+
+    verify(spanBuilder, times(1)).startSpan();
+    verify(span, times(1)).recordException(any());
+    verify(span, times(1)).end();
+  }
 }
