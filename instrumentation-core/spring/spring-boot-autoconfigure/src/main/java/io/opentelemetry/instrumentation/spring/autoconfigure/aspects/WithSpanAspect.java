@@ -70,9 +70,7 @@ public class WithSpanAspect {
   }
 
   private void errorHandler(Span span, Throwable t) {
-    String message = t.getMessage();
-    span.addEvent(message);
-    span.setAttribute("error", true);
-    span.setStatus(Status.UNKNOWN);
+    span.recordException(t);
+    span.setStatus(Status.INTERNAL);
   }
 }
