@@ -22,7 +22,6 @@ import play.libs.concurrent.HttpExecution
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
-import spock.lang.Retry
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -35,7 +34,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-@Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
 class PlayAsyncServerTest extends PlayServerTest {
   @Shared
   def executor = Executors.newCachedThreadPool()

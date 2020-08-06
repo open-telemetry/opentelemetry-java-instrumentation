@@ -19,14 +19,11 @@ package io.opentelemetry.auto.tooling
 import io.opentelemetry.auto.bootstrap.WeakMap
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
-import spock.lang.Retry
 import spock.lang.Shared
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 
-@Retry
-// These tests fail sometimes in CI.
 class WeakConcurrentSupplierTest extends AgentSpecification {
   @Shared
   def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent()

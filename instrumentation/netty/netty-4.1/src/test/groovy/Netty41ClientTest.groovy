@@ -23,23 +23,22 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.auto.test.base.HttpClientTest
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Response
-import spock.lang.Retry
 import spock.lang.Shared
 import spock.lang.Timeout
+
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
-@Retry
 @Timeout(5)
 class Netty41ClientTest extends HttpClientTest {
 

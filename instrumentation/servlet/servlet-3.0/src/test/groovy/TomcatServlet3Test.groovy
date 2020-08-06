@@ -15,6 +15,8 @@
  */
 
 import com.google.common.io.Files
+import javax.servlet.Servlet
+import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
@@ -28,16 +30,12 @@ import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.servlet.Servlet
-import javax.servlet.ServletException
-
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 
 @Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
@@ -125,22 +123,19 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     }
 
     and:
-    assertTraces(count * 2) {
+    assertTraces(count) {
       assert accessLogValue.loggedIds.size() == count
       def loggedTraces = accessLogValue.loggedIds*.first
       def loggedSpans = accessLogValue.loggedIds*.second
 
       (0..count - 1).each {
-        trace(it * 2, 1) {
-          basicSpan(it, 0, "TEST_SPAN")
-        }
-        trace(it * 2 + 1, 2) {
+        trace(it, 2) {
           serverSpan(it, 0, null, null, "GET", SUCCESS.body.length())
           controllerSpan(it, 1, span(0))
         }
 
-        assert loggedTraces.contains(traces[it * 2 + 1][0].traceId.toLowerBase16())
-        assert loggedSpans.contains(traces[it * 2 + 1][0].spanId.toLowerBase16())
+        assert loggedTraces.contains(traces[it][0].traceId.toLowerBase16())
+        assert loggedSpans.contains(traces[it][0].spanId.toLowerBase16())
       }
     }
 
@@ -160,18 +155,15 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     response.body().string() == ERROR.body
 
     and:
-    assertTraces(2) {
-      trace(0, 1) {
-        basicSpan(it, 0, "TEST_SPAN")
-      }
-      trace(1, 2) {
+    assertTraces(1) {
+      trace(0, 2) {
         serverSpan(it, 0, null, null, method, response.body().contentLength(), ERROR)
         controllerSpan(it, 1, span(0))
       }
 
       def (String traceId, String spanId) = accessLogValue.loggedIds[0]
-      assert traces[1][0].traceId.toLowerBase16() == traceId
-      assert traces[1][0].spanId.toLowerBase16() == spanId
+      assert traces[0][0].traceId.toLowerBase16() == traceId
+      assert traces[0][0].spanId.toLowerBase16() == spanId
     }
 
     where:

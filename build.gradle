@@ -5,6 +5,8 @@ plugins {
   id 'com.jfrog.bintray' version '1.8.5' apply false
   id "nebula.release" version "15.0.1"
 
+  id 'org.gradle.test-retry' version '1.1.8' apply false
+
   id 'org.unbroken-dome.test-sets' version '3.0.1'
   id 'com.github.ben-manes.versions' version '0.27.0'
 
