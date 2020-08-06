@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -46,7 +47,7 @@ public class WithSpanAspect {
   @Around("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
   public Object traceMethod(final ProceedingJoinPoint pjp) throws Throwable {
 
-    Span span = tracer.spanBuilder(getSpanName(pjp)).startSpan();
+    Span span = tracer.spanBuilder(getSpanName(pjp)).setSpanKind(Kind.INTERNAL).startSpan();
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
