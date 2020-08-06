@@ -67,7 +67,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return withScopedContext(context);
   }
 
-  // TODO should end methods remove SPAN attribute from request as well?
   public void end(Span span, RESPONSE response) {
     onResponse(span, response);
     super.end(span);
