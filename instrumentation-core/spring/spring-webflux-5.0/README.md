@@ -1,15 +1,15 @@
 # Manual Instrumentation for Spring-WebFlux
 
-Provides OpenTelemetry instrumentation for Spring's WebClient.  
+Provides OpenTelemetry instrumentation for Spring's WebClient.
 
 ## Quickstart
 
 ### Add these dependencies to your project.
 
-Replace `SPRING_VERSION` with the version of spring you're using. 
+Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 5.0`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry). 
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
 `Minimum version: 0.8.0`
 
 For Maven add to your `pom.xml`:
@@ -21,13 +21,13 @@ For Maven add to your `pom.xml`:
     <artifactId>opentelemetry-spring-webflux-5.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-  
+
    <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-sdk</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-  
+
   <!-- spring web -->
   <dependency>
     <groupId>org.springframework</groupId>
@@ -35,7 +35,7 @@ For Maven add to your `pom.xml`:
     <version>SPRING_VERSION</version>
     <scope>runtime</scope>
   </dependency>
-  
+
 </dependencies>
 ```
 
@@ -50,7 +50,7 @@ runtime 'org.springframework:spring-webflux:SPRING_VERSION'
 
 #### WebClientTracingFilter
 
-WebClientTracingFilter adds OpenTelemetry client spans to requests sent using WebClient by implementing the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html) 
+WebClientTracingFilter adds OpenTelemetry client spans to requests sent using WebClient by implementing the [ExchangeFilterFunction](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/function/client/ExchangeFilterFunction.html)
 interface. An example is shown below:
 
 ##### Usage
@@ -70,10 +70,10 @@ public class WebClientConfig {
 
    @Bean
    public WebClient.Builder webClient(Tracer tracer) {
-      
+
       WebClient webClient = WebClient.create();
       WebClientTracingFilter webClientTracingFilter = new WebClientTracingFilter(tracer);
-      
+
       return webClient.mutate().filter(webClientTracingFilter);
    }
 }
