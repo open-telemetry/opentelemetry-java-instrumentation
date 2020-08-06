@@ -225,11 +225,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     // This test should handle both types or we should unify how the clients work
 
     given:
-    if (!testRedirects()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRedirects())
+    assumeTrue(testRedirects())
     def uri = server.address.resolve("/redirect")
 
     when:
@@ -251,11 +247,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with 2 redirects"() {
     given:
-    if (!testRedirects()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRedirects())
+    assumeTrue(testRedirects())
     def uri = server.address.resolve("/another-redirect")
 
     when:
@@ -278,11 +270,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with circular redirects"() {
     given:
-    if (!testRedirects() || !testCircularRedirects()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRedirects() && testCircularRedirects())
+    assumeTrue(testRedirects() && testCircularRedirects())
     def uri = server.address.resolve("/circular-redirect")
 
     when:
@@ -307,11 +295,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "redirect #method to secured endpoint copies auth header"() {
     given:
-    if (!testRedirects()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRedirects())
+    assumeTrue(testRedirects())
     def uri = server.address.resolve("/to-secured")
 
     when:
@@ -334,11 +318,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error (unopened port)"() {
     given:
-    if (!testConnectionFailure()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testConnectionFailure())
+    assumeTrue(testConnectionFailure())
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
 
     when:
@@ -364,11 +344,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error dropped request"() {
     given:
-    if (!testRemoteConnection()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRemoteConnection())
+    assumeTrue(testRemoteConnection())
     // https://stackoverflow.com/a/100859
     def uri = new URI("http://www.google.com:81/")
 
@@ -393,11 +369,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "connection error non routable address"() {
     given:
-    if (!testRemoteConnection()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRemoteConnection())
+    assumeTrue(testRemoteConnection())
     def uri = new URI("https://192.0.2.1/")
 
     when:
@@ -423,11 +395,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
   def "test https request"() {
     given:
-    if (!testRemoteConnection()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testRemoteConnection())
+    assumeTrue(testRemoteConnection())
     def uri = new URI("https://www.google.com/")
 
     when:

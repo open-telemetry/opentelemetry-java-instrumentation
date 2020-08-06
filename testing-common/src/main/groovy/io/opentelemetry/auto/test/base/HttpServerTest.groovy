@@ -342,11 +342,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test notFound"() {
     setup:
-    if (!testNotFound()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testNotFound())
+    assumeTrue(testNotFound())
     def request = request(NOT_FOUND, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -363,11 +359,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test path param"() {
     setup:
-    if (!testPathParam()) {
-      return
-    }
-    // TODO(anuraaga): assumeTrue sometimes doesn't work on JUnit5 Vintage + Spock
-    // assumeTrue(testPathParam())
+    assumeTrue(testPathParam())
     def request = request(PATH_PARAM, method, body).build()
     def response = client.newCall(request).execute()
 
