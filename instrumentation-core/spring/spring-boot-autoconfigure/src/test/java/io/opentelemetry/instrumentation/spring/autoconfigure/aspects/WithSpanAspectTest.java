@@ -113,7 +113,7 @@ public class WithSpanAspectTest {
         .isInstanceOf(Exception.class);
 
     verify(spanBuilder, times(1)).startSpan();
-    verify(span, times(1)).recordException(any());
+    verify(span, times(1)).recordException(any(Exception.class));
     verify(span, times(1)).end();
   }
 }
