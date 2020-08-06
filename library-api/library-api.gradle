@@ -5,7 +5,6 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   api deps.opentelemetryApi
-  compileOnly deps.opentelemetrySdk
   implementation deps.slf4j
 
   testImplementation project(':testing-common')
