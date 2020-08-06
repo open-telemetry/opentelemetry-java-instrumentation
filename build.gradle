@@ -62,18 +62,6 @@ allprojects {
   }
 }
 
-// Writes tasks to file allowing us to leverage CircleCI's file based task parallelization
-task writeMuzzleTasksToFile {
-  doLast {
-    def muzzleFile = file("${buildDir}/muzzleTasks")
-    assert muzzleFile.parentFile.mkdirs() || muzzleFile.parentFile.directory
-
-    muzzleFile.text = subprojects.findAll { subproject -> subproject.plugins.hasPlugin('muzzle') }
-      .collect { it.path + ":muzzle" }
-      .join('\n')
-  }
-}
-
 apply plugin: 'com.diffplug.gradle.spotless'
 
 spotless {
