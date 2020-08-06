@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.none;

@@ -85,7 +85,6 @@ tasks.withType(ShadowJar).configureEach {
   relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
   relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"
   relocate "io.opentelemetry.trace", "io.opentelemetry.auto.shaded.io.opentelemetry.trace"
-  relocate "io.opentelemetry.contrib.auto.annotations", "io.opentelemetry.auto.shaded.io.opentelemetry.contrib.auto.annotations"
 
   // relocate OpenTelemetry API dependency
   relocate "io.grpc", "io.opentelemetry.auto.shaded.io.grpc"

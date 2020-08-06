@@ -22,6 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.config.MethodsConfigurationParser;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;

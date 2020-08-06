@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
 
-import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.TraceDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.TraceDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
+import unshaded.io.opentelemetry.extensions.auto.annotations.WithSpan;
 
 /**
  * Instrumentation for methods annotated with {@link
@@ -35,10 +36,12 @@ public class WithSpanAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Origin final Method method) {
+    WithSpan annotation = method.getAnnotation(WithSpan.class);
+
     Span span =
         TRACER
-            .spanBuilder(DECORATE.spanNameForMethodWithAnnotation(method))
-            .setSpanKind(DECORATE.extractSpanKind(method))
+            .spanBuilder(DECORATE.spanNameForMethodWithAnnotation(annotation, method))
+            .setSpanKind(DECORATE.extractSpanKind(annotation))
             .startSpan();
     DECORATE.afterStart(span);
     return new SpanWithScope(span, currentContextWith(span));

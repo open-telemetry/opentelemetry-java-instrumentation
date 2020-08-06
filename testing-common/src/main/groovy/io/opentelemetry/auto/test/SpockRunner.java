@@ -62,7 +62,6 @@ public class SpockRunner extends Sputnik {
       "io.opentelemetry.internal", // OpenTelemetry API
       "io.opentelemetry.metrics", // OpenTelemetry API
       "io.opentelemetry.trace", // OpenTelemetry API
-      "io.opentelemetry.contrib.auto.annotations", // OpenTelemetry API Contrib
       "io.grpc.Context", // OpenTelemetry API dependency
       "io.grpc.Deadline", // OpenTelemetry API dependency
       "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency
