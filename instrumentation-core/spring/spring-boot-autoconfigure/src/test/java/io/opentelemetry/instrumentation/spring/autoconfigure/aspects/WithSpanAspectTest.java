@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 
+/** Spring AOP Test for {@link WithSpanAspect} */
 @ExtendWith(MockitoExtension.class)
 public class WithSpanAspectTest {
   static class WithSpanTester {
