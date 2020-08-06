@@ -2,6 +2,7 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
   skipPublish = true
+  retryTests = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"

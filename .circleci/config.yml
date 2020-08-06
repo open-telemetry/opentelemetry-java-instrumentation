@@ -118,7 +118,6 @@ jobs:
 
   muzzle:
     <<: *defaults
-    parallelism: 8
     steps:
       - checkout
 
@@ -126,14 +125,11 @@ jobs:
       # restoring/saving than the actual increase in time it takes just downloading the artifacts each time.
 
       - run:
-          name: Gather muzzle tasks
-          command: SKIP_BUILDSCAN="true" ./gradlew writeMuzzleTasksToFile --stacktrace --no-daemon
-      - run:
           name: Verify Muzzle
           command: >-
             SKIP_BUILDSCAN="true"
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
-            ./gradlew `circleci tests split workspace/build/muzzleTasks | xargs` --parallel --stacktrace --no-daemon --max-workers=16
+            ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
   publish: &publish
     <<: *defaults
