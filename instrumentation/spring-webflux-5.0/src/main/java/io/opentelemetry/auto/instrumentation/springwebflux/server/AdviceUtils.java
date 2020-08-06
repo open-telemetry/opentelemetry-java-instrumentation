@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringW
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TracingContextUtils;

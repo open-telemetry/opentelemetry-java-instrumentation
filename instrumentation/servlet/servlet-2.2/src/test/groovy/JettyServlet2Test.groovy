@@ -16,7 +16,7 @@
 
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.library.api.MoreAttributes
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server

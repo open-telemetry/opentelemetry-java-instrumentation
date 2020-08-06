@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.jsp;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;

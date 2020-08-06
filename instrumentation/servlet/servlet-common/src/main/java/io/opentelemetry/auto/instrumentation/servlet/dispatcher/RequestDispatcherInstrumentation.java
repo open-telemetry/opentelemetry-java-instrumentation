@@ -22,7 +22,7 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.library.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;

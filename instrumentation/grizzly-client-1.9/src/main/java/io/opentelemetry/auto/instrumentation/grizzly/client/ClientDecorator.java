@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.grizzly.client;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

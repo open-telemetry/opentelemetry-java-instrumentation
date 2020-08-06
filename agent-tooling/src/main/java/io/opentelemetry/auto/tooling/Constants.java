@@ -41,7 +41,7 @@ public final class Constants {
   // This is used in IntegrationTestUtils.java
   public static final String[] AGENT_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto",
-    "io.opentelemetry.instrumentation.library.api",
+    "io.opentelemetry.instrumentation.api",
     // guava
     "com.google.auto",
     "com.google.common",

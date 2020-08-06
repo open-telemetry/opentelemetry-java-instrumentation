@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.servlet.filter;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
 
 public class FilterDecorator extends BaseDecorator {

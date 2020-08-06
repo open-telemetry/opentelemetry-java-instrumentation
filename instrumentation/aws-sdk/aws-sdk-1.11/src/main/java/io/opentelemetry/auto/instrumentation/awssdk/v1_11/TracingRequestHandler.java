@@ -24,9 +24,9 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
-import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

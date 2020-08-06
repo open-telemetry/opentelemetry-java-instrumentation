@@ -20,7 +20,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -45,7 +45,7 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared

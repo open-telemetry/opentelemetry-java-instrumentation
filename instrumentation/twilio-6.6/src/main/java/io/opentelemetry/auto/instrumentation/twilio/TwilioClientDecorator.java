@@ -20,7 +20,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;

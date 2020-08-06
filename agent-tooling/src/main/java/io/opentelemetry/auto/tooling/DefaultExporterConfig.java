@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.tooling;
 
-import io.opentelemetry.instrumentation.library.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.Config;
 
 public class DefaultExporterConfig implements io.opentelemetry.sdk.extensions.auto.config.Config {
   private final String prefix;

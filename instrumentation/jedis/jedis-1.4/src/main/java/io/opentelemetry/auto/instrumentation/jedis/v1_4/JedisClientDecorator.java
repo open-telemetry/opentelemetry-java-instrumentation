@@ -17,8 +17,8 @@
 package io.opentelemetry.auto.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
-import io.opentelemetry.instrumentation.library.api.decorator.DatabaseClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import redis.clients.jedis.Connection;
 

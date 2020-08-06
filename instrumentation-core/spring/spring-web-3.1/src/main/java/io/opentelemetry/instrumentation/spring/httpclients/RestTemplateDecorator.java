@@ -20,7 +20,7 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.library.api.decorator.HttpClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_4;
 
-import io.opentelemetry.instrumentation.library.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;

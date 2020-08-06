@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.bootstrap.spi.TracerCustomizer;
-import io.opentelemetry.instrumentation.library.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;

@@ -55,7 +55,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   static {
     final String[] testBS = {
-      "io.opentelemetry.instrumentation.library.api",
+      "io.opentelemetry.instrumentation.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API (context prop)

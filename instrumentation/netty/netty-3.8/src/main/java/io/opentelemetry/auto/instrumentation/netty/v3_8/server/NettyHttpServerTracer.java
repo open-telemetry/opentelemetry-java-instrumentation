@@ -21,7 +21,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.library.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;

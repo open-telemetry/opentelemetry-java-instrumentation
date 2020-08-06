@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
-import io.opentelemetry.instrumentation.library.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

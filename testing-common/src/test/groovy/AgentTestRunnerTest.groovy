@@ -25,7 +25,7 @@ import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.instrumentation.library.api.config.Config.TRACE_CLASSES_EXCLUDE
+import static io.opentelemetry.instrumentation.api.config.Config.TRACE_CLASSES_EXCLUDE
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null

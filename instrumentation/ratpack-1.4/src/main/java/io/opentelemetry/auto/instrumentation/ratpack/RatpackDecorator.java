@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.library.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import ratpack.handling.Context;

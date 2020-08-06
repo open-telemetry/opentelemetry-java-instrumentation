@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.finatra;
 
-import io.opentelemetry.instrumentation.library.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 
 public class FinatraTracer extends BaseTracer {
   public static final FinatraTracer TRACER = new FinatraTracer();
