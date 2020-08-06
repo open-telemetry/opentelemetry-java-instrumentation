@@ -27,6 +27,7 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -59,7 +60,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Span span = TRACER.startSpan(request);
     try (Scope scope = currentContextWith(span)) {
-      TRACER.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+      BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
         Context context = withSpan(span, Context.current());

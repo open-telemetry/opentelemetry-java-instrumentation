@@ -131,7 +131,7 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public static void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
@@ -144,7 +144,7 @@ public abstract class BaseTracer {
     }
   }
 
-  public void onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public static void onPeerConnection(final Span span, final InetAddress remoteAddress) {
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
