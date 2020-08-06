@@ -27,6 +27,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses Spring-AOP to wrap methods and constructors marked by {@link WithSpan} in a {@link
@@ -40,14 +42,16 @@ public class WithSpanAspect {
 
   private final Tracer tracer;
 
+  private static final Logger logger = LoggerFactory.getLogger(WithSpanAspect.class);
+
   public WithSpanAspect(Tracer tracer) {
     this.tracer = tracer;
   }
 
   @Around("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
   public Object traceMethod(final ProceedingJoinPoint pjp) throws Throwable {
-
     Span span = tracer.spanBuilder(getSpanName(pjp)).setSpanKind(Kind.INTERNAL).startSpan();
+    logger.info(getSpanName(pjp));
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
@@ -65,7 +69,7 @@ public class WithSpanAspect {
 
     String spanName = withSpan.value();
     if (spanName.isEmpty()) {
-      spanName = method.getClass().getSimpleName() + "." + method.getName();
+      spanName = method.getDeclaringClass().getSimpleName() + "." + method.getName();
     }
     return spanName;
   }
