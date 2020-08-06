@@ -23,6 +23,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -56,6 +57,11 @@ public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResp
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.getHeader(name).map(HttpHeader::value).orElse(null);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
   }
 
   @Override

@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import java.net.HttpURLConnection;
@@ -49,6 +50,11 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
 
   @Override
   protected String responseHeader(Integer integer, String name) {
+    return null;
+  }
+
+  @Override
+  protected Setter<HttpURLConnection> getSetter() {
     return null;
   }
 

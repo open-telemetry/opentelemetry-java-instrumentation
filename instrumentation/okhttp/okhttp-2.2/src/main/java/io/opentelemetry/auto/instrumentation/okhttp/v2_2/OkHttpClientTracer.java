@@ -19,6 +19,7 @@ package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -48,6 +49,11 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
+  }
+
+  @Override
+  protected Setter<Request> getSetter() {
+    return null;
   }
 
   @Override

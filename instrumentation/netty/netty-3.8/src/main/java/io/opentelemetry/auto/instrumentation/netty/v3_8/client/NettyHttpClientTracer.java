@@ -25,6 +25,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -62,6 +63,11 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.headers().get(name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
   }
 
   @Override

@@ -19,6 +19,7 @@ package io.opentelemetry.auto.instrumentation.khttp;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import khttp.KHttp;
@@ -54,6 +55,11 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
   @Override
   protected String responseHeader(Response response, String name) {
     return response.getHeaders().get(name);
+  }
+
+  @Override
+  protected Setter<RequestWrapper> getSetter() {
+    return null;
   }
 
   @Override
