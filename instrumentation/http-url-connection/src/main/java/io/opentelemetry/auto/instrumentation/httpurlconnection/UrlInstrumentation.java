@@ -93,9 +93,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
             BaseTracer.setPeer(span, host, null);
           }
 
-          if (throwable != null) {
-            TRACER.endExceptionally(span, throwable);
-          }
+          TRACER.endExceptionally(span, throwable);
         }
       }
     }
