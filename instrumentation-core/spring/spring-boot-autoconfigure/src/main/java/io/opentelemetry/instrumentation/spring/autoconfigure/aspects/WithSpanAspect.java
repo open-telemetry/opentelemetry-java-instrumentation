@@ -47,7 +47,6 @@ public class WithSpanAspect {
   public Object traceMethod(final ProceedingJoinPoint pjp) throws Throwable {
 
     Span span = tracer.spanBuilder(getSpanName(pjp)).startSpan();
-
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
