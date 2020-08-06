@@ -57,6 +57,10 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
     return "io.opentelemetry.auto.http-url-connection";
   }
 
+  /**
+   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
+   * name.
+   */
   @Override
   public Span startSpan(String spanName) {
     return tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).startSpan();
