@@ -37,7 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class WithSpanAspectTest {
-  static class WithSpanTest {
+  static class WithSpanTester {
     @WithSpan
     public String testWithSpan() {
       return "Span with name testWithSpan was created";
@@ -68,12 +68,12 @@ public class WithSpanAspectTest {
   @DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
   void withSpan() throws Throwable {
     when(pjp.getSignature()).thenReturn(signature);
-    when(signature.getMethod()).thenReturn(WithSpanTest.class.getDeclaredMethod("testWithSpan"));
+    when(signature.getMethod()).thenReturn(WithSpanTester.class.getDeclaredMethod("testWithSpan"));
 
     WithSpanAspect withSpanAspect = new WithSpanAspect(tracer);
     withSpanAspect.traceMethod(pjp);
 
-    verify(tracer, times(1)).spanBuilder("WithSpanTest.testWithSpan");
+    verify(tracer, times(1)).spanBuilder("WithSpanTester.testWithSpan");
     verify(spanBuilder, times(1)).startSpan();
     verify(span, times(1)).end();
   }
@@ -84,7 +84,7 @@ public class WithSpanAspectTest {
   void withSpanName() throws Throwable {
     when(pjp.getSignature()).thenReturn(signature);
     when(signature.getMethod())
-        .thenReturn(WithSpanTest.class.getDeclaredMethod("testWithSpanWithValue"));
+        .thenReturn(WithSpanTester.class.getDeclaredMethod("testWithSpanWithValue"));
 
     WithSpanAspect withSpanAspect = new WithSpanAspect(tracer);
     withSpanAspect.traceMethod(pjp);
@@ -99,7 +99,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan AND an exception is thrown span should record the exception")
   void withSpanError() throws Throwable {
     when(pjp.getSignature()).thenReturn(signature);
-    when(signature.getMethod()).thenReturn(WithSpanTest.class.getDeclaredMethod("testWithSpan"));
+    when(signature.getMethod()).thenReturn(WithSpanTester.class.getDeclaredMethod("testWithSpan"));
 
     Exception exception = new Exception("with span exception");
     when(pjp.proceed()).thenThrow(exception);
