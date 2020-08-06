@@ -19,6 +19,7 @@ package server
 import ratpack.exec.Promise
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.test.embed.EmbeddedApp
+import io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION

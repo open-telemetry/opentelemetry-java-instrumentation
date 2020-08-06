@@ -35,7 +35,7 @@ public class ExecutorInstrumentationUtils {
   // helpful in akka where there is so much recursive async spawning of new work)
   public static final Context.Key<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
       Context.key("thread-propagation-locations");
-  private static final boolean THREAD_PROPAGATION_DEBUGGER =
+  public static final boolean THREAD_PROPAGATION_DEBUGGER =
       Boolean.getBoolean("otel.threadPropagationDebugger");
 
   private static final Logger log = LoggerFactory.getLogger(ExecutorInstrumentationUtils.class);
