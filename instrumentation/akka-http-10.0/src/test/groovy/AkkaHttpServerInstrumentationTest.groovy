@@ -15,7 +15,6 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpServerTest
-import spock.lang.Retry
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
 
@@ -41,7 +40,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
   }
 }
 
-@Retry
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {
@@ -54,7 +52,6 @@ class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentatio
   }
 }
 
-@Retry
 class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {

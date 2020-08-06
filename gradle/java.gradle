@@ -2,6 +2,7 @@ import java.time.Duration
 
 apply plugin: 'java-library'
 apply plugin: 'groovy'
+apply plugin: 'org.gradle.test-retry'
 
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
@@ -274,4 +275,8 @@ tasks.withType(Test).configureEach {
   // Disable all tests if current JVM doesn't match version requirements
   // Disable all tests if skipTests property was specified
   enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
+
+  retry {
+    maxRetries = findProperty('retryTests') ? 5 : 0
+  }
 }
