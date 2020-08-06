@@ -25,6 +25,7 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -54,7 +55,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   protected abstract String responseHeader(RESPONSE response, String name);
 
   protected HttpTextFormat.Setter<REQUEST> getSetter() {
-    throw new UnsupportedOperationException();
+    return null;
   }
 
   public Span startSpan(REQUEST request) {
@@ -63,7 +64,12 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   public Scope startScope(Span span, REQUEST request) {
     Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, getSetter());
+    Setter<REQUEST> setter = getSetter();
+    if (setter == null) {
+      throw new IllegalStateException(
+          "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
+    }
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, setter);
     return withScopedContext(context);
   }
 
