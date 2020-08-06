@@ -28,6 +28,7 @@ dependencies {
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
 
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
   testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
