@@ -132,7 +132,6 @@ public abstract class BaseTracer {
   }
 
   public void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
-    assert span != null;
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
@@ -146,12 +145,10 @@ public abstract class BaseTracer {
   }
 
   public void onPeerConnection(final Span span, final InetAddress remoteAddress) {
-    assert span != null;
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
   public static void setPeer(final Span span, String peerName, String peerIp) {
-    assert span != null;
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
     }
