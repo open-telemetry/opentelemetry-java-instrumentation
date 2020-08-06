@@ -41,7 +41,6 @@ include ':smoke-tests:springboot'
 
 // instrumentation:
 include ':instrumentation:akka-context-propagation'
-include ':instrumentation:akka-context-propagation:akka-testing'
 include ':instrumentation:akka-http-10.0'
 include ':instrumentation:annotations'
 include ':instrumentation:apache-httpasyncclient-4.0'
