@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.javaconcurrent;
+package io.opentelemetry.auto.instrumentation.akkaconcurrent;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
@@ -28,6 +28,7 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
+import io.opentelemetry.auto.instrumentation.javaconcurrent.AbstractExecutorInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +41,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   public AkkaExecutorInstrumentation() {
-    super(EXEC_NAME + ".akka_fork_join");
+    super(AbstractExecutorInstrumentation.EXEC_NAME + ".akka_fork_join");
+  }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
   }
 
   @Override

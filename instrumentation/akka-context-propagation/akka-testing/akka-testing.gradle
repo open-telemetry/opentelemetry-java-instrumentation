@@ -12,6 +12,7 @@ dependencies {
   testImplementation group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.16'
   testImplementation group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
 
+  testImplementation project(':instrumentation:akka-context-propagation')
   testImplementation project(':instrumentation:java-concurrent')
   testImplementation project(':instrumentation:annotations')
 }

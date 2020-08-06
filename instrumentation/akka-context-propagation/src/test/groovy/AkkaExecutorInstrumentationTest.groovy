@@ -18,8 +18,6 @@ import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.data.SpanData
-import spock.lang.Shared
-
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -27,6 +25,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
@@ -35,6 +34,10 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
 class AkkaExecutorInstrumentationTest extends AgentTestRunner {
+
+  static {
+    System.setProperty("otel.integration.java_concurrent.akka_fork_join.enabled", "true")
+  }
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }
@@ -127,7 +130,7 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
                 throw e.getCause()
               }
             }
-          } catch (RejectedExecutionException e) {
+          } catch (RejectedExecutionException ignored) {
           }
 
           for (Future f : jobFutures) {

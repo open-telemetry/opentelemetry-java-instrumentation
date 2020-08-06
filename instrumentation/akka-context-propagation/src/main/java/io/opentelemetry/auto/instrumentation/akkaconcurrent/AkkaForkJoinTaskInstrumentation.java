@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.javaconcurrent;
+package io.opentelemetry.auto.instrumentation.akkaconcurrent;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -31,6 +31,7 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
+import io.opentelemetry.auto.instrumentation.javaconcurrent.AbstractExecutorInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import java.util.Collections;
@@ -54,7 +55,12 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
 
   public AkkaForkJoinTaskInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super(AbstractExecutorInstrumentation.EXEC_NAME + ".akka_fork_join");
+  }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
   }
 
   @Override
