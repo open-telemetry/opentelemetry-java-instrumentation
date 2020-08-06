@@ -64,7 +64,7 @@ public class WithSpanAspect {
 
     String spanName = withSpan.value();
     if (spanName.isEmpty()) {
-      spanName = method.getName();
+      spanName = method.getClass().getSimpleName() + "." + method.getName();
     }
     return spanName;
   }
