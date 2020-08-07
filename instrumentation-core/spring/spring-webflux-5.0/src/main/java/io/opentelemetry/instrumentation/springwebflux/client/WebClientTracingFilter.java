@@ -37,14 +37,13 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     this.tracer = tracer;
   }
 
-  public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    addFilter(exchangeFilterFunctions, TRACER);
+  public void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
+    addFilter(exchangeFilterFunctions, tracer);
   }
 
   public static void addFilter(
-      final List<ExchangeFilterFunction> exchangeFilterFunctions,
-      SpringWebfluxHttpClientTracer tracer) {
-    exchangeFilterFunctions.add(0, new WebClientTracingFilter(TRACER.getTracer()));
+      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
+    exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 
   @Override
