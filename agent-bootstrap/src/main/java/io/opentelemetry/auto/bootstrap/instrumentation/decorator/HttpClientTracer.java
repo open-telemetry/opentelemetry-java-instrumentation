@@ -100,7 +100,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
     return span;
   }
 
-  public Span onRequest(final Span span, final REQUEST request) {
+  protected Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));

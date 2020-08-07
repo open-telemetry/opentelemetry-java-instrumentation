@@ -129,4 +129,9 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.aws-sdk-2.2";
   }
+
+  @Override
+  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
+    return super.onRequest(span, sdkHttpRequest);
+  }
 }
