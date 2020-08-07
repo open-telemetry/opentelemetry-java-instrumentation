@@ -17,12 +17,10 @@
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
-import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -78,7 +76,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       packageName + ".HttpHeadersInjectAdapter",
       getClass().getName() + "$DelegatingRequestProducer",
       getClass().getName() + "$TraceContinuedFutureCallback",
-      packageName + ".ApacheHttpAsyncClientDecorator"
+      packageName + ".ApacheHttpAsyncClientTracer"
     };
   }
 
@@ -104,8 +102,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Span parentSpan = TRACER.getCurrentSpan();
-      Span clientSpan = TRACER.spanBuilder(DEFAULT_SPAN_NAME).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(clientSpan);
+      Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
@@ -120,9 +117,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
       }
     }
   }
@@ -144,8 +139,8 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      span.updateName(DECORATE.spanNameForRequest(request));
-      DECORATE.onRequest(span, request);
+      span.updateName(TRACER.spanNameForRequest(request));
+      TRACER.onRequest(span, request);
 
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
@@ -205,9 +200,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void completed(final T result) {
-      DECORATE.onResponse(clientSpan, getResponse(context));
-      DECORATE.beforeFinish(clientSpan);
-      clientSpan.end(); // end span before calling delegate
+      TRACER.end(clientSpan, getResponse(context));
 
       if (parentSpan == null) {
         completeDelegate(result);
@@ -220,10 +213,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void failed(final Exception ex) {
-      DECORATE.onResponse(clientSpan, getResponse(context));
-      DECORATE.onError(clientSpan, ex);
-      DECORATE.beforeFinish(clientSpan);
-      clientSpan.end(); // end span before calling delegate
+      TRACER.endExceptionally(clientSpan, getResponse(context), ex);
 
       if (parentSpan == null) {
         failDelegate(ex);
@@ -236,9 +226,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void cancelled() {
-      DECORATE.onResponse(clientSpan, getResponse(context));
-      DECORATE.beforeFinish(clientSpan);
-      clientSpan.end(); // end span before calling delegate
+      TRACER.end(clientSpan, getResponse(context));
 
       if (parentSpan == null) {
         cancelDelegate();
