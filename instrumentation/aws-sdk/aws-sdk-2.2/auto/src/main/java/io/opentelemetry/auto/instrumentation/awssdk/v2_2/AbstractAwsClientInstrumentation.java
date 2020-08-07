@@ -31,7 +31,7 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
       packageName + ".TracingExecutionInterceptor",
       packageName + ".TracingExecutionInterceptor$ScopeHolder",
       packageName + ".shaded.AwsSdk",
-      packageName + ".shaded.AwsSdkClientDecorator",
+      packageName + ".shaded.AwsSdkClientTracer",
       packageName + ".shaded.TracingExecutionInterceptor",
     };
   }
