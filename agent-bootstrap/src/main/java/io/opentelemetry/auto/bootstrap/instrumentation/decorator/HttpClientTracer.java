@@ -29,6 +29,7 @@ import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -56,8 +57,20 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   protected abstract HttpTextFormat.Setter<REQUEST> getSetter();
 
+  protected HttpClientTracer() {
+    super();
+  }
+
+  protected HttpClientTracer(Tracer tracer) {
+    super(tracer);
+  }
+
   public Span startSpan(REQUEST request) {
-    return startSpan(request, spanNameForRequest(request));
+    return startSpan(request, -1);
+  }
+
+  public Span startSpan(REQUEST request, long startTimeNanos) {
+    return startSpan(request, spanNameForRequest(request), startTimeNanos);
   }
 
   public Scope startScope(Span span, REQUEST request) {
@@ -72,20 +85,32 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   public void end(Span span, RESPONSE response) {
+    end(span, response, -1);
+  }
+
+  public void end(Span span, RESPONSE response, long endTimeNanos) {
     onResponse(span, response);
-    super.end(span);
+    if (endTimeNanos > 0) {
+      super.end(span, endTimeNanos);
+    } else {
+      super.end(span);
+    }
   }
 
   public void endExceptionally(Span span, RESPONSE response, Throwable throwable) {
+    endExceptionally(span, response, throwable, -1);
+  }
+
+  public void endExceptionally(Span span, RESPONSE response, Throwable throwable, long endTimeNanos) {
     onResponse(span, response);
-    super.endExceptionally(span, throwable);
+    super.endExceptionally(span, throwable, endTimeNanos);
   }
 
   /**
    * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
    * Context}, or an invalid {@link Span} otherwise.
    */
-  private Span startSpan(REQUEST request, String name) {
+  private Span startSpan(REQUEST request, String name, long startTimeNanos) {
     Context context = Context.current();
     Span clientSpan = ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context);
 
@@ -95,7 +120,11 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
 
     Span current = TracingContextUtils.getSpan(context);
-    Span span = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
+    Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current);
+    if (startTimeNanos > 0) {
+      spanBuilder.setStartTimestamp(startTimeNanos);
+    }
+    Span span = spanBuilder.startSpan();
     onRequest(span, request);
     return span;
   }

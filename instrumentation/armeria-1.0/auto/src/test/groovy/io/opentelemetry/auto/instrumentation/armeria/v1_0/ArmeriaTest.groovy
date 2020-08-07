@@ -14,23 +14,32 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.armeria.v1_0
+package io.opentelemetry.auto.instrumentation.armeria.v1_0
 
+import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.server.ServerBuilder
-import io.opentelemetry.auto.test.InstrumentationTestTrait
-import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService
+import io.opentelemetry.auto.test.AgentTestTrait
+import io.opentelemetry.auto.test.SpockRunner
+import io.opentelemetry.instrumentation.armeria.v1_0.AbstractArmeriaTest
+import org.junit.runner.RunWith
 
-class ArmeriaServerTest extends AbstractArmeriaServerTest implements InstrumentationTestTrait {
+@RunWith(SpockRunner)
+class ArmeriaTest extends AbstractArmeriaTest implements AgentTestTrait {
   @Override
-  void configureServer(ServerBuilder sb) {
-    sb.decorator(OpenTelemetryService.newDecorator())
+  ServerBuilder configureServer(ServerBuilder sb) {
+    return sb
+  }
+
+  @Override
+  WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
+    return clientBuilder
   }
 
   def childSetupSpec() {
     server.before()
   }
 
-  def cleanupSpec() {
+  def childCleanupSpec() {
     server.after()
   }
 }

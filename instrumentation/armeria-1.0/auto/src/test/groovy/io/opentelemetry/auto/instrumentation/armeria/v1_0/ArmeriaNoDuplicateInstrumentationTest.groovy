@@ -16,16 +16,26 @@
 
 package io.opentelemetry.auto.instrumentation.armeria.v1_0
 
+import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.server.ServerBuilder
 import io.opentelemetry.auto.test.AgentTestTrait
 import io.opentelemetry.auto.test.SpockRunner
-import io.opentelemetry.instrumentation.armeria.v1_0.AbstractArmeriaServerTest
+import io.opentelemetry.instrumentation.armeria.v1_0.AbstractArmeriaTest
+import io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient
+import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService
 import org.junit.runner.RunWith
 
 @RunWith(SpockRunner)
-class ArmeriaServerTest extends AbstractArmeriaServerTest implements AgentTestTrait {
+class ArmeriaNoDuplicateInstrumentationTest extends AbstractArmeriaTest implements AgentTestTrait {
   @Override
-  void configureServer(ServerBuilder sb) {}
+  ServerBuilder configureServer(ServerBuilder sb) {
+    return sb.decorator(OpenTelemetryService.newDecorator())
+  }
+
+  @Override
+  WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
+    return clientBuilder.decorator(OpenTelemetryClient.newDecorator())
+  }
 
   def childSetupSpec() {
     server.before()
