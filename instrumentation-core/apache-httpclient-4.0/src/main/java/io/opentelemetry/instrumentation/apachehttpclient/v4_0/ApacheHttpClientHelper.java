@@ -16,41 +16,21 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientHelper {
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
-
   public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
-    return doMethodEnter(request, TRACER);
-  }
-
-  public static SpanWithScope doMethodEnter(final HttpUriRequest request, final Tracer tracer) {
-    Span span = DECORATE.getOrCreateSpan(request, tracer);
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, request);
-
-    Context context = ClientDecorator.currentContextWith(span);
-    if (span.getContext().isValid()) {
-      DECORATE.inject(context, request);
-    }
-    Scope scope = withScopedContext(context);
+    Span span = TRACER.startSpan(request);
+    Scope scope = TRACER.startScope(span, request);
 
     return new SpanWithScope(span, scope);
   }
@@ -69,14 +49,11 @@ public class ApacheHttpClientHelper {
       final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
     try {
       Span span = spanWithScope.getSpan();
-
-      if (result instanceof HttpResponse) {
-        DECORATE.onResponse(span, (HttpResponse) result);
-      } // else they probably provided a ResponseHandler.
-
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, (HttpResponse) result, throwable);
+      } else {
+        TRACER.end(span, (HttpResponse) result);
+      }
     } finally {
       spanWithScope.closeScope();
     }

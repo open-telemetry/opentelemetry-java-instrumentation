@@ -16,23 +16,20 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
+
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
-  public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
+class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, HttpResponse> {
 
-  public void inject(Context context, HttpUriRequest request) {
-    OpenTelemetry.getPropagators()
-        .getHttpTextFormat()
-        .inject(context, request, HttpHeadersInjectAdapter.SETTER);
-  }
+  public static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 
   @Override
   protected String method(final HttpUriRequest httpRequest) {
@@ -59,8 +56,23 @@ class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, Http
     return header(response, name);
   }
 
+  @Override
+  protected Setter<HttpUriRequest> getSetter() {
+    return SETTER;
+  }
+
   private static String header(HttpMessage message, String name) {
     Header header = message.getFirstHeader(name);
     return header != null ? header.getValue() : null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-webflux-5.0";
+  }
+
+  @Override
+  protected Span onResponse(Span span, HttpResponse httpResponse) {
+    return super.onResponse(span, httpResponse);
   }
 }
