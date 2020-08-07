@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -56,7 +56,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$WrappedFuture", JaxRsClientDecorator.class.getName(),
+      getClass().getName() + "$WrappedFuture", JaxRsClientTracer.class.getName(),
     };
   }
 
@@ -84,9 +84,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       if (throwable != null) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          Span span = (Span) prop;
-          DECORATE.onError(span, throwable);
-          span.end();
+          TRACER.endExceptionally((Span) prop, throwable);
         }
       }
     }
@@ -136,9 +134,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       } catch (final ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          Span span = (Span) prop;
-          DECORATE.onError(span, e.getCause());
-          span.end();
+          TRACER.endExceptionally((Span) prop, e.getCause());
         }
         throw e;
       }
@@ -152,9 +148,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       } catch (final ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          Span span = (Span) prop;
-          DECORATE.onError(span, e.getCause());
-          span.end();
+          TRACER.endExceptionally((Span) prop, e.getCause());
         }
         throw e;
       }
