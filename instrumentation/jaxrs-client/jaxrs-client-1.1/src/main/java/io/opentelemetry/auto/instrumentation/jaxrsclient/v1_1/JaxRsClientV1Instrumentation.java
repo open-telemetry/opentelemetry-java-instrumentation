@@ -18,13 +18,11 @@ package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -37,8 +35,8 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -67,7 +65,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JaxRsClientV1Decorator", packageName + ".InjectAdapter",
+      packageName + ".JaxRsClientV1Tracer", packageName + ".InjectAdapter",
     };
   }
 
@@ -83,19 +81,16 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static SpanWithScope onEnter(
-        @Advice.Argument(0) final ClientRequest request, @Advice.This final ClientHandler thisObj) {
+    public static void onEnter(
+        @Advice.Argument(0) final ClientRequest request,
+        @Advice.This final ClientHandler thisObj,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
-        Span span =
-            TRACER
-                .spanBuilder(DECORATE.spanNameForRequest(request))
-                .setSpanKind(CLIENT)
-                .startSpan();
-        DECORATE.afterStart(span);
-        DECORATE.onRequest(span, request);
+        span = TRACER.startSpan(request);
 
         Context context = withSpan(span, Context.current());
         request.getProperties().put(CONTEXT_ATTRIBUTE, context);
@@ -103,25 +98,25 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         OpenTelemetry.getPropagators()
             .getHttpTextFormat()
             .inject(context, request.getHeaders(), SETTER);
-        return new SpanWithScope(span, withScopedContext(context));
+        scope = withScopedContext(context);
       }
-      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final ClientResponse response,
-        @Advice.Thrown final Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
-      Span span = spanWithScope.getSpan();
-      DECORATE.onResponse(span, response);
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span, response);
+      }
     }
   }
 }

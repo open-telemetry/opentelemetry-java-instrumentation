@@ -18,16 +18,12 @@ package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 
-public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, ClientResponse> {
-  public static final JaxRsClientV1Decorator DECORATE = new JaxRsClientV1Decorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-client-1.1");
+public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {
+  public static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   @Override
   protected String method(final ClientRequest httpRequest) {
@@ -53,5 +49,15 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   @Override
   protected String responseHeader(ClientResponse clientResponse, String name) {
     return clientResponse.getHeaders().getFirst(name);
+  }
+
+  @Override
+  protected Setter<ClientRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jaxrs-client-1.1";
   }
 }
