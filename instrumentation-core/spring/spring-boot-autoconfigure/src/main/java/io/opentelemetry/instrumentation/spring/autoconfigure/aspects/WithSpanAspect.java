@@ -54,7 +54,8 @@ public class WithSpanAspect {
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
-      errorHandler(span, t);
+      span.setStatus(Status.INTERNAL);
+      span.recordException(t);
       throw t;
     } finally {
       span.end();
@@ -67,10 +68,5 @@ public class WithSpanAspect {
       return method.getDeclaringClass().getSimpleName() + "." + method.getName();
     }
     return spanName;
-  }
-
-  private void errorHandler(Span span, Throwable t) {
-    span.recordException(t);
-    span.setStatus(Status.INTERNAL);
   }
 }
