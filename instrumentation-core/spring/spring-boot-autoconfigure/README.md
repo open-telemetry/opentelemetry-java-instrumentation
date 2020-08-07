@@ -18,19 +18,20 @@ For Maven add to your `pom.xml`:
     <artifactId>opentelemetry-spring-boot-autoconfigure</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-
-   <dependency>
+  
+  <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-sdk</artifactId>
+    <artifactId>opentelemetry-api</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-  <!-- spring web -->
-  <dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-webflux</artifactId>
-    <version>SPRING_VERSION</version>
-    <scope>runtime</scope>
+   <!-- simple span exporter -->
+   <!-- outputs spans to console -->
+   <!-- provides opentelemetry-sdk artifact -->
+   <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-exporters-logging</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
 </dependencies>
@@ -38,9 +39,9 @@ For Maven add to your `pom.xml`:
 
 For Gradle add to your dependencies:
 ```groovy
-implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.0:OPENTELEMETRY_VERSION'
-implementation 'io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION'
-runtime 'org.springframework:spring-webflux:SPRING_VERSION'
+implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-autoconfigure:OPENTELEMETRY_VERSION'
+implementation 'io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION'
+implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
 ```
 
 ### Features
@@ -66,7 +67,6 @@ For Maven add to your `pom.xml`:
     <groupId>org.springframework</groupId>
     <artifactId>spring-web</artifactId>
     <version>SPRING_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 
   <!-- Used to autoconfigure spring-webmvc -->
@@ -74,7 +74,6 @@ For Maven add to your `pom.xml`:
     <groupId>org.springframework</groupId>
     <artifactId>spring-webmvc</artifactId>
     <version>SPRING_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 
   <!-- Used to autoconfigure spring-webflux -->
@@ -82,7 +81,6 @@ For Maven add to your `pom.xml`:
     <groupId>org.springframework</groupId>
     <artifactId>spring-webflux</artifactId>
     <version>SPRING_WEBFLUX_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 
   <!-- Used to enable instrumentation using @WithSpan  -->
@@ -90,7 +88,6 @@ For Maven add to your `pom.xml`:
     <groupId>org.springframework</groupId>
     <artifactId>spring-aop</artifactId>
     <version>SPRING_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
   <dependency>
     <groupId>io.opentelemetry</groupId>
@@ -105,29 +102,22 @@ For Maven add to your `pom.xml`:
     <version>SLF4J_VERSION</version>
   </dependency>
 
-  <!-- LoggingSpanExporter -->
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporters-logging</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-
 </dependencies>
 ```
 
 For Gradle add to your dependencies:
 ```groovy
 //Used to autoconfigure spring-web
-runtime "org.springframework:spring-web:SPRING_VERSION"
+implementation "org.springframework:spring-web:SPRING_VERSION"
 
 //Used to autoconfigure spring-webmvc
-runtime "org.springframework:spring-webmvc:SPRING_VERSION"
+implementation "org.springframework:spring-webmvc:SPRING_VERSION"
 
 //Used to autoconfigure spring-webflux
-runtime "org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION"
+implementation "org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION"
 
 //Enables instrumentation using @WithSpan
-runtime "org.springframework:spring-aop:SPRING_VERSION"
+implementation "org.springframework:spring-aop:SPRING_VERSION"
 implementation "io.opentelemetry:opentelemetry-extension-auto-annotations:OPENTELEMETRY_VERSION"
 
 //Slf4j log correlation support
@@ -171,6 +161,7 @@ import io.opentelemetry.trace.Tracer;
 public class TracedClass {
 
     @Autowired
+    // Tracer is bean is initialized by io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration.java
     Tracer tracer;
 
     public TracedClass() {}
@@ -179,9 +170,6 @@ public class TracedClass {
     public void tracedMethod() {
         this.tracedNestedMethod();
     }
-
-    @WithSpan
-    public void tracedNestedMethod() {}
 
     @WithSpan("span name")
     public void tracedMethodWithName() {
