@@ -29,11 +29,11 @@ For Maven add to your `pom.xml`:
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-  <!-- required to instrument spring-web -->
+  <!-- required to instrument spring-webmvc -->
   <!-- this artifact should already be present in your application -->
   <dependency>
     <groupId>org.springframework</groupId>
-    <artifactId>spring-web</artifactId>
+    <artifactId>spring-webmvc</artifactId>
     <version>SPRING_VERSION</version>
   </dependency>
 
@@ -46,7 +46,7 @@ implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webmvc-3.1
 implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
 
 //this artifact should already be present in your application
-runtime 'org.springframework:spring-web:SPRING_VERSION'
+runtime 'org.springframework:spring-webmvc:SPRING_VERSION'
 ```
 
 ### Features
