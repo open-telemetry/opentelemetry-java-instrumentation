@@ -46,7 +46,7 @@ implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webflux-5.
 implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
 
 //this artifact should already be present in your application
-runtime 'org.springframework:spring-webflux:SPRING_VERSION'
+implementation 'org.springframework:spring-webflux:SPRING_VERSION'
 ```
 
 ### Features
