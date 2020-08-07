@@ -101,7 +101,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     endExceptionally(span, response, throwable, -1);
   }
 
-  public void endExceptionally(Span span, RESPONSE response, Throwable throwable, long endTimeNanos) {
+  public void endExceptionally(
+      Span span, RESPONSE response, Throwable throwable, long endTimeNanos) {
     onResponse(span, response);
     super.endExceptionally(span, throwable, endTimeNanos);
   }
