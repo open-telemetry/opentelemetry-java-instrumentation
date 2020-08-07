@@ -24,7 +24,6 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -46,10 +45,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    Span span =
-        tracer.getOrCreateSpan(
-            request, OpenTelemetry.getTracerProvider().get(tracer.getInstrumentationName()));
-    tracer.onRequest(span, request);
+    Span span = tracer.startSpan(request);
     request.addHandlerContext(
         SPAN_SCOPE_PAIR_CONTEXT_KEY,
         new SpanWithScope(span, withScopedContext(currentContextWith(span))));
