@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -48,6 +49,11 @@ public class WithSpanAspectTest {
     @WithSpan("greatestSpanEver")
     public String testWithSpanWithValue() {
       return "Span with name greatestSpanEver was created";
+    }
+
+    @WithSpan(kind = Kind.CLIENT)
+    public String testWithSpanWithKind() {
+      return "Span with name testWithSpanWithKind and Kind.CLIENT was created";
     }
 
     @WithSpan
@@ -115,6 +121,30 @@ public class WithSpanAspectTest {
 
     verify(spanBuilder, times(1)).startSpan();
     verify(span, times(1)).recordException(any(Exception.class));
+    verify(span, times(1)).end();
+  }
+
+  @Test
+  @DisplayName(
+      "when method is annotated with @WithSpan AND Span.Kind is missing should set default Kind")
+  void withSpanDefaultKind() throws Throwable {
+
+    withSpanTester.testWithSpan();
+
+    verify(spanBuilder, times(1)).setSpanKind(Kind.INTERNAL);
+    verify(spanBuilder, times(1)).startSpan();
+    verify(span, times(1)).end();
+  }
+
+  @Test
+  @DisplayName(
+      "when method is annotated with @WithSpan AND WithSpan.kind is set should build span with the declared Kind")
+  void withSpanClientKind() throws Throwable {
+
+    withSpanTester.testWithSpanWithKind();
+
+    verify(spanBuilder, times(1)).setSpanKind(Kind.CLIENT);
+    verify(spanBuilder, times(1)).startSpan();
     verify(span, times(1)).end();
   }
 }

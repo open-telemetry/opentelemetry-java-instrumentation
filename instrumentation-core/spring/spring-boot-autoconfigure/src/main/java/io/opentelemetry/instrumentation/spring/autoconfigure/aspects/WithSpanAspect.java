@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -27,8 +26,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Uses Spring-AOP to wrap methods and constructors marked by {@link WithSpan} in a {@link
@@ -42,16 +39,18 @@ public class WithSpanAspect {
 
   private final Tracer tracer;
 
-  private static final Logger logger = LoggerFactory.getLogger(WithSpanAspect.class);
-
   public WithSpanAspect(Tracer tracer) {
     this.tracer = tracer;
   }
 
   @Around("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
-  public Object traceMethod(final ProceedingJoinPoint pjp) throws Throwable {
-    Span span = tracer.spanBuilder(getSpanName(pjp)).setSpanKind(Kind.INTERNAL).startSpan();
-    logger.info(getSpanName(pjp));
+  public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
+    MethodSignature signature = (MethodSignature) pjp.getSignature();
+    Method method = signature.getMethod();
+    WithSpan withSpan = method.getAnnotation(WithSpan.class);
+
+    Span span =
+        tracer.spanBuilder(getSpanName(withSpan, method)).setSpanKind(withSpan.kind()).startSpan();
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
@@ -62,14 +61,10 @@ public class WithSpanAspect {
     }
   }
 
-  private String getSpanName(final ProceedingJoinPoint pjp) {
-    MethodSignature signature = (MethodSignature) pjp.getSignature();
-    Method method = signature.getMethod();
-    WithSpan withSpan = method.getAnnotation(WithSpan.class);
-
+  private String getSpanName(WithSpan withSpan, Method method) {
     String spanName = withSpan.value();
     if (spanName.isEmpty()) {
-      spanName = method.getDeclaringClass().getSimpleName() + "." + method.getName();
+      return method.getDeclaringClass().getSimpleName() + "." + method.getName();
     }
     return spanName;
   }
