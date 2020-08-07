@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Configures {@link WithSpanAspect} to trace spring beans. */
+/** Configures {@link WithSpanAspect} to trace bean methods annotated with {@link WithSpan}. */
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
 @ConditionalOnProperty(
