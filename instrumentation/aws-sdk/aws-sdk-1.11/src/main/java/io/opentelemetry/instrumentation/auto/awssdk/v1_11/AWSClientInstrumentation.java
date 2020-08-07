@@ -54,6 +54,8 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".AwsSdkClientTracer",
+      packageName + ".AwsSdkClientTracer$1",
+      packageName + ".AwsSdkClientTracer$2",
       packageName + ".RequestMeta",
       packageName + ".TracingRequestHandler",
     };

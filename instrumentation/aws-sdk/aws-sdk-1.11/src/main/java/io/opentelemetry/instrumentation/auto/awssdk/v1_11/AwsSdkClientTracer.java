@@ -26,11 +26,12 @@ import com.amazonaws.Response;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.Function;
+import io.opentelemetry.instrumentation.api.Functions;
+import io.opentelemetry.instrumentation.api.QualifiedClassNameCache;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
 
@@ -38,8 +39,22 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
 
-  private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
-  private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
+  private final QualifiedClassNameCache cache =
+      new QualifiedClassNameCache(
+          new Function<Class<?>, String>() {
+            @Override
+            public String apply(Class<?> input) {
+              return input.getSimpleName().replace("Request", "");
+            }
+          },
+          Functions.SuffixJoin.of(
+              ".",
+              new Function<String, String>() {
+                @Override
+                public String apply(String serviceName) {
+                  return serviceName.replace("Amazon", "").trim();
+                }
+              }));
 
   public AwsSdkClientTracer() {}
 
@@ -50,7 +65,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     }
     String awsServiceName = request.getServiceName();
     Class<?> awsOperation = request.getOriginalRequest().getClass();
-    return remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation);
+    return cache.getQualifiedName(awsOperation, awsServiceName);
   }
 
   public Span startSpan(Request<?> request, RequestMeta requestMeta) {
@@ -93,20 +108,6 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
     return super.onResponse(span, response);
-  }
-
-  private String remapServiceName(String serviceName) {
-    if (!serviceNames.containsKey(serviceName)) {
-      serviceNames.put(serviceName, serviceName.replace("Amazon", "").trim());
-    }
-    return serviceNames.get(serviceName);
-  }
-
-  private String remapOperationName(Class<?> awsOperation) {
-    if (!operationNames.containsKey(awsOperation)) {
-      operationNames.put(awsOperation, awsOperation.getSimpleName().replace("Request", ""));
-    }
-    return operationNames.get(awsOperation);
   }
 
   @Override

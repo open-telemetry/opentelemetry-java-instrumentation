@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.auto.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.api.FixedSizeCache;
+import io.opentelemetry.instrumentation.api.Functions;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
@@ -35,8 +36,8 @@ public class HystrixDecorator extends BaseDecorator {
   private static final FixedSizeCache<ResourceNameCacheKey, String> RESOURCE_NAME_CACHE =
       new FixedSizeCache<>(64);
 
-  private static final FixedSizeCache.ToString<ResourceNameCacheKey> TO_STRING =
-      new FixedSizeCache.ToString<>();
+  private static final Functions.ToString<ResourceNameCacheKey> TO_STRING =
+      new Functions.ToString<>();
 
   private static final class ResourceNameCacheKey {
     private final String group;

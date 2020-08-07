@@ -83,7 +83,7 @@ class FixedSizeCacheTest extends Specification {
     conds.await(30.0) // the test is really fast locally, but I don't know how fast CI is
   }
 
-  private class TVC implements FixedSizeCache.Creator<TKey, String> {
+  private class TVC implements Function<TKey, String> {
     private final AtomicInteger count
 
     TVC(AtomicInteger count) {
@@ -91,7 +91,7 @@ class FixedSizeCacheTest extends Specification {
     }
 
     @Override
-    String create(TKey key) {
+    String apply(TKey key) {
       count.incrementAndGet()
       return key.string + "_value"
     }

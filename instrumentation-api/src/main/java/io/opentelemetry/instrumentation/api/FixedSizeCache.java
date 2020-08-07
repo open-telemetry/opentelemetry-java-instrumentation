@@ -32,39 +32,6 @@ package io.opentelemetry.instrumentation.api;
  */
 public final class FixedSizeCache<K, V> {
 
-  public interface Creator<K, V> {
-    V create(K key);
-  }
-
-  public static final class Suffix implements Creator<String, String> {
-    private final String suffix;
-
-    public Suffix(String suffix) {
-      this.suffix = suffix;
-    }
-
-    @Override
-    public String create(String key) {
-      return key + suffix;
-    }
-  }
-
-  public static final class LowerCase implements Creator<String, String> {
-
-    @Override
-    public String create(String key) {
-      return key.toLowerCase();
-    }
-  }
-
-  public static final class ToString<T> implements Creator<T, String> {
-
-    @Override
-    public String create(T key) {
-      return key.toString();
-    }
-  }
-
   static final int MAXIMUM_CAPACITY = 1 << 30;
 
   private static final class Node<K, V> {
@@ -112,7 +79,7 @@ public final class FixedSizeCache<K, V> {
    * @param creator how to create a cached value base on the key if the lookup fails
    * @return the cached or created and stored value
    */
-  public V computeIfAbsent(K key, Creator<K, ? extends V> creator) {
+  public V computeIfAbsent(K key, Function<K, ? extends V> creator) {
     if (key == null) {
       return null;
     }
@@ -143,8 +110,8 @@ public final class FixedSizeCache<K, V> {
     return value;
   }
 
-  private V createAndStoreValue(K key, Creator<K, ? extends V> creator, int pos) {
-    V value = creator.create(key);
+  private V createAndStoreValue(K key, Function<K, ? extends V> creator, int pos) {
+    V value = creator.apply(key);
     Node<K, V> node = new Node<>(key, value);
     elements[pos] = node;
     return value;

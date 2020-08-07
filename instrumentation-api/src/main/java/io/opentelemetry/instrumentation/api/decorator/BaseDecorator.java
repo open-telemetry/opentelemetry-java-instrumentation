@@ -21,6 +21,9 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.Function;
+import io.opentelemetry.instrumentation.api.Functions;
+import io.opentelemetry.instrumentation.api.QualifiedClassNameCache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -29,19 +32,26 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 @Deprecated
 public abstract class BaseDecorator {
 
-  private static final ClassValue<SpanNames> SPAN_NAMES =
-      new ClassValue<SpanNames>() {
-        @Override
-        protected SpanNames computeValue(Class<?> type) {
-          return new SpanNames(getClassName(type));
-        }
-      };
+  private static final QualifiedClassNameCache CLASS_NAMES =
+      new QualifiedClassNameCache(
+          new Function<Class<?>, String>() {
+            @Override
+            public String apply(Class<?> clazz) {
+              String simpleName = clazz.getSimpleName();
+              if (simpleName.isEmpty()) {
+                String name = clazz.getName();
+                int start = name.lastIndexOf('.');
+                return name.substring(start + 1);
+              }
+              return simpleName;
+            }
+          },
+          Functions.PrefixJoin.of("."));
 
   protected BaseDecorator() {}
 
@@ -131,7 +141,10 @@ public abstract class BaseDecorator {
    * @return the span name from the class and method
    */
   public String spanNameForMethod(Class<?> clazz, Method method) {
-    return spanNameForMethod(clazz, null == method ? null : method.getName());
+    if (null == method) {
+      return CLASS_NAMES.getClassName(clazz);
+    }
+    return CLASS_NAMES.getQualifiedName(clazz, method.getName());
   }
 
   /**
@@ -142,8 +155,7 @@ public abstract class BaseDecorator {
    * @return the span name from the class and method
    */
   public String spanNameForMethod(Class<?> clazz, String methodName) {
-    SpanNames cn = SPAN_NAMES.get(clazz);
-    return null == methodName ? cn.getClassName() : cn.getSpanName(methodName);
+    return CLASS_NAMES.getQualifiedName(clazz, methodName);
   }
 
   /**
@@ -152,39 +164,7 @@ public abstract class BaseDecorator {
    */
   public String spanNameForClass(Class<?> clazz) {
     String simpleName = clazz.getSimpleName();
-    return simpleName.isEmpty() ? SPAN_NAMES.get(clazz).getClassName() : simpleName;
-  }
-
-  private static class SpanNames {
-    private final String className;
-    private final ConcurrentHashMap<String, String> spanNames = new ConcurrentHashMap<>(1);
-
-    private SpanNames(String className) {
-      this.className = className;
-    }
-
-    public String getClassName() {
-      return className;
-    }
-
-    public String getSpanName(String methodName) {
-      String spanName = spanNames.get(methodName);
-      if (null == spanName) {
-        spanName = className + "." + methodName;
-        spanNames.putIfAbsent(methodName, spanName);
-      }
-      return spanName;
-    }
-  }
-
-  private static String getClassName(Class<?> clazz) {
-    String simpleName = clazz.getSimpleName();
-    if (simpleName.isEmpty()) {
-      String name = clazz.getName();
-      int start = name.lastIndexOf('.');
-      return name.substring(start + 1);
-    }
-    return simpleName;
+    return simpleName.isEmpty() ? CLASS_NAMES.getClassName(clazz) : simpleName;
   }
 
   public static <C> SpanContext extract(C carrier, TextMapPropagator.Getter<C> getter) {
