@@ -47,26 +47,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
-    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-
-    if (span != null) {
-      TRACER.onRequest(span, context.httpRequest());
-      TRACER.onSdkRequest(span, context.request());
-      TRACER.onAttributes(span, executionAttributes);
-    }
+    TRACER.afterMarshalling(context, executionAttributes);
   }
 
   @Override
   public void afterExecution(
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
-    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-      TRACER.afterExecution(span, context.httpRequest());
-      // Call onResponse on both types of responses:
-      TRACER.onSdkResponse(span, context.response());
-      TRACER.end(span, context.httpResponse());
-    }
+    TRACER.afterExecution(context, executionAttributes);
   }
 
   @Override
