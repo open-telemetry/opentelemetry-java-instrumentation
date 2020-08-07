@@ -54,7 +54,7 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".KubernetesClientDecorator",
+      packageName + ".KubernetesClientTracer",
       packageName + ".TracingInterceptor",
       packageName + ".KubernetesRequestDigest",
       packageName + ".KubernetesResource",
