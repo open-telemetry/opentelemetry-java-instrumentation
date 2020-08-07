@@ -64,11 +64,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   @Override
   public Object onCompleted() throws Exception {
     Response response = builder.build();
-    if (response != null) {
-      TRACER.onResponse(span, response);
-    }
-    TRACER.beforeFinish(span);
-    span.end();
+    TRACER.end(span, response);
 
     try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       return delegate.onCompleted();
@@ -77,8 +73,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public void onThrowable(final Throwable throwable) {
-    TRACER.onError(span, throwable);
-    TRACER.beforeFinish(span);
+    TRACER.endExceptionally(span, throwable);
     span.end();
 
     try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {
