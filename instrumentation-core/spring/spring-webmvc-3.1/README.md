@@ -46,7 +46,7 @@ implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webmvc-3.1
 implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
 
 //this artifact should already be present in your application
-runtime 'org.springframework:spring-webmvc:SPRING_VERSION'
+implementation 'org.springframework:spring-webmvc:SPRING_VERSION'
 ```
 
 ### Features
