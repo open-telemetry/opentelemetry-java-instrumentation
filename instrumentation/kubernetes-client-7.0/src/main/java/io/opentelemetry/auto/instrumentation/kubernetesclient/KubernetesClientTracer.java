@@ -63,6 +63,11 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
     return "io.opentelemetry.auto.kubernetes-client-7.0";
   }
 
+  @Override
+  protected Span onRequest(Span span, Request request) {
+    return super.onRequest(span, request);
+  }
+
   /**
    * This method is used to generate an acceptable CLIENT span (operation) name based on a given
    * KubernetesRequestDigest.
