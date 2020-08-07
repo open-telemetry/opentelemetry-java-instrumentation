@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+
+
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import unshaded.io.grpc.Context
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.context.Scope
+import unshaded.io.opentelemetry.trace.DefaultSpan
 import unshaded.io.opentelemetry.trace.Span
 import unshaded.io.opentelemetry.trace.Status
 
@@ -356,5 +360,19 @@ class TracerTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  def "add DefaultSpan to context"() {
+    when:
+    // Lazy way to get a span context
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
+    def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
+    testSpan.end()
+
+    def span = DefaultSpan.create(testSpan.getContext())
+    def context = withSpan(span, Context.current())
+
+    then:
+    getSpan(context).getContext().getSpanId() == span.getContext().getSpanId()
   }
 }

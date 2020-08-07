@@ -26,8 +26,11 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.UnshadedContextPropagators;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedSpan;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.DefaultSpan;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -90,6 +93,15 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
       contextPropagators = new UnshadedContextPropagators(contextStore);
+    }
+  }
+
+  public static class DefaultSpanAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Return(readOnly = false)
+            unshaded.io.opentelemetry.trace.DefaultSpan span) {
+      span = Bridging.toUnshaded(DefaultSpan.create(Bridging.toShaded(span.getContext())));
     }
   }
 }
