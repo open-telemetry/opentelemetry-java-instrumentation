@@ -22,18 +22,19 @@ For Maven add to your `pom.xml`:
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
+   <!-- provides opentelemetry-sdk -->
    <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-sdk</artifactId>
+    <artifactId>opentelemetry-exporters-logging</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-  <!-- spring web -->
+  <!-- required to instrument spring-web -->
+  <!-- this artifact should already be present in your application -->
   <dependency>
     <groupId>org.springframework</groupId>
     <artifactId>spring-web</artifactId>
     <version>SPRING_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 
 </dependencies>
@@ -42,7 +43,9 @@ For Maven add to your `pom.xml`:
 For Gradle add to your dependencies:
 ```groovy
 implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-web-3.1:OPENTELEMETRY_VERSION'
-implementation 'io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION'
+implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
+
+//this artifact should already be present in your application
 runtime 'org.springframework:spring-web:SPRING_VERSION'
 ```
 
