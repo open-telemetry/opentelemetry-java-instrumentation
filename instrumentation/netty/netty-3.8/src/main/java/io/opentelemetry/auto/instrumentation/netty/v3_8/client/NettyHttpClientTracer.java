@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_0.client;
+package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final NettyHttpClientDecorator DECORATE = new NettyHttpClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-4.0");
+public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+  public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
-    return httpRequest.getMethod().name();
+    return httpRequest.getMethod().getName();
   }
 
   @Override
@@ -49,7 +52,7 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
 
   @Override
   protected Integer status(final HttpResponse httpResponse) {
-    return httpResponse.getStatus().code();
+    return httpResponse.getStatus().getCode();
   }
 
   @Override
@@ -60,5 +63,22 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.headers().get(name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  public Scope startScope(Span span, HttpRequest request) {
+    Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
+    return withScopedContext(context);
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.netty-3.8";
   }
 }

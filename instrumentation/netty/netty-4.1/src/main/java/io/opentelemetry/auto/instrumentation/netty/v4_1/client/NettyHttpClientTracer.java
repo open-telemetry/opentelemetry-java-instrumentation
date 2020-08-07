@@ -17,20 +17,23 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final NettyHttpClientDecorator DECORATE = new NettyHttpClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-4.1");
+public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+  public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
@@ -60,5 +63,22 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.headers().get(name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  public Scope startScope(Span span, HttpRequest request) {
+    Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
+    return withScopedContext(context);
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.netty-4.1";
   }
 }

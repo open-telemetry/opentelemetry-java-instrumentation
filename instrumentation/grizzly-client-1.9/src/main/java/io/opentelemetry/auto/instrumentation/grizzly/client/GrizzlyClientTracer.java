@@ -14,44 +14,51 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
+package io.opentelemetry.auto.instrumentation.grizzly.client;
 
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import com.ning.http.client.Request;
+import com.ning.http.client.Response;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final OkHttpClientDecorator DECORATE = new OkHttpClientDecorator();
+public class GrizzlyClientTracer extends HttpClientTracer<Request, Response> {
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.okhttp-2.2");
+  public static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
 
   @Override
   protected String method(final Request request) {
-    return request.method();
+    return request.getMethod();
   }
 
   @Override
   protected URI url(final Request request) throws URISyntaxException {
-    return request.url().toURI();
+    return request.getUri().toJavaNetURI();
   }
 
   @Override
   protected Integer status(final Response response) {
-    return response.code();
+    return response.getStatusCode();
   }
 
   @Override
   protected String requestHeader(Request request, String name) {
-    return request.header(name);
+    return request.getHeaders().getFirstValue(name);
   }
 
   @Override
   protected String responseHeader(Response response, String name) {
-    return response.header(name);
+    return response.getHeaders().getFirstValue(name);
+  }
+
+  @Override
+  protected Setter<Request> getSetter() {
+    return GrizzlyInjectAdapter.SETTER;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.grizzly-client-1.9";
   }
 }

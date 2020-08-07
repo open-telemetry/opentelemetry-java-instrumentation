@@ -32,9 +32,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class ClientResponseInstrumentation extends Instrumenter.Default {
+public final class GrizzlyClientResponseInstrumentation extends Instrumenter.Default {
 
-  public ClientResponseInstrumentation() {
+  public GrizzlyClientResponseInstrumentation() {
     super("grizzly-client", "ning");
   }
 
@@ -60,7 +60,9 @@ public final class ClientResponseInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".ClientDecorator"};
+    return new String[] {
+      packageName + ".GrizzlyClientTracer", packageName + ".GrizzlyInjectAdapter"
+    };
   }
 
   @Override
@@ -69,6 +71,6 @@ public final class ClientResponseInstrumentation extends Instrumenter.Default {
         named("onCompleted")
             .and(takesArgument(0, named("com.ning.http.client.Response")))
             .and(isPublic()),
-        packageName + ".ClientResponseAdvice");
+        packageName + ".GrizzlyClientResponseAdvice");
   }
 }

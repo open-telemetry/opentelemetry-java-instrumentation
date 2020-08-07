@@ -54,7 +54,7 @@ public class KHttpInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KHttpHeadersInjectAdapter",
-      packageName + ".KHttpDecorator",
+      packageName + ".KHttpTracer",
       packageName + ".RequestWrapper",
     };
   }

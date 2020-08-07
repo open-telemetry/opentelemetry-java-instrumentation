@@ -14,45 +14,50 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.client;
+package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 
-import com.ning.http.client.Request;
-import com.ning.http.client.Response;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class ClientDecorator extends HttpClientDecorator<Request, Response> {
-
-  public static final ClientDecorator DECORATE = new ClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grizzly-client-1.9");
+public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
+  public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   @Override
   protected String method(final Request request) {
-    return request.getMethod();
+    return request.method();
   }
 
   @Override
   protected URI url(final Request request) throws URISyntaxException {
-    return request.getUri().toJavaNetURI();
+    return request.url().toURI();
   }
 
   @Override
   protected Integer status(final Response response) {
-    return response.getStatusCode();
+    return response.code();
   }
 
   @Override
   protected String requestHeader(Request request, String name) {
-    return request.getHeaders().getFirstValue(name);
+    return request.header(name);
   }
 
   @Override
   protected String responseHeader(Response response, String name) {
-    return response.getHeaders().getFirstValue(name);
+    return response.header(name);
+  }
+
+  @Override
+  protected Setter<Request> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.okhttp-2.2";
   }
 }

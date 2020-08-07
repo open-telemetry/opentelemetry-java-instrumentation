@@ -17,19 +17,22 @@
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
+import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final AkkaHttpClientDecorator DECORATE = new AkkaHttpClientDecorator();
+public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+  public static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.akka-http-10.0");
+  public Depth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(HttpExt.class);
+  }
 
   @Override
   protected String method(final HttpRequest httpRequest) {
@@ -54,5 +57,15 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.getHeader(name).map(HttpHeader::value).orElse(null);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.akka-http-10.0";
   }
 }

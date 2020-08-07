@@ -19,17 +19,18 @@ package io.opentelemetry.auto.instrumentation.googlehttpclient;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final GoogleHttpClientDecorator DECORATE = new GoogleHttpClientDecorator();
+public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+  public static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.google-http-client-1.19");
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.google-http-client-1.19";
+  }
 
   @Override
   protected String method(final HttpRequest httpRequest) {
@@ -58,6 +59,11 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return header(httpResponse.getHeaders(), name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return HeadersInjectAdapter.SETTER;
   }
 
   private static String header(HttpHeaders headers, String name) {

@@ -18,10 +18,14 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
 public abstract class BaseTracer {
@@ -127,7 +131,44 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
+  public static void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+    if (remoteConnection != null) {
+      InetAddress remoteAddress = remoteConnection.getAddress();
+      if (remoteAddress != null) {
+        onPeerConnection(span, remoteAddress);
+      } else {
+        // Failed DNS lookup, the host string is the name.
+        setPeer(span, remoteConnection.getHostString(), null);
+      }
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
+    }
+  }
+
+  public static void onPeerConnection(final Span span, final InetAddress remoteAddress) {
+    setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
+  }
+
   public static void setPeer(final Span span, String peerName, String peerIp) {
-    BaseDecorator.setPeer(span, peerName, peerIp);
+    if (peerName != null && !peerName.equals(peerIp)) {
+      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
+    }
+    if (peerIp != null) {
+      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
+    }
+    String peerService = mapToPeer(peerName);
+    if (peerService == null) {
+      peerService = mapToPeer(peerIp);
+    }
+    if (peerService != null) {
+      SemanticAttributes.PEER_SERVICE.set(span, peerService);
+    }
+  }
+
+  protected static String mapToPeer(String endpoint) {
+    if (endpoint == null) {
+      return null;
+    }
+
+    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
   }
 }

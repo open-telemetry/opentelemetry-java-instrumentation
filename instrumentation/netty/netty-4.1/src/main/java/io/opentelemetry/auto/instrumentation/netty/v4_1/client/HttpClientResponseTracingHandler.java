@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -41,9 +41,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
     if (span != null && finishSpan) {
       try (Scope scope = currentContextWith(span)) {
-        DECORATE.onResponse(span, (HttpResponse) msg);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(span, (HttpResponse) msg);
       }
     }
 

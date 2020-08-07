@@ -16,18 +16,17 @@
 
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConnection, Integer> {
+public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection, Integer> {
 
-  public static final HttpUrlConnectionDecorator DECORATE = new HttpUrlConnectionDecorator();
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.http-url-connection");
+  public static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
 
   @Override
   protected String method(final HttpURLConnection connection) {
@@ -52,5 +51,24 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   @Override
   protected String responseHeader(Integer integer, String name) {
     return null;
+  }
+
+  @Override
+  protected Setter<HttpURLConnection> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.http-url-connection";
+  }
+
+  /**
+   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
+   * name.
+   */
+  @Override
+  public Span startSpan(String spanName) {
+    return tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).startSpan();
   }
 }

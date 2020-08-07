@@ -30,7 +30,7 @@ import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -91,7 +91,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
       Span span = contextStore.get(request);
       if (span != null) {
-        BaseDecorator.setPeer(span, remoteHostname, null);
+        BaseTracer.setPeer(span, remoteHostname, null);
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");

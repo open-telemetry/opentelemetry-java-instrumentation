@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly.client;
 
-import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.grizzly.client.GrizzlyClientTracer.TRACER;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
@@ -30,7 +30,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
-public class ClientResponseAdvice {
+public class GrizzlyClientResponseAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
@@ -46,9 +46,7 @@ public class ClientResponseAdvice {
       contextStore.put(handler, null);
     }
     if (spanWithParent.hasRight()) {
-      DECORATE.onResponse(spanWithParent.getRight(), response);
-      DECORATE.beforeFinish(spanWithParent.getRight());
-      spanWithParent.getRight().end();
+      TRACER.end(spanWithParent.getRight(), response);
     }
     return spanWithParent.hasLeft()
         ? ContextUtils.withScopedContext(spanWithParent.getLeft())
