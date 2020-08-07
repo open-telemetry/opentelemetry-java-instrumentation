@@ -16,7 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
+<<<<<<< HEAD
 import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
+=======
+import io.opentelemetry.auto.instrumentation.spring.webflux.client.shaded.WebClientTracingFilter;
+>>>>>>> 8d9cdd87f... fix gradle
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.reactive.function.client.WebClient;
 
