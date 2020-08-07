@@ -21,8 +21,6 @@ dependencies {
   compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
   compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 
-  testImplementation project(':instrumentation:annotations')
-
   testImplementation group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
   testImplementation group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
 
