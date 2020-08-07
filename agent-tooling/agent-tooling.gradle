@@ -43,6 +43,7 @@ test {
 }
 
 // Needs a fresh classloader.
+// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
 def testHelperInjection = tasks.register('testHelperInjection', Test) {
   filter {
     includeTestsMatching 'HelperInjectionTest'
