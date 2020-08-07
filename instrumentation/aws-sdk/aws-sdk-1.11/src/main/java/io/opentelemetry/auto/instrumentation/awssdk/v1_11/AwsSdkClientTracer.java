@@ -16,12 +16,16 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -29,16 +33,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
-
+  public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
   static final String COMPONENT_NAME = "java-aws-sdk";
 
   private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
-  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
-
-  public AwsSdkClientTracer(final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
-    this.contextStore = contextStore;
-  }
 
   @Override
   public String spanNameForRequest(final Request<?> request) {
@@ -50,10 +49,8 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     return remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation);
   }
 
-  @Override
-  public Span onRequest(final Span span, final Request<?> request) {
-    // Call super first because we override the span name below.
-    super.onRequest(span, request);
+  public Span startSpan(Request<?> request, RequestMeta requestMeta) {
+    Span span = super.startSpan(request);
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
@@ -64,23 +61,30 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     span.setAttribute("aws.operation", awsOperation.getSimpleName());
     span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
-    if (contextStore != null) {
-      RequestMeta requestMeta = contextStore.get(originalRequest);
-      if (requestMeta != null) {
-        span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
-        span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
-        span.setAttribute("aws.queue.name", requestMeta.getQueueName());
-        span.setAttribute("aws.stream.name", requestMeta.getStreamName());
-        span.setAttribute("aws.table.name", requestMeta.getTableName());
-      }
+    if (requestMeta != null) {
+      span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
+      span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
+      span.setAttribute("aws.queue.name", requestMeta.getQueueName());
+      span.setAttribute("aws.stream.name", requestMeta.getStreamName());
+      span.setAttribute("aws.table.name", requestMeta.getTableName());
     }
-
     return span;
+  }
+
+  /**
+   * Override startScope not to inject context into the request since no need to propagate context
+   * to AWS backend services.
+   */
+  @Override
+  public Scope startScope(Span span, Request<?> request) {
+    Context context = withSpan(span, Context.current());
+    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
+    return withScopedContext(context);
   }
 
   @Override
   public Span onResponse(final Span span, final Response<?> response) {
-    if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
+    if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }

@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -133,5 +134,9 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
   @Override
   protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
     return super.onRequest(span, sdkHttpRequest);
+  }
+
+  public Tracer getTracer() {
+    return tracer;
   }
 }

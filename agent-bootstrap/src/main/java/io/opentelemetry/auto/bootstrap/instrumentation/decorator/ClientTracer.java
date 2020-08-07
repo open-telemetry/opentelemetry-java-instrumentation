@@ -27,7 +27,7 @@ public abstract class ClientTracer extends BaseTracer {
 
   // Keeps track of the client span in a subtree corresponding to a client request.
   // Visible for testing
-  static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
+  protected static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("opentelemetry-trace-auto-client-span-key");
 
   /**

@@ -16,9 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator.currentContextWith;
+import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.AwsSdkClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -26,16 +25,17 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
 
-  private final AwsSdkClientTracer tracer;
+  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
 
   public TracingRequestHandler(
       final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
-    tracer = new AwsSdkClientTracer(contextStore);
+    this.contextStore = contextStore;
   }
 
   @Override
@@ -45,10 +45,11 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    Span span = tracer.startSpan(request);
-    request.addHandlerContext(
-        SPAN_SCOPE_PAIR_CONTEXT_KEY,
-        new SpanWithScope(span, withScopedContext(currentContextWith(span))));
+    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    RequestMeta requestMeta = contextStore.get(originalRequest);
+    Span span = TRACER.startSpan(request, requestMeta);
+    Scope scope = TRACER.startScope(span, request);
+    request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, scope));
   }
 
   @Override
@@ -58,7 +59,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
       Span span = scope.getSpan();
-      tracer.end(span, response);
+      TRACER.end(span, response);
     }
   }
 
@@ -69,7 +70,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
       Span span = scope.getSpan();
-      tracer.endExceptionally(span, e);
+      TRACER.endExceptionally(span, response, e);
     }
   }
 }

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.OnErrorTracer.ERROR_TRACER;
+import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.AwsSdkClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -57,7 +57,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".OnErrorTracer", packageName + ".RequestMeta",
+      packageName + ".AwsSdkClientTracer", packageName + ".RequestMeta",
     };
   }
 
@@ -78,7 +78,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         if (scope != null) {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
           Span span = scope.getSpan();
-          ERROR_TRACER.endExceptionally(span, throwable);
+          TRACER.endExceptionally(span, throwable);
           scope.closeScope();
         }
       }
@@ -114,7 +114,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           if (scope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
             Span span = scope.getSpan();
-            ERROR_TRACER.endExceptionally(span, throwable);
+            TRACER.endExceptionally(span, throwable);
             scope.closeScope();
           }
         }

@@ -62,12 +62,14 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
 
   public Scope startScope(Span span, REQUEST request) {
     Context context = withSpan(span, Context.current());
+
     Setter<REQUEST> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, setter);
+    context = context.withValue(ClientTracer.CONTEXT_CLIENT_SPAN_KEY, span);
     return withScopedContext(context);
   }
 

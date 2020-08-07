@@ -66,7 +66,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.ApacheHttpClientDecorator",
+      packageName + ".shaded.ApacheHttpClientTracer",
       packageName + ".shaded.HttpHeadersInjectAdapter",
       packageName + ".shaded.HostAndRequestAsHttpUriRequest",
       packageName + ".shaded.ApacheHttpClientHelper",
