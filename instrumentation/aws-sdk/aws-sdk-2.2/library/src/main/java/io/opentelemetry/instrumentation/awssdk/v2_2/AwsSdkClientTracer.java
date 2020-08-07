@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -113,6 +114,11 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
   @Override
   protected String responseHeader(SdkHttpResponse sdkHttpResponse, String name) {
     return header(sdkHttpResponse, name);
+  }
+
+  @Override
+  protected Setter<SdkHttpRequest> getSetter() {
+    return null;
   }
 
   private static String header(SdkHttpHeaders headers, String name) {

@@ -29,6 +29,7 @@ import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -159,11 +160,10 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
     return span;
   }
 
-  private Span onResponse(final Span span, final RESPONSE response) {
+  protected Span onResponse(final Span span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
       Integer status = status(response);
-      System.out.println("status: " + status);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
@@ -172,11 +172,15 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
     return span;
   }
 
-  private String spanNameForRequest(final REQUEST request) {
+  protected String spanNameForRequest(final REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
     String method = method(request);
     return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
+  public Span getOrCreateSpan(final REQUEST request, final Tracer tracer) {
+    return getOrCreateSpan(spanNameForRequest(request), tracer);
   }
 }

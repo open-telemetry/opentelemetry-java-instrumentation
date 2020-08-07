@@ -21,13 +21,14 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Response<?>> {
+public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -35,8 +36,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
   private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
 
-  public AwsSdkClientDecorator(
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+  public AwsSdkClientTracer(final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
     this.contextStore = contextStore;
   }
 
@@ -124,5 +124,15 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
   @Override
   protected String responseHeader(Response<?> response, String name) {
     return response.getHttpResponse().getHeaders().get(name);
+  }
+
+  @Override
+  protected Setter<Request<?>> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.aws-sdk-1.11";
   }
 }

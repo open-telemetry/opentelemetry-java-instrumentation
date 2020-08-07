@@ -16,8 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 
-public class OnErrorDecorator extends BaseDecorator {
-  public static final OnErrorDecorator DECORATE = new OnErrorDecorator();
+public class OnErrorTracer extends BaseTracer {
+  public static final OnErrorTracer ERROR_TRACER = new OnErrorTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.aws-sdk-1.11-error";
+  }
 }
