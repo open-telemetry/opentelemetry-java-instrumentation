@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;

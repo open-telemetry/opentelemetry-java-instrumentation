@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.instrumentation.spring.webflux.server;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,11 +35,26 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstrumentation {
+public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrumentation {
+
+  public RouterFunctionInstrumentation() {
+    super("spring-webflux-functional");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.springframework.web.reactive.function.server.ServerRequest");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.springframework.web.reactive.DispatcherHandler");
+    return not(isAbstract())
+        .and(
+            extendsClass(
+                // TODO: this doesn't handle nested routes (DefaultNestedRouterFunction)
+                named(
+                    "org.springframework.web.reactive.function.server.RouterFunctions$DefaultRouterFunction")));
   }
 
   @Override
@@ -43,10 +62,12 @@ public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstr
     return singletonMap(
         isMethod()
             .and(isPublic())
-            .and(named("handle"))
-            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
+            .and(named("route"))
+            .and(
+                takesArgument(
+                    0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".DispatcherHandlerAdvice");
+        packageName + ".RouterFunctionAdvice");
   }
 }

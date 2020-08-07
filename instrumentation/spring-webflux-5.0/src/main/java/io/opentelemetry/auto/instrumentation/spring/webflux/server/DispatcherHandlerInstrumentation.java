@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -35,18 +31,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class HandlerAdapterInstrumentation extends AbstractWebfluxInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.springframework.web.reactive.HandlerAdapter");
-  }
+public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isAbstract())
-        .and(implementsInterface(named("org.springframework.web.reactive.HandlerAdapter")));
+    return named("org.springframework.web.reactive.DispatcherHandler");
   }
 
   @Override
@@ -56,9 +45,8 @@ public final class HandlerAdapterInstrumentation extends AbstractWebfluxInstrume
             .and(isPublic())
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArgument(1, named("java.lang.Object")))
-            .and(takesArguments(2)),
+            .and(takesArguments(1)),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".HandlerAdapterAdvice");
+        packageName + ".DispatcherHandlerAdvice");
   }
 }

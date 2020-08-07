@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.auto.instrumentation.spring.webflux.client;
 
 <<<<<<< HEAD
 import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
