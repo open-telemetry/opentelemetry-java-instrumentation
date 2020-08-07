@@ -31,8 +31,7 @@ import org.springframework.web.client.RestTemplate;
 class RestTemplateBeanPostProcessorTest {
   @Mock Tracer tracer;
 
-  RestTemplateBeanPostProcessor restTemplateBeanPostProcessor =
-      new RestTemplateBeanPostProcessor(tracer);
+  RestTemplateBeanPostProcessor restTemplateBeanPostProcessor = new RestTemplateBeanPostProcessor();
 
   @Test
   @DisplayName("when processed bean is not of type RestTemplate should return object")

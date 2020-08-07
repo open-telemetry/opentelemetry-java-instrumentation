@@ -20,7 +20,8 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,12 +29,12 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, ClientHttpResponse> {
+class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpResponse> {
 
-  public static final RestTemplateDecorator DECORATE = new RestTemplateDecorator();
+  public static final RestTemplateTracer TRACER = new RestTemplateTracer();
 
   public void inject(Context context, HttpRequest request) {
-    getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+    getPropagators().getHttpTextFormat().inject(context, request, getSetter());
   }
 
   @Override
@@ -63,5 +64,15 @@ class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, ClientHttpR
   @Override
   protected String responseHeader(ClientHttpResponse response, String name) {
     return response.getHeaders().getFirst(name);
+  }
+
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return SETTER;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-web-3.1";
   }
 }
