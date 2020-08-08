@@ -28,11 +28,14 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 /**
- * Uses Spring-AOP to wrap methods and constructors marked by {@link WithSpan} in a {@link
+ * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link
  * io.opentelemetry.trace.Span}.
  *
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.
+ *
+ * <p> Note: This Aspect uses spring-aop to proxy beans. Therefore 
+ * the {@link WithSpan} annotation can not be applied to constructors.
  */
 @Aspect
 public class WithSpanAspect {
