@@ -157,18 +157,20 @@ import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
+/**
+ * Test WithSpan
+ *
+ */
 @Component
 public class TracedClass {
 
     @Autowired
-    // Tracer is bean is initialized by io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration.java
+    // Tracer bean is provided by
+    // io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration.java
     Tracer tracer;
-
-    public TracedClass() {}
 
     @WithSpan
     public void tracedMethod() {
-        this.tracedNestedMethod();
     }
 
     @WithSpan("span name")
@@ -177,6 +179,10 @@ public class TracedClass {
         currentSpan.addEvent("ADD EVENT TO tracedMethodWithName SPAN");
         currentSpan.setAttribute("isTestAttribute", true);
     }
+    
+    @WithSpan(value="client span", kind=Span.Kind.CLIENT)
+    public void tracedClientSpan() {
+    }
 }
 
 ```
@@ -184,6 +190,7 @@ public class TracedClass {
 ##### Sample Trace
 
 <!-- TODO: Add Image or LogSpanExporter Output -->
+
 
 #### In Development - Slf4j Log Correlation
 
@@ -210,7 +217,7 @@ public class OpenTelemetryConfig {
 
 This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/logging) Span Exporters.
 
-If an exporter is present in the classpath during runtime and a spring bean of the exporter type is missing from the spring application context. An exporter bean is initialized and added to the active tracer provider.
+If an exporter is present in the classpath during runtime and a spring bean of the exporter type is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](/src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/TracerAutoConfiguration.java).
 
 
 #### Configuration Properties
