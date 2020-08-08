@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.api.decorator;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
