@@ -20,8 +20,6 @@ compileSlickTestGroovy {
 dependencies {
   // This is needed for Scala ForJoinTask/Pool instrumentation
   compileOnly deps.scala
-  // This is needed for Akka ForJoinTask/Pool instrumentation
-  compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
   slickTestImplementation project(':instrumentation:java-concurrent')
   slickTestImplementation project(':instrumentation:jdbc')
@@ -32,12 +30,3 @@ dependencies {
 
 // Run Slick library tests along with the rest of unit tests
 test.dependsOn slickTest
-
-// Until custom source sets can use minJavaVersionForTests separately from other tests
-// force this one test to run on java8 only
-slickTest {
-  onlyIf {
-    String java8Home = findJavaHome(JavaVersion.VERSION_1_8)
-    java8Home != null && executable == toExecutable(java8Home)
-  }
-}

@@ -17,11 +17,9 @@
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -67,7 +65,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".HttpUrlConnectionDecorator",
+      packageName + ".HttpUrlConnectionTracer",
       packageName + ".HeadersInjectAdapter",
       HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState",
       HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState$1",
@@ -152,16 +150,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile boolean finished = false;
 
     public Span start(final HttpURLConnection connection) {
-      span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForRequest(connection))
-              .setSpanKind(CLIENT)
-              .startSpan();
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span);
-        DECORATE.onRequest(span, connection);
-        return span;
-      }
+      span = TRACER.startSpan(connection);
+      return span;
     }
 
     public boolean hasSpan() {
@@ -174,9 +164,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     public void finishSpan(final Throwable throwable) {
       try (Scope scope = currentContextWith(span)) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
         span = null;
         finished = true;
       }
@@ -190,9 +178,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        */
       if (responseCode > 0) {
         try (Scope scope = currentContextWith(span)) {
-          DECORATE.onResponse(span, responseCode);
-          DECORATE.beforeFinish(span);
-          span.end();
+          TRACER.end(span, responseCode);
           span = null;
           finished = true;
         }
