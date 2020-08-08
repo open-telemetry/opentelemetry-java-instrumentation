@@ -30,7 +30,7 @@ testSets {
 }
 
 dependencies {
-  implementation project(path: ':instrumentation-core:spring:spring-webflux-5.0', configuration: 'shadow')
+  implementation project(':instrumentation-core:spring:spring-webflux-5.0')
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
   compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
 
