@@ -34,8 +34,8 @@ import org.aspectj.lang.reflect.MethodSignature;
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.
  *
- * <p> Note: This Aspect uses spring-aop to proxy beans. Therefore 
- * the {@link WithSpan} annotation can not be applied to constructors.
+ * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore the {@link WithSpan} annotation
+ * can not be applied to constructors.
  */
 @Aspect
 public class WithSpanAspect {
