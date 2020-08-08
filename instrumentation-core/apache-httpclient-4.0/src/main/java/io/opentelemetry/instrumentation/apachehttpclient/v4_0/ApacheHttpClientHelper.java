@@ -31,7 +31,6 @@ public class ApacheHttpClientHelper {
   public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
     Span span = TRACER.startSpan(request);
     Scope scope = TRACER.startScope(span, request);
-
     return new SpanWithScope(span, scope);
   }
 
@@ -49,10 +48,15 @@ public class ApacheHttpClientHelper {
       final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
     try {
       Span span = spanWithScope.getSpan();
-      if (throwable != null) {
-        TRACER.endExceptionally(span, (HttpResponse) result, throwable);
+      if (result instanceof HttpResponse) {
+        HttpResponse response = (HttpResponse) result;
+        if (throwable != null) {
+          TRACER.endExceptionally(span, response, throwable);
+        } else {
+          TRACER.end(span, response);
+        }
       } else {
-        TRACER.end(span, (HttpResponse) result);
+        TRACER.end(span);
       }
     } finally {
       spanWithScope.closeScope();
