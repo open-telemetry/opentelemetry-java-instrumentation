@@ -74,12 +74,23 @@ If you now look inside
 `opentelemetry-javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
 following "clusters" of classes:
 
-- `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated inside
-`AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
-- `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and available in bootstrap classloader.
-- `io/opentelemetry/instrumentation/auto/api/` - contains `auto-api` module and available in bootstrap classloader.
-- `io/opentelemetry/auto/shaded/instrumentation/api/` - contains `instrumentation-api` module and available in bootstrap classloader.
-- `io/opentelemetry/auto/shaded/io/` - contains OpenTelemetry API and its dependencies.
-Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.
-- `io/opentelemetry/auto/slf4j/` - contains SLF4J and its simple logger implementation.
-Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.
+Available in the system class loader:
+
+- `io/opentelemetry/auto/bootstrap/AgentBootstrap` - the one class from `opentelemetry-javaagent`
+module
+
+Available in the bootstrap class loader:
+
+- `io/opentelemetry/auto/bootstrap/` - contains the `agent-bootstrap` module
+- `io/opentelemetry/instrumentation/auto/api/` - contains the `auto-api` module
+- `io/opentelemetry/auto/shaded/instrumentation/api/` - contains the `instrumentation-api` module,
+ shaded during creation of `javaagent` jar file by Shadow Gradle plugin
+- `io/opentelemetry/auto/shaded/io/` - contains the OpenTelemetry API and its dependency gRPC
+Context, both shaded during creation of `javaagent` jar file by Shadow Gradle plugin
+- `io/opentelemetry/auto/slf4j/` - contains SLF4J and its simple logger implementation, shaded
+during creation of `javaagent` jar file by Shadow Gradle plugin
+
+Available in the agent class loader:
+- `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated
+inside `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the
+`-all` artifact).
