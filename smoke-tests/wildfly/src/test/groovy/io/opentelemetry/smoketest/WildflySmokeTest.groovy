@@ -18,10 +18,8 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.auto.test.utils.PortUtils
 import okhttp3.Request
-import spock.lang.Retry
 import spock.lang.Shared
 
-@Retry(delay = 1000)
 class WildflySmokeTest extends AbstractServerSmokeTest {
 
   @Shared

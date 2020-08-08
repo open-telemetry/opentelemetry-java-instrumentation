@@ -16,10 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.setPeer;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
@@ -30,6 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.InternalJarURLHandler;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -63,7 +61,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".HttpUrlConnectionDecorator",
+      packageName + ".HttpUrlConnectionTracer",
     };
   }
 
@@ -85,19 +83,17 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
-
+        Span span = TRACER.startSpan(protocol + ".request");
         try (Scope scope = currentContextWith(span)) {
           span.setAttribute(SemanticAttributes.HTTP_URL.key(), url.toString());
           span.setAttribute(
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            setPeer(span, host, null);
+            BaseTracer.setPeer(span, host, null);
           }
 
-          DECORATE.onError(span, throwable);
-          span.end();
+          TRACER.endExceptionally(span, throwable);
         }
       }
     }

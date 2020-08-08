@@ -16,68 +16,58 @@
 
 package io.opentelemetry.auto.instrumentation.khttp;
 
-import static io.opentelemetry.auto.instrumentation.khttp.KHttpDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.khttp.KHttpDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
+import static io.opentelemetry.auto.instrumentation.khttp.KHttpTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
-import khttp.KHttp;
 import khttp.responses.Response;
 import net.bytebuddy.asm.Advice;
 
 public class KHttpAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope methodEnter(
+  public static void methodEnter(
       @Advice.Argument(value = 0) String method,
       @Advice.Argument(value = 1) String uri,
-      @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers) {
+      @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope,
+      @Advice.Local("otelCallDepth") Depth callDepth) {
 
-    int callDepth = CallDepthThreadLocalMap.incrementCallDepth(KHttp.class);
-    if (callDepth > 0) {
-      return null;
+    callDepth = TRACER.getCallDepth();
+    if (callDepth.getAndIncrement() == 0) {
+      span = TRACER.startSpan(new RequestWrapper(method, uri, headers));
+      if (span.getContext().isValid()) {
+        Context context = withSpan(span, Context.current());
+        headers = asWritable(headers);
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
+        scope = withScopedContext(context);
+      }
     }
-
-    Span span = TRACER.spanBuilder("HTTP " + method).setSpanKind(CLIENT).startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, new RequestWrapper(method, uri, headers));
-
-    Context context = withSpan(span, Context.current());
-
-    headers = asWritable(headers);
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
-    return new SpanWithScope(span, withScopedContext(context));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Return final Response result,
-      @Advice.Thrown final Throwable throwable) {
-    if (spanWithScope == null) {
-      return;
-    }
-    CallDepthThreadLocalMap.reset(KHttp.class);
-
-    try {
-      Span span = spanWithScope.getSpan();
-
-      DECORATE.onResponse(span, result);
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-    } finally {
-      spanWithScope.closeScope();
+      @Advice.Return final Response response,
+      @Advice.Thrown final Throwable throwable,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope,
+      @Advice.Local("otelCallDepth") Depth callDepth) {
+    if (callDepth.decrementAndGet() == 0 && scope != null) {
+      scope.close();
+      if (throwable == null) {
+        TRACER.end(span, response);
+      } else {
+        TRACER.endExceptionally(span, response, throwable);
+      }
     }
   }
 }

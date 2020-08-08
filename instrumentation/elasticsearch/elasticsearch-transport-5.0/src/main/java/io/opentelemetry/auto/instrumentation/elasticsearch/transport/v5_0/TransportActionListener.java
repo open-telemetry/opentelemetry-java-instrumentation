@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.Elas
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.setPeer;
 
 import com.google.common.base.Joiner;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
@@ -72,7 +73,8 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(final T response) {
     if (response.remoteAddress() != null) {
-      setPeer(span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
+      BaseTracer.setPeer(
+          span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.remoteAddress().getPort());
     }
 

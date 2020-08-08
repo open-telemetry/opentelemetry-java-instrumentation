@@ -82,7 +82,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       // Util
       packageName + ".util.CombinedSimpleChannelHandler",
       // client helpers
-      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".client.NettyHttpClientTracer",
       packageName + ".client.NettyResponseInjectAdapter",
       packageName + ".client.HttpClientRequestTracingHandler",
       packageName + ".client.HttpClientResponseTracingHandler",

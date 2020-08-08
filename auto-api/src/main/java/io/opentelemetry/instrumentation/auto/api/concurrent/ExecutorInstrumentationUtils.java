@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.auto.api.concurrent;
 import static io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils.TRACER;
 
 import io.grpc.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.trace.Span;
@@ -30,13 +31,6 @@ import org.slf4j.LoggerFactory;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
-
-  // locations where the context was propagated to another thread (tracking multiple steps is
-  // helpful in akka where there is so much recursive async spawning of new work)
-  public static final Context.Key<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
-      Context.key("thread-propagation-locations");
-  private static final boolean THREAD_PROPAGATION_DEBUGGER =
-      Boolean.getBoolean("otel.threadPropagationDebugger");
 
   private static final Logger log = LoggerFactory.getLogger(ExecutorInstrumentationUtils.class);
 
@@ -85,11 +79,11 @@ public class ExecutorInstrumentationUtils {
   public static <T> State setupState(
       final ContextStore<T, State> contextStore, final T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
-    if (THREAD_PROPAGATION_DEBUGGER) {
-      List<StackTraceElement[]> location = THREAD_PROPAGATION_LOCATIONS.get(context);
+    if (Config.THREAD_PROPAGATION_DEBUGGER) {
+      List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(context);
       if (location == null) {
         location = new CopyOnWriteArrayList<>();
-        context = context.withValue(THREAD_PROPAGATION_LOCATIONS, location);
+        context = context.withValue(Config.THREAD_PROPAGATION_LOCATIONS, location);
       }
       location.add(0, new Exception().getStackTrace());
     }

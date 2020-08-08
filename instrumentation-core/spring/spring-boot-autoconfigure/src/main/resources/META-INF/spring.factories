@@ -6,4 +6,5 @@ io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingS
 io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate.RestTemplateAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient.WebClientAutoConfiguration,\
-io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMVCFilterAutoConfiguration
+io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMVCFilterAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.aspects.TraceAspectAutoConfiguration

@@ -36,7 +36,6 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.util.concurrent.Callable
-import java.util.concurrent.atomic.AtomicBoolean
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -46,7 +45,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -395,12 +393,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
     }
-    assertTraces(size * 2) {
+    assertTraces(size) {
       (0..size - 1).each {
-        trace(it * 2, 1) {
-          basicSpan(it, 0, "TEST_SPAN")
-        }
-        trace(it * 2 + 1, spanCount) {
+        trace(it, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
           if (hasHandlerSpan()) {
@@ -498,13 +493,4 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  public static final AtomicBoolean ENABLE_TEST_ADVICE = new AtomicBoolean(false)
-
-  def setup() {
-    ENABLE_TEST_ADVICE.set(true)
-  }
-
-  def cleanup() {
-    ENABLE_TEST_ADVICE.set(false)
-  }
 }

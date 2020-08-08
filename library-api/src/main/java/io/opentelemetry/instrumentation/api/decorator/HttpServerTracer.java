@@ -31,10 +31,13 @@ import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +49,9 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
 
   protected static final String USER_AGENT = "User-Agent";
+
+  private static final boolean FAIL_ON_CONTEXT_LEAK =
+      Boolean.getBoolean("otel.internal.failOnContextLeak");
 
   public HttpServerTracer() {
     super();
@@ -270,12 +276,45 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   private <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+    if (Config.THREAD_PROPAGATION_DEBUGGER) {
+      debugContextLeak();
+    }
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
     Context context = getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
     Span span = getSpan(context);
     return span.getContext();
+  }
+
+  private void debugContextLeak() {
+    Context current = Context.current();
+    if (current != Context.ROOT) {
+      log.error("Unexpected non-root current context found when extracting remote context!");
+      Span currentSpan = TracingContextUtils.getSpanWithoutDefault(current);
+      if (currentSpan != null) {
+        log.error("It contains this span: {}", currentSpan);
+      }
+      List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(current);
+      if (location != null) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<StackTraceElement[]> i = location.iterator();
+        while (i.hasNext()) {
+          for (StackTraceElement ste : i.next()) {
+            sb.append("\n");
+            sb.append(ste);
+          }
+          if (i.hasNext()) {
+            sb.append("\nwhich was propagated from:");
+          }
+        }
+        log.error("a context leak was detected. it was propagated from:{}", sb);
+      }
+
+      if (FAIL_ON_CONTEXT_LEAK) {
+        throw new IllegalStateException("Context leak detected");
+      }
+    }
   }
 
   private static void setStatus(Span span, int status) {

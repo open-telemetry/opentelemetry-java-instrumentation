@@ -32,7 +32,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 import static java.util.Collections.singletonMap
@@ -93,11 +92,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     authProvider.latestAuthentications.get(0).password == testPassword
 
     and:
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, "TEST_SPAN")
-      }
-      trace(1, 1) {
         serverSpan(it, 0, null, null, "POST", response.body()?.contentLength(), LOGIN)
       }
     }

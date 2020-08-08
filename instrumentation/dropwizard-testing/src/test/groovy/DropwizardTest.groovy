@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
@@ -26,7 +27,6 @@ import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import spock.lang.Retry
 
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -43,8 +43,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-// Work around for: address already in use
-@Retry(count = 5, delay = 100)
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
 
   @Override

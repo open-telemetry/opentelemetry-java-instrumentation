@@ -16,16 +16,16 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -57,34 +57,25 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     Scope parentScope = null;
     Span continuation = channelTraceContext.getConnectionContinuation();
     if (continuation != null) {
-      parentScope = TRACER.withSpan(continuation);
+      parentScope = currentContextWith(continuation);
       channelTraceContext.setConnectionContinuation(null);
     }
+    channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
+    Span span = TRACER.startSpan(request);
+    BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
 
-    Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    try (Scope scope = TRACER.withSpan(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-      DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    channelTraceContext.setClientSpan(span);
 
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
-
-      channelTraceContext.setClientSpan(span);
-
-      try {
-        ctx.sendDownstream(msg);
-      } catch (final Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-        throw throwable;
-      }
+    try (Scope scope = currentContextWith(span)) {
+      ctx.sendDownstream(msg);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     } finally {
       if (parentScope != null) {
         parentScope.close();

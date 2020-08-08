@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import io.grpc.Context;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -46,6 +47,13 @@ import org.slf4j.LoggerFactory;
 public class Config {
 
   private static final Logger log = LoggerFactory.getLogger(Config.class);
+
+  // locations where the context was propagated to another thread (tracking multiple steps is
+  // helpful in akka where there is so much recursive async spawning of new work)
+  public static final Context.Key<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
+      Context.key("thread-propagation-locations");
+  public static final boolean THREAD_PROPAGATION_DEBUGGER =
+      Boolean.getBoolean("otel.threadPropagationDebugger");
 
   private static final MethodHandles.Lookup PUBLIC_LOOKUP = MethodHandles.publicLookup();
 
