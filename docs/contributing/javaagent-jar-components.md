@@ -1,7 +1,13 @@
 ### Understanding the javaagent components
 
 OpenTelemetry Auto Instrumentation java agent's jar can logically be divided
-into 3 parts.
+into 3 parts:
+
+* Modules that live in the system class loader
+* Modules that live in the bootstrap class loader
+* Modules that live in the agent class loader
+
+### Modules that live in the system class loader
 
 #### `opentelemetry-javaagent` module
 
@@ -15,15 +21,27 @@ classloader and immediately delegate to
 `io.opentelemetry.auto.bootstrap.Agent` (now in the bootstrap class loader)
 class from there.
 
+### Modules that live in the bootstrap class loader
+
 #### `agent-bootstrap` module
 
-This module contains support classes for actual instrumentations to be loaded
+`io.opentelemetry.auto.bootstrap.Agent` and a few other classes that live in the bootstrap class
+loader but are not used directly by auto-instrumentation
+
+#### `instrumentation-api` and `auto-api` modules
+
+These modules contains support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
 classloaders in the running application. For this reason `java-agent` puts
 all these classes into JVM's bootstrap classloader. For the same reason this
 module should be as small as possible and have as few dependencies as
 possible. Otherwise, there is a risk of accidentally exposing this classes to
 the actual application.
+
+`instrumentation-api` contains classes that are needed for both library and auto-instrumentation,
+while `auto-api` contains classes that are only needed for auto-instrumentation.
+
+### Modules that live in the agent class loader
 
 #### `agent-tooling` module and `instrumentation` submodules
 
@@ -59,5 +77,9 @@ following "clusters" of classes:
 - `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated inside
 `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 - `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and available in bootstrap classloader.
-- `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its dependencies.
+- `io/opentelemetry/instrumentation/auto/api/` - contains `auto-api` module and available in bootstrap classloader.
+- `io/opentelemetry/auto/shaded/instrumentation/api/` - contains `instrumentation-api` module and available in bootstrap classloader.
+- `io/opentelemetry/auto/shaded/io/` - contains OpenTelemetry API and its dependencies.
+Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.
+- `io/opentelemetry/auto/slf4j/` - contains SLF4J and its simple logger implementation.
 Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.

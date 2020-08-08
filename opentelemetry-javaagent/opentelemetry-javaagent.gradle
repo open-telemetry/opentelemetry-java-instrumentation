@@ -78,7 +78,7 @@ tasks.withType(ShadowJar).configureEach {
   relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
   // prevents conflict with library instrumentation
-  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.auto.shaded.io.opentelemetry.api'
+  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.auto.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
