@@ -37,7 +37,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 
-/** Spring AOP Test for {@link WithSpanAspect} */
+/** 
+* Spring AOP Test for {@link WithSpanAspect}
+* 
+*<p> Note: {@link WithSpanAspect} uses spring-aop to proxy beans. Therefore 
+* the {@link WithSpan} annotation can not be applied to constructors
+*/
 @ExtendWith(MockitoExtension.class)
 public class WithSpanAspectTest {
   static class WithSpanTester {
