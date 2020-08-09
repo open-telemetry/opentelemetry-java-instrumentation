@@ -101,7 +101,7 @@ repositories {
 dependencies {
   testImplementation deps.spock
   testImplementation deps.groovy
-//  testImplementation deps.testLogging
+  testImplementation deps.testLogging
   testImplementation group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
   testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }

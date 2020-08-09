@@ -16,70 +16,108 @@
 
 package io.opentelemetry.smoketest
 
-import groovy.json.JsonSlurper
+import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.auto.test.utils.OkHttpUtils
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.proto.trace.v1.Span
 import java.util.concurrent.TimeUnit
+import java.util.stream.Stream
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Shared
 import spock.lang.Specification
 
-class SmokeTest extends Specification {
-  private static final Logger log = LoggerFactory.getLogger(SmokeTest)
+abstract class SmokeTest extends Specification {
+  private static final Logger logger = LoggerFactory.getLogger(SmokeTest)
 
   protected static OkHttpClient client = OkHttpUtils.client()
 
-  private Network network = Network.newNetwork()
+  private static String tmpDir = System.getProperty('java.io.tmpdir')
 
-  GenericContainer target = new GenericContainer<>("smoke-spring:0.0.1-SNAPSHOT")
+  @Shared
+  private Network network = Network.newNetwork()
+  @Shared
+  protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
+
+  @Shared
+  protected GenericContainer target = new GenericContainer<>(getTargetImage())
     .withExposedPorts(8080)
     .withNetwork(network)
-    .withLogConsumer(new Slf4jLogConsumer(log))
-    .withFileSystemBind("/Users/nsalnikovtarnovski/Documents/workspace/opentelemetry-auto-instr-java/opentelemetry-javaagent/build/libs/opentelemetry-javaagent-0.7.0-SNAPSHOT-all.jar", "/opentelemetry-javaagent-all.jar")
+    .withLogConsumer(new Slf4jLogConsumer(logger))
+    .withFileSystemBind(agentPath, "/opentelemetry-javaagent-all.jar")
     .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
     .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
     .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
     .withEnv("OTEL_OTLP_ENDPOINT", "collector:55680")
+    .withEnv(extraEnv)
 
-  GenericContainer collector = new GenericContainer<>("otel/opentelemetry-collector")
+  protected abstract String getTargetImage()
+
+  /**
+   * Subclasses can override this method to customise target application's environment
+   */
+  protected Map<String, String> getExtraEnv() {
+    return Collections.emptyMap()
+  }
+
+  @Shared
+  protected GenericContainer collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
     .withNetwork(network)
     .withNetworkAliases("collector")
-    .withLogConsumer(new Slf4jLogConsumer(log))
+    .withLogConsumer(new Slf4jLogConsumer(logger))
     .withClasspathResourceMapping("/otel.yaml", "/etc/otel.yaml", BindMode.READ_ONLY)
-    .withFileSystemBind("./otel", "/otel", BindMode.READ_WRITE)
+    .withFileSystemBind("/$tmpDir/otel", "/otel", BindMode.READ_WRITE)
     .withCommand("--config /etc/otel.yaml")
 
-  def "test"() {
-    setup:
+  def setupSpec() {
     collector.start()
     target.start()
-    String url = "http://localhost:${target.getMappedPort(8080)}"
-    def request = new Request.Builder().url(url).get().build()
+  }
 
-    when:
-    def response = client.newCall(request).execute()
-    def traces = waitForFile("./otel/traces.json")
-
-    then:
-    response.body().string() == "Hello world"
-    traces['spans'].size() == 2
-
-    cleanup:
+  def cleanupSpec() {
     target.stop()
     collector.stop()
   }
 
-  private Map waitForFile(String path) {
+  protected static int countSpansByName(Collection<ExportTraceServiceRequest> traces, String spanName) {
+    return getSpanStream(traces).filter { it.name == spanName }.count()
+  }
+
+  protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {
+    return traces.stream()
+      .flatMap { it.getResourceSpansList().stream() }
+      .flatMap { it.getInstrumentationLibrarySpansList().stream() }
+      .flatMap { it.getSpansList().stream() }
+  }
+
+  protected static Collection<ExportTraceServiceRequest> waitForTraces() {
+    return waitForFile("/$tmpDir/otel/traces.json")
+  }
+
+  protected static Collection<ExportTraceServiceRequest> waitForFile(String path) {
     def file = new File(path)
-    println file.absolutePath
-    while (file.size() < 1_000) {
-      TimeUnit.MILLISECONDS.sleep(100)
+
+    //TODO Hack! Please find more stable way
+    waitForFileSizeToStabilize(file)
+    return file.readLines().collect {
+      def builder = ExportTraceServiceRequest.newBuilder()
+      JsonFormat.parser().merge(it, builder)
+      return builder.build()
     }
-    return new JsonSlurper().parse(file)
+  }
+
+  private static void waitForFileSizeToStabilize(File file) {
+    long previousSize = 0
+    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
+    while ((previousSize == 0) || previousSize != file.size() && System.currentTimeMillis() < deadline) {
+      previousSize = file.size()
+      println "Curent file size $previousSize"
+      TimeUnit.MILLISECONDS.sleep(500)
+    }
   }
 }

@@ -8,19 +8,16 @@ dependencies {
 
   implementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
   implementation deps.slf4j
+  implementation deps.opentelemetryProto
   implementation "org.testcontainers:testcontainers:1.14.3"
+  implementation 'com.google.protobuf:protobuf-java-util:3.12.4'
 }
 
-subprojects { subProject ->
-  subProject.tasks.withType(Javadoc).configureEach { enabled = false }
-  subProject.tasks.withType(Test).configureEach {
-    dependsOn = [':opentelemetry-javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
+test {
+  dependsOn = [':opentelemetry-javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
 
-    doFirst {
-      // Tests depend on this to know where to run things and what agent jar to use
-      jvmArgs "-Dio.opentelemetry.smoketest.builddir=${buildDir}"
-      jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-javaagent').tasks.shadowJar.archivePath}"
-      jvmArgs "-Dotel.exporter.jar=${project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath}"
-    }
+  doFirst {
+    jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-javaagent').tasks.shadowJar.archivePath}"
+    jvmArgs "-Dotel.exporter.jar=${project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath}"
   }
 }
