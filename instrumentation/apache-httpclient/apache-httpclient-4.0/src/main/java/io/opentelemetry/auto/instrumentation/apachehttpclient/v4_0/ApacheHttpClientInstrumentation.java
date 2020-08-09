@@ -66,11 +66,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.ApacheHttpClientDecorator",
-      packageName + ".shaded.HttpHeadersInjectAdapter",
-      packageName + ".shaded.HostAndRequestAsHttpUriRequest",
-      packageName + ".shaded.ApacheHttpClientHelper",
-      packageName + ".shaded.WrappingStatusSettingResponseHandler",
+      "io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator",
+      "io.opentelemetry.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
+      "io.opentelemetry.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
+      "io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",
+      "io.opentelemetry.instrumentation.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
     };
   }
 
