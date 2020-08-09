@@ -67,7 +67,7 @@ pool.submit(new AcceptRequestRunnable() {
     pool.submit(new ProcessRequestRunnable(req) {
         writeResponse(process(req))
         pool.submit(new AcceptRequestRunnable() {
-        ... repeat untill shutdown
+        ... repeat until shutdown
     })
 })
 ```
