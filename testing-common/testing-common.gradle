@@ -46,7 +46,7 @@ dependencies {
 
   api deps.groovy
 
-  testImplementation deps.opentelemetryApiAutoAnnotations
+  testImplementation deps.opentelemetryAutoAnnotations
   testImplementation project(':instrumentation:annotations')
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
