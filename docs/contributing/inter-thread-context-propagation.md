@@ -37,7 +37,7 @@ and request processing thread happens manually, by submitting work into some thr
 In the second case it is the framework that handles separate thread pool and passing work to it.
 
 In cases like this proper tracing solution should still combine into a single trace all the work
-required for request processing, irregardless in what thread that work happened. With proper
+required for request processing, regardless in what thread that work happened. With proper
 parent-child relationship between span: span representing shipping address query should be the child
 of the span which denotes accepting HTTP request.
 
