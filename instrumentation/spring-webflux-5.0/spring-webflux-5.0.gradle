@@ -34,7 +34,6 @@ dependencies {
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
   compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
 
-  testImplementation project(':instrumentation:annotations')
   testImplementation project(':instrumentation:netty:netty-4.1')
   testImplementation project(':instrumentation:reactor-3.1')
 

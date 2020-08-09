@@ -28,7 +28,6 @@ dependencies {
 
   testImplementation project(':instrumentation:jdbc')
   testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation project(':instrumentation:annotations')
   testImplementation project(':instrumentation:vertx-3.0')
 
   testImplementation group: 'io.vertx', name: 'vertx-web', version: vertxVersion
@@ -37,7 +36,6 @@ dependencies {
   testImplementation group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
   testImplementation group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
   testImplementation 'org.hsqldb:hsqldb:2.3.4'
-  testImplementation deps.opentelemetryAutoAnnotations
 
   // Vert.x 4.0 is incompatible with our tests.
   latestDepTestImplementation group: 'io.vertx', name: 'vertx-web', version: '3.+'
