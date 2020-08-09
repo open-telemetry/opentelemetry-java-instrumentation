@@ -173,14 +173,14 @@ public class TracedClass {
     public void tracedMethod() {
     }
 
-    @WithSpan("span name")
+    @WithSpan(value="span name")
     public void tracedMethodWithName() {
         Span currentSpan = tracer.getCurrentSpan();
         currentSpan.addEvent("ADD EVENT TO tracedMethodWithName SPAN");
         currentSpan.setAttribute("isTestAttribute", true);
     }
     
-    @WithSpan(value="client span", kind=Span.Kind.CLIENT)
+    @WithSpan(kind=Span.Kind.CLIENT)
     public void tracedClientSpan() {
     }
 }
@@ -189,7 +189,130 @@ public class TracedClass {
 
 ##### Sample Trace
 
-<!-- TODO: Add Image or LogSpanExporter Output -->
+```json
+[
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "parentId":"9b782243ad7df179",
+      "id":"43990118a8bdbdf5",
+      "kind":"CLIENT",
+      "name":"http get",
+      "timestamp":1596841405949825,
+      "duration":21288,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      },
+      "tags":{
+         "http.method":"GET",
+         "http.status_code":"200",
+         "http.url":"/spring-web/sample/trace/2",
+         "net.peer.name":"localhost",
+         "net.peer.port":"8081"
+      }
+   },
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "parentId":"9b782243ad7df179",
+      "id":"1b14a2fc89d7a762",
+      "kind":"CLIENT",
+      "name":"http post",
+      "timestamp":1596841406109125,
+      "duration":25137,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      },
+      "tags":{
+         "http.method":"POST",
+         "http.status_code":"200",
+         "http.url":"/spring-web/sample/trace/1",
+         "net.peer.name":"localhost",
+         "net.peer.port":"8082"
+      }
+   },
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "parentId":"9b782243ad7df179",
+      "id":"c3ef24b9bff5901c",
+      "name":"tracedclass.withspanmethod",
+      "timestamp":1596841406165439,
+      "duration":6912,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      },
+      "tags":{
+         "test.type":"@WithSpan annotation",
+         "test.case":'@WithSpan(value="@withspan set span name")',
+         "test.hasEvent":'true',
+      }
+   },
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "parentId":"9b782243ad7df179",
+      "id":"1a6cb395a8a33cc0",
+      "name":"@withspan set span name",
+      "timestamp":1596841406182759,
+      "duration":2187,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      },
+      "annotations":[
+         {
+            "timestamp":1596841406182920,
+            "value":"ADD EVENT TO tracedMethodWithName SPAN"
+         }
+      ],
+      "tags":{
+         "test.type":"@WithSpan annotation",
+         "test.case":'@WithSpan(value="@withspan set span name")',
+         "test.hasEvent":'true',
+      }
+   },
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "parentId":"9b782243ad7df179",
+      "id":"74dd19a8a9883f80",
+      "kind":"CLIENT",
+      "name":"tracedClientSpan",
+      "timestamp":1596841406194210,
+      "duration":130,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      }
+      "tags":{
+         "test.type":"@WithSpan annotation",
+         "test.case":"@WithSpan(kind=Span.Kind.Client)",
+      }
+   },
+   {
+      "traceId":"0371febbbfa76b2e285a08b53a055d17",
+      "id":"9b782243ad7df179",
+      "kind":"SERVER",
+      "name":"webmvctracingfilter.dofilterinteral",
+      "timestamp":1596841405866633,
+      "duration":355648,
+      "localEndpoint":{
+         "serviceName":"sample_trace",
+         "ipv4":"XXX.XXX.X.XXX"
+      },
+      "tags":{
+         "http.client_ip":"0:0:0:0:0:0:0:1",
+         "http.flavor":"HTTP/1.1",
+         "http.method":"GET",
+         "http.status_code":"200",
+         "http.url":"/spring-webmvc/sample/trace",
+         "http.user_agent":"PostmanRuntime/7.26.2",
+         "net.peer.ip":"0:0:0:0:0:0:0:1",
+         "net.peer.port":"33916",
+         "sampling.probability":"1.0"
+      }
+   }
+]
+```
 
 
 #### In Development - Slf4j Log Correlation
