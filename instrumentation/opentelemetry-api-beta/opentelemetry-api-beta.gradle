@@ -22,6 +22,8 @@ dependencies {
   compileOnly project(path: ':opentelemetry-api-beta-shaded-for-instrumenting', configuration: 'shadow')
   compileOnly project(path: ':opentelemetry-auto-annotations-beta-shaded-for-instrumenting', configuration: 'shadow')
 
-  testImplementation project(path: ':opentelemetry-api-beta-shaded-for-instrumenting', configuration: 'shadow')
+  // using OpenTelemetry SDK to make sure that instrumentation doesn't cause
+  // OpenTelemetrySdk.getTracerProvider() to throw ClassCastException
+  testImplementation project(path: ':opentelemetry-sdk-beta-shaded-for-instrumenting', configuration: 'shadow')
   testImplementation project(path: ':opentelemetry-auto-annotations-beta-shaded-for-instrumenting', configuration: 'shadow')
 }
