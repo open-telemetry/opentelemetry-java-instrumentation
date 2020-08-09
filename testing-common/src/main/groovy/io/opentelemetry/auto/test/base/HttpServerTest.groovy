@@ -26,7 +26,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
-import java.util.concurrent.atomic.AtomicBoolean
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -45,7 +44,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -394,12 +392,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
     }
-    assertTraces(size * 2) {
+    assertTraces(size) {
       (0..size - 1).each {
-        trace(it * 2, 1) {
-          basicSpan(it, 0, "TEST_SPAN")
-        }
-        trace(it * 2 + 1, spanCount) {
+        trace(it, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
           if (hasHandlerSpan()) {
@@ -479,7 +474,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP } // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP }
+        // Optional
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
@@ -496,13 +492,4 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  public static final AtomicBoolean ENABLE_TEST_ADVICE = new AtomicBoolean(false)
-
-  def setup() {
-    ENABLE_TEST_ADVICE.set(true)
-  }
-
-  def cleanup() {
-    ENABLE_TEST_ADVICE.set(false)
-  }
 }

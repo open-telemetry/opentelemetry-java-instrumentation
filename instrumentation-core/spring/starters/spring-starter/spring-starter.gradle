@@ -11,7 +11,9 @@ sourceCompatibility = '8'
 
 dependencies { 
   api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
+  api group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   api project(':instrumentation-core:spring:spring-boot-autoconfigure')
+  api deps.opentelemetryApiAutoAnnotations
   api deps.opentelemetryApi
   api deps.opentelemetryLogging
   api deps.opentelemetrySdk

@@ -27,7 +27,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
@@ -120,21 +119,8 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
   }
 
-  protected void onPeerConnection(Span span, final CONNECTION connection) {
+  protected void onPeerConnection(final Span span, final CONNECTION connection) {
     onPeerConnection(span, peerAddress(connection));
-  }
-
-  protected void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
-    if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress());
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
-    }
-  }
-
-  protected void onPeerConnection(final Span span, final InetAddress remoteAddress) {
-    if (remoteAddress != null) {
-      setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
-    }
   }
 
   protected void onStatement(final Span span, final String statement) {

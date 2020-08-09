@@ -16,11 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.googlehttpclient;
 
-import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -37,7 +34,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import java.util.HashMap;
@@ -69,7 +65,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GoogleHttpClientDecorator",
+      packageName + ".GoogleHttpClientTracer",
       packageName + ".RequestState",
       packageName + ".HeadersInjectAdapter"
     };
@@ -103,19 +99,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       RequestState state = contextStore.get(request);
 
       if (state == null) {
-        state =
-            new RequestState(
-                TRACER
-                    .spanBuilder(DECORATE.spanNameForRequest(request))
-                    .setSpanKind(CLIENT)
-                    .startSpan());
+        state = new RequestState(TRACER.startSpan(request));
         contextStore.put(request, state);
       }
 
       Span span = state.getSpan();
-
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
 
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
@@ -134,18 +122,15 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       if (state != null) {
         Span span = state.getSpan();
 
-        try (Scope scope = currentContextWith(span)) {
-          DECORATE.onResponse(span, response);
-          DECORATE.onError(span, throwable);
-
-          // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
-          // for a failed request.  Thus, check the response code
-          if (response != null && !response.isSuccessStatusCode()) {
-            span.setStatus(Status.UNKNOWN);
-          }
-
-          DECORATE.beforeFinish(span);
-          span.end();
+        if (throwable == null) {
+          TRACER.end(span, response);
+        } else {
+          TRACER.endExceptionally(span, response, throwable);
+        }
+        // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
+        // for a failed request.  Thus, check the response code
+        if (response != null && !response.isSuccessStatusCode()) {
+          span.setStatus(Status.UNKNOWN);
         }
       }
     }
@@ -155,8 +140,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final HttpRequest request) {
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+      Span span = TRACER.startSpan(request);
 
       ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);
@@ -178,12 +162,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         if (state != null) {
           Span span = state.getSpan();
 
-          try (Scope scope = currentContextWith(span)) {
-            DECORATE.onError(span, throwable);
-
-            DECORATE.beforeFinish(span);
-            span.end();
-          }
+          TRACER.endExceptionally(span, throwable);
         }
       }
     }

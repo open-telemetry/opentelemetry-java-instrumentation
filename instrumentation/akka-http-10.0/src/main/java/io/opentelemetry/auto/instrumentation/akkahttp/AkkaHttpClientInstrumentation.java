@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,9 +29,9 @@ import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -62,7 +60,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-      packageName + ".AkkaHttpClientDecorator",
+      packageName + ".AkkaHttpClientTracer",
     };
   }
 
@@ -83,33 +81,30 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
+    public static void methodEnter(
+        @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
-      if (callDepth > 0) {
-        return null;
+      callDepth = TRACER.getCallDepth();
+      if (callDepth.getAndIncrement() == 0) {
+        span = TRACER.startSpan(request);
+
+        Context context = withSpan(span, Context.current());
+        if (request != null) {
+          AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
+          OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, headers);
+          // Request is immutable, so we have to assign new value once we update headers
+          request = headers.getRequest();
+        }
+        scope = withScopedContext(context);
       }
-
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-
-      Context context = withSpan(span, Context.current());
-
-      if (request != null) {
-        AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, headers);
-        // Request is immutable, so we have to assign new value once we update headers
-        request = headers.getRequest();
-      }
-      return new SpanWithScope(span, withScopedContext(context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -117,23 +112,18 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        if (throwable == null) {
+          responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
+        } else {
+          TRACER.endExceptionally(span, throwable);
+        }
       }
-      CallDepthThreadLocalMap.reset(HttpExt.class);
-
-      Span span = spanWithScope.getSpan();
-
-      if (throwable == null) {
-        responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
-      } else {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-      }
-      spanWithScope.closeScope();
     }
   }
 
@@ -147,12 +137,10 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Override
     public Void apply(final Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        DECORATE.onResponse(span, result.get());
+        TRACER.end(span, result.get());
       } else {
-        DECORATE.onError(span, result.failed().get());
+        TRACER.endExceptionally(span, result.failed().get());
       }
-      DECORATE.beforeFinish(span);
-      span.end();
       return null;
     }
   }
