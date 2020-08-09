@@ -16,17 +16,17 @@
 
 package config.exclude;
 
-import io.opentracing.contrib.dropwizard.Trace;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
 
 public class SomeClass implements Runnable {
 
-  @Trace
+  @WithSpan
   @Override
   public void run() {}
 
   public static class NestedClass implements Runnable {
 
-    @Trace
+    @WithSpan
     @Override
     public void run() {}
   }
