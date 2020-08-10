@@ -1,3 +1,7 @@
+ext {
+  retryTests = true
+}
+
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
 

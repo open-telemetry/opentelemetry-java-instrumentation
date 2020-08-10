@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+import io.opentelemetry.auto.test.AgentTestRunner
+import unshaded.io.opentelemetry.sdk.OpenTelemetrySdk
+import unshaded.io.opentelemetry.sdk.trace.TracerSdkProvider
 
-import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
-import net.bytebuddy.asm.Advice;
-import org.springframework.web.reactive.function.client.WebClient;
+class TracerSdkTest extends AgentTestRunner {
 
-public class WebClientFilterAdvice {
+  def "direct access to sdk should not fail"() {
+    when:
+    def provider = OpenTelemetrySdk.getTracerProvider()
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onBuild(@Advice.This final WebClient.Builder thiz) {
-    thiz.filters(WebClientTracingFilter::addFilter);
+    then:
+    provider instanceof TracerSdkProvider
   }
 }

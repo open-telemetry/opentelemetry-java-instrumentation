@@ -17,16 +17,27 @@
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;
+import unshaded.io.opentelemetry.internal.Obfuscated;
 import unshaded.io.opentelemetry.trace.Tracer;
 import unshaded.io.opentelemetry.trace.TracerProvider;
 
-public class UnshadedTracerProvider implements TracerProvider {
+public class UnshadedTracerProvider implements TracerProvider, Obfuscated {
+
+  private static final Logger log = LoggerFactory.getLogger(UnshadedTracerProvider.class);
+
+  private static final AtomicBoolean messageAlreadyLogged = new AtomicBoolean();
 
   private final ContextStore<Context, io.grpc.Context> contextStore;
+  private final TracerProvider originalTracerProvider;
 
-  public UnshadedTracerProvider(ContextStore<Context, io.grpc.Context> contextStore) {
+  public UnshadedTracerProvider(
+      ContextStore<Context, io.grpc.Context> contextStore, TracerProvider originalTracerProvider) {
     this.contextStore = contextStore;
+    this.originalTracerProvider = originalTracerProvider;
   }
 
   @Override
@@ -41,5 +52,21 @@ public class UnshadedTracerProvider implements TracerProvider {
         io.opentelemetry.OpenTelemetry.getTracerProvider()
             .get(instrumentationName, instrumentationVersion),
         contextStore);
+  }
+
+  // this is called by OpenTelemetrySdk, which expects to get back a real TracerProviderSdk
+  @Override
+  public Object unobfuscate() {
+    if (!messageAlreadyLogged.getAndSet(true)) {
+      String message =
+          "direct usage of the OpenTelemetry SDK is not supported when running agent"
+              + " (run with debug logging to see stack trace)";
+      if (log.isDebugEnabled()) {
+        log.debug(message, new Exception("stack trace"));
+      } else {
+        log.info(message);
+      }
+    }
+    return ((Obfuscated<?>) originalTracerProvider).unobfuscate();
   }
 }

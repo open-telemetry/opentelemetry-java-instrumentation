@@ -16,7 +16,10 @@
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -40,6 +43,8 @@ import org.slf4j.LoggerFactory;
 public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
+
+  private static final Tracer tracer = OpenTelemetry.getTracer("test");
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
@@ -98,26 +103,34 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         });
   }
 
-  @WithSpan
   private void handleListProducts(final RoutingContext routingContext) {
-    HttpServerResponse response = routingContext.response();
-    Single<JsonArray> jsonArraySingle = listProducts();
+    Span span = tracer.spanBuilder("handleListProducts").startSpan();
+    try (Scope ignored = tracer.withSpan(span)) {
+      HttpServerResponse response = routingContext.response();
+      Single<JsonArray> jsonArraySingle = listProducts();
 
-    jsonArraySingle.subscribe(
-        arr -> response.putHeader("content-type", "application/json").end(arr.encode()));
+      jsonArraySingle.subscribe(
+          arr -> response.putHeader("content-type", "application/json").end(arr.encode()));
+    } finally {
+      span.end();
+    }
   }
 
-  @WithSpan
   private Single<JsonArray> listProducts() {
-    return client
-        .rxQuery("SELECT id, name, price, weight FROM products")
-        .flatMap(
-            result -> {
-              Thread.dumpStack();
-              JsonArray arr = new JsonArray();
-              result.getRows().forEach(arr::add);
-              return Single.just(arr);
-            });
+    Span span = tracer.spanBuilder("listProducts").startSpan();
+    try (Scope ignored = tracer.withSpan(span)) {
+      return client
+          .rxQuery("SELECT id, name, price, weight FROM products")
+          .flatMap(
+              result -> {
+                Thread.dumpStack();
+                JsonArray arr = new JsonArray();
+                result.getRows().forEach(arr::add);
+                return Single.just(arr);
+              });
+    } finally {
+      span.end();
+    }
   }
 
   private void setUpInitialData(final Handler<Void> done) {

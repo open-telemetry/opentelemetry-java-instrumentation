@@ -48,7 +48,9 @@ public class ReferenceCreator extends ClassVisitor {
    * <p>For now we're hardcoding this to the instrumentation package so we only create references
    * from the method advice and helper classes.
    */
-  private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.auto.instrumentation.";
+  private static final String[] REFERENCE_CREATION_PACKAGE = {
+    "io.opentelemetry.auto.instrumentation.", "io.opentelemetry.instrumentation."
+  };
 
   /**
    * Generate all references reachable from a given class.
@@ -79,9 +81,13 @@ public class ReferenceCreator extends ClassVisitor {
         Map<String, Reference> instrumentationReferences = cv.getReferences();
         for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
           // Don't generate references created outside of the instrumentation package.
-          if (!visitedSources.contains(entry.getKey())
-              && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
-            instrumentationQueue.add(entry.getKey());
+          if (!visitedSources.contains(entry.getKey())) {
+            for (String pkg : REFERENCE_CREATION_PACKAGE) {
+              if (entry.getKey().startsWith(pkg)) {
+                instrumentationQueue.add(entry.getKey());
+                break;
+              }
+            }
           }
           if (references.containsKey(entry.getKey())) {
             references.put(entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));

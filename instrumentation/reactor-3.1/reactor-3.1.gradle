@@ -22,7 +22,7 @@ testSets {
 }
 
 dependencies {
-  implementation project(path: ':instrumentation-core:reactor-3.1', configuration: 'shadow')
+  implementation project(':instrumentation-core:reactor-3.1')
 
   testImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 

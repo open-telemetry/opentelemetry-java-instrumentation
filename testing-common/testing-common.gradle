@@ -48,13 +48,8 @@ dependencies {
 
   api deps.groovy
 
+  testImplementation deps.opentelemetryApiAutoAnnotations
   testImplementation project(':instrumentation:annotations')
-
-  //TODO replace with Otel WithSpan
-  testImplementation('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {
-    // bringing this in has side effects and causes some tests to fail
-    exclude group: 'io.dropwizard', module: 'dropwizard-core'
-  }
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode
