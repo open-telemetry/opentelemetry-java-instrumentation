@@ -27,7 +27,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Configures {@link WebMVCFilter} for tracing. */
 @Configuration
-@EnableConfigurationProperties(WebMVCProperties.class)
+@EnableConfigurationProperties(WebMvcProperties.class)
 @ConditionalOnProperty(prefix = "opentelemetry.trace.web", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass(OncePerRequestFilter.class)
 public class WebMvcFilterAutoConfiguration {

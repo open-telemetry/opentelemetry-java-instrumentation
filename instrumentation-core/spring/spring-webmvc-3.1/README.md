@@ -1,4 +1,4 @@
-# Manual Instrumentation for Spring-WebMvc
+# Manual Instrumentation for Spring Web MVC
 
 Provides OpenTelemetry tracing for spring-webmvc RestControllers by leveraging spring-webmvc [filters](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter).
 
@@ -7,12 +7,13 @@ Provides OpenTelemetry tracing for spring-webmvc RestControllers by leveraging s
 ### Add these dependencies to your project.
 
 Replace `SPRING_VERSION` with the version of spring you're using.
-`Minimum version: 3.1`
+ - `Minimum version: 3.1`
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 0.8.0`
+ - `Minimum version: 0.8.0`
 
 For Maven add to your `pom.xml`:
+
 ```xml
 <dependencies>
   <!-- opentelemetry -->
@@ -41,6 +42,7 @@ For Maven add to your `pom.xml`:
 ```
 
 For Gradle add to your dependencies:
+
 ```groovy
 implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webmvc-3.1:OPENTELEMETRY_VERSION'
 implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
@@ -58,7 +60,6 @@ WebMvcTracingFilter adds OpenTelemetry server spans to requests processed by req
 ##### Usage
 
 ```java
-
 import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter
 import io.opentelemetry.trace.Tracer;
 
