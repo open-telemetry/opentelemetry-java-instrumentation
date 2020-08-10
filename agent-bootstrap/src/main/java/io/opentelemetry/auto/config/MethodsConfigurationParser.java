@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation;
+package io.opentelemetry.auto.config;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import io.opentelemetry.auto.config.Config;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -59,7 +58,7 @@ public class MethodsConfigurationParser {
           configString);
       return Collections.emptyMap();
     } else {
-      Map<String, Set<String>> toTrace = Maps.newHashMap();
+      Map<String, Set<String>> toTrace = new HashMap<>();
       String[] classMethods = configString.split(";", -1);
       for (String classMethod : classMethods) {
         if (classMethod.trim().isEmpty()) {
@@ -70,7 +69,7 @@ public class MethodsConfigurationParser {
         String method = splitClassMethod[1].trim();
         String methodNames = method.substring(0, method.length() - 1);
         String[] splitMethodNames = methodNames.split(",", -1);
-        Set<String> trimmedMethodNames = Sets.newHashSetWithExpectedSize(splitMethodNames.length);
+        Set<String> trimmedMethodNames = new HashSet<>(splitMethodNames.length);
         for (String methodName : splitMethodNames) {
           String trimmedMethodName = methodName.trim();
           if (!trimmedMethodName.isEmpty()) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation
+package io.opentelemetry.auto.config
 
 
 import spock.lang.Specification
