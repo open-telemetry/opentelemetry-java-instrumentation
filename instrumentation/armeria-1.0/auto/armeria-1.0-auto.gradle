@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  implementation project(path: ':instrumentation:armeria-1.0:library', configuration: 'shadow')
+  implementation project(':instrumentation:armeria-1.0:library')
 
   compileOnly group: 'com.linecorp.armeria', name: 'armeria', version: '0.99.8'
 

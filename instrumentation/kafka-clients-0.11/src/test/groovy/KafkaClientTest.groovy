@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -396,7 +396,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "read message without context propagation"
     ConfigUtils.updateConfig {
-      System.setProperty("otel."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
+      System.setProperty("otel." + Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
     }
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
@@ -447,7 +447,7 @@ class KafkaClientTest extends AgentTestRunner {
     producerFactory.stop()
     container?.stop()
     ConfigUtils.updateConfig {
-      System.clearProperty("otel."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
+      System.clearProperty("otel." + Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
     }
 
   }

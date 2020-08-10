@@ -17,8 +17,8 @@
 package io.opentelemetry.instrumentation.springwebmvc;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;

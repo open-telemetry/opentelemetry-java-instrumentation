@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
@@ -25,9 +25,9 @@ import org.glassfish.embeddable.GlassFishProperties
 import org.glassfish.embeddable.GlassFishRuntime
 import org.glassfish.embeddable.archive.ScatteredArchive
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER

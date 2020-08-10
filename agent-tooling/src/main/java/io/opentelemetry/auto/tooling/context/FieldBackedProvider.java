@@ -20,15 +20,15 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLO
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.bootstrap.WeakMap;
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.HelperInjector;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.tooling.Instrumenter.Default;
 import io.opentelemetry.auto.tooling.Utils;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.Arrays;

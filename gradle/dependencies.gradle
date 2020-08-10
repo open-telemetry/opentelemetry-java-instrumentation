@@ -28,22 +28,22 @@ ext {
 
   deps = [
     // OpenTelemetry
-    opentelemetryApi               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
-    opentelemetryApiAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
-    opentelemetryTraceProps        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetryOther),
-    opentelemetrySdk               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
-    opentelemetrySdkAutoConfig     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetryOther),
-    opentelemetryJaeger            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
-    opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
-    opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
-    opentelemetryLogging           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetryOther),
+    opentelemetryApi            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
+    opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
+    opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetryOther),
+    opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
+    opentelemetrySdkAutoConfig  : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetryOther),
+    opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
+    opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
+    opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
+    opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetryOther),
 
     // General
-    slf4j                          : "org.slf4j:slf4j-api:${versions.slf4j}",
-    guava                          : "com.google.guava:guava:$versions.guava",
-    bytebuddy                      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${versions.bytebuddy}"),
-    bytebuddyagent                 : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
-    autoservice                    : [
+    slf4j                       : "org.slf4j:slf4j-api:${versions.slf4j}",
+    guava                       : "com.google.guava:guava:$versions.guava",
+    bytebuddy                   : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${versions.bytebuddy}"),
+    bytebuddyagent              : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
+    autoservice                 : [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
       // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
@@ -52,23 +52,23 @@ ext {
 
     // Testing
 
-    spock                          : [
+    spock                       : [
       dependencies.create("org.spockframework:spock-core:${versions.spock}", {
         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
       }),
       // Used by Spock for mocking:
       dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '2.6') // Last version to support Java7
     ],
-    groovy                         : "org.codehaus.groovy:groovy-all:${versions.groovy}",
-    testcontainers                 : "org.testcontainers:testcontainers:1.12.2",
-    testLogging                    : [
+    groovy                      : "org.codehaus.groovy:groovy-all:${versions.groovy}",
+    testcontainers              : "org.testcontainers:testcontainers:1.12.2",
+    testLogging                 : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),
       dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: versions.slf4j),
       dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: versions.slf4j),
     ],
-    scala                          : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
-    kotlin                         : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
-    coroutines                     : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
+    scala                       : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
+    kotlin                      : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
+    coroutines                  : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
   ]
 }

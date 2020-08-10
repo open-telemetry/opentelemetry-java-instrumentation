@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 
 public class OnErrorTracer extends BaseTracer {
   public static final OnErrorTracer ERROR_TRACER = new OnErrorTracer();

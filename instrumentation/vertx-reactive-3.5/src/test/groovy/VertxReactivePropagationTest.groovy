@@ -77,8 +77,8 @@ class VertxReactivePropagationTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
           }
         }
-        basicSpan(it, 1, "VertxReactiveWebServer.handleListProducts", span(0))
-        basicSpan(it, 2, "VertxReactiveWebServer.listProducts", span(1))
+        basicSpan(it, 1, "handleListProducts", span(0))
+        basicSpan(it, 2, "listProducts", span(1))
         span(3) {
           operationName "SELECT id, name, price, weight FROM products"
           spanKind CLIENT

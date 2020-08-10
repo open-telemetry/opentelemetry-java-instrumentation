@@ -18,13 +18,14 @@ package io.opentelemetry.auto.test.utils
 
 import io.grpc.Context
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.context.Scope
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
+
 import java.util.concurrent.Callable
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext
@@ -40,7 +41,7 @@ class TraceUtils {
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      //TODO following two lines are duplicated from io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer
+      //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
       def span = TRACER.spanBuilder(rootOperationName).setSpanKind(Span.Kind.SERVER).startSpan()
       Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))

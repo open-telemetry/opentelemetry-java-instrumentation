@@ -26,12 +26,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientHelper;
-import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.HostAndRequestAsHttpUriRequest;
-import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.WrappingStatusSettingResponseHandler;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -66,11 +63,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.ApacheHttpClientDecorator",
-      packageName + ".shaded.HttpHeadersInjectAdapter",
-      packageName + ".shaded.HostAndRequestAsHttpUriRequest",
-      packageName + ".shaded.ApacheHttpClientHelper",
-      packageName + ".shaded.WrappingStatusSettingResponseHandler",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
     };
   }
 

@@ -16,16 +16,16 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator.currentContextWith;
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.api.decorator.ClientDecorator.currentContextWith;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 
 /** Tracing Request Handler */

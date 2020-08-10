@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch.transport.v5_0;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
