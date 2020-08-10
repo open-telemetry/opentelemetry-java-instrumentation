@@ -1,4 +1,4 @@
-# Manual Instrumentation for Spring WebFlux
+# Manual Instrumentation for Spring Webflux
 
 Provides OpenTelemetry instrumentation for Spring's WebClient.
 
