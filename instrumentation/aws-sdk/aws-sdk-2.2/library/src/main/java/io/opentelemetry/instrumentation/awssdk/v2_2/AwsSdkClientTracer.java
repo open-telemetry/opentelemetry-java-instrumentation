@@ -133,11 +133,6 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
     return "io.opentelemetry.auto.aws-sdk-2.2";
   }
 
-  @Override
-  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    return super.onRequest(span, sdkHttpRequest);
-  }
-
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
