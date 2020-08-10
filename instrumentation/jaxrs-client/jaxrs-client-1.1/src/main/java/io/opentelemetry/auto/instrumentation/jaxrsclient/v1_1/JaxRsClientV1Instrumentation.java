@@ -16,13 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;

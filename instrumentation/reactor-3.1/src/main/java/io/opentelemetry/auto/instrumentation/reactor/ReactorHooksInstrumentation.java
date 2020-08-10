@@ -42,18 +42,18 @@ public final class ReactorHooksInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.TracingPublishers",
-      packageName + ".shaded.TracingPublishers$MonoTracingPublisher",
-      packageName + ".shaded.TracingPublishers$ParallelFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$ConnectableFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$GroupedFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FuseableMonoTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FuseableParallelFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FuseableConnectableFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FuseableGroupedFluxTracingPublisher",
-      packageName + ".shaded.TracingPublishers$FuseableFluxTracingPublisher",
-      packageName + ".shaded.TracingSubscriber"
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$MonoTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$ParallelFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$ConnectableFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$GroupedFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableMonoTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableParallelFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableConnectableFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableGroupedFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableFluxTracingPublisher",
+      "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
     };
   }
 

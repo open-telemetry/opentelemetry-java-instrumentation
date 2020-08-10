@@ -22,12 +22,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.UnshadedContextPropagators;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -67,7 +67,7 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
             unshaded.io.opentelemetry.trace.TracerProvider tracerProvider) {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      tracerProvider = new UnshadedTracerProvider(contextStore);
+      tracerProvider = new UnshadedTracerProvider(contextStore, tracerProvider);
     }
   }
 

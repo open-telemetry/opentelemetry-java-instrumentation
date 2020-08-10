@@ -20,8 +20,8 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;

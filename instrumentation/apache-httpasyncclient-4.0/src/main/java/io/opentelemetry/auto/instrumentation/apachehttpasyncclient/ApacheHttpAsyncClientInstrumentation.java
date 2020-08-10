@@ -16,11 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;

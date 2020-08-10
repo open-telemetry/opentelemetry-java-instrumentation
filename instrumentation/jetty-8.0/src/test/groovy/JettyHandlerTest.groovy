@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import org.eclipse.jetty.server.Request
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.AbstractHandler
+import org.eclipse.jetty.server.handler.ErrorHandler
 import spock.lang.Shared
 
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import org.eclipse.jetty.server.Request
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.AbstractHandler
-import org.eclipse.jetty.server.handler.ErrorHandler
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION

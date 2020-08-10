@@ -15,8 +15,8 @@
  */
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig

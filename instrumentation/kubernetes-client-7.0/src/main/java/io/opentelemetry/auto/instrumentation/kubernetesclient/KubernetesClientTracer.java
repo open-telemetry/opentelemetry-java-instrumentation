@@ -18,8 +18,8 @@ package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import okhttp3.Request;

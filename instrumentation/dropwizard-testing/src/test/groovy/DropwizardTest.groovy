@@ -20,10 +20,10 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
@@ -113,7 +113,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         parent()
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" TEST_CLIENT_IP // dropwizard reports peer ip as the client ip
+        // dropwizard reports peer ip as the client ip
+        "${SemanticAttributes.NET_PEER_IP.key()}" TEST_CLIENT_IP
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
@@ -122,7 +123,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || /* async */ it == null }
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || /* async */it == null }
         "servlet.context" ""
         "servlet.path" ""
         if (endpoint.query) {

@@ -7,5 +7,4 @@ dependencies {
   testImplementation deps.coroutines
 
   testImplementation project(':instrumentation:java-concurrent')
-  testImplementation project(':instrumentation:annotations')
 }

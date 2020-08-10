@@ -17,36 +17,12 @@
 package io.opentelemetry.auto.instrumentation.traceannotation;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
-import java.lang.reflect.Method;
 
 public class TraceDecorator extends BaseDecorator {
   public static final TraceDecorator DECORATE = new TraceDecorator();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.trace-annotation");
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
-   * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
-   * #spanNameForMethod(Method)}.
-   */
-  public String spanNameForMethodWithAnnotation(final Method method) {
-    WithSpan annotation = method.getAnnotation(WithSpan.class);
-    if (annotation != null && !annotation.value().isEmpty()) {
-      return annotation.value();
-    }
-
-    return spanNameForMethod(method);
-  }
-
-  public Span.Kind extractSpanKind(final Method method) {
-    WithSpan annotation = method.getAnnotation(WithSpan.class);
-    return annotation != null ? annotation.kind() : Kind.INTERNAL;
-  }
 }

@@ -16,9 +16,9 @@
 
 package client
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -33,13 +33,13 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     ClientResponse response = WebClient.builder().build().method(HttpMethod.resolve(method))
-        .uri(uri)
-        .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
-        .exchange()
-        .doAfterSuccessOrError { res, ex ->
-          callback?.call()
-        }
-        .block()
+      .uri(uri)
+      .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
+      .exchange()
+      .doAfterSuccessOrError { res, ex ->
+        callback?.call()
+      }
+      .block()
 
     response.statusCode().value()
   }

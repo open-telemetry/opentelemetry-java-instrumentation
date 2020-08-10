@@ -46,9 +46,9 @@ public class WebClientFilterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.SpringWebfluxHttpClientTracer",
-      packageName + ".shaded.HttpHeadersInjectAdapter",
-      packageName + ".shaded.WebClientTracingFilter"
+      "io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientTracer",
+      "io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter",
+      "io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter"
     };
   }
 

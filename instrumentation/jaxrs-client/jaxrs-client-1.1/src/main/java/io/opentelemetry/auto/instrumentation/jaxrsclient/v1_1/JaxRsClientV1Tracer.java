@@ -18,8 +18,8 @@ package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 
 public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {

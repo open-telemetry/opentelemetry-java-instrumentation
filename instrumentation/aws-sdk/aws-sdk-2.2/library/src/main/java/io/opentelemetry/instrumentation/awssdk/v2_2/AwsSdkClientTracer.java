@@ -16,15 +16,17 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.SPAN_ATTRIBUTE;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpHeaders;
@@ -136,7 +138,24 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
     return super.onRequest(span, sdkHttpRequest);
   }
 
-  public Tracer getTracer() {
-    return tracer;
+  public void afterMarshalling(
+      final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
+    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    if (span != null) {
+      onRequest(span, context.httpRequest());
+      onSdkRequest(span, context.request());
+      onAttributes(span, executionAttributes);
+    }
+  }
+
+  public void afterExecution(
+      final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
+    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    if (span != null) {
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+      afterExecution(span, context.httpRequest());
+      onSdkResponse(span, context.response());
+      end(span, context.httpResponse());
+    }
   }
 }

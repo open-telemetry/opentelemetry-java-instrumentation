@@ -23,9 +23,9 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 
 /** Tracing Request Handler */

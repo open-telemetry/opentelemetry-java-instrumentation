@@ -18,8 +18,8 @@ package io.opentelemetry.auto.instrumentation.playws;
 
 import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.org.asynchttpclient.Request;
