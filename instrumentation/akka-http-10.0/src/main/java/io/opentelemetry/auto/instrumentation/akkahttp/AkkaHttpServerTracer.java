@@ -20,8 +20,8 @@ import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 

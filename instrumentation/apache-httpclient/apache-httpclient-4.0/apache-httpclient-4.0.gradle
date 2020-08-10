@@ -30,7 +30,6 @@ testSets {
 }
 
 dependencies {
-  implementation project(':instrumentation-core:apache-httpclient-4.0')
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
   testImplementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'

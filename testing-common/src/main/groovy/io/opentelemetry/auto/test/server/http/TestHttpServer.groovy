@@ -17,24 +17,25 @@
 package io.opentelemetry.auto.test.server.http
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.HandlerList
+
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.trace.Span.Kind.SERVER
@@ -82,7 +83,7 @@ class TestHttpServer implements AutoCloseable {
     internalServer.stopAtShutdown = true
 
     def port = internalServer.connectors[0].localPort
-    address = new URI("http://localhost:${ port}")
+    address = new URI("http://localhost:${port}")
 
     PortUtils.waitForPortToOpen(port, 20, TimeUnit.SECONDS)
     System.out.println("Started server $this on port ${address.getPort()}")

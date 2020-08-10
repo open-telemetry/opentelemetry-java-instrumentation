@@ -34,6 +34,8 @@ subprojects {
 }
 
 dependencies {
+  implementation project(':library-api')
+  implementation project(':auto-api')
   implementation(project(':auto-tooling')) {
     exclude module: ':auto-bootstrap'
   }
@@ -62,10 +64,15 @@ shadowJar {
   }
 
   // rewrite library instrumentation dependencies
-  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.auto.shaded.instrumentation"
+  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.auto.shaded.instrumentation") {
+    exclude "io.opentelemetry.instrumentation.auto.**"
+  }
 
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
+
+  // prevents conflict with library instrumentation
+  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.auto.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"

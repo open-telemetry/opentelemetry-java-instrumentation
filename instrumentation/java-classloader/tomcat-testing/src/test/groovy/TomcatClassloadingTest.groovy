@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.auto.api.concurrent.State
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader
@@ -38,9 +38,9 @@ class TomcatClassloadingTest extends AgentTestRunner {
 
     when:
     // If instrumentation didn't work this would blow up with NPE due to incomplete resources mocking
-    def clazz = classloader.loadClass("io.opentelemetry.auto.instrumentation.api.MoreAttributes")
+    def clazz = classloader.loadClass("io.opentelemetry.instrumentation.auto.api.concurrent.State")
 
     then:
-    clazz == MoreAttributes
+    clazz == State
   }
 }

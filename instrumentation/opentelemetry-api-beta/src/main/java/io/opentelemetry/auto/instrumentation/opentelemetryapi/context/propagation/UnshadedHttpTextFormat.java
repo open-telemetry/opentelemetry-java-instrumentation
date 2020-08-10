@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation;
 
-import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

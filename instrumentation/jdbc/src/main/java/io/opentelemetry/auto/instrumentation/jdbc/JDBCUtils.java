@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.jdbc.normalizer.SqlNormalizer;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;

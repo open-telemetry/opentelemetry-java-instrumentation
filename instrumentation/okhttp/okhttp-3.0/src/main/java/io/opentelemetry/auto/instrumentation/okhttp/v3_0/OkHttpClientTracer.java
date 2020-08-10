@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.okhttp.v3_0;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;

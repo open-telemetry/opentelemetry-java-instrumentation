@@ -21,9 +21,9 @@ import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatche
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.config.MethodsConfigurationParser;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;

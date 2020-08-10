@@ -39,7 +39,7 @@ class JBossClassloadingTest extends AgentTestRunner {
     when:
     Class<?> clazz
     try {
-      clazz = Class.forName("io.opentelemetry.auto.instrumentation.api.MoreAttributes", false, classLoader)
+      clazz = Class.forName("io.opentelemetry.instrumentation.auto.api.concurrent.State", false, classLoader)
     } catch (ClassNotFoundException e) {
     }
 

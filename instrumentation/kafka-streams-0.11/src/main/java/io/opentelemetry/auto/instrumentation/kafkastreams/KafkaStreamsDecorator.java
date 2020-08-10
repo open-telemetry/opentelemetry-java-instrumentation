@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.kafkastreams;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.streams.processor.internals.StampedRecord;

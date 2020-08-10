@@ -16,11 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrs.v1_0;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
+import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.bootstrap.WeakMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseTracer;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
+import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.trace.Span;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

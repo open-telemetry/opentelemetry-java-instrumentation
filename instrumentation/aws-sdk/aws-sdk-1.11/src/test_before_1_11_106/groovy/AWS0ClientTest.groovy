@@ -31,8 +31,8 @@ import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -135,7 +135,7 @@ class AWS0ClientTest extends AgentTestRunner {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service | operation           | method | path                  | handlerCount | client                                                                      | additionalAttributes | call | body
+    service | operation           | method | path                  | handlerCount | client                                                                      | additionalAttributes              | call                                                                                                                                   | body
     "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
     "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
     "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("http://localhost:$server.address.port") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
@@ -190,7 +190,7 @@ class AWS0ClientTest extends AgentTestRunner {
     }
 
     where:
-    service | operation   | method | url                  | call                                                    | additionalAttributes | body | client
+    service | operation   | method | url                  | call                                                    | additionalAttributes              | body | client
     "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { client -> client.getObject("someBucket", "someKey") } | ["aws.bucket.name": "someBucket"] | ""   | new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN, new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0))).withEndpoint("http://localhost:${UNUSABLE_PORT}")
   }
 

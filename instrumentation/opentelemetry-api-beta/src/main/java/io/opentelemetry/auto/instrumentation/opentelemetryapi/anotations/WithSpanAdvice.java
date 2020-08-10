@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.TraceDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
