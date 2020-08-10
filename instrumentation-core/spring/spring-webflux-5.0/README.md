@@ -12,6 +12,53 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
 `Minimum version: 0.8.0`
 
+
+For Maven add to your `pom.xml`:
+
+```xml
+<dependencies>
+  <!-- opentelemetry instrumentation -->
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-spring-webmvc-3.1</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+
+   <!-- opentelemetry exporter -->
+   <!-- replace this default exporter with your opentelemetry exporter (ex. otlp/zipkin/jaeger/..) -->
+   <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-exporters-logging</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+
+  <!-- required to instrument spring-webmvc -->
+  <!-- this artifact should already be present in your application -->
+  <dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-webflux</artifactId>
+    <version>SPRING_VERSION</version>
+  </dependency>
+
+</dependencies>
+```
+
+For Gradle add to your dependencies:
+
+```groovy
+// opentelemetry instrumentation
+implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-webflux-3.1:OPENTELEMETRY_VERSION'
+
+// opentelemetry exporter
+// replace this default exporter with your opentelemetry exporter (ex. otlp/zipkin/jaeger/..)
+implementation 'io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION'
+
+// required to instrument spring-webmvc
+// this artifact should already be present in your application
+implementation 'org.springframework:spring-webflux:SPRING_VERSION'
+```
+
+
 For Maven add to your `pom.xml`:
 ```xml
 <dependencies>
