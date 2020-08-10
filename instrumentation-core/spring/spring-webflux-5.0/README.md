@@ -15,7 +15,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepo
 For Maven add to your `pom.xml`:
 ```xml
 <dependencies>
-  <!-- opentelemetry -->
+  <!-- opentelemetry instrumentation -->
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-spring-webflux-5.0</artifactId>
