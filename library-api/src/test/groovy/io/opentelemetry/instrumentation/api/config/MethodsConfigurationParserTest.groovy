@@ -16,7 +16,6 @@
 
 package io.opentelemetry.instrumentation.api.config
 
-import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser
 import spock.lang.Specification
 
 class MethodsConfigurationParserTest extends Specification {
