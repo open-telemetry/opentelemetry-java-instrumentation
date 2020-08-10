@@ -22,7 +22,7 @@ For Maven add to your `pom.xml`:
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-   <!-- provides opentelemetry-sdk -->
+   <!-- opentelemetry exporter -->
    <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporters-logging</artifactId>
