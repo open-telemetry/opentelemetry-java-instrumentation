@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation
+package io.opentelemetry.instrumentation.api.config
 
-
+import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser
 import spock.lang.Specification
 
 class MethodsConfigurationParserTest extends Specification {
@@ -38,5 +38,4 @@ class MethodsConfigurationParserTest extends Specification {
     "Class\$1[method1 ] ; Class\$2[ method2];"                      | ["Class\$1": ["method1"].toSet(), "Class\$2": ["method2"].toSet()]
     "Duplicate[method1] ; Duplicate[method2]  ;Duplicate[method3];" | ["Duplicate": ["method3"].toSet()]
   }
-
 }

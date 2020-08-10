@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import java.util.Map;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -32,9 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * Instrumentation for methods annotated with {@link
- * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation. As that is Otel annotation, we
- * provide full support for all its attributes, as opposed to bare minimum functionality of {@link
- * TraceAnnotationsInstrumentation} for third party annotations.
+ * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation.
  */
 @AutoService(Instrumenter.class)
 public final class WithSpanAnnotationInstrumentation
@@ -48,7 +46,8 @@ public final class WithSpanAnnotationInstrumentation
 
   public WithSpanAnnotationInstrumentation() {
     super("trace", "with-span-annotation");
-    annotatedMethodMatcher = isAnnotatedWith(WithSpan.class);
+    annotatedMethodMatcher =
+        isAnnotatedWith(named("unshaded.io.opentelemetry.extensions.auto.annotations.WithSpan"));
     excludedMethodsMatcher = configureExcludedMethods();
   }
 

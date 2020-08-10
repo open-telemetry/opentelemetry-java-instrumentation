@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.traceannotation;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser;
+import io.opentelemetry.instrumentation.auto.api.config.Config;
 import java.util.Map;
 import java.util.Set;
 import net.bytebuddy.description.ByteCodeElement;
