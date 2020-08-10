@@ -64,7 +64,9 @@ shadowJar {
   }
 
   // rewrite library instrumentation dependencies
-  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.auto.shaded.instrumentation"
+  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.auto.shaded.instrumentation") {
+    exclude "io.opentelemetry.instrumentation.auto.**"
+  }
 
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
