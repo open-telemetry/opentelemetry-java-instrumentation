@@ -59,8 +59,10 @@ public class UnshadedTracerProvider implements TracerProvider, Obfuscated {
   public Object unobfuscate() {
     if (!messageAlreadyLogged.getAndSet(true)) {
       String message =
-          "direct usage of the OpenTelemetry SDK is not supported when running agent"
-              + " (run with debug logging to see stack trace)";
+          "direct usage of the OpenTelemetry SDK, e.g. using OpenTelemetrySdk.getTracerProvider()"
+              + " instead of OpenTelemetry.getTracerProvider(), is not supported when running agent"
+              + " (see https://github.com/open-telemetry/opentelemetry-java-instrumentation#troubleshooting"
+              + " for how to run with debug logging, which will log stack trace with this message)";
       if (log.isDebugEnabled()) {
         log.debug(message, new Exception("stack trace"));
       } else {
