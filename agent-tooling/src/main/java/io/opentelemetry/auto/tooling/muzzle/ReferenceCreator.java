@@ -80,19 +80,24 @@ public class ReferenceCreator extends ClassVisitor {
 
         Map<String, Reference> instrumentationReferences = cv.getReferences();
         for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
+          String key = entry.getKey();
           // Don't generate references created outside of the instrumentation package.
           if (!visitedSources.contains(entry.getKey())) {
             for (String pkg : REFERENCE_CREATION_PACKAGE) {
-              if (entry.getKey().startsWith(pkg)) {
-                instrumentationQueue.add(entry.getKey());
+              // TODO (trask) clean up during
+              //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/754
+              if (key.startsWith(pkg)
+                  && !key.startsWith("io.opentelemetry.instrumentation.auto.api.")
+                  && !key.startsWith("io.opentelemetry.instrumentation.api.")) {
+                instrumentationQueue.add(key);
                 break;
               }
             }
           }
-          if (references.containsKey(entry.getKey())) {
-            references.put(entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
+          if (references.containsKey(key)) {
+            references.put(key, references.get(key).merge(entry.getValue()));
           } else {
-            references.put(entry.getKey(), entry.getValue());
+            references.put(key, entry.getValue());
           }
         }
 
