@@ -30,7 +30,7 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends ClientTracer {
+public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
 
   private static final String DB_QUERY = "DB Query";
 
