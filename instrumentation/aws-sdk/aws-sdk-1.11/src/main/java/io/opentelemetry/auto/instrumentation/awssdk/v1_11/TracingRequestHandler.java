@@ -58,8 +58,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      Span span = scope.getSpan();
-      TRACER.end(span, response);
+      tracer.end(scope.getSpan(), response);
     }
   }
 
@@ -69,8 +68,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      Span span = scope.getSpan();
-      TRACER.endExceptionally(span, response, e);
+      tracer.endExceptionally(scope.getSpan(), response, e);
     }
   }
 }

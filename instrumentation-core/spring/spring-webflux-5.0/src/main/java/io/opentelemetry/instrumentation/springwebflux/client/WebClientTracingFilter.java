@@ -48,14 +48,13 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
-    Span span = TRACER.getOrCreateSpan(TRACER.spanNameForRequest(request), tracer);
-    ClientRequest mutatedRequest =
-        ClientRequest.from(request)
-            .headers(httpHeaders -> TRACER.inject(Context.current(), httpHeaders))
-            .build();
-    TRACER.onRequest(span, mutatedRequest);
+    Span span = TRACER.startSpan(request);
 
     try (Scope scope = tracer.withSpan(span)) {
+      ClientRequest mutatedRequest =
+          ClientRequest.from(request)
+              .headers(httpHeaders -> TRACER.inject(Context.current(), httpHeaders))
+              .build();
       return next.exchange(mutatedRequest)
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {

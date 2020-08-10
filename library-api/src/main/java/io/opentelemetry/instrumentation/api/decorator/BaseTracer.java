@@ -33,6 +33,11 @@ public abstract class BaseTracer {
   public static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
       Context.key("opentelemetry-trace-server-span-key");
 
+  // Keeps track of the client span in a subtree corresponding to a client request.
+  // Visible for testing
+  public static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
+      Context.key("opentelemetry-trace-auto-client-span-key");
+
   protected final Tracer tracer;
 
   public BaseTracer() {

@@ -36,7 +36,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
+public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -69,7 +69,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, setter);
-    context = context.withValue(ClientTracer.CONTEXT_CLIENT_SPAN_KEY, span);
+    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
     return withScopedContext(context);
   }
 
@@ -89,7 +89,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends ClientTracer {
    */
   private Span startSpan(REQUEST request, String name) {
     Context context = Context.current();
-    Span clientSpan = ClientTracer.CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

@@ -20,7 +20,11 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInter
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -133,11 +137,6 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
     return "io.opentelemetry.auto.aws-sdk-2.2";
   }
 
-  @Override
-  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    return super.onRequest(span, sdkHttpRequest);
-  }
-
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
@@ -157,5 +156,22 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
       onSdkResponse(span, context.response());
       end(span, context.httpResponse());
     }
+  }
+
+  /**
+   * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
+   * io.grpc.Context }, or an invalid {@link Span} otherwise.
+   */
+  public Span getOrCreateSpan(String name, Tracer tracer) {
+    io.grpc.Context context = io.grpc.Context.current();
+    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+
+    if (clientSpan != null) {
+      // We don't want to create two client spans for a given client call, suppress inner spans.
+      return DefaultSpan.getInvalid();
+    }
+
+    Span current = TracingContextUtils.getSpan(context);
+    return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
   }
 }
