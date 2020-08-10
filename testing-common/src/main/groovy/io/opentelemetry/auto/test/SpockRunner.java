@@ -43,11 +43,9 @@ public class SpockRunner extends Sputnik {
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.instrumentation.api",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.auto.typedspan",
+    "io.opentelemetry.instrumentation.auto.api",
   };
 
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
@@ -55,6 +53,7 @@ public class SpockRunner extends Sputnik {
   static {
     ByteBuddyAgent.install();
     final String[] testBS = {
+      "io.opentelemetry.instrumentation.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API (context prop)
@@ -62,7 +61,6 @@ public class SpockRunner extends Sputnik {
       "io.opentelemetry.internal", // OpenTelemetry API
       "io.opentelemetry.metrics", // OpenTelemetry API
       "io.opentelemetry.trace", // OpenTelemetry API
-      "io.opentelemetry.contrib.auto.annotations", // OpenTelemetry API Contrib
       "io.grpc.Context", // OpenTelemetry API dependency
       "io.grpc.Deadline", // OpenTelemetry API dependency
       "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency

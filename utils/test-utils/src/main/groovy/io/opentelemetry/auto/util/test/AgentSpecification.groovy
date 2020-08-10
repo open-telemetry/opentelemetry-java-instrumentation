@@ -31,7 +31,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named
 import static net.bytebuddy.matcher.ElementMatchers.none
 
 abstract class AgentSpecification extends Specification {
-  private static final String CONFIG = "io.opentelemetry.auto.config.Config"
+  private static final String CONFIG = "io.opentelemetry.instrumentation.api.config.Config"
 
   static {
     addByteBuddyRawSetting()

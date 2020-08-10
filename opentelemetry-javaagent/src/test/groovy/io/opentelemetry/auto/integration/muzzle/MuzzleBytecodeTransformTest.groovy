@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.integration.muzzle
 
-import io.opentelemetry.auto.bootstrap.instrumentation.SafeServiceLoader
 import io.opentelemetry.auto.test.IntegrationTestUtils
+import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader
 import spock.lang.Specification
 
 import java.lang.reflect.Field

@@ -122,10 +122,10 @@ class ClassLoadingTest extends Specification {
 
 
     where:
-    name                                                       | onTestClasspath
-    "io.opentelemetry.auto.instrumentation.api.MoreAttributes" | true
+    name                                                         | onTestClasspath
+    "io.opentelemetry.instrumentation.auto.api.concurrent.State" | true
     // This test case fails on ibm j9.  Perhaps this rule only applies to OpenJdk based jvms?
-//    "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State" | false
+//    "io.opentelemetry.instrumentation.auto.api.concurrent.State" | false
     resource = name.replace(".", "/") + ".class"
   }
 }
