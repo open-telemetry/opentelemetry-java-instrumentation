@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
+import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -24,7 +25,11 @@ import org.springframework.web.client.RestTemplate;
 
 final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
-  public RestTemplateBeanPostProcessor() {}
+  private final Tracer tracer;
+
+  public RestTemplateBeanPostProcessor(final Tracer tracer) {
+    this.tracer = tracer;
+  }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
@@ -42,7 +47,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
         .noneMatch(inteceptor -> inteceptor instanceof RestTemplateInterceptor)) {
-      restTemplateInterceptors.add(0, new RestTemplateInterceptor());
+      restTemplateInterceptors.add(0, new RestTemplateInterceptor(tracer));
     }
   }
 }

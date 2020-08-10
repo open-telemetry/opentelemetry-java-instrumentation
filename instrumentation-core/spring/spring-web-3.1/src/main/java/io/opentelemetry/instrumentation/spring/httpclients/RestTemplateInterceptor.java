@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.spring.httpclients.RestTemplateTr
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -29,7 +30,11 @@ import org.springframework.http.client.ClientHttpResponse;
 /** Wraps RestTemplate requests in a span. Adds the current span context to request headers. */
 public final class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
-  public RestTemplateInterceptor() {}
+  private final Tracer tracer;
+
+  public RestTemplateInterceptor(final Tracer tracer) {
+    this.tracer = tracer;
+  }
 
   @Override
   public ClientHttpResponse intercept(

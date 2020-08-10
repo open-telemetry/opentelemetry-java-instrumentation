@@ -34,13 +34,14 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation {
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Span methodEnter(
+    public static void methodEnter(
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
+        @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
 
-      Span span = TRACER.startSpan(request);
+      span = TRACER.startSpan(request);
       scope = TRACER.startScope(span, request);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
@@ -51,18 +52,15 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         // websocket upgrade handlers aren't supported
         asyncHandler = new AsyncHandlerWrapper(asyncHandler, span, parentContext);
       }
-
-      return span;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Span span,
         @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+      scope.close();
+
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
       }

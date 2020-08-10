@@ -51,7 +51,7 @@ public class ApacheHttpClientHelper {
       if (result instanceof HttpResponse) {
         HttpResponse response = (HttpResponse) result;
         TRACER.onResponse(span, response);
-      }
+      } // else they probably provided a ResponseHandler
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
       } else {
