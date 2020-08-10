@@ -16,14 +16,15 @@ For Maven add to your `pom.xml`:
 
 ```xml
 <dependencies>
-  <!-- opentelemetry -->
+  <!-- opentelemetry instrumentation -->
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-spring-webmvc-3.1</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
-   <!-- provides opentelemetry-sdk -->
+   <!-- opentelemetry exporter -->
+   <!-- replace this default exporter with your opentelemetry exporter (ex. otlp/zipkin/jaeger/..) -->
    <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporters-logging</artifactId>
