@@ -5,7 +5,6 @@ ext {
   serverExtension = 'zip'
 
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  retryTests = true
 }
 
 repositories {
