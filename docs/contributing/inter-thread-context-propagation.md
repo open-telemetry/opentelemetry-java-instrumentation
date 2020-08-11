@@ -64,15 +64,17 @@ There are some runtime environments which, simplifying, do the following:
 ```
 pool.submit(new AcceptRequestRunnable() {
     Request req = readRequest()
-    // At this point Context.current() will have a started span
-    // recording monitoring data about `req`
-    pool.submit(new ProcessRequestRunnable(req) {
-        // The same context from above is active here
-        writeResponse(process(req))
-        pool.submit(new AcceptRequestRunnable() {
-        // The same context from above is propagated here as well
-        ... repeat until shutdown
-    })
+    service(req){ <- This method is instrumented and we start new scope here
+        // At this point Context.current() will have a started span
+        // recording monitoring data about `req`
+        pool.submit(new ProcessRequestRunnable(req) {
+            // The same context from above is active here
+            writeResponse(process(req))
+            pool.submit(new AcceptRequestRunnable() {
+            // The same context from above is propagated here as well
+            ... repeat until shutdown
+        })
+    }
 })
 ```
 
