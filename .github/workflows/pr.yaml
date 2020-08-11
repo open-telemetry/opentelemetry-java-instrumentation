@@ -1,8 +1,6 @@
 name: PR build
 
-on:
-  pull_request:
-    types: [opened, edited]
+on: pull_request
 
 jobs:
   test:
