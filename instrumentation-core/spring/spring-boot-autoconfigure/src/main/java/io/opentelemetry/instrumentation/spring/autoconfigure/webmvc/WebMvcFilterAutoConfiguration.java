@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
-import io.opentelemetry.instrumentation.springwebmvc.WebMVCTracingFilter;
+import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter;
 import io.opentelemetry.trace.Tracer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,13 +27,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Configures {@link WebMVCFilter} for tracing. */
 @Configuration
-@EnableConfigurationProperties(WebMVCProperties.class)
+@EnableConfigurationProperties(WebMvcProperties.class)
 @ConditionalOnProperty(prefix = "opentelemetry.trace.web", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass(OncePerRequestFilter.class)
-public class WebMVCFilterAutoConfiguration {
+public class WebMvcFilterAutoConfiguration {
 
   @Bean
-  public WebMVCTracingFilter otelWebMVCTracingFilter(final Tracer tracer) {
-    return new WebMVCTracingFilter(tracer);
+  public WebMvcTracingFilter otelWebMvcTracingFilter(final Tracer tracer) {
+    return new WebMvcTracingFilter(tracer);
   }
 }

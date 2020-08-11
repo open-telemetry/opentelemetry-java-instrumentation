@@ -19,19 +19,19 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
-import io.opentelemetry.instrumentation.springwebmvc.WebMVCTracingFilter;
+import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-/** Spring Boot auto configuration test for {@link WebMVCFilterAutoConfiguration} */
-class WebMVCFilterAutoConfigurationTest {
+/** Spring Boot auto configuration test for {@link WebMvcFilterAutoConfiguration} */
+class WebMvcFilterAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  TracerAutoConfiguration.class, WebMVCFilterAutoConfiguration.class));
+                  TracerAutoConfiguration.class, WebMvcFilterAutoConfiguration.class));
 
   @Test
   @DisplayName("when web is ENABLED should initialize WebMvcTracingFilter bean")
@@ -40,7 +40,7 @@ class WebMVCFilterAutoConfigurationTest {
         .withPropertyValues("opentelemetry.trace.web.enabled=true")
         .run(
             (context) -> {
-              assertThat(context.getBean("otelWebMVCTracingFilter", WebMVCTracingFilter.class))
+              assertThat(context.getBean("otelWebMvcTracingFilter", WebMvcTracingFilter.class))
                   .isNotNull();
             });
   }
@@ -52,7 +52,7 @@ class WebMVCFilterAutoConfigurationTest {
         .withPropertyValues("opentelemetry.trace.web.enabled=false")
         .run(
             (context) -> {
-              assertThat(context.containsBean("otelWebMVCTracingFilter")).isFalse();
+              assertThat(context.containsBean("otelWebMvcTracingFilter")).isFalse();
             });
   }
 
@@ -61,7 +61,7 @@ class WebMVCFilterAutoConfigurationTest {
   void noProperty() {
     this.contextRunner.run(
         (context) -> {
-          assertThat(context.getBean("otelWebMVCTracingFilter", WebMVCTracingFilter.class))
+          assertThat(context.getBean("otelWebMvcTracingFilter", WebMvcTracingFilter.class))
               .isNotNull();
         });
   }
