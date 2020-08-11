@@ -30,7 +30,6 @@ import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -77,8 +76,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
         if (scope != null) {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-          Span span = scope.getSpan();
-          TRACER.endExceptionally(span, throwable);
+          TRACER.endExceptionally(scope.getSpan(), throwable);
           scope.closeScope();
         }
       }
@@ -113,8 +111,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (scope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-            Span span = scope.getSpan();
-            TRACER.endExceptionally(span, throwable);
+            TRACER.endExceptionally(scope.getSpan(), throwable);
             scope.closeScope();
           }
         }
