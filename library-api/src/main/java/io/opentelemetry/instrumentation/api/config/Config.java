@@ -84,10 +84,6 @@ public class Config {
 
   public static final String KAFKA_CLIENT_PROPAGATION_ENABLED = "kafka.client.propagation.enabled";
 
-  public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
-  public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
-      "experimental.log.capture.threshold";
-
   public static final String ENDPOINT_PEER_SERVICE_MAPPING = "endpoint.peer.service.mapping";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
@@ -123,24 +119,6 @@ public class Config {
   private final boolean httpClientTagQueryString;
   private final Integer scopeDepthLimit;
   private final boolean runtimeContextFieldInjection;
-
-  private final boolean logInjectionEnabled;
-
-  // mapping of threshold values to different logging frameworks:
-  //
-  // | Threshold    | JUL     | Logback | Log4j  |
-  // |--------------|---------|---------|--------|
-  // | OFF          | OFF     | OFF     | OFF    |
-  // | FATAL        | SEVERE  | ERROR   | FATAL  |
-  // | ERROR/SEVERE | SEVERE  | ERROR   | ERROR  |
-  // | WARN/WARNING | WARNING | WARN    | WARN   |
-  // | INFO         | INFO    | INFO    | INFO   |
-  // | CONFIG       | CONFIG  | DEBUG   | DEBUG  |
-  // | DEBUG/FINE   | FINE    | DEBUG   | DEBUG  |
-  // | FINER        | FINER   | DEBUG   | DEBUG  |
-  // | TRACE/FINEST | FINEST  | TRACE   | TRACE  |
-  // | ALL          | ALL     | ALL     | ALL    |
-  private final String experimentalLogCaptureThreshold;
 
   private final String traceAnnotations;
 
@@ -187,14 +165,6 @@ public class Config {
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
-
-    logInjectionEnabled =
-        getBooleanSettingFromEnvironment(LOG_INJECTION_ENABLED, DEFAULT_LOG_INJECTION_ENABLED);
-
-    experimentalLogCaptureThreshold =
-        toUpper(
-            getSettingFromEnvironment(
-                EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD));
 
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
@@ -248,14 +218,6 @@ public class Config {
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
-
-    logInjectionEnabled =
-        getPropertyBooleanValue(properties, LOG_INJECTION_ENABLED, parent.logInjectionEnabled);
-
-    experimentalLogCaptureThreshold =
-        toUpper(
-            properties.getProperty(
-                EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, parent.experimentalLogCaptureThreshold));
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
@@ -581,14 +543,6 @@ public class Config {
     return runtimeContextFieldInjection;
   }
 
-  public boolean isLogInjectionEnabled() {
-    return logInjectionEnabled;
-  }
-
-  public String getExperimentalLogCaptureThreshold() {
-    return experimentalLogCaptureThreshold;
-  }
-
   public String getTraceAnnotations() {
     return traceAnnotations;
   }
@@ -646,11 +600,6 @@ public class Config {
         + scopeDepthLimit
         + ", runtimeContextFieldInjection="
         + runtimeContextFieldInjection
-        + ", logInjectionEnabled="
-        + logInjectionEnabled
-        + ", experimentalLogCaptureThreshold='"
-        + experimentalLogCaptureThreshold
-        + '\''
         + ", traceAnnotations='"
         + traceAnnotations
         + '\''
