@@ -22,7 +22,7 @@ import okhttp3.Request
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage() {
-    "docker.pkg.github.com/inikem/opentelemetry-java-instrumentation/smoke-springboot:latest"
+    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot:latest"
   }
 
   def "spring boot smoke test"() {

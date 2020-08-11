@@ -19,5 +19,5 @@ dependencies {
 
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:11"
-  to.image = "docker.pkg.github.com/inikem/opentelemetry-java-instrumentation/smoke-springboot"
+  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot"
 }
