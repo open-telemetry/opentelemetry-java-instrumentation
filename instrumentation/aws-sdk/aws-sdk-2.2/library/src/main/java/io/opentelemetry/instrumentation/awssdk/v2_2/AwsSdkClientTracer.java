@@ -16,8 +16,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.SPAN_ATTRIBUTE;
-
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.DefaultSpan;
@@ -30,7 +28,6 @@ import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
-import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpHeaders;
@@ -137,27 +134,6 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
     return "io.opentelemetry.auto.aws-sdk-2.2";
   }
 
-  public void afterMarshalling(
-      final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
-    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      onRequest(span, context.httpRequest());
-      onSdkRequest(span, context.request());
-      onAttributes(span, executionAttributes);
-    }
-  }
-
-  public void afterExecution(
-      final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
-    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-      afterExecution(span, context.httpRequest());
-      onSdkResponse(span, context.response());
-      end(span, context.httpResponse());
-    }
-  }
-
   /**
    * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
    * io.grpc.Context }, or an invalid {@link Span} otherwise.
@@ -173,5 +149,11 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
 
     Span current = TracingContextUtils.getSpan(context);
     return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
+  }
+
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
+    return super.onRequest(span, sdkHttpRequest);
   }
 }
