@@ -3,8 +3,8 @@ name: Build Play smoke test distribution
 on:
   push:
     paths:
-      - 'smoke-tests/play'
-#    branches: 'master'
+      - 'smoke-tests/play/**'
+    branches: 'master'
 
 jobs:
   test:

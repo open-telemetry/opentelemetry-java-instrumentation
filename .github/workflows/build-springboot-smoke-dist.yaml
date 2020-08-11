@@ -3,8 +3,8 @@ name: Build Spring Boot smoke test distribution
 on:
   push:
     paths:
-      - 'smoke-tests/springboot'
-#    branches: 'master'
+      - 'smoke-tests/springboot/**'
+    branches: 'master'
 
 jobs:
   test:
