@@ -20,16 +20,22 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientTracer.TR
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
+import software.amazon.awssdk.awscore.AwsResponse;
+import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
 /** AWS request execution interceptor */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   static final ExecutionAttribute<Span> SPAN_ATTRIBUTE =
       new ExecutionAttribute<>("io.opentelemetry.auto.Span");
+
+  static final String COMPONENT_NAME = "java-aws-sdk";
 
   private final Kind kind;
 
@@ -40,7 +46,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    Span span = TRACER.getOrCreateSpan(TRACER.spanName(executionAttributes), AwsSdk.tracer());
+    Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer());
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -50,8 +56,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       TRACER.onRequest(span, context.httpRequest());
-      TRACER.onSdkRequest(span, context.request());
-      TRACER.onAttributes(span, executionAttributes);
+      onSdkRequest(span, context.request());
+      onAttributes(span, executionAttributes);
     }
   }
 
@@ -62,7 +68,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (span != null) {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
       TRACER.afterExecution(span, context.httpRequest());
-      TRACER.onSdkResponse(span, context.response());
+      onSdkResponse(span, context.response());
       TRACER.end(span, context.httpResponse());
     }
   }
@@ -75,5 +81,55 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
       TRACER.endExceptionally(span, context.exception());
     }
+  }
+
+  Span onSdkRequest(final Span span, final SdkRequest request) {
+    // S3
+    request
+        .getValueForField("Bucket", String.class)
+        .ifPresent(name -> span.setAttribute("aws.bucket.name", name));
+    // SQS
+    request
+        .getValueForField("QueueUrl", String.class)
+        .ifPresent(name -> span.setAttribute("aws.queue.url", name));
+    request
+        .getValueForField("QueueName", String.class)
+        .ifPresent(name -> span.setAttribute("aws.queue.name", name));
+    // Kinesis
+    request
+        .getValueForField("StreamName", String.class)
+        .ifPresent(name -> span.setAttribute("aws.stream.name", name));
+    // DynamoDB
+    request
+        .getValueForField("TableName", String.class)
+        .ifPresent(name -> span.setAttribute("aws.table.name", name));
+    return span;
+  }
+
+  String spanName(final ExecutionAttributes attributes) {
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+
+    return awsServiceName + "." + awsOperation;
+  }
+
+  Span onAttributes(final Span span, final ExecutionAttributes attributes) {
+
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+
+    span.setAttribute("aws.agent", COMPONENT_NAME);
+    span.setAttribute("aws.service", awsServiceName);
+    span.setAttribute("aws.operation", awsOperation);
+
+    return span;
+  }
+
+  // Not overriding the super.  Should call both with each type of response.
+  Span onSdkResponse(final Span span, final SdkResponse response) {
+    if (response instanceof AwsResponse) {
+      span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
+    }
+    return span;
   }
 }
