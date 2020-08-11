@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.springwebmvc;
+package io.opentelemetry.instrumentation.spring.webmvc;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -27,13 +27,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered {
+public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered {
 
   private static final String FILTER_CLASS = "WebMVCTracingFilter";
   private static final String FILTER_METHOD = "doFilterInteral";
   private final SpringWebMvcServerTracer tracer;
 
-  public WebMVCTracingFilter(Tracer tracer) {
+  public WebMvcTracingFilter(Tracer tracer) {
     this.tracer = new SpringWebMvcServerTracer(tracer);
   }
 

@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * exist in application context
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.web")
-public final class WebMVCProperties {
+public final class WebMvcProperties {
   private boolean enabled = true;
 
   public boolean isEnabled() {
