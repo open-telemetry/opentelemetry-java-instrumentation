@@ -71,6 +71,7 @@ class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, HttpRespon
     return "io.opentelemetry.auto.spring-webflux-5.0";
   }
 
+  /** This method is overridden to allow other classes in this package to call it. */
   @Override
   protected Span onResponse(Span span, HttpResponse httpResponse) {
     return super.onResponse(span, httpResponse);

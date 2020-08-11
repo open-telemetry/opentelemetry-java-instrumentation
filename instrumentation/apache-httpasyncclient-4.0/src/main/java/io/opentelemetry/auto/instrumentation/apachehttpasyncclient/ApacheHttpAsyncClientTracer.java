@@ -106,6 +106,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
     return super.spanNameForRequest(httpRequest);
   }
 
+  /** This method is overridden to allow other classes in this package to call it. */
   @Override
   public Span onRequest(Span span, HttpRequest httpRequest) {
     return super.onRequest(span, httpRequest);

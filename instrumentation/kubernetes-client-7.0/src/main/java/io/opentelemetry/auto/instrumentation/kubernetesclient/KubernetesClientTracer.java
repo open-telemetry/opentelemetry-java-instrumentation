@@ -63,6 +63,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
     return "io.opentelemetry.auto.kubernetes-client-7.0";
   }
 
+  /** This method is overridden to allow other classes in this package to call it. */
   @Override
   protected Span onRequest(Span span, Request request) {
     return super.onRequest(span, request);
