@@ -27,7 +27,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
   private final Tracer tracer;
 
-  public RestTemplateBeanPostProcessor(final Tracer tracer) {
+  public RestTemplateBeanPostProcessor(Tracer tracer) {
     this.tracer = tracer;
   }
 

@@ -213,6 +213,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void failed(final Exception ex) {
+      // end span before calling delegate
       TRACER.endExceptionally(clientSpan, getResponse(context), ex);
 
       if (parentSpan == null) {
@@ -226,6 +227,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void cancelled() {
+      // end span before calling delegate
       TRACER.end(clientSpan, getResponse(context));
 
       if (parentSpan == null) {

@@ -49,8 +49,7 @@ public class ApacheHttpClientHelper {
     try {
       Span span = spanWithScope.getSpan();
       if (result instanceof HttpResponse) {
-        HttpResponse response = (HttpResponse) result;
-        TRACER.onResponse(span, response);
+        TRACER.onResponse(span, (HttpResponse) result);
       } // else they probably provided a ResponseHandler
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
