@@ -20,6 +20,7 @@ import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.trace.v1.Span
+import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
@@ -36,8 +37,6 @@ abstract class SmokeTest extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(SmokeTest)
 
   protected static OkHttpClient client = OkHttpUtils.client()
-
-  private static String tmpDir = System.getProperty('java.io.tmpdir')
 
   @Shared
   private Network network = Network.newNetwork()
@@ -71,7 +70,6 @@ abstract class SmokeTest extends Specification {
     .withNetworkAliases("collector")
     .withLogConsumer(new Slf4jLogConsumer(logger))
     .withClasspathResourceMapping("/otel.yaml", "/etc/otel.yaml", BindMode.READ_ONLY)
-    .withFileSystemBind("/$tmpDir/otel", "/otel", BindMode.READ_WRITE)
     .withCommand("--config /etc/otel.yaml")
 
   def setupSpec() {
@@ -95,15 +93,10 @@ abstract class SmokeTest extends Specification {
       .flatMap { it.getSpansList().stream() }
   }
 
-  protected static Collection<ExportTraceServiceRequest> waitForTraces() {
-    return waitForFile("/$tmpDir/otel/traces.json")
-  }
-
-  protected static Collection<ExportTraceServiceRequest> waitForFile(String path) {
-    def file = new File(path)
-
-    //TODO Hack! Please find more stable way
+  protected Collection<ExportTraceServiceRequest> waitForTraces() {
+    def file = new FileInDocker(collector, "/traces.json")
     waitForFileSizeToStabilize(file)
+
     return file.readLines().collect {
       def builder = ExportTraceServiceRequest.newBuilder()
       JsonFormat.parser().merge(it, builder)
@@ -111,13 +104,39 @@ abstract class SmokeTest extends Specification {
     }
   }
 
-  private static void waitForFileSizeToStabilize(File file) {
+
+  private static void waitForFileSizeToStabilize(FileInDocker file) {
     long previousSize = 0
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
-    while ((previousSize == 0) || previousSize != file.size() && System.currentTimeMillis() < deadline) {
-      previousSize = file.size()
+    while ((previousSize == 0) || previousSize != file.getSize() && System.currentTimeMillis() < deadline) {
+      previousSize = file.getSize()
       println "Curent file size $previousSize"
       TimeUnit.MILLISECONDS.sleep(500)
+    }
+  }
+
+  private static class FileInDocker {
+    private final GenericContainer collector
+    private final File localFile
+    private final String pathInDocker
+
+    FileInDocker(GenericContainer collector, String pathInDocker) {
+      this.pathInDocker = pathInDocker
+      this.collector = collector
+
+      this.localFile = Files.createTempFile("traces", ".json").toFile()
+      localFile.deleteOnExit()
+      println localFile
+    }
+
+    long getSize() {
+      collector.copyFileFromContainer(pathInDocker, localFile.absolutePath)
+      return localFile.size()
+    }
+
+    List<String> readLines() {
+      collector.copyFileFromContainer(pathInDocker, localFile.absolutePath)
+      return localFile.readLines()
     }
   }
 }

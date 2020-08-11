@@ -18,7 +18,7 @@ exporters:
   logging:
     loglevel: debug
   file:
-    path: /otel/traces.json
+    path: /traces.json
 
 service:
   pipelines:
