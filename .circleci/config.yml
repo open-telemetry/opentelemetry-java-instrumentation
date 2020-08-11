@@ -96,7 +96,7 @@ jobs:
           name: Run Tests
           command: >-
             GRADLE_OPTS="-Dotel.forkedMaxHeapSize=4G -Dotel.forkedMinHeapSize=64M"
-            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >>
+            ./gradlew <<# parameters.prefixTestTask>>testJava<</ parameters.prefixTestTask>><< parameters.testTask >> -x :smoke-tests:test
             << pipeline.parameters.gradle_flags >>
             --max-workers=6
 
