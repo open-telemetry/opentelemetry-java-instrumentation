@@ -64,9 +64,13 @@ There are some runtime environments which, simplifying, do the following:
 ```
 pool.submit(new AcceptRequestRunnable() {
     Request req = readRequest()
+    // At this point Context.current() will have a started span
+    // recording monitoring data about `req`
     pool.submit(new ProcessRequestRunnable(req) {
+        // The same context from above is active here
         writeResponse(process(req))
         pool.submit(new AcceptRequestRunnable() {
+        // The same context from above is propagated here as well
         ... repeat until shutdown
     })
 })
@@ -85,3 +89,6 @@ We acknowledge the problem with too active context propagation. We still think t
 support for asynchronous multi-threaded traces is very important. We have diagnostics in place to
 help us with detecting when we too eagerly propagate the execution context too far. We hope to
 gradually find framework-specific countermeasures to such problem and solve them one by one.
+
+In the meantime, processing new incoming request in the given JVM and creating new `SERVER` span
+always starts with a clean context.
