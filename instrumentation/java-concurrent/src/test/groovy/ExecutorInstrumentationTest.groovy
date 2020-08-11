@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper
-import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.auto.api.concurrent.CallableWrapper
+import io.opentelemetry.instrumentation.auto.api.concurrent.RunnableWrapper
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Shared
 

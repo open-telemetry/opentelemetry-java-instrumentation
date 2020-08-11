@@ -26,9 +26,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.trace.Span;
 import java.sql.PreparedStatement;
 import java.util.Map;

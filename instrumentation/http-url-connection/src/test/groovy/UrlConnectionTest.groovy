@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.bootstrap.AgentClassLoader
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT

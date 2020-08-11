@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.hibernate;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.OrmClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.OrmClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;

@@ -20,8 +20,8 @@ import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatche
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;

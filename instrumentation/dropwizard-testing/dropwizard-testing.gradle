@@ -1,6 +1,5 @@
 ext {
   skipPublish = true
-  retryTests = true
 }
 apply from: "$rootDir/gradle/instrumentation.gradle"
 

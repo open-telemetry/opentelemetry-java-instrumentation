@@ -16,18 +16,19 @@
 
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.api.MoreAttributes
+import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import java.util.concurrent.ExecutionException
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.ExecutionException
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
@@ -431,7 +432,8 @@ abstract class HttpClientTest extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
+        // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         if (userAgent) {

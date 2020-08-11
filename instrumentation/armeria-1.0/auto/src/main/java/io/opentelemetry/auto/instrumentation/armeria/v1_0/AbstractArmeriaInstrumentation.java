@@ -29,13 +29,13 @@ public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".shaded.internal.ContextUtil",
-      packageName + ".shaded.server.ArmeriaServerTracer",
-      packageName + ".shaded.server.ArmeriaServerTracer$ArmeriaGetter",
-      packageName + ".shaded.server.OpenTelemetryService",
-      packageName + ".shaded.server.OpenTelemetryService$Decorator",
+      "io.opentelemetry.instrumentation.armeria.v1_0.internal.ContextUtil",
+      "io.opentelemetry.instrumentation.armeria.v1_0.server.ArmeriaServerTracer",
+      "io.opentelemetry.instrumentation.armeria.v1_0.server.ArmeriaServerTracer$ArmeriaGetter",
+      "io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService",
+      "io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$Decorator",
       // .thenAccept(log -> lambda
-      packageName + ".shaded.server.OpenTelemetryService$1",
+      "io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$1",
     };
   }
 }

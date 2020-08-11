@@ -2,7 +2,6 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
   // Play doesn't work with Java 9+ until 2.6.12
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
-  retryTests = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"

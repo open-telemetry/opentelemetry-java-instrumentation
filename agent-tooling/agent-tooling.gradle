@@ -1,7 +1,3 @@
-ext {
-  retryTests = true
-}
-
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
@@ -15,8 +11,10 @@ configurations {
 }
 
 dependencies {
-  implementation(project(':auto-bootstrap'))
-  implementation(project(':utils:thread-utils'))
+  implementation project(':auto-bootstrap')
+  implementation project(':auto-api')
+  implementation project(':library-api')
+  implementation project(':utils:thread-utils')
 
   implementation deps.opentelemetryApi
   implementation deps.opentelemetrySdk

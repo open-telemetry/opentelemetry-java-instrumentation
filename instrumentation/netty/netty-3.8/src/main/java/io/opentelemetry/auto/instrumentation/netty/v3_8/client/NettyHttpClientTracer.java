@@ -23,9 +23,9 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientTracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;

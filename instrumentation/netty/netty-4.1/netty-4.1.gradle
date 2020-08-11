@@ -1,7 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  retryTests = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -42,7 +41,6 @@ testSets {
 dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
-  testImplementation project(':instrumentation:annotations')
   testImplementation group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   testImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 

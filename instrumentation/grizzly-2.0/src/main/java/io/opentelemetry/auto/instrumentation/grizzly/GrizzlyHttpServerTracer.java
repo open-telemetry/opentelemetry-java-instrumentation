@@ -17,8 +17,8 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;

@@ -22,9 +22,14 @@ rootProject.name = 'opentelemetry-java-instrumentation'
 include ':opentelemetry-javaagent'
 include ':opentelemetry-sdk-shaded-for-testing'
 include ':opentelemetry-api-beta-shaded-for-instrumenting'
+include ':opentelemetry-auto-annotations-beta-shaded-for-instrumenting'
+include ':opentelemetry-sdk-beta-shaded-for-instrumenting'
 include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
+
+include ':library-api'
+include ':auto-api'
 
 // misc
 include ':testing-common'
@@ -149,7 +154,6 @@ include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
 
-include ':instrumentation-core:apache-httpclient-4.0'
 include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet'
 include ':instrumentation-core:spring:spring-boot-autoconfigure'

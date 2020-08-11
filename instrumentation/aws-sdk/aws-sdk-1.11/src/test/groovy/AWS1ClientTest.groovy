@@ -44,8 +44,8 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -172,7 +172,7 @@ class AWS1ClientTest extends AgentTestRunner {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service      | operation           | method | path                  | handlerCount | client                                                                                                                                             | call                                                                            | additionalAttributes | body
+    service      | operation           | method | path                  | handlerCount | client                                                                                                                                             | call                                                                            | additionalAttributes              | body
     "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.createBucket("testbucket") }                                 | ["aws.bucket.name": "testbucket"] | ""
     "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.getObject("someBucket", "someKey") }                         | ["aws.bucket.name": "someBucket"] | ""
     "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | 1            | AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
@@ -245,7 +245,7 @@ class AWS1ClientTest extends AgentTestRunner {
     }
 
     where:
-    service | operation   | method | url                  | call                                                    | additionalAttributes | body | client
+    service | operation   | method | url                  | call                                                    | additionalAttributes              | body | client
     "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { client -> client.getObject("someBucket", "someKey") } | ["aws.bucket.name": "someBucket"] | ""   | new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN, new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0))).withEndpoint("http://localhost:${UNUSABLE_PORT}")
   }
 
