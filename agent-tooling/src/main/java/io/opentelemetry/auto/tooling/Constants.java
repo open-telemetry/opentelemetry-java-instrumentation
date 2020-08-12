@@ -28,7 +28,6 @@ public final class Constants {
    *
    * <p>Updates should be mirrored in
    * io.opentelemetry.auto.gradle.instrumentation.AutoInstrumentationPlugin#BOOTSTRAP_PACKAGE_PREFIXES_COPY
-   * io.opentelemetry.auto.test.SpockRunner#BOOTSTRAP_PACKAGE_PREFIXES_COPY
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto.common.exec",

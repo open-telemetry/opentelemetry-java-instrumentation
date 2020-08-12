@@ -18,11 +18,8 @@ package io.opentelemetry.auto.instrumentation.armeria.v1_0
 
 import com.linecorp.armeria.server.ServerBuilder
 import io.opentelemetry.auto.test.AgentTestTrait
-import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.instrumentation.armeria.v1_0.AbstractArmeriaServerTest
-import org.junit.runner.RunWith
 
-@RunWith(SpockRunner)
 class ArmeriaServerTest extends AbstractArmeriaServerTest implements AgentTestTrait {
   @Override
   void configureServer(ServerBuilder sb) {}

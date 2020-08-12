@@ -29,13 +29,13 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
-public class PatchLoggerTest {
+class PatchLoggerTest {
   @Test
-  public void testImplementsAllMethods() {
+  void testImplementsAllMethods() {
     Set<MethodSignature> patchLoggerMethods = new HashSet<>();
     for (Method method : PatchLogger.class.getMethods()) {
       MethodSignature methodSignature = new MethodSignature();
@@ -77,13 +77,13 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLogger() {
+  void testGetLogger() {
     PatchLogger logger = PatchLogger.getLogger("abc");
     assertThat(logger.getSlf4jLogger().getName()).isEqualTo("abc");
   }
 
   @Test
-  public void testGetName() {
+  void testGetName() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.getName()).thenReturn("xyz");
@@ -94,7 +94,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testNormalMethods() {
+  void testNormalMethods() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -121,7 +121,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testParameterizedLevelMethodsWithNoParams() {
+  void testParameterizedLevelMethodsWithNoParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -148,7 +148,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testParameterizedLevelMethodsWithSingleParam() {
+  void testParameterizedLevelMethodsWithSingleParam() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -187,7 +187,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testParameterizedLevelMethodsWithArrayOfParams() {
+  void testParameterizedLevelMethodsWithArrayOfParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -226,7 +226,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testParameterizedLevelMethodsWithThrowable() {
+  void testParameterizedLevelMethodsWithThrowable() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -260,7 +260,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testIsLoggableAll() {
+  void testIsLoggableAll() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -283,7 +283,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testIsLoggableSome() {
+  void testIsLoggableSome() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(false);
@@ -306,7 +306,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testIsLoggableNone() {
+  void testIsLoggableNone() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(false);
@@ -329,7 +329,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelSevere() {
+  void testGetLevelSevere() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isErrorEnabled()).thenReturn(true);
@@ -340,7 +340,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelWarning() {
+  void testGetLevelWarning() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isWarnEnabled()).thenReturn(true);
@@ -351,7 +351,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelConfig() {
+  void testGetLevelConfig() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isInfoEnabled()).thenReturn(true);
@@ -362,7 +362,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelFine() {
+  void testGetLevelFine() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isDebugEnabled()).thenReturn(true);
@@ -373,7 +373,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelFinest() {
+  void testGetLevelFinest() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -384,7 +384,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testGetLevelOff() {
+  void testGetLevelOff() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     // when
@@ -394,7 +394,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogpParameterizedLevelMethodsWithNoParams() {
+  void testLogpParameterizedLevelMethodsWithNoParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -421,7 +421,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogpParameterizedLevelMethodsWithSingleParam() {
+  void testLogpParameterizedLevelMethodsWithSingleParam() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -460,7 +460,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogpParameterizedLevelMethodsWithArrayOfParams() {
+  void testLogpParameterizedLevelMethodsWithArrayOfParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -499,7 +499,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogpParameterizedLevelMethodsWithThrowable() {
+  void testLogpParameterizedLevelMethodsWithThrowable() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -533,7 +533,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithNoParams() {
+  void testLogrbParameterizedLevelMethodsWithNoParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -560,7 +560,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithSingleParam() {
+  void testLogrbParameterizedLevelMethodsWithSingleParam() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -599,7 +599,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithArrayOfParams() {
+  void testLogrbParameterizedLevelMethodsWithArrayOfParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -642,7 +642,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithVarArgsOfParams() {
+  void testLogrbParameterizedLevelMethodsWithVarArgsOfParams() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -681,7 +681,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithVarArgsOfParams2() {
+  void testLogrbParameterizedLevelMethodsWithVarArgsOfParams2() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     when(slf4jLogger.isTraceEnabled()).thenReturn(true);
@@ -720,7 +720,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithThrowable() {
+  void testLogrbParameterizedLevelMethodsWithThrowable() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -754,7 +754,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithThrowable2() {
+  void testLogrbParameterizedLevelMethodsWithThrowable2() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -788,7 +788,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testLogrbParameterizedLevelMethodsWithResourceBundleObjectAndThrowable() {
+  void testLogrbParameterizedLevelMethodsWithResourceBundleObjectAndThrowable() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -822,7 +822,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testEnteringExitingThrowingMethods() {
+  void testEnteringExitingThrowingMethods() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
     PatchLogger logger = new PatchLogger(slf4jLogger);
@@ -840,7 +840,7 @@ public class PatchLoggerTest {
   }
 
   @Test
-  public void testResourceBundle() {
+  void testResourceBundle() {
     // given
     org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
 

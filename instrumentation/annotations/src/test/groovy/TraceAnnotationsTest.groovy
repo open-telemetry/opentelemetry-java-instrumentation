@@ -15,19 +15,12 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
 
 import java.util.concurrent.Callable
 
 class TraceAnnotationsTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.annotations")
-    }
-  }
 
   def "test simple case annotations"() {
     setup:
