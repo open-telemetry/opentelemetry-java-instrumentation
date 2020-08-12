@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -35,39 +31,36 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrumentation {
+public class WebClientFilterInstrumentation extends Instrumenter.Default {
 
-  public RouterFunctionInstrumentation() {
-    super("spring-webflux-functional");
+  public WebClientFilterInstrumentation() {
+    super("spring-webflux", "spring-webflux-client");
   }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.springframework.web.reactive.function.server.ServerRequest");
+    return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");
   }
 
   @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isAbstract())
-        .and(
-            extendsClass(
-                // TODO: this doesn't handle nested routes (DefaultNestedRouterFunction)
-                named(
-                    "org.springframework.web.reactive.function.server.RouterFunctions$DefaultRouterFunction")));
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientDecorator",
+      "io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter",
+      "io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter"
+    };
+  }
+
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    return implementsInterface(
+        named("org.springframework.web.reactive.function.client.WebClient$Builder"));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(isPublic())
-            .and(named("route"))
-            .and(
-                takesArgument(
-                    0, named("org.springframework.web.reactive.function.server.ServerRequest")))
-            .and(takesArguments(1)),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".RouterFunctionAdvice");
+        isMethod().and(isPublic()).and(named("build")), packageName + ".WebClientFilterAdvice");
   }
 }

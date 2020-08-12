@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.instrumentation.spring.webflux.client;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
+import net.bytebuddy.asm.Advice;
+import org.springframework.web.reactive.function.client.WebClient;
 
-public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Default {
+public class WebClientFilterAdvice {
 
-  public AbstractWebfluxInstrumentation(final String... additionalNames) {
-    super("spring-webflux", additionalNames);
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebfluxHttpServerDecorator",
-      packageName + ".AdviceUtils",
-      packageName + ".AdviceUtils$SpanFinishingSubscriber",
-      packageName + ".RouteOnSuccessOrError"
-    };
+  @Advice.OnMethodEnter(suppress = Throwable.class)
+  public static void onBuild(@Advice.This final WebClient.Builder thiz) {
+    thiz.filters(WebClientTracingFilter::addFilter);
   }
 }

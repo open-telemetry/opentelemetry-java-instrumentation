@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.springwebflux.client;
+package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
