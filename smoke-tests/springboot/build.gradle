@@ -25,5 +25,5 @@ def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
-  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot-$targetJDK"
+  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot-jdk$targetJDK"
 }
