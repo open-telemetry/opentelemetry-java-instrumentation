@@ -20,9 +20,9 @@ import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Arrays;
 import java.util.HashSet;

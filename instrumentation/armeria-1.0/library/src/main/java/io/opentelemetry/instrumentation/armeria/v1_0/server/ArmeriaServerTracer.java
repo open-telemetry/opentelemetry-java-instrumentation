@@ -20,8 +20,8 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -104,8 +104,9 @@ public class ArmeriaServerTracer
   @Override
   protected void attachServerContext(Context context, Void ctx) {}
 
-  private enum ArmeriaGetter implements Getter<HttpRequest> {
-    INSTANCE;
+  private static class ArmeriaGetter implements Getter<HttpRequest> {
+
+    private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 
     @Override
     public String get(HttpRequest carrier, String key) {

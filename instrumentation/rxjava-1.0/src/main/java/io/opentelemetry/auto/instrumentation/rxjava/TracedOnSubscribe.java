@@ -19,8 +19,8 @@ package io.opentelemetry.auto.instrumentation.rxjava;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import rx.Observable;

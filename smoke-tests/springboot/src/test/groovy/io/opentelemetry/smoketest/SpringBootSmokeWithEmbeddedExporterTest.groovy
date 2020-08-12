@@ -25,8 +25,9 @@ import okhttp3.Request
  */
 class SpringBootSmokeWithEmbeddedExporterTest extends AbstractServerSmokeTest {
 
-  static final HANDLER_SPAN = "LOGGED_SPAN WebController.greeting"
   static final SERVLET_SPAN = "LOGGED_SPAN /greeting"
+  static final HANDLER_SPAN = "LOGGED_SPAN WebController.greeting"
+  static final WITH_SPAN = "LOGGED_SPAN WebController.withSpan"
 
   @Override
   ProcessBuilder createProcessBuilder() {
@@ -43,8 +44,9 @@ class SpringBootSmokeWithEmbeddedExporterTest extends AbstractServerSmokeTest {
   def "can monitor default home page"() {
     setup:
     def spanCounter = new SpanCounter(logfile, [
-      (HANDLER_SPAN): 1,
       (SERVLET_SPAN): 1,
+      (HANDLER_SPAN): 1,
+      (WITH_SPAN)   : 1
     ], 10000)
     String url = "http://localhost:${httpPort}/greeting"
     def request = new Request.Builder().url(url).get().build()
@@ -56,10 +58,11 @@ class SpringBootSmokeWithEmbeddedExporterTest extends AbstractServerSmokeTest {
     then:
     def responseBodyStr = response.body().string()
     responseBodyStr != null
-    responseBodyStr.contains("Sup Dawg")
+    responseBodyStr.contains("Hi!")
     response.body().contentType().toString().contains("text/plain")
     response.code() == 200
-    spans[HANDLER_SPAN] == 1
     spans[SERVLET_SPAN] == 1
+    spans[HANDLER_SPAN] == 1
+    spans[WITH_SPAN] == 1
   }
 }

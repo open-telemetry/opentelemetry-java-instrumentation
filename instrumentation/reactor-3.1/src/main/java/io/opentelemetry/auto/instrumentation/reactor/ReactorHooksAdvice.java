@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.reactor;
 
-import io.opentelemetry.auto.instrumentation.reactor.shaded.TracingPublishers;
+import io.opentelemetry.instrumentation.reactor.TracingPublishers;
 import net.bytebuddy.asm.Advice;
 
 public class ReactorHooksAdvice {

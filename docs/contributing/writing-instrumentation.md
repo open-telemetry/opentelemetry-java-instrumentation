@@ -115,5 +115,4 @@ With that written, let's add tests for the auto instrumentation. We basically wa
 the instrumentation works without the user knowing about the instrumentation. Add a test that extends
 the base class you wrote earlier, but in this, create a client using none of the APIs in our project,
 only the ones offered by the library. Implement the `AgentTestRunner` trait for common setup logic,
-add `@RunWith(SpockRunner.class)` for a bit more bytecode initialization needed for agent tests
 and try running. All of the tests should pass for auto instrumentation too.

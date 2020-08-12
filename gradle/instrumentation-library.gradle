@@ -1,7 +1,3 @@
-ext {
-  noShadowPublish = true
-}
-
 group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -10,31 +6,13 @@ apply from: "$rootDir/gradle/publish.gradle"
 archivesBaseName = projectDir.parentFile.name
 
 dependencies {
-  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
-  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
-  // the agent, like Agent.
-  api(project(':auto-bootstrap')){
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
+  api project(':library-api')
 
   api deps.opentelemetryApi
 
   testImplementation project(':testing-common')
 }
 
-if (!ext.properties.noShadow) {
-
-  apply plugin: 'com.github.johnrengelman.shadow'
-
-  shadowJar {
-    archiveClassifier = 'agent'
-
-    configurations = []
-
-    relocate "io.opentelemetry.instrumentation.${javaSubPackage}", "io.opentelemetry.auto.instrumentation.${javaSubPackage}.shaded"
-  }
-}
-
 afterEvaluate {
-  archivesBaseName =  'opentelemetry-' + archivesBaseName
+  archivesBaseName = 'opentelemetry-' + archivesBaseName
 }

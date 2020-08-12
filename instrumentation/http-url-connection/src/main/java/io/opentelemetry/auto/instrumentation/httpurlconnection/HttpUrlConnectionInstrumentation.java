@@ -32,11 +32,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
 import java.net.HttpURLConnection;
 import java.util.Map;
@@ -178,7 +178,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        */
       if (responseCode > 0) {
         try (Scope scope = currentContextWith(span)) {
-          TRACER.end(span, responseCode);
+          // Need to explicitly cast to boxed type to make sure correct method is called.
+          // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
+          TRACER.end(span, (Integer) responseCode);
           span = null;
           finished = true;
         }

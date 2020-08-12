@@ -23,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.linecorp.armeria.server.ServerBuilder;
-import io.opentelemetry.auto.instrumentation.armeria.v1_0.shaded.server.OpenTelemetryService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
@@ -49,7 +48,7 @@ public class ArmeriaServerInstrumentation extends AbstractArmeriaInstrumentation
   public static class AddDecoratorAdvice {
     @Advice.OnMethodExit
     public static void addDecorator(@Advice.Return ServerBuilder sb) {
-      sb.decorator(OpenTelemetryService.newDecorator());
+      sb.decorator(ArmeriaDecorators.SERVER_DECORATOR);
     }
   }
 }

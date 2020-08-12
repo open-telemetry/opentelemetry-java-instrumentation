@@ -16,6 +16,7 @@ jar {
 
 dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.18.RELEASE'
+  implementation deps.opentelemetryAutoAnnotations
 
   testImplementation project(':smoke-tests')
 }

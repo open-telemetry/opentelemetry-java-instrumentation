@@ -27,7 +27,7 @@ class TraceConfigTest extends AgentTestRunner {
     }
   }
 
-  def specCleanup() {
+  def cleanupSpec() {
     ConfigUtils.updateConfig {
       System.clearProperty("otel.trace.methods")
     }

@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.springdata;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Tracer;
 
 public final class SpringDataDecorator extends ClientDecorator {

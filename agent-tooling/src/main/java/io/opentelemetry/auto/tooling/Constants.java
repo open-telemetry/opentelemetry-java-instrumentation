@@ -28,23 +28,19 @@ public final class Constants {
    *
    * <p>Updates should be mirrored in
    * io.opentelemetry.auto.gradle.instrumentation.AutoInstrumentationPlugin#BOOTSTRAP_PACKAGE_PREFIXES_COPY
-   * io.opentelemetry.auto.test.SpockRunner#BOOTSTRAP_PACKAGE_PREFIXES_COPY
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.instrumentation.api",
     "io.opentelemetry.auto.shaded",
-    "io.opentelemetry.auto.typedspan",
+    "io.opentelemetry.instrumentation.auto.api",
   };
 
   // This is used in IntegrationTestUtils.java
   public static final String[] AGENT_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto",
-    "io.opentelemetry.auto.common.exec",
-    "io.opentelemetry.auto.instrumentation",
+    "io.opentelemetry.instrumentation.api",
     // guava
     "com.google.auto",
     "com.google.common",

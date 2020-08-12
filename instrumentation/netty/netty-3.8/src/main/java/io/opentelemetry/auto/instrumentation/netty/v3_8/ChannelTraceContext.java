@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.netty.v3_8;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.util.Objects;
 
