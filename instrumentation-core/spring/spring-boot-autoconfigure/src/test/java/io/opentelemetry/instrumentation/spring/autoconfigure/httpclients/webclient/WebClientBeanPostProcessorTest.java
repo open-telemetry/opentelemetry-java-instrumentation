@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webcli
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
+import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

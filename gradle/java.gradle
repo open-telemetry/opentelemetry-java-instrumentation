@@ -99,6 +99,12 @@ repositories {
 }
 
 dependencies {
+  testImplementation enforcedPlatform(group: 'org.junit', name: 'junit-bom', version: versions.junit5)
+  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api'
+  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
+  testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
+  testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine'
+
   testImplementation deps.spock
   testImplementation deps.groovy
   testImplementation deps.testLogging
@@ -264,9 +270,7 @@ addTestRule("test")
 addTestRule("latestDepTest")
 
 tasks.withType(Test).configureEach {
-  if (project.findProperty("enableJunitPlatform") == true) {
-    useJUnitPlatform()
-  }
+  useJUnitPlatform()
 
   // All tests must complete within 15 minutes.
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
@@ -277,9 +281,7 @@ tasks.withType(Test).configureEach {
   enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
 
   retry {
-    // Retry is opt-in - we don't want our tests to be flaky but currently go ahead and retry them to allow CI
-    // to work. Please continue remove this property from as many projects as possible. You can see tests that
-    // were retried by this mechanism in the collected test reports and build scans.
-    maxRetries = findProperty('retryTests') ? 5 : 0
+    // You can see tests that were retried by this mechanism in the collected test reports and build scans.
+    maxRetries = 5
   }
 }

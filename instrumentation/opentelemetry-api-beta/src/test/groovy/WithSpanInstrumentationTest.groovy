@@ -31,7 +31,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     }
   }
 
-  def specCleanup() {
+  def cleanupSpec() {
     ConfigUtils.updateConfig {
       System.clearProperty("otel.trace.classes.exclude")
       System.clearProperty("otel.trace.annotated.methods.exclude")

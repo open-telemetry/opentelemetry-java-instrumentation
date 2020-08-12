@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.test
 
-
 import io.opentelemetry.auto.tooling.AgentInstaller
 import io.opentelemetry.auto.tooling.HelperInjector
 import io.opentelemetry.auto.tooling.Utils

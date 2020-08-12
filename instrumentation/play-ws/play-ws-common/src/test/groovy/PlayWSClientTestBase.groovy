@@ -67,4 +67,10 @@ abstract class PlayWSClientTestBase extends HttpClientTest {
   boolean testCallbackWithParent() {
     return false
   }
+
+  @Override
+  boolean testRemoteConnection() {
+    // TODO(anuraaga): Timeouts contain ConnectException in client span instead of TimeoutException
+    return false
+  }
 }

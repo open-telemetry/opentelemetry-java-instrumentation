@@ -1,0 +1,37 @@
+name: PR build
+
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [8, 11, 14]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }} for running tests
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Set JDK ${{ matrix.java }} home
+        run: echo "::set-env name=JAVA_${{ matrix.java }}_HOME::${{ env.JAVA_HOME }}"
+
+      - name: Set up JDK 11 for running Gradle
+        if: matrix.java != 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Cache gradle dependencies
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          job-id: jdk${{ matrix.java }}
+
+      - name: Test with Gradle
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew testJava${{ matrix.java }} --stacktrace
+          timeout_minutes: 60
+          max_attempts: 3

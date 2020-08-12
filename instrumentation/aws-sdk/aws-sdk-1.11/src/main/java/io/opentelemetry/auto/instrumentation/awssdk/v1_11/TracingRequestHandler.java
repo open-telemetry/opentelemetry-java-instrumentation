@@ -18,6 +18,8 @@ package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.AwsSdkClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.api.decorator.ClientDecorator.currentContextWith;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -33,9 +35,12 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
 
+  private final AwsSdkClientTracer tracer;
+  
   public TracingRequestHandler(
       final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
     this.contextStore = contextStore;
+    this.tracer = new AwsSdkClientTracer(contextStore);
   }
 
   @Override
@@ -58,7 +63,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      TRACER.end(scope.getSpan(), response);
+      tracer.end(scope.getSpan(), response);
     }
   }
 
@@ -68,7 +73,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      TRACER.endExceptionally(scope.getSpan(), response, e);
+      tracer.endExceptionally(scope.getSpan(), response, e);
     }
   }
 }

@@ -27,17 +27,23 @@ import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
-  public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+
   static final String COMPONENT_NAME = "java-aws-sdk";
 
   private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
+  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
+
+  public AwsSdkClientTracer(final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+    this.contextStore = contextStore;
+  }
 
   @Override
   public String spanNameForRequest(final Request<?> request) {

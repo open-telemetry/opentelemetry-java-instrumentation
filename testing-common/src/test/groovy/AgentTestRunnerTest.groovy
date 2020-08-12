@@ -16,7 +16,6 @@
 
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.tooling.Constants
@@ -37,11 +36,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
-  }
-
-  def "spock runner bootstrap prefixes correct for test setup"() {
-    expect:
-    SpockRunner.BOOTSTRAP_PACKAGE_PREFIXES_COPY == Constants.BOOTSTRAP_PACKAGE_PREFIXES
   }
 
   def "classpath setup"() {

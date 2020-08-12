@@ -44,7 +44,10 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     return newDecorator(new ArmeriaServerTracer(tracer));
   }
 
-  /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
+  /**
+   * Creates a new tracing {@link HttpService} decorator using the specified {@link
+   * ArmeriaServerTracer}.
+   */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator(
       ArmeriaServerTracer serverTracer) {
     return new Decorator(serverTracer);
