@@ -52,6 +52,10 @@ public class ArmeriaWebClientBuilderInstrumentation extends AbstractArmeriaInstr
     return transformers;
   }
 
+  // Intercept calls from app to register decorator and suppress them to avoid registering
+  // multiple decorators, one from user app and one from our auto instrumentation. Otherwise, we
+  // will end up with double telemetry.
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
   public static class SuppressDecoratorAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {

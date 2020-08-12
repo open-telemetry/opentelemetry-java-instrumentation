@@ -37,11 +37,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class ArmeriaServerBuilderInstrumentation extends AbstractArmeriaInstrumentation {
 
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
-  public static final String SUPPRESSED_DECORATOR_NAME =
-      "_io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$Decorator"
-          .substring(1);
-
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("com.linecorp.armeria.server.ServerBuilder");
@@ -66,6 +61,10 @@ public class ArmeriaServerBuilderInstrumentation extends AbstractArmeriaInstrume
     }
   }
 
+  // Intercept calls from app to register decorator and suppress them to avoid registering
+  // multiple decorators, one from user app and one from our auto instrumentation. Otherwise, we
+  // will end up with double telemetry.
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
   public static class SuppressDecoratorAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {

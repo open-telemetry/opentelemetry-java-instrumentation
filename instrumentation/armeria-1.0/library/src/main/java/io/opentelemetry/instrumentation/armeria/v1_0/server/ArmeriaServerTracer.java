@@ -104,8 +104,9 @@ public class ArmeriaServerTracer
   @Override
   protected void attachServerContext(Context context, Void ctx) {}
 
-  private enum ArmeriaGetter implements Getter<HttpRequest> {
-    INSTANCE;
+  private static class ArmeriaGetter implements Getter<HttpRequest> {
+
+    private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 
     @Override
     public String get(HttpRequest carrier, String key) {

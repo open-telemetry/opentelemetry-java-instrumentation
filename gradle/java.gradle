@@ -282,6 +282,6 @@ tasks.withType(Test).configureEach {
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries = 0
+    maxRetries = 5
   }
 }

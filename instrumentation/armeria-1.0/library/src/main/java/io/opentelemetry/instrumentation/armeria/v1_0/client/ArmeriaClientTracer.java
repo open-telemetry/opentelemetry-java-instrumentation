@@ -67,8 +67,9 @@ public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, 
     return "io.opentelemetry.armeria-1.0";
   }
 
-  private enum ArmeriaSetter implements Setter<ClientRequestContext> {
-    INSTANCE;
+  private static class ArmeriaSetter implements Setter<ClientRequestContext> {
+
+    private static final ArmeriaSetter INSTANCE = new ArmeriaSetter();
 
     @Override
     public void set(ClientRequestContext ctx, String key, String value) {
