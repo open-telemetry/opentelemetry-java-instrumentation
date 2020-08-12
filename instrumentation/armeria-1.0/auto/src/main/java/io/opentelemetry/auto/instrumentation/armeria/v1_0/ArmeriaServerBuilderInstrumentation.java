@@ -24,8 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import com.linecorp.armeria.server.ServerBuilder;
-import io.opentelemetry.auto.instrumentation.armeria.v1_0.shaded.server.OpenTelemetryService;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -36,6 +36,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class ArmeriaServerBuilderInstrumentation extends AbstractArmeriaInstrumentation {
+
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
+  public static final String SUPPRESSED_DECORATOR_NAME =
+      "_io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$Decorator"
+          .substring(1);
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
@@ -62,13 +67,9 @@ public class ArmeriaServerBuilderInstrumentation extends AbstractArmeriaInstrume
   }
 
   public static class SuppressDecoratorAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
-      return decorator
-          .getClass()
-          .getName()
-          .equals(
-              "io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$Decorator");
+      return decorator != ArmeriaDecorators.SERVER_DECORATOR;
     }
 
     @Advice.OnMethodExit

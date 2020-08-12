@@ -24,7 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -56,11 +55,7 @@ public class ArmeriaWebClientBuilderInstrumentation extends AbstractArmeriaInstr
   public static class SuppressDecoratorAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
-      return decorator
-          .getClass()
-          .getName()
-          .equals(
-              "io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient$Decorator");
+      return decorator != ArmeriaDecorators.CLIENT_DECORATOR;
     }
 
     @Advice.OnMethodExit
@@ -77,7 +72,7 @@ public class ArmeriaWebClientBuilderInstrumentation extends AbstractArmeriaInstr
   public static class BuildAdvice {
     @Advice.OnMethodEnter
     public static void build(@Advice.This WebClientBuilder builder) {
-      builder.decorator(OpenTelemetryClient.newDecorator());
+      builder.decorator(ArmeriaDecorators.CLIENT_DECORATOR);
     }
   }
 }

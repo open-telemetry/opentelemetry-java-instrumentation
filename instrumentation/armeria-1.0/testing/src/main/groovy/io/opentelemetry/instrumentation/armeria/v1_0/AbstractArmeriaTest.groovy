@@ -27,10 +27,12 @@ import com.linecorp.armeria.testing.junit4.server.ServerRule
 import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+import spock.lang.Unroll
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
+@Unroll
 abstract class AbstractArmeriaTest extends InstrumentationSpecification {
 
   abstract ServerBuilder configureServer(ServerBuilder serverBuilder)

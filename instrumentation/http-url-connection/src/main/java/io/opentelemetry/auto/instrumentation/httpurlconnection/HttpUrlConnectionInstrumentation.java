@@ -178,7 +178,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        */
       if (responseCode > 0) {
         try (Scope scope = currentContextWith(span)) {
-          TRACER.end(span, responseCode);
+          // Need to explicitly cast to boxed type to make sure correct method is called.
+          // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
+          TRACER.end(span, (Integer) responseCode);
           span = null;
           finished = true;
         }

@@ -20,6 +20,5 @@ dependencies {
 
   compileOnly group: 'com.linecorp.armeria', name: 'armeria', version: '0.99.8'
 
-  testImplementation project(path: ':instrumentation:armeria-1.0:library')
   testImplementation project(':instrumentation:armeria-1.0:testing')
 }
