@@ -27,8 +27,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Sets;
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;

@@ -22,7 +22,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.bytebuddy.AgentTransformers;
 import io.opentelemetry.auto.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
@@ -30,6 +29,7 @@ import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.auto.tooling.context.NoopContextProvider;
 import io.opentelemetry.auto.tooling.muzzle.Reference;
 import io.opentelemetry.auto.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;

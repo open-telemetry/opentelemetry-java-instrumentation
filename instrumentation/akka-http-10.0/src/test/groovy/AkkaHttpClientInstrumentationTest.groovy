@@ -20,8 +20,8 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
 import spock.lang.Shared
 import spock.lang.Timeout
 

@@ -44,27 +44,18 @@ class GrizzlyAsyncHttpClientTest extends HttpClientTest {
     }
     Request request = requestBuilder.build()
 
-    def handler = new AsyncCompletionHandlerMock(callback)
+    def handler = new AsyncCompletionHandler() {
+      @Override
+      Object onCompleted(Response response) throws Exception {
+        if (callback != null) {
+          callback()
+        }
+        return response
+      }
+    }
 
     def response = client.executeRequest(request, handler).get()
     response.statusCode
-  }
-
-  class AsyncCompletionHandlerMock extends AsyncCompletionHandler<Response> {
-
-    private Closure callback
-
-    AsyncCompletionHandlerMock(Closure callback) {
-      this.callback = callback
-    }
-
-    @Override
-    Response onCompleted(Response response) throws Exception {
-      if (callback != null) {
-        callback()
-      }
-      return response
-    }
   }
 
   @Override

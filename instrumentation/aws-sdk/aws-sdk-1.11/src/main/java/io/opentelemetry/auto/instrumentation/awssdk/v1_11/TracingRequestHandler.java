@@ -17,29 +17,25 @@
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.api.decorator.ClientDecorator.currentContextWith;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.aws-sdk-1.11");
 
-  private final AwsSdkClientDecorator decorate;
+  private final AwsSdkClientTracer tracer;
 
   public TracingRequestHandler(
       final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
-    decorate = new AwsSdkClientDecorator(contextStore);
+    tracer = new AwsSdkClientTracer(contextStore);
   }
 
   @Override
@@ -49,38 +45,29 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    Span span = decorate.getOrCreateSpan(request, TRACER);
-    decorate.afterStart(span);
-    decorate.onRequest(span, request);
+    Span span = tracer.startSpan(request);
     request.addHandlerContext(
         SPAN_SCOPE_PAIR_CONTEXT_KEY,
-        new SpanWithScope(
-            span, ContextUtils.withScopedContext(ClientDecorator.currentContextWith(span))));
+        new SpanWithScope(span, withScopedContext(currentContextWith(span))));
   }
 
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
-    SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-    if (spanWithScope != null) {
+    SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanWithScope.closeScope();
-      Span span = spanWithScope.getSpan();
-      decorate.onResponse(span, response);
-      decorate.beforeFinish(span);
-      span.end();
+      scope.closeScope();
+      tracer.end(scope.getSpan(), response);
     }
   }
 
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
-    SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-    if (spanWithScope != null) {
+    SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanWithScope.closeScope();
-      Span span = spanWithScope.getSpan();
-      decorate.onError(span, e);
-      decorate.beforeFinish(span);
-      span.end();
+      scope.closeScope();
+      tracer.endExceptionally(scope.getSpan(), response, e);
     }
   }
 }

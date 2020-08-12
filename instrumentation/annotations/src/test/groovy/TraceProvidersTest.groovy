@@ -25,13 +25,12 @@ class TraceProvidersTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.annotations")
       //Don't bother to instrument inner closures of this test class
       System.setProperty("otel.trace.classes.exclude", TraceProvidersTest.name + "*")
     }
   }
 
-  def specCleanup() {
+  def cleanupSpec() {
     ConfigUtils.updateConfig {
       System.clearProperty("otel.trace.classes.exclude")
     }

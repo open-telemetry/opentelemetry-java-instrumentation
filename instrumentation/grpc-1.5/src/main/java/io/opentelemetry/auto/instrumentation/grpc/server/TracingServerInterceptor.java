@@ -16,10 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
+import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 

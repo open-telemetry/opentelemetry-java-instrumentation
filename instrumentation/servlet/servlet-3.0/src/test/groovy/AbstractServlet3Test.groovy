@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.Request

@@ -31,8 +31,10 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  def specCleanup() {
-    System.clearProperty("otel.trace.annotations")
+  def cleanupSpec() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("otel.trace.annotations")
+    }
   }
 
   def "method with disabled NewRelic annotation should be ignored"() {

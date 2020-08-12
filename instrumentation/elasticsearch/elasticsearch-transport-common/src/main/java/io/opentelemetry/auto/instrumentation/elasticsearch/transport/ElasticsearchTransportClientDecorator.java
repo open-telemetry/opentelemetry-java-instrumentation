@@ -17,7 +17,7 @@
 package io.opentelemetry.auto.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

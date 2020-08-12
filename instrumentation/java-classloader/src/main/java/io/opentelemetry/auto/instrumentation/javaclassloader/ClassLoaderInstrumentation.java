@@ -29,9 +29,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Constants;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -61,7 +61,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
     return namedNoneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.auto.bootstrap.AgentClassLoader")
+            "io.opentelemetry.instrumentation.auto.api.AgentClassLoader")
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 

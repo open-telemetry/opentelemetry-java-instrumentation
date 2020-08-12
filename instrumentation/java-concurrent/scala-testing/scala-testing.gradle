@@ -8,5 +8,4 @@ dependencies {
   testImplementation deps.scala
 
   testImplementation project(':instrumentation:java-concurrent')
-  testImplementation project(':instrumentation:annotations')
 }

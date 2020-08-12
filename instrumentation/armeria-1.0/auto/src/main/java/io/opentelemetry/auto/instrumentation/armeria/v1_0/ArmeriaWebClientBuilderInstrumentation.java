@@ -23,8 +23,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import com.linecorp.armeria.client.WebClientBuilder;
-import io.opentelemetry.auto.instrumentation.armeria.v1_0.shaded.client.OpenTelemetryClient;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
