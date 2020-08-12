@@ -1,0 +1,42 @@
+plugins {
+  id "org.gradle.playframework" version "0.9"
+  id 'com.google.cloud.tools.jib' version '2.4.0'
+}
+
+ext {
+  playVersion = "2.6.20"
+  scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
+}
+
+play {
+  platform {
+    playVersion = project.ext.playVersion
+    scalaVersion = project.ext.scalaVersion
+    javaVersion = JavaVersion.VERSION_1_8
+  }
+  injectedRoutesGenerator = true
+}
+
+repositories {
+  mavenLocal()
+  jcenter()
+  mavenCentral()
+  maven {
+    name "lightbend-maven-releases"
+    url "https://repo.lightbend.com/lightbend/maven-release"
+  }
+}
+
+description = 'Play Integration Tests.'
+
+dependencies {
+  implementation "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
+}
+
+jib {
+  from.image = "bellsoft/liberica-openjdk-alpine:11"
+  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play"
+  container.mainClass = "play.core.server.ProdServerStart"
+}

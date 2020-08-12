@@ -58,3 +58,7 @@ hs_err_pid*
 replay_pid*
 
 !java-agent/benchmark/releases/*.jar
+/smoke-tests/play/.gradle/
+/smoke-tests/play/.idea/
+/smoke-tests/springboot/.gradle/
+/smoke-tests/springboot/.idea/
