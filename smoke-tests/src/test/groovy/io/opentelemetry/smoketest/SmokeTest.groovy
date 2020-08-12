@@ -44,18 +44,9 @@ abstract class SmokeTest extends Specification {
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
 
   @Shared
-  protected GenericContainer target = new GenericContainer<>(getTargetImage())
-    .withExposedPorts(8080)
-    .withNetwork(network)
-    .withLogConsumer(new Slf4jLogConsumer(logger))
-    .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
-    .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
-    .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
-    .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
-    .withEnv("OTEL_OTLP_ENDPOINT", "collector:55680")
-    .withEnv(extraEnv)
+  protected GenericContainer target
 
-  protected abstract String getTargetImage()
+  protected abstract String getTargetImage(int jdk)
 
   /**
    * Subclasses can override this method to customise target application's environment
@@ -65,20 +56,42 @@ abstract class SmokeTest extends Specification {
   }
 
   @Shared
-  protected GenericContainer collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
-    .withNetwork(network)
-    .withNetworkAliases("collector")
-    .withLogConsumer(new Slf4jLogConsumer(logger))
-    .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-    .withCommand("--config /etc/otel.yaml")
+  private GenericContainer collector
 
-  def setupSpec() {
+  def setup() {
+    //We have to recreate collector for every test to wipe exported file with traces
+    collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
+      .withNetwork(network)
+      .withNetworkAliases("collector")
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+      .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
+      .withCommand("--config /etc/otel.yaml")
     collector.start()
+  }
+
+  def startTarget(int jdk) {
+    target = new GenericContainer<>(getTargetImage(jdk))
+      .withExposedPorts(8080)
+      .withNetwork(network)
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+      .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
+      .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
+      .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
+      .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
+      .withEnv("OTEL_OTLP_ENDPOINT", "collector:55680")
+      .withEnv(extraEnv)
     target.start()
   }
 
-  def cleanupSpec() {
+  def cleanup() {
+    collector.stop()
+  }
+
+  def stopTarget() {
     target.stop()
+  }
+
+  def cleanupSpec() {
     collector.stop()
   }
 
