@@ -22,6 +22,9 @@ jobs:
         with:
           job-id: springboot-smoke
 
+      - name: Login to GitHub Package Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.repository }} --password-stdin
+
       - name: Build Docker Image
         run: |
           ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
