@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'smoke-tests/play/**'
+      - '.github/workflows/build-play-smoke-dist.yaml'
     branches: 'master'
 
 jobs:
@@ -25,4 +26,4 @@ jobs:
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.repository }} --password-stdin
 
       - name: Build Docker Image
-        run: cd smoke-tests/play && ../../gradlew jib
+        run: cd smoke-tests/play && ./gradlew jib

@@ -26,10 +26,10 @@ import java.util.stream.Stream
 import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.utility.MountableFile
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -48,7 +48,7 @@ abstract class SmokeTest extends Specification {
     .withExposedPorts(8080)
     .withNetwork(network)
     .withLogConsumer(new Slf4jLogConsumer(logger))
-    .withFileSystemBind(agentPath, "/opentelemetry-javaagent-all.jar")
+    .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
     .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
     .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
     .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
@@ -69,7 +69,7 @@ abstract class SmokeTest extends Specification {
     .withNetwork(network)
     .withNetworkAliases("collector")
     .withLogConsumer(new Slf4jLogConsumer(logger))
-    .withClasspathResourceMapping("/otel.yaml", "/etc/otel.yaml", BindMode.READ_ONLY)
+    .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
     .withCommand("--config /etc/otel.yaml")
 
   def setupSpec() {
