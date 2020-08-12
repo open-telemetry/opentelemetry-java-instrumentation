@@ -2,12 +2,11 @@ plugins {
   id 'org.springframework.boot' version '2.3.2.RELEASE'
   id 'io.spring.dependency-management' version '1.0.9.RELEASE'
   id 'java'
-  id 'com.google.cloud.tools.jib' version '2.4.0'
+  id 'com.google.cloud.tools.jib' version '2.5.0'
 }
 
 group = 'io.opentelemetry'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '8'
 
 repositories {
   jcenter()
@@ -15,9 +14,16 @@ repositories {
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0'
 }
 
+compileJava {
+  options.release = 8
+}
+
+def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
+
 jib {
-  from.image = "bellsoft/liberica-openjdk-alpine:11"
-  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot"
+  from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
+  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot-$targetJDK"
 }

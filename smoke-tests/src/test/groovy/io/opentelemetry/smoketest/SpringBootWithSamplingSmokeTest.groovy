@@ -25,8 +25,8 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   static final int NUM_TRIES = 1000
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
 
-  protected String getTargetImage() {
-    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot:latest"
+  protected String getTargetImage(int jdk) {
+    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot-$jdk:latest"
   }
 
   @Override
@@ -34,8 +34,9 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
     return ["OTEL_CONFIG_SAMPLER_PROBABILITY": String.valueOf(SAMPLER_PROBABILITY)]
   }
 
-  def "default home page with probability sampling enabled"() {
+  def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {
     setup:
+    startTarget(jdk)
     String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
@@ -49,5 +50,11 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
     // since sampling is enabled, not really expecting to receive NUM_TRIES spans
     Math.abs(countSpansByName(traces, 'WebController.greeting') - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
     Math.abs(countSpansByName(traces, '/greeting') - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
+
+    cleanup:
+    stopTarget()
+
+    where:
+    jdk << [8, 11, 14]
   }
 }
