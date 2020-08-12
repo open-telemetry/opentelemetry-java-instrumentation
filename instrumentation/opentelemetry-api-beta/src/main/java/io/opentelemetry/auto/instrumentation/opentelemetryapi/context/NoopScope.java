@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
 
-import unshaded.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.context.Scope;
 
 /** A {@link Scope} that does nothing when it is created or closed. */
 public final class NoopScope implements Scope {

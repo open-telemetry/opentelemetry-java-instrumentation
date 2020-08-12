@@ -16,31 +16,31 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
+import application.io.opentelemetry.metrics.BatchRecorder;
+import application.io.opentelemetry.metrics.DoubleCounter;
+import application.io.opentelemetry.metrics.DoubleUpDownCounter;
+import application.io.opentelemetry.metrics.DoubleValueRecorder;
+import application.io.opentelemetry.metrics.LongCounter;
+import application.io.opentelemetry.metrics.LongUpDownCounter;
+import application.io.opentelemetry.metrics.LongValueRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.opentelemetry.metrics.BatchRecorder;
-import unshaded.io.opentelemetry.metrics.DoubleCounter;
-import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
-import unshaded.io.opentelemetry.metrics.DoubleValueRecorder;
-import unshaded.io.opentelemetry.metrics.LongCounter;
-import unshaded.io.opentelemetry.metrics.LongUpDownCounter;
-import unshaded.io.opentelemetry.metrics.LongValueRecorder;
 
-class UnshadedBatchRecorder implements BatchRecorder {
+class ApplicationBatchRecorder implements BatchRecorder {
 
-  private static final Logger log = LoggerFactory.getLogger(UnshadedBatchRecorder.class);
+  private static final Logger log = LoggerFactory.getLogger(ApplicationBatchRecorder.class);
 
-  private final io.opentelemetry.metrics.BatchRecorder shadedBatchRecorder;
+  private final io.opentelemetry.metrics.BatchRecorder agentBatchRecorder;
 
-  UnshadedBatchRecorder(final io.opentelemetry.metrics.BatchRecorder shadedBatchRecorder) {
-    this.shadedBatchRecorder = shadedBatchRecorder;
+  ApplicationBatchRecorder(final io.opentelemetry.metrics.BatchRecorder agentBatchRecorder) {
+    this.agentBatchRecorder = agentBatchRecorder;
   }
 
   @Override
   public BatchRecorder put(final LongValueRecorder measure, final long value) {
-    if (measure instanceof UnshadedLongValueRecorder) {
-      shadedBatchRecorder.put(
-          ((UnshadedLongValueRecorder) measure).getShadedLongValueRecorder(), value);
+    if (measure instanceof ApplicationLongValueRecorder) {
+      agentBatchRecorder.put(
+          ((ApplicationLongValueRecorder) measure).getAgentLongValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }
@@ -49,9 +49,9 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(final DoubleValueRecorder measure, final double value) {
-    if (measure instanceof UnshadedDoubleValueRecorder) {
-      shadedBatchRecorder.put(
-          ((UnshadedDoubleValueRecorder) measure).getShadedDoubleValueRecorder(), value);
+    if (measure instanceof ApplicationDoubleValueRecorder) {
+      agentBatchRecorder.put(
+          ((ApplicationDoubleValueRecorder) measure).getAgentDoubleValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }
@@ -60,8 +60,8 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(final LongCounter counter, final long value) {
-    if (counter instanceof UnshadedLongCounter) {
-      shadedBatchRecorder.put(((UnshadedLongCounter) counter).getShadedLongCounter(), value);
+    if (counter instanceof ApplicationLongCounter) {
+      agentBatchRecorder.put(((ApplicationLongCounter) counter).getAgentLongCounter(), value);
     } else {
       log.debug("unexpected counter: {}", counter);
     }
@@ -70,8 +70,8 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(final DoubleCounter counter, final double value) {
-    if (counter instanceof UnshadedDoubleCounter) {
-      shadedBatchRecorder.put(((UnshadedDoubleCounter) counter).getShadedDoubleCounter(), value);
+    if (counter instanceof ApplicationDoubleCounter) {
+      agentBatchRecorder.put(((ApplicationDoubleCounter) counter).getAgentDoubleCounter(), value);
     } else {
       log.debug("unexpected counter: {}", counter);
     }
@@ -80,9 +80,9 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(final LongUpDownCounter counter, final long value) {
-    if (counter instanceof UnshadedLongUpDownCounter) {
-      shadedBatchRecorder.put(
-          ((UnshadedLongUpDownCounter) counter).getShadedLongUpDownCounter(), value);
+    if (counter instanceof ApplicationLongUpDownCounter) {
+      agentBatchRecorder.put(
+          ((ApplicationLongUpDownCounter) counter).getAgentLongUpDownCounter(), value);
     } else {
       log.debug("unexpected counter: {}", counter);
     }
@@ -91,9 +91,9 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(final DoubleUpDownCounter counter, final double value) {
-    if (counter instanceof UnshadedDoubleUpDownCounter) {
-      shadedBatchRecorder.put(
-          ((UnshadedDoubleUpDownCounter) counter).getShadedDoubleUpDownCounter(), value);
+    if (counter instanceof ApplicationDoubleUpDownCounter) {
+      agentBatchRecorder.put(
+          ((ApplicationDoubleUpDownCounter) counter).getAgentDoubleUpDownCounter(), value);
     } else {
       log.debug("unexpected counter: {}", counter);
     }
@@ -102,6 +102,6 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public void record() {
-    shadedBatchRecorder.record();
+    agentBatchRecorder.record();
   }
 }

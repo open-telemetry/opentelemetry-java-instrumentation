@@ -22,6 +22,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.TracingContextUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -33,16 +36,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.Scope;
-import unshaded.io.opentelemetry.trace.Span;
 
 @AutoService(Instrumenter.class)
 public class TracingContextUtilsInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.io.opentelemetry.trace.TracingContextUtils");
+    return named("application.io.opentelemetry.trace.TracingContextUtils");
   }
 
   @Override
@@ -87,13 +87,14 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Span span,
-        @Advice.Argument(1) final Context context,
-        @Advice.Return(readOnly = false) Context updatedContext) {
+        @Advice.Argument(0) final Span applicationSpan,
+        @Advice.Argument(1) final Context applicationContext,
+        @Advice.Return(readOnly = false) Context applicationUpdatedContext) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      updatedContext = TracingContextUtils.withSpan(span, context, contextStore);
+      applicationUpdatedContext =
+          TracingContextUtils.withSpan(applicationSpan, applicationContext, contextStore);
     }
   }
 
@@ -105,8 +106,8 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) Span span) {
-      span = TracingContextUtils.getCurrentSpan();
+    public static void methodExit(@Advice.Return(readOnly = false) Span applicationSpan) {
+      applicationSpan = TracingContextUtils.getCurrentSpan();
     }
   }
 
@@ -119,11 +120,12 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context context, @Advice.Return(readOnly = false) Span span) {
+        @Advice.Argument(0) final Context context,
+        @Advice.Return(readOnly = false) Span applicationSpan) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      span = TracingContextUtils.getSpan(context, contextStore);
+      applicationSpan = TracingContextUtils.getSpan(context, contextStore);
     }
   }
 
@@ -136,11 +138,12 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context context, @Advice.Return(readOnly = false) Span span) {
+        @Advice.Argument(0) final Context context,
+        @Advice.Return(readOnly = false) Span applicationSpan) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      span = TracingContextUtils.getSpanWithoutDefault(context, contextStore);
+      applicationSpan = TracingContextUtils.getSpanWithoutDefault(context, contextStore);
     }
   }
 
@@ -153,8 +156,9 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Span span, @Advice.Return(readOnly = false) Scope scope) {
-      scope = TracingContextUtils.currentContextWith(span);
+        @Advice.Argument(0) final Span applicationSpan,
+        @Advice.Return(readOnly = false) Scope applicationScope) {
+      applicationScope = TracingContextUtils.currentContextWith(applicationSpan);
     }
   }
 }

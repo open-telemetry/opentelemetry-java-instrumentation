@@ -16,32 +16,31 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import io.opentelemetry.common.Attributes.Builder;
+import application.io.opentelemetry.common.AttributeValue;
+import application.io.opentelemetry.common.Attributes;
+import application.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import application.io.opentelemetry.trace.DefaultSpan;
+import application.io.opentelemetry.trace.EndSpanOptions;
+import application.io.opentelemetry.trace.Span;
+import application.io.opentelemetry.trace.SpanContext;
+import application.io.opentelemetry.trace.SpanId;
+import application.io.opentelemetry.trace.Status;
+import application.io.opentelemetry.trace.TraceFlags;
+import application.io.opentelemetry.trace.TraceId;
+import application.io.opentelemetry.trace.TraceState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.opentelemetry.common.AttributeValue;
-import unshaded.io.opentelemetry.common.Attributes;
-import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
-import unshaded.io.opentelemetry.trace.DefaultSpan;
-import unshaded.io.opentelemetry.trace.EndSpanOptions;
-import unshaded.io.opentelemetry.trace.Span;
-import unshaded.io.opentelemetry.trace.SpanContext;
-import unshaded.io.opentelemetry.trace.SpanId;
-import unshaded.io.opentelemetry.trace.Status;
-import unshaded.io.opentelemetry.trace.TraceFlags;
-import unshaded.io.opentelemetry.trace.TraceId;
-import unshaded.io.opentelemetry.trace.TraceState;
 
 /**
- * This class translates between the (unshaded) OpenTelemetry API that the user brings and the
- * (shaded) OpenTelemetry API that is in the bootstrap class loader and used to report telemetry to
- * the agent.
+ * This class translates between the (unshaded) OpenTelemetry API that the application brings and
+ * the (shaded) OpenTelemetry API that is used by the agent.
  *
- * <p>"unshaded.io.opentelemetry.*" refers to the (unshaded) OpenTelemetry API that the user brings
- * (as those references will be translated during the build to remove the "unshaded." prefix).
+ * <p>"application.io.opentelemetry.*" refers to the (unshaded) OpenTelemetry API that the
+ * application brings (as those references will be translated during the build to remove the
+ * "application." prefix).
  *
- * <p>"io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is in the bootstrap class
- * loader (as those references will later be shaded).
+ * <p>"io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is used by the agent (as
+ * those references will later be shaded).
  *
  * <p>Also see comments in this module's gradle file.
  */
@@ -52,169 +51,173 @@ public class Bridging {
   // this is just an optimization to save some byte array allocations
   public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();
 
-  public static Span toUnshaded(final io.opentelemetry.trace.Span shadedSpan) {
-    if (!shadedSpan.getContext().isValid()) {
+  public static Span toApplication(final io.opentelemetry.trace.Span agentSpan) {
+    if (!agentSpan.getContext().isValid()) {
       // no need to wrap
       return DefaultSpan.getInvalid();
     } else {
-      return new UnshadedSpan(shadedSpan);
+      return new ApplicationSpan(agentSpan);
     }
   }
 
-  public static io.opentelemetry.trace.Span toShadedOrNull(final Span unshadedSpan) {
-    if (!unshadedSpan.getContext().isValid()) {
+  public static io.opentelemetry.trace.Span toAgentOrNull(final Span applicationSpan) {
+    if (!applicationSpan.getContext().isValid()) {
       // no need to wrap
       return io.opentelemetry.trace.DefaultSpan.getInvalid();
-    } else if (unshadedSpan instanceof UnshadedSpan) {
-      return ((UnshadedSpan) unshadedSpan).getShadedSpan();
+    } else if (applicationSpan instanceof ApplicationSpan) {
+      return ((ApplicationSpan) applicationSpan).getAgentSpan();
     } else {
       return null;
     }
   }
 
-  public static SpanContext toUnshaded(final io.opentelemetry.trace.SpanContext shadedContext) {
-    if (shadedContext.isRemote()) {
+  public static SpanContext toApplication(final io.opentelemetry.trace.SpanContext agentContext) {
+    if (agentContext.isRemote()) {
       return SpanContext.createFromRemoteParent(
-          toUnshaded(shadedContext.getTraceId()),
-          toUnshaded(shadedContext.getSpanId()),
-          toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTraceState()));
+          toApplication(agentContext.getTraceId()),
+          toApplication(agentContext.getSpanId()),
+          toApplication(agentContext.getTraceFlags()),
+          toApplication(agentContext.getTraceState()));
     } else {
       return SpanContext.create(
-          toUnshaded(shadedContext.getTraceId()),
-          toUnshaded(shadedContext.getSpanId()),
-          toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTraceState()));
+          toApplication(agentContext.getTraceId()),
+          toApplication(agentContext.getSpanId()),
+          toApplication(agentContext.getTraceFlags()),
+          toApplication(agentContext.getTraceState()));
     }
   }
 
-  public static io.opentelemetry.trace.SpanContext toShaded(final SpanContext unshadedContext) {
-    if (unshadedContext.isRemote()) {
+  public static io.opentelemetry.trace.SpanContext toAgent(final SpanContext applicationContext) {
+    if (applicationContext.isRemote()) {
       return io.opentelemetry.trace.SpanContext.createFromRemoteParent(
-          toShaded(unshadedContext.getTraceId()),
-          toShaded(unshadedContext.getSpanId()),
-          toShaded(unshadedContext.getTraceFlags()),
-          toShaded(unshadedContext.getTraceState()));
+          toAgent(applicationContext.getTraceId()),
+          toAgent(applicationContext.getSpanId()),
+          toAgent(applicationContext.getTraceFlags()),
+          toAgent(applicationContext.getTraceState()));
     } else {
       return io.opentelemetry.trace.SpanContext.create(
-          toShaded(unshadedContext.getTraceId()),
-          toShaded(unshadedContext.getSpanId()),
-          toShaded(unshadedContext.getTraceFlags()),
-          toShaded(unshadedContext.getTraceState()));
+          toAgent(applicationContext.getTraceId()),
+          toAgent(applicationContext.getSpanId()),
+          toAgent(applicationContext.getTraceFlags()),
+          toAgent(applicationContext.getTraceState()));
     }
   }
 
-  public static io.opentelemetry.common.Attributes toShaded(final Attributes unshadedAttributes) {
-    final Builder builder = io.opentelemetry.common.Attributes.newBuilder();
-    unshadedAttributes.forEach(
+  public static io.opentelemetry.common.Attributes toAgent(final Attributes applicationAttributes) {
+    final io.opentelemetry.common.Attributes.Builder agentAttributes =
+        io.opentelemetry.common.Attributes.newBuilder();
+    applicationAttributes.forEach(
         new KeyValueConsumer<AttributeValue>() {
           @Override
           public void consume(String key, AttributeValue attributeValue) {
-            io.opentelemetry.common.AttributeValue shadedValue = toShadedOrNull(attributeValue);
-            if (shadedValue != null) {
-              builder.setAttribute(key, shadedValue);
+            io.opentelemetry.common.AttributeValue agentValue = toAgentOrNull(attributeValue);
+            if (agentValue != null) {
+              agentAttributes.setAttribute(key, agentValue);
             }
           }
         });
-    return builder.build();
+    return agentAttributes.build();
   }
 
-  public static io.opentelemetry.common.AttributeValue toShadedOrNull(
-      final AttributeValue unshadedValue) {
-    switch (unshadedValue.getType()) {
+  public static io.opentelemetry.common.AttributeValue toAgentOrNull(
+      final AttributeValue applicationValue) {
+    switch (applicationValue.getType()) {
       case STRING:
         return io.opentelemetry.common.AttributeValue.stringAttributeValue(
-            unshadedValue.getStringValue());
+            applicationValue.getStringValue());
       case LONG:
         return io.opentelemetry.common.AttributeValue.longAttributeValue(
-            unshadedValue.getLongValue());
+            applicationValue.getLongValue());
       case BOOLEAN:
         return io.opentelemetry.common.AttributeValue.booleanAttributeValue(
-            unshadedValue.getBooleanValue());
+            applicationValue.getBooleanValue());
       case DOUBLE:
         return io.opentelemetry.common.AttributeValue.doubleAttributeValue(
-            unshadedValue.getDoubleValue());
+            applicationValue.getDoubleValue());
       default:
-        log.debug("unexpected attribute type: {}", unshadedValue.getType());
+        log.debug("unexpected attribute type: {}", applicationValue.getType());
         return null;
     }
   }
 
-  public static io.opentelemetry.trace.Status toShadedOrNull(final Status unshadedStatus) {
-    io.opentelemetry.trace.Status.CanonicalCode canonicalCode;
+  public static io.opentelemetry.trace.Status toAgentOrNull(final Status applicationStatus) {
+    io.opentelemetry.trace.Status.CanonicalCode agentCanonicalCode;
     try {
-      canonicalCode =
+      agentCanonicalCode =
           io.opentelemetry.trace.Status.CanonicalCode.valueOf(
-              unshadedStatus.getCanonicalCode().name());
+              applicationStatus.getCanonicalCode().name());
     } catch (final IllegalArgumentException e) {
-      log.debug("unexpected status canonical code: {}", unshadedStatus.getCanonicalCode().name());
+      log.debug(
+          "unexpected status canonical code: {}", applicationStatus.getCanonicalCode().name());
       return null;
     }
-    return canonicalCode.toStatus().withDescription(unshadedStatus.getDescription());
+    return agentCanonicalCode.toStatus().withDescription(applicationStatus.getDescription());
   }
 
-  public static io.opentelemetry.trace.Span.Kind toShadedOrNull(final Span.Kind unshadedSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
+      final Span.Kind applicationSpanKind) {
     try {
-      return io.opentelemetry.trace.Span.Kind.valueOf(unshadedSpanKind.name());
+      return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
     } catch (final IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", unshadedSpanKind.name());
+      log.debug("unexpected span kind: {}", applicationSpanKind.name());
       return null;
     }
   }
 
-  public static io.opentelemetry.trace.EndSpanOptions toShaded(
-      final EndSpanOptions unshadedEndSpanOptions) {
+  public static io.opentelemetry.trace.EndSpanOptions toAgent(
+      final EndSpanOptions applicationEndSpanOptions) {
     return io.opentelemetry.trace.EndSpanOptions.builder()
-        .setEndTimestamp(unshadedEndSpanOptions.getEndTimestamp())
+        .setEndTimestamp(applicationEndSpanOptions.getEndTimestamp())
         .build();
   }
 
-  private static TraceId toUnshaded(final io.opentelemetry.trace.TraceId shadedTraceId) {
+  private static TraceId toApplication(final io.opentelemetry.trace.TraceId agentTraceId) {
     byte[] bytes = getBuffer();
-    shadedTraceId.copyBytesTo(bytes, 0);
+    agentTraceId.copyBytesTo(bytes, 0);
     return TraceId.fromBytes(bytes, 0);
   }
 
-  private static SpanId toUnshaded(final io.opentelemetry.trace.SpanId shadedSpanId) {
+  private static SpanId toApplication(final io.opentelemetry.trace.SpanId agentSpanId) {
     byte[] bytes = getBuffer();
-    shadedSpanId.copyBytesTo(bytes, 0);
+    agentSpanId.copyBytesTo(bytes, 0);
     return SpanId.fromBytes(bytes, 0);
   }
 
-  private static TraceFlags toUnshaded(final io.opentelemetry.trace.TraceFlags shadedTraceFlags) {
-    return TraceFlags.fromByte(shadedTraceFlags.getByte());
+  private static TraceFlags toApplication(final io.opentelemetry.trace.TraceFlags agentTraceFlags) {
+    return TraceFlags.fromByte(agentTraceFlags.getByte());
   }
 
-  private static TraceState toUnshaded(final io.opentelemetry.trace.TraceState shadedTraceState) {
-    TraceState.Builder builder = TraceState.builder();
-    for (io.opentelemetry.trace.TraceState.Entry entry : shadedTraceState.getEntries()) {
-      builder.set(entry.getKey(), entry.getValue());
+  private static TraceState toApplication(final io.opentelemetry.trace.TraceState agentTraceState) {
+    TraceState.Builder applicationTraceState = TraceState.builder();
+    for (io.opentelemetry.trace.TraceState.Entry entry : agentTraceState.getEntries()) {
+      applicationTraceState.set(entry.getKey(), entry.getValue());
     }
-    return builder.build();
+    return applicationTraceState.build();
   }
 
-  private static io.opentelemetry.trace.TraceId toShaded(final TraceId unshadedTraceId) {
+  private static io.opentelemetry.trace.TraceId toAgent(final TraceId applicationTraceId) {
     byte[] bytes = getBuffer();
-    unshadedTraceId.copyBytesTo(bytes, 0);
+    applicationTraceId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.TraceId.fromBytes(bytes, 0);
   }
 
-  private static io.opentelemetry.trace.SpanId toShaded(final SpanId unshadedSpanId) {
+  private static io.opentelemetry.trace.SpanId toAgent(final SpanId applicationSpanId) {
     byte[] bytes = getBuffer();
-    unshadedSpanId.copyBytesTo(bytes, 0);
+    applicationSpanId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.SpanId.fromBytes(bytes, 0);
   }
 
-  private static io.opentelemetry.trace.TraceFlags toShaded(final TraceFlags unshadedTraceFlags) {
-    return io.opentelemetry.trace.TraceFlags.fromByte(unshadedTraceFlags.getByte());
+  private static io.opentelemetry.trace.TraceFlags toAgent(final TraceFlags applicationTraceFlags) {
+    return io.opentelemetry.trace.TraceFlags.fromByte(applicationTraceFlags.getByte());
   }
 
-  private static io.opentelemetry.trace.TraceState toShaded(final TraceState unshadedTraceState) {
-    io.opentelemetry.trace.TraceState.Builder builder = io.opentelemetry.trace.TraceState.builder();
-    for (final TraceState.Entry entry : unshadedTraceState.getEntries()) {
-      builder.set(entry.getKey(), entry.getValue());
+  private static io.opentelemetry.trace.TraceState toAgent(final TraceState applicationTraceState) {
+    io.opentelemetry.trace.TraceState.Builder agentTraceState =
+        io.opentelemetry.trace.TraceState.builder();
+    for (final TraceState.Entry entry : applicationTraceState.getEntries()) {
+      agentTraceState.set(entry.getKey(), entry.getValue());
     }
-    return builder.build();
+    return agentTraceState.build();
   }
 
   private static byte[] getBuffer() {

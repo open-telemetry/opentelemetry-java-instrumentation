@@ -16,11 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.Scope;
 
 public class ContextUtils {
 
@@ -28,16 +28,16 @@ public class ContextUtils {
 
   public static Scope withScopedContext(
       final Context context, final ContextStore<Context, io.grpc.Context> contextStore) {
-    io.grpc.Context shadedContext = contextStore.get(context);
-    if (shadedContext == null) {
+    io.grpc.Context agentContext = contextStore.get(context);
+    if (agentContext == null) {
       if (log.isDebugEnabled()) {
         log.debug("unexpected context: {}", context, new Exception("unexpected context"));
       }
       return NoopScope.getInstance();
     }
 
-    io.opentelemetry.context.Scope scope =
-        io.opentelemetry.context.ContextUtils.withScopedContext(shadedContext);
-    return new UnshadedScope(scope);
+    io.opentelemetry.context.Scope agentScope =
+        io.opentelemetry.context.ContextUtils.withScopedContext(agentContext);
+    return new ApplicationScope(agentScope);
   }
 }

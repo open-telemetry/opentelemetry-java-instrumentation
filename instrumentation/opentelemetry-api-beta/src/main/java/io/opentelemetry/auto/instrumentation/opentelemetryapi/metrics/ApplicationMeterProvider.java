@@ -16,20 +16,20 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import unshaded.io.opentelemetry.metrics.Meter;
-import unshaded.io.opentelemetry.metrics.MeterProvider;
+import application.io.opentelemetry.metrics.Meter;
+import application.io.opentelemetry.metrics.MeterProvider;
 
-public class UnshadedMeterProvider implements MeterProvider {
+public class ApplicationMeterProvider implements MeterProvider {
 
   @Override
   public Meter get(final String instrumentationName) {
-    return new UnshadedMeter(
+    return new ApplicationMeter(
         io.opentelemetry.OpenTelemetry.getMeterProvider().get(instrumentationName));
   }
 
   @Override
   public Meter get(final String instrumentationName, final String instrumentationVersion) {
-    return new UnshadedMeter(
+    return new ApplicationMeter(
         io.opentelemetry.OpenTelemetry.getMeterProvider()
             .get(instrumentationName, instrumentationVersion));
   }
