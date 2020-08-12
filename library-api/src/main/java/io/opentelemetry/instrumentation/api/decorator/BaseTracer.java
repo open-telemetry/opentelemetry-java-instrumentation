@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.api.decorator;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
@@ -115,13 +116,25 @@ public abstract class BaseTracer {
   }
 
   public void end(Span span) {
-    span.end();
+    end(span, -1);
+  }
+
+  public void end(Span span, long endTimeNanos) {
+    if (endTimeNanos > 0) {
+      span.end(EndSpanOptions.builder().setEndTimestamp(endTimeNanos).build());
+    } else {
+      span.end();
+    }
   }
 
   public void endExceptionally(Span span, Throwable throwable) {
+    endExceptionally(span, throwable, -1);
+  }
+
+  public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     onError(span, unwrapThrowable(throwable));
     span.setStatus(Status.INTERNAL);
-    end(span);
+    end(span, endTimeNanos);
   }
 
   protected void onError(final Span span, final Throwable throwable) {
