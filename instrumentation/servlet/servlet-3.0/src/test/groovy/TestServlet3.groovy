@@ -16,11 +16,10 @@
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.base.HttpServerTest
-
+import java.util.concurrent.Phaser
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import java.util.concurrent.Phaser
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION

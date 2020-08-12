@@ -60,21 +60,31 @@ on that thread for the duration of the execution. This can be illustrated by the
 ```
 
 ## The drawback
-There are some runtime environments which, simplifying, do the following:
+Here is a simplified example of what async servlet processing may look like
 ```
-pool.submit(new AcceptRequestRunnable() {
-    Request req = readRequest()
-    service(req){ <- This method is instrumented and we start new scope here
-        // At this point Context.current() will have a started span
-        // recording monitoring data about `req`
-        pool.submit(new ProcessRequestRunnable(req) {
-            // The same context from above is active here
-            writeResponse(process(req))
-            pool.submit(new AcceptRequestRunnable() {
-            // The same context from above is propagated here as well
-            ... repeat until shutdown
-        })
+protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    //This method is instrumented and we start new scope here
+    AsyncContext context = req.startAsync()
+    // When the runnable below is being submitted by servlet engine to an executor service
+    // it will capture the current context (together with the current span) with it
+    context.start {
+        // When Runnable starts, we reactive the captured context
+        // So this method is executed with the same context as the original "service" method
+        resp.writer.print("Hello world!")
+        context.complete()
     }
+}
+```
+If we now take a look inside `context.complete` method from above it may be implemented like this:
+
+```
+//Here we still have the same context from above active
+//It gets attached to this new runnable
+pool.submit(new AcceptRequestRunnable() {
+// The same context from above is propagated here as well
+// Thus new reqeust processing will start while having a context active with some span inside
+// That span will be used as parent spans for new spans created for a new request
+    ...
 })
 ```
 
