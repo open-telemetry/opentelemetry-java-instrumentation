@@ -36,8 +36,8 @@ subprojects {
 dependencies {
   implementation project(':library-api')
   implementation project(':auto-api')
-  implementation(project(':auto-tooling')) {
-    exclude module: ':auto-bootstrap'
+  implementation(project(':javaagent-tooling')) {
+    exclude module: ':javaagent-bootstrap'
   }
 }
 
@@ -60,7 +60,7 @@ shadowJar {
   duplicatesStrategy = DuplicatesStrategy.FAIL
 
   dependencies {
-    exclude(project(':auto-bootstrap'))
+    exclude(project(':javaagent-bootstrap'))
   }
 
   // rewrite library instrumentation dependencies

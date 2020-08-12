@@ -23,7 +23,7 @@ testSets {
 dependencies {
   compileOnly(group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0')
 
-  implementation project(':auto-tooling')
+  implementation project(':javaagent-tooling')
 
   testImplementation project(':instrumentation:java-concurrent')
   testImplementation group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0'

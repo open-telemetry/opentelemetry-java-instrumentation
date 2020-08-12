@@ -11,7 +11,7 @@ configurations {
 }
 
 dependencies {
-  implementation project(':auto-bootstrap')
+  implementation project(':javaagent-bootstrap')
   implementation project(':auto-api')
   implementation project(':library-api')
   implementation project(':utils:thread-utils')

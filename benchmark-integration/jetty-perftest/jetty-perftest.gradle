@@ -1,5 +1,5 @@
 dependencies {
-  implementation project(':auto-bootstrap')
+  implementation project(':javaagent-bootstrap')
   implementation project(':benchmark-integration')
 
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
