@@ -282,6 +282,6 @@ tasks.withType(Test).configureEach {
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries = 5
+    maxRetries = System.getenv("CI") != null ? 5 : 0
   }
 }
