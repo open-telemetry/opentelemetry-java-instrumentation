@@ -87,7 +87,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    */
   private Span startSpan(REQUEST request, String name) {
     Context context = Context.current();
-    Span clientSpan = ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
@@ -100,7 +100,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  private Span onRequest(final Span span, final REQUEST request) {
+  protected Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
@@ -159,11 +159,10 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  private Span onResponse(final Span span, final RESPONSE response) {
+  protected Span onResponse(final Span span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
       Integer status = status(response);
-      System.out.println("status: " + status);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
@@ -172,7 +171,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  private String spanNameForRequest(final REQUEST request) {
+  protected String spanNameForRequest(final REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

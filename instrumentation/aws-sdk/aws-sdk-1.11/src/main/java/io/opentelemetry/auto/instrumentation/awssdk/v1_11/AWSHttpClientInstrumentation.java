@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.OnErrorDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.OnErrorTracer.ERROR_TRACER;
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -57,7 +57,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".OnErrorDecorator", packageName + ".RequestMeta",
+      packageName + ".OnErrorTracer", packageName + ".RequestMeta",
     };
   }
 
@@ -74,14 +74,12 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-        if (spanWithScope != null) {
+        SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+        if (scope != null) {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-          Span span = spanWithScope.getSpan();
-          DECORATE.onError(span, throwable);
-          DECORATE.beforeFinish(span);
-          span.end();
-          spanWithScope.closeScope();
+          Span span = scope.getSpan();
+          ERROR_TRACER.endExceptionally(span, throwable);
+          scope.closeScope();
         }
       }
     }
@@ -112,14 +110,12 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-          if (spanWithScope != null) {
+          SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+          if (scope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-            Span span = spanWithScope.getSpan();
-            DECORATE.onError(span, throwable);
-            DECORATE.beforeFinish(span);
-            span.end();
-            spanWithScope.closeScope();
+            Span span = scope.getSpan();
+            ERROR_TRACER.endExceptionally(span, throwable);
+            scope.closeScope();
           }
         }
       }
