@@ -79,16 +79,6 @@ class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, Clie
     return "io.opentelemetry.auto.spring-webflux-5.0";
   }
 
-  @Override
-  protected Span onRequest(Span span, ClientRequest clientRequest) {
-    return super.onRequest(span, clientRequest);
-  }
-
-  @Override
-  protected String spanNameForRequest(ClientRequest clientRequest) {
-    return super.spanNameForRequest(clientRequest);
-  }
-
   public Tracer getTracer() {
     return tracer;
   }
