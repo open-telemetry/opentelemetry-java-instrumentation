@@ -16,24 +16,24 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.propagation.ContextPropagators;
+import application.io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.propagation.ContextPropagators;
-import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;
 
-public class UnshadedContextPropagators implements ContextPropagators {
+public class ApplicationContextPropagators implements ContextPropagators {
 
-  private final UnshadedHttpTextFormat unshadedHttpTextFormat;
+  private final ApplicationHttpTextFormat applicationHttpTextFormat;
 
-  public UnshadedContextPropagators(final ContextStore<Context, io.grpc.Context> contextStore) {
-    unshadedHttpTextFormat =
-        new UnshadedHttpTextFormat(
+  public ApplicationContextPropagators(final ContextStore<Context, io.grpc.Context> contextStore) {
+    applicationHttpTextFormat =
+        new ApplicationHttpTextFormat(
             OpenTelemetry.getPropagators().getHttpTextFormat(), contextStore);
   }
 
   @Override
   public HttpTextFormat getHttpTextFormat() {
-    return unshadedHttpTextFormat;
+    return applicationHttpTextFormat;
   }
 }

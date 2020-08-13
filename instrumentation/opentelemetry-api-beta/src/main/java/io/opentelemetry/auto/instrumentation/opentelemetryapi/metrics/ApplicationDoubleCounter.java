@@ -16,82 +16,81 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.DoubleCounter;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.DoubleCounter;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedDoubleCounter implements DoubleCounter {
+class ApplicationDoubleCounter implements DoubleCounter {
 
-  private final io.opentelemetry.metrics.DoubleCounter shadedDoubleCounter;
+  private final io.opentelemetry.metrics.DoubleCounter agentDoubleCounter;
 
-  UnshadedDoubleCounter(final io.opentelemetry.metrics.DoubleCounter shadedDoubleCounter) {
-    this.shadedDoubleCounter = shadedDoubleCounter;
+  ApplicationDoubleCounter(final io.opentelemetry.metrics.DoubleCounter agentDoubleCounter) {
+    this.agentDoubleCounter = agentDoubleCounter;
   }
 
-  io.opentelemetry.metrics.DoubleCounter getShadedDoubleCounter() {
-    return shadedDoubleCounter;
+  io.opentelemetry.metrics.DoubleCounter getAgentDoubleCounter() {
+    return agentDoubleCounter;
   }
 
   @Override
   public void add(final double delta, final Labels labels) {
-    shadedDoubleCounter.add(delta, LabelsShader.shade(labels));
+    agentDoubleCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
   public BoundDoubleCounter bind(final Labels labels) {
-    return new BoundInstrument(shadedDoubleCounter.bind(LabelsShader.shade(labels)));
+    return new BoundInstrument(agentDoubleCounter.bind(LabelBridging.toAgent(labels)));
   }
 
   static class BoundInstrument implements DoubleCounter.BoundDoubleCounter {
 
-    private final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter
-        shadedBoundDoubleCounter;
+    private final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter;
 
     BoundInstrument(
-        final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter shadedBoundDoubleCounter) {
-      this.shadedBoundDoubleCounter = shadedBoundDoubleCounter;
+        final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
+      this.agentBoundDoubleCounter = agentBoundDoubleCounter;
     }
 
     @Override
     public void add(final double delta) {
-      shadedBoundDoubleCounter.add(delta);
+      agentBoundDoubleCounter.add(delta);
     }
 
     @Override
     public void unbind() {
-      shadedBoundDoubleCounter.unbind();
+      agentBoundDoubleCounter.unbind();
     }
   }
 
   static class Builder implements DoubleCounter.Builder {
 
-    private final io.opentelemetry.metrics.DoubleCounter.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleCounter.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    Builder(final io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public DoubleCounter.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public DoubleCounter.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public DoubleCounter.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public DoubleCounter build() {
-      return new UnshadedDoubleCounter(shadedBuilder.build());
+      return new ApplicationDoubleCounter(agentBuilder.build());
     }
   }
 }

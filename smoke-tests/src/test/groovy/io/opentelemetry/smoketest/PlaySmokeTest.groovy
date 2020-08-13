@@ -22,7 +22,7 @@ import okhttp3.Request
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk) {
-    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play-jdk$jdk:latest"
+    "open-telemetry-docker-dev.bintray.io/java/smoke-play-jdk$jdk:latest"
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {

@@ -16,20 +16,21 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi;
 
+import application.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 import io.opentelemetry.common.Labels;
 import io.opentelemetry.common.Labels.Builder;
-import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 
 /**
- * This class converts between Labels class that user brings and Labels class that agent has.
+ * This class converts between Labels class that application brings and Labels class that agent
+ * uses.
  *
  * <p>TODO probably not the most performant solution...
  */
-public class LabelsShader {
+public class LabelBridging {
 
-  public static Labels shade(unshaded.io.opentelemetry.common.Labels labels) {
+  public static Labels toAgent(application.io.opentelemetry.common.Labels applicationLabels) {
     io.opentelemetry.common.Labels.Builder builder = io.opentelemetry.common.Labels.newBuilder();
-    labels.forEach(new Consumer(builder));
+    applicationLabels.forEach(new Consumer(builder));
     return builder.build();
   }
 

@@ -16,18 +16,18 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
 
-import unshaded.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.context.Scope;
 
-public class UnshadedScope implements Scope {
+public class ApplicationScope implements Scope {
 
-  private final io.opentelemetry.context.Scope shadedScope;
+  private final io.opentelemetry.context.Scope agentScope;
 
-  public UnshadedScope(final io.opentelemetry.context.Scope shadedScope) {
-    this.shadedScope = shadedScope;
+  public ApplicationScope(final io.opentelemetry.context.Scope agentScope) {
+    this.agentScope = agentScope;
   }
 
   @Override
   public void close() {
-    shadedScope.close();
+    agentScope.close();
   }
 }

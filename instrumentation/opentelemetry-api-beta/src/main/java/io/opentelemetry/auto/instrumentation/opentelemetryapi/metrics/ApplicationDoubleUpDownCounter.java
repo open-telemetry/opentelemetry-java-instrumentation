@@ -16,84 +16,84 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.DoubleUpDownCounter;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedDoubleUpDownCounter implements DoubleUpDownCounter {
+class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 
-  private final io.opentelemetry.metrics.DoubleUpDownCounter shadedDoubleUpDownCounter;
+  private final io.opentelemetry.metrics.DoubleUpDownCounter agentDoubleUpDownCounter;
 
-  UnshadedDoubleUpDownCounter(
-      final io.opentelemetry.metrics.DoubleUpDownCounter shadedDoubleUpDownCounter) {
-    this.shadedDoubleUpDownCounter = shadedDoubleUpDownCounter;
+  ApplicationDoubleUpDownCounter(
+      final io.opentelemetry.metrics.DoubleUpDownCounter agentDoubleUpDownCounter) {
+    this.agentDoubleUpDownCounter = agentDoubleUpDownCounter;
   }
 
-  io.opentelemetry.metrics.DoubleUpDownCounter getShadedDoubleUpDownCounter() {
-    return shadedDoubleUpDownCounter;
+  io.opentelemetry.metrics.DoubleUpDownCounter getAgentDoubleUpDownCounter() {
+    return agentDoubleUpDownCounter;
   }
 
   @Override
   public void add(final double delta, final Labels labels) {
-    shadedDoubleUpDownCounter.add(delta, LabelsShader.shade(labels));
+    agentDoubleUpDownCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
   public BoundDoubleUpDownCounter bind(final Labels labels) {
-    return new BoundInstrument(shadedDoubleUpDownCounter.bind(LabelsShader.shade(labels)));
+    return new BoundInstrument(agentDoubleUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }
 
   static class BoundInstrument implements BoundDoubleUpDownCounter {
 
     private final io.opentelemetry.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
-        shadedBoundDoubleUpDownCounter;
+        agentBoundDoubleUpDownCounter;
 
     BoundInstrument(
         final io.opentelemetry.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
-            shadedBoundDoubleUpDownCounter) {
-      this.shadedBoundDoubleUpDownCounter = shadedBoundDoubleUpDownCounter;
+            agentBoundDoubleUpDownCounter) {
+      this.agentBoundDoubleUpDownCounter = agentBoundDoubleUpDownCounter;
     }
 
     @Override
     public void add(final double delta) {
-      shadedBoundDoubleUpDownCounter.add(delta);
+      agentBoundDoubleUpDownCounter.add(delta);
     }
 
     @Override
     public void unbind() {
-      shadedBoundDoubleUpDownCounter.unbind();
+      agentBoundDoubleUpDownCounter.unbind();
     }
   }
 
   static class Builder implements DoubleUpDownCounter.Builder {
 
-    private final io.opentelemetry.metrics.DoubleUpDownCounter.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.DoubleUpDownCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleUpDownCounter.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    Builder(final io.opentelemetry.metrics.DoubleUpDownCounter.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public DoubleUpDownCounter.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public DoubleUpDownCounter.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public DoubleUpDownCounter.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public DoubleUpDownCounter build() {
-      return new UnshadedDoubleUpDownCounter(shadedBuilder.build());
+      return new ApplicationDoubleUpDownCounter(agentBuilder.build());
     }
   }
 }

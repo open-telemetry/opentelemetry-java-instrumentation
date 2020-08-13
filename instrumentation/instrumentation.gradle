@@ -36,8 +36,8 @@ subprojects {
 dependencies {
   implementation project(':library-api')
   implementation project(':auto-api')
-  implementation(project(':auto-tooling')) {
-    exclude module: ':auto-bootstrap'
+  implementation(project(':javaagent-tooling')) {
+    exclude module: ':javaagent-bootstrap'
   }
 }
 
@@ -60,7 +60,7 @@ shadowJar {
   duplicatesStrategy = DuplicatesStrategy.FAIL
 
   dependencies {
-    exclude(project(':auto-bootstrap'))
+    exclude(project(':javaagent-bootstrap'))
   }
 
   // rewrite library instrumentation dependencies
@@ -87,6 +87,6 @@ shadowJar {
   relocate "io.grpc.Context", "io.opentelemetry.auto.shaded.io.grpc.Context"
 
   // this is for instrumentation on opentelemetry-api itself
-  relocate "unshaded.io.opentelemetry", "io.opentelemetry"
-  relocate "unshaded.io.grpc", "io.grpc"
+  relocate "application.io.opentelemetry", "io.opentelemetry"
+  relocate "application.io.grpc", "io.grpc"
 }

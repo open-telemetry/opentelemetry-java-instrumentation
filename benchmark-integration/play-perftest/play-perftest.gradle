@@ -22,7 +22,7 @@ dependencies {
   implementation "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
   implementation "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
-  implementation project(':auto-bootstrap')
+  implementation project(':javaagent-bootstrap')
   implementation project(':benchmark-integration')
 }
 

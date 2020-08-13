@@ -55,8 +55,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    def bootstrapProject = project.rootProject.getChildProjects().get('auto-bootstrap')
-    def toolingProject = project.rootProject.getChildProjects().get('auto-tooling')
+    def bootstrapProject = project.rootProject.getChildProjects().get('javaagent-bootstrap')
+    def toolingProject = project.rootProject.getChildProjects().get('javaagent-tooling')
     project.extensions.create("muzzle", MuzzleExtension, project.objects)
 
     // compileMuzzle compiles all projects required to run muzzle validation.

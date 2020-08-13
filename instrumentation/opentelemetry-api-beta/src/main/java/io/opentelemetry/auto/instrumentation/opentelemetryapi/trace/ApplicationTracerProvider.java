@@ -16,39 +16,40 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.internal.Obfuscated;
+import application.io.opentelemetry.trace.Tracer;
+import application.io.opentelemetry.trace.TracerProvider;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.internal.Obfuscated;
-import unshaded.io.opentelemetry.trace.Tracer;
-import unshaded.io.opentelemetry.trace.TracerProvider;
 
-public class UnshadedTracerProvider implements TracerProvider, Obfuscated {
+public class ApplicationTracerProvider implements TracerProvider, Obfuscated {
 
-  private static final Logger log = LoggerFactory.getLogger(UnshadedTracerProvider.class);
+  private static final Logger log = LoggerFactory.getLogger(ApplicationTracerProvider.class);
 
   private static final AtomicBoolean messageAlreadyLogged = new AtomicBoolean();
 
   private final ContextStore<Context, io.grpc.Context> contextStore;
-  private final TracerProvider originalTracerProvider;
+  private final TracerProvider applicationOriginalTracerProvider;
 
-  public UnshadedTracerProvider(
-      ContextStore<Context, io.grpc.Context> contextStore, TracerProvider originalTracerProvider) {
+  public ApplicationTracerProvider(
+      ContextStore<Context, io.grpc.Context> contextStore,
+      TracerProvider applicationOriginalTracerProvider) {
     this.contextStore = contextStore;
-    this.originalTracerProvider = originalTracerProvider;
+    this.applicationOriginalTracerProvider = applicationOriginalTracerProvider;
   }
 
   @Override
   public Tracer get(final String instrumentationName) {
-    return new UnshadedTracer(
+    return new ApplicationTracer(
         io.opentelemetry.OpenTelemetry.getTracerProvider().get(instrumentationName), contextStore);
   }
 
   @Override
   public Tracer get(final String instrumentationName, final String instrumentationVersion) {
-    return new UnshadedTracer(
+    return new ApplicationTracer(
         io.opentelemetry.OpenTelemetry.getTracerProvider()
             .get(instrumentationName, instrumentationVersion),
         contextStore);
@@ -69,6 +70,6 @@ public class UnshadedTracerProvider implements TracerProvider, Obfuscated {
         log.info(message);
       }
     }
-    return ((Obfuscated<?>) originalTracerProvider).unobfuscate();
+    return ((Obfuscated<?>) applicationOriginalTracerProvider).unobfuscate();
   }
 }

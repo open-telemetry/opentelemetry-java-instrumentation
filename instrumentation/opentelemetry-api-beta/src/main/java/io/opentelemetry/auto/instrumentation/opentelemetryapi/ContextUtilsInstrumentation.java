@@ -22,6 +22,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.Scope;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.ContextUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -33,15 +35,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.Scope;
 
 @AutoService(Instrumenter.class)
 public class ContextUtilsInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.io.opentelemetry.context.ContextUtils");
+    return named("application.io.opentelemetry.context.ContextUtils");
   }
 
   @Override
@@ -66,11 +66,12 @@ public class ContextUtilsInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context context, @Advice.Return(readOnly = false) Scope scope) {
+        @Advice.Argument(0) final Context applicationContext,
+        @Advice.Return(readOnly = false) Scope applicationScope) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      scope = ContextUtils.withScopedContext(context, contextStore);
+      applicationScope = ContextUtils.withScopedContext(applicationContext, contextStore);
     }
   }
 }

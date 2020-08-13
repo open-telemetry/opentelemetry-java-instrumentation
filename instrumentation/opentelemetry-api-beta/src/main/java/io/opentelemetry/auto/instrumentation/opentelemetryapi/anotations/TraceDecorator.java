@@ -16,15 +16,14 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
 
+import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
+import application.io.opentelemetry.trace.Span;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.opentelemetry.extensions.auto.annotations.WithSpan;
-import unshaded.io.opentelemetry.trace.Span.Kind;
 
 public class TraceDecorator extends BaseDecorator {
   public static final TraceDecorator DECORATE = new TraceDecorator();
@@ -40,24 +39,25 @@ public class TraceDecorator extends BaseDecorator {
    * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
    * #spanNameForMethod(Method)}.
    */
-  public String spanNameForMethodWithAnnotation(WithSpan annotation, Method method) {
-    if (annotation != null && !annotation.value().isEmpty()) {
-      return annotation.value();
+  public String spanNameForMethodWithAnnotation(WithSpan applicationAnnotation, Method method) {
+    if (applicationAnnotation != null && !applicationAnnotation.value().isEmpty()) {
+      return applicationAnnotation.value();
     }
     return spanNameForMethod(method);
   }
 
-  public Span.Kind extractSpanKind(WithSpan annotation) {
-    Kind unshadedKind = annotation != null ? annotation.kind() : Kind.INTERNAL;
-    return toShadedOrNull(unshadedKind);
+  public io.opentelemetry.trace.Span.Kind extractSpanKind(WithSpan applicationAnnotation) {
+    Span.Kind applicationKind =
+        applicationAnnotation != null ? applicationAnnotation.kind() : Span.Kind.INTERNAL;
+    return toAgentOrNull(applicationKind);
   }
 
-  public static io.opentelemetry.trace.Span.Kind toShadedOrNull(
-      final unshaded.io.opentelemetry.trace.Span.Kind unshadedSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
+      final Span.Kind applicationSpanKind) {
     try {
-      return io.opentelemetry.trace.Span.Kind.valueOf(unshadedSpanKind.name());
+      return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
     } catch (final IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", unshadedSpanKind.name());
+      log.debug("unexpected span kind: {}", applicationSpanKind.name());
       return io.opentelemetry.trace.Span.Kind.INTERNAL;
     }
   }
