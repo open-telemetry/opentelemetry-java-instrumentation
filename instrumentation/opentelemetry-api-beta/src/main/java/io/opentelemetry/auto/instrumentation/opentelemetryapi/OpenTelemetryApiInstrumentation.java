@@ -21,10 +21,13 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.propagation.ContextPropagators;
+import application.io.opentelemetry.metrics.MeterProvider;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.UnshadedContextPropagators;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.ApplicationMeterProvider;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
@@ -34,14 +37,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import unshaded.io.grpc.Context;
 
 @AutoService(Instrumenter.class)
 public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.io.opentelemetry.OpenTelemetry");
+    return named("application.io.opentelemetry.OpenTelemetry");
   }
 
   @Override
@@ -64,10 +66,11 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.trace.TracerProvider tracerProvider) {
+            application.io.opentelemetry.trace.TracerProvider applicationTracerProvider) {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      tracerProvider = new UnshadedTracerProvider(contextStore, tracerProvider);
+      applicationTracerProvider =
+          new ApplicationTracerProvider(contextStore, applicationTracerProvider);
     }
   }
 
@@ -75,9 +78,8 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.metrics.MeterProvider meterProvider) {
-      meterProvider = new UnshadedMeterProvider();
+        @Advice.Return(readOnly = false) MeterProvider applicationMeterProvider) {
+      applicationMeterProvider = new ApplicationMeterProvider();
     }
   }
 
@@ -85,11 +87,10 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.context.propagation.ContextPropagators contextPropagators) {
+        @Advice.Return(readOnly = false) ContextPropagators applicationContextPropagators) {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      contextPropagators = new UnshadedContextPropagators(contextStore);
+      applicationContextPropagators = new ApplicationContextPropagators(contextStore);
     }
   }
 }

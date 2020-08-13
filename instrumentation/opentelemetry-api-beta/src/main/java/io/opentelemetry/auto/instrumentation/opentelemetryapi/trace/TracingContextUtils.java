@@ -16,92 +16,94 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShadedOrNull;
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toUnshaded;
+import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toApplication;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.trace.DefaultSpan;
+import application.io.opentelemetry.trace.Span;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.ApplicationScope;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.NoopScope;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.UnshadedScope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.Scope;
-import unshaded.io.opentelemetry.trace.DefaultSpan;
-import unshaded.io.opentelemetry.trace.Span;
 
 public class TracingContextUtils {
 
   private static final Logger log = LoggerFactory.getLogger(TracingContextUtils.class);
 
   public static Context withSpan(
-      final Span span,
-      final Context context,
+      final Span applicationSpan,
+      final Context applicationContext,
       final ContextStore<Context, io.grpc.Context> contextStore) {
-    io.opentelemetry.trace.Span shadedSpan = toShadedOrNull(span);
-    if (shadedSpan == null) {
+    io.opentelemetry.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
+    if (agentSpan == null) {
       if (log.isDebugEnabled()) {
-        log.debug("unexpected span: {}", span, new Exception("unexpected span"));
+        log.debug("unexpected span: {}", applicationSpan, new Exception("unexpected span"));
       }
-      return context;
+      return applicationContext;
     }
-    io.grpc.Context shadedContext = contextStore.get(context);
-    if (shadedContext == null) {
+    io.grpc.Context agentContext = contextStore.get(applicationContext);
+    if (agentContext == null) {
       if (log.isDebugEnabled()) {
-        log.debug("unexpected context: {}", context, new Exception("unexpected context"));
+        log.debug(
+            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
       }
-      return context;
+      return applicationContext;
     }
-    io.grpc.Context updatedShadedContext =
-        io.opentelemetry.trace.TracingContextUtils.withSpan(shadedSpan, shadedContext);
-    Context updatedContext = context.fork();
-    contextStore.put(updatedContext, updatedShadedContext);
-    return updatedContext;
+    io.grpc.Context agentUpdatedContext =
+        io.opentelemetry.trace.TracingContextUtils.withSpan(agentSpan, agentContext);
+    Context applicationUpdatedContext = applicationContext.fork();
+    contextStore.put(applicationUpdatedContext, agentUpdatedContext);
+    return applicationUpdatedContext;
   }
 
   public static Span getCurrentSpan() {
-    return toUnshaded(io.opentelemetry.trace.TracingContextUtils.getCurrentSpan());
+    return toApplication(io.opentelemetry.trace.TracingContextUtils.getCurrentSpan());
   }
 
   public static Span getSpan(
-      final Context context, final ContextStore<Context, io.grpc.Context> contextStore) {
-    io.grpc.Context shadedContext = contextStore.get(context);
-    if (shadedContext == null) {
+      final Context applicationContext, final ContextStore<Context, io.grpc.Context> contextStore) {
+    io.grpc.Context agentContext = contextStore.get(applicationContext);
+    if (agentContext == null) {
       if (log.isDebugEnabled()) {
-        log.debug("unexpected context: {}", context, new Exception("unexpected context"));
+        log.debug(
+            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
       }
       return DefaultSpan.getInvalid();
     }
-    return toUnshaded(io.opentelemetry.trace.TracingContextUtils.getSpan(shadedContext));
+    return toApplication(io.opentelemetry.trace.TracingContextUtils.getSpan(agentContext));
   }
 
   public static Span getSpanWithoutDefault(
-      final Context context, final ContextStore<Context, io.grpc.Context> contextStore) {
-    io.grpc.Context shadedContext = contextStore.get(context);
-    if (shadedContext == null) {
+      final Context applicationContext, final ContextStore<Context, io.grpc.Context> contextStore) {
+    io.grpc.Context agentContext = contextStore.get(applicationContext);
+    if (agentContext == null) {
       if (log.isDebugEnabled()) {
-        log.debug("unexpected context: {}", context, new Exception("unexpected context"));
+        log.debug(
+            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
       }
       return null;
     }
-    io.opentelemetry.trace.Span shadedSpan =
-        io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault(shadedContext);
-    return shadedSpan == null ? null : toUnshaded(shadedSpan);
+    io.opentelemetry.trace.Span agentSpan =
+        io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault(agentContext);
+    return agentSpan == null ? null : toApplication(agentSpan);
   }
 
-  public static Scope currentContextWith(final Span span) {
-    if (!span.getContext().isValid()) {
-      // this supports direct usage of unshaded DefaultSpan.getInvalid()
-      return new UnshadedScope(
+  public static Scope currentContextWith(final Span applicationSpan) {
+    if (!applicationSpan.getContext().isValid()) {
+      // this supports direct usage of DefaultSpan.getInvalid()
+      return new ApplicationScope(
           io.opentelemetry.trace.TracingContextUtils.currentContextWith(
               io.opentelemetry.trace.DefaultSpan.getInvalid()));
     }
-    if (span instanceof UnshadedSpan) {
-      return new UnshadedScope(
+    if (applicationSpan instanceof ApplicationSpan) {
+      return new ApplicationScope(
           io.opentelemetry.trace.TracingContextUtils.currentContextWith(
-              ((UnshadedSpan) span).getShadedSpan()));
+              ((ApplicationSpan) applicationSpan).getAgentSpan()));
     }
     if (log.isDebugEnabled()) {
-      log.debug("unexpected span: {}", span, new Exception("unexpected span"));
+      log.debug("unexpected span: {}", applicationSpan, new Exception("unexpected span"));
     }
     return NoopScope.getInstance();
   }

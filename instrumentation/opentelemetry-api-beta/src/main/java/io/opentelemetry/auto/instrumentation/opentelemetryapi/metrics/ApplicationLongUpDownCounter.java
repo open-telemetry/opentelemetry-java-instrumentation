@@ -16,84 +16,84 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.LongUpDownCounter;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.LongUpDownCounter;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedLongUpDownCounter implements LongUpDownCounter {
+class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
-  private final io.opentelemetry.metrics.LongUpDownCounter shadedLongUpDownCounter;
+  private final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter;
 
-  UnshadedLongUpDownCounter(
-      final io.opentelemetry.metrics.LongUpDownCounter shadedLongUpDownCounter) {
-    this.shadedLongUpDownCounter = shadedLongUpDownCounter;
+  ApplicationLongUpDownCounter(
+      final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
+    this.agentLongUpDownCounter = agentLongUpDownCounter;
   }
 
-  io.opentelemetry.metrics.LongUpDownCounter getShadedLongUpDownCounter() {
-    return shadedLongUpDownCounter;
+  io.opentelemetry.metrics.LongUpDownCounter getAgentLongUpDownCounter() {
+    return agentLongUpDownCounter;
   }
 
   @Override
   public void add(final long delta, final Labels labels) {
-    shadedLongUpDownCounter.add(delta, LabelsShader.shade(labels));
+    agentLongUpDownCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
   public BoundLongUpDownCounter bind(final Labels labels) {
-    return new BoundInstrument(shadedLongUpDownCounter.bind(LabelsShader.shade(labels)));
+    return new BoundInstrument(agentLongUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }
 
   static class BoundInstrument implements BoundLongUpDownCounter {
 
     private final io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
-        shadedBoundLongUpDownCounter;
+        agentBoundLongUpDownCounter;
 
     BoundInstrument(
         final io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
-            shadedBoundLongUpDownCounter) {
-      this.shadedBoundLongUpDownCounter = shadedBoundLongUpDownCounter;
+            agentBoundLongUpDownCounter) {
+      this.agentBoundLongUpDownCounter = agentBoundLongUpDownCounter;
     }
 
     @Override
     public void add(final long delta) {
-      shadedBoundLongUpDownCounter.add(delta);
+      agentBoundLongUpDownCounter.add(delta);
     }
 
     @Override
     public void unbind() {
-      shadedBoundLongUpDownCounter.unbind();
+      agentBoundLongUpDownCounter.unbind();
     }
   }
 
   static class Builder implements LongUpDownCounter.Builder {
 
-    private final io.opentelemetry.metrics.LongUpDownCounter.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.LongUpDownCounter.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    Builder(final io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public LongUpDownCounter.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public LongUpDownCounter.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public LongUpDownCounter.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public LongUpDownCounter build() {
-      return new UnshadedLongUpDownCounter(shadedBuilder.build());
+      return new ApplicationLongUpDownCounter(agentBuilder.build());
     }
   }
 }

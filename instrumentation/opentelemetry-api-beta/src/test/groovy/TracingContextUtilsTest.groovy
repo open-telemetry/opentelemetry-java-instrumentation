@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+import application.io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
-import unshaded.io.grpc.Context
 
-import static unshaded.io.opentelemetry.OpenTelemetry.getTracerProvider
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.getSpan
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault
+import static application.io.opentelemetry.OpenTelemetry.getTracerProvider
+import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
+import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
+import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
+import static application.io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault
 
 class TracingContextUtilsTest extends AgentTestRunner {
 

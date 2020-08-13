@@ -16,81 +16,81 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.LongCounter;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.LongCounter;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedLongCounter implements LongCounter {
+class ApplicationLongCounter implements LongCounter {
 
-  private final io.opentelemetry.metrics.LongCounter shadedLongCounter;
+  private final io.opentelemetry.metrics.LongCounter agentLongCounter;
 
-  UnshadedLongCounter(final io.opentelemetry.metrics.LongCounter shadedLongCounter) {
-    this.shadedLongCounter = shadedLongCounter;
+  ApplicationLongCounter(final io.opentelemetry.metrics.LongCounter agentLongCounter) {
+    this.agentLongCounter = agentLongCounter;
   }
 
-  io.opentelemetry.metrics.LongCounter getShadedLongCounter() {
-    return shadedLongCounter;
+  io.opentelemetry.metrics.LongCounter getAgentLongCounter() {
+    return agentLongCounter;
   }
 
   @Override
   public void add(final long delta, final Labels labels) {
-    shadedLongCounter.add(delta, LabelsShader.shade(labels));
+    agentLongCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
   public BoundLongCounter bind(final Labels labels) {
-    return new BoundInstrument(shadedLongCounter.bind(LabelsShader.shade(labels)));
+    return new BoundInstrument(agentLongCounter.bind(LabelBridging.toAgent(labels)));
   }
 
   static class BoundInstrument implements LongCounter.BoundLongCounter {
 
-    private final io.opentelemetry.metrics.LongCounter.BoundLongCounter shadedBoundLongCounter;
+    private final io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter;
 
     BoundInstrument(
-        final io.opentelemetry.metrics.LongCounter.BoundLongCounter shadedBoundLongCounter) {
-      this.shadedBoundLongCounter = shadedBoundLongCounter;
+        final io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
+      this.agentBoundLongCounter = agentBoundLongCounter;
     }
 
     @Override
     public void add(final long delta) {
-      shadedBoundLongCounter.add(delta);
+      agentBoundLongCounter.add(delta);
     }
 
     @Override
     public void unbind() {
-      shadedBoundLongCounter.unbind();
+      agentBoundLongCounter.unbind();
     }
   }
 
   static class Builder implements LongCounter.Builder {
 
-    private final io.opentelemetry.metrics.LongCounter.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.LongCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.LongCounter.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    Builder(final io.opentelemetry.metrics.LongCounter.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public LongCounter.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public LongCounter.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public LongCounter.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public LongCounter build() {
-      return new UnshadedLongCounter(shadedBuilder.build());
+      return new ApplicationLongCounter(agentBuilder.build());
     }
   }
 }

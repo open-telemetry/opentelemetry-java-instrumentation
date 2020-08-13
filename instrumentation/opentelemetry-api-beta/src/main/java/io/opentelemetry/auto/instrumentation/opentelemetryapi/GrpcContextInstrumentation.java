@@ -22,6 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.io.grpc.Context;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.ContextUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -33,14 +34,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import unshaded.io.grpc.Context;
 
 @AutoService(Instrumenter.class)
 public class GrpcContextInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.io.grpc.Context");
+    return named("application.io.grpc.Context");
   }
 
   @Override
@@ -55,10 +55,10 @@ public class GrpcContextInstrumentation extends AbstractInstrumentation {
   public static class CurrentAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return final unshaded.io.grpc.Context context) {
+    public static void methodExit(@Advice.Return final Context applicationContext) {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      contextStore.put(context, io.grpc.Context.current());
+      contextStore.put(applicationContext, io.grpc.Context.current());
     }
 
     // this is to make muzzle think we need ContextUtils to make sure we do not apply this

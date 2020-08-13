@@ -16,10 +16,10 @@
 
 package io.opentelemetry.test.annotation;
 
+import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
+import application.io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Tracer;
-import unshaded.io.opentelemetry.extensions.auto.annotations.WithSpan;
-import unshaded.io.opentelemetry.trace.Span.Kind;
 
 public class TracedWithSpan {
 

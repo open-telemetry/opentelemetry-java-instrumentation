@@ -16,85 +16,85 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.LongValueObserver;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.LongValueObserver;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedLongValueObserver implements LongValueObserver {
+class ApplicationLongValueObserver implements LongValueObserver {
 
-  private final io.opentelemetry.metrics.LongValueObserver shadedLongValueObserver;
+  private final io.opentelemetry.metrics.LongValueObserver agentLongValueObserver;
 
-  public UnshadedLongValueObserver(
-      final io.opentelemetry.metrics.LongValueObserver shadedLongValueObserver) {
-    this.shadedLongValueObserver = shadedLongValueObserver;
+  public ApplicationLongValueObserver(
+      final io.opentelemetry.metrics.LongValueObserver agentLongValueObserver) {
+    this.agentLongValueObserver = agentLongValueObserver;
   }
 
   @Override
   public void setCallback(final Callback<LongResult> metricUpdater) {
-    shadedLongValueObserver.setCallback(new ShadedResultLongValueObserver(metricUpdater));
+    agentLongValueObserver.setCallback(new AgentResultLongValueObserver(metricUpdater));
   }
 
-  public static class ShadedResultLongValueObserver
+  public static class AgentResultLongValueObserver
       implements io.opentelemetry.metrics.AsynchronousInstrument.Callback<
           io.opentelemetry.metrics.LongValueObserver.LongResult> {
 
     private final Callback<LongResult> metricUpdater;
 
-    public ShadedResultLongValueObserver(final Callback<LongResult> metricUpdater) {
+    public AgentResultLongValueObserver(final Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
     public void update(final io.opentelemetry.metrics.LongValueObserver.LongResult result) {
-      metricUpdater.update(new UnshadedResultLongValueObserver(result));
+      metricUpdater.update(new ApplicationResultLongValueObserver(result));
     }
   }
 
-  public static class UnshadedResultLongValueObserver implements LongResult {
+  public static class ApplicationResultLongValueObserver implements LongResult {
 
     private final io.opentelemetry.metrics.LongValueObserver.LongResult
-        shadedResultLongValueObserver;
+        agentResultLongValueObserver;
 
-    public UnshadedResultLongValueObserver(
-        final io.opentelemetry.metrics.LongValueObserver.LongResult shadedResultLongValueObserver) {
-      this.shadedResultLongValueObserver = shadedResultLongValueObserver;
+    public ApplicationResultLongValueObserver(
+        final io.opentelemetry.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
+      this.agentResultLongValueObserver = agentResultLongValueObserver;
     }
 
     @Override
     public void observe(final long value, final Labels labels) {
-      shadedResultLongValueObserver.observe(value, LabelsShader.shade(labels));
+      agentResultLongValueObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
 
   static class Builder implements LongValueObserver.Builder {
 
-    private final io.opentelemetry.metrics.LongValueObserver.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder;
 
-    public Builder(final io.opentelemetry.metrics.LongValueObserver.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    public Builder(final io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public LongValueObserver.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public LongValueObserver.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public LongValueObserver.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public LongValueObserver build() {
-      return new UnshadedLongValueObserver(shadedBuilder.build());
+      return new ApplicationLongValueObserver(agentBuilder.build());
     }
   }
 }

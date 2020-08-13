@@ -16,89 +16,87 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.DoubleUpDownSumObserver;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 import io.opentelemetry.metrics.AsynchronousInstrument;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.DoubleUpDownSumObserver;
 
-class UnshadedDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
+class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
-  private final io.opentelemetry.metrics.DoubleUpDownSumObserver shadedDoubleUpDownSumObserver;
+  private final io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver;
 
-  protected UnshadedDoubleUpDownSumObserver(
-      final io.opentelemetry.metrics.DoubleUpDownSumObserver shadedDoubleUpDownSumObserver) {
-    this.shadedDoubleUpDownSumObserver = shadedDoubleUpDownSumObserver;
+  protected ApplicationDoubleUpDownSumObserver(
+      final io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver) {
+    this.agentDoubleUpDownSumObserver = agentDoubleUpDownSumObserver;
   }
 
   @Override
   public void setCallback(final Callback<DoubleResult> metricUpdater) {
-    shadedDoubleUpDownSumObserver.setCallback(
-        new ShadedResultDoubleUpDownSumObserver(metricUpdater));
+    agentDoubleUpDownSumObserver.setCallback(new AgentResultDoubleUpDownSumObserver(metricUpdater));
   }
 
-  static class ShadedResultDoubleUpDownSumObserver
+  static class AgentResultDoubleUpDownSumObserver
       implements AsynchronousInstrument.Callback<
           io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult> {
 
     private final Callback<DoubleResult> metricUpdater;
 
-    protected ShadedResultDoubleUpDownSumObserver(final Callback<DoubleResult> metricUpdater) {
+    protected AgentResultDoubleUpDownSumObserver(final Callback<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
     public void update(final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult result) {
-      metricUpdater.update(new UnshadedResultDoubleUpDownSumObserver(result));
+      metricUpdater.update(new ApplicationResultDoubleUpDownSumObserver(result));
     }
   }
 
-  static class UnshadedResultDoubleUpDownSumObserver implements DoubleResult {
+  static class ApplicationResultDoubleUpDownSumObserver implements DoubleResult {
 
     private final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
-        shadedResultDoubleUpDownSumObserver;
+        agentResultDoubleUpDownSumObserver;
 
-    public UnshadedResultDoubleUpDownSumObserver(
+    public ApplicationResultDoubleUpDownSumObserver(
         final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
-            shadedResultDoubleUpDownSumObserver) {
-      this.shadedResultDoubleUpDownSumObserver = shadedResultDoubleUpDownSumObserver;
+            agentResultDoubleUpDownSumObserver) {
+      this.agentResultDoubleUpDownSumObserver = agentResultDoubleUpDownSumObserver;
     }
 
     @Override
     public void observe(final double value, final Labels labels) {
-      shadedResultDoubleUpDownSumObserver.observe(value, LabelsShader.shade(labels));
+      agentResultDoubleUpDownSumObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
 
   static class Builder implements DoubleUpDownSumObserver.Builder {
 
-    private final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder;
 
-    protected Builder(
-        final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    protected Builder(final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public DoubleUpDownSumObserver.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public DoubleUpDownSumObserver.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public DoubleUpDownSumObserver.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public DoubleUpDownSumObserver build() {
-      return new UnshadedDoubleUpDownSumObserver(shadedBuilder.build());
+      return new ApplicationDoubleUpDownSumObserver(agentBuilder.build());
     }
   }
 }

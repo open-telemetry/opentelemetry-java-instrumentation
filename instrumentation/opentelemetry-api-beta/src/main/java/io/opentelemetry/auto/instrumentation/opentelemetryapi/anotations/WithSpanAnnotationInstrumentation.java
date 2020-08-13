@@ -47,7 +47,7 @@ public final class WithSpanAnnotationInstrumentation
   public WithSpanAnnotationInstrumentation() {
     super("trace", "with-span-annotation");
     annotatedMethodMatcher =
-        isAnnotatedWith(named("unshaded.io.opentelemetry.extensions.auto.annotations.WithSpan"));
+        isAnnotatedWith(named("application.io.opentelemetry.extensions.auto.annotations.WithSpan"));
     excludedMethodsMatcher = configureExcludedMethods();
   }
 

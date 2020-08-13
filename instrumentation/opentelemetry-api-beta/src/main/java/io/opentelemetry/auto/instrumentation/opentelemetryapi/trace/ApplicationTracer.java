@@ -16,36 +16,36 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
+import application.io.grpc.Context;
+import application.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.trace.Span;
+import application.io.opentelemetry.trace.Tracer;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
-import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.Scope;
-import unshaded.io.opentelemetry.trace.Span;
-import unshaded.io.opentelemetry.trace.Tracer;
 
-class UnshadedTracer implements Tracer {
+class ApplicationTracer implements Tracer {
 
-  private final io.opentelemetry.trace.Tracer shadedTracer;
+  private final io.opentelemetry.trace.Tracer agentTracer;
   private final ContextStore<Context, io.grpc.Context> contextStore;
 
-  UnshadedTracer(
-      final io.opentelemetry.trace.Tracer shadedTracer,
+  ApplicationTracer(
+      final io.opentelemetry.trace.Tracer agentTracer,
       ContextStore<Context, io.grpc.Context> contextStore) {
-    this.shadedTracer = shadedTracer;
+    this.agentTracer = agentTracer;
     this.contextStore = contextStore;
   }
 
   @Override
   public Span getCurrentSpan() {
-    return Bridging.toUnshaded(shadedTracer.getCurrentSpan());
+    return Bridging.toApplication(agentTracer.getCurrentSpan());
   }
 
   @Override
-  public Scope withSpan(final Span span) {
-    return TracingContextUtils.currentContextWith(span);
+  public Scope withSpan(final Span applicationSpan) {
+    return TracingContextUtils.currentContextWith(applicationSpan);
   }
 
   @Override
   public Span.Builder spanBuilder(final String spanName) {
-    return new UnshadedSpan.Builder(shadedTracer.spanBuilder(spanName), contextStore);
+    return new ApplicationSpan.Builder(agentTracer.spanBuilder(spanName), contextStore);
   }
 }

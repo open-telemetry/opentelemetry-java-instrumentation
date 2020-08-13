@@ -87,6 +87,6 @@ shadowJar {
   relocate "io.grpc.Context", "io.opentelemetry.auto.shaded.io.grpc.Context"
 
   // this is for instrumentation on opentelemetry-api itself
-  relocate "unshaded.io.opentelemetry", "io.opentelemetry"
-  relocate "unshaded.io.grpc", "io.grpc"
+  relocate "application.io.opentelemetry", "io.opentelemetry"
+  relocate "application.io.grpc", "io.grpc"
 }

@@ -16,87 +16,87 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.DoubleValueObserver;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 import io.opentelemetry.metrics.AsynchronousInstrument;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.DoubleValueObserver;
 
-class UnshadedDoubleValueObserver implements DoubleValueObserver {
+class ApplicationDoubleValueObserver implements DoubleValueObserver {
 
-  private final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver;
+  private final io.opentelemetry.metrics.DoubleValueObserver agentDoubleValueObserver;
 
-  protected UnshadedDoubleValueObserver(
-      final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver) {
-    this.shadedDoubleValueObserver = shadedDoubleValueObserver;
+  protected ApplicationDoubleValueObserver(
+      final io.opentelemetry.metrics.DoubleValueObserver agentDoubleValueObserver) {
+    this.agentDoubleValueObserver = agentDoubleValueObserver;
   }
 
   @Override
   public void setCallback(final Callback<DoubleResult> metricUpdater) {
-    shadedDoubleValueObserver.setCallback(new ShadedResultDoubleValueObserver(metricUpdater));
+    agentDoubleValueObserver.setCallback(new AgentResultDoubleValueObserver(metricUpdater));
   }
 
-  static class ShadedResultDoubleValueObserver
+  static class AgentResultDoubleValueObserver
       implements AsynchronousInstrument.Callback<
           io.opentelemetry.metrics.DoubleValueObserver.DoubleResult> {
 
     private final Callback<DoubleResult> metricUpdater;
 
-    protected ShadedResultDoubleValueObserver(final Callback<DoubleResult> metricUpdater) {
+    protected AgentResultDoubleValueObserver(final Callback<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
     public void update(final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult result) {
-      metricUpdater.update(new UnshadedResultDoubleValueObserver(result));
+      metricUpdater.update(new ApplicationResultDoubleValueObserver(result));
     }
   }
 
-  static class UnshadedResultDoubleValueObserver implements DoubleResult {
+  static class ApplicationResultDoubleValueObserver implements DoubleResult {
 
     private final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult
-        shadedResultDoubleValueObserver;
+        agentResultDoubleValueObserver;
 
-    public UnshadedResultDoubleValueObserver(
+    public ApplicationResultDoubleValueObserver(
         final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult
-            shadedResultDoubleValueObserver) {
-      this.shadedResultDoubleValueObserver = shadedResultDoubleValueObserver;
+            agentResultDoubleValueObserver) {
+      this.agentResultDoubleValueObserver = agentResultDoubleValueObserver;
     }
 
     @Override
     public void observe(final double value, final Labels labels) {
-      shadedResultDoubleValueObserver.observe(value, LabelsShader.shade(labels));
+      agentResultDoubleValueObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
 
   static class Builder implements DoubleValueObserver.Builder {
 
-    private final io.opentelemetry.metrics.DoubleValueObserver.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.DoubleValueObserver.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.DoubleValueObserver.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    protected Builder(final io.opentelemetry.metrics.DoubleValueObserver.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public DoubleValueObserver.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public DoubleValueObserver.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public DoubleValueObserver.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public DoubleValueObserver build() {
-      return new UnshadedDoubleValueObserver(shadedBuilder.build());
+      return new ApplicationDoubleValueObserver(agentBuilder.build());
     }
   }
 }

@@ -16,84 +16,84 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
-import unshaded.io.opentelemetry.common.Labels;
-import unshaded.io.opentelemetry.metrics.LongValueRecorder;
+import application.io.opentelemetry.common.Labels;
+import application.io.opentelemetry.metrics.LongValueRecorder;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
 
-class UnshadedLongValueRecorder implements LongValueRecorder {
+class ApplicationLongValueRecorder implements LongValueRecorder {
 
-  private final io.opentelemetry.metrics.LongValueRecorder shadedLongValueRecorder;
+  private final io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder;
 
-  protected UnshadedLongValueRecorder(
-      final io.opentelemetry.metrics.LongValueRecorder shadedLongValueRecorder) {
-    this.shadedLongValueRecorder = shadedLongValueRecorder;
+  protected ApplicationLongValueRecorder(
+      final io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder) {
+    this.agentLongValueRecorder = agentLongValueRecorder;
   }
 
-  public io.opentelemetry.metrics.LongValueRecorder getShadedLongValueRecorder() {
-    return shadedLongValueRecorder;
+  public io.opentelemetry.metrics.LongValueRecorder getAgentLongValueRecorder() {
+    return agentLongValueRecorder;
   }
 
   @Override
   public void record(final long delta, final Labels labels) {
-    shadedLongValueRecorder.record(delta, LabelsShader.shade(labels));
+    agentLongValueRecorder.record(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
   public BoundLongValueRecorder bind(final Labels labels) {
-    return new BoundInstrument(shadedLongValueRecorder.bind(LabelsShader.shade(labels)));
+    return new BoundInstrument(agentLongValueRecorder.bind(LabelBridging.toAgent(labels)));
   }
 
   static class BoundInstrument implements LongValueRecorder.BoundLongValueRecorder {
 
     private final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
-        shadedBoundLongValueRecorder;
+        agentBoundLongValueRecorder;
 
     protected BoundInstrument(
         final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
-            shadedBoundLongValueRecorder) {
-      this.shadedBoundLongValueRecorder = shadedBoundLongValueRecorder;
+            agentBoundLongValueRecorder) {
+      this.agentBoundLongValueRecorder = agentBoundLongValueRecorder;
     }
 
     @Override
     public void record(final long delta) {
-      shadedBoundLongValueRecorder.record(delta);
+      agentBoundLongValueRecorder.record(delta);
     }
 
     @Override
     public void unbind() {
-      shadedBoundLongValueRecorder.unbind();
+      agentBoundLongValueRecorder.unbind();
     }
   }
 
   static class Builder implements LongValueRecorder.Builder {
 
-    private final io.opentelemetry.metrics.LongValueRecorder.Builder shadedBuilder;
+    private final io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.LongValueRecorder.Builder shadedBuilder) {
-      this.shadedBuilder = shadedBuilder;
+    protected Builder(final io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder) {
+      this.agentBuilder = agentBuilder;
     }
 
     @Override
     public LongValueRecorder.Builder setDescription(final String description) {
-      shadedBuilder.setDescription(description);
+      agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
     public LongValueRecorder.Builder setUnit(final String unit) {
-      shadedBuilder.setUnit(unit);
+      agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
     public LongValueRecorder.Builder setConstantLabels(final Labels constantLabels) {
-      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
+      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }
 
     @Override
     public LongValueRecorder build() {
-      return new UnshadedLongValueRecorder(shadedBuilder.build());
+      return new ApplicationLongValueRecorder(agentBuilder.build());
     }
   }
 }

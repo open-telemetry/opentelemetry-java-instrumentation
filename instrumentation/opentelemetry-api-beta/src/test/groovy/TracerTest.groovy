@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
+import application.io.grpc.Context
+import application.io.opentelemetry.OpenTelemetry
+import application.io.opentelemetry.context.Scope
+import application.io.opentelemetry.trace.DefaultSpan
+import application.io.opentelemetry.trace.Span
+import application.io.opentelemetry.trace.Status
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import unshaded.io.grpc.Context
-import unshaded.io.opentelemetry.OpenTelemetry
-import unshaded.io.opentelemetry.context.Scope
-import unshaded.io.opentelemetry.trace.DefaultSpan
-import unshaded.io.opentelemetry.trace.Span
-import unshaded.io.opentelemetry.trace.Status
 
-import static unshaded.io.opentelemetry.context.ContextUtils.withScopedContext
-import static unshaded.io.opentelemetry.trace.Span.Kind.PRODUCER
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.getSpan
-import static unshaded.io.opentelemetry.trace.TracingContextUtils.withSpan
+import static application.io.opentelemetry.context.ContextUtils.withScopedContext
+import static application.io.opentelemetry.trace.Span.Kind.PRODUCER
+import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
+import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
+import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
+import static application.io.opentelemetry.trace.TracingContextUtils.withSpan
 
 class TracerTest extends AgentTestRunner {
 
