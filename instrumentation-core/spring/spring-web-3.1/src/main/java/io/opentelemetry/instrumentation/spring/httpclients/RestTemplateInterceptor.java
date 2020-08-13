@@ -32,7 +32,7 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
 
   private final Tracer tracer;
 
-  public RestTemplateInterceptor(final Tracer tracer) {
+  public RestTemplateInterceptor(Tracer tracer) {
     this.tracer = tracer;
   }
 
