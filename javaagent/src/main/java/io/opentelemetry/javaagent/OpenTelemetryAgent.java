@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.bootstrap;
+package io.opentelemetry.javaagent;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,8 +55,8 @@ import java.util.regex.Pattern;
  *   <li>Do dot touch any logging facilities here so we can configure them later
  * </ul>
  */
-public class AgentBootstrap {
-  private static final Class<?> thisClass = AgentBootstrap.class;
+public class OpenTelemetryAgent {
+  private static final Class<?> thisClass = OpenTelemetryAgent.class;
 
   public static void premain(final String agentArgs, final Instrumentation inst) {
     agentmain(agentArgs, inst);

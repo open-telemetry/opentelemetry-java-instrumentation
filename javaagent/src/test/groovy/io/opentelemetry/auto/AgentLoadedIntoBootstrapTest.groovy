@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto
 
-import io.opentelemetry.auto.bootstrap.AgentBootstrap
 import io.opentelemetry.auto.test.IntegrationTestUtils
+import io.opentelemetry.javaagent.OpenTelemetryAgent
 import jvmbootstraptest.AgentLoadedChecker
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap
 import spock.lang.Specification
@@ -50,7 +50,7 @@ class AgentLoadedIntoBootstrapTest extends Specification {
     def mainClassName = MyClassLoaderIsNotBootstrap.getName()
     def pathToJar = IntegrationTestUtils.createJarWithClasses(mainClassName,
       MyClassLoaderIsNotBootstrap,
-      AgentBootstrap).getPath()
+      OpenTelemetryAgent).getPath()
 
     expect:
     IntegrationTestUtils.runOnSeparateJvm(mainClassName
