@@ -60,7 +60,7 @@ ext {
       dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '2.6') // Last version to support Java7
     ],
     groovy                      : "org.codehaus.groovy:groovy-all:${versions.groovy}",
-    testcontainers              : "org.testcontainers:testcontainers:1.12.2",
+    testcontainers              : "org.testcontainers:testcontainers:1.14.3",
     testLogging                 : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

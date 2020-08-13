@@ -1,0 +1,69 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+archivesBaseName = "jmx-metrics"
+
+apply plugin: 'groovy'
+apply plugin: 'org.unbroken-dome.test-sets'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+description = 'JMX metrics gathering Groovy script runner'
+
+// we are joint compiling so rely on groovy plugin entirely
+sourceSets.main.groovy.srcDirs = ["src/main/java", "src/main/groovy"]
+sourceSets.test.groovy.srcDirs = ["src/test/java", "src/test/groovy"]
+sourceSets.main.java.srcDirs = []
+sourceSets.test.java.srcDirs = []
+
+ext{
+  grpcVersion = '1.30.2'
+  protobufVersion = '3.11.4'
+}
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'io.opentelemetry.instrumentation.jmxmetrics.JmxMetrics'
+    )
+  }
+}
+
+dependencies {
+    implementation "com.google.guava:guava:25.0-jre",
+         "com.google.protobuf:protobuf-java:${protobufVersion}",
+         "com.google.protobuf:protobuf-java-util:${protobufVersion}",
+         "io.grpc:grpc-netty-shaded:${grpcVersion}",
+         "org.codehaus.groovy:groovy-jmx:${versions.groovy}",
+         "org.codehaus.groovy:groovy:${versions.groovy}",
+         dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-inmemory', version: versions.opentelemetryOther),
+         deps.opentelemetryApi,
+         deps.opentelemetryLogging,
+         deps.opentelemetryOtlp,
+         deps.opentelemetrySdk,
+         deps.slf4j,
+         dependencies.create(group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j)
+
+    runtime "org.terracotta:jmxremote_optional-tc:1.0.5"
+
+    testImplementation "io.grpc:grpc-api:${grpcVersion}",
+        "io.grpc:grpc-protobuf:${grpcVersion}",
+        "io.grpc:grpc-stub:${grpcVersion}",
+        "io.grpc:grpc-testing:${grpcVersion}",
+        "org.codehaus.groovy:groovy-test:${versions.groovy}",
+        'io.rest-assured:rest-assured:4.2.0',
+        'org.awaitility:awaitility:3.0.0',
+        deps.testcontainers,
+        dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther)
+}
+
+tasks.withType(Test) {
+    dependsOn shadowJar
+    // there is likely a better way but shadowJar.archiveFileName is missing the opentelemetry- prefix
+    // from instrumentation-library's afterEvaluate
+    def shadowJarDir = tasks.shadowJar.destinationDirectory.asFile.get().path
+    def shadowJarFilename = tasks.shadowJar.archiveFileName.get()
+    systemProperty 'shadow.jar.path', "${shadowJarDir}/opentelemetry-${shadowJarFilename}"
+}
+
+spotbugs {
+  // tests require more memory than default
+  maxHeapSize = '1g'
+}

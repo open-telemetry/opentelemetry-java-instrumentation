@@ -160,6 +160,7 @@ include ':instrumentation-core:spring:spring-boot-autoconfigure'
 include ':instrumentation-core:spring:spring-web-3.1'
 include ':instrumentation-core:spring:spring-webflux-5.0'
 include ':instrumentation-core:spring:spring-webmvc-3.1'
+include ':instrumentation-core:jmx-metrics'
 
 include ':instrumentation-core:spring:starters:spring-starter'
 include ':instrumentation-core:spring:starters:jaeger-exporter-starter'
