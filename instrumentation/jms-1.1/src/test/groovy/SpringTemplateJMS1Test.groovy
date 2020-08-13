@@ -82,7 +82,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
   def "send and receive message generates spans"() {
     setup:
-    AtomicReference<String> msgId = new AtomicReference<>();
+    AtomicReference<String> msgId = new AtomicReference<>()
     Thread.start {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
