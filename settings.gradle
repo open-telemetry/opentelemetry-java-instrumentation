@@ -19,13 +19,13 @@ gradleEnterprise {
 rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
-include ':opentelemetry-javaagent'
 include ':opentelemetry-sdk-shaded-for-testing'
 include ':opentelemetry-api-beta-shaded-for-instrumenting'
 include ':opentelemetry-auto-annotations-beta-shaded-for-instrumenting'
 include ':opentelemetry-sdk-beta-shaded-for-instrumenting'
-include ':agent-bootstrap'
-include ':agent-tooling'
+include ':javaagent-bootstrap'
+include ':javaagent-tooling'
+include ':javaagent'
 include ':load-generator'
 
 include ':library-api'
@@ -189,8 +189,6 @@ rootProject.children.each {
   setBuildFile(it)
 }
 
-project(':agent-bootstrap').name = 'auto-bootstrap'
-project(':agent-tooling').name = 'auto-tooling'
 project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporter-jaeger'
 project(':auto-exporters:logging').name = 'opentelemetry-auto-exporter-logging'
 project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporter-otlp'

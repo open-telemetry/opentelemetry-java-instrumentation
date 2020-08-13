@@ -80,6 +80,6 @@ public class TypeMatchingBenchmark {
   @Fork(
       jvmArgsAppend =
           "-javaagent:/path/to/opentelemetry-java-instrumentation"
-              + "/opentelemetry-javaagent/build/libs/opentelemetry-javaagent.jar")
+              + "/javaagent/build/libs/opentelemetry-javaagent.jar")
   public static class WithAgent extends TypeMatchingBenchmark {}
 }

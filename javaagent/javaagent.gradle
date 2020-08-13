@@ -4,7 +4,8 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-description = 'Auto instrumentation agent'
+description = 'OpenTelemetry Javaagent'
+group = 'io.opentelemetry.javaagent'
 
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/version.gradle"
@@ -94,7 +95,7 @@ tasks.withType(ShadowJar).configureEach {
 }
 
 dependencies {
-  testImplementation project(':auto-bootstrap')
+  testImplementation project(':javaagent-bootstrap')
   testImplementation project(':auto-api')
   testImplementation project(':library-api')
   testImplementation project(':utils:test-utils')
@@ -104,7 +105,7 @@ dependencies {
 
   testImplementation 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
-  shadowInclude project(path: ':auto-bootstrap')
+  shadowInclude project(path: ':javaagent-bootstrap')
 }
 
 tasks.withType(Test).configureEach {

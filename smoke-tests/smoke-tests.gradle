@@ -14,10 +14,10 @@ dependencies {
 }
 
 test {
-  dependsOn = [':opentelemetry-javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
+  dependsOn = [':javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
 
   doFirst {
-    jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-javaagent').tasks.shadowJar.archivePath}"
+    jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
     jvmArgs "-Dotel.exporter.jar=${project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath}"
   }
 }

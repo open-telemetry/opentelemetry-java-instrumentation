@@ -31,7 +31,7 @@ afterEvaluate {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
       plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
-      classPath = project(':auto-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
+      classPath = project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
     }
   }
 
@@ -39,7 +39,7 @@ afterEvaluate {
     implementation project(':library-api')
     implementation project(':auto-api')
     // Apply common dependencies for instrumentation.
-    implementation(project(':auto-tooling')) {
+    implementation(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
       // is brought in for tests by project(:testing-common) below
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
