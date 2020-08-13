@@ -5,8 +5,7 @@ on:
     paths:
       - 'smoke-tests/springboot/**'
       - '.github/workflows/build-springboot-smoke-dist.yaml'
-    branches: 'master'
-  pull_request:
+#    branches: 'master'
 
 jobs:
   publish:
@@ -24,7 +23,7 @@ jobs:
           job-id: springboot-smoke
 
       - name: Login to GitHub Package Registry
-        run: docker login -u ${{ env.BINTRAY_USER }} -p ${{ env.BINTRAY_API_KEY }} open-telemetry-docker-dev.bintray.io
+        run: docker login -u iNikem -p ${{ secrets.BINTRAY_API_KEY }} open-telemetry-docker-dev.bintray.io
 
       - name: Build Docker Image
         run: |
