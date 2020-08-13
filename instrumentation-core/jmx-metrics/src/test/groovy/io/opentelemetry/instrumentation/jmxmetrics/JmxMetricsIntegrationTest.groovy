@@ -39,9 +39,12 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.images.builder.ImageFromDockerfile
 import org.testcontainers.utility.MountableFile
+import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Specification
 
+// Test containers is only supported on machine CircleCI resource
+@Requires({"true" != System.getenv("CIRCLECI")})
 class JmxMetricsIntegrationTest extends Specification {
 
   @Shared
