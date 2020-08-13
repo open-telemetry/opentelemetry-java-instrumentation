@@ -126,6 +126,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
       try (Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
+        DECORATE.afterStart(span, spanName, message);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();

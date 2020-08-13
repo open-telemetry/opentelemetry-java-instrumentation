@@ -105,12 +105,10 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         defaultDestination = null;
       }
 
-      Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForProducer(message, defaultDestination))
-              .setSpanKind(PRODUCER)
-              .startSpan();
+      final String spanName = DECORATE.spanNameForProducer(message, defaultDestination);
+      Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span);
+      DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);
@@ -146,12 +144,11 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         return null;
       }
 
-      Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForProducer(message, destination))
-              .setSpanKind(PRODUCER)
-              .startSpan();
+      final String spanName = DECORATE.spanNameForProducer(message, destination);
+
+      Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span);
+      DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);

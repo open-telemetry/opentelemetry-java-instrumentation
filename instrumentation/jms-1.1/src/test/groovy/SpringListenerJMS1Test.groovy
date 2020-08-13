@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import listener.Config
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
@@ -39,11 +40,13 @@ class SpringListenerJMS1Test extends AgentTestRunner {
     expect:
     assertTraces(2) {
       trace(0, 2) {
-        producerSpan(it, 0, "queue/SpringListenerJMS1")
-        consumerSpan(it, 1, "queue/SpringListenerJMS1", true, MessagingMessageListenerAdapter, span(0))
+        producerSpan(it, 0, "queue", "SpringListenerJMS1")
+        // cannot get messageId therefore get it from span attributes
+        consumerSpan(it, 1, "queue", "SpringListenerJMS1", it.span(1).attributes.get(SemanticAttributes.MESSAGING_MESSAGE_ID.key()).stringValue, true, MessagingMessageListenerAdapter, span(0))
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue/SpringListenerJMS1", false, ActiveMQMessageConsumer, traces[0][0])
+        // cannot get messageId therefore get it from span attributes
+        consumerSpan(it, 0, "queue", "SpringListenerJMS1", it.span(0).attributes.get(SemanticAttributes.MESSAGING_MESSAGE_ID.key()).stringValue, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 

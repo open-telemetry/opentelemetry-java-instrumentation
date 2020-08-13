@@ -23,9 +23,11 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 import javax.jms.Connection
+import javax.jms.Message
 import javax.jms.Session
 import javax.jms.TextMessage
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
@@ -66,29 +68,31 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS1") | "queue/SpringTemplateJMS1"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS1") | "queue"         | "SpringTemplateJMS1"
   }
 
   def "send and receive message generates spans"() {
     setup:
+    AtomicReference<String> msgId = new AtomicReference<>();
     Thread.start {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
+      msgId.set(msg.getJMSMessageID())
 
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    def receivedMessage
+    Message receivedMessage
     def stopwatch = Stopwatch.createStarted()
     while (receivedMessage == null && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       // sendAndReceive() returns null if template.receive() has not been called yet
@@ -101,21 +105,21 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, ActiveMQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue/<temporary>") // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "<temporary>") // receive doesn't propagate the trace, so this is a root
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue/<temporary>", false, ActiveMQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[2][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS1") | "queue/SpringTemplateJMS1"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS1") | "queue"         | "SpringTemplateJMS1"
   }
 }
