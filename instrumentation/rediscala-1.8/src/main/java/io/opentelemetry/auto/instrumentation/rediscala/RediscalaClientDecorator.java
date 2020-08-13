@@ -29,7 +29,7 @@ public class RediscalaClientDecorator
   public static final RediscalaClientDecorator DECORATE = new RediscalaClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rediscala-1.8");
+      OpenTelemetry.getTracer("io.opentelemetry.auto.rediscala-1.8");
 
   @Override
   protected String dbSystem() {

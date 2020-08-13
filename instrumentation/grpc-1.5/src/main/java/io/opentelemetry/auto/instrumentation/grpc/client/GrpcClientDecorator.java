@@ -25,8 +25,7 @@ import io.opentelemetry.trace.Tracer;
 
 public class GrpcClientDecorator extends ClientDecorator {
   public static final GrpcClientDecorator DECORATE = new GrpcClientDecorator();
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.grpc-1.5");
 
   public Span onClose(final Span span, final io.grpc.Status status) {
     onComplete(span, GrpcHelper.statusFromGrpcStatus(status), status.getCause());

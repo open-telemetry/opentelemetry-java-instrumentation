@@ -110,7 +110,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     TEST_WRITER = new InMemoryExporter();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
-    TEST_TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+    TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {

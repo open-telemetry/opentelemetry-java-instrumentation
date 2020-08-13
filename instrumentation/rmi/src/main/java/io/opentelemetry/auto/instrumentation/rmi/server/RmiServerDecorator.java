@@ -23,6 +23,5 @@ import io.opentelemetry.trace.Tracer;
 public class RmiServerDecorator extends ServerDecorator {
   public static final RmiServerDecorator DECORATE = new RmiServerDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rmi");
 }

@@ -26,7 +26,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   public static final KafkaStreamsDecorator CONSUMER_DECORATE = new KafkaStreamsDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kafka-streams-0.11");
+      OpenTelemetry.getTracer("io.opentelemetry.auto.kafka-streams-0.11");
 
   public String spanNameForConsume(final StampedRecord record) {
     if (record == null) {

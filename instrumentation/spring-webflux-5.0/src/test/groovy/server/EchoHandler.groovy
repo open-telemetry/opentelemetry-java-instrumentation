@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono
 @Component
 class EchoHandler {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
 
   Mono<ServerResponse> echo(ServerRequest request) {
     TRACER.spanBuilder("echo").startSpan().end()

@@ -29,8 +29,7 @@ import javax.jms.Topic;
 public class JMSDecorator extends ClientDecorator {
   public static final JMSDecorator DECORATE = new JMSDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jms-1.1");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
 
   public String spanNameForReceive(final Message message) {
     return toSpanName(message, null);

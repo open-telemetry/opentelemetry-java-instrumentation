@@ -30,8 +30,7 @@ public class ActionWrapper<T> implements Action<T> {
 
   private static final Logger log = LoggerFactory.getLogger(ActionWrapper.class);
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Action<T> delegate;
   private final Span span;
