@@ -15,7 +15,7 @@ configurations {
 dependencies {
   implementation project(':javaagent-bootstrap')
   implementation project(':auto-api')
-  implementation project(':library-api')
+  implementation project(':instrumentation-api')
   implementation project(':utils:thread-utils')
 
   implementation deps.opentelemetryApi
