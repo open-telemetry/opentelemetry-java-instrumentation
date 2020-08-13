@@ -17,9 +17,7 @@
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.InjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -38,14 +36,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-    Span span =
-        TRACER
-            .spanBuilder(DECORATE.spanNameForRequest(requestContext))
-            .setSpanKind(CLIENT)
-            .startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, requestContext);
+    Span span = TRACER.startSpan(requestContext);
 
     Context context = withSpan(span, Context.current());
     OpenTelemetry.getPropagators()
@@ -61,9 +52,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
     Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
       Span span = (Span) spanObj;
-      DECORATE.onResponse(span, responseContext);
-      DECORATE.beforeFinish(span);
-      span.end();
+      TRACER.end(span, responseContext);
     }
   }
 }

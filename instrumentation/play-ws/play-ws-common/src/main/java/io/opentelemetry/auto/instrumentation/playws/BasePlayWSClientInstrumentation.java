@@ -67,7 +67,7 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator",
+      "io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer",
       "io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
       packageName + ".StreamedAsyncHandlerWrapper"

@@ -63,7 +63,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator",
+      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer",
       "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
       "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
       "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",

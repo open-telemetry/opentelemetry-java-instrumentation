@@ -16,19 +16,17 @@
 
 package io.opentelemetry.auto.instrumentation.playws;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
+
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final PlayWSClientDecorator DECORATE = new PlayWSClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-ws-2.1");
+public class PlayWSClientTracer extends HttpClientTracer<Request, Response> {
+  public static final PlayWSClientTracer TRACER = new PlayWSClientTracer();
 
   @Override
   protected String method(final Request request) {
@@ -53,5 +51,15 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   @Override
   protected String responseHeader(Response response, String name) {
     return response.getHeaders().get(name);
+  }
+
+  @Override
+  protected Setter<Request> getSetter() {
+    return SETTER;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.play-ws-2.1";
   }
 }

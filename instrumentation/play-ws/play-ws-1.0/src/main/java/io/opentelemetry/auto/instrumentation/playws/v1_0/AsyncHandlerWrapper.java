@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;
@@ -64,11 +64,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   @Override
   public Object onCompleted() throws Exception {
     Response response = builder.build();
-    if (response != null) {
-      DECORATE.onResponse(span, response);
-    }
-    DECORATE.beforeFinish(span);
-    span.end();
+    TRACER.end(span, response);
 
     try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       return delegate.onCompleted();
@@ -77,8 +73,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public void onThrowable(final Throwable throwable) {
-    DECORATE.onError(span, throwable);
-    DECORATE.beforeFinish(span);
+    TRACER.endExceptionally(span, throwable);
     span.end();
 
     try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {

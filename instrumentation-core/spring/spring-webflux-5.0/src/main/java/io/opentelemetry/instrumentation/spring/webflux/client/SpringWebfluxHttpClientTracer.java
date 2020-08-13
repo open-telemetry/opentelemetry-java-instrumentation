@@ -17,11 +17,11 @@
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
-import static io.opentelemetry.OpenTelemetry.getTracerProvider;
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
@@ -30,12 +30,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-class SpringWebfluxHttpClientDecorator extends HttpClientDecorator<ClientRequest, ClientResponse> {
+class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, ClientResponse> {
 
-  public static final Tracer TRACER =
-      getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
-  public static final SpringWebfluxHttpClientDecorator DECORATE =
-      new SpringWebfluxHttpClientDecorator();
+  public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
   public void onCancel(final Span span) {
     span.setAttribute("event", "cancelled");
@@ -70,5 +67,19 @@ class SpringWebfluxHttpClientDecorator extends HttpClientDecorator<ClientRequest
   protected String responseHeader(ClientResponse clientResponse, String name) {
     List<String> headers = clientResponse.headers().header(name);
     return !headers.isEmpty() ? headers.get(0) : null;
+  }
+
+  @Override
+  protected Setter<ClientRequest> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-webflux-5.0";
+  }
+
+  public Tracer getTracer() {
+    return tracer;
   }
 }

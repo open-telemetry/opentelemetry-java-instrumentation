@@ -16,18 +16,17 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
+
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class KubernetesClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final KubernetesClientDecorator DECORATE = new KubernetesClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kubernetes-client-7.0");
+public class KubernetesClientTracer extends HttpClientTracer<Request, Response> {
+  public static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   @Override
   protected String method(final Request httpRequest) {
@@ -52,5 +51,34 @@ public class KubernetesClientDecorator extends HttpClientDecorator<Request, Resp
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
+  }
+
+  @Override
+  protected Setter<Request> getSetter() {
+    return null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.kubernetes-client-7.0";
+  }
+
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  protected Span onRequest(Span span, Request request) {
+    return super.onRequest(span, request);
+  }
+
+  /**
+   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
+   * KubernetesRequestDigest.
+   */
+  public Span startSpan(KubernetesRequestDigest digest) {
+    return tracer
+        .spanBuilder(digest.toString())
+        .setSpanKind(CLIENT)
+        .setAttribute("namespace", digest.getResourceMeta().getNamespace())
+        .setAttribute("name", digest.getResourceMeta().getName())
+        .startSpan();
   }
 }

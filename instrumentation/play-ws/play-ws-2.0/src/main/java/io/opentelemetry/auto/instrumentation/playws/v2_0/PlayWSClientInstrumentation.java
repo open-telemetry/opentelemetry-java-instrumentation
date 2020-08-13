@@ -17,9 +17,7 @@
 package io.opentelemetry.auto.instrumentation.playws.v2_0;
 
 import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
@@ -38,16 +36,12 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation {
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Span methodEnter(
+    public static void methodEnter(
         @Advice.Argument(0) final Request request,
-        @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
+        @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
+        @Advice.Local("otelSpan") Span span) {
 
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-
+      span = TRACER.startSpan(request);
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
 
@@ -57,18 +51,14 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         // websocket upgrade handlers aren't supported
         asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
       }
-
-      return span;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Span clientSpan, @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable, @Advice.Local("otelSpan") Span span) {
 
       if (throwable != null) {
-        DECORATE.onError(clientSpan, throwable);
-        DECORATE.beforeFinish(clientSpan);
-        clientSpan.end();
+        TRACER.endExceptionally(span, throwable);
       }
     }
   }

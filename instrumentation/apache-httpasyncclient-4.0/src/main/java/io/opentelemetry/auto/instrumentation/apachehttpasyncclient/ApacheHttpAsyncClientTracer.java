@@ -16,9 +16,12 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
+
+import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -29,13 +32,9 @@ import org.apache.http.RequestLine;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
+public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
 
-  public static final ApacheHttpAsyncClientDecorator DECORATE =
-      new ApacheHttpAsyncClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpasyncclient-4.0");
+  public static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
   @Override
   protected String method(final HttpRequest request) {
@@ -78,8 +77,38 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
     return header(response, name);
   }
 
+  @Override
+  protected Setter<HttpRequest> getSetter() {
+    return SETTER;
+  }
+
   private static String header(HttpMessage message, String name) {
     Header header = message.getFirstHeader(name);
     return header != null ? header.getValue() : null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.apache-httpasyncclient-4.0";
+  }
+
+  /**
+   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
+   * name.
+   */
+  @Override
+  public Span startSpan(String spanName) {
+    return tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).startSpan();
+  }
+
+  @Override
+  public String spanNameForRequest(HttpRequest httpRequest) {
+    return super.spanNameForRequest(httpRequest);
+  }
+
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  public Span onRequest(Span span, HttpRequest httpRequest) {
+    return super.onRequest(span, httpRequest);
   }
 }

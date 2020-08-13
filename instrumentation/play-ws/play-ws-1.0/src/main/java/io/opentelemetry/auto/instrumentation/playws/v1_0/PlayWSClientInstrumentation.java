@@ -16,18 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -39,24 +34,15 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation {
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Span methodEnter(
+    public static void methodEnter(
         @Advice.Argument(0) final Request request,
-        @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
+        @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
 
-      Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForRequest(request))
-              .setSpanKind(CLIENT)
-              .setParent(getSpan(parentContext))
-              .startSpan();
-
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request);
-
-      OpenTelemetry.getPropagators()
-          .getHttpTextFormat()
-          .inject(withSpan(span, parentContext), request, SETTER);
+      span = TRACER.startSpan(request);
+      scope = TRACER.startScope(span, request);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
@@ -66,18 +52,17 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         // websocket upgrade handlers aren't supported
         asyncHandler = new AsyncHandlerWrapper(asyncHandler, span, parentContext);
       }
-
-      return span;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Span clientSpan, @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
 
       if (throwable != null) {
-        DECORATE.onError(clientSpan, throwable);
-        DECORATE.beforeFinish(clientSpan);
-        clientSpan.end();
+        TRACER.endExceptionally(span, throwable);
       }
     }
   }

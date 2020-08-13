@@ -54,7 +54,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JaxRsClientDecorator",
+      packageName + ".JaxRsClientTracer",
       packageName + ".ClientTracingFeature",
       packageName + ".ClientTracingFilter",
       packageName + ".InjectAdapter",

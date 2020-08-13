@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.kubernetesclient.KubernetesClientTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -36,16 +34,8 @@ public class TracingInterceptor implements Interceptor {
 
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(chain.request());
 
-    Span span =
-        TRACER
-            .spanBuilder(digest.toString())
-            .setSpanKind(CLIENT)
-            .setAttribute("namespace", digest.getResourceMeta().getNamespace())
-            .setAttribute("name", digest.getResourceMeta().getName())
-            .startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, chain.request());
+    Span span = TRACER.startSpan(digest);
+    TRACER.onRequest(span, chain.request());
 
     Context context = withSpan(span, Context.current());
 
@@ -53,15 +43,11 @@ public class TracingInterceptor implements Interceptor {
     try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(chain.request());
     } catch (final Exception e) {
-      DECORATE.onError(span, e);
-      span.end();
+      TRACER.endExceptionally(span, e);
       throw e;
     }
 
-    DECORATE.onResponse(span, response);
-    DECORATE.beforeFinish(span);
-    span.end();
-
+    TRACER.end(span, response);
     return response;
   }
 }
