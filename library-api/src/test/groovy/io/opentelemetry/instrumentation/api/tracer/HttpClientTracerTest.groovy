@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.decorator
+package io.opentelemetry.instrumentation.api.tracer
 
-
+import io.opentelemetry.context.propagation.HttpTextFormat
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
+import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
-class HttpClientDecoratorTest extends ClientDecoratorTest {
+class HttpClientTracerTest extends BaseTracerTest {
 
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
@@ -33,7 +35,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   def "test onRequest"() {
     setup:
-    def decorator = newDecorator()
+    def decorator = newTracer()
 
     when:
     decorator.onRequest(span, req)
@@ -57,7 +59,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   def "test onRequest with mapped peer"() {
     setup:
-    def decorator = newDecorator()
+    def decorator = newTracer()
     def req = [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
 
     when:
@@ -81,7 +83,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   def "test url handling for #url"() {
     setup:
-    def decorator = newDecorator()
+    def decorator = newTracer()
 
     when:
     withConfigOverride(io.opentelemetry.instrumentation.api.config.Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
@@ -125,10 +127,10 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   def "test onResponse"() {
     setup:
-    def decorator = newDecorator()
+    def tracer = newTracer()
 
     when:
-    decorator.onResponse(span, resp)
+    tracer.onResponse(span, resp)
 
     then:
     if (status) {
@@ -152,7 +154,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   def "test assert null span"() {
     setup:
-    def decorator = newDecorator()
+    def decorator = newTracer()
 
     when:
     decorator.onRequest((Span) null, null)
@@ -168,8 +170,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   }
 
   @Override
-  def newDecorator() {
-    return new HttpClientDecorator<Map, Map>() {
+  def newTracer() {
+    return new HttpClientTracer<Map, Map>() {
 
       @Override
       protected String method(Map m) {
@@ -194,6 +196,16 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected String responseHeader(Map m, String name) {
         return m[name]
+      }
+
+      @Override
+      protected HttpTextFormat.Setter<Map> getSetter() {
+        return null
+      }
+
+      @Override
+      protected String getInstrumentationName() {
+        return "HttpClientTracerTest"
       }
     }
   }
