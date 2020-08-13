@@ -21,12 +21,13 @@ import okhttp3.Request
 
 class SpringBootSmokeTest extends SmokeTest {
 
-  protected String getTargetImage() {
-    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot:latest"
+  protected String getTargetImage(int jdk) {
+    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-springboot-jdk$jdk:latest"
   }
 
-  def "spring boot smoke test"() {
+  def "spring boot smoke test on JDK #jdk"(int jdk) {
     setup:
+    startTarget(jdk)
     String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
@@ -35,9 +36,16 @@ class SpringBootSmokeTest extends SmokeTest {
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:
-    response.body().string() == "Sup Dawg"
+    response.body().string() == "Hi!"
     countSpansByName(traces, '/greeting') == 1
     countSpansByName(traces, 'WebController.greeting') == 1
+    countSpansByName(traces, 'WebController.withSpan') == 1
+
+    cleanup:
+    stopTarget()
+
+    where:
+    jdk << [8, 11, 14]
   }
 
 }

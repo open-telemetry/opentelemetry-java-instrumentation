@@ -21,7 +21,7 @@ import okhttp3.Request
 
 class WildflySmokeTest extends SmokeTest {
 
-  protected String getTargetImage() {
+  protected String getTargetImage(int jdk) {
     "jboss/wildfly:latest"
   }
 
@@ -29,6 +29,7 @@ class WildflySmokeTest extends SmokeTest {
   //So this test just verifies that Wildfly has come up.
   def "wildfly smoke test"() {
     setup:
+    startTarget(11) // does not actually matter
     String url = "http://localhost:${target.getMappedPort(8080)}"
     def request = new Request.Builder().url(url).get().build()
 
@@ -41,6 +42,9 @@ class WildflySmokeTest extends SmokeTest {
     responseBodyStr.contains("Your WildFly instance is running.")
     response.body().contentType().toString().contains("text/html")
     response.code() == 200
+
+    cleanup:
+    stopTarget()
   }
 
 }

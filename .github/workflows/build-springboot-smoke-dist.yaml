@@ -8,7 +8,7 @@ on:
     branches: 'master'
 
 jobs:
-  test:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,10 +20,14 @@ jobs:
       - name: Cache gradle dependencies
         uses: burrunan/gradle-cache-action@v1
         with:
-          job-id: jdk11
+          job-id: springboot-smoke
 
       - name: Login to GitHub Package Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.repository }} --password-stdin
 
       - name: Build Docker Image
-        run: cd smoke-tests/springboot && ./gradlew jib
+        run: |
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+          ./gradlew jib -PtargetJDK=14 -Djib.httpTimeout=120000 -Djib.console=plain
+        working-directory: smoke-tests/springboot

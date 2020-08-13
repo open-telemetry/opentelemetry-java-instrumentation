@@ -1,6 +1,6 @@
 plugins {
   id "org.gradle.playframework" version "0.9"
-  id 'com.google.cloud.tools.jib' version '2.4.0'
+  id 'com.google.cloud.tools.jib' version '2.5.0'
 }
 
 ext {
@@ -35,8 +35,10 @@ dependencies {
   implementation "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 }
 
+def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
+
 jib {
-  from.image = "bellsoft/liberica-openjdk-alpine:11"
-  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play"
+  from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
+  to.image = "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play-jdk$targetJDK"
   container.mainClass = "play.core.server.ProdServerStart"
 }

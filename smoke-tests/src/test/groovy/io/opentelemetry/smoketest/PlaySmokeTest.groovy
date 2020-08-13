@@ -21,12 +21,13 @@ import okhttp3.Request
 
 class PlaySmokeTest extends SmokeTest {
 
-  protected String getTargetImage() {
-    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play:latest"
+  protected String getTargetImage(int jdk) {
+    "docker.pkg.github.com/open-telemetry/opentelemetry-java-instrumentation/smoke-play-jdk$jdk:latest"
   }
 
-  def "play smoke test"() {
+  def "play smoke test on JDK #jdk"(int jdk) {
     setup:
+    startTarget(jdk)
     String url = "http://localhost:${target.getMappedPort(8080)}/welcome?id=1"
     def request = new Request.Builder().url(url).get().build()
 
@@ -39,6 +40,12 @@ class PlaySmokeTest extends SmokeTest {
     //Both play and akka-http support produce spans with the same name.
     //One internal, one SERVER
     countSpansByName(traces, 'GET /welcome') == 2
+
+    cleanup:
+    stopTarget()
+
+    where:
+    jdk << [8, 11, 14]
   }
 
 }
