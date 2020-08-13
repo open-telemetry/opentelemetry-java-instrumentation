@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.Apache
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
+import static io.opentelemetry.instrumentation.api.decorator.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
