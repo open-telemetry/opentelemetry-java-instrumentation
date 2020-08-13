@@ -35,10 +35,10 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   def "test onRequest"() {
     setup:
-    def decorator = newTracer()
+    def tracer = newTracer()
 
     when:
-    decorator.onRequest(span, req)
+    tracer.onRequest(span, req)
 
     then:
     if (req) {
@@ -59,14 +59,14 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   def "test onRequest with mapped peer"() {
     setup:
-    def decorator = newTracer()
+    def tracer = newTracer()
     def req = [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
 
     when:
     withConfigOverride(
       "endpoint.peer.service.mapping",
       "myhost=reservation-service") {
-      decorator.onRequest(span, req)
+      tracer.onRequest(span, req)
     }
 
     then:
@@ -83,11 +83,11 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   def "test url handling for #url"() {
     setup:
-    def decorator = newTracer()
+    def tracer = newTracer()
 
     when:
     withConfigOverride(io.opentelemetry.instrumentation.api.config.Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
-      decorator.onRequest(span, req)
+      tracer.onRequest(span, req)
     }
 
     then:
@@ -154,16 +154,16 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   def "test assert null span"() {
     setup:
-    def decorator = newTracer()
+    def tracer = newTracer()
 
     when:
-    decorator.onRequest((Span) null, null)
+    tracer.onRequest((Span) null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onResponse((Span) null, null)
+    tracer.onResponse((Span) null, null)
 
     then:
     thrown(AssertionError)
