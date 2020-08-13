@@ -16,12 +16,15 @@
 
 package io.opentelemetry.auto.instrumentation.playws.v2_1;
 
+import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -36,11 +39,11 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
     public static void methodEnter(
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelSpan") Span span) {
 
       span = TRACER.startSpan(request);
-      scope = TRACER.startScope(span, request);
+      Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
@@ -52,10 +55,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+        @Advice.Thrown final Throwable throwable, @Advice.Local("otelSpan") Span span) {
 
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
