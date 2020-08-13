@@ -96,7 +96,9 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.Thrown final Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+      if (scope != null) {
+        scope.close();
+      }
 
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
