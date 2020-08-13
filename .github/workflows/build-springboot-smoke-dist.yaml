@@ -6,6 +6,7 @@ on:
       - 'smoke-tests/springboot/**'
       - '.github/workflows/build-springboot-smoke-dist.yaml'
     branches: 'master'
+  pull_request:
 
 jobs:
   publish:
@@ -23,7 +24,7 @@ jobs:
           job-id: springboot-smoke
 
       - name: Login to GitHub Package Registry
-        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.repository }} --password-stdin
+        run: docker login -u ${{ env.BINTRAY_USER }} -p ${{ env.BINTRAY_API_KEY }} open-telemetry-docker-dev.bintray.io
 
       - name: Build Docker Image
         run: |
