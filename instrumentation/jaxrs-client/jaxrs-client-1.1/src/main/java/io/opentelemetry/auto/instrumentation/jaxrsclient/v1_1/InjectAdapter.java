@@ -16,16 +16,15 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
+import com.sun.jersey.api.client.ClientRequest;
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import javax.ws.rs.core.MultivaluedMap;
 
-public final class InjectAdapter implements HttpTextFormat.Setter<MultivaluedMap> {
+public final class InjectAdapter implements HttpTextFormat.Setter<ClientRequest> {
 
   public static final InjectAdapter SETTER = new InjectAdapter();
 
   @Override
-  public void set(final MultivaluedMap headers, final String key, final String value) {
-    // Don't allow duplicates.
-    headers.putSingle(key, value);
+  public void set(ClientRequest clientRequest, String key, String value) {
+    clientRequest.getHeaders().putSingle(key, value);
   }
 }

@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
+import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
+
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
@@ -53,7 +55,7 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
 
   @Override
   protected Setter<ClientRequest> getSetter() {
-    return null;
+    return SETTER;
   }
 
   @Override

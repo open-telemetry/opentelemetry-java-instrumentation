@@ -16,14 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -33,8 +30,6 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -91,14 +86,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
         span = TRACER.startSpan(request);
-
-        Context context = withSpan(span, Context.current());
-        request.getProperties().put(CONTEXT_ATTRIBUTE, context);
-
-        OpenTelemetry.getPropagators()
-            .getHttpTextFormat()
-            .inject(context, request.getHeaders(), SETTER);
-        scope = withScopedContext(context);
+        scope = TRACER.startScope(span, request);
       }
     }
 
@@ -108,9 +96,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.Thrown final Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+      scope.close();
 
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
