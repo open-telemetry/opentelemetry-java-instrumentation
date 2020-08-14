@@ -73,6 +73,13 @@ class ShadowPackageRenamingTest extends Specification {
           break
         }
       }
+      if (info.getName() == 'io.opentelemetry.javaagent.OpenTelemetryAgent') {
+        // io.opentelemetry.javaagent.OpenTelemetryAgent isn't needed in the bootstrap prefixes
+        // because it doesn't live in the bootstrap class loader, but it's still "good" for the
+        // purpose of this test which is just checking all the classes sitting directly inside of
+        // the agent jar
+        goodPrefix = true
+      }
       if (!goodPrefix) {
         badBootstrapPrefixes.add(info.getName())
       }

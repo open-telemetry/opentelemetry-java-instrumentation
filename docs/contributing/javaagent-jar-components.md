@@ -12,7 +12,7 @@ into 3 parts:
 #### `javaagent` module
 
 This module consists of single class
-`io.opentelemetry.auto.bootstrap.AgentBootstrap` which implements [Java
+`io.opentelemetry.javaagent.OpenTelemetryAgent` which implements [Java
 instrumentation
 agent](https://docs.oracle.com/javase/7/docs/api/java/lang/instrument/package-summary.html).
 This class is loaded during application startup by application classloader.

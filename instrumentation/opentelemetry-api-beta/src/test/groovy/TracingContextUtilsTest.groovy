@@ -15,9 +15,9 @@
  */
 
 import application.io.grpc.Context
+import application.io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.AgentTestRunner
 
-import static application.io.opentelemetry.OpenTelemetry.getTracerProvider
 import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
 import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
@@ -35,7 +35,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getCurrentSpan should return span"() {
     when:
-    def tracer = getTracerProvider().get("test")
+    def tracer = OpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
     def span = getCurrentSpan()
@@ -55,7 +55,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getSpan should return span"() {
     when:
-    def tracer = getTracerProvider().get("test")
+    def tracer = OpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
     def span = getSpan(Context.current())
@@ -75,7 +75,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getSpanWithoutDefault should return span"() {
     when:
-    def tracer = getTracerProvider().get("test")
+    def tracer = OpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
     def span = getSpanWithoutDefault(Context.current())

@@ -18,9 +18,9 @@ configurations {
 jar {
   manifest {
     attributes(
-      "Main-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
-      "Agent-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
-      "Premain-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
+      "Main-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Agent-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Premain-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )
@@ -97,7 +97,7 @@ tasks.withType(ShadowJar).configureEach {
 dependencies {
   testImplementation project(':javaagent-bootstrap')
   testImplementation project(':auto-api')
-  testImplementation project(':library-api')
+  testImplementation project(':instrumentation-api')
   testImplementation project(':utils:test-utils')
 
   testImplementation deps.testLogging
