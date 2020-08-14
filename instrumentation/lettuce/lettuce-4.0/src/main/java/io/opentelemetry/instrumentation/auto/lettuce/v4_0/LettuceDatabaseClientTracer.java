@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
+package io.opentelemetry.instrumentation.auto.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
 

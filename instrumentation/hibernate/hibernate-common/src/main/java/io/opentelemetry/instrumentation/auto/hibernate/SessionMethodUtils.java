@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hibernate;
+package io.opentelemetry.instrumentation.auto.hibernate;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;

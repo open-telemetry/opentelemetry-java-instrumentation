@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.auto.jdbc;
 
-import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
+import static io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils.connectionFromStatement;
 
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;

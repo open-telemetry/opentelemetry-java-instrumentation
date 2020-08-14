@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jetty;
+package io.opentelemetry.instrumentation.auto.jetty;
 
-import static io.opentelemetry.auto.instrumentation.jetty.JettyHttpServerTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.jetty.JettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletRequest;
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse;
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener;
+import io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletRequest;
+import io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse;
+import io.opentelemetry.instrumentation.auto.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;

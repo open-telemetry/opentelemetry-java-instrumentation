@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_1.server;
+package io.opentelemetry.instrumentation.auto.netty.v4_1.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
@@ -22,7 +22,7 @@ import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import java.net.InetSocketAddress;

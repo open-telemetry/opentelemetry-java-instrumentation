@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rediscala;
+package io.opentelemetry.instrumentation.auto.rediscala;
 
-import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;

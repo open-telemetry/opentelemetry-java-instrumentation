@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import java.io.IOException;

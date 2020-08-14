@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.client;
+package io.opentelemetry.instrumentation.auto.grizzly.client;
 
-import static io.opentelemetry.auto.instrumentation.grizzly.client.GrizzlyClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.grizzly.client.GrizzlyClientTracer.TRACER;
 
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;

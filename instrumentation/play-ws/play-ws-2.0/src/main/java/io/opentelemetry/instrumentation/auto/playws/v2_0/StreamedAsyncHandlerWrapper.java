@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws.v2_0;
+package io.opentelemetry.instrumentation.auto.playws.v2_0;
 
 import io.opentelemetry.trace.Span;
 import org.reactivestreams.Publisher;

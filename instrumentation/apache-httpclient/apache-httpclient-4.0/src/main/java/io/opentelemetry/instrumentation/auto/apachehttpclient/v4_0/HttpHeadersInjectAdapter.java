@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.apache.http.client.methods.HttpUriRequest;

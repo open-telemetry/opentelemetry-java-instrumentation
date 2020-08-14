@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
+package io.opentelemetry.instrumentation.auto.netty.v4_0.server;
 
-import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.netty.v4_0.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.Channel;

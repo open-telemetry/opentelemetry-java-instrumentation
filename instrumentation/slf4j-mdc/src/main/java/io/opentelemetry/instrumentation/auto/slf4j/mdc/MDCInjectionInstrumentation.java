@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.instrumentation.slf4j.mdc;
+package io.opentelemetry.instrumentation.auto.slf4j.mdc;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;

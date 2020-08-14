@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws;
+package io.opentelemetry.instrumentation.auto.playws;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -67,8 +67,8 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer",
-      "io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter",
+      "io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer",
+      "io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
       packageName + ".StreamedAsyncHandlerWrapper"
     };

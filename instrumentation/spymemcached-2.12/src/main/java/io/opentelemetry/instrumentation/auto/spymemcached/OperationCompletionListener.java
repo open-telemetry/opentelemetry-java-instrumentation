@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spymemcached;
+package io.opentelemetry.instrumentation.auto.spymemcached;
 
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.ExecutionException;

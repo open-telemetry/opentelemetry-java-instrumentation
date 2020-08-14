@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.metrics.BatchRecorder;
 import application.io.opentelemetry.metrics.DoubleCounter;

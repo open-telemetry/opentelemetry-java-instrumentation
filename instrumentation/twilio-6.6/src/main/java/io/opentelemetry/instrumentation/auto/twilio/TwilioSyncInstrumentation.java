@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.twilio;
+package io.opentelemetry.instrumentation.auto.twilio;
 
-import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;

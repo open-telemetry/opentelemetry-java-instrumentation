@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly;
+package io.opentelemetry.instrumentation.auto.grizzly;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.glassfish.grizzly.http.HttpRequestPacket;

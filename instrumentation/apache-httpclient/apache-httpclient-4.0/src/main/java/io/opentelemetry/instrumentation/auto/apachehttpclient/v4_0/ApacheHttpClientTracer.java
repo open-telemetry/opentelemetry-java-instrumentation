@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;

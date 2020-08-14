@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.cassandra.v3_0;
+package io.opentelemetry.instrumentation.auto.cassandra.v3_0;
 
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;

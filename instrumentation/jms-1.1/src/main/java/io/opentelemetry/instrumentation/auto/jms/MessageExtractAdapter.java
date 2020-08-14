@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jms;
+package io.opentelemetry.instrumentation.auto.jms;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import javax.jms.JMSException;

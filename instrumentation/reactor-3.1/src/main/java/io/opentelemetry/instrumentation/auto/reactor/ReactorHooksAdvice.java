@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.reactor;
+package io.opentelemetry.instrumentation.auto.reactor;
 
 import io.opentelemetry.instrumentation.reactor.TracingPublishers;
 import net.bytebuddy.asm.Advice;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.finatra;
+package io.opentelemetry.instrumentation.auto.finatra;
 
 import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 

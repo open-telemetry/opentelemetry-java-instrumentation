@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_1.server;
+package io.opentelemetry.instrumentation.auto.netty.v4_1.server;
 
 import io.netty.channel.CombinedChannelDuplexHandler;
 

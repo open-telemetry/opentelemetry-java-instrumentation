@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
 import java.net.URI;
 import java.net.URISyntaxException;

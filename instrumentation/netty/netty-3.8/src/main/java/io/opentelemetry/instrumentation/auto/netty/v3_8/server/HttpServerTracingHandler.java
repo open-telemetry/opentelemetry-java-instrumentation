@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
+package io.opentelemetry.instrumentation.auto.netty.v3_8.server;
 
-import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
-import io.opentelemetry.auto.instrumentation.netty.v3_8.util.CombinedSimpleChannelHandler;
+import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.instrumentation.auto.netty.v3_8.util.CombinedSimpleChannelHandler;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.jboss.netty.channel.Channel;
 

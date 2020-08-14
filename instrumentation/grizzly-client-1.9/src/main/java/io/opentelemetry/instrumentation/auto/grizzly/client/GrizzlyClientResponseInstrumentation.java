@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.client;
+package io.opentelemetry.instrumentation.auto.grizzly.client;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;

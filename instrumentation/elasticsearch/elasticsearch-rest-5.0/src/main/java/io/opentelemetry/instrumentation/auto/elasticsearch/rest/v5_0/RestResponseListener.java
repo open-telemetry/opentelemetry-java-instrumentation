@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.elasticsearch.rest.v5_0;
+package io.opentelemetry.instrumentation.auto.elasticsearch.rest.v5_0;
 
-import static io.opentelemetry.auto.instrumentation.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
 
 import io.opentelemetry.trace.Span;
 import org.elasticsearch.client.Response;

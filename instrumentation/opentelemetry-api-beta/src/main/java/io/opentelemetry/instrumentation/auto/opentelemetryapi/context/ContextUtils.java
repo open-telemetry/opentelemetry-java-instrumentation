@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.context;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;

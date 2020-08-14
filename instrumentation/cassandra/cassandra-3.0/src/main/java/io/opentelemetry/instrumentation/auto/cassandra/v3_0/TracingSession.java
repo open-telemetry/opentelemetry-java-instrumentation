@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.cassandra.v3_0;
+package io.opentelemetry.instrumentation.auto.cassandra.v3_0;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-import static io.opentelemetry.auto.instrumentation.cassandra.v3_0.CassandraDatabaseClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.cassandra.v3_0.CassandraDatabaseClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.datastax.driver.core.BoundStatement;

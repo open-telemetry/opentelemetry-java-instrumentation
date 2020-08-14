@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws.v2_0;
+package io.opentelemetry.instrumentation.auto.playws.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.playws.BasePlayWSClientInstrumentation;
+import io.opentelemetry.instrumentation.auto.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;

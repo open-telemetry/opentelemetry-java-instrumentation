@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.auto.jdbc;
 
-import static io.opentelemetry.auto.instrumentation.jdbc.JdbcTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.jdbc.JdbcTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebmvc;
+package io.opentelemetry.instrumentation.auto.springwebmvc;
 
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.springwebmvc.SpringWebMvcTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import java.io.IOException;

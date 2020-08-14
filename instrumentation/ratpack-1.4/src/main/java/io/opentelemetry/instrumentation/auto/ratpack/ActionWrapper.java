@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.ratpack;
+package io.opentelemetry.instrumentation.auto.ratpack;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 

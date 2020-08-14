@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.sparkjava;
+package io.opentelemetry.instrumentation.auto.sparkjava;
 
-import static io.opentelemetry.auto.instrumentation.sparkjava.RoutesInstrumentation.TracerHolder.TRACER;
+import static io.opentelemetry.instrumentation.auto.sparkjava.RoutesInstrumentation.TracerHolder.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

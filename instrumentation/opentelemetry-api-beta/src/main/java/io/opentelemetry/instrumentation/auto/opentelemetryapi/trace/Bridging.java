@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
 
 import application.io.opentelemetry.common.AttributeValue;
 import application.io.opentelemetry.common.Attributes;

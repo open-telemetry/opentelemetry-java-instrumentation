@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.elasticsearch.transport.v5_3;
+package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_3;
 
-import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;

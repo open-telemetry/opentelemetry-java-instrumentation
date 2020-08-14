@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
+package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
@@ -28,7 +28,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
+import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;

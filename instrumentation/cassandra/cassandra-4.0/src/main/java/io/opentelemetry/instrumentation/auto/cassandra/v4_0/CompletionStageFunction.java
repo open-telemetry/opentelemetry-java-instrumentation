@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.cassandra.v4_0;
+package io.opentelemetry.instrumentation.auto.cassandra.v4_0;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import java.util.function.Function;

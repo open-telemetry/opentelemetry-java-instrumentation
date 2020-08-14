@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.v3_0;
+package io.opentelemetry.instrumentation.auto.servlet.v3_0;
 
-import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.grpc.Context;

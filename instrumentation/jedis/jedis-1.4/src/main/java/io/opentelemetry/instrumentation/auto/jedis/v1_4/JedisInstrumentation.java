@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jedis.v1_4;
+package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 
-import static io.opentelemetry.auto.instrumentation.jedis.v1_4.JedisClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jedis.v1_4.JedisClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

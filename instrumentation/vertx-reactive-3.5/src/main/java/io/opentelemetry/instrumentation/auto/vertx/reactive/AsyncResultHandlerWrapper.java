@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.vertx.reactive;
+package io.opentelemetry.instrumentation.auto.vertx.reactive;
 
 import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;

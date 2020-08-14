@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
+package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;

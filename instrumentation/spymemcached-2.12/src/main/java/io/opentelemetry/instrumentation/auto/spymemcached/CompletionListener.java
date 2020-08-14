@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spymemcached;
+package io.opentelemetry.instrumentation.auto.spymemcached;
 
-import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 

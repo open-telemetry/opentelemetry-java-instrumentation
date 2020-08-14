@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;

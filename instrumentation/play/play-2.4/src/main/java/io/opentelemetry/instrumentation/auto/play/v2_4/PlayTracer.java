@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.play.v2_4;
+package io.opentelemetry.instrumentation.auto.play.v2_4;
 
 import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.trace.Span;

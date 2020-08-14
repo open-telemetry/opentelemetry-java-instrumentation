@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rxjava;
+package io.opentelemetry.instrumentation.auto.rxjava;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 

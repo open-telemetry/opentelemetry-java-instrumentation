@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springdata;
+package io.opentelemetry.instrumentation.auto.springdata;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_1;
+package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
-import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -35,12 +35,12 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientRequestTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientResponseTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerRequestTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerResponseTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.trace.Span;

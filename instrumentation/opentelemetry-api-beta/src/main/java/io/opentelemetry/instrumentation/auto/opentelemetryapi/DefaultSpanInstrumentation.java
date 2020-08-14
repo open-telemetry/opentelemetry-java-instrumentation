@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.DefaultSpan;
 import java.util.Collections;

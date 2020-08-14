@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.TraceDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations.TraceDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations.TraceDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations.TraceDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rediscala;
+package io.opentelemetry.instrumentation.auto.rediscala;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;

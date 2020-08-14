@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jetty;
+package io.opentelemetry.instrumentation.auto.jetty;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -57,12 +57,12 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
     return new String[] {
       "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletRequest",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse$CountingServletOutputStream",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse$CountingPrintWriter",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.TagSettingAsyncListener",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletRequest",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse$CountingServletOutputStream",
+      "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse$CountingPrintWriter",
       packageName + ".JettyHttpServerTracer",
     };
   }

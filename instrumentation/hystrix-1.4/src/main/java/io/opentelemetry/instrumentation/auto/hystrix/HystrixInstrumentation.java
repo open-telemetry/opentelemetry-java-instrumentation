@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hystrix;
+package io.opentelemetry.instrumentation.auto.hystrix;
 
-import static io.opentelemetry.auto.instrumentation.hystrix.HystrixDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hystrix.HystrixDecorator.DECORATE;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -63,9 +63,9 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.auto.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.auto.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
+      "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
       packageName + ".HystrixDecorator",
       packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
     };

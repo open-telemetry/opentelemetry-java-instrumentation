@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -63,11 +63,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer",
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",
-      "io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
+      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientTracer",
+      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
+      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
+      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientHelper",
+      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
     };
   }
 

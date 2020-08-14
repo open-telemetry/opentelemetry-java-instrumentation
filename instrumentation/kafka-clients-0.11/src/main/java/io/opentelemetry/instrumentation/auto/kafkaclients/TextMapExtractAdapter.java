@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.auto.kafkaclients;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import java.nio.charset.StandardCharsets;

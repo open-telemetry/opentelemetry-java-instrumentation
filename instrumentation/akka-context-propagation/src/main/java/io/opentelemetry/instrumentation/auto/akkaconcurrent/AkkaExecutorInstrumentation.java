@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.akkaconcurrent;
+package io.opentelemetry.instrumentation.auto.akkaconcurrent;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
@@ -24,7 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.javaconcurrent.AbstractExecutorInstrumentation;
+import io.opentelemetry.instrumentation.auto.javaconcurrent.AbstractExecutorInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;

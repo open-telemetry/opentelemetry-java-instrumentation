@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws;
+package io.opentelemetry.instrumentation.auto.playws;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import play.shaded.ahc.org.asynchttpclient.Request;

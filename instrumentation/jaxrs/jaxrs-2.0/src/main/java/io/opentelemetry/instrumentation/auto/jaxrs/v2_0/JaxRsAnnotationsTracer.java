@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
 import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
@@ -31,9 +31,9 @@ import javax.ws.rs.Path;
 
 public class JaxRsAnnotationsTracer extends BaseTracer {
   public static final String ABORT_FILTER_CLASS =
-      "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.class";
+      "io.opentelemetry.instrumentation.auto.jaxrs2.filter.abort.class";
   public static final String ABORT_HANDLED =
-      "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.handled";
+      "io.opentelemetry.instrumentation.auto.jaxrs2.filter.abort.handled";
 
   public static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
 

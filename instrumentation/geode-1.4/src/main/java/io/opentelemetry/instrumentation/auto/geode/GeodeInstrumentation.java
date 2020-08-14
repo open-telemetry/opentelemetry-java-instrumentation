@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.geode;
+package io.opentelemetry.instrumentation.auto.geode;
 
-import static io.opentelemetry.auto.instrumentation.geode.GeodeDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.geode.GeodeDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

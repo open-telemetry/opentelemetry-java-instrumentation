@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
+package io.opentelemetry.instrumentation.auto.okhttp.v2_2;
 
 import com.squareup.okhttp.Request;
 import io.opentelemetry.context.propagation.HttpTextFormat;

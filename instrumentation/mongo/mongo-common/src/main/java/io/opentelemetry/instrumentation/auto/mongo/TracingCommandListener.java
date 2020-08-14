@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.mongo;
+package io.opentelemetry.instrumentation.auto.mongo;
 
-import static io.opentelemetry.auto.instrumentation.mongo.MongoClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.mongo.MongoClientTracer.TRACER;
 
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;

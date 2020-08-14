@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.elasticsearch.rest.v6_4;
+package io.opentelemetry.instrumentation.auto.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.auto.instrumentation.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.elasticsearch.rest.ElasticsearchRestClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -47,7 +47,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.elasticsearch.rest.ElasticsearchRestClientDecorator",
+      "io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator",
       packageName + ".RestResponseListener",
     };
   }

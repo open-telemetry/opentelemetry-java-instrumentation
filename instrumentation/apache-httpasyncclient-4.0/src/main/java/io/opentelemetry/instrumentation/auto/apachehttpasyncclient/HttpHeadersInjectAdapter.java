@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
+package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.apache.http.HttpRequest;

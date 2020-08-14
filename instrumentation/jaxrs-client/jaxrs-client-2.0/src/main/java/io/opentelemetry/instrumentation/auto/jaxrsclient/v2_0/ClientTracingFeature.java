@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0;
+package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;

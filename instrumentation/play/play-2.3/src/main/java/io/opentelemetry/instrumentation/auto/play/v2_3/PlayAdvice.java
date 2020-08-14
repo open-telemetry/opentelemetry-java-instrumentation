@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.play.v2_3;
+package io.opentelemetry.instrumentation.auto.play.v2_3;
 
-import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.play.v2_3.PlayTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;

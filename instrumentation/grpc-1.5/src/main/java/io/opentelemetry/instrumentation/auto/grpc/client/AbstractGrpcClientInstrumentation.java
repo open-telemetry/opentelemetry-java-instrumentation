@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grpc.client;
+package io.opentelemetry.instrumentation.auto.grpc.client;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.net.InetSocketAddress;
@@ -35,7 +35,7 @@ abstract class AbstractGrpcClientInstrumentation extends Instrumenter.Default {
       packageName + ".TracingClientInterceptor",
       packageName + ".TracingClientInterceptor$TracingClientCall",
       packageName + ".TracingClientInterceptor$TracingClientCallListener",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
+      "io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper",
     };
   }
 

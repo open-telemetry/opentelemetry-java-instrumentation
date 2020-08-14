@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;

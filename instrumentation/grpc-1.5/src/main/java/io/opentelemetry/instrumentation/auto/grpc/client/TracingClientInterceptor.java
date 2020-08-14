@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grpc.client;
+package io.opentelemetry.instrumentation.auto.grpc.client;
 
-import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.grpc.client.GrpcClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.grpc.client.GrpcClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.grpc.client.GrpcInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
@@ -34,7 +34,7 @@ import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
+import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.context.Scope;

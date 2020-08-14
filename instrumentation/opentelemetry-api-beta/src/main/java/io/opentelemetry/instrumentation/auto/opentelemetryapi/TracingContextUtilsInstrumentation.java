@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -26,7 +26,7 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.TracingContextUtils;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.TracingContextUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.auto.jdbc;
 
 import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 

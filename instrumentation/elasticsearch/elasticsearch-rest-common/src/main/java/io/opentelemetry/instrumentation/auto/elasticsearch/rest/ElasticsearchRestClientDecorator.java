@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.elasticsearch.rest;
+package io.opentelemetry.instrumentation.auto.elasticsearch.rest;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;

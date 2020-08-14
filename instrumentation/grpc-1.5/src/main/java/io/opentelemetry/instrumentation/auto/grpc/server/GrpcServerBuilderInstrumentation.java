@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grpc.server;
+package io.opentelemetry.instrumentation.auto.grpc.server;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -50,7 +50,7 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
       packageName + ".TracingServerInterceptor",
       packageName + ".TracingServerInterceptor$TracingServerCall",
       packageName + ".TracingServerInterceptor$TracingServerCallListener",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
+      "io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper",
     };
   }
 

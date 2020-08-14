@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grpc.server;
+package io.opentelemetry.instrumentation.auto.grpc.server;
 
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.HttpTextFormat;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rmi.server;
+package io.opentelemetry.instrumentation.auto.rmi.server;
 
-import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.trace.Span.Kind.SERVER;

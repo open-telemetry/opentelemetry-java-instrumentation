@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.filter;
+package io.opentelemetry.instrumentation.auto.servlet.filter;
 
-import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.filter.FilterDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.servlet.filter.FilterDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

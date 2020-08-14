@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
+package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.couchbase.v2_0.CouchbaseClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.couchbase.v2_0.CouchbaseClientDecorator.DECORATE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;

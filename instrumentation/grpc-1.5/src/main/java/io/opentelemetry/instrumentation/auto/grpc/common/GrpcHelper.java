@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grpc.common;
+package io.opentelemetry.instrumentation.auto.grpc.common;
 
 import io.grpc.Status.Code;
 import io.opentelemetry.instrumentation.api.decorator.BaseTracer;

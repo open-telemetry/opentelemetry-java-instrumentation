@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.khttp;
+package io.opentelemetry.instrumentation.auto.khttp;
 
 import java.util.Map;
 

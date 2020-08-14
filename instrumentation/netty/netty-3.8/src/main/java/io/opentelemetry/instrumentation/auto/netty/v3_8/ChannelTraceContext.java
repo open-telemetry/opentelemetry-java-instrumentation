@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v3_8;
+package io.opentelemetry.instrumentation.auto.netty.v3_8;
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;

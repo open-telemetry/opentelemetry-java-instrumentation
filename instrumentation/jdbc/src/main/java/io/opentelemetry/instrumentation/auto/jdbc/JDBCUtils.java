@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.auto.jdbc;
 
-import io.opentelemetry.auto.instrumentation.jdbc.normalizer.SqlNormalizer;
+import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.lang.reflect.Field;
 import java.sql.Connection;

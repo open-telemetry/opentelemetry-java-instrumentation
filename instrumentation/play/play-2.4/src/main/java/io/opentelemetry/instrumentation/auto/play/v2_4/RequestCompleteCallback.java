@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.play.v2_4;
+package io.opentelemetry.instrumentation.auto.play.v2_4;
 
-import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.play.v2_4.PlayTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import org.slf4j.Logger;

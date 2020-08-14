@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jsp;
+package io.opentelemetry.instrumentation.auto.jsp;
 
-import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

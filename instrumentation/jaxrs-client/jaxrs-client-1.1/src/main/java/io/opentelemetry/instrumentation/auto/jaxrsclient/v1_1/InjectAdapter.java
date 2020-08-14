@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
+package io.opentelemetry.instrumentation.auto.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
 import io.opentelemetry.context.propagation.HttpTextFormat;

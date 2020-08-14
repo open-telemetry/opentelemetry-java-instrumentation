@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.googlehttpclient;
+package io.opentelemetry.instrumentation.auto.googlehttpclient;
 
 import io.opentelemetry.trace.Span;
 import java.util.Objects;

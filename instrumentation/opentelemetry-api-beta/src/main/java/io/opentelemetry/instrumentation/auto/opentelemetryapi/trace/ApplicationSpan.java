@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toAgent;
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toAgentOrNull;
+import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toAgent;
+import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.common.AttributeValue;

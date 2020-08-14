@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rmi.context;
+package io.opentelemetry.instrumentation.auto.rmi.context;
 
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 

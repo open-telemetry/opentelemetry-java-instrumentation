@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.ratpack;
+package io.opentelemetry.instrumentation.auto.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.ratpack.RatpackDecorator.DECORATE;
 
 import io.opentelemetry.trace.Span;
 import java.util.Optional;

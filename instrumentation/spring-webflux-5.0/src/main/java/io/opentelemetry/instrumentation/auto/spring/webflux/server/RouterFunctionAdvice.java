@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spring.webflux.server;
+package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.reactive.function.server.HandlerFunction;

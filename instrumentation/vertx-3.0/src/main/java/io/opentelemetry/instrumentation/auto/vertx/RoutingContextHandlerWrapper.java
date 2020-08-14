@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.vertx;
+package io.opentelemetry.instrumentation.auto.vertx;
 
-import static io.opentelemetry.auto.instrumentation.vertx.VertxDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.vertx.VertxDecorator.TRACER;
 
 import io.opentelemetry.trace.Span;
 import io.vertx.core.Handler;

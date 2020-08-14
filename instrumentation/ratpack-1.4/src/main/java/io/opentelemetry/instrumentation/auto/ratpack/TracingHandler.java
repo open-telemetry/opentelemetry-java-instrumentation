@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.ratpack;
+package io.opentelemetry.instrumentation.auto.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.ratpack.RatpackDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.ratpack.RatpackDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
@@ -33,12 +33,12 @@ public final class TracingHandler implements Handler {
 
   /**
    * This constant is copied over from
-   * io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys. The key string must be kept
+   * io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys. The key string must be kept
    * consistent.
    */
   public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
+          "io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
   public void handle(final Context ctx) {

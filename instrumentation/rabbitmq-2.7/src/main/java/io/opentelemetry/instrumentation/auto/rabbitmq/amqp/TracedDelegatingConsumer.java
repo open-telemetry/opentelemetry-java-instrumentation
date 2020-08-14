@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

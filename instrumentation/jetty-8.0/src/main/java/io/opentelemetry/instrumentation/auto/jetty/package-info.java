@@ -10,7 +10,7 @@
  * <p>As instrumentation points differ between servlet instrumentations and this one, this module
  * has its own {@code JettyHandlerInstrumentation} and {@code JettyHandlerAdvice}. But this is the
  * only difference between two instrumentations, thus {@link
- * io.opentelemetry.auto.instrumentation.jetty.JettyHttpServerTracer} is a very thin subclass of
- * {@link io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer}.
+ * io.opentelemetry.instrumentation.auto.jetty.JettyHttpServerTracer} is a very thin subclass of
+ * {@link io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer}.
  */
-package io.opentelemetry.auto.instrumentation.jetty;
+package io.opentelemetry.instrumentation.auto.jetty;

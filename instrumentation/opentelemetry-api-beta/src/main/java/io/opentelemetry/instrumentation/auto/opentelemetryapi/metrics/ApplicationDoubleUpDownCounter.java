@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.common.Labels;
 import application.io.opentelemetry.metrics.DoubleUpDownCounter;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelBridging;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.LabelBridging;
 
 class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 

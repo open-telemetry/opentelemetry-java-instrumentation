@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jedis.v1_4;
+package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;

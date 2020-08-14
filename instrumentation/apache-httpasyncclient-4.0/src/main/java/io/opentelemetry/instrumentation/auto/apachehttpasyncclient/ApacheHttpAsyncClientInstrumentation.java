@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
+package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
-import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springdata;
+package io.opentelemetry.instrumentation.auto.springdata;
 
-import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.springdata.SpringDataDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.springdata.SpringDataDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;

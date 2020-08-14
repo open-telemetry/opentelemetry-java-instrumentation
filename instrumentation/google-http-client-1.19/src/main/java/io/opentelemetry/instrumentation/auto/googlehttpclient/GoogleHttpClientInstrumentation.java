@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.googlehttpclient;
+package io.opentelemetry.instrumentation.auto.googlehttpclient;
 
-import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientTracer.TRACER;
-import static io.opentelemetry.auto.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.googlehttpclient.GoogleHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.googlehttpclient.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

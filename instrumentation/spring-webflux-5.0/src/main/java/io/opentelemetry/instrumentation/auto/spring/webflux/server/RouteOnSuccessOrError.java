@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spring.webflux.server;
+package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.decorator.BaseTracer;

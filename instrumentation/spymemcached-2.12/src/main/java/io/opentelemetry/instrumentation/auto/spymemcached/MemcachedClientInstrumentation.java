@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spymemcached;
+package io.opentelemetry.instrumentation.auto.spymemcached;
 
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

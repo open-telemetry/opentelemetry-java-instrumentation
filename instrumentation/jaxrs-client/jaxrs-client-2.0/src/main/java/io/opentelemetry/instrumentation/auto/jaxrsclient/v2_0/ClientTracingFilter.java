@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0;
+package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.InjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.InjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.mongo;
+package io.opentelemetry.instrumentation.auto.mongo;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;

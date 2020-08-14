@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.auto.kafkaclients;
 
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

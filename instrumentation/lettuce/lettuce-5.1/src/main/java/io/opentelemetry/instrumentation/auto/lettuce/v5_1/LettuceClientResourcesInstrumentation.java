@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_1;
+package io.opentelemetry.instrumentation.auto.lettuce.v5_1;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;

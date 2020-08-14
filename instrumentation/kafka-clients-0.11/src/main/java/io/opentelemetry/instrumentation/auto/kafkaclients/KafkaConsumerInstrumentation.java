@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.auto.kafkaclients;
 
-import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

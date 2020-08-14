@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.client;
+package io.opentelemetry.instrumentation.auto.grizzly.client;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws.v1_0;
+package io.opentelemetry.instrumentation.auto.playws.v1_0;
 
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;

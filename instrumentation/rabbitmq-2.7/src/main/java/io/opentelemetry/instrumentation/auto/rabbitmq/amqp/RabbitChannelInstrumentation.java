@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
+package io.opentelemetry.instrumentation.auto.netty.v3_8.client;
 
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyHttpClientTracer.TRACER;
 
-import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.DefaultSpan;

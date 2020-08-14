@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rmi.context.server;
+package io.opentelemetry.instrumentation.auto.rmi.context.server;
 
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.GETTER;
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload.GETTER;
+import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
+import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 
-import io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload;
+import io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.io.ObjectInput;

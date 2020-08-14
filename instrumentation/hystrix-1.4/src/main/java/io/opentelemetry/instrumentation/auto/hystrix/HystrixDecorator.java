@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hystrix;
+package io.opentelemetry.instrumentation.auto.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
+package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
@@ -54,9 +54,9 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.auto.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.auto.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
+      "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientDecorator",
       packageName + ".CouchbaseOnSubscribe",
     };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.mongo.v3_7;
+package io.opentelemetry.instrumentation.auto.mongo.v3_7;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.event.CommandListener;
-import io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener;
+import io.opentelemetry.instrumentation.auto.mongo.TracingCommandListener;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -63,8 +63,8 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.mongo.MongoClientTracer",
-      "io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener"
+      "io.opentelemetry.instrumentation.auto.mongo.MongoClientTracer",
+      "io.opentelemetry.instrumentation.auto.mongo.TracingCommandListener"
     };
   }
 

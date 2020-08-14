@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.anotations;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import application.io.opentelemetry.trace.Span;

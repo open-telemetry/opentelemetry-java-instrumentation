@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
+package io.opentelemetry.instrumentation.auto.netty.v3_8.server;
 
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
 import java.net.InetSocketAddress;

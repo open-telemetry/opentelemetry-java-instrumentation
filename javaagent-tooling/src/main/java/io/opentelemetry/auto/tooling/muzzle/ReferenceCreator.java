@@ -49,7 +49,7 @@ public class ReferenceCreator extends ClassVisitor {
    * from the method advice and helper classes.
    */
   private static final String[] REFERENCE_CREATION_PACKAGE = {
-    "io.opentelemetry.auto.instrumentation.", "io.opentelemetry.instrumentation."
+    "io.opentelemetry.instrumentation.auto.", "io.opentelemetry.instrumentation."
   };
 
   /**

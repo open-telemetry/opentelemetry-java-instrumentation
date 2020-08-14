@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
+package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 
@@ -38,8 +38,8 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
+      "io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils",
+      "io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator",
       packageName + ".AbstractHibernateInstrumentation$V3Advice",
     };
   }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
+package io.opentelemetry.instrumentation.auto.okhttp.v2_2;
 
-import static io.opentelemetry.auto.instrumentation.okhttp.v2_2.OkHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.okhttp.v2_2.OkHttpClientTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 

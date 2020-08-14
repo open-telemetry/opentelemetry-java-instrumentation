@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
+package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;

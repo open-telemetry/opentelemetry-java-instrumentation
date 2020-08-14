@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.spring.webflux.server;
+package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
-import static io.opentelemetry.auto.instrumentation.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.opentelemetry.context.Scope;
@@ -38,7 +38,7 @@ import reactor.util.context.Context;
 public class AdviceUtils {
 
   public static final String CONTEXT_ATTRIBUTE =
-      "io.opentelemetry.auto.instrumentation.springwebflux.Context";
+      "io.opentelemetry.instrumentation.auto.springwebflux.Context";
 
   public static String parseOperationName(final Object handler) {
     String className = DECORATE.spanNameForClass(handler.getClass());

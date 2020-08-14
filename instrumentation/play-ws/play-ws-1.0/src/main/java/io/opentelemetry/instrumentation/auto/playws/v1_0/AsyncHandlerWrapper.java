@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws.v1_0;
+package io.opentelemetry.instrumentation.auto.playws.v1_0;
 
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;

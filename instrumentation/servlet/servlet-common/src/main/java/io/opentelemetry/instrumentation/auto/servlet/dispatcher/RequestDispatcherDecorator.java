@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
+package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;

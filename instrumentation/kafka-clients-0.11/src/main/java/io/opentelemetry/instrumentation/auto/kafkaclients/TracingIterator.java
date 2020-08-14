@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.auto.kafkaclients;
 
-import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v3_8.client;
+package io.opentelemetry.instrumentation.auto.netty.v3_8.client;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.jboss.netty.handler.codec.http.HttpHeaders;

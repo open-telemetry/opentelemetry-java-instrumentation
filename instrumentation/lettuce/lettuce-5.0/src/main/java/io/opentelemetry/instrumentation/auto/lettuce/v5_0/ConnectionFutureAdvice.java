@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
+package io.opentelemetry.instrumentation.auto.lettuce.v5_0;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;

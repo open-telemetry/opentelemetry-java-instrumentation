@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.playws;
+package io.opentelemetry.instrumentation.auto.playws;
 
-import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;

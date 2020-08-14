@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi;
 
 import static java.util.Collections.singletonMap;
 

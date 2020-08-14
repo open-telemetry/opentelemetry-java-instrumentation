@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jetty;
+package io.opentelemetry.instrumentation.auto.jetty;
 
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
+import io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer;
 
 public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
   public static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();

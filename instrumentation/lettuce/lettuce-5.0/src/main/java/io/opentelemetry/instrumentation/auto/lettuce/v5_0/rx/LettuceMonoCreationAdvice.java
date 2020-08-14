@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_0.rx;
+package io.opentelemetry.instrumentation.auto.lettuce.v5_0.rx;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
+import static io.opentelemetry.instrumentation.auto.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 
 import io.lettuce.core.protocol.RedisCommand;
 import java.util.function.Supplier;

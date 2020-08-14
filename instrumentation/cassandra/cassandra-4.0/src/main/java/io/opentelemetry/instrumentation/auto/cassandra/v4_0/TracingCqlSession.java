@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.cassandra.v4_0;
+package io.opentelemetry.instrumentation.auto.cassandra.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.cassandra.v4_0.CassandraDatabaseClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.cassandra.v4_0.CassandraDatabaseClientTracer.TRACER;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;

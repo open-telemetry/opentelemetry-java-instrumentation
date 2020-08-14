@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.v2_2;
+package io.opentelemetry.instrumentation.auto.servlet.v2_2;
 
-import static io.opentelemetry.auto.instrumentation.servlet.v2_2.Servlet2HttpServerTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.v2_2.Servlet2HttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;

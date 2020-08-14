@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.akkahttp;
+package io.opentelemetry.instrumentation.auto.akkahttp;
 
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.akkahttp.AkkaHttpClientTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;

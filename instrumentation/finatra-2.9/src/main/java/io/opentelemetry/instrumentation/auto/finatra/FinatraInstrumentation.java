@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.finatra;
+package io.opentelemetry.instrumentation.auto.finatra;
 
-import static io.opentelemetry.auto.instrumentation.finatra.FinatraTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.finatra.FinatraTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

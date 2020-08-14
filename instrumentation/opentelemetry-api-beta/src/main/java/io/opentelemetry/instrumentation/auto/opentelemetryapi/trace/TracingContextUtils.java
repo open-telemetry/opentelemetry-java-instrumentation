@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
+package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toApplication;
+import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toApplication;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.Span;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.ApplicationScope;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.NoopScope;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.ApplicationScope;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.NoopScope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

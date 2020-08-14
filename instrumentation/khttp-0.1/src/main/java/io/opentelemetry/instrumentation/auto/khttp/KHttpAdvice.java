@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.khttp;
+package io.opentelemetry.instrumentation.auto.khttp;
 
-import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
-import static io.opentelemetry.auto.instrumentation.khttp.KHttpTracer.TRACER;
+import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.asWritable;
+import static io.opentelemetry.instrumentation.auto.khttp.KHttpTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 

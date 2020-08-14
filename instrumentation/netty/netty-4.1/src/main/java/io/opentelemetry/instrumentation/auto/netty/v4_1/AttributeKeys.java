@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_1;
+package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
 import io.grpc.Context;
 import io.netty.util.AttributeKey;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler;
+import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,11 +38,11 @@ public class AttributeKeys {
           };
 
   public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.auto.instrumentation.netty.v4_1.parent.connect.span");
+      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_1.parent.connect.span");
 
   /**
    * This constant is copied over to
-   * io.opentelemetry.auto.instrumentation.ratpack.server.TracingHandler, so if this changes, that
+   * io.opentelemetry.instrumentation.auto.ratpack.server.TracingHandler, so if this changes, that
    * must also change.
    */
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =

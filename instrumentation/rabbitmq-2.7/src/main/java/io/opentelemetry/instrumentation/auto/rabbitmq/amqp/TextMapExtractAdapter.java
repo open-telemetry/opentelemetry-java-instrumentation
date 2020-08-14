@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import java.util.Map;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.rmi.context.client;
+package io.opentelemetry.instrumentation.auto.rmi.context.client;
 
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.TRACER;
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload.TRACER;
+import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -79,10 +79,10 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload$InjectAdapter",
-      "io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload$ExtractAdapter",
-      "io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload",
-      "io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator"
+      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload$InjectAdapter",
+      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload$ExtractAdapter",
+      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload",
+      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator"
     };
   }
 

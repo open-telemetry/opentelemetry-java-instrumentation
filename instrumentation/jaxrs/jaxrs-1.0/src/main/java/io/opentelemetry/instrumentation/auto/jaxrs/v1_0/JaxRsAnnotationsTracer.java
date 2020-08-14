@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.jaxrs.v1_0;
+package io.opentelemetry.instrumentation.auto.jaxrs.v1_0;
 
 import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 

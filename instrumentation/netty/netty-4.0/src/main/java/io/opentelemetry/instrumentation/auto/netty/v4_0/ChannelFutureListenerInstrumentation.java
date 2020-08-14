@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.netty.v4_0;
+package io.opentelemetry.instrumentation.auto.netty.v4_0;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
+import io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyHttpClientTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;

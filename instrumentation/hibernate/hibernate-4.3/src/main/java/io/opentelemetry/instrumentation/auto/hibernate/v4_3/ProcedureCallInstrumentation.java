@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.hibernate.v4_3;
+package io.opentelemetry.instrumentation.auto.hibernate.v4_3;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
+import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
@@ -51,8 +51,8 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
+      "io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils",
+      "io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator",
     };
   }
 

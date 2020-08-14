@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
+package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
 

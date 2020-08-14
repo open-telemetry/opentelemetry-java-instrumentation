@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
+package io.opentelemetry.instrumentation.auto.lettuce.v5_0;
 
 public class LettuceConnectionDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<String> {
