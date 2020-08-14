@@ -42,7 +42,7 @@ public abstract class BaseTracer {
   protected final Tracer tracer;
 
   public BaseTracer() {
-    tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
   }
 
   public BaseTracer(Tracer tracer) {

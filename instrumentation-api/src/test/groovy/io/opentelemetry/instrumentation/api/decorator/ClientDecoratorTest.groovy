@@ -25,7 +25,7 @@ import io.opentelemetry.trace.TracingContextUtils
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
 
   def "test afterStart"() {
     setup:

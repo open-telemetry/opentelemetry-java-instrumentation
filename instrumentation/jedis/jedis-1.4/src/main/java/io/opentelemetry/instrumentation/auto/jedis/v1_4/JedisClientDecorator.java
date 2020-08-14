@@ -25,8 +25,7 @@ import redis.clients.jedis.Connection;
 public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jedis-1.4");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jedis-1.4");
 
   @Override
   protected String dbSystem() {

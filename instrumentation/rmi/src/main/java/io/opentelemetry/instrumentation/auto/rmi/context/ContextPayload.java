@@ -36,8 +36,7 @@ public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rmi");
 
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();

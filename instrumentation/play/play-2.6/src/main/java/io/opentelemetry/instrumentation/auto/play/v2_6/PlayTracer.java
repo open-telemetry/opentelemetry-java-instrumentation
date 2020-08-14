@@ -32,8 +32,7 @@ import scala.Option;
 public class PlayTracer extends BaseTracer {
   public static final PlayTracer DECORATE = new PlayTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.6");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.play-2.6");
 
   private static final Method typedKeyGetUnderlying;
 

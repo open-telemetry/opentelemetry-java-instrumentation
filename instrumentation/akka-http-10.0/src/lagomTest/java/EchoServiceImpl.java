@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class EchoServiceImpl implements EchoService {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   @Override
   public ServiceCall<Source<String, NotUsed>, Source<String, NotUsed>> echo() {
