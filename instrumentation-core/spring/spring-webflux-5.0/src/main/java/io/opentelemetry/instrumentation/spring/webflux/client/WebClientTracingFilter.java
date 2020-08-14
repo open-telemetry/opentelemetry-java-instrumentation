@@ -62,6 +62,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
               })
           .doOnCancel(
               () -> {
+                TRACER.onCancel(span);
                 TRACER.end(span);
               });
     }
