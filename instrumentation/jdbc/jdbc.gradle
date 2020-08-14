@@ -16,7 +16,7 @@ javacc {
   configs {
     template {
       inputFile = file('src/main/javacc/SqlNormalizer.jj')
-      packageName = 'io.opentelemetry.auto.instrumentation.jdbc.normalizer'
+      packageName = 'io.opentelemetry.instrumentation.auto.jdbc.normalizer'
     }
   }
 }
