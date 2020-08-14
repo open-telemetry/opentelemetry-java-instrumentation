@@ -25,7 +25,7 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor
-import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper
+import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes

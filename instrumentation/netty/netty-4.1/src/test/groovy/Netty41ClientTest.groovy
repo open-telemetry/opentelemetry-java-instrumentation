@@ -21,7 +21,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
+import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
