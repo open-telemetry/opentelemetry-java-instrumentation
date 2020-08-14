@@ -25,8 +25,7 @@ import org.apache.geode.cache.Region;
 public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   public static GeodeDecorator DECORATE = new GeodeDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.geode-1.7");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.geode-1.7");
 
   @Override
   protected String dbSystem() {

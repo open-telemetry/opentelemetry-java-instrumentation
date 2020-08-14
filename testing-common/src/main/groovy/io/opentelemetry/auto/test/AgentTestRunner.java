@@ -20,7 +20,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -37,7 +36,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.net.BindException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -110,7 +108,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     TEST_WRITER = new InMemoryExporter();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
-    TEST_TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+    TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {
@@ -183,25 +181,27 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
   /**
    * This is used by setupSpec() methods to auto-retry setup that depends on finding and then using
-   * an available free port, because that kind of setup can fail sporadically with
-   * "java.net.BindException: Address already in use" if the available port gets re-used between
-   * when we find the available port and when we use it.
+   * an available free port, because that kind of setup can fail sporadically if the available port
+   * gets re-used between when we find the available port and when we use it.
    *
    * @param closure the groovy closure to run with retry
    */
-  public static void withRetryOnBindException(final Closure<?> closure) {
-    withRetryOnBindException(closure, 3);
+  public static void withRetryOnAddressAlreadyInUse(final Closure<?> closure) {
+    withRetryOnAddressAlreadyInUse(closure, 3);
   }
 
-  private static void withRetryOnBindException(final Closure<?> closure, final int numRetries) {
+  private static void withRetryOnAddressAlreadyInUse(
+      final Closure<?> closure, final int numRetries) {
     try {
       closure.call();
     } catch (final Throwable t) {
-      if (numRetries == 0 || !(Throwables.getRootCause(t) instanceof BindException)) {
+      // typically this is "java.net.BindException: Address already in use", but also can be
+      // "io.netty.channel.unix.Errors$NativeIoException: bind() failed: Address already in use"
+      if (numRetries == 0 || !t.getMessage().contains("Address already in use")) {
         throw t;
       }
       log.debug("retrying due to bind exception: {}", t.getMessage(), t);
-      withRetryOnBindException(closure, numRetries - 1);
+      withRetryOnAddressAlreadyInUse(closure, numRetries - 1);
     }
   }
 

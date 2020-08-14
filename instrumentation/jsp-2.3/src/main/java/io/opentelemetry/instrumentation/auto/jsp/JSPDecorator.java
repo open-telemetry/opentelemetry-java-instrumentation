@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory;
 public class JSPDecorator extends BaseDecorator {
   public static final JSPDecorator DECORATE = new JSPDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jsp-2.3");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jsp-2.3");
 
   public String spanNameOnCompile(final JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null

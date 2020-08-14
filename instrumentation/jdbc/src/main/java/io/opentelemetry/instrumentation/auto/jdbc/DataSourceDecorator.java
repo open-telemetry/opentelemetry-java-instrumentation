@@ -23,6 +23,5 @@ import io.opentelemetry.trace.Tracer;
 public class DataSourceDecorator extends BaseDecorator {
   public static final DataSourceDecorator DECORATE = new DataSourceDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jdbc");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jdbc");
 }

@@ -41,7 +41,7 @@ public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
   public static final io.opentelemetry.trace.Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.1");
+      OpenTelemetry.getTracer("io.opentelemetry.auto.lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {

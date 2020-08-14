@@ -28,7 +28,7 @@ include ':javaagent-tooling'
 include ':javaagent'
 include ':load-generator'
 
-include ':library-api'
+include ':instrumentation-api'
 include ':auto-api'
 
 // misc

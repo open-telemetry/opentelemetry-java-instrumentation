@@ -27,7 +27,7 @@ import io.opentelemetry.trace.Tracer;
 public class AdviceUtils {
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.java-concurrent");
+      OpenTelemetry.getTracer("io.opentelemetry.auto.java-concurrent");
 
   /**
    * Start scope for a given task

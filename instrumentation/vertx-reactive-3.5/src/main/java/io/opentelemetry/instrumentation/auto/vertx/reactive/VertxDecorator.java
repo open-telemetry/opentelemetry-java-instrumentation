@@ -21,6 +21,5 @@ import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
 
 public class VertxDecorator extends BaseDecorator {
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.vertx");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.vertx");
 }

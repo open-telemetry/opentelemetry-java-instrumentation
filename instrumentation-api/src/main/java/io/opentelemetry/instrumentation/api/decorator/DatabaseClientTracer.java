@@ -37,7 +37,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   protected final Tracer tracer;
 
   public DatabaseClientTracer() {
-    tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
   }
 
   public Span startSpan(CONNECTION connection, QUERY query) {

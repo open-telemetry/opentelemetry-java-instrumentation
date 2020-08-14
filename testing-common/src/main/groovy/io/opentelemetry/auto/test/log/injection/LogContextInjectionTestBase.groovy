@@ -22,6 +22,7 @@ import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.context.Scope
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
+
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
@@ -32,7 +33,7 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
  */
 abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
-  final Tracer tracer = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.test")
+  final Tracer tracer = OpenTelemetry.getTracer("io.opentelemetry.auto.test")
 
   /**
    * Set in the framework-specific context the given value at the given key
