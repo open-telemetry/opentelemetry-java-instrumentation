@@ -86,7 +86,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
         span = TRACER.startSpan(request);
-        scope = TRACER.startScope(span, request);
+        scope = TRACER.startScope(span, request.getHeaders());
       }
     }
 

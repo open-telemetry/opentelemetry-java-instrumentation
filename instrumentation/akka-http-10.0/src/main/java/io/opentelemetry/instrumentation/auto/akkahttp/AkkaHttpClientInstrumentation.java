@@ -158,7 +158,11 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void set(final AkkaHttpHeaders carrier, final String key, final String value) {
-      carrier.setRequest(carrier.getRequest().addHeader(RawHeader.create(key, value)));
+      HttpRequest request = carrier.getRequest();
+      if (request != null) {
+        // It looks like this cast is only needed in Java, Scala would have figured it out
+        carrier.setRequest((HttpRequest) request.addHeader(RawHeader.create(key, value)));
+      }
     }
   }
 }

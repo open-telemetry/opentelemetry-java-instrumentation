@@ -42,7 +42,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
       Context parentContext = Context.current();
 
       span = TRACER.startSpan(request);
-      scope = TRACER.startScope(span, request);
+      scope = TRACER.startScope(span, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =

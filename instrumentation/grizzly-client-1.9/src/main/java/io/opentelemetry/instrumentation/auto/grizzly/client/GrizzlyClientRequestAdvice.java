@@ -38,7 +38,7 @@ public class GrizzlyClientRequestAdvice {
     Span span = TRACER.startSpan(request);
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
         .put(handler, Pair.of(parentContext, span));
-    return TRACER.startScope(span, request);
+    return TRACER.startScope(span, request.getHeaders());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
