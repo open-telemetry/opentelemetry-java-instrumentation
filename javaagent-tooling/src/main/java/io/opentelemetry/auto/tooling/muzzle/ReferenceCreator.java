@@ -86,7 +86,6 @@ public class ReferenceCreator extends ClassVisitor {
           // Don't generate references created outside of the instrumentation package.
           if (!visitedSources.contains(entry.getKey()) && isInReferenceCreationPackage(key)) {
             instrumentationQueue.add(key);
-            break;
           }
           if (references.containsKey(key)) {
             references.put(key, references.get(key).merge(entry.getValue()));
