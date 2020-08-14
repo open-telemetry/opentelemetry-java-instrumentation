@@ -107,7 +107,6 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
       final String spanName = DECORATE.spanNameForProducer(message, defaultDestination);
       Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
-      DECORATE.afterStart(span);
       DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());
@@ -147,7 +146,6 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       final String spanName = DECORATE.spanNameForProducer(message, destination);
 
       Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
-      DECORATE.afterStart(span);
       DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());

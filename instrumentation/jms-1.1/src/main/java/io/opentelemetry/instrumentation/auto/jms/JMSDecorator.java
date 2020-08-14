@@ -22,14 +22,17 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JMSDecorator extends ClientDecorator {
+  private static final Logger log = LoggerFactory.getLogger(JMSDecorator.class);
+
   public static final JMSDecorator DECORATE = new JMSDecorator();
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
@@ -84,6 +87,7 @@ public class JMSDecorator extends ClientDecorator {
   }
 
   public void afterStart(Span span, String spanName, Message message) {
+    super.afterStart(span);
     if (spanName.startsWith("queue/")) {
       SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "queue");
       SemanticAttributes.MESSAGING_DESTINATION.set(span, spanName.replaceFirst("queue/", ""));
@@ -101,7 +105,8 @@ public class JMSDecorator extends ClientDecorator {
         if (messageID != null) {
           SemanticAttributes.MESSAGING_MESSAGE_ID.set(span, messageID);
         }
-      } catch (JMSException e) {
+      } catch (Exception e) {
+        log.debug("Failure getting JMS message id", e);
       }
 
       try {
@@ -109,7 +114,8 @@ public class JMSDecorator extends ClientDecorator {
         if (correlationID != null) {
           SemanticAttributes.MESSAGING_CONVERSATION_ID.set(span, correlationID);
         }
-      } catch (JMSException e) {
+      } catch (Exception e) {
+        log.debug("Failure getting JMS correlation id", e);
       }
     }
   }

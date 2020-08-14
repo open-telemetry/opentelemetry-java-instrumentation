@@ -92,7 +92,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    Message receivedMessage
+    def receivedMessage
     def stopwatch = Stopwatch.createStarted()
     while (receivedMessage == null && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       // sendAndReceive() returns null if template.receive() has not been called yet

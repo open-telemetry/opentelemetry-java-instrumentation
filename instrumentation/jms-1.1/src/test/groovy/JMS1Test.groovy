@@ -283,7 +283,11 @@ class JMS1Test extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
         "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
-        "${SemanticAttributes.MESSAGING_MESSAGE_ID.key()}" messageId
+        if (messageId != null) {
+          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key()}" messageId
+        } else {
+          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key()}" String
+        }
         if (destinationName == "<temporary>") {
           "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key()}" true
         }

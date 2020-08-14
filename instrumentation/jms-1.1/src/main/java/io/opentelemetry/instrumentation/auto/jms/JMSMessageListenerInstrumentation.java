@@ -84,7 +84,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
       spanBuilder.setParent(extract(message, GETTER));
 
       Span span = spanBuilder.startSpan();
-      DECORATE.afterStart(span);
       DECORATE.afterStart(span, spanName, message);
 
       return new SpanWithScope(span, currentContextWith(span));

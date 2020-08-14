@@ -41,12 +41,10 @@ class SpringListenerJMS1Test extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         producerSpan(it, 0, "queue", "SpringListenerJMS1")
-        // cannot get messageId therefore get it from span attributes
-        consumerSpan(it, 1, "queue", "SpringListenerJMS1", it.span(1).attributes.get(SemanticAttributes.MESSAGING_MESSAGE_ID.key()).stringValue, true, MessagingMessageListenerAdapter, span(0))
+        consumerSpan(it, 1, "queue", "SpringListenerJMS1", null, true, MessagingMessageListenerAdapter, span(0))
       }
       trace(1, 1) {
-        // cannot get messageId therefore get it from span attributes
-        consumerSpan(it, 0, "queue", "SpringListenerJMS1", it.span(0).attributes.get(SemanticAttributes.MESSAGING_MESSAGE_ID.key()).stringValue, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, "queue", "SpringListenerJMS1", null, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
