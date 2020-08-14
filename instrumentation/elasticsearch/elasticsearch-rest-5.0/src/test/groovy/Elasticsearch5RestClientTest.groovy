@@ -16,7 +16,7 @@
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -125,6 +125,6 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 }

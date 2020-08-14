@@ -45,7 +45,7 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -340,6 +340,6 @@ class AWS1ClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 }

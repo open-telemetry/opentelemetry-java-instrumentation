@@ -174,7 +174,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     if (userAgent != null) {
       SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
     }
-    // Copy of HttpClientDecorator url handling
+    // Copy of HttpClientTracer url handling
     try {
       URI url = url(request);
       if (url != null) {

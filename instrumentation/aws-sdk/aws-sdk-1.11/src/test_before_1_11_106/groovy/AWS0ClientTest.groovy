@@ -32,7 +32,7 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -282,6 +282,6 @@ class AWS0ClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 }
