@@ -78,8 +78,4 @@ public class SpringWebfluxHttpClientTracer
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.spring-webflux-5.0";
   }
-
-  public Tracer getTracer() {
-    return tracer;
-  }
 }
