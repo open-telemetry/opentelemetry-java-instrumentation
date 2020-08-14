@@ -1,5 +1,6 @@
 plugins {
   id 'com.gradle.enterprise' version '3.0'
+  id 'com.github.burrunan.s3-build-cache' version '1.1'
 }
 
 def isCI = System.getenv("CI") != null
@@ -13,6 +14,16 @@ gradleEnterprise {
       publishAlways()
       tag 'CI'
     }
+  }
+}
+
+apply plugin: 'com.github.burrunan.s3-build-cache'
+
+buildCache {
+  remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
+    region = 'us-west-2'
+    bucket = 'otel-gradle-cache-temp'
+    push = isCI
   }
 }
 
