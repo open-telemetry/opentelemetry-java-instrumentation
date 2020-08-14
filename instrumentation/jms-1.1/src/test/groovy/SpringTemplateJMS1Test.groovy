@@ -23,7 +23,6 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 import javax.jms.Connection
-import javax.jms.Message
 import javax.jms.Session
 import javax.jms.TextMessage
 import java.util.concurrent.TimeUnit
