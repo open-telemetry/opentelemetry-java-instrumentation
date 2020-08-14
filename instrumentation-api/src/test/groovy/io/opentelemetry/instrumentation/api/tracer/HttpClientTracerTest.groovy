@@ -17,7 +17,6 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.context.propagation.HttpTextFormat
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes

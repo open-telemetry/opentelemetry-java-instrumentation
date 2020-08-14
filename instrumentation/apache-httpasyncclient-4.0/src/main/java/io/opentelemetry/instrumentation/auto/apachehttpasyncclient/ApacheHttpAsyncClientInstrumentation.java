@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.instrumentation.api.decorator.HttpClientTracer.DEFAULT_SPAN_NAME;
+import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
