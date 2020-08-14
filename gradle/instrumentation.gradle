@@ -25,6 +25,34 @@ apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    // Need to set name after evaluation to pick up additional languages like scala.
+    afterEvaluate {
+      dirName = 'test'
+    }
+  }
+}
+
+configurations {
+  // library is where to define dependencies on the library that is being instrumented. It will not
+  // be packaged in the agent but will be available at runtime for tests.
+  library {
+    canBeResolved = false
+    canBeConsumed = false
+  }
+  compileOnly.extendsFrom(library)
+  testImplementation.extendsFrom(library)
+  library.dependencies.whenObjectAdded {
+    def dep = it.copy()
+    dep.version {
+      it.strictly '+'
+    }
+    latestDepTestImplementation.dependencies.add(dep)
+  }
+}
 
 afterEvaluate {
   byteBuddy {
