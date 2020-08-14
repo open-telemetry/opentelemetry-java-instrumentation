@@ -79,12 +79,12 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final Message message) {
 
-      Span.Builder spanBuilder =
-          TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
+      final String spanName = DECORATE.spanNameForConsumer(message);
+      Span.Builder spanBuilder = TRACER.spanBuilder(spanName).setSpanKind(CONSUMER);
       spanBuilder.setParent(extract(message, GETTER));
 
       Span span = spanBuilder.startSpan();
-      DECORATE.afterStart(span);
+      DECORATE.afterStart(span, spanName, message);
 
       return new SpanWithScope(span, currentContextWith(span));
     }
