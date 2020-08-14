@@ -17,7 +17,7 @@
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
+import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
