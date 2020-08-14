@@ -16,16 +16,12 @@
 
 package client
 
-import io.opentelemetry.auto.test.asserts.TraceAssert
+
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.api.MoreAttributes
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Timeout
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {
@@ -42,44 +38,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
       .block()
 
     response.statusCode().value()
-  }
-
-  @Override
-  // parent spanRef must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
-    super.clientSpan(trace, index, parentSpan, method, tagQueryString, uri, status, exception)
-    if (!exception) {
-      trace.span(index + 1) {
-        childOf(trace.span(index))
-        operationName "HTTP $method"
-        spanKind CLIENT
-        errored exception != null
-        if (exception) {
-          errorEvent(exception.class, exception.message)
-        }
-        attributes {
-          "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-          "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port
-          "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-          "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
-          "${SemanticAttributes.HTTP_METHOD.key()}" method
-          "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("ReactorNetty") }
-          if (status) {
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
-          }
-          if (tagQueryString) {
-            "$MoreAttributes.HTTP_QUERY" uri.query
-            "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-          }
-        }
-      }
-    }
-  }
-
-  @Override
-  int extraClientSpans() {
-    // has netty-client span inside of spring-webflux-client
-    return 1
   }
 
   boolean testRedirects() {

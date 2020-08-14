@@ -50,7 +50,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     Span span = TRACER.startSpan(request);
 
     ClientRequest.Builder requestBuilder = ClientRequest.from(request);
-    try (Scope scope = TRACER.startScope(span, requestBuilder)) {
+    try (Scope ignored = TRACER.startScope(span, requestBuilder)) {
       return next.exchange(requestBuilder.build())
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {
