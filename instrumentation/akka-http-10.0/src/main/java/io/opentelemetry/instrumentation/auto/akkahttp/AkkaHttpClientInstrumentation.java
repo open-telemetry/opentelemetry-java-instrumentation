@@ -56,6 +56,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
+      AkkaHttpClientInstrumentation.class.getName() + "$InjectAdapter",
       packageName + ".AkkaHttpClientTracer",
     };
   }
