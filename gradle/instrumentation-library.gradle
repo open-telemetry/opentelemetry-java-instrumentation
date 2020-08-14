@@ -6,7 +6,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 archivesBaseName = projectDir.parentFile.name
 
 dependencies {
-  api project(':library-api')
+  api project(':instrumentation-api')
 
   api deps.opentelemetryApi
 
