@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
-import io.opentelemetry.auto.instrumentation.jdbc.normalizer.SqlNormalizer
+import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
+import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.instrumentation.api.config.Config

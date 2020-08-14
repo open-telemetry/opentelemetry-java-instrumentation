@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
@@ -39,7 +38,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
   }
 
   public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    addFilter(exchangeFilterFunctions, TRACER);
+    addFilter(exchangeFilterFunctions, TRACER.getTracer());
   }
 
   public static void addFilter(
@@ -49,32 +48,25 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
-    Span span = DECORATE.getOrCreateSpan(request, tracer);
-    DECORATE.afterStart(span);
+    Span span = TRACER.startSpan(request);
 
     try (Scope scope = tracer.withSpan(span)) {
       ClientRequest mutatedRequest =
           ClientRequest.from(request)
-              .headers(httpHeaders -> DECORATE.inject(Context.current(), httpHeaders))
+              .headers(httpHeaders -> TRACER.inject(Context.current(), httpHeaders))
               .build();
-      DECORATE.onRequest(span, mutatedRequest);
-
       return next.exchange(mutatedRequest)
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {
                 if (throwable != null) {
-                  DECORATE.onError(span, throwable);
+                  TRACER.endExceptionally(span, clientResponse, throwable);
                 } else {
-                  DECORATE.onResponse(span, clientResponse);
+                  TRACER.end(span, clientResponse);
                 }
-                DECORATE.beforeFinish(span);
-                span.end();
               })
           .doOnCancel(
               () -> {
-                DECORATE.onCancel(span);
-                DECORATE.beforeFinish(span);
-                span.end();
+                TRACER.end(span);
               });
     }
   }

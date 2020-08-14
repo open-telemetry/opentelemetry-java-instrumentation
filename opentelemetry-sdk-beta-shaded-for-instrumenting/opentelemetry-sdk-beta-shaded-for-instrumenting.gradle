@@ -14,7 +14,7 @@ dependencies {
 shadowJar {
 
   mergeServiceFiles()
-  
-  relocate "io.opentelemetry", "unshaded.io.opentelemetry"
-  relocate "io.grpc", "unshaded.io.grpc"
+
+  relocate "io.opentelemetry", "application.io.opentelemetry"
+  relocate "io.grpc", "application.io.grpc"
 }

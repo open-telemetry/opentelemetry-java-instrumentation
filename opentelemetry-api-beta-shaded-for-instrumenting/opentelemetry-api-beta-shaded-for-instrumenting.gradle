@@ -13,6 +13,6 @@ dependencies {
 // (see more explanation in opentelemetry-api-beta.gradle)
 shadowJar {
 
-  relocate "io.opentelemetry", "unshaded.io.opentelemetry"
-  relocate "io.grpc", "unshaded.io.grpc"
+  relocate "io.opentelemetry", "application.io.opentelemetry"
+  relocate "io.grpc", "application.io.grpc"
 }

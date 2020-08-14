@@ -1,18 +1,18 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  implementation project(':auto-bootstrap')
+  implementation project(':javaagent-bootstrap')
 
   implementation 'info.picocli:picocli:4.0.4'
   implementation deps.guava
 }
 
 task launch(type: JavaExec) {
-  dependsOn ':opentelemetry-javaagent:shadowJar'
+  dependsOn ':javaagent:shadowJar'
   doFirst {
     classpath = sourceSets.main.runtimeClasspath
     main = 'io.opentelemetry.loadgenerator.LoadGenerator'
-    jvmArgs = ["-javaagent:${project(':opentelemetry-javaagent').shadowJar.archivePath}"]
+    jvmArgs = ["-javaagent:${project(':javaagent').shadowJar.archivePath}"]
     systemProperties System.properties
   }
 }

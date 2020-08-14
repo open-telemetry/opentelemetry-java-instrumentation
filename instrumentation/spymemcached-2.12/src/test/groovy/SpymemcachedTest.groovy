@@ -15,7 +15,7 @@
  */
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
+import io.opentelemetry.instrumentation.auto.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.trace.attributes.SemanticAttributes

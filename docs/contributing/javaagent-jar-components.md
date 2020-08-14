@@ -9,10 +9,10 @@ into 3 parts:
 
 ### Modules that live in the system class loader
 
-#### `opentelemetry-javaagent` module
+#### `javaagent` module
 
 This module consists of single class
-`io.opentelemetry.auto.bootstrap.AgentBootstrap` which implements [Java
+`io.opentelemetry.javaagent.OpenTelemetryAgent` which implements [Java
 instrumentation
 agent](https://docs.oracle.com/javase/7/docs/api/java/lang/instrument/package-summary.html).
 This class is loaded during application startup by application classloader.
@@ -23,7 +23,7 @@ class from there.
 
 ### Modules that live in the bootstrap class loader
 
-#### `agent-bootstrap` module
+#### `javaagent-bootstrap` module
 
 `io.opentelemetry.auto.bootstrap.Agent` and a few other classes that live in the bootstrap class
 loader but are not used directly by auto-instrumentation
@@ -32,7 +32,7 @@ loader but are not used directly by auto-instrumentation
 
 These modules contains support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
-classloaders in the running application. For this reason `java-agent` puts
+classloaders in the running application. For this reason the `javaagent` module puts
 all these classes into JVM's bootstrap classloader. For the same reason this
 module should be as small as possible and have as few dependencies as
 possible. Otherwise, there is a risk of accidentally exposing this classes to
@@ -43,7 +43,7 @@ while `auto-api` contains classes that are only needed for auto-instrumentation.
 
 ### Modules that live in the agent class loader
 
-#### `agent-tooling` module and `instrumentation` submodules
+#### `javaagent-tooling` module and `instrumentation` submodules
 
 Contains everything necessary to make instrumentation machinery work,
 including integration with [ByteBuddy](https://bytebuddy.net/) and actual
@@ -51,8 +51,8 @@ library-specific instrumentations. As these classes depend on many classes
 from different libraries, it is paramount to hide all these classes from the
 host application. This is achieved in the following way:
 
-- When `java-agent` module builds the final agent, it moves all classes from
-`instrumentation` submodules and `agent-tooling` module into a separate
+- When `javaagent` module builds the final agent, it moves all classes from
+`instrumentation` submodules and `javaagent-tooling` module into a separate
 folder inside final jar file, called`inst`.
 In addition, the extension of all class files is changed from `class` to `classdata`.
 This ensures that general classloaders cannot find nor load these classes.
@@ -71,17 +71,17 @@ still access helper classes from bootstrap classloader.
 #### Agent jar structure
 
 If you now look inside
-`opentelemetry-javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
+`javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
 following "clusters" of classes:
 
 Available in the system class loader:
 
-- `io/opentelemetry/auto/bootstrap/AgentBootstrap` - the one class from `opentelemetry-javaagent`
+- `io/opentelemetry/auto/bootstrap/AgentBootstrap` - the one class from `javaagent`
 module
 
 Available in the bootstrap class loader:
 
-- `io/opentelemetry/auto/bootstrap/` - contains the `agent-bootstrap` module
+- `io/opentelemetry/auto/bootstrap/` - contains the `javaagent-bootstrap` module
 - `io/opentelemetry/instrumentation/auto/api/` - contains the `auto-api` module
 - `io/opentelemetry/auto/shaded/instrumentation/api/` - contains the `instrumentation-api` module,
  shaded during creation of `javaagent` jar file by Shadow Gradle plugin
@@ -91,6 +91,6 @@ Context, both shaded during creation of `javaagent` jar file by Shadow Gradle pl
 during creation of `javaagent` jar file by Shadow Gradle plugin
 
 Available in the agent class loader:
-- `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated
+- `inst/` - contains `javaagent-tooling` module and `instrumentation` submodules, loaded and isolated
 inside `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the
 `-all` artifact).

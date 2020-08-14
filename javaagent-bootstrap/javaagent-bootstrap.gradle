@@ -1,0 +1,23 @@
+group = 'io.opentelemetry.javaagent'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+// FIXME: Improve test coverage.
+minimumBranchCoverage = 0.0
+minimumInstructionCoverage = 0.0
+
+dependencies {
+  api deps.opentelemetryApi
+  compileOnly deps.opentelemetrySdk
+  implementation deps.slf4j
+  implementation group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
+  // ^ Generally a bad idea for libraries, but we're shadowing.
+
+  implementation project(':instrumentation-api')
+  implementation project(':auto-api')
+
+  testImplementation project(':testing-common')
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
+}

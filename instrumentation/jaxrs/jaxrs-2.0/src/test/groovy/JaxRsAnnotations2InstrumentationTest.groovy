@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer
+import io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.auto.api.WeakMap
 

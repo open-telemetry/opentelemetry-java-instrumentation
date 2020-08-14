@@ -34,10 +34,10 @@ dependencies {
   //TODO replace with Servlet API?
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
-  implementation project(':auto-bootstrap')
+  implementation project(':javaagent-bootstrap')
   implementation project(':auto-api')
-  implementation project(':library-api')
-  implementation(project(':auto-tooling')) {
+  implementation project(':instrumentation-api')
+  implementation(project(':javaagent-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
@@ -49,7 +49,7 @@ dependencies {
   api deps.groovy
 
   testImplementation deps.opentelemetryAutoAnnotations
-  testImplementation project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:external-annotations')
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode

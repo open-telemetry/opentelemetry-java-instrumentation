@@ -42,7 +42,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 

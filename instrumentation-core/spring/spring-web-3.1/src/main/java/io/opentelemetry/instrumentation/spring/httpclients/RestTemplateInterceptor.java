@@ -16,9 +16,8 @@
 
 package io.opentelemetry.instrumentation.spring.httpclients;
 
-import static io.opentelemetry.instrumentation.spring.httpclients.RestTemplateDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.spring.httpclients.RestTemplateTracer.TRACER;
 
-import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -41,18 +40,11 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
   public ClientHttpResponse intercept(
       HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
 
-    Span clientSpan = DECORATE.getOrCreateSpan(request, tracer);
-
-    try (Scope scope = tracer.withSpan(clientSpan)) {
-      DECORATE.onRequest(clientSpan, request);
-      DECORATE.inject(Context.current(), request);
-
+    Span span = TRACER.startSpan(request);
+    try (Scope scope = TRACER.startScope(span, request)) {
       ClientHttpResponse response = execution.execute(request, body);
-      DECORATE.onResponse(clientSpan, response);
-
+      TRACER.end(span, response);
       return response;
-    } finally {
-      clientSpan.end();
     }
   }
 }
