@@ -106,7 +106,9 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       Span span = state.getSpan();
 
       Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+      OpenTelemetry.getPropagators()
+          .getHttpTextFormat()
+          .inject(context, request.getHeaders(), SETTER);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

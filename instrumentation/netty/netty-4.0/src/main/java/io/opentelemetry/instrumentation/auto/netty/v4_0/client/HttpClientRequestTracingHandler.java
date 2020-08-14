@@ -17,16 +17,12 @@
 package io.opentelemetry.instrumentation.auto.netty.v4_0.client;
 
 import static io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.AttributeKeys;
@@ -59,25 +55,14 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     Span span = TRACER.startSpan(request);
-    try (Scope scope = currentContextWith(span)) {
-      BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+    BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+    ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
 
-      // AWS calls are often signed, so we can't add headers without breaking the signature.
-      if (!request.headers().contains("amz-sdk-invocation-id")) {
-        Context context = withSpan(span, Context.current());
-        OpenTelemetry.getPropagators()
-            .getHttpTextFormat()
-            .inject(context, request.headers(), SETTER);
-      }
-
-      ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
-
-      try {
-        ctx.write(msg, prm);
-      } catch (final Throwable throwable) {
-        TRACER.endExceptionally(span, throwable);
-        throw throwable;
-      }
+    try (Scope scope = TRACER.startScope(span, request.headers())) {
+      ctx.write(msg, prm);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     } finally {
       if (null != parentScope) {
         parentScope.close();

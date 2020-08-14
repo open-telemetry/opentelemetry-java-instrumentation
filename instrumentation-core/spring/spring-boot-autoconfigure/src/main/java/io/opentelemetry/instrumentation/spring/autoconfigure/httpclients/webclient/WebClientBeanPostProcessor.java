@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
+import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
-import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -31,9 +31,9 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
-  private final Tracer tracer;
+  private final SpringWebfluxHttpClientTracer tracer;
 
-  WebClientBeanPostProcessor(Tracer tracer) {
+  WebClientBeanPostProcessor(SpringWebfluxHttpClientTracer tracer) {
     this.tracer = tracer;
   }
 

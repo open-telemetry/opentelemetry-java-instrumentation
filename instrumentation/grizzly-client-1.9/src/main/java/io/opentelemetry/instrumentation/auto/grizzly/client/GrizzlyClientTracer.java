@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.grizzly.client;
 
+import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
@@ -23,7 +24,8 @@ import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GrizzlyClientTracer extends HttpClientTracer<Request, Response> {
+public class GrizzlyClientTracer
+    extends HttpClientTracer<Request, FluentCaseInsensitiveStringsMap, Response> {
 
   public static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
 
@@ -53,7 +55,7 @@ public class GrizzlyClientTracer extends HttpClientTracer<Request, Response> {
   }
 
   @Override
-  protected Setter<Request> getSetter() {
+  protected Setter<FluentCaseInsensitiveStringsMap> getSetter() {
     return GrizzlyInjectAdapter.SETTER;
   }
 

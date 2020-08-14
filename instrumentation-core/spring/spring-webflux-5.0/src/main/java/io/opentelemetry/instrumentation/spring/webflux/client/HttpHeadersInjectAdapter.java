@@ -17,14 +17,14 @@
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import org.springframework.http.HttpHeaders;
+import org.springframework.web.reactive.function.client.ClientRequest;
 
-class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<ClientRequest.Builder> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
-  public void set(final HttpHeaders carrier, final String key, final String value) {
-    carrier.set(key, value);
+  public void set(final ClientRequest.Builder carrier, final String key, final String value) {
+    carrier.header(key, value);
   }
 }

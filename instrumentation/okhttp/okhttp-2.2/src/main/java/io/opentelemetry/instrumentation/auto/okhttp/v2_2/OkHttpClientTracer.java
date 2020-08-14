@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.okhttp.v2_2;
 
+import static io.opentelemetry.instrumentation.auto.okhttp.v2_2.RequestBuilderInjectAdapter.SETTER;
+
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
@@ -23,7 +25,7 @@ import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
+public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
   public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   @Override
@@ -52,8 +54,8 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   }
 
   @Override
-  protected Setter<Request> getSetter() {
-    return null;
+  protected Setter<Request.Builder> getSetter() {
+    return SETTER;
   }
 
   @Override

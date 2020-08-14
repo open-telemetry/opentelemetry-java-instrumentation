@@ -24,7 +24,8 @@ import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, RequestLog> {
+public class ArmeriaClientTracer
+    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
 
   ArmeriaClientTracer() {}
 

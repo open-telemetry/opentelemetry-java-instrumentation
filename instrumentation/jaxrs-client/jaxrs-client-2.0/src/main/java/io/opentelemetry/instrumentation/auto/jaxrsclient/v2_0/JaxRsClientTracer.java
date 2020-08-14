@@ -16,14 +16,17 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
+import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.InjectAdapter.SETTER;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.core.MultivaluedMap;
 
 public class JaxRsClientTracer
-    extends HttpClientTracer<ClientRequestContext, ClientResponseContext> {
+    extends HttpClientTracer<ClientRequestContext, MultivaluedMap, ClientResponseContext> {
   public static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
 
   @Override
@@ -52,8 +55,8 @@ public class JaxRsClientTracer
   }
 
   @Override
-  protected Setter<ClientRequestContext> getSetter() {
-    return null;
+  protected Setter<MultivaluedMap> getSetter() {
+    return SETTER;
   }
 
   @Override

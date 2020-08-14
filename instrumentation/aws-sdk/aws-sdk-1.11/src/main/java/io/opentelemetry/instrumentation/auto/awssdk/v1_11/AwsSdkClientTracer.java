@@ -32,7 +32,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
+public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 

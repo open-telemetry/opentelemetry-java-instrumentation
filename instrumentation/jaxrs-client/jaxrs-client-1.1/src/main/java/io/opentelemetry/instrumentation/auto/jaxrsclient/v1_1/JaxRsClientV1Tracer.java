@@ -23,8 +23,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
 import java.net.URI;
+import javax.ws.rs.core.MultivaluedMap;
 
-public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {
+public class JaxRsClientV1Tracer
+    extends HttpClientTracer<ClientRequest, MultivaluedMap<String, Object>, ClientResponse> {
   public static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   @Override
@@ -54,7 +56,7 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
   }
 
   @Override
-  protected Setter<ClientRequest> getSetter() {
+  protected Setter<MultivaluedMap<String, Object>> getSetter() {
     return SETTER;
   }
 

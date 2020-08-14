@@ -16,18 +16,22 @@
 
 package io.opentelemetry.instrumentation.auto.akkahttp;
 
+import static io.opentelemetry.instrumentation.auto.akkahttp.AkkaHttpClientInstrumentation.InjectAdapter.SETTER;
+
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.auto.akkahttp.AkkaHttpClientInstrumentation.AkkaHttpHeaders;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+public class AkkaHttpClientTracer
+    extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
   public static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
 
   public Depth getCallDepth() {
@@ -60,8 +64,8 @@ public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResp
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
-    return null;
+  protected Setter<AkkaHttpHeaders> getSetter() {
+    return SETTER;
   }
 
   @Override

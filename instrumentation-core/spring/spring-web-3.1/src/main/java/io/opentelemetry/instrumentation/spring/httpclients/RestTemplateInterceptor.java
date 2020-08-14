@@ -41,7 +41,7 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
       HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
 
     Span span = TRACER.startSpan(request);
-    try (Scope scope = TRACER.startScope(span, request)) {
+    try (Scope scope = TRACER.startScope(span, request.getHeaders())) {
       ClientHttpResponse response = execution.execute(request, body);
       TRACER.end(span, response);
       return response;

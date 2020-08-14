@@ -17,14 +17,14 @@
 package io.opentelemetry.instrumentation.spring.httpclients;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpHeaders;
 
-class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpRequest> {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
-  public void set(HttpRequest carrier, String key, String value) {
-    carrier.getHeaders().set(key, value);
+  public void set(HttpHeaders carrier, String key, String value) {
+    carrier.set(key, value);
   }
 }
