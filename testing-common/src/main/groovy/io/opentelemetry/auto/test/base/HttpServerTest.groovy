@@ -68,7 +68,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   URI address
 
   def setupSpec() {
-    withRetryOnBindException({
+    withRetryOnAddressAlreadyInUse({
       setupSpecUnderRetry()
     })
   }

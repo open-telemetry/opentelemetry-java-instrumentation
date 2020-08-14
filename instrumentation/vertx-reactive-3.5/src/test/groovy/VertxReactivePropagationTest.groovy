@@ -48,7 +48,7 @@ class VertxReactivePropagationTest extends AgentTestRunner {
   }
 
   //Verifies that context is correctly propagated and sql query span has correct parent.
-  //Tests io.opentelemetry.auto.instrumentation.vertx.reactive.VertxRxInstrumentation
+  //Tests io.opentelemetry.instrumentation.auto.vertx.reactive.VertxRxInstrumentation
   def "should propagate context over vert.x rx-java framework"() {
     setup:
     def url = "http://localhost:$port/listProducts"

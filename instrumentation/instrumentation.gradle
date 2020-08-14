@@ -34,7 +34,7 @@ subprojects {
 }
 
 dependencies {
-  implementation project(':library-api')
+  implementation project(':instrumentation-api')
   implementation project(':auto-api')
   implementation(project(':javaagent-tooling')) {
     exclude module: ':javaagent-bootstrap'

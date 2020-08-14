@@ -39,7 +39,7 @@ public class LogContextScopeListener {
   /** A reference to the log context method that removes an attribute from the log context */
   private final Method removeMethod;
 
-  final Tracer tracer = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+  final Tracer tracer = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   public LogContextScopeListener(final Method putMethod, final Method removeMethod) {
     this.putMethod = putMethod;

@@ -22,8 +22,7 @@ import java.util.concurrent.Callable;
 
 public class SayTracedHello {
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   @com.appoptics.api.ext.LogMethod
   public String appoptics() {

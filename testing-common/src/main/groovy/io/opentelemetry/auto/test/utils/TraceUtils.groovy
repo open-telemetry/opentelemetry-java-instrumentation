@@ -37,7 +37,7 @@ class TraceUtils {
   private static final BaseDecorator DECORATE = new BaseDecorator() {
   }
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     try {
