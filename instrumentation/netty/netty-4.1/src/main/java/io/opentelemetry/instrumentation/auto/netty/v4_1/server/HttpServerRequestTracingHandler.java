@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1.server;
 
-import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
 import io.netty.channel.Channel;

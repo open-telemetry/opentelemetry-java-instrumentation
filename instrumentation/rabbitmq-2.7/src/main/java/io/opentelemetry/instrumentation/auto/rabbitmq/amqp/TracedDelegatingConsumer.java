@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
+import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;

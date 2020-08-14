@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.jsp;
 
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

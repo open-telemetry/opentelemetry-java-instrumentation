@@ -23,8 +23,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.AttributeKeys;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.netty.v4_0.AttributeKeys;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 

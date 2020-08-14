@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.grizzly;
 
-import static io.opentelemetry.instrumentation.auto.grizzly.GrizzlyHttpServerTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.auto.grizzly.GrizzlyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;

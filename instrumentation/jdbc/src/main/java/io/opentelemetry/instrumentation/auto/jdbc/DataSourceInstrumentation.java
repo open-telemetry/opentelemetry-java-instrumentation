@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.jdbc;
 
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.jdbc.DataSourceDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jdbc.DataSourceDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

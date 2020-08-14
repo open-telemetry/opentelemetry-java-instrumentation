@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;

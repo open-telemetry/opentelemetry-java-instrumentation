@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.rediscala;
 
-import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

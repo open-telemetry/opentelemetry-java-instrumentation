@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.http;
 
-import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;

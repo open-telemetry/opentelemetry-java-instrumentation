@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v6_0;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.setPeer;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.trace.Span;

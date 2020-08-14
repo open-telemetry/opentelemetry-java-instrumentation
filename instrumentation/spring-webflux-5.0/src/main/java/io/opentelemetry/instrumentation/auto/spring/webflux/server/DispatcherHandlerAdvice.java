@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.TRACER;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;

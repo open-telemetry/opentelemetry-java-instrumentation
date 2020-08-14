@@ -23,8 +23,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.trace.DefaultSpan;
 import java.util.Collections;
 import java.util.Map;

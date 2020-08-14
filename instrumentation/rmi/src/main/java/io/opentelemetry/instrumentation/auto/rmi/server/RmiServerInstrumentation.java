@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.server;
 
-import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
+import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

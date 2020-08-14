@@ -26,9 +26,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyHttpClientTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyHttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

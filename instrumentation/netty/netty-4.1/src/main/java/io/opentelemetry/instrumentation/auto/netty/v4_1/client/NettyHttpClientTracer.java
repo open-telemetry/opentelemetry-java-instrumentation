@@ -17,8 +17,8 @@
 package io.opentelemetry.instrumentation.auto.netty.v4_1.client;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;

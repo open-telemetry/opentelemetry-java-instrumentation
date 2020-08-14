@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.client;
 
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.rmi.client.RmiClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.rmi.client.RmiClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;

@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.finatra;
 
-import static io.opentelemetry.instrumentation.auto.finatra.FinatraTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.instrumentation.auto.finatra.FinatraTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
