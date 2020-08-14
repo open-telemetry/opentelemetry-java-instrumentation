@@ -22,8 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
 public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;

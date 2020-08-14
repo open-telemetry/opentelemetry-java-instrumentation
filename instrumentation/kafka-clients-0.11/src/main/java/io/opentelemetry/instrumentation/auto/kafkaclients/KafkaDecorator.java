@@ -28,7 +28,7 @@ public class KafkaDecorator extends ClientDecorator {
   public static final KafkaDecorator DECORATE = new KafkaDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kafka-clients-0.11");
+      OpenTelemetry.getTracer("io.opentelemetry.auto.kafka-clients-0.11");
 
   public String spanNameOnConsume(final ConsumerRecord record) {
     String topic = record.topic();

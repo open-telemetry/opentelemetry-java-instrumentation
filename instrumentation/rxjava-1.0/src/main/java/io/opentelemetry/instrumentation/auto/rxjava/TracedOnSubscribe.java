@@ -28,8 +28,7 @@ import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rxjava-1.0");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rxjava-1.0");
 
   private final Observable.OnSubscribe<?> delegate;
   private final String operationName;

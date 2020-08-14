@@ -26,8 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Worker {
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(final long workTimeMS) {

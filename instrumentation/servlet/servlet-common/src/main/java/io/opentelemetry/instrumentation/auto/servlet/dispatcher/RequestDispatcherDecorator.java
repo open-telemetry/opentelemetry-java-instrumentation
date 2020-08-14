@@ -22,6 +22,5 @@ import io.opentelemetry.trace.Tracer;
 
 public class RequestDispatcherDecorator extends BaseDecorator {
   public static final RequestDispatcherDecorator DECORATE = new RequestDispatcherDecorator();
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
+  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.servlet");
 }
