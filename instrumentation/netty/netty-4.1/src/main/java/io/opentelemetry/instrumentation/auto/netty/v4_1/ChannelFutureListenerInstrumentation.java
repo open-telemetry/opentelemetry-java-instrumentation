@@ -18,13 +18,14 @@ package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.netty.channel.ChannelFuture;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -97,12 +98,12 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (cause == null) {
         return null;
       }
-      Span parentSpan =
-          future.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
-      if (parentSpan == null) {
+      Context parentContext =
+          future.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+      if (parentContext == null) {
         return null;
       }
-      Scope parentScope = currentContextWith(parentSpan);
+      Scope parentScope = withScopedContext(parentContext);
       Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT");
       NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
       return parentScope;

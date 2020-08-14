@@ -16,9 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1.client;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -39,10 +40,11 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     Scope parentScope = null;
-    Span parentSpan =
-        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
-    if (parentSpan != null) {
-      parentScope = currentContextWith(parentSpan);
+    Context parentContext =
+        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+    if (parentContext != null) {
+      // TODO (trask) if null then do with ROOT scope?
+      parentScope = withScopedContext(parentContext);
     }
 
     HttpRequest request = (HttpRequest) msg;
