@@ -170,7 +170,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   @Override
   def newTracer() {
-    return new HttpClientTracer<Map, Map>() {
+    return new HttpClientTracer<Map, Map, Map>() {
 
       @Override
       protected String method(Map m) {
