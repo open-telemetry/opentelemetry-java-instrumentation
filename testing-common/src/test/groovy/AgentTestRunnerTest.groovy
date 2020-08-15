@@ -18,7 +18,7 @@ import com.google.common.reflect.ClassPath
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.auto.tooling.Constants
+import io.opentelemetry.javaagent.tooling.Constants
 
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException

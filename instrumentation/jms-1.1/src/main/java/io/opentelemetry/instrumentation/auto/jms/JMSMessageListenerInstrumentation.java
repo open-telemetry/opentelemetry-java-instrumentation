@@ -16,12 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.jms.MessageExtractAdapter.GETTER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -30,8 +30,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.jms.Message;

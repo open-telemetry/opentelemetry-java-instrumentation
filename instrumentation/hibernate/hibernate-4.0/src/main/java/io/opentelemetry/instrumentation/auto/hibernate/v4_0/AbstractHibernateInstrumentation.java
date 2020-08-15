@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v4_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 

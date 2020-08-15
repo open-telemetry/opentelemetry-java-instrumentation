@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -35,7 +35,6 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientResponseTracingHandler;
@@ -43,6 +42,7 @@ import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracing
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;

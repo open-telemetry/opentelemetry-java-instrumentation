@@ -7,8 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.api.GlobalTracer;
-import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.auto.tooling.log.LogContextScopeListener;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.log.LogContextScopeListener;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.Map;
@@ -70,7 +70,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {"io.opentelemetry.auto.tooling.log.LogContextScopeListener"};
+    return new String[] {"io.opentelemetry.javaagent.tooling.log.LogContextScopeListener"};
   }
 
   public static class MDCAdvice {

@@ -55,7 +55,8 @@ public class IntegrationTestUtils {
     Field classloaderField = null;
     try {
       Class<?> agentClass =
-          ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
+          ClassLoader.getSystemClassLoader()
+              .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
       classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
@@ -147,7 +148,7 @@ public class IntegrationTestUtils {
   public static String[] getBootstrapPackagePrefixes() throws Exception {
     Field f =
         getAgentClassLoader()
-            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .loadClass("io.opentelemetry.javaagent.tooling.Constants")
             .getField("BOOTSTRAP_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }
@@ -155,7 +156,7 @@ public class IntegrationTestUtils {
   public static String[] getAgentPackagePrefixes() throws Exception {
     Field f =
         getAgentClassLoader()
-            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .loadClass("io.opentelemetry.javaagent.tooling.Constants")
             .getField("AGENT_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }

@@ -39,14 +39,14 @@ import org.gradle.jvm.tasks.Jar;
 public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   /**
-   * An exact copy of {@code io.opentelemetry.auto.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. We
+   * An exact copy of {@code io.opentelemetry.javaagent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. We
    * can't reference it directly since this file needs to be compiled before the other packages.
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
-    "io.opentelemetry.auto.common.exec",
-    "io.opentelemetry.auto.slf4j",
-    "io.opentelemetry.auto.bootstrap",
-    "io.opentelemetry.auto.shaded",
+    "io.opentelemetry.javaagent.common.exec",
+    "io.opentelemetry.javaagent.slf4j",
+    "io.opentelemetry.javaagent.bootstrap",
+    "io.opentelemetry.javaagent.shaded",
     "io.opentelemetry.instrumentation.auto.api",
   };
 

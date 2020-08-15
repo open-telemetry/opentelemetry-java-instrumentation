@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.jms.MessageInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
@@ -31,9 +31,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;

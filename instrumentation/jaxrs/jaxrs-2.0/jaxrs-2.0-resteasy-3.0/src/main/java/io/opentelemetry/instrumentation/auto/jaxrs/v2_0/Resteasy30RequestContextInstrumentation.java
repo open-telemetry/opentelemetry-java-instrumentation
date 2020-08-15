@@ -17,8 +17,8 @@
 package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;

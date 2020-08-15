@@ -12,7 +12,7 @@ byteBuddy {
   transformation {
     // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
     tasks = ['compileJava', 'compileScala', 'compileKotlin']
-    plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin$NoOp'
+    plugin = 'io.opentelemetry.javaagent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
   }
 }
 
@@ -30,7 +30,7 @@ afterEvaluate {
   byteBuddy {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
-      plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
+      plugin = 'io.opentelemetry.javaagent.tooling.muzzle.MuzzleGradlePlugin'
       classPath = project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
     }
   }

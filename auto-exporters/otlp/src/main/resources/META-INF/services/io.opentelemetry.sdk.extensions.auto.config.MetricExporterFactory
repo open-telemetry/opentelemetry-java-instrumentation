@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.otlp.OtlpMetricExporterFactory
+io.opentelemetry.javaagent.exporters.otlp.OtlpMetricExporterFactory

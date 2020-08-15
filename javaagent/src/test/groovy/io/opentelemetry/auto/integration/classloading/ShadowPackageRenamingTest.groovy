@@ -26,7 +26,7 @@ class ShadowPackageRenamingTest extends Specification {
     setup:
     Class<?> clazz =
       IntegrationTestUtils.getAgentClassLoader()
-        .loadClass("io.opentelemetry.auto.tooling.AgentInstaller")
+        .loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller")
     URL userGuava =
       MapMaker.getProtectionDomain().getCodeSource().getLocation()
     URL agentGuavaDep =
@@ -48,7 +48,7 @@ class ShadowPackageRenamingTest extends Specification {
 
   def "agent classes not visible"() {
     when:
-    ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.tooling.AgentInstaller")
+    ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller")
     then:
     thrown ClassNotFoundException
   }
