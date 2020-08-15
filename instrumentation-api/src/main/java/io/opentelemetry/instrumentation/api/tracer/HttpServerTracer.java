@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.decorator;
+package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
@@ -27,6 +27,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -174,7 +175,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     if (userAgent != null) {
       SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
     }
-    // Copy of HttpClientDecorator url handling
+    // Copy of HttpClientTracer url handling
     try {
       URI url = url(request);
       if (url != null) {

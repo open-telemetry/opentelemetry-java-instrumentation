@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 

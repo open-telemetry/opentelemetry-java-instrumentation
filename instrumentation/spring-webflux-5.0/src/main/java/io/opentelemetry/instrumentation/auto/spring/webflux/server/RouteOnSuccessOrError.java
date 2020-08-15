@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.function.BiConsumer;

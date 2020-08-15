@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.decorator;
+package io.opentelemetry.instrumentation.api.tracer;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
