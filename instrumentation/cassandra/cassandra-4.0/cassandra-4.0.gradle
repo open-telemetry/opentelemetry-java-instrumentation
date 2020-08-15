@@ -6,7 +6,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -17,17 +16,8 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
+  library group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
 
-  testImplementation group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
   testImplementation group: 'org.cassandraunit', name: 'cassandra-unit', version: '4.3.1.0'
-
-  latestDepTestImplementation group: 'com.datastax.oss', name: 'java-driver-core', version: '4.+'
 }

@@ -25,16 +25,6 @@ apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    // Need to set name after evaluation to pick up additional languages like scala.
-    afterEvaluate {
-      dirName = 'test'
-    }
-  }
-}
 
 configurations {
   // library is where to define dependencies on the library that is being instrumented. It will not
@@ -43,14 +33,28 @@ configurations {
     canBeResolved = false
     canBeConsumed = false
   }
+  testLibrary {
+    canBeResolved = false
+    canBeConsumed = false
+  }
   compileOnly.extendsFrom(library)
-  testImplementation.extendsFrom(library)
-  library.dependencies.whenObjectAdded {
-    def dep = it.copy()
-    dep.version {
-      it.strictly '+'
+  if (findProperty('testLatestDeps')) {
+    library.dependencies.whenObjectAdded {
+      def dep = it.copy()
+      dep.version {
+        it.strictly '+'
+      }
+      testImplementation.dependencies.add(dep)
     }
-    latestDepTestImplementation.dependencies.add(dep)
+    testLibrary.dependencies.whenObjectAdded {
+      def dep = it.copy()
+      dep.version {
+        it.strictly '+'
+      }
+      testImplementation.dependencies.add(dep)
+    }
+  } else {
+    testImplementation.extendsFrom(library, testLibrary)
   }
 }
 

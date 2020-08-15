@@ -27,10 +27,6 @@ testSets {
   test_before_1_11_106 {
     dirName = 'test_before_1_11_106'
   }
-
-  latestDepTest {
-    dirName = 'test'
-  }
 }
 
 configurations {
@@ -45,16 +41,16 @@ configurations {
 }
 
 dependencies {
-  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
+  library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
 
   // needed for kinesis:
   testImplementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: versions.jackson
@@ -65,13 +61,6 @@ dependencies {
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.0')
-
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '+'
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '+'
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '+'
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '+'
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '+'
-  latestDepTestImplementation group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '+'
 }
 
 test.dependsOn test_before_1_11_106

@@ -5,6 +5,7 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
     lagomTest
@@ -88,11 +89,6 @@ test.dependsOn version101Test
 compileVersion101TestGroovy {
     classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
     dependsOn compileVersion101TestScala
-}
-
-compileLatestDepTestGroovy {
-    classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
-    dependsOn compileLatestDepTestScala
 }
 
 // Lagom test supports running only on java 8 for now.

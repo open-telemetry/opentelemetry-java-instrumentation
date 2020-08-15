@@ -1,20 +1,8 @@
 ext.skipPublish = true
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
 
 dependencies {
-  testImplementation group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
-  testImplementation group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'
-  testImplementation group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.3.0.Final'
-
-  // Beyond 2.x is CDI 2+ and requires Java 8
-  latestDepTestImplementation group: 'org.jboss.weld', name: 'weld-core', version: '2.+'
-  latestDepTestImplementation group: 'org.jboss.weld.se', name: 'weld-se', version: '2.+'
-  latestDepTestImplementation group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.+'
+  testLibrary group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
+  testLibrary group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'
+  testLibrary group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.3.0.Final'
 }

@@ -1,5 +1,6 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  testLatestDeps = false
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -18,7 +19,5 @@ muzzle {
 dependencies {
   implementation project(':instrumentation:armeria-1.0:library')
 
-  compileOnly group: 'com.linecorp.armeria', name: 'armeria', version: '0.99.8'
-
-  testImplementation project(':instrumentation:armeria-1.0:testing')
+  library group: 'com.linecorp.armeria', name: 'armeria', version: '0.99.8'
 }
