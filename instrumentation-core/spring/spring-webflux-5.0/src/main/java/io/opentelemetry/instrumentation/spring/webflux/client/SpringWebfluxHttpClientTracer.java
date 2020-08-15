@@ -32,12 +32,6 @@ public class SpringWebfluxHttpClientTracer
 
   public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
-  public SpringWebfluxHttpClientTracer(Tracer tracer) {
-    super(tracer);
-  }
-
-  public SpringWebfluxHttpClientTracer() {}
-
   public void onCancel(final Span span) {
     span.setAttribute("event", "cancelled");
     span.setAttribute("message", "The subscription was cancelled");
@@ -77,5 +71,9 @@ public class SpringWebfluxHttpClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.spring-webflux-5.0";
+  }
+
+  public Tracer getTracer() {
+    return tracer;
   }
 }

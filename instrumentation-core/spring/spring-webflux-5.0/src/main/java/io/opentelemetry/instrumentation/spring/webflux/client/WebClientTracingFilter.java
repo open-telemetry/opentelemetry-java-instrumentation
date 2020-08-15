@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfl
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -29,19 +30,18 @@ import reactor.core.publisher.Mono;
 
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 
-  private final SpringWebfluxHttpClientTracer tracer;
+  private final Tracer tracer;
 
-  public WebClientTracingFilter(SpringWebfluxHttpClientTracer tracer) {
+  public WebClientTracingFilter(Tracer tracer) {
     this.tracer = tracer;
   }
 
   public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    addFilter(exchangeFilterFunctions, TRACER);
+    addFilter(exchangeFilterFunctions, TRACER.getTracer());
   }
 
   public static void addFilter(
-      final List<ExchangeFilterFunction> exchangeFilterFunctions,
-      SpringWebfluxHttpClientTracer tracer) {
+      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
     exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 

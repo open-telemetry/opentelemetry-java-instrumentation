@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webcli
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +32,7 @@ class WebClientBeanPostProcessorTest {
 
   @Mock Tracer tracer;
 
-  WebClientBeanPostProcessor webClientBeanPostProcessor =
-      new WebClientBeanPostProcessor(new SpringWebfluxHttpClientTracer(tracer));
+  WebClientBeanPostProcessor webClientBeanPostProcessor = new WebClientBeanPostProcessor(tracer);
 
   @Test
   @DisplayName(
