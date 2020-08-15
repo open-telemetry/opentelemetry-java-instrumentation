@@ -148,8 +148,6 @@ include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common'
 include ':instrumentation:servlet:servlet-2.2'
 include ':instrumentation:servlet:servlet-3.0'
-// FIXME this instrumentation relied on scope listener
-// include ':instrumentation:slf4j-mdc'
 include ':instrumentation:spark-web-framework-2.3'
 include ':instrumentation:spring-data-1.8'
 include ':instrumentation:spring-scheduling-3.1'
