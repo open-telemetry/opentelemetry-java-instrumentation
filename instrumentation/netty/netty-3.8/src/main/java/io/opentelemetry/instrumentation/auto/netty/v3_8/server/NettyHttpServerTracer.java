@@ -94,11 +94,6 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Integer peerPort(final Channel channel) {
     SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
