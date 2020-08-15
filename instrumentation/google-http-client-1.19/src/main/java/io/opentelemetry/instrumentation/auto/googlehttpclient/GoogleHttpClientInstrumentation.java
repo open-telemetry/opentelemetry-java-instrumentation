@@ -17,8 +17,6 @@
 package io.opentelemetry.instrumentation.auto.googlehttpclient;
 
 import static io.opentelemetry.instrumentation.auto.googlehttpclient.GoogleHttpClientTracer.TRACER;
-import static io.opentelemetry.instrumentation.auto.googlehttpclient.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -29,9 +27,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
@@ -59,15 +56,13 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("com.google.api.client.http.HttpRequest", RequestState.class.getName());
+    return singletonMap("com.google.api.client.http.HttpRequest", Span.class.getName());
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GoogleHttpClientTracer",
-      packageName + ".RequestState",
-      packageName + ".HeadersInjectAdapter"
+      packageName + ".GoogleHttpClientTracer", packageName + ".HeadersInjectAdapter"
     };
   }
 
@@ -91,39 +86,36 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class GoogleHttpClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This final HttpRequest request) {
+    public static void methodEnter(
+        @Advice.This final HttpRequest request, @Advice.Local("otelScope") Scope scope) {
 
-      ContextStore<HttpRequest, RequestState> contextStore =
-          InstrumentationContext.get(HttpRequest.class, RequestState.class);
+      ContextStore<HttpRequest, Span> contextStore =
+          InstrumentationContext.get(HttpRequest.class, Span.class);
 
-      RequestState state = contextStore.get(request);
+      Span span = contextStore.get(request);
 
-      if (state == null) {
-        state = new RequestState(TRACER.startSpan(request));
-        contextStore.put(request, state);
+      if (span == null) {
+        span = TRACER.startSpan(request);
+        contextStore.put(request, span);
       }
 
-      Span span = state.getSpan();
-
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators()
-          .getHttpTextFormat()
-          .inject(context, request.getHeaders(), SETTER);
+      scope = TRACER.startScope(span, request.getHeaders());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This final HttpRequest request,
         @Advice.Return final HttpResponse response,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelScope") Scope scope) {
 
-      ContextStore<HttpRequest, RequestState> contextStore =
-          InstrumentationContext.get(HttpRequest.class, RequestState.class);
-      RequestState state = contextStore.get(request);
+      scope.close();
 
-      if (state != null) {
-        Span span = state.getSpan();
+      ContextStore<HttpRequest, Span> contextStore =
+          InstrumentationContext.get(HttpRequest.class, Span.class);
+      Span span = contextStore.get(request);
 
+      if (span != null) {
         if (throwable == null) {
           TRACER.end(span, response);
         } else {
@@ -144,11 +136,10 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
     public static void methodEnter(@Advice.This final HttpRequest request) {
       Span span = TRACER.startSpan(request);
 
-      ContextStore<HttpRequest, RequestState> contextStore =
-          InstrumentationContext.get(HttpRequest.class, RequestState.class);
+      ContextStore<HttpRequest, Span> contextStore =
+          InstrumentationContext.get(HttpRequest.class, Span.class);
 
-      RequestState state = new RequestState(span);
-      contextStore.put(request, state);
+      contextStore.put(request, span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -157,13 +148,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
       if (throwable != null) {
 
-        ContextStore<HttpRequest, RequestState> contextStore =
-            InstrumentationContext.get(HttpRequest.class, RequestState.class);
-        RequestState state = contextStore.get(request);
+        ContextStore<HttpRequest, Span> contextStore =
+            InstrumentationContext.get(HttpRequest.class, Span.class);
+        Span span = contextStore.get(request);
 
-        if (state != null) {
-          Span span = state.getSpan();
-
+        if (span != null) {
           TRACER.endExceptionally(span, throwable);
         }
       }
