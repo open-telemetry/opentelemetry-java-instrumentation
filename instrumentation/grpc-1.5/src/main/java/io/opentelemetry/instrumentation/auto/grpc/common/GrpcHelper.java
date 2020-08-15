@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.grpc.common;
 
 import io.grpc.Status.Code;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Status.CanonicalCode;

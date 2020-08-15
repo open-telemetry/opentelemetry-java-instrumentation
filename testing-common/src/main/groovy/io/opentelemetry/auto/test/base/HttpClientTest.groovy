@@ -20,7 +20,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
@@ -466,7 +466,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 
   int extraClientSpans() {

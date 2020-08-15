@@ -309,7 +309,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 
 }
