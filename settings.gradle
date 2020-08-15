@@ -22,7 +22,7 @@ apply plugin: 'com.github.burrunan.s3-build-cache'
 buildCache {
   remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
     region = 'us-west-2'
-    bucket = 'otel-gradle-cache-temp'
+    bucket = 'opentelemetry-java-instrumentation-gradle-test1'
     push = isCI
   }
 }
