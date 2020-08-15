@@ -56,7 +56,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$WrappedFuture", JaxRsClientTracer.class.getName(),
+      getClass().getName() + "$WrappedFuture",
+      packageName + ".JaxRsClientTracer",
+      packageName + ".InjectAdapter",
     };
   }
 
