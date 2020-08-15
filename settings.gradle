@@ -23,7 +23,7 @@ buildCache {
   remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
     region = 'us-west-2'
     bucket = 'opentelemetry-java-instrumentation-gradle-test1'
-    push = 'true'.equals(gradle.startParameter.projectProperties.get('pushBuildCache'))
+    push = System.getenv('S3_BUILD_CACHE_ACCESS_KEY_ID') != null
   }
 }
 
