@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
 import io.opentelemetry.trace.attributes.SemanticAttributes
 

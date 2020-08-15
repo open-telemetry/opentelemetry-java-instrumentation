@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE
+import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
 import static io.opentelemetry.trace.TracingContextUtils.getSpan
 import static io.opentelemetry.trace.TracingContextUtils.withSpan
 

@@ -21,7 +21,7 @@ import static io.opentelemetry.instrumentation.auto.jaxrsclient.v1_1.InjectAdapt
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 
 public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {

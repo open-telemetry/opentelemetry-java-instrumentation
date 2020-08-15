@@ -21,7 +21,7 @@ import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInj
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;

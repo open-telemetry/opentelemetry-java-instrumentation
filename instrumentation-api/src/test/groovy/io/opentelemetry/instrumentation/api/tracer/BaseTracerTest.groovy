@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
