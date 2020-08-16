@@ -35,7 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Entry point for initializing the agent.
+ * Premain-Class for the OpenTelemetry Java agent.
  *
  * <p>The bootstrap process of the agent is somewhat complicated and care has to be taken to make
  * sure things do not get broken by accident.
@@ -67,10 +67,11 @@ public class OpenTelemetryAgent {
 
       URL bootstrapURL = installBootstrapJar(inst);
 
-      Class<?> agentClass =
+      Class<?> agentInitializerClass =
           ClassLoader.getSystemClassLoader()
-              .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
-      Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
+              .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
+      Method startMethod =
+          agentInitializerClass.getMethod("start", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapURL);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
