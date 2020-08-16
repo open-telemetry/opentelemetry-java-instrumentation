@@ -89,11 +89,6 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Integer peerPort(HttpRequestPacket httpRequest) {
     return httpRequest.getRemotePort();
   }

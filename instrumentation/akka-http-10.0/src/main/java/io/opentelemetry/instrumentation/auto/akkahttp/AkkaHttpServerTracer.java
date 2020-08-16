@@ -78,11 +78,6 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Integer peerPort(HttpRequest httpRequest) {
     return null;
   }

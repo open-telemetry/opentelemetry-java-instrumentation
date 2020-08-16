@@ -47,11 +47,6 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Integer peerPort(ServiceRequestContext ctx) {
     SocketAddress socketAddress = ctx.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
