@@ -33,7 +33,6 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.common.exec.DaemonThreadFactory;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import java.util.Objects;
