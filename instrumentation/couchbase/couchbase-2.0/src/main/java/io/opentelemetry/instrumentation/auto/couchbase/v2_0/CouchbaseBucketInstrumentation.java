@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,8 +25,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;

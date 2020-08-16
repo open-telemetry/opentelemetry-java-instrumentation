@@ -23,7 +23,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
 import io.opentelemetry.auto.test.AgentTestRunner;
-import io.opentelemetry.auto.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;

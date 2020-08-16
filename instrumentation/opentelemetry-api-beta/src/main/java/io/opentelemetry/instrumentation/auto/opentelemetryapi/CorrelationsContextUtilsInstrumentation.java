@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import application.io.grpc.Context;
 import application.io.opentelemetry.correlationcontext.CorrelationContext;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

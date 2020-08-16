@@ -78,10 +78,10 @@ class FieldBackedProviderTest extends AgentTestRunner {
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('io.opentelemetry.auto.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }
@@ -245,10 +245,10 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('io.opentelemetry.auto.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }

@@ -24,7 +24,7 @@ import io.grpc.ServerBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.auto.common.exec.CommonTaskExecutor
+import io.opentelemetry.javaagent.common.exec.CommonTaskExecutor
 import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils

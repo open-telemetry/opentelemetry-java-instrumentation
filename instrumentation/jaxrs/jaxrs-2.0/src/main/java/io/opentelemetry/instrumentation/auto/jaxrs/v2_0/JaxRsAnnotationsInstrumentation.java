@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -29,11 +29,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -74,8 +74,8 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
-      "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
+      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
+      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsTracer",
     };
   }

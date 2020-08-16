@@ -23,7 +23,7 @@ public class AgentLoadedChecker {
   public static void main(final String[] args) throws ClassNotFoundException {
     // Empty classloader that delegates to bootstrap
     URLClassLoader emptyClassLoader = new URLClassLoader(new URL[] {}, null);
-    Class agentClass = emptyClassLoader.loadClass("io.opentelemetry.auto.bootstrap.Agent");
+    Class agentClass = emptyClassLoader.loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
 
     if (agentClass.getClassLoader() != null) {
       throw new RuntimeException(

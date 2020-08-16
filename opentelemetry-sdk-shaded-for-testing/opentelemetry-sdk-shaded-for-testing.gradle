@@ -21,10 +21,10 @@ shadowJar {
 
   mergeServiceFiles()
 
-  relocate "com.google", "io.opentelemetry.auto.shaded.com.google"
-  relocate "javax.annotation", "io.opentelemetry.auto.shaded.javax.annotation"
-  relocate "org.checkerframework", "io.opentelemetry.auto.shaded.org.checkerframework"
-  relocate "org.codehaus", "io.opentelemetry.auto.shaded.org.codehaus"
+  relocate "com.google", "io.opentelemetry.javaagent.shaded.com.google"
+  relocate "javax.annotation", "io.opentelemetry.javaagent.shaded.javax.annotation"
+  relocate "org.checkerframework", "io.opentelemetry.javaagent.shaded.org.checkerframework"
+  relocate "org.codehaus", "io.opentelemetry.javaagent.shaded.org.codehaus"
 
   // this is brought by OpenTelemetry API
   exclude "io/grpc/**"

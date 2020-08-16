@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.server;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -30,9 +30,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;

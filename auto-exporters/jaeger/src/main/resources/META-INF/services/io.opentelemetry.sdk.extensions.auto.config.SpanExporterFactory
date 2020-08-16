@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory
+io.opentelemetry.javaagent.exporters.jaeger.JaegerExporterFactory
