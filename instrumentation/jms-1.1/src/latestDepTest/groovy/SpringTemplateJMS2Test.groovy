@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
+
+import static JMS2Test.consumerSpan
+import static JMS2Test.producerSpan
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -32,13 +40,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
-
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.TimeUnit
-
-import static JMS2Test.consumerSpan
-import static JMS2Test.producerSpan
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
   static {
@@ -101,7 +102,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     }
   }
 
-  def "sending a message to #expectedSpanName generates spans"() {
+  def "sending a message to #destinationName generates spans"() {
     setup:
     template.convertAndSend(destination, messageText)
     TextMessage receivedMessage = template.receive(destination)
@@ -110,23 +111,25 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[0][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS2") | "queue/SpringTemplateJMS2"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS2") | "queue"         | "SpringTemplateJMS2"
   }
 
   def "send and receive message generates spans"() {
     setup:
+    AtomicReference<String> msgId = new AtomicReference<>()
     Thread.start {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
+      msgId.set(msg.getJMSMessageID())
 
       // There's a chance this might be reported last, messing up the assertion.
       template.send(msg.getJMSReplyTo()) {
@@ -141,21 +144,21 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, HornetQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue/<temporary>") // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "<temporary>") // receive doesn't propagate the trace, so this is a root
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue/<temporary>", false, HornetQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[2][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS2") | "queue/SpringTemplateJMS2"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS2") | "queue"         | "SpringTemplateJMS2"
   }
 }
