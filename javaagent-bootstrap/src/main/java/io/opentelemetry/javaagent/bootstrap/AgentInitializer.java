@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
  * unimpeded access to the rest of agent parts.
  */
-public class Agent {
+public class AgentInitializer {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.showDateTime";
@@ -49,13 +49,13 @@ public class Agent {
     // We can configure logger here because io.opentelemetry.auto.AgentBootstrap doesn't touch
     // it.
     configureLogger();
-    log = LoggerFactory.getLogger(Agent.class);
+    log = LoggerFactory.getLogger(AgentInitializer.class);
   }
 
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
 
-  public static void start(Instrumentation inst, URL bootstrapURL) {
+  public static void initialize(Instrumentation inst, URL bootstrapURL) {
     startAgent(inst, bootstrapURL);
 
     boolean appUsingCustomLogManager = isAppUsingCustomLogManager();

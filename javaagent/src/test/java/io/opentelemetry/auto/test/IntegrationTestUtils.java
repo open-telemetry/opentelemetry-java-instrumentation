@@ -56,7 +56,7 @@ public class IntegrationTestUtils {
     try {
       Class<?> agentClass =
           ClassLoader.getSystemClassLoader()
-              .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
+              .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
       classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
