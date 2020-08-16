@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 
 public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Default {
 
-  public AbstractWebfluxInstrumentation(final String... additionalNames) {
+  public AbstractWebfluxInstrumentation(String... additionalNames) {
     super("spring-webflux", additionalNames);
   }
 

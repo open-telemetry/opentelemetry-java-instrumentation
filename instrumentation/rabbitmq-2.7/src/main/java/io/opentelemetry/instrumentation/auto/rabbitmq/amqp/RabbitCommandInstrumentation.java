@@ -16,17 +16,17 @@
 
 package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.Command;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -76,7 +76,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
   public static class CommandConstructorAdvice {
     @Advice.OnMethodExit
-    public static void setSpanNameAddHeaders(@Advice.This final Command command) {
+    public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
       Span span = CURRENT_RABBIT_SPAN.get();
       if (span != null && command.getMethod() != null) {
@@ -89,7 +89,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
      * 2.7 because of TracedDelegatingConsumer. This unused method is added to ensure consistent
      * muzzle validation by preventing match with 2.6.
      */
-    public static void muzzleCheck(final TracedDelegatingConsumer consumer) {
+    public static void muzzleCheck(TracedDelegatingConsumer consumer) {
       consumer.handleRecoverOk(null);
     }
   }

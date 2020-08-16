@@ -24,12 +24,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
 import io.opentelemetry.instrumentation.auto.javaconcurrent.AbstractExecutorInstrumentation;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -76,8 +76,8 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
+        @Advice.This Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -88,9 +88,9 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }

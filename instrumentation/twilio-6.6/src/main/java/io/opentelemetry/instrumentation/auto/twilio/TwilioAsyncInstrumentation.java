@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.twilio;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -36,9 +36,9 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -106,7 +106,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
+        @Advice.This Object that, @Advice.Origin("#m") String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
       // case of async operations where we want visibility into how long the task was delayed from
@@ -132,9 +132,9 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final ListenableFuture response) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return ListenableFuture response) {
       if (spanWithScope == null) {
         return;
       }
@@ -172,19 +172,19 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
     /** Span that we should finish and annotate when the future is complete. */
     private final Span span;
 
-    public SpanFinishingCallback(final Span span) {
+    public SpanFinishingCallback(Span span) {
       this.span = span;
     }
 
     @Override
-    public void onSuccess(final Object result) {
+    public void onSuccess(Object result) {
       DECORATE.beforeFinish(span);
       DECORATE.onResult(span, result);
       span.end();
     }
 
     @Override
-    public void onFailure(final Throwable t) {
+    public void onFailure(Throwable t) {
       DECORATE.onError(span, t);
       DECORATE.beforeFinish(span);
       span.end();

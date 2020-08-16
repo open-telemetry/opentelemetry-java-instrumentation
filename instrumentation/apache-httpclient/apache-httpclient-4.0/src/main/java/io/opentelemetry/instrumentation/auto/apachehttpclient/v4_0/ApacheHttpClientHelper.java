@@ -28,14 +28,14 @@ import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientHelper {
 
-  public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
+  public static SpanWithScope doMethodEnter(HttpUriRequest request) {
     Span span = TRACER.startSpan(request);
     Scope scope = TRACER.startScope(span, request);
     return new SpanWithScope(span, scope);
   }
 
   public static void doMethodExitAndResetCallDepthThread(
-      final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
+      SpanWithScope spanWithScope, Object result, Throwable throwable) {
     if (spanWithScope == null) {
       return;
     }
@@ -44,8 +44,7 @@ public class ApacheHttpClientHelper {
     doMethodExit(spanWithScope, result, throwable);
   }
 
-  public static void doMethodExit(
-      final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
+  public static void doMethodExit(SpanWithScope spanWithScope, Object result, Throwable throwable) {
     try {
       Span span = spanWithScope.getSpan();
       if (result instanceof HttpResponse) {

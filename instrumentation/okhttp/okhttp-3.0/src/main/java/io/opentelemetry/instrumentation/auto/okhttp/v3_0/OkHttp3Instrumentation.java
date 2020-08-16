@@ -22,7 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -61,8 +61,7 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
 
   public static class OkHttp3Advice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addTracingInterceptor(
-        @Advice.Argument(0) final OkHttpClient.Builder builder) {
+    public static void addTracingInterceptor(@Advice.Argument(0) OkHttpClient.Builder builder) {
       for (Interceptor interceptor : builder.interceptors()) {
         if (interceptor instanceof TracingInterceptor) {
           return;

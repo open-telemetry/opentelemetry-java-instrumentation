@@ -18,9 +18,9 @@ package io.opentelemetry.instrumentation.auto.jaxrs.v1_0;
 
 import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -35,7 +35,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
-  public Span startSpan(final Class<?> target, final Method method) {
+  public Span startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
     Span serverSpan = getCurrentServerSpan();
 
@@ -51,7 +51,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return tracer.spanBuilder(spanName).startSpan();
   }
 
-  private void updateServerSpanName(final Span span, final String spanName) {
+  private void updateServerSpanName(Span span, String spanName) {
     if (!spanName.isEmpty()) {
       span.updateName(spanName);
     }
@@ -63,7 +63,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getPathSpanName(final Class<?> target, final Method method) {
+  private String getPathSpanName(Class<?> target, Method method) {
     Map<Method, String> classMap = spanNames.get(target);
 
     if (classMap == null) {
@@ -106,7 +106,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return spanName;
   }
 
-  private String locateHttpMethod(final Method method) {
+  private String locateHttpMethod(Method method) {
     String httpMethod = null;
     for (Annotation ann : method.getDeclaredAnnotations()) {
       if (ann.annotationType().getAnnotation(HttpMethod.class) != null) {
@@ -116,11 +116,11 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return httpMethod;
   }
 
-  private Path findMethodPath(final Method method) {
+  private Path findMethodPath(Method method) {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(final Class<?> target) {
+  private Path findClassPath(Class<?> target) {
     for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
       Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {
@@ -132,7 +132,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private Method findMatchingMethod(final Method baseMethod, final Method[] methods) {
+  private Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {
       if (!baseMethod.getReturnType().equals(method.getReturnType())) {
@@ -158,8 +158,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(
-      final String httpMethod, final Path classPath, final Path methodPath) {
+  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
     if (httpMethod != null) {

@@ -191,7 +191,7 @@ public class Config {
   }
 
   // Read order: Properties -> Parent
-  private Config(final Properties properties, final Config parent) {
+  private Config(Properties properties, Config parent) {
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
     exporter = properties.getProperty(EXPORTER, parent.exporter);
 
@@ -244,8 +244,7 @@ public class Config {
     log.debug("New instance: {}", this);
   }
 
-  public boolean isIntegrationEnabled(
-      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+  public boolean isIntegrationEnabled(SortedSet<String> integrationNames, boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
@@ -272,7 +271,7 @@ public class Config {
    * @return
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  public static String getSettingFromEnvironment(final String name, final String defaultValue) {
+  public static String getSettingFromEnvironment(String name, String defaultValue) {
     String value;
     String systemPropertyName = propertyNameToSystemPropertyName(name);
 
@@ -301,36 +300,33 @@ public class Config {
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a list by
    * splitting on `,`.
    */
-  private static List<String> getListSettingFromEnvironment(
-      final String name, final String defaultValue) {
+  private static List<String> getListSettingFromEnvironment(String name, String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
-  private static Map<String, String> getMapSettingFromEnvironment(final String name) {
+  private static Map<String, String> getMapSettingFromEnvironment(String name) {
     return parseMap(getSettingFromEnvironment(name, null));
   }
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
    */
-  private static Boolean getBooleanSettingFromEnvironment(
-      final String name, final Boolean defaultValue) {
+  private static Boolean getBooleanSettingFromEnvironment(String name, Boolean defaultValue) {
     return getSettingFromEnvironmentWithLog(name, Boolean.class, defaultValue);
   }
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Integer.
    */
-  private static Integer getIntegerSettingFromEnvironment(
-      final String name, final Integer defaultValue) {
+  private static Integer getIntegerSettingFromEnvironment(String name, Integer defaultValue) {
     return getSettingFromEnvironmentWithLog(name, Integer.class, defaultValue);
   }
 
   private static <T> T getSettingFromEnvironmentWithLog(
-      final String name, final Class<T> tClass, final T defaultValue) {
+      String name, Class<T> tClass, T defaultValue) {
     try {
       return valueOf(getSettingFromEnvironment(name, null), tClass, defaultValue);
-    } catch (final NumberFormatException e) {
+    } catch (NumberFormatException e) {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
     }
@@ -343,7 +339,7 @@ public class Config {
    * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
    */
-  private static String propertyNameToEnvironmentVariableName(final String setting) {
+  private static String propertyNameToEnvironmentVariableName(String setting) {
     return ENV_REPLACEMENT
         .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
         .replaceAll("_");
@@ -356,7 +352,7 @@ public class Config {
    * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name
    */
-  private static String propertyNameToSystemPropertyName(final String setting) {
+  private static String propertyNameToSystemPropertyName(String setting) {
     return PREFIX + setting;
   }
 
@@ -368,7 +364,7 @@ public class Config {
    * @return value == null || value.trim().isEmpty() ? defaultValue : tClass.valueOf(value)
    * @throws NumberFormatException
    */
-  private static <T> T valueOf(final String value, final Class<T> tClass, final T defaultValue) {
+  private static <T> T valueOf(String value, Class<T> tClass, T defaultValue) {
     if (value == null || value.trim().isEmpty()) {
       return defaultValue;
     }
@@ -377,40 +373,40 @@ public class Config {
           PUBLIC_LOOKUP
               .findStatic(tClass, "valueOf", MethodType.methodType(tClass, String.class))
               .invoke(value);
-    } catch (final NumberFormatException e) {
+    } catch (NumberFormatException e) {
       throw e;
-    } catch (final NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException e) {
       log.debug("Can't invoke or access 'valueOf': ", e);
       throw new NumberFormatException(e.toString());
-    } catch (final Throwable e) {
+    } catch (Throwable e) {
       log.debug("Can't parse: ", e);
       throw new NumberFormatException(e.toString());
     }
   }
 
   private static List<String> getPropertyListValue(
-      final Properties properties, final String name, final List<String> defaultValue) {
+      Properties properties, String name, List<String> defaultValue) {
     String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
   private static Map<String, String> getPropertyMapValue(
-      final Properties properties, final String name, final Map<String, String> defaultValue) {
+      Properties properties, String name, Map<String, String> defaultValue) {
     String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value);
   }
 
   private static Boolean getPropertyBooleanValue(
-      final Properties properties, final String name, final Boolean defaultValue) {
+      Properties properties, String name, Boolean defaultValue) {
     return valueOf(properties.getProperty(name), Boolean.class, defaultValue);
   }
 
   private static Integer getPropertyIntegerValue(
-      final Properties properties, final String name, final Integer defaultValue) {
+      Properties properties, String name, Integer defaultValue) {
     return valueOf(properties.getProperty(name), Integer.class, defaultValue);
   }
 
-  private static List<String> parseList(final String str) {
+  private static List<String> parseList(String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyList();
     }
@@ -423,7 +419,7 @@ public class Config {
     return Collections.unmodifiableList(Arrays.asList(tokens));
   }
 
-  private static Map<String, String> parseMap(final String str) {
+  private static Map<String, String> parseMap(String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyMap();
     }
@@ -474,9 +470,9 @@ public class Config {
 
     try (FileReader fileReader = new FileReader(configurationFile)) {
       properties.load(fileReader);
-    } catch (final FileNotFoundException fnf) {
+    } catch (FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
-    } catch (final IOException ioe) {
+    } catch (IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }
@@ -484,7 +480,7 @@ public class Config {
     return properties;
   }
 
-  private static String toUpper(final String str) {
+  private static String toUpper(String str) {
     return str == null ? null : str.toUpperCase(Locale.ENGLISH);
   }
 
@@ -495,7 +491,7 @@ public class Config {
     return INSTANCE;
   }
 
-  public static Config get(final Properties properties) {
+  public static Config get(Properties properties) {
     if (properties == null || properties.isEmpty()) {
       return INSTANCE;
     } else {

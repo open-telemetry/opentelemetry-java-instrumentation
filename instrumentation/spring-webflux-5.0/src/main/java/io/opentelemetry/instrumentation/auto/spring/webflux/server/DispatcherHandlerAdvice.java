@@ -36,7 +36,7 @@ public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void methodEnter(
-      @Advice.Argument(0) final ServerWebExchange exchange,
+      @Advice.Argument(0) ServerWebExchange exchange,
       @Advice.Local("otelScope") Scope otelScope,
       @Advice.Local("otelContext") Context otelContext) {
 
@@ -53,8 +53,8 @@ public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Thrown final Throwable throwable,
-      @Advice.Argument(0) final ServerWebExchange exchange,
+      @Advice.Thrown Throwable throwable,
+      @Advice.Argument(0) ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Void> mono,
       @Advice.Local("otelScope") Scope otelScope,
       @Advice.Local("otelContext") Context otelContext) {

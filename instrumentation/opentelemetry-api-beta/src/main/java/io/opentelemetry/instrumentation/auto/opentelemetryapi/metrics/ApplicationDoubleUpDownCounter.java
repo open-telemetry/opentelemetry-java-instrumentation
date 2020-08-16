@@ -25,7 +25,7 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
   private final io.opentelemetry.metrics.DoubleUpDownCounter agentDoubleUpDownCounter;
 
   ApplicationDoubleUpDownCounter(
-      final io.opentelemetry.metrics.DoubleUpDownCounter agentDoubleUpDownCounter) {
+      io.opentelemetry.metrics.DoubleUpDownCounter agentDoubleUpDownCounter) {
     this.agentDoubleUpDownCounter = agentDoubleUpDownCounter;
   }
 
@@ -34,12 +34,12 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
   }
 
   @Override
-  public void add(final double delta, final Labels labels) {
+  public void add(double delta, Labels labels) {
     agentDoubleUpDownCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
-  public BoundDoubleUpDownCounter bind(final Labels labels) {
+  public BoundDoubleUpDownCounter bind(Labels labels) {
     return new BoundInstrument(agentDoubleUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }
 
@@ -49,13 +49,13 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
         agentBoundDoubleUpDownCounter;
 
     BoundInstrument(
-        final io.opentelemetry.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
+        io.opentelemetry.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
             agentBoundDoubleUpDownCounter) {
       this.agentBoundDoubleUpDownCounter = agentBoundDoubleUpDownCounter;
     }
 
     @Override
-    public void add(final double delta) {
+    public void add(double delta) {
       agentBoundDoubleUpDownCounter.add(delta);
     }
 
@@ -69,24 +69,24 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 
     private final io.opentelemetry.metrics.DoubleUpDownCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleUpDownCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.metrics.DoubleUpDownCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setDescription(final String description) {
+    public DoubleUpDownCounter.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setUnit(final String unit) {
+    public DoubleUpDownCounter.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setConstantLabels(final Labels constantLabels) {
+    public DoubleUpDownCounter.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

@@ -36,12 +36,12 @@ public class LettuceAsyncBiFunction<T, U extends Throwable, R>
 
   private final Span span;
 
-  public LettuceAsyncBiFunction(final Span span) {
+  public LettuceAsyncBiFunction(Span span) {
     this.span = span;
   }
 
   @Override
-  public R apply(final T t, final Throwable throwable) {
+  public R apply(T t, Throwable throwable) {
     if (throwable instanceof CancellationException) {
       span.setAttribute("db.command.cancelled", true);
       TRACER.end(span);

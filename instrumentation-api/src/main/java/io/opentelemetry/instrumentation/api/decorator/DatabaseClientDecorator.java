@@ -31,19 +31,19 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   protected abstract String dbName(CONNECTION connection);
 
   // TODO make abstract after implementing in all subclasses
-  protected String dbConnectionString(final CONNECTION connection) {
+  protected String dbConnectionString(CONNECTION connection) {
     return null;
   }
 
   @Override
-  public Span afterStart(final Span span) {
+  public Span afterStart(Span span) {
     assert span != null;
     span.setAttribute(SemanticAttributes.DB_SYSTEM.key(), dbSystem());
     return super.afterStart(span);
   }
 
   /** This should be called when the connection is being used, not when it's created. */
-  public Span onConnection(final Span span, final CONNECTION connection) {
+  public Span onConnection(Span span, CONNECTION connection) {
     assert span != null;
     if (connection != null) {
       span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
@@ -54,7 +54,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
     return span;
   }
 
-  public Span onStatement(final Span span, final String statement) {
+  public Span onStatement(Span span, String statement) {
     assert span != null;
     span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement);
     return span;

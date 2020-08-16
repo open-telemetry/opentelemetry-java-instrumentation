@@ -32,7 +32,7 @@ public class GrizzlyHttpServerTracer
   public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
   @Override
-  protected String method(final HttpRequestPacket httpRequest) {
+  protected String method(HttpRequestPacket httpRequest) {
     return httpRequest.getMethod().getMethodString();
   }
 
@@ -58,7 +58,7 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected URI url(final HttpRequestPacket httpRequest) throws URISyntaxException {
+  protected URI url(HttpRequestPacket httpRequest) throws URISyntaxException {
     return new URI(
         (httpRequest.isSecure() ? "https://" : "http://")
             + httpRequest.serverName()
@@ -69,7 +69,7 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(final HttpRequestPacket httpRequest) {
+  protected String peerHostIP(HttpRequestPacket httpRequest) {
     return httpRequest.getRemoteAddress();
   }
 
@@ -89,7 +89,7 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected Integer peerPort(final HttpRequestPacket httpRequest) {
+  protected Integer peerPort(HttpRequestPacket httpRequest) {
     return httpRequest.getRemotePort();
   }
 }

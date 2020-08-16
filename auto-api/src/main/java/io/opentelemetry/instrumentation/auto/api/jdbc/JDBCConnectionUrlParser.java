@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public enum JDBCConnectionUrlParser {
   GENERIC_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       try {
         // Attempt generic parsing
         URI uri = new URI(jdbcUrl);
@@ -67,7 +67,7 @@ public enum JDBCConnectionUrlParser {
         }
 
         return builder.system(uri.getScheme());
-      } catch (final Exception e) {
+      } catch (Exception e) {
         return builder;
       }
     }
@@ -79,7 +79,7 @@ public enum JDBCConnectionUrlParser {
    */
   JTDS_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String serverName = "";
       Integer port = null;
 
@@ -124,7 +124,7 @@ public enum JDBCConnectionUrlParser {
 
   MODIFIED_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String type;
       String serverName = "";
       Integer port = null;
@@ -203,7 +203,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 5432;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -220,7 +220,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 3306;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -256,7 +256,7 @@ public enum JDBCConnectionUrlParser {
         hostEndLoc = portLoc;
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, dbLoc)));
-        } catch (final NumberFormatException e) {
+        } catch (NumberFormatException e) {
         }
       } else {
         hostEndLoc = dbLoc;
@@ -270,7 +270,7 @@ public enum JDBCConnectionUrlParser {
 
   MARIA_SUBPROTO() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       int hostEndLoc;
       int clusterSepLoc = jdbcUrl.indexOf(",");
       int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
@@ -296,7 +296,7 @@ public enum JDBCConnectionUrlParser {
         int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
-        } catch (final NumberFormatException e) {
+        } catch (NumberFormatException e) {
         }
       } else {
         hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -317,7 +317,7 @@ public enum JDBCConnectionUrlParser {
     private final Pattern USER_REGEX = Pattern.compile("\\(\\s*user\\s*=\\s*([^ )]+)\\s*\\)");
 
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       int addressEnd = jdbcUrl.indexOf(",address=");
       if (addressEnd > 0) {
         jdbcUrl = jdbcUrl.substring(0, addressEnd);
@@ -345,7 +345,7 @@ public enum JDBCConnectionUrlParser {
     private static final String DEFAULT_HOST = "localhost";
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -359,7 +359,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 1433;
 
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
@@ -387,7 +387,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 50000;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getPort() == null) {
         builder.port(DEFAULT_PORT);
@@ -400,7 +400,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 1521;
 
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       int typeEndIndex = jdbcUrl.indexOf(":", "oracle:".length());
       String subtype = jdbcUrl.substring("oracle:".length(), typeEndIndex);
       jdbcUrl = jdbcUrl.substring(typeEndIndex + 1);
@@ -421,7 +421,7 @@ public enum JDBCConnectionUrlParser {
 
   ORACLE_CONNECT_INFO() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
 
       String host;
       Integer port;
@@ -444,7 +444,7 @@ public enum JDBCConnectionUrlParser {
             Integer parsedPort = null;
             try {
               parsedPort = Integer.parseInt(portOrInstance);
-            } catch (final NumberFormatException e) {
+            } catch (NumberFormatException e) {
             }
             if (parsedPort == null) {
               port = null;
@@ -482,7 +482,7 @@ public enum JDBCConnectionUrlParser {
 
   ORACLE_AT() {
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       if (jdbcUrl.contains("@(description")) {
         return ORACLE_AT_DESCRIPTION.doParse(jdbcUrl, builder);
       }
@@ -524,7 +524,7 @@ public enum JDBCConnectionUrlParser {
         Pattern.compile("\\(\\s*service_name\\s*=\\s*([^ )]+)\\s*\\)");
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String[] atSplit = jdbcUrl.split("@", 2);
 
       int userInfoLoc = atSplit[0].indexOf("/");
@@ -555,7 +555,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 8082;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String instance;
 
       String h2Url = jdbcUrl.substring("h2:".length());
@@ -616,7 +616,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 9001;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String instance = null;
       DBInfo dbInfo = builder.build();
       if (dbInfo.getUser() == null) {
@@ -665,7 +665,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 1527;
 
     @Override
-    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String instance = null;
       String host = null;
 
@@ -757,13 +757,13 @@ public enum JDBCConnectionUrlParser {
 
   private final String[] typeKeys;
 
-  JDBCConnectionUrlParser(final String... typeKeys) {
+  JDBCConnectionUrlParser(String... typeKeys) {
     this.typeKeys = typeKeys;
   }
 
-  abstract DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder);
+  abstract DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder);
 
-  public static DBInfo parse(String connectionUrl, final Properties props) {
+  public static DBInfo parse(String connectionUrl, Properties props) {
     if (connectionUrl == null) {
       return DEFAULT;
     }
@@ -793,13 +793,13 @@ public enum JDBCConnectionUrlParser {
         return withUrl(typeParsers.get(type).doParse(jdbcUrl, parsedProps), type);
       }
       return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Error parsing URL", e);
       return parsedProps.build();
     }
   }
 
-  private static DBInfo withUrl(final DBInfo.Builder builder, String type) {
+  private static DBInfo withUrl(DBInfo.Builder builder, String type) {
     DBInfo info = builder.build();
     StringBuilder url = new StringBuilder();
     url.append(type);
@@ -823,7 +823,7 @@ public enum JDBCConnectionUrlParser {
   }
 
   // Source: https://stackoverflow.com/a/13592567
-  private static Map<String, String> splitQuery(final String query, final String separator) {
+  private static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -840,7 +840,7 @@ public enum JDBCConnectionUrlParser {
                   : null;
           query_pairs.put(key, value);
         }
-      } catch (final UnsupportedEncodingException e) {
+      } catch (UnsupportedEncodingException e) {
         // Ignore.
       }
     }
@@ -848,7 +848,7 @@ public enum JDBCConnectionUrlParser {
   }
 
   private static void populateStandardProperties(
-      final DBInfo.Builder builder, final Map<? extends Object, ? extends Object> props) {
+      DBInfo.Builder builder, Map<? extends Object, ? extends Object> props) {
     if (props != null && !props.isEmpty()) {
       if (props.containsKey("user")) {
         builder.user((String) props.get("user"));
@@ -872,7 +872,7 @@ public enum JDBCConnectionUrlParser {
         String portNumber = (String) props.get("portnumber");
         try {
           builder.port(Integer.parseInt(portNumber));
-        } catch (final NumberFormatException e) {
+        } catch (NumberFormatException e) {
           log.debug("Error parsing portnumber property: " + portNumber, e);
         }
       }
@@ -881,7 +881,7 @@ public enum JDBCConnectionUrlParser {
         String portNumber = (String) props.get("portNumber");
         try {
           builder.port(Integer.parseInt(portNumber));
-        } catch (final NumberFormatException e) {
+        } catch (NumberFormatException e) {
           log.debug("Error parsing portNumber property: " + portNumber, e);
         }
       }
@@ -892,7 +892,7 @@ public enum JDBCConnectionUrlParser {
    * see {@link <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md">specification</a>}
    */
-  private static String toDbSystem(final String type) {
+  private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database
       case "db2": // IBM Db2

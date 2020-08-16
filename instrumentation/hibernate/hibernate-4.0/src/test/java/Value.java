@@ -31,7 +31,7 @@ public class Value {
 
   public Value() {}
 
-  public Value(final String name) {
+  public Value(String name) {
     this.name = name;
   }
 
@@ -42,7 +42,7 @@ public class Value {
     return id;
   }
 
-  private void setId(final Long id) {
+  private void setId(Long id) {
     this.id = id;
   }
 
@@ -50,7 +50,7 @@ public class Value {
     return name;
   }
 
-  public void setName(final String title) {
+  public void setName(String title) {
     name = title;
   }
 }

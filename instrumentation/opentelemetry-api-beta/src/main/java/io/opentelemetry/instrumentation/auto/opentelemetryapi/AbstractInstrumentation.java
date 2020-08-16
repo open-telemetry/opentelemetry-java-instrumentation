@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.auto.opentelemetryapi;
 
 import static java.util.Collections.singletonMap;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 
 public abstract class AbstractInstrumentation extends Instrumenter.Default {

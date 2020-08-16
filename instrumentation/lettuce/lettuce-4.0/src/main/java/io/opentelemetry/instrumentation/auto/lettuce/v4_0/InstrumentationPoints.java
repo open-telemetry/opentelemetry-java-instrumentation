@@ -35,16 +35,16 @@ public final class InstrumentationPoints {
 
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
-  public static SpanWithScope beforeCommand(final RedisCommand<?, ?, ?> command) {
+  public static SpanWithScope beforeCommand(RedisCommand<?, ?, ?> command) {
     Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
     return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
   }
 
   public static void afterCommand(
-      final RedisCommand<?, ?, ?> command,
-      final SpanWithScope spanWithScope,
-      final Throwable throwable,
-      final AsyncCommand<?, ?, ?> asyncCommand) {
+      RedisCommand<?, ?, ?> command,
+      SpanWithScope spanWithScope,
+      Throwable throwable,
+      AsyncCommand<?, ?, ?> asyncCommand) {
     Span span = spanWithScope.getSpan();
     if (throwable != null) {
       LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
@@ -68,12 +68,12 @@ public final class InstrumentationPoints {
     spanWithScope.closeScope();
   }
 
-  public static SpanWithScope beforeConnect(final RedisURI redisURI) {
+  public static SpanWithScope beforeConnect(RedisURI redisURI) {
     Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
     return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
   }
 
-  public static void afterConnect(final SpanWithScope spanWithScope, final Throwable throwable) {
+  public static void afterConnect(SpanWithScope spanWithScope, Throwable throwable) {
     Span span = spanWithScope.getSpan();
     if (throwable != null) {
       LettuceConnectionDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
@@ -90,16 +90,16 @@ public final class InstrumentationPoints {
    *
    * @return false if the span should finish early (the command will not have a return value)
    */
-  public static boolean expectsResponse(final RedisCommand<?, ?, ?> command) {
+  public static boolean expectsResponse(RedisCommand<?, ?, ?> command) {
     ProtocolKeyword keyword = command.getType();
     return !(isNonInstrumentingCommand(keyword) || isNonInstrumentingKeyword(keyword));
   }
 
-  private static boolean isNonInstrumentingCommand(final ProtocolKeyword keyword) {
+  private static boolean isNonInstrumentingCommand(ProtocolKeyword keyword) {
     return keyword instanceof CommandType && NON_INSTRUMENTING_COMMANDS.contains(keyword);
   }
 
-  private static boolean isNonInstrumentingKeyword(final ProtocolKeyword keyword) {
+  private static boolean isNonInstrumentingKeyword(ProtocolKeyword keyword) {
     return keyword == SEGFAULT;
   }
 }

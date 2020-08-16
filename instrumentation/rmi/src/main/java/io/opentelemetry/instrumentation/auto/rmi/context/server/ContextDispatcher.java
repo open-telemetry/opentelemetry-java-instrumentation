@@ -51,7 +51,7 @@ public class ContextDispatcher implements Dispatcher {
   }
 
   @Override
-  public void dispatch(final Remote obj, final RemoteCall call) throws IOException {
+  public void dispatch(Remote obj, RemoteCall call) throws IOException {
     ObjectInput in = call.getInputStream();
     int operationId = in.readInt();
     in.readLong(); // skip 8 bytes

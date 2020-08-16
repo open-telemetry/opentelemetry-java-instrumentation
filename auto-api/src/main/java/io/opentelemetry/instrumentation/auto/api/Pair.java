@@ -18,14 +18,14 @@ package io.opentelemetry.instrumentation.auto.api;
 
 public final class Pair<T, U> {
 
-  public static <T, U> Pair<T, U> of(final T left, final U right) {
+  public static <T, U> Pair<T, U> of(T left, U right) {
     return new Pair<>(left, right);
   }
 
   private final T left;
   private final U right;
 
-  Pair(final T left, final U right) {
+  Pair(T left, U right) {
     this.left = left;
     this.right = right;
   }

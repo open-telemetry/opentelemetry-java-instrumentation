@@ -20,9 +20,9 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -91,7 +91,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   public static class StoreAndIncrementApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
-        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       Context context = contextStore.putIfAbsent(thiz, new Context());
@@ -102,7 +102,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   public static class StoreAndIncrementWithFactoryApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
-        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       Context context = contextStore.putIfAbsent(thiz, Context.FACTORY);
@@ -113,7 +113,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   public static class GetApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
-        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       contextCount = contextStore.get(thiz).count;
@@ -122,8 +122,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This final KeyClass thiz, @Advice.Argument(0) final int value) {
+    public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       Context context = new Context();
@@ -189,7 +188,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
       return -1;
     }
 
-    public void putContextCount(final int value) {
+    public void putContextCount(int value) {
       // implementation replaced with test instrumentation
     }
   }

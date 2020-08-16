@@ -55,7 +55,7 @@ public class AgentClassLoader extends URLClassLoader {
    *     9+.
    */
   public AgentClassLoader(
-      final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
+      URL bootstrapJarLocation, String internalJarFileName, ClassLoader parent) {
     super(new URL[] {}, parent);
 
     // some tests pass null
@@ -71,7 +71,7 @@ public class AgentClassLoader extends URLClassLoader {
       // field.  If extending this class from Classloader instead of URLClassloader required less
       // boilerplate it could be used and the need for dummy fields would be reduced
       addURL(new URL("x-internal-jar", null, 0, "/", internalJarURLHandler));
-    } catch (final MalformedURLException e) {
+    } catch (MalformedURLException e) {
       // This can't happen with current URL constructor
       log.error("URL malformed.  Unsupported JDK?", e);
     }
@@ -93,7 +93,7 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   @Override
-  public URL getResource(final String resourceName) {
+  public URL getResource(String resourceName) {
     URL bootstrapResource = bootstrapProxy.getResource(resourceName);
     if (null == bootstrapResource) {
       return super.getResource(resourceName);
@@ -117,17 +117,17 @@ public class AgentClassLoader extends URLClassLoader {
       ClassLoader.registerAsParallelCapable();
     }
 
-    public BootstrapClassLoaderProxy(final URL[] urls) {
+    public BootstrapClassLoaderProxy(URL[] urls) {
       super(urls, null);
     }
 
     @Override
-    public void addURL(final URL url) {
+    public void addURL(URL url) {
       super.addURL(url);
     }
 
     @Override
-    protected Class<?> findClass(final String name) throws ClassNotFoundException {
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
       throw new ClassNotFoundException(name);
     }
   }

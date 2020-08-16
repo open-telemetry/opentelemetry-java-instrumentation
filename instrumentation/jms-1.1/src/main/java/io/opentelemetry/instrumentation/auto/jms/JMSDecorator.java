@@ -37,25 +37,25 @@ public class JMSDecorator extends ClientDecorator {
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
 
-  public String spanNameForReceive(final Message message) {
+  public String spanNameForReceive(Message message) {
     return toSpanName(message, null);
   }
 
-  public String spanNameForConsumer(final Message message) {
+  public String spanNameForConsumer(Message message) {
     return toSpanName(message, null);
   }
 
-  public String spanNameForProducer(final Message message, final Destination destination) {
+  public String spanNameForProducer(Message message, Destination destination) {
     return toSpanName(message, destination);
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";
 
-  public static String toSpanName(final Message message, final Destination destination) {
+  public static String toSpanName(Message message, Destination destination) {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
-    } catch (final Exception e) {
+    } catch (Exception e) {
     }
     if (jmsDestination == null) {
       jmsDestination = destination;
@@ -81,7 +81,7 @@ public class JMSDecorator extends ClientDecorator {
           return "topic/" + topicName;
         }
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
     }
     return "destination";
   }

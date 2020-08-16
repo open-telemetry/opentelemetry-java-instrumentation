@@ -53,10 +53,7 @@ public final class GrpcHelper {
   }
 
   public static void prepareSpan(
-      final Span span,
-      final String methodName,
-      final InetSocketAddress peerAddress,
-      final boolean server) {
+      Span span, String methodName, InetSocketAddress peerAddress, boolean server) {
     String serviceName =
         "(unknown)"; // Spec says it's mandatory, so populate even if we couldn't determine it.
     int slash = methodName.indexOf('/');

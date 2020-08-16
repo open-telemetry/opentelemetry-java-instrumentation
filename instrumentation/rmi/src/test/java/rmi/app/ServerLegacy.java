@@ -29,7 +29,7 @@ public class ServerLegacy extends UnicastRemoteObject implements Greeter {
   }
 
   @Override
-  public String hello(final String name) {
+  public String hello(String name) {
     return "Hello " + name;
   }
 

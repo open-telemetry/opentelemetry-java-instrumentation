@@ -16,15 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -49,10 +49,10 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -129,7 +129,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelMethodAdvice {
     @Advice.OnMethodEnter
     public static SpanWithScope onEnter(
-        @Advice.This final Channel channel, @Advice.Origin("Channel.#m") final String method) {
+        @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       if (callDepth > 0) {
         return null;
@@ -153,7 +153,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
@@ -171,10 +171,10 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelPublishAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void setSpanNameAddHeaders(
-        @Advice.Argument(0) final String exchange,
-        @Advice.Argument(1) final String routingKey,
+        @Advice.Argument(0) String exchange,
+        @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
-        @Advice.Argument(5) final byte[] body) {
+        @Advice.Argument(5) byte[] body) {
       Span span = TRACER.getCurrentSpan();
 
       if (span.getContext().isValid()) {
@@ -229,12 +229,12 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void extractAndStartSpan(
-        @Advice.This final Channel channel,
-        @Advice.Argument(0) final String queue,
-        @Advice.Enter final long startTime,
-        @Advice.Local("callDepth") final int callDepth,
-        @Advice.Return final GetResponse response,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Channel channel,
+        @Advice.Argument(0) String queue,
+        @Advice.Enter long startTime,
+        @Advice.Local("callDepth") int callDepth,
+        @Advice.Return GetResponse response,
+        @Advice.Thrown Throwable throwable) {
 
       if (callDepth > 0) {
         return;
@@ -282,7 +282,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelConsumeAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapConsumer(
-        @Advice.Argument(0) final String queue,
+        @Advice.Argument(0) String queue,
         @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {

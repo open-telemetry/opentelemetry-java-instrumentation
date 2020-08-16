@@ -35,134 +35,117 @@ public class CombinedSimpleChannelHandler<
   private final Upstream upstream;
   private final Downstream downstream;
 
-  public CombinedSimpleChannelHandler(final Upstream upstream, final Downstream downstream) {
+  public CombinedSimpleChannelHandler(Upstream upstream, Downstream downstream) {
     this.upstream = upstream;
     this.downstream = downstream;
   }
 
   @Override
-  public void handleUpstream(final ChannelHandlerContext ctx, final ChannelEvent e)
-      throws Exception {
+  public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
     upstream.handleUpstream(ctx, e);
   }
 
   @Override
-  public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e)
-      throws Exception {
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     upstream.messageReceived(ctx, e);
   }
 
   @Override
-  public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e)
-      throws Exception {
+  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
     upstream.exceptionCaught(ctx, e);
   }
 
   @Override
-  public void channelOpen(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelOpen(ctx, e);
   }
 
   @Override
-  public void channelBound(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelBound(ctx, e);
   }
 
   @Override
-  public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelConnected(ctx, e);
   }
 
   @Override
-  public void channelInterestChanged(final ChannelHandlerContext ctx, final ChannelStateEvent e)
+  public void channelInterestChanged(ChannelHandlerContext ctx, ChannelStateEvent e)
       throws Exception {
     upstream.channelInterestChanged(ctx, e);
   }
 
   @Override
-  public void channelDisconnected(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelDisconnected(ctx, e);
   }
 
   @Override
-  public void channelUnbound(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelUnbound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelUnbound(ctx, e);
   }
 
   @Override
-  public void channelClosed(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     upstream.channelClosed(ctx, e);
   }
 
   @Override
-  public void writeComplete(final ChannelHandlerContext ctx, final WriteCompletionEvent e)
-      throws Exception {
+  public void writeComplete(ChannelHandlerContext ctx, WriteCompletionEvent e) throws Exception {
     upstream.writeComplete(ctx, e);
   }
 
   @Override
-  public void childChannelOpen(final ChannelHandlerContext ctx, final ChildChannelStateEvent e)
+  public void childChannelOpen(ChannelHandlerContext ctx, ChildChannelStateEvent e)
       throws Exception {
     upstream.childChannelOpen(ctx, e);
   }
 
   @Override
-  public void childChannelClosed(final ChannelHandlerContext ctx, final ChildChannelStateEvent e)
+  public void childChannelClosed(ChannelHandlerContext ctx, ChildChannelStateEvent e)
       throws Exception {
     upstream.childChannelClosed(ctx, e);
   }
 
   @Override
-  public void handleDownstream(final ChannelHandlerContext ctx, final ChannelEvent e)
-      throws Exception {
+  public void handleDownstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
     downstream.handleDownstream(ctx, e);
   }
 
   @Override
-  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent e)
-      throws Exception {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     downstream.writeRequested(ctx, e);
   }
 
   @Override
-  public void bindRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void bindRequested(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     downstream.bindRequested(ctx, e);
   }
 
   @Override
-  public void connectRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void connectRequested(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     downstream.connectRequested(ctx, e);
   }
 
   @Override
-  public void setInterestOpsRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
+  public void setInterestOpsRequested(ChannelHandlerContext ctx, ChannelStateEvent e)
       throws Exception {
     downstream.setInterestOpsRequested(ctx, e);
   }
 
   @Override
-  public void disconnectRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void disconnectRequested(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     downstream.disconnectRequested(ctx, e);
   }
 
   @Override
-  public void unbindRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void unbindRequested(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     downstream.unbindRequested(ctx, e);
   }
 
   @Override
-  public void closeRequested(final ChannelHandlerContext ctx, final ChannelStateEvent e)
-      throws Exception {
+  public void closeRequested(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
     downstream.closeRequested(ctx, e);
   }
 }

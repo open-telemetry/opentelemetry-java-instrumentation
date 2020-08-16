@@ -40,17 +40,17 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String dbSystem(final CqlSession session) {
+  protected String dbSystem(CqlSession session) {
     return DbSystem.CASSANDRA;
   }
 
   @Override
-  protected String dbUser(final CqlSession session) {
+  protected String dbUser(CqlSession session) {
     return null;
   }
 
   @Override
-  protected String dbName(final CqlSession session) {
+  protected String dbName(CqlSession session) {
     return session.getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
@@ -59,7 +59,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     return null;
   }
 
-  public void onResponse(final Span span, final ExecutionInfo executionInfo) {
+  public void onResponse(Span span, ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();

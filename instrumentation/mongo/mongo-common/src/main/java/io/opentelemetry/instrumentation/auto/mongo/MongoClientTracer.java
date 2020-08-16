@@ -43,17 +43,17 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbSystem(final CommandStartedEvent event) {
+  protected String dbSystem(CommandStartedEvent event) {
     return DbSystem.MONGODB;
   }
 
   @Override
-  protected String dbUser(final CommandStartedEvent event) {
+  protected String dbUser(CommandStartedEvent event) {
     return null;
   }
 
   @Override
-  protected String dbName(final CommandStartedEvent event) {
+  protected String dbName(CommandStartedEvent event) {
     // Use description if set.
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
@@ -86,7 +86,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbConnectionString(final CommandStartedEvent event) {
+  protected String dbConnectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();
@@ -103,7 +103,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  public String normalizeQuery(final BsonDocument statement) {
+  public String normalizeQuery(BsonDocument statement) {
     // scrub the Mongo command so that parameters are removed from the string
     BsonDocument scrubbed = scrub(statement);
     return scrubbed.toString();
@@ -118,7 +118,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   private static final BsonValue HIDDEN_CHAR = new BsonString("?");
 
-  private static BsonDocument scrub(final BsonDocument origin) {
+  private static BsonDocument scrub(BsonDocument origin) {
     BsonDocument scrub = new BsonDocument();
     for (Map.Entry<String, BsonValue> entry : origin.entrySet()) {
       if (UNSCRUBBED_FIELDS.contains(entry.getKey()) && entry.getValue().isString()) {
@@ -131,7 +131,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     return scrub;
   }
 
-  private static BsonValue scrub(final BsonArray origin) {
+  private static BsonValue scrub(BsonArray origin) {
     BsonArray scrub = new BsonArray();
     for (BsonValue value : origin) {
       BsonValue child = scrub(value);
@@ -140,7 +140,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     return scrub;
   }
 
-  private static BsonValue scrub(final BsonValue origin) {
+  private static BsonValue scrub(BsonValue origin) {
     BsonValue scrubbed;
     if (origin.isDocument()) {
       scrubbed = scrub(origin.asDocument());

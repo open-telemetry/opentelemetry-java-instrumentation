@@ -45,17 +45,17 @@ public abstract class BaseDecorator {
 
   protected BaseDecorator() {}
 
-  public Span afterStart(final Span span) {
+  public Span afterStart(Span span) {
     assert span != null;
     return span;
   }
 
-  public Span beforeFinish(final Span span) {
+  public Span beforeFinish(Span span) {
     assert span != null;
     return span;
   }
 
-  public Span onError(final Span span, final Throwable throwable) {
+  public Span onError(Span span, Throwable throwable) {
     assert span != null;
     if (throwable != null) {
       onComplete(span, Status.UNKNOWN, throwable);
@@ -73,7 +73,7 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public Span onPeerConnection(Span span, InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
@@ -88,13 +88,13 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public Span onPeerConnection(Span span, InetAddress remoteAddress) {
     assert span != null;
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
     return span;
   }
 
-  public static void setPeer(final Span span, String peerName, String peerIp) {
+  public static void setPeer(Span span, String peerName, String peerIp) {
     assert span != null;
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
@@ -111,7 +111,7 @@ public abstract class BaseDecorator {
     }
   }
 
-  public static void addThrowable(final Span span, final Throwable throwable) {
+  public static void addThrowable(Span span, Throwable throwable) {
     span.recordException(throwable);
   }
 
@@ -119,7 +119,7 @@ public abstract class BaseDecorator {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForMethod(final Method method) {
+  public String spanNameForMethod(Method method) {
     return spanNameForMethod(method.getDeclaringClass(), method);
   }
 
@@ -130,7 +130,7 @@ public abstract class BaseDecorator {
    * @param method the method to get the name from, nullable
    * @return the span name from the class and method
    */
-  public String spanNameForMethod(final Class<?> clazz, final Method method) {
+  public String spanNameForMethod(Class<?> clazz, Method method) {
     return spanNameForMethod(clazz, null == method ? null : method.getName());
   }
 
@@ -141,7 +141,7 @@ public abstract class BaseDecorator {
    * @param methodName the name of the method to get the name from, nullable
    * @return the span name from the class and method
    */
-  public String spanNameForMethod(final Class<?> clazz, final String methodName) {
+  public String spanNameForMethod(Class<?> clazz, String methodName) {
     SpanNames cn = SPAN_NAMES.get(clazz);
     return null == methodName ? cn.getClassName() : cn.getSpanName(methodName);
   }
@@ -150,7 +150,7 @@ public abstract class BaseDecorator {
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForClass(final Class<?> clazz) {
+  public String spanNameForClass(Class<?> clazz) {
     String simpleName = clazz.getSimpleName();
     return simpleName.isEmpty() ? SPAN_NAMES.get(clazz).getClassName() : simpleName;
   }
@@ -187,7 +187,7 @@ public abstract class BaseDecorator {
     return simpleName;
   }
 
-  public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+  public static <C> SpanContext extract(C carrier, HttpTextFormat.Getter<C> getter) {
     Context context =
         getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
     Span span = getSpan(context);

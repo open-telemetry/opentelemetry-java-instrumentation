@@ -40,18 +40,18 @@ public class TwilioClientDecorator extends ClientDecorator {
   static final String COMPONENT_NAME = "twilio-sdk";
 
   /** Decorate trace based on service execution metadata. */
-  public String spanNameOnServiceExecution(final Object serviceExecutor, final String methodName) {
+  public String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
     return spanNameForClass(serviceExecutor.getClass()) + "." + methodName;
   }
 
   /** Annotate the span with the results of the operation. */
-  public Span onResult(final Span span, Object result) {
+  public Span onResult(Span span, Object result) {
 
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
       try {
         result = ((ListenableFuture) result).get(0, TimeUnit.MICROSECONDS);
-      } catch (final Exception e) {
+      } catch (Exception e) {
         log.debug("Error unwrapping result", e);
       }
     }
@@ -98,8 +98,7 @@ public class TwilioClientDecorator extends ClientDecorator {
    * Helper method for calling a getter using reflection. This will be slow, so only use when
    * required.
    */
-  private void setTagIfPresent(
-      final Span span, final Object result, final String tag, final String getter) {
+  private void setTagIfPresent(Span span, Object result, String tag, String getter) {
     try {
       Method method = result.getClass().getMethod(getter);
       Object value = method.invoke(result);
@@ -108,7 +107,7 @@ public class TwilioClientDecorator extends ClientDecorator {
         span.setAttribute(tag, value.toString());
       }
 
-    } catch (final Exception e) {
+    } catch (Exception e) {
       // Expected that this won't work for all result types
     }
   }

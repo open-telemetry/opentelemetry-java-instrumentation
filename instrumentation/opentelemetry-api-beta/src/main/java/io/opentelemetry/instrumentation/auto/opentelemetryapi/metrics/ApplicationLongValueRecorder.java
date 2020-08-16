@@ -25,7 +25,7 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
   private final io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder;
 
   protected ApplicationLongValueRecorder(
-      final io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder) {
+      io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder) {
     this.agentLongValueRecorder = agentLongValueRecorder;
   }
 
@@ -34,12 +34,12 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
   }
 
   @Override
-  public void record(final long delta, final Labels labels) {
+  public void record(long delta, Labels labels) {
     agentLongValueRecorder.record(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
-  public BoundLongValueRecorder bind(final Labels labels) {
+  public BoundLongValueRecorder bind(Labels labels) {
     return new BoundInstrument(agentLongValueRecorder.bind(LabelBridging.toAgent(labels)));
   }
 
@@ -49,13 +49,13 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
         agentBoundLongValueRecorder;
 
     protected BoundInstrument(
-        final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
+        io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
             agentBoundLongValueRecorder) {
       this.agentBoundLongValueRecorder = agentBoundLongValueRecorder;
     }
 
     @Override
-    public void record(final long delta) {
+    public void record(long delta) {
       agentBoundLongValueRecorder.record(delta);
     }
 
@@ -69,24 +69,24 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
 
     private final io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongValueRecorder.Builder setDescription(final String description) {
+    public LongValueRecorder.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongValueRecorder.Builder setUnit(final String unit) {
+    public LongValueRecorder.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongValueRecorder.Builder setConstantLabels(final Labels constantLabels) {
+    public LongValueRecorder.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

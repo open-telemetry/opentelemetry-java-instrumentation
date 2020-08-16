@@ -16,12 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.jms.MessageExtractAdapter.GETTER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -30,9 +30,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.util.HashMap;
@@ -98,10 +98,10 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final MessageConsumer consumer,
-        @Advice.Enter final long startTime,
-        @Advice.Return final Message message,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This MessageConsumer consumer,
+        @Advice.Enter long startTime,
+        @Advice.Return Message message,
+        @Advice.Thrown Throwable throwable) {
       String spanName;
       if (message == null) {
         spanName = InstrumentationContext.get(MessageConsumer.class, String.class).get(consumer);

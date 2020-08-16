@@ -28,7 +28,7 @@ class ApplicationTracer implements Tracer {
   private final ContextStore<Context, io.grpc.Context> contextStore;
 
   ApplicationTracer(
-      final io.opentelemetry.trace.Tracer agentTracer,
+      io.opentelemetry.trace.Tracer agentTracer,
       ContextStore<Context, io.grpc.Context> contextStore) {
     this.agentTracer = agentTracer;
     this.contextStore = contextStore;
@@ -40,12 +40,12 @@ class ApplicationTracer implements Tracer {
   }
 
   @Override
-  public Scope withSpan(final Span applicationSpan) {
+  public Scope withSpan(Span applicationSpan) {
     return TracingContextUtils.currentContextWith(applicationSpan);
   }
 
   @Override
-  public Span.Builder spanBuilder(final String spanName) {
+  public Span.Builder spanBuilder(String spanName) {
     return new ApplicationSpan.Builder(agentTracer.spanBuilder(spanName), contextStore);
   }
 }

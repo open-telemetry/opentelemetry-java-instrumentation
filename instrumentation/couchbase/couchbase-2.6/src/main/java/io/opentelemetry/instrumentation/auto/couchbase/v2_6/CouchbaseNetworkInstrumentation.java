@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.couchbase.v2_6;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -28,10 +28,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.util.Map;
@@ -82,10 +82,10 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   public static class CouchbaseNetworkAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addNetworkTagsToSpan(
-        @Advice.FieldValue("remoteHostname") final String remoteHostname,
-        @Advice.FieldValue("remoteSocket") final String remoteSocket,
-        @Advice.FieldValue("localSocket") final String localSocket,
-        @Advice.Argument(1) final CouchbaseRequest request) {
+        @Advice.FieldValue("remoteHostname") String remoteHostname,
+        @Advice.FieldValue("remoteSocket") String remoteSocket,
+        @Advice.FieldValue("localSocket") String localSocket,
+        @Advice.Argument(1) CouchbaseRequest request) {
       ContextStore<CouchbaseRequest, Span> contextStore =
           InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
@@ -107,7 +107,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
     }
 
     // 2.6.0 and above
-    public static void muzzleCheck(final JsonCryptoTranscoder transcoder) {
+    public static void muzzleCheck(JsonCryptoTranscoder transcoder) {
       transcoder.documentType();
     }
   }

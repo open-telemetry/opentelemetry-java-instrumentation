@@ -78,7 +78,7 @@ public abstract class BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForMethod(final Method method) {
+  protected String spanNameForMethod(Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
@@ -89,7 +89,7 @@ public abstract class BaseTracer {
    * @param method the method to get the name from, nullable
    * @return the span name from the class and method
    */
-  protected String spanNameForMethod(final Class<?> clazz, final Method method) {
+  protected String spanNameForMethod(Class<?> clazz, Method method) {
     return spanNameForMethod(clazz, null == method ? null : method.getName());
   }
 
@@ -101,7 +101,7 @@ public abstract class BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForClass(final Class<?> clazz) {
+  protected String spanNameForClass(Class<?> clazz) {
     if (!clazz.isAnonymousClass()) {
       return clazz.getSimpleName();
     }
@@ -137,7 +137,7 @@ public abstract class BaseTracer {
     end(span, endTimeNanos);
   }
 
-  protected void onError(final Span span, final Throwable throwable) {
+  protected void onError(Span span, Throwable throwable) {
     addThrowable(span, throwable);
   }
 
@@ -145,11 +145,11 @@ public abstract class BaseTracer {
     return throwable instanceof ExecutionException ? throwable.getCause() : throwable;
   }
 
-  public void addThrowable(final Span span, final Throwable throwable) {
+  public void addThrowable(Span span, Throwable throwable) {
     span.recordException(throwable);
   }
 
-  public static void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public static void onPeerConnection(Span span, InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
@@ -162,11 +162,11 @@ public abstract class BaseTracer {
     }
   }
 
-  public static void onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public static void onPeerConnection(Span span, InetAddress remoteAddress) {
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
-  public static void setPeer(final Span span, String peerName, String peerIp) {
+  public static void setPeer(Span span, String peerName, String peerIp) {
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
     }

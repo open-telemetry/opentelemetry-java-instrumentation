@@ -42,13 +42,13 @@ public class ApplicationTracerProvider implements TracerProvider, Obfuscated {
   }
 
   @Override
-  public Tracer get(final String instrumentationName) {
+  public Tracer get(String instrumentationName) {
     return new ApplicationTracer(
         io.opentelemetry.OpenTelemetry.getTracer(instrumentationName), contextStore);
   }
 
   @Override
-  public Tracer get(final String instrumentationName, final String instrumentationVersion) {
+  public Tracer get(String instrumentationName, String instrumentationVersion) {
     return new ApplicationTracer(
         io.opentelemetry.OpenTelemetry.getTracerProvider()
             .get(instrumentationName, instrumentationVersion),

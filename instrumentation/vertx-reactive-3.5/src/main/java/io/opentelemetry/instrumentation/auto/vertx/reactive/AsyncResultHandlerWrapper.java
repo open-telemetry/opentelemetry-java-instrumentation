@@ -32,13 +32,13 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   private final Context executionContext;
 
   public AsyncResultHandlerWrapper(
-      final Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
+      Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     this.delegate = delegate;
     this.executionContext = executionContext;
   }
 
   @Override
-  public void handle(final Handler<AsyncResult<?>> asyncResultHandler) {
+  public void handle(Handler<AsyncResult<?>> asyncResultHandler) {
     if (executionContext != null) {
       try (Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.handle(asyncResultHandler);
@@ -49,7 +49,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   }
 
   public static Handler<Handler<AsyncResult<?>>> wrapIfNeeded(
-      final Handler<Handler<AsyncResult<?>>> delegate, final Context executionContext) {
+      Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultHandlerWrapper)) {
       log.debug("Wrapping handler {}", delegate);
       return new AsyncResultHandlerWrapper(delegate, executionContext);

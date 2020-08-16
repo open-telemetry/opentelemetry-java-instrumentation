@@ -42,7 +42,7 @@ function start_server {
     agent_jar="$1"
     javaagent_arg=""
     if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
-        javaagent_arg="-javaagent:$agent_jar -Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=off"
+        javaagent_arg="-javaagent:$agent_jar -Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=off"
     fi
 
     if [ "$server_type" = "jar" ]; then

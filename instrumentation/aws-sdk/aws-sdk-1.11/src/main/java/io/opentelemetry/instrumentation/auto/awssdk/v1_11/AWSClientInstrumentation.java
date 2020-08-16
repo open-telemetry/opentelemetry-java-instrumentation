@@ -24,8 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -74,7 +74,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
     // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
-        @Advice.FieldValue("requestHandler2s") final List<RequestHandler2> handlers) {
+        @Advice.FieldValue("requestHandler2s") List<RequestHandler2> handlers) {
       boolean hasAgentHandler = false;
       for (RequestHandler2 handler : handlers) {
         if (handler instanceof TracingRequestHandler) {
