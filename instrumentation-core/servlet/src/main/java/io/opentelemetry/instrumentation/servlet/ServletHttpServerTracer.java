@@ -31,11 +31,6 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   // TODO this violates convention
   protected URI url(HttpServletRequest httpServletRequest) throws URISyntaxException {
     return new URI(

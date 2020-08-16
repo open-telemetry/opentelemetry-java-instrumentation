@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -22,9 +25,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
-
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class RatpackOtherTest extends AgentTestRunner {
 

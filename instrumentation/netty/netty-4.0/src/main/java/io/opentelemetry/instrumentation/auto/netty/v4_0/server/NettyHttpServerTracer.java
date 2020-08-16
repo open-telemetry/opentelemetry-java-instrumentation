@@ -65,11 +65,6 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Getter<HttpRequest> getGetter() {
     return NettyRequestExtractAdapter.GETTER;
   }

@@ -89,9 +89,4 @@ class SpringWebMvcServerTracer
   protected String getInstrumentationName() {
     return null;
   }
-
-  @Override
-  protected String getVersion() {
-    return null;
-  }
 }

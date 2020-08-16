@@ -16,6 +16,12 @@
 
 package io.opentelemetry.auto.util.test
 
+import static net.bytebuddy.description.modifier.FieldManifestation.VOLATILE
+import static net.bytebuddy.description.modifier.Ownership.STATIC
+import static net.bytebuddy.description.modifier.Visibility.PUBLIC
+import static net.bytebuddy.matcher.ElementMatchers.named
+import static net.bytebuddy.matcher.ElementMatchers.none
+
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.description.type.TypeDefinition
@@ -23,12 +29,6 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.Transformer
 import spock.lang.Specification
-
-import static net.bytebuddy.description.modifier.FieldManifestation.VOLATILE
-import static net.bytebuddy.description.modifier.Ownership.STATIC
-import static net.bytebuddy.description.modifier.Visibility.PUBLIC
-import static net.bytebuddy.matcher.ElementMatchers.named
-import static net.bytebuddy.matcher.ElementMatchers.none
 
 abstract class AgentSpecification extends Specification {
   private static final String CONFIG = "io.opentelemetry.instrumentation.api.config.Config"

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
 import akka.http.javadsl.model.HttpMethods
@@ -24,8 +26,6 @@ import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(5)
 class AkkaHttpClientInstrumentationTest extends HttpClientTest {

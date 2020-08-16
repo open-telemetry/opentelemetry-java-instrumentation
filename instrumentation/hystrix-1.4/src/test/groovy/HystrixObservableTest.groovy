@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import io.opentelemetry.auto.test.AgentTestRunner
-import rx.Observable
-import rx.schedulers.Schedulers
-
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
-
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import rx.Observable
+import rx.schedulers.Schedulers
 
 class HystrixObservableTest extends AgentTestRunner {
   static {

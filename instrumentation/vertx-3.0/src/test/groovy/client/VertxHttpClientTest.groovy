@@ -22,10 +22,9 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientResponse
 import io.vertx.core.http.HttpMethod
+import java.util.concurrent.CompletableFuture
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.CompletableFuture
 
 @Timeout(10)
 class VertxHttpClientTest extends HttpClientTest {

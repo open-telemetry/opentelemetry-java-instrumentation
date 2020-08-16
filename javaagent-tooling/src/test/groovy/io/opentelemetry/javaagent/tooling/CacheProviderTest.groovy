@@ -16,14 +16,13 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy
 import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy
+import java.lang.ref.WeakReference
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
 import spock.lang.Timeout
-
-import java.lang.ref.WeakReference
 
 @Timeout(5)
 class CacheProviderTest extends AgentSpecification {

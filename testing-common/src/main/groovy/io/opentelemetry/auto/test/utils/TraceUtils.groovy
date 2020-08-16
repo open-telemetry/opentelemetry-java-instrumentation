@@ -16,6 +16,10 @@
 
 package io.opentelemetry.auto.test.utils
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
+import static io.opentelemetry.trace.TracingContextUtils.withSpan
+
 import io.grpc.Context
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -25,12 +29,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-
 import java.util.concurrent.Callable
-
-import static io.opentelemetry.context.ContextUtils.withScopedContext
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 class TraceUtils {
 

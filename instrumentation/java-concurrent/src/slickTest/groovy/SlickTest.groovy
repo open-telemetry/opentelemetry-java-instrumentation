@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
-
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class SlickTest extends AgentTestRunner {
 

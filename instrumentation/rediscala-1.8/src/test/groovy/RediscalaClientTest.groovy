@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import akka.actor.ActorSystem
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -27,8 +29,6 @@ import scala.Option
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class RediscalaClientTest extends AgentTestRunner {
 

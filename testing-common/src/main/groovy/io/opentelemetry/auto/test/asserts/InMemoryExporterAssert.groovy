@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.test.asserts
 
+import static TraceAssert.assertTrace
+
 import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -25,8 +27,6 @@ import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
-
-import static TraceAssert.assertTrace
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces

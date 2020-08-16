@@ -15,14 +15,13 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.Future
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.Future
 
 @Timeout(5)
 class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest {

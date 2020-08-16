@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -27,8 +29,6 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JSPInstrumentationForwardTests extends AgentTestRunner {
 

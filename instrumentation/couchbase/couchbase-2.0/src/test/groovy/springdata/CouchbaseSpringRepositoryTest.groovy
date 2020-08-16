@@ -16,6 +16,9 @@
 
 package springdata
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.env.CouchbaseEnvironment
@@ -27,9 +30,6 @@ import org.springframework.data.repository.CrudRepository
 import spock.lang.Shared
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
