@@ -37,13 +37,8 @@ import io.opentelemetry.trace.Span;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class TracingSession implements Session {
-  private static final ExecutorService EXECUTOR_SERVICE =
-      Executors.newCachedThreadPool(
-          new DaemonThreadFactory("opentelemetry-cassandra-session-executor"));
 
   private final Session session;
 
@@ -149,7 +144,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query);
-      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
+      future.addListener(createListener(span, future), SameThreadExecutor.INSTANCE);
 
       return future;
     }
@@ -160,7 +155,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query, values);
-      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
+      future.addListener(createListener(span, future), SameThreadExecutor.INSTANCE);
 
       return future;
     }
@@ -171,7 +166,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query, values);
-      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
+      future.addListener(createListener(span, future), SameThreadExecutor.INSTANCE);
 
       return future;
     }
@@ -183,7 +178,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(statement);
-      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
+      future.addListener(createListener(span, future), SameThreadExecutor.INSTANCE);
 
       return future;
     }
