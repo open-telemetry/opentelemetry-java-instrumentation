@@ -52,11 +52,10 @@ public class TraceDecorator extends BaseDecorator {
     return toAgentOrNull(applicationKind);
   }
 
-  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
-      final Span.Kind applicationSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
     try {
       return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       log.debug("unexpected span kind: {}", applicationSpanKind.name());
       return io.opentelemetry.trace.Span.Kind.INTERNAL;
     }

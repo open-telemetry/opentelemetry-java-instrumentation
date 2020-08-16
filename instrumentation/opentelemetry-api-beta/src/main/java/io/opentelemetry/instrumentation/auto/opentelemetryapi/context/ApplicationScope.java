@@ -22,7 +22,7 @@ public class ApplicationScope implements Scope {
 
   private final io.opentelemetry.context.Scope agentScope;
 
-  public ApplicationScope(final io.opentelemetry.context.Scope agentScope) {
+  public ApplicationScope(io.opentelemetry.context.Scope agentScope) {
     this.agentScope = agentScope;
   }
 

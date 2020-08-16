@@ -34,12 +34,12 @@ public class GoogleHttpClientTracer
   }
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getRequestMethod();
   }
 
   @Override
-  protected URI url(final HttpRequest httpRequest) throws URISyntaxException {
+  protected URI url(HttpRequest httpRequest) throws URISyntaxException {
     // Google uses %20 (space) instead of "+" for spaces in the fragment
     // Add "+" back for consistency with the other http client instrumentations
     String url = httpRequest.getUrl().build();
@@ -48,7 +48,7 @@ public class GoogleHttpClientTracer
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
   }
 

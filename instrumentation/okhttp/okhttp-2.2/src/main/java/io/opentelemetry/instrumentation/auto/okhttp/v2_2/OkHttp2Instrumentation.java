@@ -58,7 +58,7 @@ public class OkHttp2Instrumentation extends Instrumenter.Default {
 
   public static class OkHttp2ClientAdvice {
     @Advice.OnMethodExit
-    public static void addTracingInterceptor(@Advice.This final OkHttpClient client) {
+    public static void addTracingInterceptor(@Advice.This OkHttpClient client) {
       for (Interceptor interceptor : client.interceptors()) {
         if (interceptor instanceof TracingInterceptor) {
           return;

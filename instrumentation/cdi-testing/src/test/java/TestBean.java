@@ -22,7 +22,7 @@ public class TestBean {
     return someField;
   }
 
-  public void setSomeField(final String someField) {
+  public void setSomeField(String someField) {
     this.someField = someField;
   }
 }

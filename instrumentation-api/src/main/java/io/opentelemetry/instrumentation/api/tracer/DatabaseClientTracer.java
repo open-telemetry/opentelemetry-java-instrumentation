@@ -99,7 +99,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   /** This should be called when the connection is being used, not when it's created. */
-  protected Span onConnection(final Span span, final CONNECTION connection) {
+  protected Span onConnection(Span span, CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
     span.setAttribute(SemanticAttributes.DB_NAME.key(), dbName(connection));
     span.setAttribute(
@@ -108,7 +108,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   @Override
-  protected void onError(final Span span, final Throwable throwable) {
+  protected void onError(Span span, Throwable throwable) {
     if (throwable != null) {
       span.setStatus(Status.UNKNOWN);
       addThrowable(
@@ -116,17 +116,17 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
   }
 
-  protected void onPeerConnection(final Span span, final CONNECTION connection) {
+  protected void onPeerConnection(Span span, CONNECTION connection) {
     onPeerConnection(span, peerAddress(connection));
   }
 
-  protected void onStatement(final Span span, final String statement) {
+  protected void onStatement(Span span, String statement) {
     span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement);
   }
 
   // TODO: "When it's impossible to get any meaningful representation of the span name, it can be
   // populated using the same value as db.name" (c) spec
-  protected String spanName(final String query) {
+  protected String spanName(String query) {
     return query == null ? DB_QUERY : query;
   }
 
@@ -139,7 +139,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   protected abstract String dbName(CONNECTION connection);
 
   // TODO make abstract after implementing in all subclasses
-  protected String dbConnectionString(final CONNECTION connection) {
+  protected String dbConnectionString(CONNECTION connection) {
     return null;
   }
 

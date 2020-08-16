@@ -81,8 +81,8 @@ public final class StatementInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) final String sql,
-        @Advice.This final Statement statement,
+        @Advice.Argument(0) String sql,
+        @Advice.This Statement statement,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -98,7 +98,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {

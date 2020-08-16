@@ -56,8 +56,8 @@ public class GrpcClientBuilderBuildInstrumentation extends AbstractGrpcClientIns
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-        @Advice.This final ManagedChannelBuilder thiz,
-        @Advice.FieldValue("interceptors") final List<ClientInterceptor> interceptors) {
+        @Advice.This ManagedChannelBuilder thiz,
+        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
       boolean shouldRegister = true;
       for (ClientInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingClientInterceptor) {

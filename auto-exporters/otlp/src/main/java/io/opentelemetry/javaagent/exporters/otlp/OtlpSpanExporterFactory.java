@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 public class OtlpSpanExporterFactory implements SpanExporterFactory {
 
   @Override
-  public SpanExporter fromConfig(final Config config) {
+  public SpanExporter fromConfig(Config config) {
     return OtlpGrpcSpanExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()

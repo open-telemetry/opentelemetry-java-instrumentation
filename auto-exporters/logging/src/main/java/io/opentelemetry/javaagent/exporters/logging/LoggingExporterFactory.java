@@ -22,7 +22,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
-  public SpanExporter fromConfig(final Config config) {
+  public SpanExporter fromConfig(Config config) {
     return new LoggingExporter(config.getString("logging.prefix", "Logging Exporter:"));
   }
 }

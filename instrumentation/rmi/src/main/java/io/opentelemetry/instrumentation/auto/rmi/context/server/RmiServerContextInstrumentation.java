@@ -71,7 +71,7 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Object oe, @Advice.Return(readOnly = false) Target result) {
+        @Advice.Argument(0) Object oe, @Advice.Return(readOnly = false) Target result) {
       // comparing toString() output allows us to avoid using reflection to be able to compare
       // ObjID and ObjectEndpoint objects
       // ObjectEndpoint#toString() only returns this.objId.toString() value which is exactly

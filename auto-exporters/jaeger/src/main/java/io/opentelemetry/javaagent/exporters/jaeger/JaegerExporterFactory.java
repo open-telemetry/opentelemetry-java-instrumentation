@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 public class JaegerExporterFactory implements SpanExporterFactory {
 
   @Override
-  public SpanExporter fromConfig(final Config config) {
+  public SpanExporter fromConfig(Config config) {
     return JaegerGrpcSpanExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()

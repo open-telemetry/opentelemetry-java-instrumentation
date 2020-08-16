@@ -31,7 +31,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
 
   private final Handler<RoutingContext> handler;
 
-  public RoutingContextHandlerWrapper(final Handler<RoutingContext> handler) {
+  public RoutingContextHandlerWrapper(Handler<RoutingContext> handler) {
     this.handler = handler;
   }
 

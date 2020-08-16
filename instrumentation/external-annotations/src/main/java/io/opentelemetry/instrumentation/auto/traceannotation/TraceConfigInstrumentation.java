@@ -87,7 +87,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
       this("io.opentracing.contrib.dropwizard.Trace", Collections.singleton("noop"));
     }
 
-    public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
+    public TracerClassInstrumentation(String className, Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
       this.methodNames = methodNames;

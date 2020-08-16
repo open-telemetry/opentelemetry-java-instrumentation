@@ -34,13 +34,12 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
 
   private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpClientResponseTracingHandler(
-      final ContextStore<Channel, ChannelTraceContext> contextStore) {
+  public HttpClientResponseTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
-  public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg) {
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 

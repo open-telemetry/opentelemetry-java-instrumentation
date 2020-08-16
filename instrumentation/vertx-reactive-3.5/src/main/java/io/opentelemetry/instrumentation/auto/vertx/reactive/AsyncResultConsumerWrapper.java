@@ -33,13 +33,13 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   private final Context executionContext;
 
   public AsyncResultConsumerWrapper(
-      final Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
+      Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     this.delegate = delegate;
     this.executionContext = executionContext;
   }
 
   @Override
-  public void accept(final Handler<AsyncResult<?>> asyncResultHandler) {
+  public void accept(Handler<AsyncResult<?>> asyncResultHandler) {
     if (executionContext != null) {
       try (Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.accept(asyncResultHandler);
@@ -50,7 +50,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   }
 
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
-      final Consumer<Handler<AsyncResult<?>>> delegate, final Context executionContext) {
+      Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
       log.debug("Wrapping consumer {}", delegate);
       return new AsyncResultConsumerWrapper(delegate, executionContext);

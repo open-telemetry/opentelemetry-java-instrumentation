@@ -55,7 +55,7 @@ public class Agent {
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
 
-  public static void start(final Instrumentation inst, final URL bootstrapURL) {
+  public static void start(Instrumentation inst, URL bootstrapURL) {
     startAgent(inst, bootstrapURL);
 
     boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
@@ -87,14 +87,14 @@ public class Agent {
     }
   }
 
-  private static void registerLogManagerCallback(final ClassLoadCallBack callback) {
+  private static void registerLogManagerCallback(ClassLoadCallBack callback) {
     try {
       Class<?> agentInstallerClass =
           AGENT_CLASSLOADER.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
       Method registerCallbackMethod =
           agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
       registerCallbackMethod.invoke(null, "java.util.logging.LogManager", callback);
-    } catch (final Exception ex) {
+    } catch (Exception ex) {
       log.error("Error registering callback for " + callback.getName(), ex);
     }
   }
@@ -115,7 +115,7 @@ public class Agent {
                 public void run() {
                   try {
                     execute();
-                  } catch (final Exception e) {
+                  } catch (Exception e) {
                     log.error("Failed to run class loader callback {}", getName(), e);
                   }
                 }
@@ -143,7 +143,7 @@ public class Agent {
     }
   }
 
-  private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
+  private static synchronized void startAgent(Instrumentation inst, URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
       try {
         ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
@@ -153,7 +153,7 @@ public class Agent {
             agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
         agentInstallerMethod.invoke(null, inst);
         AGENT_CLASSLOADER = agentClassLoader;
-      } catch (final Throwable ex) {
+      } catch (Throwable ex) {
         log.error("Throwable thrown while installing the agent", ex);
       }
     }
@@ -173,7 +173,7 @@ public class Agent {
       tracerInstallerMethod.invoke(null);
       Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
       logVersionInfoMethod.invoke(null);
-    } catch (final Throwable ex) {
+    } catch (Throwable ex) {
       log.error("Throwable thrown while installing the agent tracer", ex);
     }
   }
@@ -188,7 +188,7 @@ public class Agent {
     }
   }
 
-  private static void setSystemPropertyDefault(final String property, final String value) {
+  private static void setSystemPropertyDefault(String property, String value) {
     if (System.getProperty(property) == null) {
       System.setProperty(property, value);
     }
@@ -202,8 +202,8 @@ public class Agent {
    *     classloader
    * @return Agent Classloader
    */
-  private static ClassLoader createAgentClassLoader(
-      final String innerJarFilename, final URL bootstrapURL) throws Exception {
+  private static ClassLoader createAgentClassLoader(String innerJarFilename, URL bootstrapURL)
+      throws Exception {
     ClassLoader agentParent;
     if (isJavaBefore9()) {
       agentParent = null; // bootstrap

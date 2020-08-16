@@ -86,7 +86,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
 
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
-    public static void addConnectContinuation(@Advice.This final Channel channel) {
+    public static void addConnectContinuation(@Advice.This Channel channel) {
       Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         ContextStore<Channel, ChannelTraceContext> contextStore =

@@ -81,8 +81,8 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("requestContext") final ClientRequest context,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.FieldValue("requestContext") ClientRequest context,
+        @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
@@ -96,7 +96,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("requestContext") final ClientRequest context,
+        @Advice.FieldValue("requestContext") ClientRequest context,
         @Advice.Return(readOnly = false) Future<?> future) {
       if (!(future instanceof WrappedFuture)) {
         future = new WrappedFuture<>(future, context);
@@ -109,13 +109,13 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
     private final Future<T> wrapped;
     private final ClientRequest context;
 
-    public WrappedFuture(final Future<T> wrapped, final ClientRequest context) {
+    public WrappedFuture(Future<T> wrapped, ClientRequest context) {
       this.wrapped = wrapped;
       this.context = context;
     }
 
     @Override
-    public boolean cancel(final boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
       return wrapped.cancel(mayInterruptIfRunning);
     }
 
@@ -133,7 +133,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
     public T get() throws InterruptedException, ExecutionException {
       try {
         return wrapped.get();
-      } catch (final ExecutionException e) {
+      } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
           TRACER.endExceptionally((Span) prop, e.getCause());
@@ -143,11 +143,11 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
     }
 
     @Override
-    public T get(final long timeout, final TimeUnit unit)
+    public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
       try {
         return wrapped.get(timeout, unit);
-      } catch (final ExecutionException e) {
+      } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
           TRACER.endExceptionally((Span) prop, e.getCause());

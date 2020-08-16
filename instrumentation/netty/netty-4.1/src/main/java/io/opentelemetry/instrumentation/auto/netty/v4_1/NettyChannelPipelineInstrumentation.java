@@ -112,7 +112,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAddAdvice {
     @Advice.OnMethodEnter
-    public static int trackCallDepth(@Advice.Argument(2) final ChannelHandler handler) {
+    public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -127,9 +127,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter final int callDepth,
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(2) final ChannelHandler handler) {
+        @Advice.Enter int callDepth,
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(2) ChannelHandler handler) {
       if (callDepth > 0) {
         return;
       }
@@ -162,7 +162,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
               HttpClientResponseTracingHandler.class.getName(),
               new HttpClientResponseTracingHandler());
         }
-      } catch (final IllegalArgumentException e) {
+      } catch (IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
       }
     }
@@ -170,7 +170,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
-    public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
+    public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Attribute<Context> attribute =
           pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
       attribute.compareAndSet(null, Context.current());

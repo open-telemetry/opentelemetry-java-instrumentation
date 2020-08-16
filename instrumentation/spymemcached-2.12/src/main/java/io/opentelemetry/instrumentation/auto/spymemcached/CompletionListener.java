@@ -36,7 +36,7 @@ public abstract class CompletionListener<T> {
 
   private final Span span;
 
-  public CompletionListener(final MemcachedConnection connection, final String methodName) {
+  public CompletionListener(MemcachedConnection connection, String methodName) {
     span =
         TRACER
             .spanBuilder(DECORATE.spanNameOnOperation(methodName))
@@ -48,13 +48,13 @@ public abstract class CompletionListener<T> {
     }
   }
 
-  protected void closeAsyncSpan(final T future) {
+  protected void closeAsyncSpan(T future) {
     try (Scope scope = currentContextWith(span)) {
       try {
         processResult(span, future);
-      } catch (final CancellationException e) {
+      } catch (CancellationException e) {
         span.setAttribute(DB_COMMAND_CANCELLED, true);
-      } catch (final ExecutionException e) {
+      } catch (ExecutionException e) {
         if (e.getCause() instanceof CancellationException) {
           // Looks like underlying OperationFuture wraps CancellationException into
           // ExecutionException
@@ -62,11 +62,11 @@ public abstract class CompletionListener<T> {
         } else {
           DECORATE.onError(span, e.getCause());
         }
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         // Avoid swallowing InterruptedException
         DECORATE.onError(span, e);
         Thread.currentThread().interrupt();
-      } catch (final Exception e) {
+      } catch (Exception e) {
         // This should never happen, just in case to make sure we cover all unexpected exceptions
         DECORATE.onError(span, e);
       } finally {
@@ -76,7 +76,7 @@ public abstract class CompletionListener<T> {
     }
   }
 
-  protected void closeSyncSpan(final Throwable thrown) {
+  protected void closeSyncSpan(Throwable thrown) {
     try (Scope scope = currentContextWith(span)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
@@ -87,7 +87,7 @@ public abstract class CompletionListener<T> {
   protected abstract void processResult(Span span, T future)
       throws ExecutionException, InterruptedException;
 
-  protected void setResultTag(final Span span, final boolean hit) {
+  protected void setResultTag(Span span, boolean hit) {
     span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
   }
 }

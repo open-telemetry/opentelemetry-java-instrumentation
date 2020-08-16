@@ -72,7 +72,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   public static class RoutesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void routeMatchEnricher(@Advice.Return final RouteMatch routeMatch) {
+    public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
       Span span = TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {

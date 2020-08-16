@@ -78,7 +78,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
+        @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
 
       ContextStore<ProcedureCall, Span> contextStore =
           InstrumentationContext.get(ProcedureCall.class, Span.class);
@@ -89,7 +89,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }
   }

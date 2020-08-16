@@ -50,17 +50,17 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
    * @param description Descriptive string to log along with exception.
    */
   public LoggingFailSafeMatcher(
-      final ElementMatcher<? super T> matcher, final boolean fallback, final String description) {
+      ElementMatcher<? super T> matcher, boolean fallback, String description) {
     this.matcher = matcher;
     this.fallback = fallback;
     this.description = description;
   }
 
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     try {
       return matcher.matches(target);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug(description, e);
       return fallback;
     }
@@ -72,7 +72,7 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

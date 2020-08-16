@@ -25,8 +25,7 @@ public class GrizzlyInjectAdapter
   public static final GrizzlyInjectAdapter SETTER = new GrizzlyInjectAdapter();
 
   @Override
-  public void set(
-      final FluentCaseInsensitiveStringsMap carrier, final String key, final String value) {
+  public void set(FluentCaseInsensitiveStringsMap carrier, String key, String value) {
     carrier.replaceWith(key, value);
   }
 }

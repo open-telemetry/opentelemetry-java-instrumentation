@@ -93,7 +93,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
             Function1<HttpRequest, Future<HttpResponse>> handler,
-        @Advice.Argument(7) final Materializer materializer) {
+        @Advice.Argument(7) Materializer materializer) {
       handler = new AsyncWrapper(handler, materializer.executionContext());
     }
   }
@@ -101,18 +101,18 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   public static class SyncWrapper extends AbstractFunction1<HttpRequest, HttpResponse> {
     private final Function1<HttpRequest, HttpResponse> userHandler;
 
-    public SyncWrapper(final Function1<HttpRequest, HttpResponse> userHandler) {
+    public SyncWrapper(Function1<HttpRequest, HttpResponse> userHandler) {
       this.userHandler = userHandler;
     }
 
     @Override
-    public HttpResponse apply(final HttpRequest request) {
+    public HttpResponse apply(HttpRequest request) {
       Span span = TRACER.startSpan(request, request, "akka.request");
       try (Scope ignored = TRACER.startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response);
         return response;
-      } catch (final Throwable t) {
+      } catch (Throwable t) {
         TRACER.endExceptionally(span, t);
         throw t;
       }
@@ -124,14 +124,14 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     private final ExecutionContext executionContext;
 
     public AsyncWrapper(
-        final Function1<HttpRequest, Future<HttpResponse>> userHandler,
-        final ExecutionContext executionContext) {
+        Function1<HttpRequest, Future<HttpResponse>> userHandler,
+        ExecutionContext executionContext) {
       this.userHandler = userHandler;
       this.executionContext = executionContext;
     }
 
     @Override
-    public Future<HttpResponse> apply(final HttpRequest request) {
+    public Future<HttpResponse> apply(HttpRequest request) {
       Span span = TRACER.startSpan(request, request, "akka.request");
       try (Scope ignored = TRACER.startScope(span, null)) {
         return userHandler
@@ -139,20 +139,20 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
             .transform(
                 new AbstractFunction1<HttpResponse, HttpResponse>() {
                   @Override
-                  public HttpResponse apply(final HttpResponse response) {
+                  public HttpResponse apply(HttpResponse response) {
                     TRACER.end(span, response);
                     return response;
                   }
                 },
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
-                  public Throwable apply(final Throwable t) {
+                  public Throwable apply(Throwable t) {
                     TRACER.endExceptionally(span, t);
                     return t;
                   }
                 },
                 executionContext);
-      } catch (final Throwable t) {
+      } catch (Throwable t) {
         TRACER.endExceptionally(span, t);
         throw t;
       }

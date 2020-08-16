@@ -25,7 +25,7 @@ public class HttpClientTracingHandler
     extends CombinedSimpleChannelHandler<
         HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
 
-  public HttpClientTracingHandler(final ContextStore<Channel, ChannelTraceContext> contextStore) {
+  public HttpClientTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
     super(
         new HttpClientResponseTracingHandler(contextStore),
         new HttpClientRequestTracingHandler(contextStore));

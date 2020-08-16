@@ -28,12 +28,12 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
 
   private final ElementMatcher<? super TypeDescription.Generic> matcher;
 
-  public SafeExtendsClassMatcher(final ElementMatcher<? super TypeDescription.Generic> matcher) {
+  public SafeExtendsClassMatcher(ElementMatcher<? super TypeDescription.Generic> matcher) {
     this.matcher = matcher;
   }
 
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     // We do not use foreach loop and iterator interface here because we need to catch exceptions
     // in {@code getSuperClass} calls
     TypeDefinition typeDefinition = target;
@@ -52,7 +52,7 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

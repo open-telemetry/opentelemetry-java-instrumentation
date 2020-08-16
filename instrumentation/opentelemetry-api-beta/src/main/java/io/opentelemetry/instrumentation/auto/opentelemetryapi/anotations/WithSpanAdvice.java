@@ -35,7 +35,7 @@ import net.bytebuddy.asm.Advice;
 public class WithSpanAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Origin final Method method) {
+  public static SpanWithScope onEnter(@Advice.Origin Method method) {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
     Span span =
@@ -49,7 +49,7 @@ public class WithSpanAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
     Span span = spanWithScope.getSpan();
     DECORATE.onError(span, throwable);
     DECORATE.beforeFinish(span);

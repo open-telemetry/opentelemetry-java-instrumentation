@@ -89,7 +89,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
 
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) final String name) {
+    public static Class<?> onEnter(@Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
@@ -103,7 +103,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
-            } catch (final ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
             }
           }
         }
@@ -121,7 +121,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter final Class<?> resultFromBootstrapLoader) {
+        @Advice.Enter Class<?> resultFromBootstrapLoader) {
       if (resultFromBootstrapLoader != null) {
         result = resultFromBootstrapLoader;
       }

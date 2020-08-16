@@ -33,7 +33,7 @@ import io.vertx.ext.web.RoutingContext;
 public class VertxWebServer extends AbstractVerticle {
 
   @Override
-  public void start(final Future<Void> startFuture) {
+  public void start(Future<Void> startFuture) {
     int port = config().getInteger(VertxHttpServerTest.CONFIG_HTTP_SERVER_PORT);
     Router router = Router.router(vertx);
 

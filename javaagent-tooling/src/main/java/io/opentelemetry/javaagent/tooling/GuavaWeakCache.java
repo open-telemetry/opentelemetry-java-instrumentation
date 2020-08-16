@@ -52,7 +52,7 @@ public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
     }
 
     @Override
-    public GuavaWeakCache<K, V> newWeakCache(final long maxSize) {
+    public GuavaWeakCache<K, V> newWeakCache(long maxSize) {
       return new GuavaWeakCache(
           CacheBuilder.newBuilder()
               .weakKeys()
@@ -65,7 +65,7 @@ public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
 
   private final Cache<K, V> cache;
 
-  private GuavaWeakCache(final Cache<K, V> cache) {
+  private GuavaWeakCache(Cache<K, V> cache) {
     this.cache = cache;
   }
 
@@ -74,36 +74,36 @@ public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
    * @param key
    */
   @Override
-  public V getIfPresent(final K key) {
+  public V getIfPresent(K key) {
     return cache.getIfPresent(key);
   }
 
   @Override
-  public V getIfPresentOrCompute(final K key, final Callable<? extends V> loader) {
+  public V getIfPresentOrCompute(K key, Callable<? extends V> loader) {
     V v = cache.getIfPresent(key);
     if (v != null) {
       return v;
     }
     try {
       return cache.get(key, loader);
-    } catch (final ExecutionException e) {
+    } catch (ExecutionException e) {
       log.error("Can't get value from cache", e);
     }
     return null;
   }
 
   @Override
-  public V get(final K key, final Callable<? extends V> loader) {
+  public V get(K key, Callable<? extends V> loader) {
     try {
       return cache.get(key, loader);
-    } catch (final ExecutionException e) {
+    } catch (ExecutionException e) {
       log.error("Can't get value from cache", e);
     }
     return null;
   }
 
   @Override
-  public void put(final K key, final V value) {
+  public void put(K key, V value) {
     cache.put(key, value);
   }
 }

@@ -44,7 +44,7 @@ import java.util.Set;
 public class ClassHierarchyIterable implements Iterable<Class<?>> {
   private final Class<?> baseClass;
 
-  public ClassHierarchyIterable(final Class<?> baseClass) {
+  public ClassHierarchyIterable(Class<?> baseClass) {
     this.baseClass = baseClass;
   }
 
@@ -99,7 +99,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
       }
     }
 
-    private void queueNewInterfaces(final Class[] interfaces) {
+    private void queueNewInterfaces(Class[] interfaces) {
       for (Class clazz : interfaces) {
         if (queuedInterfaces.add(clazz)) {
           classesToExpand.add(clazz);

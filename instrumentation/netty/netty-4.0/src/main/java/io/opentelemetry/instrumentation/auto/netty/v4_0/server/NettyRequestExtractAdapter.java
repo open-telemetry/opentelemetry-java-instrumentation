@@ -24,7 +24,7 @@ public class NettyRequestExtractAdapter implements HttpTextFormat.Getter<HttpReq
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 
   @Override
-  public String get(final HttpRequest request, final String key) {
+  public String get(HttpRequest request, String key) {
     return request.headers().get(key);
   }
 }

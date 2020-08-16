@@ -32,7 +32,7 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, Clie
   public static final RestTemplateTracer TRACER = new RestTemplateTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }
 

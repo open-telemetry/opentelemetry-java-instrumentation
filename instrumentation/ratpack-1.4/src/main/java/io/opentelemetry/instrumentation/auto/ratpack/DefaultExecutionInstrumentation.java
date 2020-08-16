@@ -68,7 +68,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
       segment = ActionWrapper.wrapIfNeeded(segment);
     }
 
-    public void muzzleCheck(final PathBinding binding) {
+    public void muzzleCheck(PathBinding binding) {
       // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
       binding.getDescription();
     }

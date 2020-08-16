@@ -36,17 +36,17 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     this.tracer = tracer;
   }
 
-  public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
+  public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     addFilter(exchangeFilterFunctions, TRACER.getTracer());
   }
 
   public static void addFilter(
-      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
+      List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
     exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 
   @Override
-  public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
+  public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
     Span span = TRACER.startSpan(request);
 
     ClientRequest.Builder requestBuilder = ClientRequest.from(request);

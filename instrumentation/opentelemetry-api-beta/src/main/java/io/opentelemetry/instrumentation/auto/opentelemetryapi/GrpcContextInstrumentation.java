@@ -55,7 +55,7 @@ public class GrpcContextInstrumentation extends AbstractInstrumentation {
   public static class CurrentAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return final Context applicationContext) {
+    public static void methodExit(@Advice.Return Context applicationContext) {
       ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
       contextStore.put(applicationContext, io.grpc.Context.current());

@@ -88,7 +88,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
-    public static Scope activateScope(@Advice.Argument(0) final ChannelFuture future) {
+    public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*
       Idea here is:
        - To return scope only if we have captured it.
@@ -110,7 +110,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void deactivateScope(@Advice.Enter final Scope scope) {
+    public static void deactivateScope(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

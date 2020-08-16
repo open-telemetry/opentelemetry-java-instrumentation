@@ -26,7 +26,7 @@ public class ThreadLocalContext {
     local = new ThreadLocal<>();
   }
 
-  public void set(final SpanContext context) {
+  public void set(SpanContext context) {
     local.set(context);
   }
 

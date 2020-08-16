@@ -78,7 +78,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
         OpenTelemetry.getTracer("io.opentelemetry.auto.dropwizard-views-0.7");
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) final View view) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
@@ -88,7 +88,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

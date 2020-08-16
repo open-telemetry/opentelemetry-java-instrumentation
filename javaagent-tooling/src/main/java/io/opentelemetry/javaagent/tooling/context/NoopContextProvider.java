@@ -25,12 +25,12 @@ public class NoopContextProvider implements InstrumentationContextProvider {
   private NoopContextProvider() {}
 
   @Override
-  public Extendable instrumentationTransformer(final Extendable builder) {
+  public Extendable instrumentationTransformer(Extendable builder) {
     return builder;
   }
 
   @Override
-  public Extendable additionalInstrumentation(final Extendable builder) {
+  public Extendable additionalInstrumentation(Extendable builder) {
     return builder;
   }
 }

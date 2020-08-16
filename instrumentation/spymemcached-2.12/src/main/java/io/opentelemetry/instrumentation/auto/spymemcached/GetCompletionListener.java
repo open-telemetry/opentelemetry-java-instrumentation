@@ -23,17 +23,17 @@ import net.spy.memcached.internal.GetFuture;
 
 public class GetCompletionListener extends CompletionListener<GetFuture<?>>
     implements net.spy.memcached.internal.GetCompletionListener {
-  public GetCompletionListener(final MemcachedConnection connection, final String methodName) {
+  public GetCompletionListener(MemcachedConnection connection, String methodName) {
     super(connection, methodName);
   }
 
   @Override
-  public void onComplete(final GetFuture<?> future) {
+  public void onComplete(GetFuture<?> future) {
     closeAsyncSpan(future);
   }
 
   @Override
-  protected void processResult(final Span span, final GetFuture<?> future)
+  protected void processResult(Span span, GetFuture<?> future)
       throws ExecutionException, InterruptedException {
     Object result = future.get();
     setResultTag(span, result != null);

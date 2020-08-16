@@ -28,14 +28,14 @@ import okhttp3.Response;
 public class TracingInterceptor implements Interceptor {
 
   @Override
-  public Response intercept(final Chain chain) throws IOException {
+  public Response intercept(Chain chain) throws IOException {
     Span span = TRACER.startSpan(chain.request());
 
     Response response;
     Request.Builder requestBuilder = chain.request().newBuilder();
     try (Scope ignored = TRACER.startScope(span, requestBuilder)) {
       response = chain.proceed(requestBuilder.build());
-    } catch (final Exception e) {
+    } catch (Exception e) {
       TRACER.endExceptionally(span, e);
       throw e;
     }

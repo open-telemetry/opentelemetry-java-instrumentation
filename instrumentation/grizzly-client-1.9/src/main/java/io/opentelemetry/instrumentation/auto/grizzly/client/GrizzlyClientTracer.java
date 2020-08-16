@@ -30,17 +30,17 @@ public class GrizzlyClientTracer
   public static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
 
   @Override
-  protected String method(final Request request) {
+  protected String method(Request request) {
     return request.getMethod();
   }
 
   @Override
-  protected URI url(final Request request) throws URISyntaxException {
+  protected URI url(Request request) throws URISyntaxException {
     return request.getUri().toJavaNetURI();
   }
 
   @Override
-  protected Integer status(final Response response) {
+  protected Integer status(Response response) {
     return response.getStatusCode();
   }
 

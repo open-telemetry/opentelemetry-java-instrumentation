@@ -30,7 +30,7 @@ import okhttp3.Response;
 public class TracingInterceptor implements Interceptor {
 
   @Override
-  public Response intercept(final Chain chain) throws IOException {
+  public Response intercept(Chain chain) throws IOException {
 
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(chain.request());
 
@@ -42,7 +42,7 @@ public class TracingInterceptor implements Interceptor {
     Response response;
     try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(chain.request());
-    } catch (final Exception e) {
+    } catch (Exception e) {
       TRACER.endExceptionally(span, e);
       throw e;
     }

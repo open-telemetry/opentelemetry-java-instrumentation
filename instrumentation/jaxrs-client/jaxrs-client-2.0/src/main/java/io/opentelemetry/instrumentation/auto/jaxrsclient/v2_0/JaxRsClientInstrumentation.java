@@ -72,7 +72,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit
     public static void registerFeature(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Client client) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Client client) {
       // Register on the generated client instead of the builder
       // The build() can be called multiple times and is not thread safe
       // A client is only created once

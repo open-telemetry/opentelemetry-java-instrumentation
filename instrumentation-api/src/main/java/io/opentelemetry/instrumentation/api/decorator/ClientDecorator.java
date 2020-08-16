@@ -35,7 +35,7 @@ public abstract class ClientDecorator extends BaseDecorator {
    * Returns a new {@link Context} forked from the {@linkplain Context#current()} current context}
    * with the {@link Span} set.
    */
-  public static Context currentContextWith(final Span clientSpan) {
+  public static Context currentContextWith(Span clientSpan) {
     Context context = Context.current();
     if (clientSpan.getContext().isValid()) {
       context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
@@ -61,7 +61,7 @@ public abstract class ClientDecorator extends BaseDecorator {
   }
 
   @Override
-  public Span afterStart(final Span span) {
+  public Span afterStart(Span span) {
     assert span != null;
     return super.afterStart(span);
   }

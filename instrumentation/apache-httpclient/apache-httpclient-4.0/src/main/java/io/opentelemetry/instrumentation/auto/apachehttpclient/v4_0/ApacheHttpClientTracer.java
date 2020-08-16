@@ -33,17 +33,17 @@ class ApacheHttpClientTracer
   public static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 
   @Override
-  protected String method(final HttpUriRequest httpRequest) {
+  protected String method(HttpUriRequest httpRequest) {
     return httpRequest.getMethod();
   }
 
   @Override
-  protected URI url(final HttpUriRequest request) {
+  protected URI url(HttpUriRequest request) {
     return request.getURI();
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatusLine().getStatusCode();
   }
 

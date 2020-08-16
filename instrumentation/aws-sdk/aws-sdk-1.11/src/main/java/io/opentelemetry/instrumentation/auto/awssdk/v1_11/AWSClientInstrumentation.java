@@ -74,7 +74,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
     // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
-        @Advice.FieldValue("requestHandler2s") final List<RequestHandler2> handlers) {
+        @Advice.FieldValue("requestHandler2s") List<RequestHandler2> handlers) {
       boolean hasAgentHandler = false;
       for (RequestHandler2 handler : handlers) {
         if (handler instanceof TracingRequestHandler) {

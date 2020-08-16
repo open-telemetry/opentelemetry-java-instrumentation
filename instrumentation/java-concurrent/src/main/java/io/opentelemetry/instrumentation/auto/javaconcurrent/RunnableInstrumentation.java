@@ -63,14 +63,14 @@ public final class RunnableInstrumentation extends Instrumenter.Default {
   public static class RunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This final Runnable thiz) {
+    public static Scope enter(@Advice.This Runnable thiz) {
       ContextStore<Runnable, State> contextStore =
           InstrumentationContext.get(Runnable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

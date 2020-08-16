@@ -82,12 +82,12 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
     @Override
     public void visit(
-        final int version,
-        final int access,
-        final String name,
-        final String signature,
-        final String superName,
-        final String[] interfaces) {
+        int version,
+        int access,
+        String name,
+        String signature,
+        String superName,
+        String[] interfaces) {
       this.instrumentationClassName = name;
       try {
         instrumenter =
@@ -117,11 +117,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
     @Override
     public MethodVisitor visitMethod(
-        final int access,
-        final String name,
-        final String descriptor,
-        final String signature,
-        final String[] exceptions) {
+        int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_METHOD_NAME.equals(name)) {
         // muzzle getter has been generated
         // by previous compilation
@@ -494,7 +490,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       }
 
       @Override
-      public void visitInsn(final int opcode) {
+      public void visitInsn(int opcode) {
         if (opcode == Opcodes.RETURN) {
           super.visitVarInsn(Opcodes.ALOAD, 0);
           super.visitInsn(Opcodes.ACONST_NULL);

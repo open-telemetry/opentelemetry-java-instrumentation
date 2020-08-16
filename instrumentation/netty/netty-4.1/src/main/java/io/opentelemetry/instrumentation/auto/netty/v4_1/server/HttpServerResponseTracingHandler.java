@@ -31,7 +31,7 @@ import io.opentelemetry.trace.TracingContextUtils;
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
-  public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
     Context context = TRACER.getServerContext(ctx.channel());
     if (context == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
@@ -41,7 +41,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     Span span = TracingContextUtils.getSpan(context);
     try (Scope ignored = ContextUtils.withScopedContext(context)) {
       ctx.write(msg, prm);
-    } catch (final Throwable throwable) {
+    } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     }

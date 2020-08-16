@@ -39,13 +39,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   private final Span span;
 
   public TransportActionListener(
-      final ActionRequest actionRequest, final ActionListener<T> listener, final Span span) {
+      ActionRequest actionRequest, ActionListener<T> listener, Span span) {
     this.listener = listener;
     this.span = span;
     onRequest(actionRequest);
   }
 
-  private void onRequest(final ActionRequest request) {
+  private void onRequest(ActionRequest request) {
     if (request instanceof IndicesRequest) {
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
@@ -68,7 +68,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onResponse(final T response) {
+  public void onResponse(T response) {
     if (response.remoteAddress() != null) {
       BaseTracer.setPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
@@ -112,7 +112,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onFailure(final Throwable e) {
+  public void onFailure(Throwable e) {
     DECORATE.onError(span, e);
 
     try {

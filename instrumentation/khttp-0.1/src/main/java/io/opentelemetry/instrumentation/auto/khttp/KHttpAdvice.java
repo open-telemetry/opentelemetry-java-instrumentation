@@ -49,8 +49,8 @@ public class KHttpAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Return final Response response,
-      @Advice.Thrown final Throwable throwable,
+      @Advice.Return Response response,
+      @Advice.Thrown Throwable throwable,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") Depth callDepth) {

@@ -90,7 +90,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   public static class GoogleHttpClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.This final HttpRequest request,
+        @Advice.This HttpRequest request,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -112,8 +112,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return final HttpResponse response,
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Return HttpResponse response,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -136,7 +136,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.This final HttpRequest request,
+        @Advice.This HttpRequest request,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -152,7 +152,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 

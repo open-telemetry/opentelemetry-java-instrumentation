@@ -32,7 +32,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public static final String SPAN_PROPERTY_NAME = "io.opentelemetry.auto.jax-rs-client.span";
 
   @Override
-  public void filter(final ClientRequestContext requestContext) {
+  public void filter(ClientRequestContext requestContext) {
     Span span = TRACER.startSpan(requestContext);
     // TODO (trask) expose inject separate from startScope, e.g. for async cases
     Scope scope = TRACER.startScope(span, requestContext.getHeaders());
@@ -41,8 +41,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   }
 
   @Override
-  public void filter(
-      final ClientRequestContext requestContext, final ClientResponseContext responseContext) {
+  public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
       Span span = (Span) spanObj;
