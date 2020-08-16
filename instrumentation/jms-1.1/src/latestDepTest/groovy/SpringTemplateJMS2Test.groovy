@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+import static JMS2Test.consumerSpan
+import static JMS2Test.producerSpan
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import java.util.concurrent.TimeUnit
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -32,13 +38,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
-
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.TimeUnit
-
-import static JMS2Test.consumerSpan
-import static JMS2Test.producerSpan
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
   static {
@@ -147,7 +146,8 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue/<temporary>") // receive doesn't propagate the trace, so this is a root
+        // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue/<temporary>")
       }
       trace(3, 1) {
         consumerSpan(it, 0, "queue/<temporary>", false, HornetQMessageConsumer, traces[2][0])
