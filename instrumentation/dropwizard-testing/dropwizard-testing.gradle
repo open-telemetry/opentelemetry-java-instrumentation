@@ -12,7 +12,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 //}
 
 dependencies {
-  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0')
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common')
   testImplementation project(':instrumentation:servlet:servlet-3.0')
 
   // First version with DropwizardTestSupport:
