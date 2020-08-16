@@ -58,11 +58,11 @@ import java.util.regex.Pattern;
 public class OpenTelemetryAgent {
   private static final Class<?> thisClass = OpenTelemetryAgent.class;
 
-  public static void premain(final String agentArgs, final Instrumentation inst) {
+  public static void premain(String agentArgs, Instrumentation inst) {
     agentmain(agentArgs, inst);
   }
 
-  public static void agentmain(final String agentArgs, final Instrumentation inst) {
+  public static void agentmain(String agentArgs, Instrumentation inst) {
     try {
 
       URL bootstrapURL = installBootstrapJar(inst);
@@ -72,14 +72,14 @@ public class OpenTelemetryAgent {
               .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
       Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapURL);
-    } catch (final Throwable ex) {
+    } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + thisClass.getName());
       ex.printStackTrace();
     }
   }
 
-  private static synchronized URL installBootstrapJar(final Instrumentation inst)
+  private static synchronized URL installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
     URL javaAgentJarURL = null;
 
@@ -154,7 +154,7 @@ public class OpenTelemetryAgent {
       try {
         vmManagement =
             managementFactoryHelperClass.getDeclaredMethod("getVMManagement").invoke(null);
-      } catch (final NoSuchMethodException e) {
+      } catch (NoSuchMethodException e) {
         // Older vm before getVMManagement() existed
         Field field = managementFactoryHelperClass.getDeclaredField("jvm");
         field.setAccessible(true);
@@ -164,12 +164,12 @@ public class OpenTelemetryAgent {
 
       return (List<String>) vmManagementClass.getMethod("getVmArguments").invoke(vmManagement);
 
-    } catch (final ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException e) {
       try { // Try IBM-based.
         Class VMClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
         String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
         return Arrays.asList(argArray);
-      } catch (final ReflectiveOperationException e1) {
+      } catch (ReflectiveOperationException e1) {
         // Fallback to default
         System.out.println(
             "WARNING: Unable to get VM args through reflection.  A custom java.util.logging.LogManager may not work correctly");
@@ -179,7 +179,7 @@ public class OpenTelemetryAgent {
     }
   }
 
-  private static boolean checkJarManifestMainClassIsThis(final URL jarUrl) throws IOException {
+  private static boolean checkJarManifestMainClassIsThis(URL jarUrl) throws IOException {
     URL manifestUrl = new URL("jar:" + jarUrl + "!/META-INF/MANIFEST.MF");
     String mainClassLine = "Main-Class: " + thisClass.getCanonicalName();
     try (BufferedReader reader =
@@ -205,10 +205,10 @@ public class OpenTelemetryAgent {
    *
    * @param args command line agruments
    */
-  public static void main(final String... args) {
+  public static void main(String... args) {
     try {
       System.out.println(getAgentVersion());
-    } catch (final Exception e) {
+    } catch (Exception e) {
       System.out.println("Failed to parse agent version");
       e.printStackTrace();
     }

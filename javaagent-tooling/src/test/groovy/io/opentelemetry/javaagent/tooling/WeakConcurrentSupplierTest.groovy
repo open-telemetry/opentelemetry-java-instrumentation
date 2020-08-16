@@ -19,10 +19,9 @@ package io.opentelemetry.javaagent.tooling
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.instrumentation.auto.api.WeakMap
-import spock.lang.Shared
-
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
+import spock.lang.Shared
 
 class WeakConcurrentSupplierTest extends AgentSpecification {
   @Shared

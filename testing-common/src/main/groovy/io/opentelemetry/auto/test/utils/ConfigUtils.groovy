@@ -16,10 +16,8 @@
 
 package io.opentelemetry.auto.test.utils
 
-
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
-
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 

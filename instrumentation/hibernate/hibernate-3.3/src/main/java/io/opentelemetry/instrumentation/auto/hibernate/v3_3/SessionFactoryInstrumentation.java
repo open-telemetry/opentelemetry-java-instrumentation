@@ -74,7 +74,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
   public static class SessionFactoryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void openSession(@Advice.Return final Object session) {
+    public static void openSession(@Advice.Return Object session) {
 
       Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);

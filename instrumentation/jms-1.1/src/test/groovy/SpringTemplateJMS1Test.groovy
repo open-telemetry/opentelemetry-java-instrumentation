@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
+import static JMS1Test.consumerSpan
+import static JMS1Test.producerSpan
+
 import com.google.common.base.Stopwatch
 import io.opentelemetry.auto.test.AgentTestRunner
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Connection
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
-
-import javax.jms.Connection
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-
-import static JMS1Test.consumerSpan
-import static JMS1Test.producerSpan
 
 class SpringTemplateJMS1Test extends AgentTestRunner {
   @Shared
@@ -110,7 +109,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
         consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, ActiveMQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue", "<temporary>") // receive doesn't propagate the trace, so this is a root
+        // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "<temporary>")
       }
       trace(3, 1) {
         consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[2][0])

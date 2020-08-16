@@ -21,35 +21,34 @@ import com.squareup.okhttp.Request
 import com.squareup.okhttp.RequestBody
 import com.squareup.okhttp.internal.http.HttpMethod
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 import spock.lang.Timeout
 
-import java.util.concurrent.TimeUnit
-
 @Timeout(5)
 class OkHttp2Test extends HttpClientTest {
-    @Shared
-    def client = new OkHttpClient()
+  @Shared
+  def client = new OkHttpClient()
 
-    def setupSpec() {
-        client.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-    }
+  def setupSpec() {
+    client.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+  }
 
-    @Override
-    int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-        def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+  @Override
+  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
 
-        def request = new Request.Builder()
-                .url(uri.toURL())
-                .method(method, body)
-                .headers(Headers.of(HeadersUtil.headersToArray(headers)))
-                .build()
-        def response = client.newCall(request).execute()
-        callback?.call()
-        return response.code()
-    }
+    def request = new Request.Builder()
+      .url(uri.toURL())
+      .method(method, body)
+      .headers(Headers.of(HeadersUtil.headersToArray(headers)))
+      .build()
+    def response = client.newCall(request).execute()
+    callback?.call()
+    return response.code()
+  }
 
-    boolean testRedirects() {
-        false
-    }
+  boolean testRedirects() {
+    false
+  }
 }

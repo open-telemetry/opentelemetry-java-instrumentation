@@ -84,7 +84,7 @@ public class SpanWithScope {
   private final Span span;
   private final Scope scope;
 
-  public SpanWithScope(final Span span, final Scope scope) {
+  public SpanWithScope(Span span, Scope scope) {
     this.span = span;
     this.scope = scope;
   }

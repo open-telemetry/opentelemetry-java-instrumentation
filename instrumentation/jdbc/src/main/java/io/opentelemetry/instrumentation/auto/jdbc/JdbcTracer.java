@@ -40,17 +40,17 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbSystem(final DBInfo info) {
+  protected String dbSystem(DBInfo info) {
     return info.getSystem();
   }
 
   @Override
-  protected String dbUser(final DBInfo info) {
+  protected String dbUser(DBInfo info) {
     return info.getUser();
   }
 
   @Override
-  protected String dbName(final DBInfo info) {
+  protected String dbName(DBInfo info) {
     if (info.getName() != null) {
       return info.getName();
     } else {
@@ -65,7 +65,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbConnectionString(final DBInfo info) {
+  protected String dbConnectionString(DBInfo info) {
     return info.getShortUrl();
   }
 
@@ -111,14 +111,14 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
           if (url != null) {
             try {
               dbInfo = JDBCConnectionUrlParser.parse(url, connection.getClientInfo());
-            } catch (final Throwable ex) {
+            } catch (Throwable ex) {
               // getClientInfo is likely not allowed.
               dbInfo = JDBCConnectionUrlParser.parse(url, null);
             }
           } else {
             dbInfo = DBInfo.DEFAULT;
           }
-        } catch (final SQLException se) {
+        } catch (SQLException se) {
           dbInfo = DBInfo.DEFAULT;
         }
         JDBCMaps.connectionInfo.put(connection, dbInfo);

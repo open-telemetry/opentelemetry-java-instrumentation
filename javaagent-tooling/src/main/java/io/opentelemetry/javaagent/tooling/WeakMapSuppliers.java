@@ -68,7 +68,7 @@ class WeakMapSuppliers {
       static final MapCleaningTask INSTANCE = new MapCleaningTask();
 
       @Override
-      public void run(final WeakConcurrentMap target) {
+      public void run(WeakConcurrentMap target) {
         target.expungeStaleEntries();
       }
     }
@@ -76,7 +76,7 @@ class WeakMapSuppliers {
     private static class Adapter<K, V> implements WeakMap<K, V> {
       private final WeakConcurrentMap<K, V> map;
 
-      private Adapter(final WeakConcurrentMap<K, V> map) {
+      private Adapter(WeakConcurrentMap<K, V> map) {
         this.map = map;
       }
 
@@ -86,27 +86,27 @@ class WeakMapSuppliers {
       }
 
       @Override
-      public boolean containsKey(final K key) {
+      public boolean containsKey(K key) {
         return map.containsKey(key);
       }
 
       @Override
-      public V get(final K key) {
+      public V get(K key) {
         return map.get(key);
       }
 
       @Override
-      public void put(final K key, final V value) {
+      public void put(K key, V value) {
         map.put(key, value);
       }
 
       @Override
-      public void putIfAbsent(final K key, final V value) {
+      public void putIfAbsent(K key, V value) {
         map.putIfAbsent(key, value);
       }
 
       @Override
-      public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
+      public V computeIfAbsent(K key, ValueSupplier<? super K, ? extends V> supplier) {
         if (map.containsKey(key)) {
           return map.get(key);
         }
@@ -140,7 +140,7 @@ class WeakMapSuppliers {
       return new WeakMap.MapAdapter<>(new MapMaker().weakKeys().<K, V>makeMap());
     }
 
-    public <K, V> WeakMap<K, V> get(final int concurrencyLevel) {
+    public <K, V> WeakMap<K, V> get(int concurrencyLevel) {
       return new WeakMap.MapAdapter<>(
           new MapMaker().concurrencyLevel(concurrencyLevel).weakKeys().<K, V>makeMap());
     }

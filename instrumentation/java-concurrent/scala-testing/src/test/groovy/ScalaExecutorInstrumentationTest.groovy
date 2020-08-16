@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.data.SpanData
-import scala.concurrent.forkjoin.ForkJoinPool
-import scala.concurrent.forkjoin.ForkJoinTask
-import spock.lang.Shared
-
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -27,8 +25,9 @@ import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import scala.concurrent.forkjoin.ForkJoinPool
+import scala.concurrent.forkjoin.ForkJoinTask
+import spock.lang.Shared
 
 /**
  * Test executor instrumentation for Scala specific classes.

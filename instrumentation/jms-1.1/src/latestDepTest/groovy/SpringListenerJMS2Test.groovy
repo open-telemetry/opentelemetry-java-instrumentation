@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import static JMS2Test.consumerSpan
 import static JMS2Test.producerSpan
 

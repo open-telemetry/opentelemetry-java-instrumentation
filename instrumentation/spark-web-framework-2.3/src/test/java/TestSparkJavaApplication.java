@@ -18,7 +18,7 @@ import spark.Spark;
 
 public class TestSparkJavaApplication {
 
-  public static void initSpark(final int port) {
+  public static void initSpark(int port) {
     Spark.port(port);
     Spark.get("/", (req, res) -> "Hello World");
 

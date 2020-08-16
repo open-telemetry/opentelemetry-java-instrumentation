@@ -16,8 +16,11 @@
 
 package springdata
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -32,10 +35,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
-
-import java.util.concurrent.atomic.AtomicLong
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds

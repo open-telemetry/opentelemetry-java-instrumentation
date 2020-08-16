@@ -23,7 +23,7 @@ public class ExtractAdapter implements HttpTextFormat.Getter<HttpRequestPacket> 
   public static final ExtractAdapter GETTER = new ExtractAdapter();
 
   @Override
-  public String get(final HttpRequestPacket request, final String key) {
+  public String get(HttpRequestPacket request, String key) {
     return request.getHeader(key);
   }
 }

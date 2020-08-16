@@ -77,9 +77,9 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) final Message message) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) Message message) {
 
-      final String spanName = DECORATE.spanNameForConsumer(message);
+      String spanName = DECORATE.spanNameForConsumer(message);
       Span.Builder spanBuilder = TRACER.spanBuilder(spanName).setSpanKind(CONSUMER);
       spanBuilder.setParent(extract(message, GETTER));
 
@@ -91,7 +91,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

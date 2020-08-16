@@ -16,13 +16,13 @@
 
 package server
 
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 
 /* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
 

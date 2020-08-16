@@ -30,10 +30,10 @@ public class RouterFunctionAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.This final RouterFunction thiz,
-      @Advice.Argument(0) final ServerRequest serverRequest,
+      @Advice.This RouterFunction thiz,
+      @Advice.Argument(0) ServerRequest serverRequest,
       @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
-      @Advice.Thrown final Throwable throwable) {
+      @Advice.Thrown Throwable throwable) {
     if (throwable == null) {
       result = result.doOnSuccessOrError(new RouteOnSuccessOrError(thiz, serverRequest));
     } else {

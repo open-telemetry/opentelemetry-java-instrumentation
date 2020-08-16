@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.Query
 import org.hibernate.Session
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class QueryTest extends AbstractHibernateTest {
 

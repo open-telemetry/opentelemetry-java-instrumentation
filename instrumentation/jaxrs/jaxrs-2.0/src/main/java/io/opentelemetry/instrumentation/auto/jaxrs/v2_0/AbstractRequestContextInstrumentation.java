@@ -74,7 +74,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
   public static class RequestFilterHelper {
     public static SpanWithScope createOrUpdateAbortSpan(
-        final ContainerRequestContext context, final Class<?> resourceClass, final Method method) {
+        ContainerRequestContext context, Class<?> resourceClass, Method method) {
 
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
@@ -93,8 +93,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       }
     }
 
-    public static void closeSpanAndScope(
-        final SpanWithScope spanWithScope, final Throwable throwable) {
+    public static void closeSpanAndScope(SpanWithScope spanWithScope, Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

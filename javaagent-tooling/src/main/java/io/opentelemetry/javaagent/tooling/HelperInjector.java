@@ -75,13 +75,13 @@ public class HelperInjector implements Transformer {
    *     order provided. This is important if there is interdependency between helper classes that
    *     requires them to be injected in a specific order.
    */
-  public HelperInjector(final String requestingName, final String... helperClassNames) {
+  public HelperInjector(String requestingName, String... helperClassNames) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
   }
 
-  public HelperInjector(final String requestingName, final Map<String, byte[]> helperMap) {
+  public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
     this.requestingName = requestingName;
 
     helperClassNames = helperMap.keySet();
@@ -89,7 +89,7 @@ public class HelperInjector implements Transformer {
   }
 
   public static HelperInjector forDynamicTypes(
-      final String requestingName, final Collection<DynamicType.Unloaded<?>> helpers) {
+      String requestingName, Collection<DynamicType.Unloaded<?>> helpers) {
     Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
@@ -116,10 +116,10 @@ public class HelperInjector implements Transformer {
 
   @Override
   public DynamicType.Builder<?> transform(
-      final DynamicType.Builder<?> builder,
-      final TypeDescription typeDescription,
+      DynamicType.Builder<?> builder,
+      TypeDescription typeDescription,
       ClassLoader classLoader,
-      final JavaModule module) {
+      JavaModule module) {
     if (!helperClassNames.isEmpty()) {
       if (classLoader == BOOTSTRAP_CLASSLOADER) {
         classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
@@ -144,7 +144,7 @@ public class HelperInjector implements Transformer {
             JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
             helperModules.add(new WeakReference<>(javaModule.unwrap()));
           }
-        } catch (final Exception e) {
+        } catch (Exception e) {
           if (log.isErrorEnabled()) {
             log.error(
                 "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
@@ -164,8 +164,8 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private Map<String, Class<?>> injectBootstrapClassLoader(
-      final Map<String, byte[]> classnameToBytes) throws IOException {
+  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
+      throws IOException {
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.
@@ -185,11 +185,11 @@ public class HelperInjector implements Transformer {
   }
 
   private Map<String, Class<?>> injectClassLoader(
-      final ClassLoader classLoader, final Map<String, byte[]> classnameToBytes) {
+      ClassLoader classLoader, Map<String, byte[]> classnameToBytes) {
     return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }
 
-  private void ensureModuleCanReadHelperModules(final JavaModule target) {
+  private void ensureModuleCanReadHelperModules(JavaModule target) {
     if (JavaModule.isSupported() && target != JavaModule.UNSUPPORTED && target.isNamed()) {
       for (WeakReference<Object> helperModuleReference : helperModules) {
         Object realModule = helperModuleReference.get();
@@ -215,7 +215,7 @@ public class HelperInjector implements Transformer {
     return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
   }
 
-  private static void deleteTempDir(final File file) {
+  private static void deleteTempDir(File file) {
     // Not using Files.delete for deleting the directory because failures
     // create Exceptions which may prove expensive.  Instead using the
     // older File API which simply returns a boolean.

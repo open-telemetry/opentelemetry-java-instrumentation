@@ -29,7 +29,7 @@ public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Argument(0) final RedisCommand<?, ?, ?> command,
+      @Advice.Argument(0) RedisCommand<?, ?, ?> command,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -39,9 +39,9 @@ public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(0) final RedisCommand<?, ?, ?> command,
-      @Advice.Thrown final Throwable throwable,
-      @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand,
+      @Advice.Argument(0) RedisCommand<?, ?, ?> command,
+      @Advice.Thrown Throwable throwable,
+      @Advice.Return AsyncCommand<?, ?, ?> asyncCommand,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
     scope.close();

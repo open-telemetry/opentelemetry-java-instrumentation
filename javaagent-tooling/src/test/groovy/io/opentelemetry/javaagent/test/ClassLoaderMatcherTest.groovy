@@ -16,11 +16,11 @@
 
 package io.opentelemetry.auto.test
 
+import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
 import io.opentelemetry.javaagent.tooling.ClassLoaderMatcher
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
 import io.opentelemetry.javaagent.tooling.log.LogContextScopeListener
-import io.opentelemetry.auto.util.test.AgentSpecification
-import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
 
 class ClassLoaderMatcherTest extends AgentSpecification {
 

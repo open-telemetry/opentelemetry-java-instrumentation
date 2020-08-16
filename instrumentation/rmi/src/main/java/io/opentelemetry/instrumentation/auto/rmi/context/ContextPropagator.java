@@ -50,18 +50,16 @@ public class ContextPropagator {
 
   public static final ContextPropagator PROPAGATOR = new ContextPropagator();
 
-  public boolean isRMIInternalObject(final ObjID id) {
+  public boolean isRMIInternalObject(ObjID id) {
     return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
   }
 
-  public boolean isOperationWithPayload(final int operationId) {
+  public boolean isOperationWithPayload(int operationId) {
     return operationId == CONTEXT_PAYLOAD_OPERATION_ID;
   }
 
   public void attemptToPropagateContext(
-      final ContextStore<Connection, Boolean> knownConnections,
-      final Connection c,
-      final Span span) {
+      ContextStore<Connection, Boolean> knownConnections, Connection c, Span span) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(span), CONTEXT_PAYLOAD_OPERATION_ID)) {
         log.debug("Couldn't send context payload");
@@ -70,7 +68,7 @@ public class ContextPropagator {
   }
 
   private boolean checkIfContextCanBePassed(
-      final ContextStore<Connection, Boolean> knownConnections, final Connection c) {
+      ContextStore<Connection, Boolean> knownConnections, Connection c) {
     Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
       return storedResult;
@@ -82,8 +80,7 @@ public class ContextPropagator {
   }
 
   /** @return true when no error happened during call */
-  private boolean syntheticCall(
-      final Connection c, final ContextPayload payload, final int operationId) {
+  private boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);
@@ -107,7 +104,7 @@ public class ContextPropagator {
 
       try {
         shareContextCall.executeCall();
-      } catch (final Exception e) {
+      } catch (Exception e) {
         Exception ex = shareContextCall.getServerException();
         if (ex != null) {
           if (ex instanceof NoSuchObjectException) {
@@ -123,7 +120,7 @@ public class ContextPropagator {
         shareContextCall.done();
       }
 
-    } catch (final IOException e) {
+    } catch (IOException e) {
       log.debug("Communication error executing synthetic call", e);
       return false;
     }

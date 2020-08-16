@@ -16,6 +16,8 @@
 
 package util
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig
 import com.couchbase.client.java.bucket.BucketType
@@ -31,11 +33,8 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import spock.lang.Shared
-
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import spock.lang.Shared
 
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
 

@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -22,8 +23,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
 import spock.lang.Timeout
-
-import java.util.concurrent.TimeUnit
 
 @Timeout(5)
 class OkHttp3Test extends HttpClientTest {

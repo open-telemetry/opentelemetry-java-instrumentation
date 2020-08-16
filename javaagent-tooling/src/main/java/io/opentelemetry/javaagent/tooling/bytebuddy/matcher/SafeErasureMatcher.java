@@ -46,12 +46,12 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
    *
    * @param matcher The matcher to apply to the raw type.
    */
-  public SafeErasureMatcher(final ElementMatcher<? super TypeDescription> matcher) {
+  public SafeErasureMatcher(ElementMatcher<? super TypeDescription> matcher) {
     this.matcher = matcher;
   }
 
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     TypeDescription erasure = safeAsErasure(target);
     if (erasure == null) {
       return false;
@@ -61,10 +61,10 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
     }
   }
 
-  static TypeDescription safeAsErasure(final TypeDefinition typeDefinition) {
+  static TypeDescription safeAsErasure(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.asErasure();
-    } catch (final Exception e) {
+    } catch (Exception e) {
       if (log.isDebugEnabled()) {
         log.debug(
             "{} trying to get erasure for target {}: {}",
@@ -82,7 +82,7 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

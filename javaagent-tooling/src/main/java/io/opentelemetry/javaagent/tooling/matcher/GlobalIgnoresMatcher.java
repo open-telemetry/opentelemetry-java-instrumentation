@@ -43,7 +43,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher(
-      final boolean skipAdditionalLibraryMatcher) {
+      boolean skipAdditionalLibraryMatcher) {
     return new GlobalIgnoresMatcher<>(skipAdditionalLibraryMatcher);
   }
 
@@ -51,7 +51,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
   private final boolean skipAdditionalLibraryMatcher;
 
-  private GlobalIgnoresMatcher(final boolean skipAdditionalLibraryMatcher) {
+  private GlobalIgnoresMatcher(boolean skipAdditionalLibraryMatcher) {
     this.skipAdditionalLibraryMatcher = skipAdditionalLibraryMatcher;
   }
 
@@ -61,7 +61,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
    * don't have to load additional info.
    */
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     String name = target.getActualName();
 
     if (name.startsWith("net.bytebuddy.")
@@ -177,7 +177,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

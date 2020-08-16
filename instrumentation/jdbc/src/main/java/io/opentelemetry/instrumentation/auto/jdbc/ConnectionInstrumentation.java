@@ -79,7 +79,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
   public static class ConnectionPrepareAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
-        @Advice.Argument(0) final String sql, @Advice.Return final PreparedStatement statement) {
+        @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
       String normalizedSql = JDBCUtils.normalizeSql(sql);
       if (normalizedSql != null) {
         JDBCMaps.preparedStatements.put(statement, normalizedSql);

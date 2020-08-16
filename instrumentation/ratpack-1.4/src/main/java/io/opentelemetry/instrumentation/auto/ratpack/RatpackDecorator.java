@@ -27,7 +27,7 @@ public class RatpackDecorator extends BaseDecorator {
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
 
-  public Span onContext(final Span span, final Context ctx) {
+  public Span onContext(Span span, Context ctx) {
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
       description = "/";
@@ -41,7 +41,7 @@ public class RatpackDecorator extends BaseDecorator {
   }
 
   @Override
-  public Span onError(final Span span, final Throwable throwable) {
+  public Span onError(Span span, Throwable throwable) {
     // Attempt to unwrap ratpack.handling.internal.HandlerException without direct reference.
     if (throwable instanceof Error && throwable.getCause() != null) {
       return super.onError(span, throwable.getCause());

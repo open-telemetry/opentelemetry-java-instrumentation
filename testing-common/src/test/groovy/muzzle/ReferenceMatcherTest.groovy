@@ -16,15 +16,6 @@
 
 package muzzle
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ClasspathUtils
-import io.opentelemetry.javaagent.tooling.muzzle.Reference
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher
-import net.bytebuddy.jar.asm.Type
-import spock.lang.Shared
-
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.INTERFACE
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_INTERFACE
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_STATIC
@@ -36,6 +27,15 @@ import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.Missi
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingFlag
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingMethod
 import static muzzle.TestClasses.MethodBodyAdvice
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ClasspathUtils
+import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher
+import net.bytebuddy.jar.asm.Type
+import spock.lang.Shared
 
 class ReferenceMatcherTest extends AgentTestRunner {
 

@@ -64,7 +64,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
   public static class SessionFactoryAdvice extends V4Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void openSession(@Advice.Return final SharedSessionContract session) {
+    public static void openSession(@Advice.Return SharedSessionContract session) {
 
       Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);

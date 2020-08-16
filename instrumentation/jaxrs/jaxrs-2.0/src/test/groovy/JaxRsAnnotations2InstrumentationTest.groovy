@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.auto.api.WeakMap
-
+import io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer
+import java.lang.reflect.Method
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -25,9 +27,6 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import java.lang.reflect.Method
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
 
 class JaxRsAnnotations2InstrumentationTest extends AgentTestRunner {
 

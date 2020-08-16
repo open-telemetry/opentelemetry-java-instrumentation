@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationsInstrumentation
+import static io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationsInstrumentation
 import io.opentelemetry.test.annotation.SayTracedHello
-
 import java.util.concurrent.Callable
-
-import static io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 

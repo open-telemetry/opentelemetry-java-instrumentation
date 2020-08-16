@@ -27,7 +27,7 @@ public class ContextUtils {
   private static final Logger log = LoggerFactory.getLogger(ContextUtils.class);
 
   public static Scope withScopedContext(
-      final Context context, final ContextStore<Context, io.grpc.Context> contextStore) {
+      Context context, ContextStore<Context, io.grpc.Context> contextStore) {
     io.grpc.Context agentContext = contextStore.get(context);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {

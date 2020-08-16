@@ -40,7 +40,7 @@ public class AdviceUtils {
   public static final String CONTEXT_ATTRIBUTE =
       "io.opentelemetry.instrumentation.auto.springwebflux.Context";
 
-  public static String parseOperationName(final Object handler) {
+  public static String parseOperationName(Object handler) {
     String className = DECORATE.spanNameForClass(handler.getClass());
     String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
@@ -53,7 +53,7 @@ public class AdviceUtils {
     return operationName;
   }
 
-  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final io.grpc.Context context) {
+  public static <T> Mono<T> setPublisherSpan(Mono<T> mono, io.grpc.Context context) {
     return mono.<T>transform(finishSpanNextOrError(context));
   }
 
@@ -63,33 +63,31 @@ public class AdviceUtils {
    * versions.
    */
   public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> finishSpanNextOrError(
-      final io.grpc.Context context) {
+      io.grpc.Context context) {
     return Operators.lift(
         (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, context));
   }
 
-  public static void finishSpanIfPresent(
-      final ServerWebExchange exchange, final Throwable throwable) {
+  public static void finishSpanIfPresent(ServerWebExchange exchange, Throwable throwable) {
     if (exchange != null) {
       finishSpanIfPresentInAttributes(exchange.getAttributes(), throwable);
     }
   }
 
-  public static void finishSpanIfPresent(
-      final ServerRequest serverRequest, final Throwable throwable) {
+  public static void finishSpanIfPresent(ServerRequest serverRequest, Throwable throwable) {
     if (serverRequest != null) {
       finishSpanIfPresentInAttributes(serverRequest.attributes(), throwable);
     }
   }
 
   private static void finishSpanIfPresentInAttributes(
-      final Map<String, Object> attributes, final Throwable throwable) {
+      Map<String, Object> attributes, Throwable throwable) {
 
     io.grpc.Context context = (io.grpc.Context) attributes.remove(CONTEXT_ATTRIBUTE);
     finishSpanIfPresent(context, throwable);
   }
 
-  static void finishSpanIfPresent(final io.grpc.Context context, final Throwable throwable) {
+  static void finishSpanIfPresent(io.grpc.Context context, Throwable throwable) {
     if (context != null) {
       Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
@@ -107,28 +105,28 @@ public class AdviceUtils {
     private final Context context;
 
     public SpanFinishingSubscriber(
-        final CoreSubscriber<? super T> subscriber, final io.grpc.Context otelContext) {
+        CoreSubscriber<? super T> subscriber, io.grpc.Context otelContext) {
       this.subscriber = subscriber;
       this.otelContext = otelContext;
       context = subscriber.currentContext().put(Span.class, otelContext);
     }
 
     @Override
-    public void onSubscribe(final Subscription s) {
+    public void onSubscribe(Subscription s) {
       try (Scope scope = withScopedContext(otelContext)) {
         subscriber.onSubscribe(s);
       }
     }
 
     @Override
-    public void onNext(final T t) {
+    public void onNext(T t) {
       try (Scope scope = withScopedContext(otelContext)) {
         subscriber.onNext(t);
       }
     }
 
     @Override
-    public void onError(final Throwable t) {
+    public void onError(Throwable t) {
       finishSpanIfPresent(otelContext, t);
       subscriber.onError(t);
     }

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static java.util.Collections.emptyEnumeration
+
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.AgentTestRunner
-import spock.lang.Subject
-
 import javax.servlet.ServletOutputStream
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static java.util.Collections.emptyEnumeration
+import spock.lang.Subject
 
 class HttpServletResponseTest extends AgentTestRunner {
 

@@ -16,12 +16,12 @@
 
 package muzzle
 
+import static muzzle.TestClasses.LdcAdvice
+import static muzzle.TestClasses.MethodBodyAdvice
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
-
-import static muzzle.TestClasses.LdcAdvice
-import static muzzle.TestClasses.MethodBodyAdvice
 
 class ReferenceCreatorTest extends AgentTestRunner {
   def "method body creates references"() {

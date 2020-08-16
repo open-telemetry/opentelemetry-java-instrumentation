@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import static JMS2Test.consumerSpan
 import static JMS2Test.producerSpan
 
@@ -150,7 +149,8 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, HornetQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue", "<temporary>") // receive doesn't propagate the trace, so this is a root
+        // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "<temporary>")
       }
       trace(3, 1) {
         consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[2][0])

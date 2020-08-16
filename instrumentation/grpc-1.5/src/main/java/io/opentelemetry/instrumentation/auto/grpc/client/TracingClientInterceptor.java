@@ -46,15 +46,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TracingClientInterceptor implements ClientInterceptor {
   private final InetSocketAddress peerAddress;
 
-  public TracingClientInterceptor(final InetSocketAddress peerAddress) {
+  public TracingClientInterceptor(InetSocketAddress peerAddress) {
     this.peerAddress = peerAddress;
   }
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-      final MethodDescriptor<ReqT, RespT> method,
-      final CallOptions callOptions,
-      final Channel next) {
+      MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
 
     String methodName = method.getFullMethodName();
     Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
@@ -67,7 +65,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
         span.end();
@@ -81,13 +79,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
       extends ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT> {
     final Context context;
 
-    TracingClientCall(final Context context, final ClientCall<ReqT, RespT> delegate) {
+    TracingClientCall(Context context, ClientCall<ReqT, RespT> delegate) {
       super(delegate);
       this.context = context;
     }
 
     @Override
-    public void start(final Listener<RespT> responseListener, final Metadata headers) {
+    public void start(Listener<RespT> responseListener, Metadata headers) {
       // this reference to io.grpc.Context will be shaded during the build
       // see instrumentation.gradle: "relocate OpenTelemetry API dependency usage"
       // (luckily the grpc instrumentation doesn't need to reference unshaded grpc Context, so we
@@ -96,7 +94,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
       try (Scope ignored = withScopedContext(context)) {
         super.start(new TracingClientCallListener<>(context, responseListener), headers);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         Span span = getSpan(context);
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
@@ -106,10 +104,10 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
 
     @Override
-    public void sendMessage(final ReqT message) {
+    public void sendMessage(ReqT message) {
       try (Scope ignored = withScopedContext(context)) {
         super.sendMessage(message);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         Span span = getSpan(context);
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
@@ -124,13 +122,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
     private final Context context;
     private final AtomicInteger messageId = new AtomicInteger();
 
-    TracingClientCallListener(final Context context, final ClientCall.Listener<RespT> delegate) {
+    TracingClientCallListener(Context context, ClientCall.Listener<RespT> delegate) {
       super(delegate);
       this.context = context;
     }
 
     @Override
-    public void onMessage(final RespT message) {
+    public void onMessage(RespT message) {
       Span span = getSpan(context);
       Attributes attributes =
           Attributes.of(
@@ -143,13 +141,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
 
     @Override
-    public void onClose(final Status status, final Metadata trailers) {
+    public void onClose(Status status, Metadata trailers) {
       Span span = getSpan(context);
       DECORATE.onClose(span, status);
       // Finishes span.
       try (Scope ignored = withScopedContext(context)) {
         delegate().onClose(status, trailers);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         throw e;
       } finally {
@@ -162,7 +160,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onReady() {
       try (Scope ignored = withScopedContext(context)) {
         delegate().onReady();
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         Span span = getSpan(context);
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);

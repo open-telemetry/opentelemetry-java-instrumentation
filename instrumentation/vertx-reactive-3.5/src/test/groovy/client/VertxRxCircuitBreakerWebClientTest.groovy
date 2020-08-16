@@ -24,10 +24,9 @@ import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.WebClient
+import java.util.concurrent.CompletableFuture
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.CompletableFuture
 
 @Timeout(10)
 class VertxRxCircuitBreakerWebClientTest extends HttpClientTest {

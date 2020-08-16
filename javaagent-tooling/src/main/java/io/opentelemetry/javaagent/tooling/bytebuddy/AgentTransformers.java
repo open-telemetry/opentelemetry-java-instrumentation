@@ -28,10 +28,10 @@ public class AgentTransformers {
       new AgentBuilder.Transformer() {
         @Override
         public DynamicType.Builder<?> transform(
-            final DynamicType.Builder<?> builder,
-            final TypeDescription typeDescription,
-            final ClassLoader classLoader,
-            final JavaModule javaModule) {
+            DynamicType.Builder<?> builder,
+            TypeDescription typeDescription,
+            ClassLoader classLoader,
+            JavaModule javaModule) {
           return builder.visit(TypeConstantAdjustment.INSTANCE);
         }
       };

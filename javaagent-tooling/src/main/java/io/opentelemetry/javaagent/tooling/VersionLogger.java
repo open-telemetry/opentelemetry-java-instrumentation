@@ -44,7 +44,7 @@ public class VersionLogger {
     }
   }
 
-  private static String getVersionString(final InputStream stream) {
+  private static String getVersionString(InputStream stream) {
     String v;
     try {
       StringBuilder sb = new StringBuilder();
@@ -54,7 +54,7 @@ public class VersionLogger {
       }
 
       v = sb.toString().trim();
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.error("failed to read version stream", e);
       v = "unknown";
     } finally {
@@ -62,7 +62,7 @@ public class VersionLogger {
         if (null != stream) {
           stream.close();
         }
-      } catch (final IOException e) {
+      } catch (IOException e) {
       }
     }
     return v;

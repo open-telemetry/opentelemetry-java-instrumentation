@@ -16,12 +16,12 @@
 
 package io.opentelemetry.auto.test.log.events
 
+import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
 import spock.lang.Unroll
-
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST

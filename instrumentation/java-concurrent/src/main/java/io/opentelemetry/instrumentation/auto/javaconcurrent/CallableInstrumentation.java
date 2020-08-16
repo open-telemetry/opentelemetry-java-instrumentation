@@ -64,14 +64,14 @@ public final class CallableInstrumentation extends Instrumenter.Default {
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This final Callable thiz) {
+    public static Scope enter(@Advice.This Callable thiz) {
       ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

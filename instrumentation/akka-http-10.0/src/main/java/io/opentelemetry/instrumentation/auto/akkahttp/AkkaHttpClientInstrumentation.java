@@ -109,10 +109,10 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final HttpRequest request,
-        @Advice.This final HttpExt thiz,
-        @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Argument(0) HttpRequest request,
+        @Advice.This HttpExt thiz,
+        @Advice.Return Future<HttpResponse> responseFuture,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -130,12 +130,12 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
     private final Span span;
 
-    public OnCompleteHandler(final Span span) {
+    public OnCompleteHandler(Span span) {
       this.span = span;
     }
 
     @Override
-    public Void apply(final Try<HttpResponse> result) {
+    public Void apply(Try<HttpResponse> result) {
       if (result.isSuccess()) {
         TRACER.end(span, result.get());
       } else {
@@ -148,12 +148,12 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   public static class AkkaHttpHeaders implements HttpTextFormat.Setter<HttpRequest> {
     private HttpRequest request;
 
-    public AkkaHttpHeaders(final HttpRequest request) {
+    public AkkaHttpHeaders(HttpRequest request) {
       this.request = request;
     }
 
     @Override
-    public void set(final HttpRequest carrier, final String key, final String value) {
+    public void set(HttpRequest carrier, String key, String value) {
       // It looks like this cast is only needed in Java, Scala would have figured it out
       request = (HttpRequest) request.addHeader(RawHeader.create(key, value));
     }

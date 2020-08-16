@@ -31,7 +31,7 @@ public class RequestDispatcherServlet {
   @WebServlet(asyncSupported = true)
   public static class Forward extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp)
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
       String target = req.getServletPath().replace("/dispatch", "");
       ServletContext context = getServletContext();
@@ -43,7 +43,7 @@ public class RequestDispatcherServlet {
   @WebServlet(asyncSupported = true)
   public static class Include extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp)
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
       String target = req.getServletPath().replace("/dispatch", "");
       ServletContext context = getServletContext();

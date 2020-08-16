@@ -70,8 +70,8 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
+        @Advice.This Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -82,9 +82,9 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }

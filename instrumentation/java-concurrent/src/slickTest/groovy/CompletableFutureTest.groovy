@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.data.SpanData
-
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 /**
  * Note: ideally this should live with the rest of ExecutorInstrumentationTest,

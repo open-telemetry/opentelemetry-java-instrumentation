@@ -67,7 +67,7 @@ public class AgentTooling {
     return weakCacheProvider.newWeakCache();
   }
 
-  public static <K, V> WeakCache<K, V> newWeakCache(final long maxSize) {
+  public static <K, V> WeakCache<K, V> newWeakCache(long maxSize) {
     return weakCacheProvider.newWeakCache(maxSize);
   }
 

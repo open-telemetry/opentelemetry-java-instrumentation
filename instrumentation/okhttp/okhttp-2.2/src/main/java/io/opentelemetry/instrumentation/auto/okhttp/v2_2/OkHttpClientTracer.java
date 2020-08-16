@@ -27,17 +27,17 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   @Override
-  protected String method(final Request request) {
+  protected String method(Request request) {
     return request.method();
   }
 
   @Override
-  protected URI url(final Request request) throws URISyntaxException {
+  protected URI url(Request request) throws URISyntaxException {
     return request.url().toURI();
   }
 
   @Override
-  protected Integer status(final Response response) {
+  protected Integer status(Response response) {
     return response.code();
   }
 

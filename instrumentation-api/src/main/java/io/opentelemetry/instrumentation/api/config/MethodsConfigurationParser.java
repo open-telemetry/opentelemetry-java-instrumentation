@@ -84,7 +84,7 @@ public class MethodsConfigurationParser {
     }
   }
 
-  private static boolean validateConfigString(final String configString) {
+  private static boolean validateConfigString(String configString) {
     for (String segment : configString.split(";")) {
       if (!segment.trim().matches(CONFIG_FORMAT)) {
         return false;

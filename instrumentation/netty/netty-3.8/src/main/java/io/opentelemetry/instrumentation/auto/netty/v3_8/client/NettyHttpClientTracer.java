@@ -36,12 +36,12 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().getName();
   }
 
   @Override
-  protected URI url(final HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.getUri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.getUri());
@@ -51,7 +51,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatus().getCode();
   }
 

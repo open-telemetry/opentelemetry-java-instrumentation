@@ -16,20 +16,20 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface
+import static net.bytebuddy.matcher.ElementMatchers.named
+
+import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.AgentTooling
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G
-import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.description.type.TypeList
 import net.bytebuddy.jar.asm.Opcodes
 import spock.lang.Shared
-
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface
-import static net.bytebuddy.matcher.ElementMatchers.named
 
 class ImplementsInterfaceMatcherTest extends AgentSpecification {
   @Shared
@@ -74,7 +74,7 @@ class ImplementsInterfaceMatcherTest extends AgentSpecification {
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
     1 * typeGeneric.getTypeName() >> "typeGeneric-name"
-    1 * type.getInterfaces() >>  { throw new Exception("getInterfaces exception") }
+    1 * type.getInterfaces() >> { throw new Exception("getInterfaces exception") }
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
     2 * type.getTypeName() >> "type-name"
     0 * _

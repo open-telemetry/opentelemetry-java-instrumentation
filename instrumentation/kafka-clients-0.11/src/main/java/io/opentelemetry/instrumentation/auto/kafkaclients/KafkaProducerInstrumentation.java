@@ -83,7 +83,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
+        @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
       Span span =
@@ -114,7 +114,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
           OpenTelemetry.getPropagators()
               .getHttpTextFormat()
               .inject(context, record.headers(), SETTER);
-        } catch (final IllegalStateException e) {
+        } catch (IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
               new ProducerRecord<>(
@@ -136,7 +136,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
@@ -149,13 +149,13 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     private final Callback callback;
     private final Span span;
 
-    public ProducerCallback(final Callback callback, final Span span) {
+    public ProducerCallback(Callback callback, Span span) {
       this.callback = callback;
       this.span = span;
     }
 
     @Override
-    public void onCompletion(final RecordMetadata metadata, final Exception exception) {
+    public void onCompletion(RecordMetadata metadata, Exception exception) {
       try (Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, exception);
         try {

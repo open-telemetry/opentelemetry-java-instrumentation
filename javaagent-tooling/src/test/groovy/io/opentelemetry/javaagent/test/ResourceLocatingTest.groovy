@@ -16,12 +16,11 @@
 
 package io.opentelemetry.auto.test
 
-import io.opentelemetry.javaagent.tooling.bytebuddy.AgentLocationStrategy
 import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.javaagent.tooling.bytebuddy.AgentLocationStrategy
+import java.util.concurrent.atomic.AtomicReference
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared
-
-import java.util.concurrent.atomic.AtomicReference
 
 class ResourceLocatingTest extends AgentSpecification {
   @Shared

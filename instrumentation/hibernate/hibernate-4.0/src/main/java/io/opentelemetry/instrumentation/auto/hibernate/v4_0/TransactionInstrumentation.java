@@ -59,7 +59,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
   public static class TransactionCommitAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startCommit(@Advice.This final Transaction transaction) {
+    public static SpanWithScope startCommit(@Advice.This Transaction transaction) {
 
       ContextStore<Transaction, Span> contextStore =
           InstrumentationContext.get(Transaction.class, Span.class);
@@ -70,7 +70,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }

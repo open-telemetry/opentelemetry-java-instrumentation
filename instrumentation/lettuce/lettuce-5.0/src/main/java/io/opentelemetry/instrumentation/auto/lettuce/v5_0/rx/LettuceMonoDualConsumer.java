@@ -31,14 +31,13 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
   private final RedisCommand<?, ?, ?> command;
   private final boolean finishSpanOnClose;
 
-  public LettuceMonoDualConsumer(
-      final RedisCommand<?, ?, ?> command, final boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     this.command = command;
     this.finishSpanOnClose = finishSpanOnClose;
   }
 
   @Override
-  public void accept(final R r) {
+  public void accept(R r) {
     span = TRACER.startSpan(null, command);
     if (finishSpanOnClose) {
       TRACER.end(span);
@@ -46,7 +45,7 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
   }
 
   @Override
-  public void accept(final T t, final Throwable throwable) {
+  public void accept(T t, Throwable throwable) {
     if (span != null) {
       if (throwable == null) {
         TRACER.end(span);

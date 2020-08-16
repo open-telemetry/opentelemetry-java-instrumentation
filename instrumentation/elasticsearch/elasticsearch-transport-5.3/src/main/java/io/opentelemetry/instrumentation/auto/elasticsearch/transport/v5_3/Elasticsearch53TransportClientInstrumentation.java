@@ -83,8 +83,8 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) final Action action,
-        @Advice.Argument(1) final ActionRequest actionRequest,
+        @Advice.Argument(0) Action action,
+        @Advice.Argument(1) ActionRequest actionRequest,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
@@ -100,7 +100,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);

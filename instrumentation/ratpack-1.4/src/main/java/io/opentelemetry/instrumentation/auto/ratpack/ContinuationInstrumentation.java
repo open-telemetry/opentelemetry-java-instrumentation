@@ -71,7 +71,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
       block = BlockWrapper.wrapIfNeeded(block);
     }
 
-    public void muzzleCheck(final PathBinding binding) {
+    public void muzzleCheck(PathBinding binding) {
       // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
       binding.getDescription();
     }

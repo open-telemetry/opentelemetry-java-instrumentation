@@ -36,7 +36,7 @@ public class Utils {
   static {
     try {
       findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (final NoSuchMethodException | SecurityException e) {
+    } catch (NoSuchMethodException | SecurityException e) {
       throw new IllegalStateException(e);
     }
   }
@@ -57,7 +57,7 @@ public class Utils {
   }
 
   /** com.foo.Bar -> com/foo/Bar.class */
-  public static String getResourceName(final String className) {
+  public static String getResourceName(String className) {
     if (!className.endsWith(".class")) {
       return className.replace('.', '/') + ".class";
     } else {
@@ -66,12 +66,12 @@ public class Utils {
   }
 
   /** com/foo/Bar.class -> com.foo.Bar */
-  public static String getClassName(final String resourceName) {
+  public static String getClassName(String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
   }
 
   /** com.foo.Bar -> com/foo/Bar */
-  public static String getInternalName(final String resourceName) {
+  public static String getInternalName(String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
   }
 
@@ -82,7 +82,7 @@ public class Utils {
    * @param className class named to be converted
    * @return convertd name
    */
-  public static String converToInnerClassName(final String className) {
+  public static String converToInnerClassName(String className) {
     return className.replaceAll("\\.", "\\$");
   }
 
@@ -95,8 +95,7 @@ public class Utils {
    * @throws IllegalStateException if more then one method matches (i.e. in case of overloaded
    *     methods) or if no method found
    */
-  public static MethodDescription getMethodDefinition(
-      final TypeDefinition type, final String methodName) {
+  public static MethodDescription getMethodDefinition(TypeDefinition type, String methodName) {
     return type.getDeclaredMethods().filter(named(methodName)).getOnly();
   }
 

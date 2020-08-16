@@ -24,7 +24,7 @@ public class NettyResponseInjectAdapter implements HttpTextFormat.Setter<HttpHea
   public static final NettyResponseInjectAdapter SETTER = new NettyResponseInjectAdapter();
 
   @Override
-  public void set(final HttpHeaders headers, final String key, final String value) {
+  public void set(HttpHeaders headers, String key, String value) {
     headers.set(key, value);
   }
 }

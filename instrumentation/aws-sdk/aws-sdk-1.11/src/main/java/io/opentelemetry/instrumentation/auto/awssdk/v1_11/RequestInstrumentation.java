@@ -90,8 +90,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class BucketNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -106,8 +105,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class QueueUrlAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -122,8 +120,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class QueueNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -138,8 +135,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class StreamNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -154,8 +150,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class TableNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);

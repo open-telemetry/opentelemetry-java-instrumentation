@@ -30,7 +30,7 @@ import io.opentelemetry.trace.Span;
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
   @Override
-  public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) {
     Channel channel = ctx.channel();
 
     if (!(msg instanceof HttpRequest)) {
@@ -48,7 +48,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     Span span = TRACER.startSpan((HttpRequest) msg, channel, "netty.request");
     try (Scope ignored = TRACER.startScope(span, channel)) {
       ctx.fireChannelRead(msg);
-    } catch (final Throwable throwable) {
+    } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     }

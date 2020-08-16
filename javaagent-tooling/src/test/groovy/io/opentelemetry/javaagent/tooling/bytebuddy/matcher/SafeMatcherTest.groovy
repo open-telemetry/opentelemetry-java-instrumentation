@@ -16,10 +16,10 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe
+
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.matcher.ElementMatcher
-
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe
 
 class SafeMatcherTest extends AgentSpecification {
 

@@ -34,8 +34,7 @@ public class GrizzlyClientResponseAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
-      @Advice.This final AsyncCompletionHandler<?> handler,
-      @Advice.Argument(0) final Response response) {
+      @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
     // TODO I think all this should happen on exit, not on enter.
     // After response was handled by user provided handler.
@@ -54,7 +53,7 @@ public class GrizzlyClientResponseAdvice {
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onExit(@Advice.Enter final Scope scope) {
+  public static void onExit(@Advice.Enter Scope scope) {
     if (null != scope) {
       scope.close();
     }

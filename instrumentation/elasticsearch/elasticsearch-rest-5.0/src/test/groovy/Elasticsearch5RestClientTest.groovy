@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
+
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
@@ -33,10 +37,6 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch5RestClientTest extends AgentTestRunner {
   @Shared

@@ -41,7 +41,7 @@ public class LogContextScopeListener {
 
   final Tracer tracer = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
-  public LogContextScopeListener(final Method putMethod, final Method removeMethod) {
+  public LogContextScopeListener(Method putMethod, Method removeMethod) {
     this.putMethod = putMethod;
     this.removeMethod = removeMethod;
   }
@@ -52,7 +52,7 @@ public class LogContextScopeListener {
           null, TRACE_ID_KEY, tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16());
       putMethod.invoke(
           null, SPAN_ID_KEY, tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16());
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Exception setting log context context", e);
     }
   }
@@ -61,7 +61,7 @@ public class LogContextScopeListener {
     try {
       removeMethod.invoke(null, TRACE_ID_KEY);
       removeMethod.invoke(null, SPAN_ID_KEY);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Exception removing log context context", e);
     }
   }

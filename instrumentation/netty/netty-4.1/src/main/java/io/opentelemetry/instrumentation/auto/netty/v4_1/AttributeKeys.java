@@ -32,7 +32,7 @@ public class AttributeKeys {
       mapSupplier =
           new WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>() {
             @Override
-            public ConcurrentMap<String, AttributeKey<?>> get(final ClassLoader ignore) {
+            public ConcurrentMap<String, AttributeKey<?>> get(ClassLoader ignore) {
               return new ConcurrentHashMap<>();
             }
           };
@@ -62,7 +62,7 @@ public class AttributeKeys {
    * while the Attribute class is loaded by a third class loader and used internally for the
    * cassandra driver.
    */
-  private static <T> AttributeKey<T> attributeKey(final String key) {
+  private static <T> AttributeKey<T> attributeKey(String key) {
     ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
         map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {

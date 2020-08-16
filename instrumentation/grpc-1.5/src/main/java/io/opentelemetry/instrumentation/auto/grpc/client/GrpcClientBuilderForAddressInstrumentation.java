@@ -55,8 +55,8 @@ public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClie
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-        @Advice.This final ManagedChannelBuilder thiz,
-        @Advice.FieldValue("interceptors") final List<ClientInterceptor> interceptors) {
+        @Advice.This ManagedChannelBuilder thiz,
+        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
       boolean shouldRegister = true;
       for (ClientInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingClientInterceptor) {
@@ -76,9 +76,9 @@ public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClie
   public static class ForAddressAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static final void forAddress(
-        @Advice.Argument(0) final String address,
-        @Advice.Argument(1) final int port,
-        @Advice.Return final ManagedChannelBuilder builder) {
+        @Advice.Argument(0) String address,
+        @Advice.Argument(1) int port,
+        @Advice.Return ManagedChannelBuilder builder) {
       ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
           InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
       contextStore.put(builder, InetSocketAddress.createUnresolved(address, port));

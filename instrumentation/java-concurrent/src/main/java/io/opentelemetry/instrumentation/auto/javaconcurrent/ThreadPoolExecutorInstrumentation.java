@@ -63,18 +63,18 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
   public static class ThreadPoolExecutorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void disableIfQueueWrongType(
-        @Advice.This final ThreadPoolExecutor executor,
-        @Advice.Argument(4) final BlockingQueue<Runnable> queue) {
+        @Advice.This ThreadPoolExecutor executor,
+        @Advice.Argument(4) BlockingQueue<Runnable> queue) {
 
       if (queue.isEmpty()) {
         try {
           queue.offer(new GenericRunnable());
           queue.clear(); // Remove the Runnable we just added.
-        } catch (final ClassCastException | IllegalArgumentException e) {
+        } catch (ClassCastException | IllegalArgumentException e) {
           // These errors indicate the queue is fundamentally incompatible with wrapped runnables.
           // We must disable the executor instance to avoid passing wrapped runnables later.
           ExecutorInstrumentationUtils.disableExecutorForWrappedTasks(executor);
-        } catch (final Exception e) {
+        } catch (Exception e) {
           // Other errors might indicate the queue is not fully initialized.
           // We might want to disable for those too, but for now just ignore.
         }

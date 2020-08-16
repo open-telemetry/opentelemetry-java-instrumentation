@@ -69,9 +69,9 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void errorSpan(
-        @Advice.This final URL url,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.FieldValue("handler") final URLStreamHandler handler) {
+        @Advice.This URL url,
+        @Advice.Thrown Throwable throwable,
+        @Advice.FieldValue("handler") URLStreamHandler handler) {
       if (throwable != null) {
         // Various agent components end up calling `openConnection` indirectly
         // when loading classes. Avoid tracing these calls.

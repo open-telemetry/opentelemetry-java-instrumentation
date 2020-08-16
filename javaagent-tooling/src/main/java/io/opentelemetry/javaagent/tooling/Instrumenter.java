@@ -79,7 +79,7 @@ public interface Instrumenter {
     protected final String packageName =
         getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
-    public Default(final String instrumentationName, final String... additionalNames) {
+    public Default(String instrumentationName, String... additionalNames) {
       instrumentationNames = new TreeSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
@@ -94,7 +94,7 @@ public interface Instrumenter {
     }
 
     @Override
-    public final AgentBuilder instrument(final AgentBuilder parentAgentBuilder) {
+    public final AgentBuilder instrument(AgentBuilder parentAgentBuilder) {
       if (!enabled) {
         log.debug("Instrumentation {} is disabled", this);
         return parentAgentBuilder;
@@ -148,11 +148,11 @@ public interface Instrumenter {
     private class MuzzleMatcher implements AgentBuilder.RawMatcher {
       @Override
       public boolean matches(
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module,
-          final Class<?> classBeingRedefined,
-          final ProtectionDomain protectionDomain) {
+          TypeDescription typeDescription,
+          ClassLoader classLoader,
+          JavaModule module,
+          Class<?> classBeingRedefined,
+          ProtectionDomain protectionDomain) {
         /* Optimization: calling getInstrumentationMuzzle() inside this method
          * prevents unnecessary loading of muzzle references during agentBuilder
          * setup.

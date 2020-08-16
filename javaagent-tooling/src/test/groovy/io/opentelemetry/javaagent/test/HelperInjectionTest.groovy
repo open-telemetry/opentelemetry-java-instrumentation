@@ -16,22 +16,21 @@
 
 package io.opentelemetry.auto.test
 
+import static io.opentelemetry.auto.test.utils.ClasspathUtils.isClassLoaded
+import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
+
+import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
-import io.opentelemetry.auto.util.test.AgentSpecification
+import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicReference
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Timeout
-
-import java.lang.ref.WeakReference
-import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.auto.test.utils.ClasspathUtils.isClassLoaded
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
-import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
 
 class HelperInjectionTest extends AgentSpecification {
 

@@ -16,14 +16,14 @@
 
 package springdata
 
+import static com.google.common.base.Preconditions.checkNotNull
+
 import com.couchbase.client.java.cluster.BucketSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.couchbase.config.AbstractCouchbaseConfiguration
 import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepositories
-
-import static com.google.common.base.Preconditions.checkNotNull
 
 @Configuration
 @EnableCouchbaseRepositories(basePackages = "springdata")

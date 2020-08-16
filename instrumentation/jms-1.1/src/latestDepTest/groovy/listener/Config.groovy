@@ -17,6 +17,8 @@
 package listener
 
 import com.google.common.io.Files
+import javax.annotation.PreDestroy
+import javax.jms.ConnectionFactory
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -34,9 +36,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.jms.annotation.EnableJms
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
-
-import javax.annotation.PreDestroy
-import javax.jms.ConnectionFactory
 
 @Configuration
 @ComponentScan
