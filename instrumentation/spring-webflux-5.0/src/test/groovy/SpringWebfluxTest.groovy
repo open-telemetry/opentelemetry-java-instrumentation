@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -30,9 +33,6 @@ import server.EchoHandlerFunction
 import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
-
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {

@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.CompletableFuture
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -23,8 +24,6 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.CompletableFuture
 
 @Timeout(5)
 class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {

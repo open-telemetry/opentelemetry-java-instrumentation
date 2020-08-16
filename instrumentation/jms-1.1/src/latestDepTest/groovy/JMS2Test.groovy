@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -40,10 +44,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class JMS2Test extends AgentTestRunner {
   static {

@@ -18,10 +18,9 @@ package io.opentelemetry.auto.integration.muzzle
 
 import io.opentelemetry.auto.test.IntegrationTestUtils
 import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader
-import spock.lang.Specification
-
 import java.lang.reflect.Field
 import java.lang.reflect.Method
+import spock.lang.Specification
 
 class MuzzleBytecodeTransformTest extends Specification {
 

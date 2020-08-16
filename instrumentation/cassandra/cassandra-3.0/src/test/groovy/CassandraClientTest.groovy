@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -22,10 +26,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class CassandraClientTest extends AgentTestRunner {
 

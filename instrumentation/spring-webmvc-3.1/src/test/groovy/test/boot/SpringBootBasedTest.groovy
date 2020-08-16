@@ -16,6 +16,15 @@
 
 package test.boot
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGIN
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.SERVER
+import static java.util.Collections.singletonMap
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
@@ -26,15 +35,6 @@ import okhttp3.RequestBody
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGIN
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
-import static java.util.Collections.singletonMap
 
 class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> {
 

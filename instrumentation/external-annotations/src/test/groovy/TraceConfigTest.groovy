@@ -16,7 +16,6 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-
 import java.util.concurrent.Callable
 
 class TraceConfigTest extends AgentTestRunner {

@@ -16,16 +16,15 @@
 
 package io.opentelemetry.auto.test.log.injection
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.context.Scope
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-
 import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST

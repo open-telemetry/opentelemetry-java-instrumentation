@@ -16,11 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.api
 
-import spock.lang.Specification
-import spock.lang.Timeout
-
 import java.util.concurrent.Phaser
 import java.util.concurrent.TimeUnit
+import spock.lang.Specification
+import spock.lang.Timeout
 
 class AgentClassLoaderTest extends Specification {
   @Timeout(value = 60, unit = TimeUnit.SECONDS)

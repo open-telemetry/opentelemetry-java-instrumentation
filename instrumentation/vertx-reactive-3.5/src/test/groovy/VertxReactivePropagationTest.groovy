@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -22,11 +27,6 @@ import io.vertx.reactivex.core.Vertx
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class VertxReactivePropagationTest extends AgentTestRunner {
   @Shared

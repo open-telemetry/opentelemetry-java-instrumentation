@@ -16,14 +16,13 @@
 
 package io.opentelemetry.javaagent.common.exec
 
-import io.opentelemetry.auto.util.gc.GCUtils
-import spock.lang.Specification
+import static java.util.concurrent.TimeUnit.MILLISECONDS
 
+import io.opentelemetry.auto.util.gc.GCUtils
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS
+import spock.lang.Specification
 
 class PeriodicSchedulingTest extends Specification {
 

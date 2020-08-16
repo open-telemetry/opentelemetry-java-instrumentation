@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
-import rmi.app.Greeter
-import rmi.app.Server
-import rmi.app.ServerLegacy
-
-import java.rmi.registry.LocateRegistry
-import java.rmi.server.UnicastRemoteObject
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.SERVER
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.PortUtils
+import java.rmi.registry.LocateRegistry
+import java.rmi.server.UnicastRemoteObject
+import rmi.app.Greeter
+import rmi.app.Server
+import rmi.app.ServerLegacy
 
 class RmiTest extends AgentTestRunner {
   def registryPort = PortUtils.randomOpenPort()

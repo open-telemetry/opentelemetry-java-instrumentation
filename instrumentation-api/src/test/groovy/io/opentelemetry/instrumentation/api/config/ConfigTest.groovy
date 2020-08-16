@@ -16,11 +16,6 @@
 
 package io.opentelemetry.instrumentation.api.config
 
-import io.opentelemetry.auto.util.test.AgentSpecification
-import org.junit.Rule
-import org.junit.contrib.java.lang.system.EnvironmentVariables
-import org.junit.contrib.java.lang.system.RestoreSystemProperties
-
 import static Config.CONFIGURATION_FILE
 import static Config.ENDPOINT_PEER_SERVICE_MAPPING
 import static Config.HTTP_CLIENT_ERROR_STATUSES
@@ -29,6 +24,11 @@ import static Config.PREFIX
 import static Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static Config.TRACE_ENABLED
 import static Config.TRACE_METHODS
+
+import io.opentelemetry.auto.util.test.AgentSpecification
+import org.junit.Rule
+import org.junit.contrib.java.lang.system.EnvironmentVariables
+import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 class ConfigTest extends AgentSpecification {
   @Rule

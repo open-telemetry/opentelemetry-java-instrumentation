@@ -15,13 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.base.HttpClientTest
-import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
-import org.glassfish.jersey.client.ClientConfig
-import org.glassfish.jersey.client.ClientProperties
-import org.glassfish.jersey.client.JerseyClientBuilder
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
-
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -29,7 +23,12 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import java.util.concurrent.TimeUnit
+import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
+import org.glassfish.jersey.client.ClientConfig
+import org.glassfish.jersey.client.ClientProperties
+import org.glassfish.jersey.client.JerseyClientBuilder
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import spock.lang.Timeout
 
 abstract class JaxRsClientTest extends HttpClientTest {
 

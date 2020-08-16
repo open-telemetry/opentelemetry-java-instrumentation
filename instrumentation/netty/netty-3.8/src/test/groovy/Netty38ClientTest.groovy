@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Response
 import io.opentelemetry.auto.test.base.HttpClientTest
-import spock.lang.AutoCleanup
-import spock.lang.Shared
-
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import spock.lang.AutoCleanup
+import spock.lang.Shared
 
 class Netty38ClientTest extends HttpClientTest {
 

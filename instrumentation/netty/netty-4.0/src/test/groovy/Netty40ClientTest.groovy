@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static org.asynchttpclient.Dsl.asyncHttpClient
+
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -22,14 +29,6 @@ import org.asynchttpclient.Response
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static org.asynchttpclient.Dsl.asyncHttpClient
 
 @Timeout(5)
 class Netty40ClientTest extends HttpClientTest {

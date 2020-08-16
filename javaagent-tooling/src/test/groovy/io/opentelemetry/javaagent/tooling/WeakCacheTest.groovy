@@ -16,9 +16,8 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import spock.lang.Specification
-
 import java.util.concurrent.Callable
+import spock.lang.Specification
 
 class WeakCacheTest extends Specification {
   def supplier = new CounterSupplier()

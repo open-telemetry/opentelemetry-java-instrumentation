@@ -16,6 +16,8 @@
 
 package server
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
@@ -24,8 +26,6 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
 class VertxHttpServerTest extends HttpServerTest<Vertx> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"

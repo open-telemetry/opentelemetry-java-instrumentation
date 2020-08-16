@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.ClientConfiguration
@@ -47,14 +51,9 @@ import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.atomic.AtomicReference
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-
-import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class AWS1ClientTest extends AgentTestRunner {
 

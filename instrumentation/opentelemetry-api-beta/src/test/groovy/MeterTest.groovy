@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_LONG
+import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_LONG
+import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.SUMMARY
+
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.common.Labels
 import application.io.opentelemetry.metrics.AsynchronousInstrument
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.data.MetricData
-
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.SUMMARY
 
 class MeterTest extends AgentTestRunner {
 

@@ -16,22 +16,22 @@
 
 package io.opentelemetry.auto.test
 
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf
+import static net.bytebuddy.matcher.ElementMatchers.isMethod
+import static net.bytebuddy.matcher.ElementMatchers.named
+
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
+import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers
-import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer
 import net.bytebuddy.dynamic.ClassFileLocator
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
-
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf
-import static net.bytebuddy.matcher.ElementMatchers.isMethod
-import static net.bytebuddy.matcher.ElementMatchers.named
 
 class ExceptionHandlerTest extends AgentSpecification {
   @Shared
