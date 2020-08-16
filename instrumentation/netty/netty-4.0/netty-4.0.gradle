@@ -1,8 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  // NB: Fails on Java 11 with NullPointerException
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -44,7 +42,7 @@ dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
 
   testImplementation group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
-  testImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.0'
+  testImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.9'
 
   latestDepTestImplementation group: 'io.netty', name: 'netty-codec-http', version: '4.0.56.Final'
   latestDepTestImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.+'
