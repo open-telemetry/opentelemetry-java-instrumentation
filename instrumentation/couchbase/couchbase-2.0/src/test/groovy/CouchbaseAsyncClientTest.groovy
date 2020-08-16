@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import com.couchbase.client.java.AsyncCluster
 import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
+import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
 import util.AbstractCouchbaseTest
-
-import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {

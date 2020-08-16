@@ -16,18 +16,17 @@
 
 package springdata
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spock.lang.Shared
-
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import spock.lang.Shared
 
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   // Setting up appContext & repo with @Shared doesn't allow

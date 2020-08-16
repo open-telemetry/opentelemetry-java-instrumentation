@@ -16,6 +16,9 @@
 
 package springdata
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
@@ -26,9 +29,6 @@ import spock.lang.Retry
 import spock.lang.Shared
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Retry(count = 10, delay = 500)
 @Unroll

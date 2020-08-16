@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -24,18 +29,12 @@ import io.grpc.ServerBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.javaagent.common.exec.CommonTaskExecutor
-import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper
+import io.opentelemetry.javaagent.common.exec.CommonTaskExecutor
 import io.opentelemetry.trace.attributes.SemanticAttributes
-
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class GrpcTest extends AgentTestRunner {
 

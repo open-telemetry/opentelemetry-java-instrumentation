@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.trace.TracingContextUtils.getSpan
+
 import io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.context.propagation.HttpTextFormat
 import io.opentelemetry.trace.propagation.HttpTraceContext
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -34,13 +40,6 @@ import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Shared
-
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
-import static io.opentelemetry.trace.TracingContextUtils.getSpan
 
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"

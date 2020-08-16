@@ -16,8 +16,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.time.Duration
+import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicReference
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -46,13 +52,6 @@ import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-
-import java.time.Duration
-import java.util.concurrent.Future
-import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 

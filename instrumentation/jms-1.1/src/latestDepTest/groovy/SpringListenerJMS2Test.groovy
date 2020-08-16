@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
+import static JMS2Test.consumerSpan
+import static JMS2Test.producerSpan
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import javax.jms.ConnectionFactory
 import listener.Config
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
 import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
-
-import javax.jms.ConnectionFactory
-
-import static JMS2Test.consumerSpan
-import static JMS2Test.producerSpan
 
 class SpringListenerJMS2Test extends AgentTestRunner {
 

@@ -16,28 +16,27 @@
 
 package context
 
+import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
+import static context.ContextTestInstrumentation.IncorrectContextClassUsageKeyClass
+import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
+import static context.ContextTestInstrumentation.KeyClass
+import static context.ContextTestInstrumentation.UntransformableKeyClass
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.util.gc.GCUtils
-import net.bytebuddy.agent.ByteBuddyAgent
-import net.bytebuddy.utility.JavaModule
-import net.sf.cglib.proxy.Enhancer
-import net.sf.cglib.proxy.MethodInterceptor
-import net.sf.cglib.proxy.MethodProxy
-import spock.lang.Requires
-
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
-
-import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
-import static context.ContextTestInstrumentation.IncorrectContextClassUsageKeyClass
-import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
-import static context.ContextTestInstrumentation.KeyClass
-import static context.ContextTestInstrumentation.UntransformableKeyClass
+import net.bytebuddy.agent.ByteBuddyAgent
+import net.bytebuddy.utility.JavaModule
+import net.sf.cglib.proxy.Enhancer
+import net.sf.cglib.proxy.MethodInterceptor
+import net.sf.cglib.proxy.MethodProxy
+import spock.lang.Requires
 
 class FieldBackedProviderTest extends AgentTestRunner {
 

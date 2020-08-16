@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
-import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
+import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
 import spock.lang.Timeout
 
 @Timeout(20)

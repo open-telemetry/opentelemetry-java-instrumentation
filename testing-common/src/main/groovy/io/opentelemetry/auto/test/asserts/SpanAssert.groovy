@@ -16,17 +16,16 @@
 
 package io.opentelemetry.auto.test.asserts
 
+import static AttributesAssert.assertAttributes
+import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
-
 import java.util.regex.Pattern
-
-import static AttributesAssert.assertAttributes
-import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
 
 class SpanAssert {
   private final SpanData span
@@ -168,7 +167,7 @@ class SpanAssert {
   }
 
   void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
-            @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assertAttributes(span.attributes, spec)
   }
 

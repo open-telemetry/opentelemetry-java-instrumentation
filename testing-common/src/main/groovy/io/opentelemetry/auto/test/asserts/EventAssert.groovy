@@ -16,11 +16,11 @@
 
 package io.opentelemetry.auto.test.asserts
 
+import static AttributesAssert.assertAttributes
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.trace.Event
-
-import static AttributesAssert.assertAttributes
 
 class EventAssert {
   private final Event event

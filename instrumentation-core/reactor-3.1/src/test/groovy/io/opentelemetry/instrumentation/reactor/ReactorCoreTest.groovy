@@ -16,21 +16,20 @@
 
 package io.opentelemetry.instrumentation.reactor
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.InstrumentationTestRunner
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.DefaultSpan
 import io.opentelemetry.trace.Tracer
+import java.time.Duration
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
-
-import java.time.Duration
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 
 class ReactorCoreTest extends InstrumentationTestRunner {
 

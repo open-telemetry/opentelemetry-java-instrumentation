@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 @Unroll
 class PutGetTest extends AgentTestRunner {

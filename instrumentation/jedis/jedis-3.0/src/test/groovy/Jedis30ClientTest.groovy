@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Jedis30ClientTest extends AgentTestRunner {
 

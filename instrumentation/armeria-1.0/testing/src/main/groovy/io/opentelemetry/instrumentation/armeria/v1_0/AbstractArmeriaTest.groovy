@@ -16,6 +16,9 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_0
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.common.HttpMethod
@@ -28,9 +31,6 @@ import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @Unroll
 abstract class AbstractArmeriaTest extends InstrumentationSpecification {

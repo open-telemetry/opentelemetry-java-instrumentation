@@ -17,8 +17,8 @@
 package io.opentelemetry.auto.test
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.tooling.Instrumenter
 import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.javaagent.tooling.Instrumenter
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.matcher.ElementMatcher

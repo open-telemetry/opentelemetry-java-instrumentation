@@ -16,8 +16,8 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import io.opentelemetry.javaagent.tooling.matcher.NameMatchers
 import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.javaagent.tooling.matcher.NameMatchers
 import net.bytebuddy.description.NamedElement
 
 class NameMatchersTest extends AgentSpecification {

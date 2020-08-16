@@ -17,14 +17,13 @@
 package client
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.time.Duration
 import ratpack.exec.ExecResult
 import ratpack.http.client.HttpClient
 import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.time.Duration
 
 @Timeout(5)
 class RatpackHttpClientTest extends HttpClientTest {

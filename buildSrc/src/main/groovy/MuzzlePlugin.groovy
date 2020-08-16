@@ -1,3 +1,7 @@
+import java.lang.reflect.Method
+import java.security.SecureClassLoader
+import java.util.concurrent.atomic.AtomicReference
+import java.util.regex.Pattern
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
@@ -20,11 +24,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
-
-import java.lang.reflect.Method
-import java.security.SecureClassLoader
-import java.util.concurrent.atomic.AtomicReference
-import java.util.regex.Pattern
 
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
