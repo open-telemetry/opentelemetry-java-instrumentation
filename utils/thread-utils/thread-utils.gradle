@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 // TODO: add more tests
 excludedClassesCoverage += [
-  'io.opentelemetry.auto.common.exec.*'
+  'io.opentelemetry.javaagent.common.exec.*'
 ]
 
 dependencies {

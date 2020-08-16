@@ -1,0 +1,148 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.opentelemetry.javaagent.tooling;
+
+import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.MapMaker;
+import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.common.exec.CommonTaskExecutor;
+import java.util.concurrent.TimeUnit;
+
+class WeakMapSuppliers {
+  // Comparison with using WeakConcurrentMap vs Guava's implementation:
+  // Cleaning:
+  // * `WeakConcurrentMap`: centralized but we have to maintain out own code and thread for it
+  // * `Guava`: inline on application's thread, with constant max delay
+  // Jar Size:
+  // * `WeakConcurrentMap`: small
+  // * `Guava`: large, but we may use other features, like immutable collections - and we already
+  //          ship Guava as part of distribution now, so using Guava for this doesn’t increase size.
+  // Must go on bootstrap classpath:
+  // * `WeakConcurrentMap`: version conflict is unlikely, so we can directly inject for now
+  // * `Guava`: need to implement shadow copy (might eventually be necessary for other dependencies)
+  // Used by other javaagents for similar purposes:
+  // * `WeakConcurrentMap`: anecdotally used by other agents
+  // * `Guava`: specifically agent use is unknown at the moment, but Guava is a well known library
+  //            backed by big company with many-many users
+
+  /**
+   * Provides instances of {@link WeakConcurrentMap} and retains weak reference to them to allow a
+   * single thread to clean void weak references out for all instances. Cleaning is done every
+   * second.
+   */
+  static class WeakConcurrent implements WeakMap.Implementation {
+
+    @VisibleForTesting static final long CLEAN_FREQUENCY_SECONDS = 1;
+
+    @Override
+    public <K, V> WeakMap<K, V> get() {
+      WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(
+          MapCleaningTask.INSTANCE,
+          map,
+          CLEAN_FREQUENCY_SECONDS,
+          CLEAN_FREQUENCY_SECONDS,
+          TimeUnit.SECONDS,
+          "cleaner for " + map);
+      return new Adapter<>(map);
+    }
+
+    // Important to use explicit class to avoid implicit hard references to target
+    private static class MapCleaningTask implements CommonTaskExecutor.Task<WeakConcurrentMap> {
+
+      static final MapCleaningTask INSTANCE = new MapCleaningTask();
+
+      @Override
+      public void run(final WeakConcurrentMap target) {
+        target.expungeStaleEntries();
+      }
+    }
+
+    private static class Adapter<K, V> implements WeakMap<K, V> {
+      private final WeakConcurrentMap<K, V> map;
+
+      private Adapter(final WeakConcurrentMap<K, V> map) {
+        this.map = map;
+      }
+
+      @Override
+      public int size() {
+        return map.approximateSize();
+      }
+
+      @Override
+      public boolean containsKey(final K key) {
+        return map.containsKey(key);
+      }
+
+      @Override
+      public V get(final K key) {
+        return map.get(key);
+      }
+
+      @Override
+      public void put(final K key, final V value) {
+        map.put(key, value);
+      }
+
+      @Override
+      public void putIfAbsent(final K key, final V value) {
+        map.putIfAbsent(key, value);
+      }
+
+      @Override
+      public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
+        if (map.containsKey(key)) {
+          return map.get(key);
+        }
+
+        synchronized (this) {
+          if (map.containsKey(key)) {
+            return map.get(key);
+          } else {
+            V value = supplier.get(key);
+
+            map.put(key, value);
+            return value;
+          }
+        }
+      }
+    }
+
+    static class Inline implements WeakMap.Implementation {
+
+      @Override
+      public <K, V> WeakMap<K, V> get() {
+        return new Adapter<>(new WeakConcurrentMap.WithInlinedExpunction<K, V>());
+      }
+    }
+  }
+
+  static class Guava implements WeakMap.Implementation {
+
+    @Override
+    public <K, V> WeakMap<K, V> get() {
+      return new WeakMap.MapAdapter<>(new MapMaker().weakKeys().<K, V>makeMap());
+    }
+
+    public <K, V> WeakMap<K, V> get(final int concurrencyLevel) {
+      return new WeakMap.MapAdapter<>(
+          new MapMaker().concurrencyLevel(concurrencyLevel).weakKeys().<K, V>makeMap());
+    }
+  }
+}

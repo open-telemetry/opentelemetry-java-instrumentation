@@ -17,8 +17,8 @@
 package muzzle
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.tooling.muzzle.Reference
-import io.opentelemetry.auto.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
 
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice

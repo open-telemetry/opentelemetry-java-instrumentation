@@ -22,8 +22,8 @@ apply plugin: 'com.github.burrunan.s3-build-cache'
 buildCache {
   remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
     region = 'us-west-2'
-    bucket = 'otel-gradle-cache-temp'
-    push = isCI
+    bucket = 'opentelemetry-java-instrumentation-gradle-test1'
+    push = System.getenv('S3_BUILD_CACHE_ACCESS_KEY_ID') != null
   }
 }
 
@@ -148,8 +148,6 @@ include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common'
 include ':instrumentation:servlet:servlet-2.2'
 include ':instrumentation:servlet:servlet-3.0'
-// FIXME this instrumentation relied on scope listener
-// include ':instrumentation:slf4j-mdc'
 include ':instrumentation:spark-web-framework-2.3'
 include ':instrumentation:spring-data-1.8'
 include ':instrumentation:spring-scheduling-3.1'

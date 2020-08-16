@@ -19,9 +19,9 @@ package io.opentelemetry.instrumentation.auto.playws.v2_0;
 import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.playws.BasePlayWSClientInstrumentation;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;

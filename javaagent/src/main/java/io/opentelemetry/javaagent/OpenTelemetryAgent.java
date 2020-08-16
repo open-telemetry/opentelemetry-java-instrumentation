@@ -68,7 +68,8 @@ public class OpenTelemetryAgent {
       URL bootstrapURL = installBootstrapJar(inst);
 
       Class<?> agentClass =
-          ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
+          ClassLoader.getSystemClassLoader()
+              .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
       Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapURL);
     } catch (final Throwable ex) {

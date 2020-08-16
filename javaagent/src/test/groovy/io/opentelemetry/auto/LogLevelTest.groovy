@@ -25,7 +25,7 @@ import spock.lang.Timeout
 class LogLevelTest extends Specification {
 
 
-  /* Priority: io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel > opentelemetry.auto.trace.debug > OTEL_TRACE_DEBUG
+  /* Priority: io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel > opentelemetry.auto.trace.debug > OTEL_TRACE_DEBUG
   1: INFO LOGS
   0: DEBUG Logs
    */
@@ -42,7 +42,7 @@ class LogLevelTest extends Specification {
   def "SLF4J DEBUG && otel.trace.debug is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=false", "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.trace.enabled=false"] as String[]
+      , ["-Dotel.trace.debug=false", "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.trace.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
@@ -89,7 +89,7 @@ class LogLevelTest extends Specification {
   def "SLF4J DEBUG && OTEL_TRACE_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.trace.enabled=false"] as String[]
       , "" as String[]
       , ["OTEL_TRACE_DEBUG": "false"]
       , true) == 0
@@ -98,7 +98,7 @@ class LogLevelTest extends Specification {
   def "SLF4J INFO && OTEL_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info", "-Dotel.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=info", "-Dotel.trace.enabled=false"] as String[]
       , "" as String[]
       , ["OTEL_TRACE_DEBUG": "true"]
       , true) == 1
