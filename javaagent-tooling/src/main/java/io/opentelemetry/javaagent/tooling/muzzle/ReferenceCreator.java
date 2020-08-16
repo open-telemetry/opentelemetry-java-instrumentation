@@ -48,8 +48,10 @@ public class ReferenceCreator extends ClassVisitor {
    * <p>For now we're hardcoding this to the instrumentation package so we only create references
    * from the method advice and helper classes.
    */
-  private static final String[] REFERENCE_CREATION_PACKAGE = {
-    "io.opentelemetry.instrumentation.auto.", "io.opentelemetry.instrumentation."
+  private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.instrumentation.";
+
+  private static final String[] REFERENCE_CREATION_PACKAGE_EXCLUDES = {
+    "io.opentelemetry.instrumentation.api.", "io.opentelemetry.instrumentation.auto.api."
   };
 
   /**
@@ -82,17 +84,8 @@ public class ReferenceCreator extends ClassVisitor {
         for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
           String key = entry.getKey();
           // Don't generate references created outside of the instrumentation package.
-          if (!visitedSources.contains(entry.getKey())) {
-            for (String pkg : REFERENCE_CREATION_PACKAGE) {
-              // TODO (trask) clean up during
-              //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/754
-              if (key.startsWith(pkg)
-                  && !key.startsWith("io.opentelemetry.instrumentation.auto.api.")
-                  && !key.startsWith("io.opentelemetry.instrumentation.api.")) {
-                instrumentationQueue.add(key);
-                break;
-              }
-            }
+          if (!visitedSources.contains(entry.getKey()) && isInReferenceCreationPackage(key)) {
+            instrumentationQueue.add(key);
           }
           if (references.containsKey(key)) {
             references.put(key, references.get(key).merge(entry.getValue()));
@@ -114,6 +107,18 @@ public class ReferenceCreator extends ClassVisitor {
       }
     }
     return references;
+  }
+
+  private static boolean isInReferenceCreationPackage(String className) {
+    if (!className.startsWith(REFERENCE_CREATION_PACKAGE)) {
+      return false;
+    }
+    for (String exclude : REFERENCE_CREATION_PACKAGE_EXCLUDES) {
+      if (className.startsWith(exclude)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
