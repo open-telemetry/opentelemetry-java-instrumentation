@@ -57,8 +57,7 @@ class ApplicationDoubleSumObserver implements DoubleSumObserver {
         agentResultDoubleSumObserver;
 
     public ApplicationResultDoubleSumObserver(
-        io.opentelemetry.metrics.DoubleSumObserver.DoubleResult
-            agentResultDoubleSumObserver) {
+        io.opentelemetry.metrics.DoubleSumObserver.DoubleResult agentResultDoubleSumObserver) {
       this.agentResultDoubleSumObserver = agentResultDoubleSumObserver;
     }
 

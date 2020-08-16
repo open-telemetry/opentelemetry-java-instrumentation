@@ -94,8 +94,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope nameSpan(
-        @Advice.This Object target, @Advice.Origin Method method) {
+    public static SpanWithScope nameSpan(@Advice.This Object target, @Advice.Origin Method method) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
         return null;
       }

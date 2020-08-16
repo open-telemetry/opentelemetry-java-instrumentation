@@ -79,10 +79,7 @@ public class TracedDelegatingConsumer implements Consumer {
 
   @Override
   public void handleDelivery(
-      String consumerTag,
-      Envelope envelope,
-      AMQP.BasicProperties properties,
-      byte[] body)
+      String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
     Span span = null;
     Scope scope = null;

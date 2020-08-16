@@ -136,8 +136,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) Destination destination,
-        @Advice.Argument(1) Message message) {
+        @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
         return null;

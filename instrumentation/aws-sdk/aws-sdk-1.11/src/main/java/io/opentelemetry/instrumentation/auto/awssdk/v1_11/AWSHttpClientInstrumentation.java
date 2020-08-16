@@ -105,8 +105,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
     public static class RequestExecutorAdvice {
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void methodExit(
-          @Advice.FieldValue("request") Request<?> request,
-          @Advice.Thrown Throwable throwable) {
+          @Advice.FieldValue("request") Request<?> request, @Advice.Thrown Throwable throwable) {
         if (throwable != null) {
           SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (scope != null) {

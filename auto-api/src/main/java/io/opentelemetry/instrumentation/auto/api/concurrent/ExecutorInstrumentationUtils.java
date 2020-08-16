@@ -76,8 +76,7 @@ public class ExecutorInstrumentationUtils {
    * @param context current context
    * @return new state
    */
-  public static <T> State setupState(
-      ContextStore<T, State> contextStore, T task, Context context) {
+  public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (Config.THREAD_PROPAGATION_DEBUGGER) {
       List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(context);

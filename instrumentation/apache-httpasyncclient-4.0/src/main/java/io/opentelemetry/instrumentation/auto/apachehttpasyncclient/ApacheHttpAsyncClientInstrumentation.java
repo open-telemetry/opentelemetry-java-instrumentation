@@ -113,9 +113,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter Span span,
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter Span span, @Advice.Return Object result, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
       }
@@ -149,8 +147,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public void produceContent(ContentEncoder encoder, IOControl ioctrl)
-        throws IOException {
+    public void produceContent(ContentEncoder encoder, IOControl ioctrl) throws IOException {
       delegate.produceContent(encoder, ioctrl);
     }
 
@@ -187,10 +184,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        Span parentSpan,
-        Span clientSpan,
-        HttpContext context,
-        FutureCallback<T> delegate) {
+        Span parentSpan, Span clientSpan, HttpContext context, FutureCallback<T> delegate) {
       this.parentSpan = parentSpan;
       this.clientSpan = clientSpan;
       this.context = context;

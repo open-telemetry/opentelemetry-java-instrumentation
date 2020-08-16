@@ -34,8 +34,7 @@ public class WrappingStatusSettingResponseHandler implements ResponseHandler {
   }
 
   @Override
-  public Object handleResponse(HttpResponse response)
-      throws ClientProtocolException, IOException {
+  public Object handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
     if (null != span) {
       TRACER.onResponse(span, response);
     }

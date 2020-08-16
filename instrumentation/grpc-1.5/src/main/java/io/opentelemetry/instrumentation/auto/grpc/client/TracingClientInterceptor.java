@@ -52,9 +52,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-      MethodDescriptor<ReqT, RespT> method,
-      CallOptions callOptions,
-      Channel next) {
+      MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
 
     String methodName = method.getFullMethodName();
     Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();

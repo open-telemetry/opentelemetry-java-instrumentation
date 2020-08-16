@@ -126,8 +126,7 @@ public class ClasspathUtils {
     return null;
   }
 
-  private static void addToJar(
-      String resourceName, byte[] bytes, JarOutputStream jarOutputStream)
+  private static void addToJar(String resourceName, byte[] bytes, JarOutputStream jarOutputStream)
       throws IOException {
     JarEntry entry = new JarEntry(resourceName);
     jarOutputStream.putNextEntry(entry);

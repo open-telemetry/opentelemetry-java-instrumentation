@@ -43,8 +43,7 @@ public class FilterAdvice {
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onExit(
-      @Advice.This BaseFilter it, @Advice.Local("otelScope") Scope scope) {
+  public static void onExit(@Advice.This BaseFilter it, @Advice.Local("otelScope") Scope scope) {
     if (scope != null) {
       scope.close();
     }

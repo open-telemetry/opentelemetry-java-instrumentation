@@ -33,8 +33,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer;
 
-  public LettuceFluxTerminationRunnable(
-      RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
+  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
   }
 

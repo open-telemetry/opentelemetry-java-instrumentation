@@ -46,8 +46,7 @@ class ApplicationLongCounter implements LongCounter {
 
     private final io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter;
 
-    BoundInstrument(
-        io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
+    BoundInstrument(io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
       this.agentBoundLongCounter = agentBoundLongCounter;
     }
 

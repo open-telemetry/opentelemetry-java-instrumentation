@@ -36,8 +36,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   private final RouterFunction routerFunction;
   private final ServerRequest serverRequest;
 
-  public RouteOnSuccessOrError(
-      RouterFunction routerFunction, ServerRequest serverRequest) {
+  public RouteOnSuccessOrError(RouterFunction routerFunction, ServerRequest serverRequest) {
     this.routerFunction = routerFunction;
     this.serverRequest = serverRequest;
   }

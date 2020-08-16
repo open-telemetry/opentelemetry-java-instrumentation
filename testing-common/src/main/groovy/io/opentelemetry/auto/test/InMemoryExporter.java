@@ -183,8 +183,7 @@ public class InMemoryExporter implements SpanProcessor {
     waitForTraces(number, Predicates.<List<SpanData>>alwaysFalse());
   }
 
-  public List<List<SpanData>> waitForTraces(
-      int number, Predicate<List<SpanData>> excludes)
+  public List<List<SpanData>> waitForTraces(int number, Predicate<List<SpanData>> excludes)
       throws InterruptedException, TimeoutException {
     synchronized (tracesLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
@@ -210,8 +209,7 @@ public class InMemoryExporter implements SpanProcessor {
     }
   }
 
-  private List<List<SpanData>> getCompletedAndFilteredTraces(
-      Predicate<List<SpanData>> excludes) {
+  private List<List<SpanData>> getCompletedAndFilteredTraces(Predicate<List<SpanData>> excludes) {
     List<List<SpanData>> traces = new ArrayList<>();
     for (List<SpanData> trace : getTraces()) {
       if (isCompleted(trace) && !excludes.apply(trace)) {

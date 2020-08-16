@@ -98,8 +98,7 @@ public class TwilioClientDecorator extends ClientDecorator {
    * Helper method for calling a getter using reflection. This will be slow, so only use when
    * required.
    */
-  private void setTagIfPresent(
-      Span span, Object result, String tag, String getter) {
+  private void setTagIfPresent(Span span, Object result, String tag, String getter) {
     try {
       Method method = result.getClass().getMethod(getter);
       Object value = method.invoke(result);

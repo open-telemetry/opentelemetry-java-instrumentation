@@ -34,8 +34,7 @@ public class ClassRetransformingBenchmark {
   }
 
   @Benchmark
-  public void testUntracedRetransform(BenchmarkState state)
-      throws UnmodifiableClassException {
+  public void testUntracedRetransform(BenchmarkState state) throws UnmodifiableClassException {
     state.inst.retransformClasses(UntracedClass.class);
   }
 

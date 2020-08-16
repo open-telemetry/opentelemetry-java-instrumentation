@@ -40,8 +40,7 @@ import net.bytebuddy.asm.Advice;
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope createGenericSpan(
-        @Advice.This ContainerRequestContext context) {
+    public static SpanWithScope createGenericSpan(@Advice.This ContainerRequestContext context) {
 
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null) {
         Class filterClass = (Class) context.getProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS);

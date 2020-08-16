@@ -111,8 +111,7 @@ public class IntegrationTestUtils {
     return tmpJar.toURI().toURL();
   }
 
-  private static void addToJar(Class<?> clazz, JarOutputStream jarOutputStream)
-      throws IOException {
+  private static void addToJar(Class<?> clazz, JarOutputStream jarOutputStream) throws IOException {
     InputStream inputStream = null;
     ClassLoader loader = clazz.getClassLoader();
     if (null == loader) {

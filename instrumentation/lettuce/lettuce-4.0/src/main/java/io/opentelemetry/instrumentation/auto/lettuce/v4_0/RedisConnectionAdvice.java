@@ -28,8 +28,7 @@ public class RedisConnectionAdvice {
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onExit(
-      @Advice.Enter SpanWithScope scope, @Advice.Thrown Throwable throwable) {
+  public static void onExit(@Advice.Enter SpanWithScope scope, @Advice.Thrown Throwable throwable) {
     InstrumentationPoints.afterConnect(scope, throwable);
   }
 }

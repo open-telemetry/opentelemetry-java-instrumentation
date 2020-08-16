@@ -57,8 +57,7 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
         agentResultDoubleValueObserver;
 
     public ApplicationResultDoubleValueObserver(
-        io.opentelemetry.metrics.DoubleValueObserver.DoubleResult
-            agentResultDoubleValueObserver) {
+        io.opentelemetry.metrics.DoubleValueObserver.DoubleResult agentResultDoubleValueObserver) {
       this.agentResultDoubleValueObserver = agentResultDoubleValueObserver;
     }
 

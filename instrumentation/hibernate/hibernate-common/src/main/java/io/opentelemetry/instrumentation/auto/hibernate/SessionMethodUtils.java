@@ -67,10 +67,7 @@ public class SessionMethodUtils {
 
   // Closes a Scope/Span, adding an error tag if the given Throwable is not null.
   public static void closeScope(
-      SpanWithScope spanWithScope,
-      Throwable throwable,
-      String operationName,
-      Object entity) {
+      SpanWithScope spanWithScope, Throwable throwable, String operationName, Object entity) {
 
     if (spanWithScope == null) {
       // This method call was re-entrant. Do nothing, since it is being traced by the parent/first

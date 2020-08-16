@@ -164,8 +164,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineAdd2ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(1) ChannelHandler handler) {
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
@@ -194,8 +193,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineAdd3ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(2) ChannelHandler handler) {
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)

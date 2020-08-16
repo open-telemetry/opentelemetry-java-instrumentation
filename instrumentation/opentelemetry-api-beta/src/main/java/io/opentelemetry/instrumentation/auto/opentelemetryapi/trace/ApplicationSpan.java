@@ -88,8 +88,7 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void addEvent(
-      String name, Attributes applicationAttributes, long timestamp) {
+  public void addEvent(String name, Attributes applicationAttributes, long timestamp) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
   }
 

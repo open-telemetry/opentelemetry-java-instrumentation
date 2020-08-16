@@ -31,8 +31,7 @@ public class GrizzlyClientRequestAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
-      @Advice.Argument(0) Request request,
-      @Advice.Argument(1) AsyncHandler<?> handler) {
+      @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
     Context parentContext = Context.current();
 
     Span span = TRACER.startSpan(request);

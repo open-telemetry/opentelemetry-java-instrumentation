@@ -97,8 +97,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
     // }
 
     @Override
-    public void postProcess(
-        ProxyFactory factory, RepositoryInformation repositoryInformation) {
+    public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
       factory.addAdvice(0, RepositoryInterceptor.INSTANCE);
     }
   }

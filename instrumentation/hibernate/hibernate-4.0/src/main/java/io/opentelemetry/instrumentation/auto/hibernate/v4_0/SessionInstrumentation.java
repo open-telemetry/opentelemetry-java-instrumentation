@@ -122,8 +122,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
-        @Advice.This SharedSessionContract session,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.This SharedSessionContract session, @Advice.Thrown Throwable throwable) {
 
       ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
@@ -184,8 +183,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
-        @Advice.This SharedSessionContract session,
-        @Advice.Return Transaction transaction) {
+        @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);

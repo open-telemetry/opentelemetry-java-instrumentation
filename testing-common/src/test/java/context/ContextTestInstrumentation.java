@@ -122,8 +122,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
+    public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       Context context = new Context();

@@ -33,8 +33,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
 
-  public TracingRequestHandler(
-      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+  public TracingRequestHandler(ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
     this.contextStore = contextStore;
   }
 

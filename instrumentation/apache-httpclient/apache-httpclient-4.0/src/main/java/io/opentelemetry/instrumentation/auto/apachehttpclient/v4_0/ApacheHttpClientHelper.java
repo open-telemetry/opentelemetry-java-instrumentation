@@ -44,8 +44,7 @@ public class ApacheHttpClientHelper {
     doMethodExit(spanWithScope, result, throwable);
   }
 
-  public static void doMethodExit(
-      SpanWithScope spanWithScope, Object result, Throwable throwable) {
+  public static void doMethodExit(SpanWithScope spanWithScope, Object result, Throwable throwable) {
     try {
       Span span = spanWithScope.getSpan();
       if (result instanceof HttpResponse) {

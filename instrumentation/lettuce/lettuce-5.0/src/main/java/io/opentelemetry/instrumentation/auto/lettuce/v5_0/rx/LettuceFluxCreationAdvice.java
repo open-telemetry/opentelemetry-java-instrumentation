@@ -34,8 +34,7 @@ public class LettuceFluxCreationAdvice {
   // if there is an exception thrown, then don't make spans
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void monitorSpan(
-      @Advice.Enter RedisCommand command,
-      @Advice.Return(readOnly = false) Flux<?> publisher) {
+      @Advice.Enter RedisCommand command, @Advice.Return(readOnly = false) Flux<?> publisher) {
 
     boolean finishSpanOnClose = !expectsResponse(command);
     LettuceFluxTerminationRunnable handler =

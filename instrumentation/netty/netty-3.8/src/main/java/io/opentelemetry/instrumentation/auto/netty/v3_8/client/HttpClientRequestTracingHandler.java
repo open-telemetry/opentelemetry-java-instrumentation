@@ -39,8 +39,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
   private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpClientRequestTracingHandler(
-      ContextStore<Channel, ChannelTraceContext> contextStore) {
+  public HttpClientRequestTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 

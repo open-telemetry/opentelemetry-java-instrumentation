@@ -68,15 +68,13 @@ public class AdviceUtils {
         (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, context));
   }
 
-  public static void finishSpanIfPresent(
-      ServerWebExchange exchange, Throwable throwable) {
+  public static void finishSpanIfPresent(ServerWebExchange exchange, Throwable throwable) {
     if (exchange != null) {
       finishSpanIfPresentInAttributes(exchange.getAttributes(), throwable);
     }
   }
 
-  public static void finishSpanIfPresent(
-      ServerRequest serverRequest, Throwable throwable) {
+  public static void finishSpanIfPresent(ServerRequest serverRequest, Throwable throwable) {
     if (serverRequest != null) {
       finishSpanIfPresentInAttributes(serverRequest.attributes(), throwable);
     }

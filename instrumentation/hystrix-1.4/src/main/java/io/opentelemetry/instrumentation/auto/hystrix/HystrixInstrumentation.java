@@ -112,9 +112,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     private final String methodName;
 
     public HystrixOnSubscribe(
-        Observable originalObservable,
-        HystrixInvokableInfo<?> command,
-        String methodName) {
+        Observable originalObservable, HystrixInvokableInfo<?> command, String methodName) {
       super(originalObservable, OPERATION_NAME, DECORATE, INTERNAL);
 
       this.command = command;

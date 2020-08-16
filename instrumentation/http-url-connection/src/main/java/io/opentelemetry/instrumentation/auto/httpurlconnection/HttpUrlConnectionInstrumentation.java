@@ -88,8 +88,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HttpUrlState methodEnter(
-        @Advice.This HttpURLConnection thiz,
-        @Advice.FieldValue("connected") boolean connected) {
+        @Advice.This HttpURLConnection thiz, @Advice.FieldValue("connected") boolean connected) {
 
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
       if (callDepth > 0) {

@@ -30,8 +30,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   private final Subscriber<T> delegate;
   private final BaseDecorator decorator;
 
-  public TracedSubscriber(
-      Span span, Subscriber<T> delegate, BaseDecorator decorator) {
+  public TracedSubscriber(Span span, Subscriber<T> delegate, BaseDecorator decorator) {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
     this.decorator = decorator;

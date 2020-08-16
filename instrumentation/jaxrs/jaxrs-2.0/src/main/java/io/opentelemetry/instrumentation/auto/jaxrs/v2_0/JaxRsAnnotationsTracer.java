@@ -48,8 +48,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return span;
   }
 
-  public void updateSpanNames(
-      Span span, Span serverSpan, Class<?> target, Method method) {
+  public void updateSpanNames(Span span, Span serverSpan, Class<?> target, Method method) {
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String pathBasedSpanName = getPathSpanName(target, method);
     if (serverSpan == null) {
@@ -167,8 +166,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(
-      String httpMethod, Path classPath, Path methodPath) {
+  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
     if (httpMethod != null) {

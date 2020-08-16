@@ -24,8 +24,7 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
   private final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter;
 
-  ApplicationLongUpDownCounter(
-      io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
+  ApplicationLongUpDownCounter(io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
     this.agentLongUpDownCounter = agentLongUpDownCounter;
   }
 

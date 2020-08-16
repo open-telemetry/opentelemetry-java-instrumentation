@@ -23,8 +23,7 @@ import io.opentelemetry.trace.Span;
 public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
 
-  public void onCommand(
-      Span span, HystrixInvokableInfo<?> command, String methodName) {
+  public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {
     if (command != null) {
       String commandName = command.getCommandKey().name();
       String groupName = command.getCommandGroup().name();

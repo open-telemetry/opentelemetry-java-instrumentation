@@ -31,8 +31,7 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
   private final RedisCommand<?, ?, ?> command;
   private final boolean finishSpanOnClose;
 
-  public LettuceMonoDualConsumer(
-      RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     this.command = command;
     this.finishSpanOnClose = finishSpanOnClose;
   }

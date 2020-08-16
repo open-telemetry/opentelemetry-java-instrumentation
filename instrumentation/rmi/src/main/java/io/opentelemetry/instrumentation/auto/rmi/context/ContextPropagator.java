@@ -59,9 +59,7 @@ public class ContextPropagator {
   }
 
   public void attemptToPropagateContext(
-      ContextStore<Connection, Boolean> knownConnections,
-      Connection c,
-      Span span) {
+      ContextStore<Connection, Boolean> knownConnections, Connection c, Span span) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(span), CONTEXT_PAYLOAD_OPERATION_ID)) {
         log.debug("Couldn't send context payload");
@@ -82,8 +80,7 @@ public class ContextPropagator {
   }
 
   /** @return true when no error happened during call */
-  private boolean syntheticCall(
-      Connection c, ContextPayload payload, int operationId) {
+  private boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);

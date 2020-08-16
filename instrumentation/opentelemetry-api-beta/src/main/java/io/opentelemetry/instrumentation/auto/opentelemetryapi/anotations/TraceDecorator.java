@@ -52,8 +52,7 @@ public class TraceDecorator extends BaseDecorator {
     return toAgentOrNull(applicationKind);
   }
 
-  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
-      Span.Kind applicationSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
     try {
       return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {

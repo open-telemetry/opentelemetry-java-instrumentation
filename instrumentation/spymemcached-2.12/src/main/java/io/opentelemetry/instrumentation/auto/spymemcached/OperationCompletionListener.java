@@ -24,8 +24,7 @@ import net.spy.memcached.internal.OperationFuture;
 public class OperationCompletionListener
     extends CompletionListener<OperationFuture<? extends Object>>
     implements net.spy.memcached.internal.OperationCompletionListener {
-  public OperationCompletionListener(
-      MemcachedConnection connection, String methodName) {
+  public OperationCompletionListener(MemcachedConnection connection, String methodName) {
     super(connection, methodName);
   }
 

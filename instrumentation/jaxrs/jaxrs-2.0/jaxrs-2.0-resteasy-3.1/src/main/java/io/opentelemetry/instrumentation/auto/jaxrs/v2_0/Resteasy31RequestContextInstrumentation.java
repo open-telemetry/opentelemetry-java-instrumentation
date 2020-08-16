@@ -39,8 +39,7 @@ import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestConte
 public class Resteasy31RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope decorateAbortSpan(
-        @Advice.This ContainerRequestContext context) {
+    public static SpanWithScope decorateAbortSpan(@Advice.This ContainerRequestContext context) {
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
           && context instanceof PostMatchContainerRequestContext) {
 

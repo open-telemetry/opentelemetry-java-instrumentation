@@ -181,8 +181,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SyncCompletionListener listener,
-        @Advice.Thrown Throwable thrown) {
+        @Advice.Enter SyncCompletionListener listener, @Advice.Thrown Throwable thrown) {
       if (listener == null) {
         return;
       }

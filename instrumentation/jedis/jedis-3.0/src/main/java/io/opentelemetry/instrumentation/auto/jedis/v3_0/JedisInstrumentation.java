@@ -73,8 +73,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This Connection connection,
-        @Advice.Argument(0) ProtocolCommand command) {
+        @Advice.This Connection connection, @Advice.Argument(0) ProtocolCommand command) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
         return null;

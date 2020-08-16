@@ -44,9 +44,7 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
   @Override
   public <C> Context extract(
-      Context applicationContext,
-      C carrier,
-      HttpTextFormat.Getter<C> applicationGetter) {
+      Context applicationContext, C carrier, HttpTextFormat.Getter<C> applicationGetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -66,9 +64,7 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
   @Override
   public <C> void inject(
-      Context applicationContext,
-      C carrier,
-      HttpTextFormat.Setter<C> applicationSetter) {
+      Context applicationContext, C carrier, HttpTextFormat.Setter<C> applicationSetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {

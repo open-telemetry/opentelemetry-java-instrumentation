@@ -47,8 +47,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   }
 
   @Override
-  public void filter(
-      ClientRequestContext requestContext, ClientResponseContext responseContext) {
+  public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
       Span span = (Span) spanObj;

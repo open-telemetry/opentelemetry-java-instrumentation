@@ -158,8 +158,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(
-      String httpMethod, Path classPath, Path methodPath) {
+  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
     if (httpMethod != null) {

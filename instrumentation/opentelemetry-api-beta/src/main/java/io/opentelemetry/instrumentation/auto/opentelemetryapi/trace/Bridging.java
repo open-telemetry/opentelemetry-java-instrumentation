@@ -154,8 +154,7 @@ public class Bridging {
     return agentCanonicalCode.toStatus().withDescription(applicationStatus.getDescription());
   }
 
-  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
-      Span.Kind applicationSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
     try {
       return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {

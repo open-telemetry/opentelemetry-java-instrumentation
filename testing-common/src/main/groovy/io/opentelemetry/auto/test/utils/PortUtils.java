@@ -66,8 +66,7 @@ public class PortUtils {
     throw new RuntimeException("Timed out waiting for port " + port + " to be opened");
   }
 
-  public static void waitForPortToOpen(
-      int port, long timeout, TimeUnit unit, Process process) {
+  public static void waitForPortToOpen(int port, long timeout, TimeUnit unit, Process process) {
     long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
 
     while (System.currentTimeMillis() < waitUntil) {

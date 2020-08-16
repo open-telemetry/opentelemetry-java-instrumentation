@@ -72,12 +72,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
    * @return future that can be canceled
    */
   public <T> ScheduledFuture<?> scheduleAtFixedRate(
-      Task<T> task,
-      T target,
-      long initialDelay,
-      long period,
-      TimeUnit unit,
-      String name) {
+      Task<T> task, T target, long initialDelay, long period, TimeUnit unit, String name) {
     if (CommonTaskExecutor.INSTANCE.isShutdown()) {
       log.warn("Periodic task scheduler is shutdown. Will not run: {}", name);
     } else {
@@ -119,8 +114,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
   }
 
   @Override
-  public boolean awaitTermination(long timeout, TimeUnit unit)
-      throws InterruptedException {
+  public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
     return executorService.awaitTermination(timeout, unit);
   }
 

@@ -38,8 +38,7 @@ import net.bytebuddy.asm.Advice;
 public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope decorateAbortSpan(
-        @Advice.This ContainerRequestContext context) {
+    public static SpanWithScope decorateAbortSpan(@Advice.This ContainerRequestContext context) {
       UriInfo uriInfo = context.getUriInfo();
 
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null

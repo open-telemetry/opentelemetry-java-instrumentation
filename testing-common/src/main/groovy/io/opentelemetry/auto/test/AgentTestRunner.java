@@ -190,8 +190,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
     withRetryOnAddressAlreadyInUse(closure, 3);
   }
 
-  private static void withRetryOnAddressAlreadyInUse(
-      Closure<?> closure, int numRetries) {
+  private static void withRetryOnAddressAlreadyInUse(Closure<?> closure, int numRetries) {
     try {
       closure.call();
     } catch (Throwable t) {
@@ -226,7 +225,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
   }
@@ -237,7 +237,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
@@ -254,10 +255,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     @Override
     public void onDiscovery(
-        String typeName,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
       for (AgentTestRunner testRunner : activeTests) {
         if (!testRunner.shouldTransformClass(typeName, classLoader)) {
           throw new AbortTransformationException(
@@ -303,10 +301,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     @Override
     public void onComplete(
-        String typeName,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {}
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
     /** Used to signal that a transformation was intentionally aborted and is not an error. */
     public static class AbortTransformationException extends RuntimeException {

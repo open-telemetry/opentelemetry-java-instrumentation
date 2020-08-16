@@ -77,8 +77,7 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
   public static class KubernetesAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addTracingInterceptor(
-        @Advice.This ApiClient apiClient,
-        @Advice.Argument(0) List<Interceptor> interceptors) {
+        @Advice.This ApiClient apiClient, @Advice.Argument(0) List<Interceptor> interceptors) {
 
       for (Interceptor interceptor : interceptors) {
         if (interceptor instanceof TracingInterceptor) {

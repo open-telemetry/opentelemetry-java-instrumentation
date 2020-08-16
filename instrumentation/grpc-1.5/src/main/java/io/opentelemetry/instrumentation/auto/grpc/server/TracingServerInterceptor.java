@@ -48,9 +48,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-      ServerCall<ReqT, RespT> call,
-      Metadata headers,
-      ServerCallHandler<ReqT, RespT> next) {
+      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
     String methodName = call.getMethodDescriptor().getFullMethodName();
     Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);

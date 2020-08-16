@@ -93,8 +93,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       }
     }
 
-    public static void closeSpanAndScope(
-        SpanWithScope spanWithScope, Throwable throwable) {
+    public static void closeSpanAndScope(SpanWithScope spanWithScope, Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

@@ -42,8 +42,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
     return new CouchbaseOnSubscribe(originalObservable, bucket, query);
   }
 
-  private CouchbaseOnSubscribe(
-      Observable originalObservable, String bucket, String query) {
+  private CouchbaseOnSubscribe(Observable originalObservable, String bucket, String query) {
     super(originalObservable, query, DECORATE, CLIENT);
 
     this.bucket = bucket;

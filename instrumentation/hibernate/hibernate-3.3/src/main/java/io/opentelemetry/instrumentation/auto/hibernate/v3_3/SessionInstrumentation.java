@@ -186,8 +186,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public static class GetQueryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getQuery(
-        @Advice.This Object session, @Advice.Return Query query) {
+    public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
       ContextStore<Query, Span> queryContextStore =
           InstrumentationContext.get(Query.class, Span.class);
@@ -231,8 +230,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public static class GetCriteriaAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getCriteria(
-        @Advice.This Object session, @Advice.Return Criteria criteria) {
+    public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
       ContextStore<Criteria, Span> criteriaContextStore =
           InstrumentationContext.get(Criteria.class, Span.class);

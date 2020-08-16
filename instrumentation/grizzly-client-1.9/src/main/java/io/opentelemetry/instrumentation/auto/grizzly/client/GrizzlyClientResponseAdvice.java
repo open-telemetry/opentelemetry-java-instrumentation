@@ -34,8 +34,7 @@ public class GrizzlyClientResponseAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
-      @Advice.This AsyncCompletionHandler<?> handler,
-      @Advice.Argument(0) Response response) {
+      @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
     // TODO I think all this should happen on exit, not on enter.
     // After response was handled by user provided handler.

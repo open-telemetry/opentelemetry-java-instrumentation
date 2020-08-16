@@ -34,8 +34,7 @@ public class HandlerAdapterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope methodEnter(
-      @Advice.Argument(0) ServerWebExchange exchange,
-      @Advice.Argument(1) Object handler) {
+      @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
 
     SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);

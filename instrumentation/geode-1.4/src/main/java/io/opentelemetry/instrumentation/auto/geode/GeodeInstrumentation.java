@@ -88,8 +88,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This Region thiz, @Advice.Origin Method method) {
+    public static SpanWithScope onEnter(@Advice.This Region thiz, @Advice.Origin Method method) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
@@ -124,9 +123,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This Region thiz,
-        @Advice.Origin Method method,
-        @Advice.Argument(0) String query) {
+        @Advice.This Region thiz, @Advice.Origin Method method, @Advice.Argument(0) String query) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
