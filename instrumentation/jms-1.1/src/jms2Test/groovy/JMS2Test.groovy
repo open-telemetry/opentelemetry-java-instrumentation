@@ -47,6 +47,7 @@ import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
 class JMS2Test extends AgentTestRunner {
+
   static {
     ConfigUtils.updateConfig {
       System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")

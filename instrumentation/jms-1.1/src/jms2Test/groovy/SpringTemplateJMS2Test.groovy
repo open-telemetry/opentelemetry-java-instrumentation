@@ -41,6 +41,7 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
+
   static {
     ConfigUtils.updateConfig {
       System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
