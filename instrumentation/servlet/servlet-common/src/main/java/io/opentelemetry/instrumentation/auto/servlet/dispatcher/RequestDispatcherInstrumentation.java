@@ -89,10 +89,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope start(
-        @Advice.Origin("#m") final String method,
-        @Advice.This final RequestDispatcher dispatcher,
+        @Advice.Origin("#m") String method,
+        @Advice.This RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
-        @Advice.Argument(0) final ServletRequest request) {
+        @Advice.Argument(0) ServletRequest request) {
       Span parentSpan = TRACER.getCurrentSpan();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
@@ -141,10 +141,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Local("_originalContext") final Object originalContext,
-        @Advice.Argument(0) final ServletRequest request,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Local("_originalContext") Object originalContext,
+        @Advice.Argument(0) ServletRequest request,
+        @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

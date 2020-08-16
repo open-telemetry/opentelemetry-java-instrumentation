@@ -31,13 +31,13 @@ public class TracingCommandListener implements CommandListener {
   private final Map<Integer, Span> spanMap = new ConcurrentHashMap<>();
 
   @Override
-  public void commandStarted(final CommandStartedEvent event) {
+  public void commandStarted(CommandStartedEvent event) {
     Span span = TRACER.startSpan(event, event.getCommand());
     spanMap.put(event.getRequestId(), span);
   }
 
   @Override
-  public void commandSucceeded(final CommandSucceededEvent event) {
+  public void commandSucceeded(CommandSucceededEvent event) {
     Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
       TRACER.end(span);
@@ -45,7 +45,7 @@ public class TracingCommandListener implements CommandListener {
   }
 
   @Override
-  public void commandFailed(final CommandFailedEvent event) {
+  public void commandFailed(CommandFailedEvent event) {
     Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
       TRACER.endExceptionally(span, event.getThrowable());

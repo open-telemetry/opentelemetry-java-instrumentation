@@ -43,7 +43,7 @@ public class MuzzleGradlePlugin implements Plugin {
       new TypeDescription.ForLoadedType(Instrumenter.Default.class);
 
   @Override
-  public boolean matches(final TypeDescription target) {
+  public boolean matches(TypeDescription target) {
     if (target.isAbstract()) {
       return false;
     }
@@ -62,9 +62,9 @@ public class MuzzleGradlePlugin implements Plugin {
 
   @Override
   public DynamicType.Builder<?> apply(
-      final DynamicType.Builder<?> builder,
-      final TypeDescription typeDescription,
-      final ClassFileLocator classFileLocator) {
+      DynamicType.Builder<?> builder,
+      TypeDescription typeDescription,
+      ClassFileLocator classFileLocator) {
     return builder.visit(new MuzzleVisitor());
   }
 
@@ -74,15 +74,15 @@ public class MuzzleGradlePlugin implements Plugin {
   /** Compile-time Optimization used by gradle buildscripts. */
   public static class NoOp implements Plugin {
     @Override
-    public boolean matches(final TypeDescription target) {
+    public boolean matches(TypeDescription target) {
       return false;
     }
 
     @Override
     public DynamicType.Builder<?> apply(
-        final DynamicType.Builder<?> builder,
-        final TypeDescription typeDescription,
-        final ClassFileLocator classFileLocator) {
+        DynamicType.Builder<?> builder,
+        TypeDescription typeDescription,
+        ClassFileLocator classFileLocator) {
       return builder;
     }
 

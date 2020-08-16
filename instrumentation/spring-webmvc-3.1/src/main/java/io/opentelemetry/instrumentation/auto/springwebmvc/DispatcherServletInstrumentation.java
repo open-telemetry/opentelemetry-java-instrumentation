@@ -93,8 +93,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void afterRefresh(
-        @Advice.Argument(0) final ApplicationContext springCtx,
-        @Advice.FieldValue("handlerMappings") final List<HandlerMapping> handlerMappings) {
+        @Advice.Argument(0) ApplicationContext springCtx,
+        @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
         HandlerMappingResourceNameFilter filter =
             (HandlerMappingResourceNameFilter) springCtx.getBean("otelAutoDispatcherFilter");
@@ -108,14 +108,14 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) ModelAndView mv) {
       Span span = TRACER.startSpan(mv);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       Span span = spanWithScope.getSpan();
       if (throwable == null) {
         TRACER.end(span);
@@ -128,7 +128,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void nameResource(@Advice.Argument(3) final Exception exception) {
+    public static void nameResource(@Advice.Argument(3) Exception exception) {
       Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.

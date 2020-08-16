@@ -59,7 +59,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
   public static class QueryMethodAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startMethod(@Advice.This final Query query) {
+    public static SpanWithScope startMethod(@Advice.This Query query) {
 
       ContextStore<Query, Span> contextStore = InstrumentationContext.get(Query.class, Span.class);
 
@@ -69,7 +69,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }

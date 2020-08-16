@@ -41,7 +41,7 @@ import java.util.jar.Manifest;
 public class ClasspathUtils {
   private static final ClassPath testClasspath = computeTestClasspath();
 
-  public static byte[] convertToByteArray(final InputStream resource) throws IOException {
+  public static byte[] convertToByteArray(InputStream resource) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     int bytesRead;
     byte[] data = new byte[1024];
@@ -52,7 +52,7 @@ public class ClasspathUtils {
     return buffer.toByteArray();
   }
 
-  public static byte[] convertToByteArray(final Class<?> clazz) throws IOException {
+  public static byte[] convertToByteArray(Class<?> clazz) throws IOException {
     InputStream inputStream = null;
     try {
       inputStream =
@@ -75,7 +75,7 @@ public class ClasspathUtils {
    * @return the location of the newly created jar.
    * @throws IOException
    */
-  public static URL createJarWithClasses(final ClassLoader loader, final String... resourceNames)
+  public static URL createJarWithClasses(ClassLoader loader, String... resourceNames)
       throws IOException {
     File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
     tmpJar.deleteOnExit();
@@ -107,7 +107,7 @@ public class ClasspathUtils {
    * @return the location of the newly created jar.
    * @throws IOException
    */
-  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+  public static URL createJarWithClasses(Class<?>... classes) throws IOException {
     File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
     tmpJar.deleteOnExit();
 
@@ -126,8 +126,7 @@ public class ClasspathUtils {
     return null;
   }
 
-  private static void addToJar(
-      final String resourceName, final byte[] bytes, final JarOutputStream jarOutputStream)
+  private static void addToJar(String resourceName, byte[] bytes, JarOutputStream jarOutputStream)
       throws IOException {
     JarEntry entry = new JarEntry(resourceName);
     jarOutputStream.putNextEntry(entry);
@@ -148,7 +147,7 @@ public class ClasspathUtils {
     }
     try {
       return ClassPath.from(testClassLoader);
-    } catch (final IOException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -162,10 +161,10 @@ public class ClasspathUtils {
       try {
         try {
           urls.add(new File(entry).toURI().toURL());
-        } catch (final SecurityException e) { // File.toURI checks to see if the file is a directory
+        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
           urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
         }
-      } catch (final MalformedURLException e) {
+      } catch (MalformedURLException e) {
         System.err.println(
             String.format(
                 "Error injecting bootstrap jar: Malformed classpath entry: %s. %s", entry, e));
@@ -175,7 +174,7 @@ public class ClasspathUtils {
   }
 
   // Moved this to a java class because groovy was adding a hard ref to classLoader
-  public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
+  public static boolean isClassLoaded(String className, ClassLoader classLoader) {
     try {
       Method findLoadedClassMethod =
           ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
@@ -183,12 +182,12 @@ public class ClasspathUtils {
         findLoadedClassMethod.setAccessible(true);
         Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
         return null != loadedClass && loadedClass.getClassLoader() == classLoader;
-      } catch (final Exception e) {
+      } catch (Exception e) {
         throw new IllegalStateException(e);
       } finally {
         findLoadedClassMethod.setAccessible(false);
       }
-    } catch (final NoSuchMethodException e) {
+    } catch (NoSuchMethodException e) {
       throw new IllegalStateException(e);
     }
   }

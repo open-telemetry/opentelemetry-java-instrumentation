@@ -85,8 +85,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getProcedureCall(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Return final ProcedureCall returned) {
+        @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);

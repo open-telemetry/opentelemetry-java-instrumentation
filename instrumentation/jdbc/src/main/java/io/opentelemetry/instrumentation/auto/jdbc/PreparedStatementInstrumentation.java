@@ -81,7 +81,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This final PreparedStatement statement,
+        @Advice.This PreparedStatement statement,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -97,7 +97,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {

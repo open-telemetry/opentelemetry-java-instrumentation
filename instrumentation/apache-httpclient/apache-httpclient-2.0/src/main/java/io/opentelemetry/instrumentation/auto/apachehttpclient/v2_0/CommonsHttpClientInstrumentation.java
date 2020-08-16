@@ -76,7 +76,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
   public static class ExecAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(1) final HttpMethod httpMethod,
+        @Advice.Argument(1) HttpMethod httpMethod,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -92,8 +92,8 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(1) final HttpMethod httpMethod,
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Argument(1) HttpMethod httpMethod,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {

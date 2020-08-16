@@ -41,19 +41,19 @@ public class PlayTracer extends BaseTracer {
     try {
       // This method was added in Play 2.6.8
       typedKeyGetUnderlyingCheck = TypedKey.class.getMethod("asScala");
-    } catch (final NoSuchMethodException ignored) {
+    } catch (NoSuchMethodException ignored) {
     }
     // Fallback
     if (typedKeyGetUnderlyingCheck == null) {
       try {
         typedKeyGetUnderlyingCheck = TypedKey.class.getMethod("underlying");
-      } catch (final NoSuchMethodException ignored) {
+      } catch (NoSuchMethodException ignored) {
       }
     }
     typedKeyGetUnderlying = typedKeyGetUnderlyingCheck;
   }
 
-  public void updateSpanName(final Span span, final Request request) {
+  public void updateSpanName(Span span, Request request) {
     if (request != null) {
       // more about routes here:
       // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
@@ -66,7 +66,7 @@ public class PlayTracer extends BaseTracer {
                   .get(
                       (play.api.libs.typedmap.TypedKey<HandlerDef>)
                           typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF));
-        } catch (final IllegalAccessException | InvocationTargetException ignored) {
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
         }
       }
       if (defOption != null && !defOption.isEmpty()) {

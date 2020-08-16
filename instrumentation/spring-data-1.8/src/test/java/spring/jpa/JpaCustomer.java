@@ -34,7 +34,7 @@ public class JpaCustomer {
 
   protected JpaCustomer() {}
 
-  public JpaCustomer(final String firstName, final String lastName) {
+  public JpaCustomer(String firstName, String lastName) {
     this.firstName = firstName;
     this.lastName = lastName;
   }

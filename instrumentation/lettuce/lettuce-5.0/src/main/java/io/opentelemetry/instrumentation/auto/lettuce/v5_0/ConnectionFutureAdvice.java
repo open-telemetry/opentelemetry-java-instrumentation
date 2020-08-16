@@ -28,7 +28,7 @@ public class ConnectionFutureAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Argument(1) final RedisURI redisURI,
+      @Advice.Argument(1) RedisURI redisURI,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
     span = TRACER.startSpan(redisURI, "CONNECT");
@@ -37,8 +37,8 @@ public class ConnectionFutureAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Thrown final Throwable throwable,
-      @Advice.Return final ConnectionFuture<?> connectionFuture,
+      @Advice.Thrown Throwable throwable,
+      @Advice.Return ConnectionFuture<?> connectionFuture,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
     scope.close();

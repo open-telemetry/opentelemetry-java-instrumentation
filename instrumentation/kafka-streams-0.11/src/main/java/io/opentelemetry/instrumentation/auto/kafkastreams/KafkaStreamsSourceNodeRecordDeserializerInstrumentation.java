@@ -62,7 +62,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void saveHeaders(
-        @Advice.Argument(0) final ConsumerRecord incoming,
+        @Advice.Argument(0) ConsumerRecord incoming,
         @Advice.Return(readOnly = false) ConsumerRecord result) {
       result =
           new ConsumerRecord<>(

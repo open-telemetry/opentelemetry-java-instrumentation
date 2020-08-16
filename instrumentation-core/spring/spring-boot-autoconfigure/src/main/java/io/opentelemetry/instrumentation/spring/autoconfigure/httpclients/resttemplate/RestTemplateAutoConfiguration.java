@@ -42,7 +42,7 @@ public class RestTemplateAutoConfiguration {
 
   @Bean
   @Autowired
-  public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(final Tracer tracer) {
+  public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(Tracer tracer) {
     return new RestTemplateBeanPostProcessor(tracer);
   }
 }

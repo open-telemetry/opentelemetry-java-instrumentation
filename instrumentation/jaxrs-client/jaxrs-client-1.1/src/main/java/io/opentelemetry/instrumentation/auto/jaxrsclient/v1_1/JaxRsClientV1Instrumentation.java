@@ -77,8 +77,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter
     public static void onEnter(
-        @Advice.Argument(0) final ClientRequest request,
-        @Advice.This final ClientHandler thisObj,
+        @Advice.Argument(0) ClientRequest request,
+        @Advice.This ClientHandler thisObj,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -92,8 +92,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Return final ClientResponse response,
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Return ClientResponse response,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       if (scope != null) {

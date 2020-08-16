@@ -61,7 +61,7 @@ public class TracerInstaller {
     PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
   }
 
-  private static synchronized void installExporters(final String exporterName) {
+  private static synchronized void installExporters(String exporterName) {
     SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
     if (spanExporterFactory != null) {
       DefaultExporterConfig config = new DefaultExporterConfig("exporter");
@@ -88,11 +88,11 @@ public class TracerInstaller {
     return null;
   }
 
-  private static synchronized void installExportersFromJar(final String exporterJar) {
+  private static synchronized void installExportersFromJar(String exporterJar) {
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
-    } catch (final MalformedURLException e) {
+    } catch (MalformedURLException e) {
       log.warn("Filename could not be parsed: " + exporterJar + ". Exporter is not installed");
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
@@ -143,8 +143,7 @@ public class TracerInstaller {
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
-  private static <F> F getExporterFactory(
-      final Class<F> service, final ExporterClassLoader exporterLoader) {
+  private static <F> F getExporterFactory(Class<F> service, ExporterClassLoader exporterLoader) {
     ServiceLoader<F> serviceLoader = ServiceLoader.load(service, exporterLoader);
     Iterator<F> i = serviceLoader.iterator();
     if (i.hasNext()) {

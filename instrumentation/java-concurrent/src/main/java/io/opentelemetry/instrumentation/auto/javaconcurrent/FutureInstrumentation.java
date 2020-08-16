@@ -97,7 +97,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
         implementsInterface(named(Future.class.getName()));
     return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
       @Override
-      public boolean matches(final TypeDescription target) {
+      public boolean matches(TypeDescription target) {
         boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
         if (!whitelisted && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
           log.debug("Skipping future instrumentation for {}", target.getName());
@@ -121,7 +121,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   public static class CanceledFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(@Advice.This final Future<?> future) {
+    public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another

@@ -36,14 +36,13 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   private final RouterFunction routerFunction;
   private final ServerRequest serverRequest;
 
-  public RouteOnSuccessOrError(
-      final RouterFunction routerFunction, final ServerRequest serverRequest) {
+  public RouteOnSuccessOrError(RouterFunction routerFunction, ServerRequest serverRequest) {
     this.routerFunction = routerFunction;
     this.serverRequest = serverRequest;
   }
 
   @Override
-  public void accept(final HandlerFunction<?> handler, final Throwable throwable) {
+  public void accept(HandlerFunction<?> handler, Throwable throwable) {
     if (handler != null) {
       String predicateString = parsePredicateString();
       if (predicateString != null) {
@@ -73,7 +72,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     }
   }
 
-  private String parseRoute(final String routerString) {
+  private String parseRoute(String routerString) {
     return METHOD_REGEX
         .matcher(
             SPACES_REGEX

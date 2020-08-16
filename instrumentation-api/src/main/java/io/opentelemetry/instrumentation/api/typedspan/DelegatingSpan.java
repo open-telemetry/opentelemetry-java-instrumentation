@@ -27,42 +27,42 @@ import io.opentelemetry.trace.Status;
 public class DelegatingSpan implements Span {
   protected final Span delegate;
 
-  public DelegatingSpan(final Span delegate) {
+  public DelegatingSpan(Span delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public void setAttribute(final String key, final String value) {
+  public void setAttribute(String key, String value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final long value) {
+  public void setAttribute(String key, long value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final double value) {
+  public void setAttribute(String key, double value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final boolean value) {
+  public void setAttribute(String key, boolean value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final AttributeValue value) {
+  public void setAttribute(String key, AttributeValue value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void addEvent(final String name) {
+  public void addEvent(String name) {
     delegate.addEvent(name);
   }
 
   @Override
-  public void addEvent(final String name, final long timestamp) {
+  public void addEvent(String name, long timestamp) {
     delegate.addEvent(name, timestamp);
   }
 
@@ -77,17 +77,17 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void addEvent(final Event event) {
+  public void addEvent(Event event) {
     delegate.addEvent(event);
   }
 
   @Override
-  public void addEvent(final Event event, final long timestamp) {
+  public void addEvent(Event event, long timestamp) {
     delegate.addEvent(event, timestamp);
   }
 
   @Override
-  public void setStatus(final Status status) {
+  public void setStatus(Status status) {
     delegate.setStatus(status);
   }
 
@@ -97,7 +97,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void updateName(final String name) {
+  public void updateName(String name) {
     delegate.updateName(name);
   }
 
@@ -107,7 +107,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void end(final EndSpanOptions endOptions) {
+  public void end(EndSpanOptions endOptions) {
     delegate.end(endOptions);
   }
 

@@ -40,7 +40,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
    * don't have to load additional info.
    */
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     String name = target.getActualName();
 
     if (name.startsWith("com.beust.jcommander.")
@@ -325,7 +325,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (!super.equals(other)) {
       return false;
     } else if (this == other) {

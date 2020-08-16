@@ -38,20 +38,20 @@ public class ShadingRemapper extends Remapper {
     }
   }
 
-  public static Rule rule(final String from, final String to) {
+  public static Rule rule(String from, String to) {
     return new Rule(from, to);
   }
 
   private final TreeMap<String, String> map = new TreeMap<>();
 
-  public ShadingRemapper(final Rule... rules) {
+  public ShadingRemapper(Rule... rules) {
     for (Rule rule : rules) {
       map.put(rule.from, rule.to);
     }
   }
 
   @Override
-  public String map(final String internalName) {
+  public String map(String internalName) {
     Map.Entry<String, String> e = map.floorEntry(internalName);
     if (e != null && internalName.startsWith(e.getKey())) {
       return e.getValue() + internalName.substring(e.getKey().length());

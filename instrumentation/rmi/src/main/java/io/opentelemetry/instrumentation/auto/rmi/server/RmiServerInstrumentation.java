@@ -68,7 +68,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Origin final Method method) {
+    public static SpanWithScope onEnter(@Advice.Origin Method method) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
       if (callDepth > 0) {
         return null;
@@ -90,7 +90,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

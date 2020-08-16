@@ -91,7 +91,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class GoogleHttpClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This final HttpRequest request) {
+    public static void methodEnter(@Advice.This HttpRequest request) {
 
       ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);
@@ -111,9 +111,9 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.This final HttpRequest request,
-        @Advice.Return final HttpResponse response,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This HttpRequest request,
+        @Advice.Return HttpResponse response,
+        @Advice.Thrown Throwable throwable) {
 
       ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);
@@ -139,7 +139,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   public static class GoogleHttpClientAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This final HttpRequest request) {
+    public static void methodEnter(@Advice.This HttpRequest request) {
       Span span = TRACER.startSpan(request);
 
       ContextStore<HttpRequest, RequestState> contextStore =
@@ -151,7 +151,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.This final HttpRequest request, @Advice.Thrown final Throwable throwable) {
+        @Advice.This HttpRequest request, @Advice.Thrown Throwable throwable) {
 
       if (throwable != null) {
 

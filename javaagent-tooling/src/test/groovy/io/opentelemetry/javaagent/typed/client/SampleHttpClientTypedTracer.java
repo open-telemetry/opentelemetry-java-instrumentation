@@ -33,7 +33,7 @@ public class SampleHttpClientTypedTracer
   }
 
   @Override
-  protected String getSpanName(final String o) {
+  protected String getSpanName(String o) {
     return "test-span";
   }
 
@@ -41,12 +41,12 @@ public class SampleHttpClientTypedTracer
   protected HttpTextFormat.Setter<String> getSetter() {
     return new HttpTextFormat.Setter<String>() {
       @Override
-      public void set(final String carrier, final String key, final String value) {}
+      public void set(String carrier, String key, String value) {}
     };
   }
 
   @Override
-  protected SampleHttpClientTypedSpan wrapSpan(final Span span) {
+  protected SampleHttpClientTypedSpan wrapSpan(Span span) {
     return new SampleHttpClientTypedSpan(span);
   }
 }

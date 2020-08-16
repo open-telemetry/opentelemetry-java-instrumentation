@@ -55,7 +55,7 @@ public class KafkaStreamsProcessorInstrumentation {
       return spanWithScope;
     }
 
-    public void setSpanWithScope(final SpanWithScope spanWithScope) {
+    public void setSpanWithScope(SpanWithScope spanWithScope) {
       this.spanWithScope = spanWithScope;
     }
   }
@@ -94,7 +94,7 @@ public class KafkaStreamsProcessorInstrumentation {
     public static class StartSpanAdvice {
 
       @Advice.OnMethodExit(suppress = Throwable.class)
-      public static void onExit(@Advice.Return final StampedRecord record) {
+      public static void onExit(@Advice.Return StampedRecord record) {
         if (record == null) {
           return;
         }
@@ -156,7 +156,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void stopSpan(
-          @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
+          @Advice.Enter SpanScopeHolder holder, @Advice.Thrown Throwable throwable) {
         HOLDER.remove();
         SpanWithScope spanWithScope = holder.getSpanWithScope();
         if (spanWithScope != null) {

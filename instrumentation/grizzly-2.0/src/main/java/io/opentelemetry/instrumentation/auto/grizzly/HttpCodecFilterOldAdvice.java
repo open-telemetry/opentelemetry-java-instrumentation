@@ -30,9 +30,9 @@ public class HttpCodecFilterOldAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
-      @Advice.Origin final Method method,
-      @Advice.Argument(0) final FilterChainContext ctx,
-      @Advice.Argument(1) final HttpPacketParsing httpHeader) {
+      @Advice.Origin Method method,
+      @Advice.Argument(0) FilterChainContext ctx,
+      @Advice.Argument(1) HttpPacketParsing httpHeader) {
     Context context = TRACER.getServerContext(ctx);
 
     // only create a span if there isn't another one attached to the current ctx

@@ -84,7 +84,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   public static class DispatchAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean enter(
-        @Advice.This final AsyncContext context, @Advice.AllArguments final Object[] args) {
+        @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
       int depth = CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
       if (depth > 0) {
         return false;
@@ -109,7 +109,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final boolean topLevel) {
+    public static void exit(@Advice.Enter boolean topLevel) {
       if (topLevel) {
         CallDepthThreadLocalMap.reset(AsyncContext.class);
       }

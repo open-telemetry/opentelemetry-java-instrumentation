@@ -49,7 +49,7 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
      * Some cases of instrumentation will match more broadly than others, so this unused method
      * allows all instrumentation to uniformly match versions of Hibernate starting at 4.0.
      */
-    public static void muzzleCheck(final SharedSessionContract contract) {
+    public static void muzzleCheck(SharedSessionContract contract) {
       contract.createCriteria("");
     }
   }

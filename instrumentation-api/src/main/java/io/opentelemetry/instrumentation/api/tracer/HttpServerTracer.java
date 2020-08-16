@@ -169,7 +169,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   // TODO use semantic attributes
-  protected void onRequest(final Span span, final REQUEST request) {
+  protected void onRequest(Span span, REQUEST request) {
     SemanticAttributes.HTTP_METHOD.set(span, method(request));
     String userAgent = requestHeader(request, USER_AGENT);
     if (userAgent != null) {
@@ -213,7 +213,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
           span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
         }
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Error tagging url", e);
     }
     // TODO set resource name from URL.
@@ -276,7 +276,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     return forwarded.substring(start);
   }
 
-  private <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+  private <C> SpanContext extract(C carrier, HttpTextFormat.Getter<C> getter) {
     if (Config.THREAD_PROPAGATION_DEBUGGER) {
       debugContextLeak();
     }

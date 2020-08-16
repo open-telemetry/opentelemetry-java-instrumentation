@@ -30,7 +30,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   private final String query;
 
   public static CouchbaseOnSubscribe create(
-      final Observable originalObservable, final String bucket, final Method method) {
+      Observable originalObservable, String bucket, Method method) {
     Class<?> declaringClass = method.getDeclaringClass();
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
@@ -38,12 +38,11 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   }
 
   public static CouchbaseOnSubscribe create(
-      final Observable originalObservable, final String bucket, final String query) {
+      Observable originalObservable, String bucket, String query) {
     return new CouchbaseOnSubscribe(originalObservable, bucket, query);
   }
 
-  private CouchbaseOnSubscribe(
-      final Observable originalObservable, final String bucket, final String query) {
+  private CouchbaseOnSubscribe(Observable originalObservable, String bucket, String query) {
     super(originalObservable, query, DECORATE, CLIENT);
 
     this.bucket = bucket;
@@ -51,7 +50,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   }
 
   @Override
-  protected void afterStart(final Span span) {
+  protected void afterStart(Span span) {
     super.afterStart(span);
 
     span.setAttribute(SemanticAttributes.DB_NAME.key(), bucket);

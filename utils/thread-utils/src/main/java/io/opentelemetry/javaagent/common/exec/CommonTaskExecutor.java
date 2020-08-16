@@ -41,7 +41,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
   private CommonTaskExecutor() {
     try {
       Runtime.getRuntime().addShutdownHook(new ShutdownCallback(executorService));
-    } catch (final IllegalStateException ex) {
+    } catch (IllegalStateException ex) {
       // The JVM is already shutting down.
       log.debug("Error adding shutdown hook", ex);
     }
@@ -72,12 +72,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
    * @return future that can be canceled
    */
   public <T> ScheduledFuture<?> scheduleAtFixedRate(
-      final Task<T> task,
-      final T target,
-      final long initialDelay,
-      final long period,
-      final TimeUnit unit,
-      final String name) {
+      Task<T> task, T target, long initialDelay, long period, TimeUnit unit, String name) {
     if (CommonTaskExecutor.INSTANCE.isShutdown()) {
       log.warn("Periodic task scheduler is shutdown. Will not run: {}", name);
     } else {
@@ -87,7 +82,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
             executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
         periodicTask.setFuture(future);
         return future;
-      } catch (final RejectedExecutionException e) {
+      } catch (RejectedExecutionException e) {
         log.warn("Periodic task rejected. Will not run: {}", name);
       }
     }
@@ -119,13 +114,12 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
   }
 
   @Override
-  public boolean awaitTermination(final long timeout, final TimeUnit unit)
-      throws InterruptedException {
+  public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
     return executorService.awaitTermination(timeout, unit);
   }
 
   @Override
-  public void execute(final Runnable command) {
+  public void execute(Runnable command) {
     executorService.execute(command);
   }
 
@@ -133,7 +127,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
 
     private final ScheduledExecutorService executorService;
 
-    private ShutdownCallback(final ScheduledExecutorService executorService) {
+    private ShutdownCallback(ScheduledExecutorService executorService) {
       super("opentelemetry-exec-shutdown-hook");
       this.executorService = executorService;
     }
@@ -145,7 +139,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
         if (!executorService.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS)) {
           executorService.shutdownNow();
         }
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         executorService.shutdownNow();
       }
     }
@@ -160,7 +154,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
     private final Task<T> task;
     private volatile ScheduledFuture<?> future = null;
 
-    public PeriodicTask(final Task<T> task, final T target) {
+    public PeriodicTask(Task<T> task, T target) {
       this.target = new WeakReference<>(target);
       this.task = task;
     }
@@ -175,7 +169,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
       }
     }
 
-    public void setFuture(final ScheduledFuture<?> future) {
+    public void setFuture(ScheduledFuture<?> future) {
       this.future = future;
     }
   }
@@ -187,22 +181,22 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
 
     private final String name;
 
-    public UnscheduledFuture(final String name) {
+    public UnscheduledFuture(String name) {
       this.name = name;
     }
 
     @Override
-    public long getDelay(final TimeUnit unit) {
+    public long getDelay(TimeUnit unit) {
       return 0;
     }
 
     @Override
-    public int compareTo(final Delayed o) {
+    public int compareTo(Delayed o) {
       return 0;
     }
 
     @Override
-    public boolean cancel(final boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
       log.debug("Cancelling unscheduled future for: {}", name);
       return false;
     }
@@ -223,7 +217,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
     }
 
     @Override
-    public Object get(final long timeout, final TimeUnit unit) {
+    public Object get(long timeout, TimeUnit unit) {
       return null;
     }
   }

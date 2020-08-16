@@ -71,8 +71,8 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(
-        @Advice.Origin("#m") final String method,
-        @Advice.This final HttpServletResponse resp,
+        @Advice.Origin("#m") String method,
+        @Advice.This HttpServletResponse resp,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -87,7 +87,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {

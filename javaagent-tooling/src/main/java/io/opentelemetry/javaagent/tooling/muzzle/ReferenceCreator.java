@@ -61,7 +61,7 @@ public class ReferenceCreator extends ClassVisitor {
    * @throws IllegalStateException if class is not found or unable to be loaded.
    */
   public static Map<String, Reference> createReferencesFrom(
-      final String entryPointClassName, final ClassLoader loader) {
+      String entryPointClassName, ClassLoader loader) {
     Set<String> visitedSources = new HashSet<>();
     Map<String, Reference> references = new HashMap<>();
 
@@ -101,13 +101,13 @@ public class ReferenceCreator extends ClassVisitor {
           }
         }
 
-      } catch (final IOException e) {
+      } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + className, e);
       } finally {
         if (in != null) {
           try {
             in.close();
-          } catch (final IOException e) {
+          } catch (IOException e) {
             throw new IllegalStateException("Error closing class " + className, e);
           }
         }
@@ -121,7 +121,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * <p>foo/bar/Baz -> foo/bar/
    */
-  private static String internalPackageName(final String internalName) {
+  private static String internalPackageName(String internalName) {
     return internalName.replaceAll("/[^/]+$", "");
   }
 
@@ -130,7 +130,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumClassAccess(final Type from, final Type to) {
+  private static Reference.Flag computeMinimumClassAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
@@ -146,7 +146,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumFieldAccess(final Type from, final Type to) {
+  private static Reference.Flag computeMinimumFieldAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
@@ -164,8 +164,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumMethodAccess(
-      final Type from, final Type to, final Type methodType) {
+  private static Reference.Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else {
@@ -198,7 +197,7 @@ public class ReferenceCreator extends ClassVisitor {
     return references;
   }
 
-  private void addReference(final Reference ref) {
+  private void addReference(Reference ref) {
     if (!ref.getClassName().startsWith("java.")) {
       Reference reference = references.get(ref.getClassName());
       if (null == reference) {
@@ -211,12 +210,12 @@ public class ReferenceCreator extends ClassVisitor {
 
   @Override
   public void visit(
-      final int version,
-      final int access,
-      final String name,
-      final String signature,
-      final String superName,
-      final String[] interfaces) {
+      int version,
+      int access,
+      String name,
+      String signature,
+      String superName,
+      String[] interfaces) {
     refSourceClassName = Utils.getClassName(name);
     refSourceType = Type.getType("L" + name + ";");
     // Additional references we could check
@@ -227,11 +226,7 @@ public class ReferenceCreator extends ClassVisitor {
 
   @Override
   public FieldVisitor visitField(
-      final int access,
-      final String name,
-      final String descriptor,
-      final String signature,
-      final Object value) {
+      int access, String name, String descriptor, String signature, Object value) {
     // Additional references we could check
     // - annotations on field
 
@@ -242,11 +237,7 @@ public class ReferenceCreator extends ClassVisitor {
 
   @Override
   public MethodVisitor visitMethod(
-      final int access,
-      final String name,
-      final String descriptor,
-      final String signature,
-      final String[] exceptions) {
+      int access, String name, String descriptor, String signature, String[] exceptions) {
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
@@ -256,19 +247,18 @@ public class ReferenceCreator extends ClassVisitor {
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
     private int currentLineNumber = -1;
 
-    public AdviceReferenceMethodVisitor(final MethodVisitor methodVisitor) {
+    public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
       super(Opcodes.ASM7, methodVisitor);
     }
 
     @Override
-    public void visitLineNumber(final int line, final Label start) {
+    public void visitLineNumber(int line, Label start) {
       currentLineNumber = line;
       super.visitLineNumber(line, start);
     }
 
     @Override
-    public void visitFieldInsn(
-        final int opcode, final String owner, final String name, final String descriptor) {
+    public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
       // Additional references we could check
       // * DONE owner class
       //   * DONE owner class has a field (name)
@@ -318,11 +308,7 @@ public class ReferenceCreator extends ClassVisitor {
 
     @Override
     public void visitMethodInsn(
-        final int opcode,
-        final String owner,
-        final String name,
-        final String descriptor,
-        final boolean isInterface) {
+        int opcode, String owner, String name, String descriptor, boolean isInterface) {
       // Additional references we could check
       // * DONE name of method owner's class
       //   * DONE is the owner an interface?
@@ -384,7 +370,7 @@ public class ReferenceCreator extends ClassVisitor {
     }
 
     @Override
-    public void visitLdcInsn(final Object value) {
+    public void visitLdcInsn(Object value) {
       if (value instanceof Type) {
         Type type = underlyingType((Type) value);
         if (type.getSort() == Type.OBJECT) {

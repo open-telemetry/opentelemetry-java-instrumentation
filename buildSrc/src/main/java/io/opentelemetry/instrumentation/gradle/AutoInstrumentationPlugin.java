@@ -54,7 +54,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
 
   static {
-    final String[] testBS = {
+    String[] testBS = {
       "io.opentelemetry.instrumentation.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API

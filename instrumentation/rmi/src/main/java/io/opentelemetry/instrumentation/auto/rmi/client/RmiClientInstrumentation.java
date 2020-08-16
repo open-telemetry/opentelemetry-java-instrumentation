@@ -66,7 +66,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   public static class RmiClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(value = 1) final Method method) {
+    public static SpanWithScope onEnter(@Advice.Argument(value = 1) Method method) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
@@ -78,7 +78,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

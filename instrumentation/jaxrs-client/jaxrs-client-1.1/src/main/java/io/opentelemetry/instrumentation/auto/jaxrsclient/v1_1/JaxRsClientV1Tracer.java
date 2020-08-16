@@ -28,17 +28,17 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
   public static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   @Override
-  protected String method(final ClientRequest httpRequest) {
+  protected String method(ClientRequest httpRequest) {
     return httpRequest.getMethod();
   }
 
   @Override
-  protected URI url(final ClientRequest httpRequest) {
+  protected URI url(ClientRequest httpRequest) {
     return httpRequest.getURI();
   }
 
   @Override
-  protected Integer status(final ClientResponse clientResponse) {
+  protected Integer status(ClientResponse clientResponse) {
     return clientResponse.getStatus();
   }
 

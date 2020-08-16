@@ -69,8 +69,8 @@ public class ContainerRequestFilterInstrumentation extends Instrumenter.Default 
   public static class RequestFilterAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void setFilterClass(
-        @Advice.This final ContainerRequestFilter filter,
-        @Advice.Argument(0) final ContainerRequestContext context) {
+        @Advice.This ContainerRequestFilter filter,
+        @Advice.Argument(0) ContainerRequestContext context) {
       context.setProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS, filter.getClass());
     }
   }

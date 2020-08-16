@@ -52,9 +52,9 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
      */
     public static void muzzleCheck(
         // Not in 4.0
-        final Validatable validatable,
+        Validatable validatable,
         // Not before 3.3.0.GA
-        final JBossTransactionManagerLookup lookup) {
+        JBossTransactionManagerLookup lookup) {
       validatable.validate();
       lookup.getUserTransactionName();
     }

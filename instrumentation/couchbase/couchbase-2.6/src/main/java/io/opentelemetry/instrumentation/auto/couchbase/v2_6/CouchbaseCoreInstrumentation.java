@@ -73,7 +73,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
         OpenTelemetry.getTracer("io.opentelemetry.auto.couchbase-2.6");
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
+    public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
       Span parentSpan = TRACER.getCurrentSpan();
       if (parentSpan != null) {

@@ -85,7 +85,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
 
   public static class Servlet2ResponseRedirectAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.This final HttpServletResponse response) {
+    public static void onEnter(@Advice.This HttpServletResponse response) {
       InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
     }
   }
@@ -93,7 +93,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
   public static class Servlet2ResponseStatusAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This final HttpServletResponse response, @Advice.Argument(0) final Integer status) {
+        @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
       InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, status);
     }
   }

@@ -80,7 +80,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
      * stored in channel attributes.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter(@Advice.This final Object thiz) {
+    public static boolean methodEnter(@Advice.This Object thiz) {
       if (thiz instanceof MakeAsyncHttpRequestStage) {
         Scope scope = CURRENT.get();
         if (scope != null) {
@@ -93,7 +93,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
+    public static void methodExit(@Advice.Enter boolean scopeAlreadyClosed) {
       if (!scopeAlreadyClosed) {
         Scope scope = CURRENT.get();
         if (scope != null) {

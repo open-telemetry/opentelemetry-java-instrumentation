@@ -38,7 +38,7 @@ class TypedTracerDemonstration {
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.
-    } catch (final Exception ex) {
+    } catch (Exception ex) {
       span.end(ex);
     }
   }
@@ -55,7 +55,7 @@ class TypedTracerDemonstration {
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.
-    } catch (final Exception ex) {
+    } catch (Exception ex) {
       span.end(ex);
     }
   }

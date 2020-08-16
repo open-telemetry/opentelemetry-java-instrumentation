@@ -129,7 +129,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  protected Span onRequest(final Span span, final REQUEST request) {
+  protected Span onRequest(Span span, REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
@@ -181,14 +181,14 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
             span.setAttribute(MoreAttributes.HTTP_FRAGMENT, fragment);
           }
         }
-      } catch (final Exception e) {
+      } catch (Exception e) {
         log.debug("Error tagging url", e);
       }
     }
     return span;
   }
 
-  protected Span onResponse(final Span span, final RESPONSE response) {
+  protected Span onResponse(Span span, RESPONSE response) {
     assert span != null;
     if (response != null) {
       Integer status = status(response);
@@ -200,7 +200,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return span;
   }
 
-  protected String spanNameForRequest(final REQUEST request) {
+  protected String spanNameForRequest(REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

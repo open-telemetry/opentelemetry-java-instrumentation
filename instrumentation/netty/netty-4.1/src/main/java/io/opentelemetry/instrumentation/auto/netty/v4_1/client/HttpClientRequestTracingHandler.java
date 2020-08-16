@@ -36,7 +36,7 @@ import java.net.InetSocketAddress;
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
-  public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
     if (!(msg instanceof HttpRequest)) {
       ctx.write(msg, prm);
       return;
@@ -73,7 +73,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
       try {
         ctx.write(msg, prm);
-      } catch (final Throwable throwable) {
+      } catch (Throwable throwable) {
         TRACER.endExceptionally(span, throwable);
         throw throwable;
       }
