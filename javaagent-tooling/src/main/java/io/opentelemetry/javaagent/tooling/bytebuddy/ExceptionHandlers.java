@@ -46,7 +46,7 @@ public class ExceptionHandlers {
             }
 
             @Override
-            public Size apply(final MethodVisitor mv, final Implementation.Context context) {
+            public Size apply(MethodVisitor mv, Implementation.Context context) {
               String name = context.getInstrumentedType().getName();
               ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 

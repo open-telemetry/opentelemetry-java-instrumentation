@@ -42,11 +42,11 @@ public final class ReferenceMatcher {
   private final Reference[] references;
   private final Set<String> helperClassNames;
 
-  public ReferenceMatcher(final Reference... references) {
+  public ReferenceMatcher(Reference... references) {
     this(new String[0], references);
   }
 
-  public ReferenceMatcher(final String[] helperClassNames, final Reference[] references) {
+  public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
     this.references = references;
     this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
   }
@@ -76,8 +76,8 @@ public final class ReferenceMatcher {
         });
   }
 
-  private boolean doesMatch(final ClassLoader loader) {
-    for (final Reference reference : references) {
+  private boolean doesMatch(ClassLoader loader) {
+    for (Reference reference : references) {
       // Don't reference-check helper classes.
       // They will be injected by the instrumentation's HelperInjector.
       if (!helperClassNames.contains(reference.getClassName())) {
@@ -120,8 +120,7 @@ public final class ReferenceMatcher {
    * @param loader
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private static List<Reference.Mismatch> checkMatch(
-      final Reference reference, final ClassLoader loader) {
+  private static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
     TypePool typePool =
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
@@ -133,7 +132,7 @@ public final class ReferenceMatcher {
                 reference.getSources().toArray(new Source[0]), reference.getClassName()));
       }
       return checkMatch(reference, resolution.resolve());
-    } catch (final Exception e) {
+    } catch (Exception e) {
       if (e.getMessage().startsWith("Cannot resolve type description for ")) {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
@@ -149,7 +148,7 @@ public final class ReferenceMatcher {
   }
 
   public static List<Reference.Mismatch> checkMatch(
-      final Reference reference, final TypeDescription typeOnClasspath) {
+      Reference reference, TypeDescription typeOnClasspath) {
     List<Mismatch> mismatches = Collections.emptyList();
 
     for (Reference.Flag flag : reference.getFlags()) {
@@ -241,7 +240,7 @@ public final class ReferenceMatcher {
   }
 
   private static FieldDescription.InDefinedShape findField(
-      final Reference.Field fieldRef, final TypeDescription typeOnClasspath) {
+      Reference.Field fieldRef, TypeDescription typeOnClasspath) {
     for (FieldDescription.InDefinedShape fieldType : typeOnClasspath.getDeclaredFields()) {
       if (fieldType.getName().equals(fieldRef.getName())
           && ((fieldType
@@ -274,7 +273,7 @@ public final class ReferenceMatcher {
   }
 
   private static MethodDescription.InDefinedShape findMethod(
-      final Reference.Method methodRef, final TypeDescription typeOnClasspath) {
+      Reference.Method methodRef, TypeDescription typeOnClasspath) {
     for (MethodDescription.InDefinedShape methodDescription :
         typeOnClasspath.getDeclaredMethods()) {
       if (methodDescription.getInternalName().equals(methodRef.getName())

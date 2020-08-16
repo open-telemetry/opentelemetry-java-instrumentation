@@ -98,10 +98,10 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final MessageConsumer consumer,
-        @Advice.Enter final long startTime,
-        @Advice.Return final Message message,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This MessageConsumer consumer,
+        @Advice.Enter long startTime,
+        @Advice.Return Message message,
+        @Advice.Thrown Throwable throwable) {
       String spanName;
       if (message == null) {
         spanName = InstrumentationContext.get(MessageConsumer.class, String.class).get(consumer);

@@ -24,7 +24,7 @@ public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
 
   public void onCommand(
-      final Span span, final HystrixInvokableInfo<?> command, final String methodName) {
+      Span span, HystrixInvokableInfo<?> command, String methodName) {
     if (command != null) {
       String commandName = command.getCommandKey().name();
       String groupName = command.getCommandGroup().name();

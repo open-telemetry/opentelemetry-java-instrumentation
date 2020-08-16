@@ -45,7 +45,7 @@ public final class ClassLoaderMatcher {
    * @return true if class is available as a resource and not the bootstrap classloader.
    */
   public static ElementMatcher.Junction.AbstractBase<ClassLoader> hasClassesNamed(
-      final String... classNames) {
+      String... classNames) {
     return new ClassLoaderHasClassesNamedMatcher(classNames);
   }
 
@@ -62,7 +62,7 @@ public final class ClassLoaderMatcher {
     private SkipClassLoaderMatcher() {}
 
     @Override
-    public boolean matches(final ClassLoader cl) {
+    public boolean matches(ClassLoader cl) {
       if (cl == BOOTSTRAP_CLASSLOADER) {
         // Don't skip bootstrap loader
         return false;
@@ -84,7 +84,7 @@ public final class ClassLoaderMatcher {
       return v;
     }
 
-    private static boolean shouldSkipClass(final ClassLoader loader) {
+    private static boolean shouldSkipClass(ClassLoader loader) {
       switch (loader.getClass().getName()) {
         case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
         case "sun.reflect.DelegatingClassLoader":
@@ -105,7 +105,7 @@ public final class ClassLoaderMatcher {
      * class loading is issued from this check and {@code false} for 'real' class loads. We should
      * come up with some sort of hack to avoid this problem.
      */
-    private static boolean delegatesToBootstrap(final ClassLoader loader) {
+    private static boolean delegatesToBootstrap(ClassLoader loader) {
       boolean delegates = true;
       if (!loadsExpectedClass(loader, PatchLogger.class)) {
         log.debug("loader {} failed to delegate bootstrap agent class", loader);
@@ -114,11 +114,10 @@ public final class ClassLoaderMatcher {
       return delegates;
     }
 
-    private static boolean loadsExpectedClass(
-        final ClassLoader loader, final Class<?> expectedClass) {
+    private static boolean loadsExpectedClass(ClassLoader loader, Class<?> expectedClass) {
       try {
         return loader.loadClass(expectedClass.getName()) == expectedClass;
-      } catch (final ClassNotFoundException e) {
+      } catch (ClassNotFoundException e) {
         return false;
       }
     }
@@ -131,14 +130,14 @@ public final class ClassLoaderMatcher {
 
     private final String[] resources;
 
-    private ClassLoaderHasClassesNamedMatcher(final String... classNames) {
+    private ClassLoaderHasClassesNamedMatcher(String... classNames) {
       resources = classNames;
       for (int i = 0; i < resources.length; i++) {
         resources[i] = resources[i].replace(".", "/") + ".class";
       }
     }
 
-    private boolean hasResources(final ClassLoader cl) {
+    private boolean hasResources(ClassLoader cl) {
       for (String resource : resources) {
         if (cl.getResource(resource) == null) {
           return false;
@@ -148,7 +147,7 @@ public final class ClassLoaderMatcher {
     }
 
     @Override
-    public boolean matches(final ClassLoader cl) {
+    public boolean matches(ClassLoader cl) {
       if (cl == BOOTSTRAP_CLASSLOADER) {
         // Can't match the bootstrap classloader.
         return false;

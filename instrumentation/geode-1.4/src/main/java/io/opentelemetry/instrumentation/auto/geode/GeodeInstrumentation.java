@@ -89,7 +89,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This final Region thiz, @Advice.Origin final Method method) {
+        @Advice.This Region thiz, @Advice.Origin Method method) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
@@ -105,7 +105,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
@@ -124,9 +124,9 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This final Region thiz,
-        @Advice.Origin final Method method,
-        @Advice.Argument(0) final String query) {
+        @Advice.This Region thiz,
+        @Advice.Origin Method method,
+        @Advice.Argument(0) String query) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
@@ -143,7 +143,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

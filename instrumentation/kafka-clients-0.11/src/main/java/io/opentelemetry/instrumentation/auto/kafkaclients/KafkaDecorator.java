@@ -30,7 +30,7 @@ public class KafkaDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracer("io.opentelemetry.auto.kafka-clients-0.11");
 
-  public String spanNameOnConsume(final ConsumerRecord record) {
+  public String spanNameOnConsume(ConsumerRecord record) {
     String topic = record.topic();
     if (topic != null) {
       return topic;
@@ -39,7 +39,7 @@ public class KafkaDecorator extends ClientDecorator {
     }
   }
 
-  public String spanNameOnProduce(final ProducerRecord record) {
+  public String spanNameOnProduce(ProducerRecord record) {
     if (record != null) {
       String topic = record.topic();
       if (topic != null) {
@@ -49,7 +49,7 @@ public class KafkaDecorator extends ClientDecorator {
     return "destination";
   }
 
-  public void onConsume(final Span span, final long startTimeMillis, final ConsumerRecord record) {
+  public void onConsume(Span span, long startTimeMillis, ConsumerRecord record) {
     span.setAttribute("partition", record.partition());
     span.setAttribute("offset", record.offset());
     // don't record a duration if the message was sent from an old Kafka client
@@ -61,7 +61,7 @@ public class KafkaDecorator extends ClientDecorator {
     }
   }
 
-  public void onProduce(final Span span, final ProducerRecord record) {
+  public void onProduce(Span span, ProducerRecord record) {
     if (record != null) {
       Integer partition = record.partition();
       if (partition != null) {

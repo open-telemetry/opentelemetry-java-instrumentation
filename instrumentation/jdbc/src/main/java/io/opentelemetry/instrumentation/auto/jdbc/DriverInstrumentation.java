@@ -73,9 +73,9 @@ public final class DriverInstrumentation extends Instrumenter.Default {
   public static class DriverAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
-        @Advice.Argument(0) final String url,
-        @Advice.Argument(1) final Properties props,
-        @Advice.Return final Connection connection) {
+        @Advice.Argument(0) String url,
+        @Advice.Argument(1) Properties props,
+        @Advice.Return Connection connection) {
       if (connection == null) {
         // Exception was probably thrown.
         return;

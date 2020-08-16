@@ -61,7 +61,7 @@ public final class AwsClientOverrideInstrumentation extends AbstractAwsClientIns
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Return final ClientOverrideConfiguration.Builder builder) {
+        @Advice.Return ClientOverrideConfiguration.Builder builder) {
       TracingExecutionInterceptor.overrideConfiguration(builder);
     }
   }

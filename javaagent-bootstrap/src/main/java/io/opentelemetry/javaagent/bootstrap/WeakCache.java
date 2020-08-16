@@ -22,14 +22,14 @@ public interface WeakCache<K, V> {
   interface Provider<K, V> {
     WeakCache<K, V> newWeakCache();
 
-    WeakCache<K, V> newWeakCache(final long maxSize);
+    WeakCache<K, V> newWeakCache(long maxSize);
   }
 
-  V getIfPresent(final K key);
+  V getIfPresent(K key);
 
-  V getIfPresentOrCompute(final K key, final Callable<? extends V> loader);
+  V getIfPresentOrCompute(K key, Callable<? extends V> loader);
 
-  V get(final K key, final Callable<? extends V> loader);
+  V get(K key, Callable<? extends V> loader);
 
-  void put(final K key, final V value);
+  void put(K key, V value);
 }

@@ -36,11 +36,11 @@ public class SessionMethodUtils {
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
   public static <TARGET, ENTITY> SpanWithScope startScopeFrom(
-      final ContextStore<TARGET, Span> contextStore,
-      final TARGET spanKey,
-      final String operationName,
-      final ENTITY entity,
-      final boolean createSpan) {
+      ContextStore<TARGET, Span> contextStore,
+      TARGET spanKey,
+      String operationName,
+      ENTITY entity,
+      boolean createSpan) {
 
     Span sessionSpan = contextStore.get(spanKey);
     if (sessionSpan == null) {
@@ -67,10 +67,10 @@ public class SessionMethodUtils {
 
   // Closes a Scope/Span, adding an error tag if the given Throwable is not null.
   public static void closeScope(
-      final SpanWithScope spanWithScope,
-      final Throwable throwable,
-      final String operationName,
-      final Object entity) {
+      SpanWithScope spanWithScope,
+      Throwable throwable,
+      String operationName,
+      Object entity) {
 
     if (spanWithScope == null) {
       // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
@@ -97,10 +97,10 @@ public class SessionMethodUtils {
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <S, T> void attachSpanFromStore(
-      final ContextStore<S, Span> sourceContextStore,
-      final S source,
-      final ContextStore<T, Span> targetContextStore,
-      final T target) {
+      ContextStore<S, Span> sourceContextStore,
+      S source,
+      ContextStore<T, Span> targetContextStore,
+      T target) {
 
     Span sessionSpan = sourceContextStore.get(source);
     if (sessionSpan == null) {

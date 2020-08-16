@@ -20,7 +20,7 @@ import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class AbstractNettyAdvice {
-  public static void muzzleCheck(final HttpRequest httpRequest) {
+  public static void muzzleCheck(HttpRequest httpRequest) {
     HttpHeaders headers = httpRequest.headers();
   }
 }

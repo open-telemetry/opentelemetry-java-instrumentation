@@ -39,7 +39,7 @@ public class OkHttpUtils {
       new HttpLoggingInterceptor(
           new HttpLoggingInterceptor.Logger() {
             @Override
-            public void log(final String message) {
+            public void log(String message) {
               CLIENT_LOGGER.debug(message);
             }
           });
@@ -61,7 +61,7 @@ public class OkHttpUtils {
     return client(false);
   }
 
-  public static OkHttpClient client(final boolean followRedirects) {
+  public static OkHttpClient client(boolean followRedirects) {
     return clientBuilder().followRedirects(followRedirects).build();
   }
 }

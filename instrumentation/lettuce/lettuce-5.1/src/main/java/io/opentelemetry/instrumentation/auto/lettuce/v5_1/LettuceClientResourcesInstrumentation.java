@@ -72,7 +72,7 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
   public static class DefaultClientResourcesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodEnter(@Advice.Return final DefaultClientResources.Builder builder) {
+    public static void methodEnter(@Advice.Return DefaultClientResources.Builder builder) {
       builder.tracing(OpenTelemetryTracing.INSTANCE);
     }
   }

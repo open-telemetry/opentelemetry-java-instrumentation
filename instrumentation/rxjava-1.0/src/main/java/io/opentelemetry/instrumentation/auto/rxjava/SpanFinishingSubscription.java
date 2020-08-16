@@ -26,7 +26,7 @@ public class SpanFinishingSubscription implements Subscription {
   private final AtomicReference<Span> spanRef;
 
   public SpanFinishingSubscription(
-      final BaseDecorator decorator, final AtomicReference<Span> spanRef) {
+      BaseDecorator decorator, AtomicReference<Span> spanRef) {
     this.decorator = decorator;
     this.spanRef = spanRef;
   }

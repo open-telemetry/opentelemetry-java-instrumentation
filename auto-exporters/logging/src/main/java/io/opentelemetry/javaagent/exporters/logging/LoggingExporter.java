@@ -25,12 +25,12 @@ import java.util.Collection;
 public class LoggingExporter implements SpanExporter {
   private final String prefix;
 
-  public LoggingExporter(final String prefix) {
+  public LoggingExporter(String prefix) {
     this.prefix = prefix;
   }
 
   @Override
-  public ResultCode export(final Collection<SpanData> list) {
+  public ResultCode export(Collection<SpanData> list) {
     for (SpanData span : list) {
       System.out.print(
           prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");

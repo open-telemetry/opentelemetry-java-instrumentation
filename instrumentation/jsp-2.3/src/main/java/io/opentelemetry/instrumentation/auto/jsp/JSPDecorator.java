@@ -35,13 +35,13 @@ public class JSPDecorator extends BaseDecorator {
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jsp-2.3");
 
-  public String spanNameOnCompile(final JspCompilationContext jspCompilationContext) {
+  public String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null
         ? "Compile"
         : "Compile " + jspCompilationContext.getJspFile();
   }
 
-  public void onCompile(final Span span, final JspCompilationContext jspCompilationContext) {
+  public void onCompile(Span span, JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
       ServletContext servletContext = jspCompilationContext.getServletContext();
       if (servletContext != null) {
@@ -56,7 +56,7 @@ public class JSPDecorator extends BaseDecorator {
     }
   }
 
-  public String spanNameOnRender(final HttpServletRequest req) {
+  public String spanNameOnRender(HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
     Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
     String spanName = req.getServletPath();
@@ -66,7 +66,7 @@ public class JSPDecorator extends BaseDecorator {
     return "Render " + spanName;
   }
 
-  public void onRender(final Span span, final HttpServletRequest req) {
+  public void onRender(Span span, HttpServletRequest req) {
     Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
     if (forwardOrigin instanceof String) {
       span.setAttribute("jsp.forwardOrigin", forwardOrigin.toString());
@@ -79,7 +79,7 @@ public class JSPDecorator extends BaseDecorator {
     try {
       span.setAttribute(
           "jsp.requestURL", (new URI(req.getRequestURL().toString())).normalize().toString());
-    } catch (final URISyntaxException uriSE) {
+    } catch (URISyntaxException uriSE) {
       LoggerFactory.getLogger(HttpJspPage.class)
           .warn("Failed to get and normalize request URL: " + uriSE.getMessage());
     }

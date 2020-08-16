@@ -45,14 +45,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   @Override
   public void beforeExecution(
-      final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
+      Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer());
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }
 
   @Override
   public void afterMarshalling(
-      final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
+      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       TRACER.onRequest(span, context.httpRequest());
@@ -63,7 +63,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   @Override
   public void afterExecution(
-      final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
+      Context.AfterExecution context, ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
@@ -75,7 +75,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   @Override
   public void onExecutionFailure(
-      final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
+      Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
@@ -83,7 +83,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
   }
 
-  Span onSdkRequest(final Span span, final SdkRequest request) {
+  Span onSdkRequest(Span span, SdkRequest request) {
     // S3
     request
         .getValueForField("Bucket", String.class)
@@ -106,14 +106,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return span;
   }
 
-  String spanName(final ExecutionAttributes attributes) {
+  String spanName(ExecutionAttributes attributes) {
     String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     return awsServiceName + "." + awsOperation;
   }
 
-  Span onAttributes(final Span span, final ExecutionAttributes attributes) {
+  Span onAttributes(Span span, ExecutionAttributes attributes) {
 
     String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
@@ -126,7 +126,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   // Not overriding the super.  Should call both with each type of response.
-  Span onSdkResponse(final Span span, final SdkResponse response) {
+  Span onSdkResponse(Span span, SdkResponse response) {
     if (response instanceof AwsResponse) {
       span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
     }

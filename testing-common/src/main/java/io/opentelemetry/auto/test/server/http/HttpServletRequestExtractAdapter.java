@@ -31,7 +31,7 @@ public class HttpServletRequestExtractAdapter implements HttpTextFormat.Getter<H
       new HttpServletRequestExtractAdapter();
 
   @Override
-  public String get(final HttpServletRequest carrier, final String key) {
+  public String get(HttpServletRequest carrier, String key) {
     return carrier.getHeader(key);
   }
 }

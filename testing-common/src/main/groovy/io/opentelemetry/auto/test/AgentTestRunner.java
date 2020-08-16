@@ -123,11 +123,11 @@ public abstract class AgentTestRunner extends AgentSpecification {
    * @return true if the test should fail because of this error.
    */
   protected boolean onInstrumentationError(
-      final String typeName,
-      final ClassLoader classLoader,
-      final JavaModule module,
-      final boolean loaded,
-      final Throwable throwable) {
+      String typeName,
+      ClassLoader classLoader,
+      JavaModule module,
+      boolean loaded,
+      Throwable throwable) {
     log.error(
         "Unexpected instrumentation error when instrumenting {} on {}",
         typeName,
@@ -141,7 +141,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
    * @param classLoader classloader class is being defined on
    * @return true if the class under load should be transformed for this test.
    */
-  protected boolean shouldTransformClass(final String className, final ClassLoader classLoader) {
+  protected boolean shouldTransformClass(String className, ClassLoader classLoader) {
     return true;
   }
 
@@ -186,15 +186,15 @@ public abstract class AgentTestRunner extends AgentSpecification {
    *
    * @param closure the groovy closure to run with retry
    */
-  public static void withRetryOnAddressAlreadyInUse(final Closure<?> closure) {
+  public static void withRetryOnAddressAlreadyInUse(Closure<?> closure) {
     withRetryOnAddressAlreadyInUse(closure, 3);
   }
 
   private static void withRetryOnAddressAlreadyInUse(
-      final Closure<?> closure, final int numRetries) {
+      Closure<?> closure, int numRetries) {
     try {
       closure.call();
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       // typically this is "java.net.BindException: Address already in use", but also can be
       // "io.netty.channel.unix.Errors$NativeIoException: bind() failed: Address already in use"
       if (numRetries == 0 || !t.getMessage().contains("Address already in use")) {
@@ -222,44 +222,42 @@ public abstract class AgentTestRunner extends AgentSpecification {
   }
 
   public static void assertTraces(
-      final int size,
+      int size,
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
-          final Closure spec) {
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
   }
 
   public static void assertTracesWithFilter(
-      final int size,
-      final Predicate<List<SpanData>> excludes,
+      int size,
+      Predicate<List<SpanData>> excludes,
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
-          final Closure spec) {
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
   public static class TestRunnerListener implements AgentBuilder.Listener {
     private static final List<AgentTestRunner> activeTests = new CopyOnWriteArrayList<>();
 
-    public void activateTest(final AgentTestRunner testRunner) {
+    public void activateTest(AgentTestRunner testRunner) {
       activeTests.add(testRunner);
     }
 
-    public void deactivateTest(final AgentTestRunner testRunner) {
+    public void deactivateTest(AgentTestRunner testRunner) {
       activeTests.remove(testRunner);
     }
 
     @Override
     public void onDiscovery(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {
+        String typeName,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded) {
       for (AgentTestRunner testRunner : activeTests) {
         if (!testRunner.shouldTransformClass(typeName, classLoader)) {
           throw new AbortTransformationException(
@@ -270,31 +268,31 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     @Override
     public void onTransformation(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded,
-        final DynamicType dynamicType) {
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded,
+        DynamicType dynamicType) {
       TRANSFORMED_CLASSES_NAMES.add(typeDescription.getActualName());
       TRANSFORMED_CLASSES_TYPES.add(typeDescription);
     }
 
     @Override
     public void onIgnored(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {}
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded) {}
 
     @Override
     public void onError(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded,
-        final Throwable throwable) {
+        String typeName,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded,
+        Throwable throwable) {
       if (!(throwable instanceof AbortTransformationException)) {
-        for (final AgentTestRunner testRunner : activeTests) {
+        for (AgentTestRunner testRunner : activeTests) {
           if (testRunner.onInstrumentationError(typeName, classLoader, module, loaded, throwable)) {
             INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
             break;
@@ -305,10 +303,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
     @Override
     public void onComplete(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {}
+        String typeName,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded) {}
 
     /** Used to signal that a transformation was intentionally aborted and is not an error. */
     public static class AbortTransformationException extends RuntimeException {
@@ -316,18 +314,18 @@ public abstract class AgentTestRunner extends AgentSpecification {
         super();
       }
 
-      public AbortTransformationException(final String message) {
+      public AbortTransformationException(String message) {
         super(message);
       }
     }
   }
 
-  protected static String getClassName(final Class clazz) {
+  protected static String getClassName(Class clazz) {
     String className = clazz.getSimpleName();
     if (className.isEmpty()) {
       className = clazz.getName();
       if (clazz.getPackage() != null) {
-        final String pkgName = clazz.getPackage().getName();
+        String pkgName = clazz.getPackage().getName();
         if (!pkgName.isEmpty()) {
           className = clazz.getName().replace(pkgName, "").substring(1);
         }

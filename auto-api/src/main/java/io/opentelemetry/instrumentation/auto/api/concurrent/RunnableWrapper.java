@@ -30,7 +30,7 @@ public final class RunnableWrapper implements Runnable {
 
   private final Runnable runnable;
 
-  public RunnableWrapper(final Runnable runnable) {
+  public RunnableWrapper(Runnable runnable) {
     this.runnable = runnable;
   }
 
@@ -39,7 +39,7 @@ public final class RunnableWrapper implements Runnable {
     runnable.run();
   }
 
-  public static Runnable wrapIfNeeded(final Runnable task) {
+  public static Runnable wrapIfNeeded(Runnable task) {
     // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
     // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
     if (task.getClass().getName().contains("/") && (!(task instanceof RunnableWrapper))) {

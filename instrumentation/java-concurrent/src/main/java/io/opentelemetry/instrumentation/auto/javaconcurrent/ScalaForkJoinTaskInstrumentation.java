@@ -93,7 +93,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
      * need to use that state.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This final ForkJoinTask thiz) {
+    public static Scope enter(@Advice.This ForkJoinTask thiz) {
       ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
       Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);
@@ -125,7 +125,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

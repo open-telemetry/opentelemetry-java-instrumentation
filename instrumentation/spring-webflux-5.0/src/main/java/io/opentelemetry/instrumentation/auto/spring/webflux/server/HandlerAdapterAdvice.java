@@ -34,8 +34,8 @@ public class HandlerAdapterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope methodEnter(
-      @Advice.Argument(0) final ServerWebExchange exchange,
-      @Advice.Argument(1) final Object handler) {
+      @Advice.Argument(0) ServerWebExchange exchange,
+      @Advice.Argument(1) Object handler) {
 
     SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
@@ -74,9 +74,9 @@ public class HandlerAdapterAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Argument(0) final ServerWebExchange exchange,
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Thrown final Throwable throwable) {
+      @Advice.Argument(0) ServerWebExchange exchange,
+      @Advice.Enter SpanWithScope spanWithScope,
+      @Advice.Thrown Throwable throwable) {
     if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }

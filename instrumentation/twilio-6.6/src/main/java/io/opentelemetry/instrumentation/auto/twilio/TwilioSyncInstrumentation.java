@@ -101,7 +101,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
+        @Advice.This Object that, @Advice.Origin("#m") String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
       // case of async operations where we want visibility into how long the task was delayed from
@@ -125,9 +125,9 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Object response) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return Object response) {
       if (spanWithScope == null) {
         return;
       }

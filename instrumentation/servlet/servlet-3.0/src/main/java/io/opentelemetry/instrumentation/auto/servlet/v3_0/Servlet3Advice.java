@@ -34,7 +34,7 @@ public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Origin final Method method,
+      @Advice.Origin Method method,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelSpan") Span span,
@@ -66,9 +66,9 @@ public class Servlet3Advice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response,
-      @Advice.Thrown final Throwable throwable,
+      @Advice.Argument(0) ServletRequest request,
+      @Advice.Argument(1) ServletResponse response,
+      @Advice.Thrown Throwable throwable,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
     if (scope == null) {
@@ -93,7 +93,7 @@ public class Servlet3Advice {
     if (request.isAsyncStarted()) {
       try {
         request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
-      } catch (final IllegalStateException e) {
+      } catch (IllegalStateException e) {
         // org.eclipse.jetty.server.Request may throw an exception here if request became
         // finished after check above. We just ignore that exception and move on.
       }

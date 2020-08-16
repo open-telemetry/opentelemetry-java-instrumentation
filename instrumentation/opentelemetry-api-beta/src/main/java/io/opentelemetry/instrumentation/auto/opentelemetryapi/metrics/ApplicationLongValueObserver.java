@@ -25,12 +25,12 @@ class ApplicationLongValueObserver implements LongValueObserver {
   private final io.opentelemetry.metrics.LongValueObserver agentLongValueObserver;
 
   public ApplicationLongValueObserver(
-      final io.opentelemetry.metrics.LongValueObserver agentLongValueObserver) {
+      io.opentelemetry.metrics.LongValueObserver agentLongValueObserver) {
     this.agentLongValueObserver = agentLongValueObserver;
   }
 
   @Override
-  public void setCallback(final Callback<LongResult> metricUpdater) {
+  public void setCallback(Callback<LongResult> metricUpdater) {
     agentLongValueObserver.setCallback(new AgentResultLongValueObserver(metricUpdater));
   }
 
@@ -40,12 +40,12 @@ class ApplicationLongValueObserver implements LongValueObserver {
 
     private final Callback<LongResult> metricUpdater;
 
-    public AgentResultLongValueObserver(final Callback<LongResult> metricUpdater) {
+    public AgentResultLongValueObserver(Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.LongValueObserver.LongResult result) {
+    public void update(io.opentelemetry.metrics.LongValueObserver.LongResult result) {
       metricUpdater.update(new ApplicationResultLongValueObserver(result));
     }
   }
@@ -56,12 +56,12 @@ class ApplicationLongValueObserver implements LongValueObserver {
         agentResultLongValueObserver;
 
     public ApplicationResultLongValueObserver(
-        final io.opentelemetry.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
+        io.opentelemetry.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
       this.agentResultLongValueObserver = agentResultLongValueObserver;
     }
 
     @Override
-    public void observe(final long value, final Labels labels) {
+    public void observe(long value, Labels labels) {
       agentResultLongValueObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
@@ -70,24 +70,24 @@ class ApplicationLongValueObserver implements LongValueObserver {
 
     private final io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder;
 
-    public Builder(final io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder) {
+    public Builder(io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongValueObserver.Builder setDescription(final String description) {
+    public LongValueObserver.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongValueObserver.Builder setUnit(final String unit) {
+    public LongValueObserver.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongValueObserver.Builder setConstantLabels(final Labels constantLabels) {
+    public LongValueObserver.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

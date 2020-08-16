@@ -95,8 +95,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
       new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
   @Override
-  public final TypePool typePool(
-      final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
+  public final TypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
     if (classLoader == null) {
       return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
     }
@@ -113,14 +112,12 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
   }
 
   private TypePool.CacheProvider createCacheProvider(
-      final int loaderHash, final WeakReference<ClassLoader> loaderRef) {
+      int loaderHash, WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
   }
 
   private TypePool createCachingTypePool(
-      final int loaderHash,
-      final WeakReference<ClassLoader> loaderRef,
-      final ClassFileLocator classFileLocator) {
+      int loaderHash, WeakReference<ClassLoader> loaderRef, ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
         createCacheProvider(loaderHash, loaderRef),
         classFileLocator,
@@ -128,7 +125,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
   }
 
   private TypePool createCachingTypePool(
-      final TypePool.CacheProvider cacheProvider, final ClassFileLocator classFileLocator) {
+      TypePool.CacheProvider cacheProvider, ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
         cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
   }
@@ -153,8 +150,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
 
     private final int hashCode;
 
-    TypeCacheKey(
-        final int loaderHash, final WeakReference<ClassLoader> loaderRef, final String className) {
+    TypeCacheKey(int loaderHash, WeakReference<ClassLoader> loaderRef, String className) {
       this.loaderHash = loaderHash;
       this.loaderRef = loaderRef;
       this.className = className;
@@ -168,7 +164,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
       if (!(obj instanceof TypeCacheKey)) {
         return false;
       }
@@ -223,16 +219,16 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     private final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache;
 
     SharedResolutionCacheAdapter(
-        final int loaderHash,
-        final WeakReference<ClassLoader> loaderRef,
-        final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
+        int loaderHash,
+        WeakReference<ClassLoader> loaderRef,
+        Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
       this.loaderHash = loaderHash;
       this.loaderRef = loaderRef;
       this.sharedResolutionCache = sharedResolutionCache;
     }
 
     @Override
-    public TypePool.Resolution find(final String className) {
+    public TypePool.Resolution find(String className) {
       TypePool.Resolution existingResolution =
           sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) {
@@ -247,7 +243,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     }
 
     @Override
-    public TypePool.Resolution register(final String className, TypePool.Resolution resolution) {
+    public TypePool.Resolution register(String className, TypePool.Resolution resolution) {
       if (OBJECT_NAME.equals(className)) {
         return resolution;
       }
@@ -268,7 +264,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     private final TypePool.Resolution delegate;
     private TypeDescription cachedResolution;
 
-    public CachingResolution(final TypePool.Resolution delegate) {
+    public CachingResolution(TypePool.Resolution delegate) {
 
       this.delegate = delegate;
     }
@@ -303,7 +299,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     private AnnotationList annotations;
     private MethodList<MethodDescription.InDefinedShape> methods;
 
-    public CachingTypeDescription(final TypeDescription delegate) {
+    public CachingTypeDescription(TypeDescription delegate) {
       this.delegate = delegate;
     }
 

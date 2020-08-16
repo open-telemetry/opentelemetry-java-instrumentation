@@ -54,7 +54,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
    */
   private final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
 
-  public AbstractExecutorInstrumentation(final String... additionalNames) {
+  public AbstractExecutorInstrumentation(String... additionalNames) {
     super(EXEC_NAME, additionalNames);
 
     if (TRACE_ALL_EXECUTORS) {
@@ -127,7 +127,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
           matcher.and(
               new ElementMatcher<TypeDescription>() {
                 @Override
-                public boolean matches(final TypeDescription target) {
+                public boolean matches(TypeDescription target) {
                   boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
 
                   // Check for possible prefixes match only if not whitelisted already

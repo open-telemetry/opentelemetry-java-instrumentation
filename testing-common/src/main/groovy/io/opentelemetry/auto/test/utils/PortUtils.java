@@ -27,28 +27,28 @@ public class PortUtils {
 
   /** Open up a random, reusable port. */
   public static int randomOpenPort() {
-    final ServerSocket socket;
+    ServerSocket socket;
     try {
       socket = new ServerSocket(0);
       socket.setReuseAddress(true);
       socket.close();
       return socket.getLocalPort();
-    } catch (final IOException ioe) {
+    } catch (IOException ioe) {
       ioe.printStackTrace();
       return -1;
     }
   }
 
-  private static boolean isPortOpen(final int port) {
-    try (final Socket socket = new Socket((String) null, port)) {
+  private static boolean isPortOpen(int port) {
+    try (Socket socket = new Socket((String) null, port)) {
       return true;
-    } catch (final IOException e) {
+    } catch (IOException e) {
       return false;
     }
   }
 
-  public static void waitForPortToOpen(final int port, final long timeout, final TimeUnit unit) {
-    final long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
+  public static void waitForPortToOpen(int port, long timeout, TimeUnit unit) {
+    long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
 
     while (System.currentTimeMillis() < waitUntil) {
       if (isPortOpen(port)) {
@@ -57,7 +57,7 @@ public class PortUtils {
 
       try {
         TimeUnit.MILLISECONDS.sleep(100);
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new RuntimeException("Interrupted while waiting for " + port + " to be opened");
       }
@@ -67,13 +67,13 @@ public class PortUtils {
   }
 
   public static void waitForPortToOpen(
-      final int port, final long timeout, final TimeUnit unit, final Process process) {
-    final long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
+      int port, long timeout, TimeUnit unit, Process process) {
+    long waitUntil = System.currentTimeMillis() + unit.toMillis(timeout);
 
     while (System.currentTimeMillis() < waitUntil) {
       try {
         Thread.sleep(100);
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         throw new RuntimeException("Interrupted while waiting for " + port + " to be opened");
       }
 
@@ -81,7 +81,7 @@ public class PortUtils {
       try {
         process.exitValue();
         throw new RuntimeException("Process died before port " + port + " was opened");
-      } catch (final IllegalThreadStateException e) {
+      } catch (IllegalThreadStateException e) {
         // process is still alive, things are good.
       }
 

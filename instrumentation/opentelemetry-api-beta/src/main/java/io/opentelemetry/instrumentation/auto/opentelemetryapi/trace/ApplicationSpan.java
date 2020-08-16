@@ -36,7 +36,7 @@ class ApplicationSpan implements Span {
 
   private final io.opentelemetry.trace.Span agentSpan;
 
-  ApplicationSpan(final io.opentelemetry.trace.Span agentSpan) {
+  ApplicationSpan(io.opentelemetry.trace.Span agentSpan) {
     this.agentSpan = agentSpan;
   }
 
@@ -45,27 +45,27 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void setAttribute(final String key, final String value) {
+  public void setAttribute(String key, String value) {
     agentSpan.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final long value) {
+  public void setAttribute(String key, long value) {
     agentSpan.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final double value) {
+  public void setAttribute(String key, double value) {
     agentSpan.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final boolean value) {
+  public void setAttribute(String key, boolean value) {
     agentSpan.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(final String key, final AttributeValue applicationValue) {
+  public void setAttribute(String key, AttributeValue applicationValue) {
     io.opentelemetry.common.AttributeValue agentValue = Bridging.toAgentOrNull(applicationValue);
     if (agentValue != null) {
       agentSpan.setAttribute(key, agentValue);
@@ -73,38 +73,38 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void addEvent(final String name) {
+  public void addEvent(String name) {
     agentSpan.addEvent(name);
   }
 
   @Override
-  public void addEvent(final String name, final long timestamp) {
+  public void addEvent(String name, long timestamp) {
     agentSpan.addEvent(name, timestamp);
   }
 
   @Override
-  public void addEvent(final String name, final Attributes applicationAttributes) {
+  public void addEvent(String name, Attributes applicationAttributes) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
   public void addEvent(
-      final String name, final Attributes applicationAttributes, final long timestamp) {
+      String name, Attributes applicationAttributes, long timestamp) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
   }
 
   @Override
-  public void addEvent(final Event applicationEvent) {
+  public void addEvent(Event applicationEvent) {
     addEvent(applicationEvent.getName(), applicationEvent.getAttributes());
   }
 
   @Override
-  public void addEvent(final Event applicationEvent, final long timestamp) {
+  public void addEvent(Event applicationEvent, long timestamp) {
     addEvent(applicationEvent.getName(), applicationEvent.getAttributes(), timestamp);
   }
 
   @Override
-  public void setStatus(final Status applicationStatus) {
+  public void setStatus(Status applicationStatus) {
     io.opentelemetry.trace.Status agentStatus = Bridging.toAgentOrNull(applicationStatus);
     if (agentStatus != null) {
       agentSpan.setStatus(agentStatus);
@@ -117,7 +117,7 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void updateName(final String name) {
+  public void updateName(String name) {
     agentSpan.updateName(name);
   }
 
@@ -127,7 +127,7 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void end(final EndSpanOptions applicationEndOptions) {
+  public void end(EndSpanOptions applicationEndOptions) {
     agentSpan.end(toAgent(applicationEndOptions));
   }
 
@@ -142,7 +142,7 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (!(other instanceof ApplicationSpan)) {
       return false;
     }
@@ -157,14 +157,14 @@ class ApplicationSpan implements Span {
     private final ContextStore<Context, io.grpc.Context> contextStore;
 
     Builder(
-        final io.opentelemetry.trace.Span.Builder agentBuilder,
+        io.opentelemetry.trace.Span.Builder agentBuilder,
         ContextStore<Context, io.grpc.Context> contextStore) {
       this.agentBuilder = agentBuilder;
       this.contextStore = contextStore;
     }
 
     @Override
-    public Span.Builder setParent(final Span applicationParent) {
+    public Span.Builder setParent(Span applicationParent) {
       if (applicationParent instanceof ApplicationSpan) {
         agentBuilder.setParent(((ApplicationSpan) applicationParent).getAgentSpan());
       } else {
@@ -174,7 +174,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setParent(final SpanContext applicationRemoteParent) {
+    public Span.Builder setParent(SpanContext applicationRemoteParent) {
       agentBuilder.setParent(Bridging.toAgent(applicationRemoteParent));
       return this;
     }
@@ -192,20 +192,20 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder addLink(final SpanContext applicationSpanContext) {
+    public Span.Builder addLink(SpanContext applicationSpanContext) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
       return this;
     }
 
     @Override
     public Span.Builder addLink(
-        final SpanContext applicationSpanContext, final Attributes applicationAttributes) {
+        SpanContext applicationSpanContext, Attributes applicationAttributes) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
       return this;
     }
 
     @Override
-    public Span.Builder addLink(final Link applicationLink) {
+    public Span.Builder addLink(Link applicationLink) {
       agentBuilder.addLink(
           Bridging.toAgent(applicationLink.getContext()),
           Bridging.toAgent(applicationLink.getAttributes()));
@@ -213,31 +213,31 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setAttribute(final String key, final String value) {
+    public Span.Builder setAttribute(String key, String value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(final String key, final long value) {
+    public Span.Builder setAttribute(String key, long value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(final String key, final double value) {
+    public Span.Builder setAttribute(String key, double value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(final String key, final boolean value) {
+    public Span.Builder setAttribute(String key, boolean value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(final String key, final AttributeValue applicationValue) {
+    public Span.Builder setAttribute(String key, AttributeValue applicationValue) {
       io.opentelemetry.common.AttributeValue agentValue = Bridging.toAgentOrNull(applicationValue);
       if (agentValue != null) {
         agentBuilder.setAttribute(key, agentValue);
@@ -246,7 +246,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setSpanKind(final Span.Kind applicationSpanKind) {
+    public Span.Builder setSpanKind(Span.Kind applicationSpanKind) {
       io.opentelemetry.trace.Span.Kind agentSpanKind = toAgentOrNull(applicationSpanKind);
       if (agentSpanKind != null) {
         agentBuilder.setSpanKind(agentSpanKind);
@@ -255,7 +255,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setStartTimestamp(final long startTimestamp) {
+    public Span.Builder setStartTimestamp(long startTimestamp) {
       agentBuilder.setStartTimestamp(startTimestamp);
       return this;
     }

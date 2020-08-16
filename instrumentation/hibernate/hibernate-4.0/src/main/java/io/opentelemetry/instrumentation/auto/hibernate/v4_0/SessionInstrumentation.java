@@ -122,8 +122,8 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This SharedSessionContract session,
+        @Advice.Thrown Throwable throwable) {
 
       ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
@@ -142,9 +142,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Origin("#m") final String name,
-        @Advice.Argument(0) final Object entity) {
+        @Advice.This SharedSessionContract session,
+        @Advice.Origin("#m") String name,
+        @Advice.Argument(0) Object entity) {
 
       boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
       ContextStore<SharedSessionContract, Span> contextStore =
@@ -155,10 +155,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
-        @Advice.Origin("#m") final String name) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
+        @Advice.Origin("#m") String name) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
     }
@@ -168,7 +168,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
-        @Advice.This final SharedSessionContract session, @Advice.Return final Query query) {
+        @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
@@ -184,8 +184,8 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Return final Transaction transaction) {
+        @Advice.This SharedSessionContract session,
+        @Advice.Return Transaction transaction) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
@@ -201,7 +201,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(
-        @Advice.This final SharedSessionContract session, @Advice.Return final Criteria criteria) {
+        @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);

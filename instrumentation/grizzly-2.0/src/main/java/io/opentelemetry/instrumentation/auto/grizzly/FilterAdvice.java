@@ -29,8 +29,8 @@ public class FilterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This final BaseFilter it,
-      @Advice.Argument(0) final FilterChainContext ctx,
+      @Advice.This BaseFilter it,
+      @Advice.Argument(0) FilterChainContext ctx,
       @Advice.Local("otelScope") Scope scope) {
     if (TRACER.getCurrentSpan().getContext().isValid()) {
       return;
@@ -44,7 +44,7 @@ public class FilterAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
-      @Advice.This final BaseFilter it, @Advice.Local("otelScope") Scope scope) {
+      @Advice.This BaseFilter it, @Advice.Local("otelScope") Scope scope) {
     if (scope != null) {
       scope.close();
     }

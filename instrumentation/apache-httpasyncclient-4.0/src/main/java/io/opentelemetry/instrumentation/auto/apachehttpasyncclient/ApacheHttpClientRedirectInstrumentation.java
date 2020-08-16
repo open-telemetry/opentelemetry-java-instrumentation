@@ -69,8 +69,8 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
   public static class ClientRedirectAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     private static void onAfterExecute(
-        @Advice.Argument(0) final HttpRequest original,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final HttpRequest redirect) {
+        @Advice.Argument(0) HttpRequest original,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) HttpRequest redirect) {
       if (redirect == null) {
         return;
       }

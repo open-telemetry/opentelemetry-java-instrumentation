@@ -81,8 +81,8 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public static class RouteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
-        @Advice.FieldValue("routeInfo") final RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") final Class clazz) {
+        @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
+        @Advice.FieldValue("clazz") Class clazz) {
 
       Span serverSpan = TRACER.getCurrentServerSpan();
       if (serverSpan != null) {
@@ -96,9 +96,9 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Some<Future<Response>> responseOption) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return Some<Future<Response>> responseOption) {
 
       if (spanWithScope == null) {
         return;
@@ -118,19 +118,19 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public static class Listener implements FutureEventListener<Response> {
     private final SpanWithScope spanWithScope;
 
-    public Listener(final SpanWithScope spanWithScope) {
+    public Listener(SpanWithScope spanWithScope) {
       this.spanWithScope = spanWithScope;
     }
 
     @Override
-    public void onSuccess(final Response response) {
+    public void onSuccess(Response response) {
       Span span = spanWithScope.getSpan();
       TRACER.end(span);
       spanWithScope.closeScope();
     }
 
     @Override
-    public void onFailure(final Throwable cause) {
+    public void onFailure(Throwable cause) {
       Span span = spanWithScope.getSpan();
       TRACER.endExceptionally(span, cause);
       spanWithScope.closeScope();

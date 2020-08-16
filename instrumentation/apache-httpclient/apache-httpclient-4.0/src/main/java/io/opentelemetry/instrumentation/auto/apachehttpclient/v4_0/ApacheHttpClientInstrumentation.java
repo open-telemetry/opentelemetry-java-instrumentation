@@ -160,7 +160,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
+    public static SpanWithScope methodEnter(@Advice.Argument(0) HttpUriRequest request) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
@@ -171,9 +171,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Return final Object result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable) {
       ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
@@ -182,7 +182,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.Argument(0) final HttpUriRequest request,
+        @Advice.Argument(0) HttpUriRequest request,
         @Advice.Argument(
                 value = 1,
                 optional = true,
@@ -207,9 +207,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Return final Object result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable) {
       ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
@@ -217,7 +217,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public static class RequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.Argument(0) final HttpHost host, @Advice.Argument(1) final HttpRequest request) {
+        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) HttpRequest request) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
@@ -233,9 +233,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Return final Object result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable) {
       ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
@@ -244,8 +244,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.Argument(0) final HttpHost host,
-        @Advice.Argument(1) final HttpRequest request,
+        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(1) HttpRequest request,
         @Advice.Argument(
                 value = 2,
                 optional = true,
@@ -277,9 +277,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Return final Object result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable) {
       ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }

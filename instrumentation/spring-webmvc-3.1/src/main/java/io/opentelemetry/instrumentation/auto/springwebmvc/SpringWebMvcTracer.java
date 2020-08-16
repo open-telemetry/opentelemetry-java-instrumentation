@@ -42,7 +42,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     return span;
   }
 
-  public void onRequest(final Span span, final HttpServletRequest request) {
+  public void onRequest(Span span, HttpServletRequest request) {
     if (request != null) {
       Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
@@ -52,7 +52,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     }
   }
 
-  private String spanNameOnHandle(final Object handler) {
+  private String spanNameOnHandle(Object handler) {
     Class<?> clazz;
     String methodName;
 
@@ -82,7 +82,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     return spanNameForMethod(clazz, methodName);
   }
 
-  private String spanNameOnRender(final ModelAndView mv) {
+  private String spanNameOnRender(ModelAndView mv) {
     String viewName = mv.getViewName();
     if (viewName != null) {
       return "Render " + viewName;
@@ -95,7 +95,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     return "Render <unknown>";
   }
 
-  private void onRender(final Span span, final ModelAndView mv) {
+  private void onRender(Span span, ModelAndView mv) {
     span.setAttribute("view.name", mv.getViewName());
     View view = mv.getView();
     if (view != null) {

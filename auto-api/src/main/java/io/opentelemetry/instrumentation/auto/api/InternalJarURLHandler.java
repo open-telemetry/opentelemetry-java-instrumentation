@@ -44,7 +44,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
   private WeakReference<Pair<String, JarEntry>> cache = NULL;
 
-  public InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
+  public InternalJarURLHandler(String internalJarFileName, URL bootstrapJarLocation) {
     name = internalJarFileName;
     notFound = new FileNotInInternalJar(internalJarFileName);
     JarFile jarFile = null;
@@ -52,7 +52,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
       if (bootstrapJarLocation != null) {
         jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
       }
-    } catch (final URISyntaxException | IOException e) {
+    } catch (URISyntaxException | IOException e) {
       log.error("Unable to read internal jar", e);
     }
 
@@ -60,7 +60,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
   }
 
   @Override
-  protected URLConnection openConnection(final URL url) throws IOException {
+  protected URLConnection openConnection(URL url) throws IOException {
     String filename = url.getFile();
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
@@ -108,7 +108,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
   private static class InternalJarURLConnection extends URLConnection {
     private final InputStream inputStream;
 
-    private InternalJarURLConnection(final URL url, final InputStream inputStream) {
+    private InternalJarURLConnection(URL url, InputStream inputStream) {
       super(url);
       this.inputStream = inputStream;
     }

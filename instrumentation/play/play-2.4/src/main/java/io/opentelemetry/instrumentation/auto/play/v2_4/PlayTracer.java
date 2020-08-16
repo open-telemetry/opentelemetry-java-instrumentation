@@ -26,7 +26,7 @@ import scala.Option;
 public class PlayTracer extends BaseTracer {
   public static final PlayTracer TRACER = new PlayTracer();
 
-  public void updateSpanName(final Span span, final Request<?> request) {
+  public void updateSpanName(Span span, Request<?> request) {
     if (request != null) {
       Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {

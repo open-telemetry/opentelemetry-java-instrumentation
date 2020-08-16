@@ -82,10 +82,10 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   public static class CouchbaseNetworkAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addNetworkTagsToSpan(
-        @Advice.FieldValue("remoteHostname") final String remoteHostname,
-        @Advice.FieldValue("remoteSocket") final String remoteSocket,
-        @Advice.FieldValue("localSocket") final String localSocket,
-        @Advice.Argument(1) final CouchbaseRequest request) {
+        @Advice.FieldValue("remoteHostname") String remoteHostname,
+        @Advice.FieldValue("remoteSocket") String remoteSocket,
+        @Advice.FieldValue("localSocket") String localSocket,
+        @Advice.Argument(1) CouchbaseRequest request) {
       ContextStore<CouchbaseRequest, Span> contextStore =
           InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
@@ -107,7 +107,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
     }
 
     // 2.6.0 and above
-    public static void muzzleCheck(final JsonCryptoTranscoder transcoder) {
+    public static void muzzleCheck(JsonCryptoTranscoder transcoder) {
       transcoder.documentType();
     }
   }

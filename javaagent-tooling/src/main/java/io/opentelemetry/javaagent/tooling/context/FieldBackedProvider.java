@@ -110,7 +110,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       GET_CONTEXT_STORE_METHOD =
           ContextStoreImplementationTemplate.class.getMethod(
               "getContextStore", Class.class, Class.class);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new IllegalStateException(e);
     }
   }
@@ -131,8 +131,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final boolean fieldInjectionEnabled;
 
-  public FieldBackedProvider(
-      final Instrumenter.Default instrumenter, Map<String, String> contextStore) {
+  public FieldBackedProvider(Instrumenter.Default instrumenter, Map<String, String> contextStore) {
     this.instrumenter = instrumenter;
     this.contextStore = contextStore;
     byteBuddy = new ByteBuddy();
@@ -162,44 +161,40 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private AsmVisitorWrapper getContextStoreReadsRewritingVisitor() {
     return new AsmVisitorWrapper() {
       @Override
-      public int mergeWriter(final int flags) {
+      public int mergeWriter(int flags) {
         return flags | ClassWriter.COMPUTE_MAXS;
       }
 
       @Override
-      public int mergeReader(final int flags) {
+      public int mergeReader(int flags) {
         return flags;
       }
 
       @Override
       public ClassVisitor wrap(
-          final TypeDescription instrumentedType,
-          final ClassVisitor classVisitor,
-          final Implementation.Context implementationContext,
-          final TypePool typePool,
-          final FieldList<FieldDescription.InDefinedShape> fields,
-          final MethodList<?> methods,
-          final int writerFlags,
-          final int readerFlags) {
+          TypeDescription instrumentedType,
+          ClassVisitor classVisitor,
+          Implementation.Context implementationContext,
+          TypePool typePool,
+          FieldList<FieldDescription.InDefinedShape> fields,
+          MethodList<?> methods,
+          int writerFlags,
+          int readerFlags) {
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
           @Override
           public void visit(
-              final int version,
-              final int access,
-              final String name,
-              final String signature,
-              final String superName,
-              final String[] interfaces) {
+              int version,
+              int access,
+              String name,
+              String signature,
+              String superName,
+              String[] interfaces) {
             super.visit(version, access, name, signature, superName, interfaces);
           }
 
           @Override
           public MethodVisitor visitMethod(
-              final int access,
-              final String name,
-              final String descriptor,
-              final String signature,
-              final String[] exceptions) {
+              int access, String name, String descriptor, String signature, String[] exceptions) {
             MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
             return new MethodVisitor(Opcodes.ASM7, mv) {
               /** The most recent objects pushed to the stack. */
@@ -209,11 +204,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
               @Override
               public void visitMethodInsn(
-                  final int opcode,
-                  final String owner,
-                  final String name,
-                  final String descriptor,
-                  final boolean isInterface) {
+                  int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 pushOpcode(opcode);
                 if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass().getName())
                         .equals(owner)
@@ -272,7 +263,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               }
 
               /** Tracking the most recently used opcodes to assert proper api usage. */
-              private void pushOpcode(final int opcode) {
+              private void pushOpcode(int opcode) {
                 System.arraycopy(insnStack, 0, insnStack, 1, insnStack.length - 1);
                 insnStack[0] = opcode;
               }
@@ -280,38 +271,38 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               /**
                * Tracking the most recently pushed objects on the stack to assert proper api usage.
                */
-              private void pushStack(final Object o) {
+              private void pushStack(Object o) {
                 System.arraycopy(stack, 0, stack, 1, stack.length - 1);
                 stack[0] = o;
               }
 
               @Override
-              public void visitInsn(final int opcode) {
+              public void visitInsn(int opcode) {
                 pushOpcode(opcode);
                 super.visitInsn(opcode);
               }
 
               @Override
-              public void visitJumpInsn(final int opcode, final Label label) {
+              public void visitJumpInsn(int opcode, Label label) {
                 pushOpcode(opcode);
                 super.visitJumpInsn(opcode, label);
               }
 
               @Override
-              public void visitIntInsn(final int opcode, final int operand) {
+              public void visitIntInsn(int opcode, int operand) {
                 pushOpcode(opcode);
                 super.visitIntInsn(opcode, operand);
               }
 
               @Override
-              public void visitVarInsn(final int opcode, final int var) {
+              public void visitVarInsn(int opcode, int var) {
                 pushOpcode(opcode);
                 pushStack(var);
                 super.visitVarInsn(opcode, var);
               }
 
               @Override
-              public void visitLdcInsn(final Object value) {
+              public void visitLdcInsn(Object value) {
                 pushOpcode(Opcodes.LDC);
                 pushStack(value);
                 super.visitLdcInsn(value);
@@ -351,10 +342,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
       @Override
       public DynamicType.Builder<?> transform(
-          final DynamicType.Builder<?> builder,
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module) {
+          DynamicType.Builder<?> builder,
+          TypeDescription typeDescription,
+          ClassLoader classLoader,
+          JavaModule module) {
         return injector.transform(
             builder,
             typeDescription,
@@ -384,7 +375,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       AgentBuilder.Identified.Extendable builder) {
 
     if (fieldInjectionEnabled) {
-      for (final Map.Entry<String, String> entry : contextStore.entrySet()) {
+      for (Map.Entry<String, String> entry : contextStore.entrySet()) {
         /*
          * For each context store defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
@@ -433,11 +424,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return new AgentBuilder.RawMatcher() {
       @Override
       public boolean matches(
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module,
-          final Class<?> classBeingRedefined,
-          final ProtectionDomain protectionDomain) {
+          TypeDescription typeDescription,
+          ClassLoader classLoader,
+          JavaModule module,
+          Class<?> classBeingRedefined,
+          ProtectionDomain protectionDomain) {
         /*
          * The idea here is that we can add fields if class is just being loaded
          * (classBeingRedefined == null) and we have to add same fields again if class we added
@@ -458,25 +449,25 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return new AsmVisitorWrapper() {
 
       @Override
-      public int mergeWriter(final int flags) {
+      public int mergeWriter(int flags) {
         return flags | ClassWriter.COMPUTE_MAXS;
       }
 
       @Override
-      public int mergeReader(final int flags) {
+      public int mergeReader(int flags) {
         return flags;
       }
 
       @Override
       public ClassVisitor wrap(
           final TypeDescription instrumentedType,
-          final ClassVisitor classVisitor,
-          final Implementation.Context implementationContext,
-          final TypePool typePool,
-          final FieldList<FieldDescription.InDefinedShape> fields,
-          final MethodList<?> methods,
-          final int writerFlags,
-          final int readerFlags) {
+          ClassVisitor classVisitor,
+          Implementation.Context implementationContext,
+          TypePool typePool,
+          FieldList<FieldDescription.InDefinedShape> fields,
+          MethodList<?> methods,
+          int writerFlags,
+          int readerFlags) {
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
           // We are using Object class name instead of contextClassName here because this gets
           // injected onto Bootstrap classloader where context class may be unavailable
@@ -493,11 +484,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           @Override
           public void visit(
-              final int version,
-              final int access,
-              final String name,
-              final String signature,
-              final String superName,
+              int version,
+              int access,
+              String name,
+              String signature,
+              String superName,
               String[] interfaces) {
             if (interfaces == null) {
               interfaces = new String[] {};
@@ -510,11 +501,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           @Override
           public FieldVisitor visitField(
-              final int access,
-              final String name,
-              final String descriptor,
-              final String signature,
-              final Object value) {
+              int access, String name, String descriptor, String signature, Object value) {
             if (name.equals(fieldName)) {
               foundField = true;
             }
@@ -523,11 +510,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           @Override
           public MethodVisitor visitMethod(
-              final int access,
-              final String name,
-              final String descriptor,
-              final String signature,
-              final String[] exceptions) {
+              int access, String name, String descriptor, String signature, String[] exceptions) {
             if (name.equals(getterMethodName)) {
               foundGetter = true;
             }
@@ -592,7 +575,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             mv.visitEnd();
           }
 
-          private MethodVisitor getAccessorMethodVisitor(final String methodName) {
+          private MethodVisitor getAccessorMethodVisitor(String methodName) {
             return cv.visitMethod(
                 Opcodes.ACC_PUBLIC,
                 methodName,
@@ -606,7 +589,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private TypeDescription getContextStoreImplementation(
-      final String keyClassName, final String contextClassName) {
+      String keyClassName, String contextClassName) {
     DynamicType.Unloaded<?> type =
         contextStoreImplementations.get(
             getContextStoreImplementationClassName(keyClassName, contextClassName));
@@ -637,7 +620,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * @return unloaded dynamic type containing generated class
    */
   private DynamicType.Unloaded<?> makeContextStoreImplementationClass(
-      final String keyClassName, final String contextClassName) {
+      String keyClassName, String contextClassName) {
     return byteBuddy
         .rebase(ContextStoreImplementationTemplate.class)
         .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL)
@@ -659,25 +642,25 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return new AsmVisitorWrapper() {
 
       @Override
-      public int mergeWriter(final int flags) {
+      public int mergeWriter(int flags) {
         return flags | ClassWriter.COMPUTE_MAXS;
       }
 
       @Override
-      public int mergeReader(final int flags) {
+      public int mergeReader(int flags) {
         return flags;
       }
 
       @Override
       public ClassVisitor wrap(
           final TypeDescription instrumentedType,
-          final ClassVisitor classVisitor,
+          ClassVisitor classVisitor,
           final Implementation.Context implementationContext,
-          final TypePool typePool,
-          final FieldList<FieldDescription.InDefinedShape> fields,
-          final MethodList<?> methods,
-          final int writerFlags,
-          final int readerFlags) {
+          TypePool typePool,
+          FieldList<FieldDescription.InDefinedShape> fields,
+          MethodList<?> methods,
+          int writerFlags,
+          int readerFlags) {
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
 
           private final TypeDescription accessorInterface =
@@ -689,11 +672,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           @Override
           public MethodVisitor visitMethod(
-              final int access,
-              final String name,
-              final String descriptor,
-              final String signature,
-              final String[] exceptions) {
+              int access, String name, String descriptor, String signature, String[] exceptions) {
             if ("realGet".equals(name)) {
               generateRealGetMethod(name);
               return null;
@@ -727,7 +706,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            *
            * @param name name of the method being visited
            */
-          private void generateRealGetMethod(final String name) {
+          private void generateRealGetMethod(String name) {
             String getterName = getContextGetterName(keyClassName);
             Label elseLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);
@@ -780,7 +759,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            *
            * @param name name of the method being visited
            */
-          private void generateRealPutMethod(final String name) {
+          private void generateRealPutMethod(String name) {
             String setterName = getContextSetterName(keyClassName);
             Label elseLabel = new Label();
             Label endLabel = new Label();
@@ -840,7 +819,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            *
            * @param name name of the method being visited
            */
-          private void generateRealSynchronizeInstanceMethod(final String name) {
+          private void generateRealSynchronizeInstanceMethod(String name) {
             MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 1);
@@ -867,7 +846,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             mv.visitEnd();
           }
 
-          private MethodVisitor getMethodVisitor(final String methodName) {
+          private MethodVisitor getMethodVisitor(String methodName) {
             return cv.visitMethod(
                 Opcodes.ACC_PRIVATE,
                 methodName,
@@ -891,17 +870,17 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
     private final WeakMap map;
 
-    private ContextStoreImplementationTemplate(final WeakMap map) {
+    private ContextStoreImplementationTemplate(WeakMap map) {
       this.map = map;
     }
 
     @Override
-    public Object get(final Object key) {
+    public Object get(Object key) {
       return realGet(key);
     }
 
     @Override
-    public Object putIfAbsent(final Object key, final Object context) {
+    public Object putIfAbsent(Object key, Object context) {
       Object existingContext = realGet(key);
       if (null != existingContext) {
         return existingContext;
@@ -917,7 +896,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public Object putIfAbsent(final Object key, final Factory<Object> contextFactory) {
+    public Object putIfAbsent(Object key, Factory<Object> contextFactory) {
       Object existingContext = realGet(key);
       if (null != existingContext) {
         return existingContext;
@@ -934,45 +913,44 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     @Override
-    public void put(final Object key, final Object context) {
+    public void put(Object key, Object context) {
       realPut(key, context);
     }
 
-    private Object realGet(final Object key) {
+    private Object realGet(Object key) {
       // to be generated
       return null;
     }
 
-    private void realPut(final Object key, final Object value) {
+    private void realPut(Object key, Object value) {
       // to be generated
     }
 
-    private Object realSynchronizeInstance(final Object key) {
+    private Object realSynchronizeInstance(Object key) {
       // to be generated
       return null;
     }
 
-    private Object mapGet(final Object key) {
+    private Object mapGet(Object key) {
       return map.get(key);
     }
 
-    private void mapPut(final Object key, final Object value) {
+    private void mapPut(Object key, Object value) {
       map.put(key, value);
     }
 
-    private Object mapSynchronizeInstance(final Object key) {
+    private Object mapSynchronizeInstance(Object key) {
       return map;
     }
 
-    public static ContextStore getContextStore(final Class keyClass, final Class contextClass) {
+    public static ContextStore getContextStore(Class keyClass, Class contextClass) {
       // We do not actually check the keyClass here - but that should be fine since compiler would
       // check things for us.
       return INSTANCE;
     }
   }
 
-  private TypeDescription getFieldAccessorInterface(
-      final String keyClassName, final String contextClassName) {
+  private TypeDescription getFieldAccessorInterface(String keyClassName, String contextClassName) {
     DynamicType.Unloaded<?> type =
         fieldAccessorInterfaces.get(
             getContextAccessorInterfaceName(keyClassName, contextClassName));
@@ -1002,7 +980,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * @return unloaded dynamic type containing generated interface
    */
   private DynamicType.Unloaded<?> makeFieldAccessorInterface(
-      String keyClassName, final String contextClassName) {
+      String keyClassName, String contextClassName) {
     // We are using Object class name instead of contextClassName here because this gets injected
     // onto Bootstrap classloader where context class may be unavailable
     TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
@@ -1021,17 +999,17 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return new AgentBuilder.Transformer() {
       @Override
       public DynamicType.Builder<?> transform(
-          final DynamicType.Builder<?> builder,
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module) {
+          DynamicType.Builder<?> builder,
+          TypeDescription typeDescription,
+          ClassLoader classLoader,
+          JavaModule module) {
         return builder.visit(visitor);
       }
     };
   }
 
   private String getContextStoreImplementationClassName(
-      final String keyClassName, final String contextClassName) {
+      String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
         + getClass().getSimpleName()
         + "$ContextStore$"
@@ -1040,8 +1018,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         + Utils.converToInnerClassName(contextClassName);
   }
 
-  private String getContextAccessorInterfaceName(
-      final String keyClassName, final String contextClassName) {
+  private String getContextAccessorInterfaceName(String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
         + getClass().getSimpleName()
         + "$ContextAccessor$"
@@ -1050,15 +1027,15 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         + Utils.converToInnerClassName(contextClassName);
   }
 
-  private static String getContextFieldName(final String keyClassName) {
+  private static String getContextFieldName(String keyClassName) {
     return "__opentelemetryContext$" + Utils.converToInnerClassName(keyClassName);
   }
 
-  private static String getContextGetterName(final String keyClassName) {
+  private static String getContextGetterName(String keyClassName) {
     return "get" + getContextFieldName(keyClassName);
   }
 
-  private static String getContextSetterName(final String key) {
+  private static String getContextSetterName(String key) {
     return "set" + getContextFieldName(key);
   }
 
@@ -1068,10 +1045,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
     @Override
     public DynamicType.Builder<?> transform(
-        final DynamicType.Builder<?> builder,
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule module) {
+        DynamicType.Builder<?> builder,
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule module) {
       return builder;
     }
   }

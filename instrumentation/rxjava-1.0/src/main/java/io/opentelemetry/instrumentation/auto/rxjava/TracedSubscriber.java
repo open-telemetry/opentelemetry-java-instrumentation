@@ -31,7 +31,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   private final BaseDecorator decorator;
 
   public TracedSubscriber(
-      final Span span, final Subscriber<T> delegate, final BaseDecorator decorator) {
+      Span span, Subscriber<T> delegate, BaseDecorator decorator) {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
     this.decorator = decorator;
@@ -52,12 +52,12 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   }
 
   @Override
-  public void onNext(final T value) {
+  public void onNext(T value) {
     Span span = spanRef.get();
     if (span != null) {
       try (Scope scope = currentContextWith(span)) {
         delegate.onNext(value);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         onError(e);
       }
     } else {
@@ -72,7 +72,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
       boolean errored = false;
       try (Scope scope = currentContextWith(span)) {
         delegate.onCompleted();
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         // Repopulate the spanRef for onError
         spanRef.compareAndSet(null, span);
         onError(e);
@@ -90,13 +90,13 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   }
 
   @Override
-  public void onError(final Throwable e) {
+  public void onError(Throwable e) {
     Span span = spanRef.getAndSet(null);
     if (span != null) {
       try (Scope scope = currentContextWith(span)) {
         decorator.onError(span, e);
         delegate.onError(e);
-      } catch (final Throwable e2) {
+      } catch (Throwable e2) {
         decorator.onError(span, e2);
         throw e2;
       } finally {

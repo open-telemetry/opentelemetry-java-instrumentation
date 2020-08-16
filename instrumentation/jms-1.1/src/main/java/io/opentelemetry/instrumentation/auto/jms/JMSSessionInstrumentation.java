@@ -75,8 +75,8 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Argument(0) final Destination destination,
-        @Advice.Return final MessageConsumer consumer) {
+        @Advice.Argument(0) Destination destination,
+        @Advice.Return MessageConsumer consumer) {
       String spanName = JMSDecorator.toSpanName(destination);
       InstrumentationContext.get(MessageConsumer.class, String.class).put(consumer, spanName);
     }

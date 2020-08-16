@@ -27,7 +27,7 @@ public class LettuceMonoCreationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static RedisCommand extractCommandName(
-      @Advice.Argument(0) final Supplier<RedisCommand> supplier) {
+      @Advice.Argument(0) Supplier<RedisCommand> supplier) {
     return supplier.get();
   }
 
@@ -35,7 +35,7 @@ public class LettuceMonoCreationAdvice {
   // being run until the user subscribes to the Mono publisher
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void monitorSpan(
-      @Advice.Enter final RedisCommand command,
+      @Advice.Enter RedisCommand command,
       @Advice.Return(readOnly = false) Mono<?> publisher) {
     boolean finishSpanOnClose = !expectsResponse(command);
     LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);

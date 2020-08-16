@@ -80,7 +80,7 @@ public class WebApplicationContextInstrumentation extends Instrumenter.Default {
   public static class FilterInjectingAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) final ConfigurableListableBeanFactory beanFactory) {
+        @Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {
 

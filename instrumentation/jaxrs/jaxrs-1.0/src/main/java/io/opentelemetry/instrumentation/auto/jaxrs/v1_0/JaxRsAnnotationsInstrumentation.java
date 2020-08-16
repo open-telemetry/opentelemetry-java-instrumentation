@@ -95,7 +95,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
-        @Advice.This final Object target, @Advice.Origin final Method method) {
+        @Advice.This Object target, @Advice.Origin Method method) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
         return null;
       }
@@ -107,7 +107,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

@@ -44,7 +44,7 @@ public class ExecutorInstrumentationUtils {
    * @param executor executor this task was scheduled on
    * @return true iff given task object should be wrapped
    */
-  public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
+  public static boolean shouldAttachStateToTask(Object task, Executor executor) {
     if (task == null) {
       return false;
     }
@@ -77,7 +77,7 @@ public class ExecutorInstrumentationUtils {
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, Context context) {
+      ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (Config.THREAD_PROPAGATION_DEBUGGER) {
       List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(context);
@@ -97,7 +97,7 @@ public class ExecutorInstrumentationUtils {
    * @param state task instrumentation state
    * @param throwable throwable that may have been thrown
    */
-  public static void cleanUpOnMethodExit(final State state, final Throwable throwable) {
+  public static void cleanUpOnMethodExit(State state, Throwable throwable) {
     if (null != state && null != throwable) {
       /*
       Note: this may potentially clear somebody else's parent span if we didn't set it
@@ -111,7 +111,7 @@ public class ExecutorInstrumentationUtils {
     }
   }
 
-  public static void disableExecutorForWrappedTasks(final Executor executor) {
+  public static void disableExecutorForWrappedTasks(Executor executor) {
     log.debug("Disabling Executor tracing for wrapped tasks for instance {}", executor);
     EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.put(executor, true);
   }
@@ -122,7 +122,7 @@ public class ExecutorInstrumentationUtils {
    * <p>Disabled executors cannot accept wrapped tasks, non wrapped tasks (i.e. tasks with injected
    * fields) should still work fine.
    */
-  public static boolean isExecutorDisabledForThisTask(final Executor executor, final Object task) {
+  public static boolean isExecutorDisabledForThisTask(Executor executor, Object task) {
     return (task instanceof RunnableWrapper || task instanceof CallableWrapper)
         && EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.containsKey(executor);
   }

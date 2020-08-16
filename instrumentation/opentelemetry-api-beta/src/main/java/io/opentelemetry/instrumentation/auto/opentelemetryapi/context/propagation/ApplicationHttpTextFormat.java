@@ -31,8 +31,8 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
   private final ContextStore<Context, io.grpc.Context> contextStore;
 
   ApplicationHttpTextFormat(
-      final io.opentelemetry.context.propagation.HttpTextFormat agentHttpTextFormat,
-      final ContextStore<Context, io.grpc.Context> contextStore) {
+      io.opentelemetry.context.propagation.HttpTextFormat agentHttpTextFormat,
+      ContextStore<Context, io.grpc.Context> contextStore) {
     this.agentHttpTextFormat = agentHttpTextFormat;
     this.contextStore = contextStore;
   }
@@ -44,9 +44,9 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
   @Override
   public <C> Context extract(
-      final Context applicationContext,
-      final C carrier,
-      final HttpTextFormat.Getter<C> applicationGetter) {
+      Context applicationContext,
+      C carrier,
+      HttpTextFormat.Getter<C> applicationGetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -66,9 +66,9 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
   @Override
   public <C> void inject(
-      final Context applicationContext,
-      final C carrier,
-      final HttpTextFormat.Setter<C> applicationSetter) {
+      Context applicationContext,
+      C carrier,
+      HttpTextFormat.Setter<C> applicationSetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -85,12 +85,12 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
     private final HttpTextFormat.Getter<C> applicationGetter;
 
-    AgentGetter(final HttpTextFormat.Getter<C> applicationGetter) {
+    AgentGetter(HttpTextFormat.Getter<C> applicationGetter) {
       this.applicationGetter = applicationGetter;
     }
 
     @Override
-    public String get(final C carrier, final String key) {
+    public String get(C carrier, String key) {
       return applicationGetter.get(carrier, key);
     }
   }
@@ -100,12 +100,12 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
     private final HttpTextFormat.Setter<C> applicationSetter;
 
-    AgentSetter(final Setter<C> applicationSetter) {
+    AgentSetter(Setter<C> applicationSetter) {
       this.applicationSetter = applicationSetter;
     }
 
     @Override
-    public void set(final C carrier, final String key, final String value) {
+    public void set(C carrier, String key, String value) {
       applicationSetter.set(carrier, key, value);
     }
   }

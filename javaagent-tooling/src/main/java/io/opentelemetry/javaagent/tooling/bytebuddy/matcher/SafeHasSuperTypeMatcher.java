@@ -61,13 +61,13 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
    * @param matcher The matcher to apply to any super type of the matched type.
    */
   public SafeHasSuperTypeMatcher(
-      final ElementMatcher<? super TypeDescription.Generic> matcher, final boolean interfacesOnly) {
+      ElementMatcher<? super TypeDescription.Generic> matcher, boolean interfacesOnly) {
     this.matcher = matcher;
     this.interfacesOnly = interfacesOnly;
   }
 
   @Override
-  public boolean matches(final T target) {
+  public boolean matches(T target) {
     Set<TypeDescription> checkedInterfaces = new HashSet<>(8);
     // We do not use foreach loop and iterator interface here because we need to catch exceptions
     // in {@code getSuperClass} calls
@@ -91,7 +91,7 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
    * @return {@code true} if any interface matches the supplied matcher.
    */
   private boolean hasInterface(
-      final TypeDefinition typeDefinition, final Set<TypeDescription> checkedInterfaces) {
+      TypeDefinition typeDefinition, Set<TypeDescription> checkedInterfaces) {
     for (TypeDefinition interfaceType : safeGetInterfaces(typeDefinition)) {
       TypeDescription erasure = safeAsErasure(interfaceType);
       if (erasure != null) {
@@ -105,14 +105,14 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
     return false;
   }
 
-  private Iterable<TypeDefinition> safeGetInterfaces(final TypeDefinition typeDefinition) {
+  private Iterable<TypeDefinition> safeGetInterfaces(TypeDefinition typeDefinition) {
     return new SafeInterfaceIterator(typeDefinition);
   }
 
-  static TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
+  static TypeDefinition safeGetSuperClass(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.getSuperClass();
-    } catch (final Exception e) {
+    } catch (Exception e) {
       if (log.isDebugEnabled()) {
         log.debug(
             "{} trying to get super class for target {}: {}",
@@ -130,7 +130,7 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

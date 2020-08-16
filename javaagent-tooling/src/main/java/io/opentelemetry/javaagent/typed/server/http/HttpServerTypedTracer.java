@@ -27,7 +27,7 @@ public abstract class HttpServerTypedTracer<
     extends ServerTypedTracer<T, REQUEST, RESPONSE> {
 
   @Override
-  protected Span.Builder buildSpan(final REQUEST request, final Span.Builder spanBuilder) {
+  protected Span.Builder buildSpan(REQUEST request, Span.Builder spanBuilder) {
     spanBuilder.setParent(extract(request, getGetter()));
     return super.buildSpan(request, spanBuilder);
   }

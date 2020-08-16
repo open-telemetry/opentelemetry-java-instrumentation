@@ -42,7 +42,7 @@ import java.util.concurrent.CompletionStage;
 public class TracingCqlSession implements CqlSession {
   private final CqlSession session;
 
-  public TracingCqlSession(final CqlSession session) {
+  public TracingCqlSession(CqlSession session) {
     this.session = session;
   }
 
@@ -192,7 +192,7 @@ public class TracingCqlSession implements CqlSession {
         ResultSet resultSet = session.execute(statement);
         TRACER.onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
-      } catch (final RuntimeException e) {
+      } catch (RuntimeException e) {
         TRACER.endExceptionally(span, e);
         throw e;
       } finally {
@@ -211,7 +211,7 @@ public class TracingCqlSession implements CqlSession {
         ResultSet resultSet = session.execute(query);
         TRACER.onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
-      } catch (final RuntimeException e) {
+      } catch (RuntimeException e) {
         TRACER.endExceptionally(span, e);
         throw e;
       } finally {
@@ -258,7 +258,7 @@ public class TracingCqlSession implements CqlSession {
     }
   }
 
-  private static String getQuery(final Statement<?> statement) {
+  private static String getQuery(Statement<?> statement) {
     String query = null;
     if (statement instanceof SimpleStatement) {
       query = ((SimpleStatement) statement).getQuery();

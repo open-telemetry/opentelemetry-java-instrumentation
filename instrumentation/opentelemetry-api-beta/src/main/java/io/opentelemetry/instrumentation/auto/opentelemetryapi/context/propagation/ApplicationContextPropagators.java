@@ -26,7 +26,7 @@ public class ApplicationContextPropagators implements ContextPropagators {
 
   private final ApplicationHttpTextFormat applicationHttpTextFormat;
 
-  public ApplicationContextPropagators(final ContextStore<Context, io.grpc.Context> contextStore) {
+  public ApplicationContextPropagators(ContextStore<Context, io.grpc.Context> contextStore) {
     applicationHttpTextFormat =
         new ApplicationHttpTextFormat(
             OpenTelemetry.getPropagators().getHttpTextFormat(), contextStore);

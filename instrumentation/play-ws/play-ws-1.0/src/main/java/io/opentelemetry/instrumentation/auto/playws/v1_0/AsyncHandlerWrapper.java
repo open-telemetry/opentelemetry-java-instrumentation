@@ -36,27 +36,27 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
   public AsyncHandlerWrapper(
-      final AsyncHandler delegate, final Span span, Context invocationContext) {
+      AsyncHandler delegate, Span span, Context invocationContext) {
     this.delegate = delegate;
     this.span = span;
     this.invocationContext = invocationContext;
   }
 
   @Override
-  public State onBodyPartReceived(final HttpResponseBodyPart content) throws Exception {
+  public State onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
     builder.accumulate(content);
     return delegate.onBodyPartReceived(content);
   }
 
   @Override
-  public State onStatusReceived(final HttpResponseStatus status) throws Exception {
+  public State onStatusReceived(HttpResponseStatus status) throws Exception {
     builder.reset();
     builder.accumulate(status);
     return delegate.onStatusReceived(status);
   }
 
   @Override
-  public State onHeadersReceived(final HttpResponseHeaders httpHeaders) throws Exception {
+  public State onHeadersReceived(HttpResponseHeaders httpHeaders) throws Exception {
     builder.accumulate(httpHeaders);
     return delegate.onHeadersReceived(httpHeaders);
   }
@@ -72,7 +72,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onThrowable(final Throwable throwable) {
+  public void onThrowable(Throwable throwable) {
     TRACER.endExceptionally(span, throwable);
     span.end();
 

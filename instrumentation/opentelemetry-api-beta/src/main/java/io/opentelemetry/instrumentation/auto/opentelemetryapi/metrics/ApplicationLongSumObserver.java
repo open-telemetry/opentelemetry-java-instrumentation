@@ -26,12 +26,12 @@ class ApplicationLongSumObserver implements LongSumObserver {
   private final io.opentelemetry.metrics.LongSumObserver agentLongSumObserver;
 
   protected ApplicationLongSumObserver(
-      final io.opentelemetry.metrics.LongSumObserver agentLongSumObserver) {
+      io.opentelemetry.metrics.LongSumObserver agentLongSumObserver) {
     this.agentLongSumObserver = agentLongSumObserver;
   }
 
   @Override
-  public void setCallback(final Callback<LongResult> metricUpdater) {
+  public void setCallback(Callback<LongResult> metricUpdater) {
     agentLongSumObserver.setCallback(new AgentResultLongSumObserver(metricUpdater));
   }
 
@@ -41,12 +41,12 @@ class ApplicationLongSumObserver implements LongSumObserver {
 
     private final Callback<LongResult> metricUpdater;
 
-    protected AgentResultLongSumObserver(final Callback<LongResult> metricUpdater) {
+    protected AgentResultLongSumObserver(Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.LongSumObserver.LongResult result) {
+    public void update(io.opentelemetry.metrics.LongSumObserver.LongResult result) {
       metricUpdater.update(new ApplicationResultLongSumObserver(result));
     }
   }
@@ -56,12 +56,12 @@ class ApplicationLongSumObserver implements LongSumObserver {
     private final io.opentelemetry.metrics.LongSumObserver.LongResult agentResultLongSumObserver;
 
     public ApplicationResultLongSumObserver(
-        final io.opentelemetry.metrics.LongSumObserver.LongResult agentResultLongSumObserver) {
+        io.opentelemetry.metrics.LongSumObserver.LongResult agentResultLongSumObserver) {
       this.agentResultLongSumObserver = agentResultLongSumObserver;
     }
 
     @Override
-    public void observe(final long value, final Labels labels) {
+    public void observe(long value, Labels labels) {
       agentResultLongSumObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
@@ -70,24 +70,24 @@ class ApplicationLongSumObserver implements LongSumObserver {
 
     private final io.opentelemetry.metrics.LongSumObserver.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.LongSumObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.metrics.LongSumObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongSumObserver.Builder setDescription(final String description) {
+    public LongSumObserver.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongSumObserver.Builder setUnit(final String unit) {
+    public LongSumObserver.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongSumObserver.Builder setConstantLabels(final Labels constantLabels) {
+    public LongSumObserver.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

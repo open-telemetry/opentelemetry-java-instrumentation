@@ -22,7 +22,7 @@ import io.opentelemetry.trace.Span;
 public abstract class ServerDecorator extends BaseDecorator {
 
   @Override
-  public Span afterStart(final Span span) {
+  public Span afterStart(Span span) {
     assert span != null;
     return super.afterStart(span);
   }

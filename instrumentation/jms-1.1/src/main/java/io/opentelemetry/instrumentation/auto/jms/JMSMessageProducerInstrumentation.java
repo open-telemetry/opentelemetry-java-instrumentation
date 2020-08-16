@@ -92,7 +92,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) final Message message, @Advice.This final MessageProducer producer) {
+        @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
         return null;
@@ -101,11 +101,11 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       Destination defaultDestination;
       try {
         defaultDestination = producer.getDestination();
-      } catch (final JMSException e) {
+      } catch (JMSException e) {
         defaultDestination = null;
       }
 
-      final String spanName = DECORATE.spanNameForProducer(message, defaultDestination);
+      String spanName = DECORATE.spanNameForProducer(message, defaultDestination);
       Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span, spanName, message);
 
@@ -117,7 +117,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
@@ -136,14 +136,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) final Destination destination,
-        @Advice.Argument(1) final Message message) {
+        @Advice.Argument(0) Destination destination,
+        @Advice.Argument(1) Message message) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final String spanName = DECORATE.spanNameForProducer(message, destination);
+      String spanName = DECORATE.spanNameForProducer(message, destination);
 
       Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span, spanName, message);
@@ -156,7 +156,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

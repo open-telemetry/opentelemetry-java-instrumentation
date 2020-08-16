@@ -98,7 +98,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
   public static class StreamRemoteCallConstructorAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) final Connection c, @Advice.Argument(1) final ObjID id) {
+        @Advice.Argument(0) Connection c, @Advice.Argument(1) ObjID id) {
       if (!c.isReusable()) {
         return;
       }

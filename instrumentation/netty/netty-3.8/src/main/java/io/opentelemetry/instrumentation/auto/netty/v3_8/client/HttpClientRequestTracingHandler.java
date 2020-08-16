@@ -40,12 +40,12 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
   public HttpClientRequestTracingHandler(
-      final ContextStore<Channel, ChannelTraceContext> contextStore) {
+      ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
-  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg) {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     if (!(msg.getMessage() instanceof HttpRequest)) {
       ctx.sendDownstream(msg);
       return;
@@ -73,7 +73,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     try (Scope scope = currentContextWith(span)) {
       ctx.sendDownstream(msg);
-    } catch (final Throwable throwable) {
+    } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     } finally {

@@ -62,7 +62,7 @@ public class InMemoryExporter implements SpanProcessor {
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
   @Override
-  public void onStart(final ReadableSpan readableSpan) {
+  public void onStart(ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
         ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
@@ -82,7 +82,7 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   @Override
-  public void onEnd(final ReadableSpan readableSpan) {
+  public void onEnd(ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
         "<<< SPAN END: {} id={} traceid={} parent={}, attributes={}",
@@ -179,18 +179,18 @@ public class InMemoryExporter implements SpanProcessor {
     }
   }
 
-  public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
+  public void waitForTraces(int number) throws InterruptedException, TimeoutException {
     waitForTraces(number, Predicates.<List<SpanData>>alwaysFalse());
   }
 
   public List<List<SpanData>> waitForTraces(
-      final int number, final Predicate<List<SpanData>> excludes)
+      int number, Predicate<List<SpanData>> excludes)
       throws InterruptedException, TimeoutException {
     synchronized (tracesLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
       List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
       while (traces.size() < number && remainingWaitMillis > 0) {
-        final Stopwatch stopwatch = Stopwatch.createStarted();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         tracesLock.wait(remainingWaitMillis);
         remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
         traces = getCompletedAndFilteredTraces(excludes);
@@ -211,9 +211,9 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   private List<List<SpanData>> getCompletedAndFilteredTraces(
-      final Predicate<List<SpanData>> excludes) {
-    final List<List<SpanData>> traces = new ArrayList<>();
-    for (final List<SpanData> trace : getTraces()) {
+      Predicate<List<SpanData>> excludes) {
+    List<List<SpanData>> traces = new ArrayList<>();
+    for (List<SpanData> trace : getTraces()) {
       if (isCompleted(trace) && !excludes.apply(trace)) {
         traces.add(trace);
       }
@@ -240,31 +240,31 @@ public class InMemoryExporter implements SpanProcessor {
         traces,
         new Comparator<List<SpanData>>() {
           @Override
-          public int compare(final List<SpanData> trace1, final List<SpanData> trace2) {
+          public int compare(List<SpanData> trace1, List<SpanData> trace2) {
             return Longs.compare(getMinSpanOrder(trace1), getMinSpanOrder(trace2));
           }
         });
   }
 
-  private long getMinSpanOrder(final List<SpanData> spans) {
+  private long getMinSpanOrder(List<SpanData> spans) {
     long min = Long.MAX_VALUE;
-    for (final SpanData span : spans) {
+    for (SpanData span : spans) {
       min = Math.min(min, getSpanOrder(span));
     }
     return min;
   }
 
-  private List<SpanData> sort(final List<SpanData> trace) {
+  private List<SpanData> sort(List<SpanData> trace) {
 
-    final Map<SpanId, Node> lookup = new HashMap<>();
-    for (final SpanData span : trace) {
+    Map<SpanId, Node> lookup = new HashMap<>();
+    for (SpanData span : trace) {
       lookup.put(span.getSpanId(), new Node(span));
     }
 
-    for (final Node node : lookup.values()) {
-      final SpanId parentSpanId = node.span.getParentSpanId();
+    for (Node node : lookup.values()) {
+      SpanId parentSpanId = node.span.getParentSpanId();
       if (parentSpanId.isValid()) {
-        final Node parentNode = lookup.get(parentSpanId);
+        Node parentNode = lookup.get(parentSpanId);
         if (parentNode != null) {
           parentNode.childNodes.add(node);
           node.root = false;
@@ -272,8 +272,8 @@ public class InMemoryExporter implements SpanProcessor {
       }
     }
 
-    final List<Node> rootNodes = new ArrayList<>();
-    for (final Node node : lookup.values()) {
+    List<Node> rootNodes = new ArrayList<>();
+    for (Node node : lookup.values()) {
       sortOneLevel(node.childNodes);
       if (node.root) {
         rootNodes.add(node);
@@ -281,39 +281,39 @@ public class InMemoryExporter implements SpanProcessor {
     }
     sortOneLevel(rootNodes);
 
-    final TreeTraverser<Node> traverser =
+    TreeTraverser<Node> traverser =
         new TreeTraverser<Node>() {
           @Override
-          public Iterable<Node> children(final Node node) {
+          public Iterable<Node> children(Node node) {
             return node.childNodes;
           }
         };
 
-    final List<Node> orderedNodes = new ArrayList<>();
-    for (final Node rootNode : rootNodes) {
+    List<Node> orderedNodes = new ArrayList<>();
+    for (Node rootNode : rootNodes) {
       Iterables.addAll(orderedNodes, traverser.preOrderTraversal(rootNode));
     }
 
-    final List<SpanData> orderedSpans = new ArrayList<>();
-    for (final Node node : orderedNodes) {
+    List<SpanData> orderedSpans = new ArrayList<>();
+    for (Node node : orderedNodes) {
       orderedSpans.add(node.span);
     }
     return orderedSpans;
   }
 
-  private void sortOneLevel(final List<Node> nodes) {
+  private void sortOneLevel(List<Node> nodes) {
     Collections.sort(
         nodes,
         new Comparator<Node>() {
           @Override
-          public int compare(final Node node1, final Node node2) {
+          public int compare(Node node1, Node node2) {
             return Ints.compare(getSpanOrder(node1.span), getSpanOrder(node2.span));
           }
         });
   }
 
-  private int getSpanOrder(final SpanData span) {
-    final Integer order = spanOrders.get(span.getSpanId());
+  private int getSpanOrder(SpanData span) {
+    Integer order = spanOrders.get(span.getSpanId());
     if (order == null) {
       throw new IllegalStateException("order not found for span: " + span);
     }
@@ -321,8 +321,8 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   // trace is completed if root span is present
-  private static boolean isCompleted(final List<SpanData> trace) {
-    for (final SpanData span : trace) {
+  private static boolean isCompleted(List<SpanData> trace) {
+    for (SpanData span : trace) {
       if (!span.getParentSpanId().isValid()) {
         return true;
       }
@@ -340,7 +340,7 @@ public class InMemoryExporter implements SpanProcessor {
     private final List<Node> childNodes = new ArrayList<>();
     private boolean root = true;
 
-    private Node(final SpanData span) {
+    private Node(SpanData span) {
       this.span = span;
     }
   }

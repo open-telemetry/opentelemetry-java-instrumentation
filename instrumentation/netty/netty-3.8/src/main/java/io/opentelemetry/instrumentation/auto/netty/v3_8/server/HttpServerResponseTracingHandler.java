@@ -36,12 +36,12 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
   private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
   public HttpServerResponseTracingHandler(
-      final ContextStore<Channel, ChannelTraceContext> contextStore) {
+      ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
-  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg) {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
@@ -54,7 +54,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     Span span = TracingContextUtils.getSpan(context);
     try (Scope ignored = ContextUtils.withScopedContext(context)) {
       ctx.sendDownstream(msg);
-    } catch (final Throwable throwable) {
+    } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     }

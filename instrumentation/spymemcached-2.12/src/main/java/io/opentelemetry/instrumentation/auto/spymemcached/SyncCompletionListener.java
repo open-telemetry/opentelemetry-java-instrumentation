@@ -25,16 +25,16 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   private static final Logger log = LoggerFactory.getLogger(SyncCompletionListener.class);
 
-  public SyncCompletionListener(final MemcachedConnection connection, final String methodName) {
+  public SyncCompletionListener(MemcachedConnection connection, String methodName) {
     super(connection, methodName);
   }
 
   @Override
-  protected void processResult(final Span span, final Void future) {
+  protected void processResult(Span span, Void future) {
     log.error("processResult was called on SyncCompletionListener. This should never happen. ");
   }
 
-  public void done(final Throwable thrown) {
+  public void done(Throwable thrown) {
     closeSyncSpan(thrown);
   }
 }

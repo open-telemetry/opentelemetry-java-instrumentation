@@ -31,8 +31,8 @@ public class GrizzlyClientRequestAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
-      @Advice.Argument(0) final Request request,
-      @Advice.Argument(1) final AsyncHandler<?> handler) {
+      @Advice.Argument(0) Request request,
+      @Advice.Argument(1) AsyncHandler<?> handler) {
     Context parentContext = Context.current();
 
     Span span = TRACER.startSpan(request);
@@ -42,7 +42,7 @@ public class GrizzlyClientRequestAdvice {
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onExit(@Advice.Enter final Scope scope) {
+  public static void onExit(@Advice.Enter Scope scope) {
     // span closed in ClientResponseAdvice
     scope.close();
   }

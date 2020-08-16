@@ -70,8 +70,8 @@ public final class ServletContextInstrumentation extends Instrumenter.Default {
   public static class RequestDispatcherTargetAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void saveTarget(
-        @Advice.Argument(0) final String target,
-        @Advice.Return final RequestDispatcher dispatcher) {
+        @Advice.Argument(0) String target,
+        @Advice.Return RequestDispatcher dispatcher) {
       InstrumentationContext.get(RequestDispatcher.class, String.class).put(dispatcher, target);
     }
   }

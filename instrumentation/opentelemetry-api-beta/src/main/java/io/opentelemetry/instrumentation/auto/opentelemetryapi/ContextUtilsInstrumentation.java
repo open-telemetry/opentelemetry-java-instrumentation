@@ -66,7 +66,7 @@ public class ContextUtilsInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context applicationContext,
+        @Advice.Argument(0) Context applicationContext,
         @Advice.Return(readOnly = false) Scope applicationScope) {
 
       ContextStore<Context, io.grpc.Context> contextStore =

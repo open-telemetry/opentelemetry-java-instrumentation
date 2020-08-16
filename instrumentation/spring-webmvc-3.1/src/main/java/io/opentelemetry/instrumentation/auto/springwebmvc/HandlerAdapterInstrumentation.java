@@ -76,8 +76,8 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   public static class ControllerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameResourceAndStartSpan(
-        @Advice.Argument(0) final HttpServletRequest request,
-        @Advice.Argument(2) final Object handler) {
+        @Advice.Argument(0) HttpServletRequest request,
+        @Advice.Argument(2) Object handler) {
       Span serverSpan = TRACER.getCurrentServerSpan();
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
@@ -93,7 +93,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

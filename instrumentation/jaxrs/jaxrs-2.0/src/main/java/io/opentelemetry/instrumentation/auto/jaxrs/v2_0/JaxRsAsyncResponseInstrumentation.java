@@ -87,7 +87,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
   public static class AsyncResponseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
+    public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
       ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);
@@ -104,8 +104,8 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final AsyncResponse asyncResponse,
-        @Advice.Argument(0) final Throwable throwable) {
+        @Advice.This AsyncResponse asyncResponse,
+        @Advice.Argument(0) Throwable throwable) {
 
       ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);
@@ -121,7 +121,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
   public static class AsyncResponseCancelAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
+    public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
       ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);

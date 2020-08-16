@@ -59,7 +59,7 @@ public class AgentInstaller {
     AgentTooling.registerWeakMapProvider();
   }
 
-  public static void installBytebuddyAgent(final Instrumentation inst) {
+  public static void installBytebuddyAgent(Instrumentation inst) {
     if (Config.get().isTraceEnabled()) {
       installBytebuddyAgent(inst, false, new AgentBuilder.Listener[0]);
     } else {
@@ -74,9 +74,9 @@ public class AgentInstaller {
    * @return the agent's class transformer
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
-      final Instrumentation inst,
-      final boolean skipAdditionalLibraryMatcher,
-      final AgentBuilder.Listener... listeners) {
+      Instrumentation inst,
+      boolean skipAdditionalLibraryMatcher,
+      AgentBuilder.Listener... listeners) {
 
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
@@ -138,7 +138,7 @@ public class AgentInstaller {
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
         numInstrumenters++;
-      } catch (final Exception | LinkageError e) {
+      } catch (Exception | LinkageError e) {
         log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);
       }
     }
@@ -195,14 +195,11 @@ public class AgentInstaller {
     private static final Logger log = LoggerFactory.getLogger(RedefinitionLoggingListener.class);
 
     @Override
-    public void onBatch(final int index, final List<Class<?>> batch, final List<Class<?>> types) {}
+    public void onBatch(int index, List<Class<?>> batch, List<Class<?>> types) {}
 
     @Override
     public Iterable<? extends List<Class<?>>> onError(
-        final int index,
-        final List<Class<?>> batch,
-        final Throwable throwable,
-        final List<Class<?>> types) {
+        int index, List<Class<?>> batch, Throwable throwable, List<Class<?>> types) {
       if (log.isDebugEnabled()) {
         log.debug(
             "Exception while retransforming " + batch.size() + " classes: " + batch, throwable);
@@ -212,9 +209,7 @@ public class AgentInstaller {
 
     @Override
     public void onComplete(
-        final int amount,
-        final List<Class<?>> types,
-        final Map<List<Class<?>>, Throwable> failures) {}
+        int amount, List<Class<?>> types, Map<List<Class<?>>, Throwable> failures) {}
   }
 
   static class TransformLoggingListener implements AgentBuilder.Listener {
@@ -223,11 +218,11 @@ public class AgentInstaller {
 
     @Override
     public void onError(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded,
-        final Throwable throwable) {
+        String typeName,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded,
+        Throwable throwable) {
       if (log.isDebugEnabled()) {
         log.debug(
             "Failed to handle {} for transformation on classloader {}: {}",
@@ -239,38 +234,32 @@ public class AgentInstaller {
 
     @Override
     public void onTransformation(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded,
-        final DynamicType dynamicType) {
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded,
+        DynamicType dynamicType) {
       log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
 
     @Override
     public void onIgnored(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule module,
+        boolean loaded) {
       //      log.debug("onIgnored {}", typeDescription.getName());
     }
 
     @Override
     public void onComplete(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
       //      log.debug("onComplete {}", typeName);
     }
 
     @Override
     public void onDiscovery(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule module,
-        final boolean loaded) {
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
       //      log.debug("onDiscovery {}", typeName);
     }
   }
@@ -288,7 +277,7 @@ public class AgentInstaller {
    * @param className name of the class to match against
    * @param callback runnable to invoke when class name matches
    */
-  public static void registerClassLoadCallback(final String className, final Runnable callback) {
+  public static void registerClassLoadCallback(String className, Runnable callback) {
     synchronized (CLASS_LOAD_CALLBACKS) {
       List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(className);
       if (callbacks == null) {
@@ -302,44 +291,34 @@ public class AgentInstaller {
   private static class ClassLoadListener implements AgentBuilder.Listener {
     @Override
     public void onDiscovery(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule javaModule,
-        final boolean b) {}
+        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {}
 
     @Override
     public void onTransformation(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule javaModule,
-        final boolean b,
-        final DynamicType dynamicType) {}
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule javaModule,
+        boolean b,
+        DynamicType dynamicType) {}
 
     @Override
     public void onIgnored(
-        final TypeDescription typeDescription,
-        final ClassLoader classLoader,
-        final JavaModule javaModule,
-        final boolean b) {}
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule javaModule,
+        boolean b) {}
 
     @Override
     public void onError(
-        final String s,
-        final ClassLoader classLoader,
-        final JavaModule javaModule,
-        final boolean b,
-        final Throwable throwable) {}
+        String s, ClassLoader classLoader, JavaModule javaModule, boolean b, Throwable throwable) {}
 
     @Override
     public void onComplete(
-        final String typeName,
-        final ClassLoader classLoader,
-        final JavaModule javaModule,
-        final boolean b) {
+        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
       synchronized (CLASS_LOAD_CALLBACKS) {
         List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
         if (callbacks != null) {
-          for (final Runnable callback : callbacks) {
+          for (Runnable callback : callbacks) {
             callback.run();
           }
         }

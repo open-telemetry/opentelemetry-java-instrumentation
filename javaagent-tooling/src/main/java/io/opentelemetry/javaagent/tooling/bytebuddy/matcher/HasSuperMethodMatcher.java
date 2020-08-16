@@ -32,12 +32,12 @@ class HasSuperMethodMatcher<T extends MethodDescription>
 
   private final ElementMatcher<? super MethodDescription> matcher;
 
-  public HasSuperMethodMatcher(final ElementMatcher<? super MethodDescription> matcher) {
+  public HasSuperMethodMatcher(ElementMatcher<? super MethodDescription> matcher) {
     this.matcher = matcher;
   }
 
   @Override
-  public boolean matches(final MethodDescription target) {
+  public boolean matches(MethodDescription target) {
     if (target.isConstructor()) {
       return false;
     }
@@ -60,9 +60,9 @@ class HasSuperMethodMatcher<T extends MethodDescription>
   }
 
   private boolean matchesInterface(
-      final TypeList.Generic interfaces,
-      final Junction<MethodDescription> signatureMatcher,
-      final Set<TypeDefinition> checkedInterfaces) {
+      TypeList.Generic interfaces,
+      Junction<MethodDescription> signatureMatcher,
+      Set<TypeDefinition> checkedInterfaces) {
     for (TypeDefinition type : interfaces) {
       if (checkedInterfaces.add(type)) {
         for (MethodDescription methodDescription : type.getDeclaredMethods()) {
@@ -84,7 +84,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
   }
 
   @Override
-  public boolean equals(final Object other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if (other == null) {

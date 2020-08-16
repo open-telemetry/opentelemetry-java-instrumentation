@@ -49,7 +49,7 @@ public class HttpClass {
   @WebServlet
   public static class HttpClassServlet extends HttpServlet {
     @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
       try {
         Thread.sleep(10);

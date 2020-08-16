@@ -61,7 +61,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
+        @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
 
       ContextStore<Criteria, Span> contextStore =
           InstrumentationContext.get(Criteria.class, Span.class);
@@ -72,10 +72,10 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity,
-        @Advice.Origin("#m") final String name) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object entity,
+        @Advice.Origin("#m") String name) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, "Criteria." + name, entity);
     }

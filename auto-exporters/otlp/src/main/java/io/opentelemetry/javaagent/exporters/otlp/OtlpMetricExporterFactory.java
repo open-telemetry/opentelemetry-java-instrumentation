@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.metrics.export.MetricExporter;
 public class OtlpMetricExporterFactory implements MetricExporterFactory {
 
   @Override
-  public MetricExporter fromConfig(final Config config) {
+  public MetricExporter fromConfig(Config config) {
     return OtlpGrpcMetricExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()

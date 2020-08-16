@@ -71,7 +71,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
   public static class AwsSdkClientBuilderOverrideConfigurationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
+    public static void methodEnter(@Advice.This SdkClientBuilder thiz) {
       TracingExecutionInterceptor.OVERRIDDEN.put(thiz, true);
     }
   }
@@ -79,7 +79,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
   public static class AwsSdkClientBuilderBuildAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
+    public static void methodEnter(@Advice.This SdkClientBuilder thiz) {
       if (!Boolean.TRUE.equals(TracingExecutionInterceptor.OVERRIDDEN.get(thiz))) {
         TracingExecutionInterceptor.overrideConfiguration(thiz);
       }

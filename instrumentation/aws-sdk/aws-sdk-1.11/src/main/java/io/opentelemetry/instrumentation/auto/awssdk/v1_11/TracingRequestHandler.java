@@ -34,17 +34,17 @@ public class TracingRequestHandler extends RequestHandler2 {
   private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
 
   public TracingRequestHandler(
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
-  public AmazonWebServiceRequest beforeMarshalling(final AmazonWebServiceRequest request) {
+  public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
     return request;
   }
 
   @Override
-  public void beforeRequest(final Request<?> request) {
+  public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
     Span span = TRACER.startSpan(request, requestMeta);
@@ -53,7 +53,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
-  public void afterResponse(final Request<?> request, final Response<?> response) {
+  public void afterResponse(Request<?> request, Response<?> response) {
     SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
@@ -63,7 +63,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
-  public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
+  public void afterError(Request<?> request, Response<?> response, Exception e) {
     SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);

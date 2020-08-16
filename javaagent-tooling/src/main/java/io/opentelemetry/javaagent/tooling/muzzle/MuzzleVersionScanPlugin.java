@@ -37,9 +37,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 public class MuzzleVersionScanPlugin {
 
   public static void assertInstrumentationMuzzled(
-      final ClassLoader instrumentationLoader,
-      final ClassLoader userClassLoader,
-      final boolean assertPass)
+      ClassLoader instrumentationLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
     // muzzle validate all instrumenters
     for (Instrumenter instrumenter :
@@ -122,7 +120,7 @@ public class MuzzleVersionScanPlugin {
                     createHelperMap(defaultInstrumenter))
                 .transform(null, null, userClassLoader, null);
           }
-        } catch (final Exception e) {
+        } catch (Exception e) {
           System.err.println(
               "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
           throw e;
@@ -131,7 +129,7 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
-  private static Map<String, byte[]> createHelperMap(final Instrumenter.Default instrumenter)
+  private static Map<String, byte[]> createHelperMap(Instrumenter.Default instrumenter)
       throws IOException {
     Map<String, byte[]> helperMap = new LinkedHashMap<>(instrumenter.helperClassNames().length);
     for (String helperName : instrumenter.helperClassNames()) {
@@ -143,7 +141,7 @@ public class MuzzleVersionScanPlugin {
     return helperMap;
   }
 
-  public static void printMuzzleReferences(final ClassLoader instrumentationLoader) {
+  public static void printMuzzleReferences(ClassLoader instrumentationLoader) {
     for (Instrumenter instrumenter :
         ServiceLoader.load(Instrumenter.class, instrumentationLoader)) {
       if (instrumenter instanceof Instrumenter.Default) {
@@ -161,7 +159,7 @@ public class MuzzleVersionScanPlugin {
           for (Reference ref : muzzle.getReferences()) {
             System.out.println(prettyPrint("  ", ref));
           }
-        } catch (final Exception e) {
+        } catch (Exception e) {
           System.out.println(
               "Unexpected exception printing references for " + instrumenter.getClass().getName());
           throw new RuntimeException(e);
@@ -175,7 +173,7 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
-  private static String prettyPrint(final String prefix, final Reference ref) {
+  private static String prettyPrint(String prefix, Reference ref) {
     StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
     if (ref.getSuperName() != null) {
       builder.append(" extends<").append(ref.getSuperName()).append(">");

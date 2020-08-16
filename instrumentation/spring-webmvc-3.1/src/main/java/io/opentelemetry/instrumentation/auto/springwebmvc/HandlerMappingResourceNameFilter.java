@@ -36,9 +36,9 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
 
   @Override
   protected void doFilterInternal(
-      final HttpServletRequest request,
-      final HttpServletResponse response,
-      final FilterChain filterChain)
+      HttpServletRequest request,
+      HttpServletResponse response,
+      FilterChain filterChain)
       throws ServletException, IOException {
 
     Span serverSpan = TRACER.getCurrentServerSpan();
@@ -50,7 +50,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
           // Let the parent span resource name be set with the attribute set in findMapping.
           TRACER.onRequest(serverSpan, request);
         }
-      } catch (final Exception ignored) {
+      } catch (Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore
       }
     }
@@ -63,7 +63,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
    * as an attribute on the request. This attribute is read by SpringWebMvcDecorator.onRequest and
    * set as the resource name.
    */
-  private boolean findMapping(final HttpServletRequest request) throws Exception {
+  private boolean findMapping(HttpServletRequest request) throws Exception {
     for (HandlerMapping mapping : handlerMappings) {
       HandlerExecutionChain handler = mapping.getHandler(request);
       if (handler != null) {
@@ -73,7 +73,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
     return false;
   }
 
-  public void setHandlerMappings(final List<HandlerMapping> handlerMappings) {
+  public void setHandlerMappings(List<HandlerMapping> handlerMappings) {
     this.handlerMappings = handlerMappings;
   }
 

@@ -39,20 +39,20 @@ public class PatchLogger {
 
   private ResourceBundle resourceBundle;
 
-  public static PatchLogger getLogger(final String name) {
+  public static PatchLogger getLogger(String name) {
     return new PatchLogger(name);
   }
 
-  public static PatchLogger getLogger(final String name, final String resourceBundleName) {
+  public static PatchLogger getLogger(String name, String resourceBundleName) {
     return new PatchLogger(name);
   }
 
-  private PatchLogger(final String name) {
+  private PatchLogger(String name) {
     this(org.slf4j.LoggerFactory.getLogger(name));
   }
 
   // visible for testing
-  PatchLogger(final org.slf4j.Logger logger) {
+  PatchLogger(org.slf4j.Logger logger) {
     slf4jLogger = logger;
   }
 
@@ -65,35 +65,35 @@ public class PatchLogger {
     return slf4jLogger.getName();
   }
 
-  public void severe(final String msg) {
+  public void severe(String msg) {
     slf4jLogger.error(msg);
   }
 
-  public void warning(final String msg) {
+  public void warning(String msg) {
     slf4jLogger.warn(msg);
   }
 
-  public void info(final String msg) {
+  public void info(String msg) {
     slf4jLogger.info(msg);
   }
 
-  public void config(final String msg) {
+  public void config(String msg) {
     slf4jLogger.info(msg);
   }
 
-  public void fine(final String msg) {
+  public void fine(String msg) {
     slf4jLogger.debug(msg);
   }
 
-  public void finer(final String msg) {
+  public void finer(String msg) {
     slf4jLogger.trace(msg);
   }
 
-  public void finest(final String msg) {
+  public void finest(String msg) {
     slf4jLogger.trace(msg);
   }
 
-  public void log(final LogRecord record) {
+  public void log(LogRecord record) {
     Level level = record.getLevel();
     if (level.intValue() >= Level.SEVERE.intValue()) {
       if (slf4jLogger.isErrorEnabled()) {
@@ -118,7 +118,7 @@ public class PatchLogger {
     }
   }
 
-  public void log(final Level level, final String msg) {
+  public void log(Level level, String msg) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       slf4jLogger.error(msg);
     } else if (level.intValue() >= Level.WARNING.intValue()) {
@@ -132,7 +132,7 @@ public class PatchLogger {
     }
   }
 
-  public void log(final Level level, final String msg, final Object param1) {
+  public void log(Level level, String msg, Object param1) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       if (slf4jLogger.isErrorEnabled()) {
         slf4jLogger.error(MessageFormat.format(msg, param1));
@@ -156,7 +156,7 @@ public class PatchLogger {
     }
   }
 
-  public void log(final Level level, final String msg, final Object[] params) {
+  public void log(Level level, String msg, Object[] params) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       if (slf4jLogger.isErrorEnabled()) {
         slf4jLogger.error(MessageFormat.format(msg, params));
@@ -180,7 +180,7 @@ public class PatchLogger {
     }
   }
 
-  public void log(final Level level, final String msg, final Throwable thrown) {
+  public void log(Level level, String msg, Throwable thrown) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       slf4jLogger.error(msg, thrown);
     } else if (level.intValue() >= Level.WARNING.intValue()) {
@@ -194,7 +194,7 @@ public class PatchLogger {
     }
   }
 
-  public boolean isLoggable(final Level level) {
+  public boolean isLoggable(Level level) {
     if (level.intValue() >= Level.SEVERE.intValue()) {
       return slf4jLogger.isErrorEnabled();
     } else if (level.intValue() >= Level.WARNING.intValue()) {
@@ -224,126 +224,105 @@ public class PatchLogger {
     }
   }
 
-  public void logp(
-      final Level level, final String sourceClass, final String sourceMethod, final String msg) {
+  public void logp(Level level, String sourceClass, String sourceMethod, String msg) {
     log(level, msg);
   }
 
   public void logp(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String msg,
-      final Object param1) {
+      Level level, String sourceClass, String sourceMethod, String msg, Object param1) {
     log(level, msg, param1);
   }
 
   public void logp(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String msg,
-      final Object[] params) {
+      Level level, String sourceClass, String sourceMethod, String msg, Object[] params) {
     log(level, msg, params);
   }
 
   public void logp(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String msg,
-      final Throwable thrown) {
+      Level level, String sourceClass, String sourceMethod, String msg, Throwable thrown) {
     log(level, msg, thrown);
   }
 
   public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String bundleName,
-      final String msg) {
+      Level level, String sourceClass, String sourceMethod, String bundleName, String msg) {
     log(level, msg);
   }
 
   public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String bundleName,
-      final String msg,
-      final Object param1) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      String bundleName,
+      String msg,
+      Object param1) {
     log(level, msg, param1);
   }
 
   public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String bundleName,
-      final String msg,
-      final Object[] params) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      String bundleName,
+      String msg,
+      Object[] params) {
     log(level, msg, params);
   }
 
   public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final ResourceBundle bundle,
-      final String msg,
-      final Object... params) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      ResourceBundle bundle,
+      String msg,
+      Object... params) {
+    log(level, msg, params);
+  }
+
+  public void logrb(Level level, ResourceBundle bundle, String msg, Object... params) {
     log(level, msg, params);
   }
 
   public void logrb(
-      final Level level, final ResourceBundle bundle, final String msg, final Object... params) {
-    log(level, msg, params);
-  }
-
-  public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final String bundleName,
-      final String msg,
-      final Throwable thrown) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      String bundleName,
+      String msg,
+      Throwable thrown) {
     log(level, msg, thrown);
   }
 
   public void logrb(
-      final Level level,
-      final String sourceClass,
-      final String sourceMethod,
-      final ResourceBundle bundle,
-      final String msg,
-      final Throwable thrown) {
+      Level level,
+      String sourceClass,
+      String sourceMethod,
+      ResourceBundle bundle,
+      String msg,
+      Throwable thrown) {
     log(level, msg, thrown);
   }
 
-  public void logrb(
-      final Level level, final ResourceBundle bundle, final String msg, final Throwable thrown) {
+  public void logrb(Level level, ResourceBundle bundle, String msg, Throwable thrown) {
     log(level, msg, thrown);
   }
 
-  public void entering(final String sourceClass, final String sourceMethod) {}
+  public void entering(String sourceClass, String sourceMethod) {}
 
-  public void entering(final String sourceClass, final String sourceMethod, final Object param1) {}
+  public void entering(String sourceClass, String sourceMethod, Object param1) {}
 
-  public void entering(
-      final String sourceClass, final String sourceMethod, final Object[] params) {}
+  public void entering(String sourceClass, String sourceMethod, Object[] params) {}
 
-  public void exiting(final String sourceClass, final String sourceMethod) {}
+  public void exiting(String sourceClass, String sourceMethod) {}
 
-  public void exiting(final String sourceClass, final String sourceMethod, final Object result) {}
+  public void exiting(String sourceClass, String sourceMethod, Object result) {}
 
-  public void throwing(
-      final String sourceClass, final String sourceMethod, final Throwable thrown) {}
+  public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {}
 
   public ResourceBundle getResourceBundle() {
     return resourceBundle;
   }
 
-  public void setResourceBundle(final ResourceBundle resourceBundle) {
+  public void setResourceBundle(ResourceBundle resourceBundle) {
     this.resourceBundle = resourceBundle;
   }
 
@@ -355,15 +334,15 @@ public class PatchLogger {
     return getLogger("");
   }
 
-  public void setParent(final PatchLogger parent) {}
+  public void setParent(PatchLogger parent) {}
 
-  public void setLevel(final Level newLevel) {}
+  public void setLevel(Level newLevel) {}
 
   public static PatchLogger getAnonymousLogger() {
     return getLogger("");
   }
 
-  public static PatchLogger getAnonymousLogger(final String resourceBundleName) {
+  public static PatchLogger getAnonymousLogger(String resourceBundleName) {
     return getLogger("");
   }
 
@@ -371,7 +350,7 @@ public class PatchLogger {
     return global;
   }
 
-  private static String getMessage(final LogRecord record) {
+  private static String getMessage(LogRecord record) {
     String msg = record.getMessage();
     Object[] params = record.getParameters();
     if (params == null) {

@@ -26,8 +26,8 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 public class HttpServerFilterAdvice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
-      @Advice.Argument(0) final FilterChainContext ctx,
-      @Advice.Argument(2) final HttpResponsePacket response) {
+      @Advice.Argument(0) FilterChainContext ctx,
+      @Advice.Argument(2) HttpResponsePacket response) {
     Span span = TRACER.getServerSpan(ctx);
     if (span != null) {
       TRACER.end(span, response);

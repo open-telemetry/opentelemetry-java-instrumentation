@@ -66,13 +66,13 @@ public class ExporterClassLoader extends URLClassLoader {
 
   private final Manifest manifest;
 
-  public ExporterClassLoader(final URL url, final ClassLoader parent) {
+  public ExporterClassLoader(URL url, ClassLoader parent) {
     super(new URL[] {url}, parent);
     this.manifest = getManifest(url);
   }
 
   @Override
-  public Enumeration<URL> getResources(final String name) throws IOException {
+  public Enumeration<URL> getResources(String name) throws IOException {
     // A small hack to prevent other exporters from being loaded by this classloader if they
     // should happen to appear on the classpath.
     if (name.equals(
@@ -85,7 +85,7 @@ public class ExporterClassLoader extends URLClassLoader {
   }
 
   @Override
-  protected Class<?> findClass(final String name) throws ClassNotFoundException {
+  protected Class<?> findClass(String name) throws ClassNotFoundException {
     // Use resource loading to get the class as a stream of bytes, then use ASM to transform it.
     InputStream in = getResourceAsStream(name.replace('.', '/') + ".class");
     if (in == null) {
@@ -95,7 +95,7 @@ public class ExporterClassLoader extends URLClassLoader {
       byte[] bytes = remapClassBytes(in);
       definePackageIfNeeded(name);
       return defineClass(name, bytes, 0, bytes.length);
-    } catch (final IOException e) {
+    } catch (IOException e) {
       throw new ClassNotFoundException(name, e);
     } finally {
       try {
