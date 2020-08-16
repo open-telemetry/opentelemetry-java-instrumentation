@@ -16,13 +16,13 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -33,9 +33,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
@@ -89,10 +89,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope start(
-        @Advice.Origin("#m") final String method,
-        @Advice.This final RequestDispatcher dispatcher,
+        @Advice.Origin("#m") String method,
+        @Advice.This RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
-        @Advice.Argument(0) final ServletRequest request) {
+        @Advice.Argument(0) ServletRequest request) {
       Span parentSpan = TRACER.getCurrentSpan();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
@@ -141,10 +141,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Local("_originalContext") final Object originalContext,
-        @Advice.Argument(0) final ServletRequest request,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Local("_originalContext") Object originalContext,
+        @Advice.Argument(0) ServletRequest request,
+        @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

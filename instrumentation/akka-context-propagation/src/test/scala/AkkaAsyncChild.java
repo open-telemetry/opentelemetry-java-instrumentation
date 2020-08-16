@@ -38,7 +38,7 @@ public class AkkaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   }
 
   @Override
-  protected void setRawResult(final Object value) {}
+  protected void setRawResult(Object value) {}
 
   @Override
   protected boolean exec() {
@@ -46,7 +46,7 @@ public class AkkaAsyncChild extends ForkJoinTask implements Runnable, Callable {
     return true;
   }
 
-  public AkkaAsyncChild(final boolean doTraceableWork, final boolean blockThread) {
+  public AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }

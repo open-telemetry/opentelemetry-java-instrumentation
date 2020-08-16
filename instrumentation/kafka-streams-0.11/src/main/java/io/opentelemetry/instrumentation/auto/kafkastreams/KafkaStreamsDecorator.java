@@ -28,7 +28,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracer("io.opentelemetry.auto.kafka-streams-0.11");
 
-  public String spanNameForConsume(final StampedRecord record) {
+  public String spanNameForConsume(StampedRecord record) {
     if (record == null) {
       return null;
     }
@@ -40,7 +40,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
     }
   }
 
-  public void onConsume(final Span span, final StampedRecord record) {
+  public void onConsume(Span span, StampedRecord record) {
     if (record != null) {
       span.setAttribute("partition", record.partition());
       span.setAttribute("offset", record.offset());

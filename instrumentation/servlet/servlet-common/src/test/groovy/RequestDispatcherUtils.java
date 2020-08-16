@@ -34,14 +34,14 @@ public class RequestDispatcherUtils {
   private final ServletResponse resp;
   private final ServletException toThrow;
 
-  public RequestDispatcherUtils(final ServletRequest req, final ServletResponse resp) {
+  public RequestDispatcherUtils(ServletRequest req, ServletResponse resp) {
     this.req = req;
     this.resp = resp;
     toThrow = null;
   }
 
   public RequestDispatcherUtils(
-      final ServletRequest req, final ServletResponse resp, final ServletException toThrow) {
+      ServletRequest req, ServletResponse resp, ServletException toThrow) {
     this.req = req;
     this.resp = resp;
     this.toThrow = toThrow;
@@ -51,19 +51,19 @@ public class RequestDispatcherUtils {
    * encapsulated in here where groovy doesn't need to access it.
    */
 
-  void forward(final String target) throws ServletException, IOException {
+  void forward(String target) throws ServletException, IOException {
     new TestContext().getRequestDispatcher(target).forward(req, resp);
   }
 
-  void include(final String target) throws ServletException, IOException {
+  void include(String target) throws ServletException, IOException {
     new TestContext().getRequestDispatcher(target).include(req, resp);
   }
 
-  void forwardNamed(final String target) throws ServletException, IOException {
+  void forwardNamed(String target) throws ServletException, IOException {
     new TestContext().getNamedDispatcher(target).forward(req, resp);
   }
 
-  void includeNamed(final String target) throws ServletException, IOException {
+  void includeNamed(String target) throws ServletException, IOException {
     new TestContext().getNamedDispatcher(target).include(req, resp);
   }
 
@@ -74,7 +74,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public ServletContext getContext(final String s) {
+    public ServletContext getContext(String s) {
       return null;
     }
 
@@ -89,37 +89,37 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public String getMimeType(final String s) {
+    public String getMimeType(String s) {
       return null;
     }
 
     @Override
-    public Set getResourcePaths(final String s) {
+    public Set getResourcePaths(String s) {
       return null;
     }
 
     @Override
-    public URL getResource(final String s) {
+    public URL getResource(String s) {
       return null;
     }
 
     @Override
-    public InputStream getResourceAsStream(final String s) {
+    public InputStream getResourceAsStream(String s) {
       return null;
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(final String s) {
+    public RequestDispatcher getRequestDispatcher(String s) {
       return new TestDispatcher();
     }
 
     @Override
-    public RequestDispatcher getNamedDispatcher(final String s) {
+    public RequestDispatcher getNamedDispatcher(String s) {
       return new TestDispatcher();
     }
 
     @Override
-    public Servlet getServlet(final String s) {
+    public Servlet getServlet(String s) {
       return null;
     }
 
@@ -134,16 +134,16 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public void log(final String s) {}
+    public void log(String s) {}
 
     @Override
-    public void log(final Exception e, final String s) {}
+    public void log(Exception e, String s) {}
 
     @Override
-    public void log(final String s, final Throwable throwable) {}
+    public void log(String s, Throwable throwable) {}
 
     @Override
-    public String getRealPath(final String s) {
+    public String getRealPath(String s) {
       return null;
     }
 
@@ -153,7 +153,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public String getInitParameter(final String s) {
+    public String getInitParameter(String s) {
       return null;
     }
 
@@ -163,7 +163,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public Object getAttribute(final String s) {
+    public Object getAttribute(String s) {
       return null;
     }
 
@@ -173,10 +173,10 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public void setAttribute(final String s, final Object o) {}
+    public void setAttribute(String s, Object o) {}
 
     @Override
-    public void removeAttribute(final String s) {}
+    public void removeAttribute(String s) {}
 
     @Override
     public String getServletContextName() {
@@ -186,7 +186,7 @@ public class RequestDispatcherUtils {
 
   class TestDispatcher implements RequestDispatcher {
     @Override
-    public void forward(final ServletRequest servletRequest, final ServletResponse servletResponse)
+    public void forward(ServletRequest servletRequest, ServletResponse servletResponse)
         throws ServletException {
       runUnderTrace(
           "forward-child",
@@ -202,7 +202,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public void include(final ServletRequest servletRequest, final ServletResponse servletResponse)
+    public void include(ServletRequest servletRequest, ServletResponse servletResponse)
         throws ServletException {
       runUnderTrace(
           "include-child",

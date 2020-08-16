@@ -16,15 +16,14 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v3_8;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
@@ -34,6 +33,7 @@ import io.opentelemetry.instrumentation.auto.netty.v3_8.client.HttpClientTracing
 import io.opentelemetry.instrumentation.auto.netty.v3_8.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -125,9 +125,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAdviceUtil {
     public static void wrapHandler(
-        final ContextStore<Channel, ChannelTraceContext> contextStore,
-        final ChannelPipeline pipeline,
-        final ChannelHandler handler) {
+        ContextStore<Channel, ChannelTraceContext> contextStore,
+        ChannelPipeline pipeline,
+        ChannelHandler handler) {
       try {
         // Server pipeline handlers
         if (handler instanceof HttpServerCodec) {
@@ -164,8 +164,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineAdd2ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(1) final ChannelHandler handler) {
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
@@ -177,9 +176,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter final int depth,
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(1) final ChannelHandler handler) {
+        @Advice.Enter int depth,
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(1) ChannelHandler handler) {
       if (depth > 0) {
         return;
       }
@@ -194,8 +193,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineAdd3ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(2) final ChannelHandler handler) {
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
@@ -207,9 +205,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter final int depth,
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(2) final ChannelHandler handler) {
+        @Advice.Enter int depth,
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(2) ChannelHandler handler) {
       if (depth > 0) {
         return;
       }

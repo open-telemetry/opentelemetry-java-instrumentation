@@ -26,10 +26,10 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.TracingContextUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -87,8 +87,8 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Span applicationSpan,
-        @Advice.Argument(1) final Context applicationContext,
+        @Advice.Argument(0) Span applicationSpan,
+        @Advice.Argument(1) Context applicationContext,
         @Advice.Return(readOnly = false) Context applicationUpdatedContext) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
@@ -120,7 +120,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context context,
+        @Advice.Argument(0) Context context,
         @Advice.Return(readOnly = false) Span applicationSpan) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
@@ -138,7 +138,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context context,
+        @Advice.Argument(0) Context context,
         @Advice.Return(readOnly = false) Span applicationSpan) {
 
       ContextStore<Context, io.grpc.Context> contextStore =
@@ -156,7 +156,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Span applicationSpan,
+        @Advice.Argument(0) Span applicationSpan,
         @Advice.Return(readOnly = false) Scope applicationScope) {
       applicationScope = TracingContextUtils.currentContextWith(applicationSpan);
     }

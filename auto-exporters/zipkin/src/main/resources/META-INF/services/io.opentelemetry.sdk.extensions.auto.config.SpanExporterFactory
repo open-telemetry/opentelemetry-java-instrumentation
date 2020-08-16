@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.zipkin.ZipkinExporterFactory
+io.opentelemetry.javaagent.exporters.zipkin.ZipkinExporterFactory

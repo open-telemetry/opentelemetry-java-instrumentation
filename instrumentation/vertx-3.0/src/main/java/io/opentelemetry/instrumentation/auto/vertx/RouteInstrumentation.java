@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.vertx;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Map;

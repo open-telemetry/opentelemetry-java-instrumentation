@@ -41,7 +41,7 @@ public final class TracingHandler implements Handler {
           "io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
-  public void handle(final Context ctx) {
+  public void handle(Context ctx) {
     Attribute<io.grpc.Context> spanAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(SERVER_ATTRIBUTE_KEY);
     io.grpc.Context serverSpanContext = spanAttribute.get();

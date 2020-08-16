@@ -16,20 +16,20 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.http;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
@@ -71,8 +71,8 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(
-        @Advice.Origin("#m") final String method,
-        @Advice.This final HttpServletResponse resp,
+        @Advice.Origin("#m") String method,
+        @Advice.This HttpServletResponse resp,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -87,7 +87,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {

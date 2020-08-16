@@ -16,18 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.hystrix;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.hystrix.HystrixDecorator.DECORATE;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.INTERNAL;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,9 +87,9 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final HystrixInvokableInfo<?> command,
+        @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return(readOnly = false) Observable result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown Throwable throwable) {
 
       result = Observable.create(new HystrixOnSubscribe(result, command, "execute"));
     }
@@ -99,9 +99,9 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final HystrixInvokableInfo<?> command,
+        @Advice.This HystrixInvokableInfo<?> command,
         @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown Throwable throwable) {
 
       result = Observable.create(new HystrixOnSubscribe(result, command, "fallback"));
     }
@@ -112,9 +112,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     private final String methodName;
 
     public HystrixOnSubscribe(
-        final Observable originalObservable,
-        final HystrixInvokableInfo<?> command,
-        final String methodName) {
+        Observable originalObservable, HystrixInvokableInfo<?> command, String methodName) {
       super(originalObservable, OPERATION_NAME, DECORATE, INTERNAL);
 
       this.command = command;
@@ -122,7 +120,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    protected void afterStart(final Span span) {
+    protected void afterStart(Span span) {
       super.afterStart(span);
 
       DECORATE.onCommand(span, command, methodName);

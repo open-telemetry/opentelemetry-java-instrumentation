@@ -33,23 +33,23 @@ final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpR
   static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
 
   // Certain headers in the request like User-Agent are only available after execution.
-  Span afterExecution(final Span span, final SdkHttpRequest request) {
+  Span afterExecution(Span span, SdkHttpRequest request) {
     SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
     return span;
   }
 
   @Override
-  protected String method(final SdkHttpRequest request) {
+  protected String method(SdkHttpRequest request) {
     return request.method().name();
   }
 
   @Override
-  protected URI url(final SdkHttpRequest request) {
+  protected URI url(SdkHttpRequest request) {
     return request.getUri();
   }
 
   @Override
-  protected Integer status(final SdkHttpResponse response) {
+  protected Integer status(SdkHttpResponse response) {
     return response.statusCode();
   }
 

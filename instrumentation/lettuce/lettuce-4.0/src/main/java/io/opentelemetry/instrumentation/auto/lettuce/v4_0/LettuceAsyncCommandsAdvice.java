@@ -24,16 +24,16 @@ import net.bytebuddy.asm.Advice;
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand<?, ?, ?> command) {
+  public static SpanWithScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
     return InstrumentationPoints.beforeCommand(command);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
-      @Advice.Argument(0) final RedisCommand<?, ?, ?> command,
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Thrown final Throwable throwable,
-      @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
+      @Advice.Argument(0) RedisCommand<?, ?, ?> command,
+      @Advice.Enter SpanWithScope spanWithScope,
+      @Advice.Thrown Throwable throwable,
+      @Advice.Return AsyncCommand<?, ?, ?> asyncCommand) {
     InstrumentationPoints.afterCommand(command, spanWithScope, throwable, asyncCommand);
   }
 }

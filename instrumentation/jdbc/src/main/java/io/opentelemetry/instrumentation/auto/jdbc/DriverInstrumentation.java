@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.jdbc;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,9 +25,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DBInfo;
 import io.opentelemetry.instrumentation.auto.api.jdbc.JDBCConnectionUrlParser;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
@@ -73,9 +73,9 @@ public final class DriverInstrumentation extends Instrumenter.Default {
   public static class DriverAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
-        @Advice.Argument(0) final String url,
-        @Advice.Argument(1) final Properties props,
-        @Advice.Return final Connection connection) {
+        @Advice.Argument(0) String url,
+        @Advice.Argument(1) Properties props,
+        @Advice.Return Connection connection) {
       if (connection == null) {
         // Exception was probably thrown.
         return;

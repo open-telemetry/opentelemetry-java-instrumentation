@@ -33,8 +33,7 @@ public class TracingSubscriber<T>
   private final io.grpc.Context downstreamContext;
   private Subscription subscription;
 
-  public TracingSubscriber(
-      final io.grpc.Context upstreamContext, final CoreSubscriber<T> delegate) {
+  public TracingSubscriber(io.grpc.Context upstreamContext, CoreSubscriber<T> delegate) {
     this.delegate = delegate;
     this.upstreamContext = upstreamContext;
     this.downstreamContext =
@@ -55,7 +54,7 @@ public class TracingSubscriber<T>
   }
 
   @Override
-  public void onSubscribe(final Subscription subscription) {
+  public void onSubscribe(Subscription subscription) {
     this.subscription = subscription;
 
     try (Scope scope = ContextUtils.withScopedContext(downstreamContext)) {
@@ -64,7 +63,7 @@ public class TracingSubscriber<T>
   }
 
   @Override
-  public void onNext(final T t) {
+  public void onNext(T t) {
     try (Scope scope = ContextUtils.withScopedContext(downstreamContext)) {
       delegate.onNext(t);
     }
@@ -75,7 +74,7 @@ public class TracingSubscriber<T>
   }
 
   @Override
-  public void onError(final Throwable t) {
+  public void onError(Throwable t) {
     try (Scope scope = finalScopeForDownstream()) {
       delegate.onError(t);
     }
@@ -93,7 +92,7 @@ public class TracingSubscriber<T>
    */
 
   @Override
-  public void request(final long n) {
+  public void request(long n) {
     try (Scope scope = ContextUtils.withScopedContext(upstreamContext)) {
       subscription.request(n);
     }
@@ -111,7 +110,7 @@ public class TracingSubscriber<T>
    */
 
   @Override
-  public Object scanUnsafe(final Attr attr) {
+  public Object scanUnsafe(Attr attr) {
     if (attr == Attr.PARENT) {
       return subscription;
     }
@@ -126,7 +125,7 @@ public class TracingSubscriber<T>
    */
 
   @Override
-  public int requestFusion(final int requestedMode) {
+  public int requestFusion(int requestedMode) {
     return Fuseable.NONE;
   }
 

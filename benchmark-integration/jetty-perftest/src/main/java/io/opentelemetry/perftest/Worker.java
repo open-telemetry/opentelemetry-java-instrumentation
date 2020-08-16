@@ -29,7 +29,7 @@ public class Worker {
   private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
   /** Simulate work for the give number of milliseconds. */
-  public static void doWork(final long workTimeMS) {
+  public static void doWork(long workTimeMS) {
     Span span = TRACER.spanBuilder("work").startSpan();
     try (Scope scope = currentContextWith(span)) {
       if (span != null) {

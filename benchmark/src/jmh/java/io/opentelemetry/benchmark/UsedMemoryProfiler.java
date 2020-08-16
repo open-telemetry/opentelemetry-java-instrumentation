@@ -36,8 +36,7 @@ public class UsedMemoryProfiler implements InternalProfiler {
   }
 
   @Override
-  public void beforeIteration(
-      final BenchmarkParams benchmarkParams, final IterationParams iterationParams) {
+  public void beforeIteration(BenchmarkParams benchmarkParams, IterationParams iterationParams) {
     System.gc();
     System.runFinalization();
 
@@ -47,9 +46,7 @@ public class UsedMemoryProfiler implements InternalProfiler {
 
   @Override
   public Collection<? extends Result> afterIteration(
-      final BenchmarkParams benchmarkParams,
-      final IterationParams iterationParams,
-      final IterationResult result) {
+      BenchmarkParams benchmarkParams, IterationParams iterationParams, IterationResult result) {
 
     long totalHeap = Runtime.getRuntime().totalMemory();
     long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();

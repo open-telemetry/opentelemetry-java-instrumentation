@@ -24,13 +24,13 @@ public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
     implements StreamedAsyncHandler {
   private final StreamedAsyncHandler streamedDelegate;
 
-  public StreamedAsyncHandlerWrapper(final StreamedAsyncHandler delegate, final Span span) {
+  public StreamedAsyncHandlerWrapper(StreamedAsyncHandler delegate, Span span) {
     super(delegate, span);
     streamedDelegate = delegate;
   }
 
   @Override
-  public State onStream(final Publisher publisher) {
+  public State onStream(Publisher publisher) {
     return streamedDelegate.onStream(publisher);
   }
 }

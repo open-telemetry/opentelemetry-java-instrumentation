@@ -34,16 +34,16 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
   }
 
   @Override
-  protected String dbUser(final Object o) {
+  protected String dbUser(Object o) {
     return null;
   }
 
   @Override
-  protected String dbName(final Object o) {
+  protected String dbName(Object o) {
     return null;
   }
 
-  public Span onRequest(final Span span, final Class action, final Class request) {
+  public Span onRequest(Span span, Class action, Class request) {
     span.setAttribute("elasticsearch.action", action.getSimpleName());
     span.setAttribute("elasticsearch.request", request.getSimpleName());
     return span;

@@ -45,8 +45,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
    */
   private SpanWithScope currentSpanWithScope;
 
-  public TracingIterator(
-      final Iterator<ConsumerRecord> delegateIterator, final KafkaDecorator decorator) {
+  public TracingIterator(Iterator<ConsumerRecord> delegateIterator, KafkaDecorator decorator) {
     this.delegateIterator = delegateIterator;
     this.decorator = decorator;
   }
@@ -101,7 +100,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         decorator.onConsume(span, startTimeMillis, next);
         currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Error during decoration", e);
     }
     return next;

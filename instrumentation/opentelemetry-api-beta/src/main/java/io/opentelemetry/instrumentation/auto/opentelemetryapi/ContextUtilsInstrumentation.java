@@ -25,10 +25,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.ContextUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -66,7 +66,7 @@ public class ContextUtilsInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final Context applicationContext,
+        @Advice.Argument(0) Context applicationContext,
         @Advice.Return(readOnly = false) Scope applicationScope) {
 
       ContextStore<Context, io.grpc.Context> contextStore =

@@ -28,8 +28,8 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -70,8 +70,8 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   public static class HttpClientAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(value = 0, optional = true) final Request<?> request,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Argument(value = 0, optional = true) Request<?> request,
+        @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
         if (scope != null) {
@@ -105,8 +105,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
     public static class RequestExecutorAdvice {
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void methodExit(
-          @Advice.FieldValue("request") final Request<?> request,
-          @Advice.Thrown final Throwable throwable) {
+          @Advice.FieldValue("request") Request<?> request, @Advice.Thrown Throwable throwable) {
         if (throwable != null) {
           SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (scope != null) {

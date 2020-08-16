@@ -24,7 +24,7 @@ public class TextMapExtractAdapter implements HttpTextFormat.Getter<Map<String, 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 
   @Override
-  public String get(final Map<String, Object> carrier, final String key) {
+  public String get(Map<String, Object> carrier, String key) {
     Object obj = carrier.get(key);
     return obj == null ? null : obj.toString();
   }

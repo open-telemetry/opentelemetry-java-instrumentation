@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.awssdk.v1_11;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,9 +25,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -90,8 +90,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class BucketNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -106,8 +105,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class QueueUrlAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -122,8 +120,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class QueueNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -138,8 +135,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class StreamNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
@@ -154,8 +150,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public static class TableNameAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(0) final String value,
-        @Advice.This final AmazonWebServiceRequest request) {
+        @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
       ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);

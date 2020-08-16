@@ -35,74 +35,74 @@ class ApplicationMeter implements Meter {
 
   private final io.opentelemetry.metrics.Meter agentMeter;
 
-  ApplicationMeter(final io.opentelemetry.metrics.Meter agentMeter) {
+  ApplicationMeter(io.opentelemetry.metrics.Meter agentMeter) {
     this.agentMeter = agentMeter;
   }
 
   @Override
-  public DoubleCounter.Builder doubleCounterBuilder(final String name) {
+  public DoubleCounter.Builder doubleCounterBuilder(String name) {
     return new ApplicationDoubleCounter.Builder(agentMeter.doubleCounterBuilder(name));
   }
 
   @Override
-  public LongCounter.Builder longCounterBuilder(final String name) {
+  public LongCounter.Builder longCounterBuilder(String name) {
     return new ApplicationLongCounter.Builder(agentMeter.longCounterBuilder(name));
   }
 
   @Override
-  public DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(final String name) {
+  public DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(String name) {
     return new ApplicationDoubleUpDownCounter.Builder(agentMeter.doubleUpDownCounterBuilder(name));
   }
 
   @Override
-  public LongUpDownCounter.Builder longUpDownCounterBuilder(final String name) {
+  public LongUpDownCounter.Builder longUpDownCounterBuilder(String name) {
     return new ApplicationLongUpDownCounter.Builder(agentMeter.longUpDownCounterBuilder(name));
   }
 
   @Override
-  public DoubleValueRecorder.Builder doubleValueRecorderBuilder(final String name) {
+  public DoubleValueRecorder.Builder doubleValueRecorderBuilder(String name) {
     return new ApplicationDoubleValueRecorder.Builder(agentMeter.doubleValueRecorderBuilder(name));
   }
 
   @Override
-  public LongValueRecorder.Builder longValueRecorderBuilder(final String name) {
+  public LongValueRecorder.Builder longValueRecorderBuilder(String name) {
     return new ApplicationLongValueRecorder.Builder(agentMeter.longValueRecorderBuilder(name));
   }
 
   @Override
-  public DoubleSumObserver.Builder doubleSumObserverBuilder(final String name) {
+  public DoubleSumObserver.Builder doubleSumObserverBuilder(String name) {
     return new ApplicationDoubleSumObserver.Builder(agentMeter.doubleSumObserverBuilder(name));
   }
 
   @Override
-  public LongSumObserver.Builder longSumObserverBuilder(final String name) {
+  public LongSumObserver.Builder longSumObserverBuilder(String name) {
     return new ApplicationLongSumObserver.Builder(agentMeter.longSumObserverBuilder(name));
   }
 
   @Override
-  public DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(final String name) {
+  public DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(String name) {
     return new ApplicationDoubleUpDownSumObserver.Builder(
         agentMeter.doubleUpDownSumObserverBuilder(name));
   }
 
   @Override
-  public LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(final String name) {
+  public LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(String name) {
     return new ApplicationLongUpDownSumObserver.Builder(
         agentMeter.longUpDownSumObserverBuilder(name));
   }
 
   @Override
-  public DoubleValueObserver.Builder doubleValueObserverBuilder(final String name) {
+  public DoubleValueObserver.Builder doubleValueObserverBuilder(String name) {
     return new ApplicationDoubleValueObserver.Builder(agentMeter.doubleValueObserverBuilder(name));
   }
 
   @Override
-  public LongValueObserver.Builder longValueObserverBuilder(final String name) {
+  public LongValueObserver.Builder longValueObserverBuilder(String name) {
     return new ApplicationLongValueObserver.Builder(agentMeter.longValueObserverBuilder(name));
   }
 
   @Override
-  public BatchRecorder newBatchRecorder(final String... keyValuePairs) {
+  public BatchRecorder newBatchRecorder(String... keyValuePairs) {
     return new ApplicationBatchRecorder(agentMeter.newBatchRecorder(keyValuePairs));
   }
 }

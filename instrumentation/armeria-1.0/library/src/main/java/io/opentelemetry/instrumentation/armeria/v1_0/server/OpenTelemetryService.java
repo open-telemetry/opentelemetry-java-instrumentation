@@ -92,8 +92,8 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
   }
 
   private static String route(ServiceRequestContext ctx) {
-    final Route route = ctx.config().route();
-    final List<String> paths = route.paths();
+    Route route = ctx.config().route();
+    List<String> paths = route.paths();
     switch (route.pathType()) {
       case EXACT:
       case PREFIX:

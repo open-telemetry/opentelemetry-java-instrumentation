@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.logging.LoggingExporterFactory
+io.opentelemetry.javaagent.exporters.logging.LoggingExporterFactory

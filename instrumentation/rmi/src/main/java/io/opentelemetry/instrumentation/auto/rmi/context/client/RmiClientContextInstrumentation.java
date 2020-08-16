@@ -16,18 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.context.client;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.rmi.server.ObjID;
 import java.util.Map;
@@ -97,8 +97,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
 
   public static class StreamRemoteCallConstructorAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) final Connection c, @Advice.Argument(1) final ObjID id) {
+    public static void onEnter(@Advice.Argument(0) Connection c, @Advice.Argument(1) ObjID id) {
       if (!c.isReusable()) {
         return;
       }

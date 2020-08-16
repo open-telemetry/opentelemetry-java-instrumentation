@@ -24,7 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -62,7 +62,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void saveHeaders(
-        @Advice.Argument(0) final ConsumerRecord incoming,
+        @Advice.Argument(0) ConsumerRecord incoming,
         @Advice.Return(readOnly = false) ConsumerRecord result) {
       result =
           new ConsumerRecord<>(

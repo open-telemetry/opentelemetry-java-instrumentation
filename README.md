@@ -167,7 +167,7 @@ The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/open
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
 Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
-provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.auto.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
 ## Supported Java libraries and frameworks
 
@@ -301,7 +301,7 @@ and you want to suppress some of them without modifying the code.
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.

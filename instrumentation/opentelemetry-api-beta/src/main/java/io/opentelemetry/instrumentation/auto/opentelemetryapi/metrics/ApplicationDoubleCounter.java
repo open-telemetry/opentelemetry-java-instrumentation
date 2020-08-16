@@ -24,7 +24,7 @@ class ApplicationDoubleCounter implements DoubleCounter {
 
   private final io.opentelemetry.metrics.DoubleCounter agentDoubleCounter;
 
-  ApplicationDoubleCounter(final io.opentelemetry.metrics.DoubleCounter agentDoubleCounter) {
+  ApplicationDoubleCounter(io.opentelemetry.metrics.DoubleCounter agentDoubleCounter) {
     this.agentDoubleCounter = agentDoubleCounter;
   }
 
@@ -33,12 +33,12 @@ class ApplicationDoubleCounter implements DoubleCounter {
   }
 
   @Override
-  public void add(final double delta, final Labels labels) {
+  public void add(double delta, Labels labels) {
     agentDoubleCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
-  public BoundDoubleCounter bind(final Labels labels) {
+  public BoundDoubleCounter bind(Labels labels) {
     return new BoundInstrument(agentDoubleCounter.bind(LabelBridging.toAgent(labels)));
   }
 
@@ -47,12 +47,12 @@ class ApplicationDoubleCounter implements DoubleCounter {
     private final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter;
 
     BoundInstrument(
-        final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
+        io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
       this.agentBoundDoubleCounter = agentBoundDoubleCounter;
     }
 
     @Override
-    public void add(final double delta) {
+    public void add(double delta) {
       agentBoundDoubleCounter.add(delta);
     }
 
@@ -66,24 +66,24 @@ class ApplicationDoubleCounter implements DoubleCounter {
 
     private final io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleCounter.Builder setDescription(final String description) {
+    public DoubleCounter.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleCounter.Builder setUnit(final String unit) {
+    public DoubleCounter.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleCounter.Builder setConstantLabels(final Labels constantLabels) {
+    public DoubleCounter.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

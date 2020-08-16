@@ -51,15 +51,16 @@ public class IntegrationTestUtils {
     return getAgentFieldClassloader("JMXFETCH_CLASSLOADER");
   }
 
-  private static ClassLoader getAgentFieldClassloader(final String fieldName) {
+  private static ClassLoader getAgentFieldClassloader(String fieldName) {
     Field classloaderField = null;
     try {
       Class<?> agentClass =
-          ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
+          ClassLoader.getSystemClassLoader()
+              .loadClass("io.opentelemetry.javaagent.bootstrap.Agent");
       classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {
       if (null != classloaderField) {
@@ -76,7 +77,7 @@ public class IntegrationTestUtils {
   }
 
   /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
-  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+  public static URL createJarWithClasses(Class<?>... classes) throws IOException {
     return createJarWithClasses(null, classes);
   }
   /**
@@ -89,7 +90,7 @@ public class IntegrationTestUtils {
    * @return the location of the newly created jar.
    * @throws IOException
    */
-  public static URL createJarWithClasses(final String mainClassname, final Class<?>... classes)
+  public static URL createJarWithClasses(String mainClassname, Class<?>... classes)
       throws IOException {
     File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
     tmpJar.deleteOnExit();
@@ -110,8 +111,7 @@ public class IntegrationTestUtils {
     return tmpJar.toURI().toURL();
   }
 
-  private static void addToJar(final Class<?> clazz, final JarOutputStream jarOutputStream)
-      throws IOException {
+  private static void addToJar(Class<?> clazz, JarOutputStream jarOutputStream) throws IOException {
     InputStream inputStream = null;
     ClassLoader loader = clazz.getClassLoader();
     if (null == loader) {
@@ -140,14 +140,14 @@ public class IntegrationTestUtils {
   }
 
   /** com.foo.Bar -> com/foo/Bar.class */
-  public static String getResourceName(final String className) {
+  public static String getResourceName(String className) {
     return className.replace('.', '/') + ".class";
   }
 
   public static String[] getBootstrapPackagePrefixes() throws Exception {
     Field f =
         getAgentClassLoader()
-            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .loadClass("io.opentelemetry.javaagent.tooling.Constants")
             .getField("BOOTSTRAP_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }
@@ -155,7 +155,7 @@ public class IntegrationTestUtils {
   public static String[] getAgentPackagePrefixes() throws Exception {
     Field f =
         getAgentClassLoader()
-            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .loadClass("io.opentelemetry.javaagent.tooling.Constants")
             .getField("AGENT_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }
@@ -172,11 +172,11 @@ public class IntegrationTestUtils {
   }
 
   public static int runOnSeparateJvm(
-      final String mainClassName,
-      final String[] jvmArgs,
-      final String[] mainMethodArgs,
-      final Map<String, String> envVars,
-      final boolean printOutputStreams)
+      String mainClassName,
+      String[] jvmArgs,
+      String[] mainMethodArgs,
+      Map<String, String> envVars,
+      boolean printOutputStreams)
       throws Exception {
     String classPath = System.getProperty("java.class.path");
     return runOnSeparateJvm(
@@ -192,12 +192,12 @@ public class IntegrationTestUtils {
    * @throws Exception
    */
   public static int runOnSeparateJvm(
-      final String mainClassName,
-      final String[] jvmArgs,
-      final String[] mainMethodArgs,
-      final Map<String, String> envVars,
-      final String classpath,
-      final boolean printOutputStreams)
+      String mainClassName,
+      String[] jvmArgs,
+      String[] mainMethodArgs,
+      Map<String, String> envVars,
+      String classpath,
+      boolean printOutputStreams)
       throws Exception {
 
     String separator = System.getProperty("file.separator");
@@ -233,7 +233,7 @@ public class IntegrationTestUtils {
     return process.exitValue();
   }
 
-  private static void waitFor(final Process process, final long timeout, final TimeUnit unit)
+  private static void waitFor(Process process, long timeout, TimeUnit unit)
       throws InterruptedException, TimeoutException {
     long startTime = System.nanoTime();
     long rem = unit.toNanos(timeout);
@@ -242,7 +242,7 @@ public class IntegrationTestUtils {
       try {
         process.exitValue();
         return;
-      } catch (final IllegalThreadStateException ex) {
+      } catch (IllegalThreadStateException ex) {
         if (rem > 0) {
           Thread.sleep(Math.min(TimeUnit.NANOSECONDS.toMillis(rem) + 1, 100));
         }
@@ -257,7 +257,7 @@ public class IntegrationTestUtils {
     String type;
     boolean print;
 
-    private StreamGobbler(final InputStream stream, final String type, final boolean print) {
+    private StreamGobbler(InputStream stream, String type, boolean print) {
       this.stream = stream;
       this.type = type;
       this.print = print;
@@ -273,7 +273,7 @@ public class IntegrationTestUtils {
             System.out.println(type + "> " + line);
           }
         }
-      } catch (final IOException e) {
+      } catch (IOException e) {
         e.printStackTrace();
       }
     }

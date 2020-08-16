@@ -41,19 +41,19 @@ public class CallDepthThreadLocalMap {
         }
       };
 
-  public static Depth getCallDepth(final Class<?> k) {
+  public static Depth getCallDepth(Class<?> k) {
     return TLS.get(k).get();
   }
 
-  public static int incrementCallDepth(final Class<?> k) {
+  public static int incrementCallDepth(Class<?> k) {
     return TLS.get(k).get().getAndIncrement();
   }
 
-  public static int decrementCallDepth(final Class<?> k) {
+  public static int decrementCallDepth(Class<?> k) {
     return TLS.get(k).get().decrementAndGet();
   }
 
-  public static void reset(final Class<?> k) {
+  public static void reset(Class<?> k) {
     TLS.get(k).get().depth = 0;
   }
 

@@ -28,14 +28,13 @@ public class WrappingStatusSettingResponseHandler implements ResponseHandler {
   final Span span;
   final ResponseHandler handler;
 
-  public WrappingStatusSettingResponseHandler(final Span span, final ResponseHandler handler) {
+  public WrappingStatusSettingResponseHandler(Span span, ResponseHandler handler) {
     this.span = span;
     this.handler = handler;
   }
 
   @Override
-  public Object handleResponse(final HttpResponse response)
-      throws ClientProtocolException, IOException {
+  public Object handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
     if (null != span) {
       TRACER.onResponse(span, response);
     }

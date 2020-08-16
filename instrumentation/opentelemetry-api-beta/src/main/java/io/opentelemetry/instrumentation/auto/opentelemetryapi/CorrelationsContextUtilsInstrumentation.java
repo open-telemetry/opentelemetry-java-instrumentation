@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import application.io.grpc.Context;
 import application.io.opentelemetry.correlationcontext.CorrelationContext;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -65,8 +65,8 @@ public class CorrelationsContextUtilsInstrumentation extends AbstractInstrumenta
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) final CorrelationContext applicationCorrelationContext,
-        @Advice.Argument(1) final Context applicationContext,
+        @Advice.Argument(0) CorrelationContext applicationCorrelationContext,
+        @Advice.Argument(1) Context applicationContext,
         @Advice.Return(readOnly = false) Context applicationUpdatedContext) {
       applicationUpdatedContext = applicationContext;
     }

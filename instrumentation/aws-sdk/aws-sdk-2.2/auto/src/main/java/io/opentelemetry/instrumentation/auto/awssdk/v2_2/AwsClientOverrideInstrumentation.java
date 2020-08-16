@@ -16,14 +16,14 @@
 
 package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -60,8 +60,7 @@ public final class AwsClientOverrideInstrumentation extends AbstractAwsClientIns
   public static class AwsSdkClientOverrideAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Return final ClientOverrideConfiguration.Builder builder) {
+    public static void methodEnter(@Advice.Return ClientOverrideConfiguration.Builder builder) {
       TracingExecutionInterceptor.overrideConfiguration(builder);
     }
   }

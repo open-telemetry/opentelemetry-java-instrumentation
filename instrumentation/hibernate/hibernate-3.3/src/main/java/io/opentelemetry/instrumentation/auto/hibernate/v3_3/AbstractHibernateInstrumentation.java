@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.classic.Validatable;
 import org.hibernate.transaction.JBossTransactionManagerLookup;
@@ -52,9 +52,9 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
      */
     public static void muzzleCheck(
         // Not in 4.0
-        final Validatable validatable,
+        Validatable validatable,
         // Not before 3.3.0.GA
-        final JBossTransactionManagerLookup lookup) {
+        JBossTransactionManagerLookup lookup) {
       validatable.validate();
       lookup.getUserTransactionName();
     }

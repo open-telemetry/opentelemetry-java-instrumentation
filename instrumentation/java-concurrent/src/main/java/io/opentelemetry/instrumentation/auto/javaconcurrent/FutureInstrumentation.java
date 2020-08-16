@@ -16,16 +16,16 @@
 
 package io.opentelemetry.instrumentation.auto.javaconcurrent;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -97,7 +97,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
         implementsInterface(named(Future.class.getName()));
     return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
       @Override
-      public boolean matches(final TypeDescription target) {
+      public boolean matches(TypeDescription target) {
         boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
         if (!whitelisted && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
           log.debug("Skipping future instrumentation for {}", target.getName());
@@ -121,7 +121,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   public static class CanceledFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(@Advice.This final Future<?> future) {
+    public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another

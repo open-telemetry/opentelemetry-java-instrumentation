@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.akkaconcurrent;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,13 +27,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import akka.dispatch.forkjoin.ForkJoinPool;
 import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
 import io.opentelemetry.instrumentation.auto.javaconcurrent.AbstractExecutorInstrumentation;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,7 +99,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
      * need to use that state.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This final ForkJoinTask thiz) {
+    public static Scope enter(@Advice.This ForkJoinTask thiz) {
       ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
       Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);
@@ -131,7 +131,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

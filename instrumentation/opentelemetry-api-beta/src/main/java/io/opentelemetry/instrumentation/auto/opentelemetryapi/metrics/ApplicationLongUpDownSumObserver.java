@@ -26,12 +26,12 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
   private final io.opentelemetry.metrics.LongUpDownSumObserver agentLongUpDownSumObserver;
 
   protected ApplicationLongUpDownSumObserver(
-      final io.opentelemetry.metrics.LongUpDownSumObserver agentLongUpDownSumObserver) {
+      io.opentelemetry.metrics.LongUpDownSumObserver agentLongUpDownSumObserver) {
     this.agentLongUpDownSumObserver = agentLongUpDownSumObserver;
   }
 
   @Override
-  public void setCallback(final Callback<LongResult> metricUpdater) {
+  public void setCallback(Callback<LongResult> metricUpdater) {
     agentLongUpDownSumObserver.setCallback(new AgentResultLongUpDownSumObserver(metricUpdater));
   }
 
@@ -41,12 +41,12 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
 
     private final Callback<LongResult> metricUpdater;
 
-    protected AgentResultLongUpDownSumObserver(final Callback<LongResult> metricUpdater) {
+    protected AgentResultLongUpDownSumObserver(Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.LongUpDownSumObserver.LongResult result) {
+    public void update(io.opentelemetry.metrics.LongUpDownSumObserver.LongResult result) {
       metricUpdater.update(new ApplicationResultLongUpDownSumObserver(result));
     }
   }
@@ -57,13 +57,13 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
         agentResultLongUpDownSumObserver;
 
     public ApplicationResultLongUpDownSumObserver(
-        final io.opentelemetry.metrics.LongUpDownSumObserver.LongResult
+        io.opentelemetry.metrics.LongUpDownSumObserver.LongResult
             agentResultLongUpDownSumObserver) {
       this.agentResultLongUpDownSumObserver = agentResultLongUpDownSumObserver;
     }
 
     @Override
-    public void observe(final long value, final Labels labels) {
+    public void observe(long value, Labels labels) {
       agentResultLongUpDownSumObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
@@ -72,24 +72,24 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
 
     private final io.opentelemetry.metrics.LongUpDownSumObserver.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.LongUpDownSumObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.metrics.LongUpDownSumObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setDescription(final String description) {
+    public LongUpDownSumObserver.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setUnit(final String unit) {
+    public LongUpDownSumObserver.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setConstantLabels(final Labels constantLabels) {
+    public LongUpDownSumObserver.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

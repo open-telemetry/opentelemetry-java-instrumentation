@@ -37,10 +37,10 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   private final Span.Kind spanKind;
 
   public TracedOnSubscribe(
-      final Observable originalObservable,
-      final String operationName,
-      final BaseDecorator decorator,
-      final Span.Kind spanKind) {
+      Observable originalObservable,
+      String operationName,
+      BaseDecorator decorator,
+      Span.Kind spanKind) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
     this.decorator = decorator;
@@ -50,7 +50,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   }
 
   @Override
-  public void call(final Subscriber<? super T> subscriber) {
+  public void call(Subscriber<? super T> subscriber) {
     // span finished by TracedSubscriber
     Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(spanKind);
     if (parentSpan != null) {
@@ -65,7 +65,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
     }
   }
 
-  protected void afterStart(final Span span) {
+  protected void afterStart(Span span) {
     decorator.afterStart(span);
   }
 }

@@ -29,27 +29,27 @@ public class TagSettingAsyncListener implements AsyncListener {
   private final AtomicBoolean responseHandled;
   private final Span span;
 
-  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final Span span) {
+  public TagSettingAsyncListener(AtomicBoolean responseHandled, Span span) {
     this.responseHandled = responseHandled;
     this.span = span;
   }
 
   @Override
-  public void onComplete(final AsyncEvent event) {
+  public void onComplete(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
       servletHttpServerTracer.end(span, (HttpServletResponse) event.getSuppliedResponse());
     }
   }
 
   @Override
-  public void onTimeout(final AsyncEvent event) {
+  public void onTimeout(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
       servletHttpServerTracer.onTimeout(span, event.getAsyncContext().getTimeout());
     }
   }
 
   @Override
-  public void onError(final AsyncEvent event) {
+  public void onError(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
       servletHttpServerTracer.endExceptionally(
           span, event.getThrowable(), (HttpServletResponse) event.getSuppliedResponse());
@@ -58,7 +58,7 @@ public class TagSettingAsyncListener implements AsyncListener {
 
   /** Transfer the listener over to the new context. */
   @Override
-  public void onStartAsync(final AsyncEvent event) {
+  public void onStartAsync(AsyncEvent event) {
     event.getAsyncContext().addListener(this);
   }
 }

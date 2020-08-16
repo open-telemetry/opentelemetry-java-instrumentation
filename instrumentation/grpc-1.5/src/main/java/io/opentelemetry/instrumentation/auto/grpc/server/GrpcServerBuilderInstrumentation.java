@@ -22,7 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.grpc.ServerInterceptor;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -65,7 +65,7 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-        @Advice.FieldValue("interceptors") final List<ServerInterceptor> interceptors) {
+        @Advice.FieldValue("interceptors") List<ServerInterceptor> interceptors) {
       boolean shouldRegister = true;
       for (ServerInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingServerInterceptor) {

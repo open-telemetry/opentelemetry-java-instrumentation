@@ -26,12 +26,12 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
   private final io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver;
 
   protected ApplicationDoubleUpDownSumObserver(
-      final io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver) {
+      io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver) {
     this.agentDoubleUpDownSumObserver = agentDoubleUpDownSumObserver;
   }
 
   @Override
-  public void setCallback(final Callback<DoubleResult> metricUpdater) {
+  public void setCallback(Callback<DoubleResult> metricUpdater) {
     agentDoubleUpDownSumObserver.setCallback(new AgentResultDoubleUpDownSumObserver(metricUpdater));
   }
 
@@ -41,12 +41,12 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
     private final Callback<DoubleResult> metricUpdater;
 
-    protected AgentResultDoubleUpDownSumObserver(final Callback<DoubleResult> metricUpdater) {
+    protected AgentResultDoubleUpDownSumObserver(Callback<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult result) {
+    public void update(io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult result) {
       metricUpdater.update(new ApplicationResultDoubleUpDownSumObserver(result));
     }
   }
@@ -57,13 +57,13 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
         agentResultDoubleUpDownSumObserver;
 
     public ApplicationResultDoubleUpDownSumObserver(
-        final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
+        io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
             agentResultDoubleUpDownSumObserver) {
       this.agentResultDoubleUpDownSumObserver = agentResultDoubleUpDownSumObserver;
     }
 
     @Override
-    public void observe(final double value, final Labels labels) {
+    public void observe(double value, Labels labels) {
       agentResultDoubleUpDownSumObserver.observe(value, LabelBridging.toAgent(labels));
     }
   }
@@ -72,24 +72,24 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
     private final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder;
 
-    protected Builder(final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setDescription(final String description) {
+    public DoubleUpDownSumObserver.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setUnit(final String unit) {
+    public DoubleUpDownSumObserver.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setConstantLabels(final Labels constantLabels) {
+    public DoubleUpDownSumObserver.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

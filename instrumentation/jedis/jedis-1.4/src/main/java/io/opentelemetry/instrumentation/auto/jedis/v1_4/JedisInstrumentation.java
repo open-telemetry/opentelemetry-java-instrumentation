@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -28,9 +28,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -79,7 +79,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This final Connection connection, @Advice.Argument(0) final Command command) {
+        @Advice.This Connection connection, @Advice.Argument(0) Command command) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
         return null;
@@ -94,7 +94,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
