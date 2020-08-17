@@ -27,9 +27,9 @@ jar {
   }
 }
 
-CopySpec isolateSpec(Collection<Task> sourceTasks) {
+CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
   return copySpec {
-    from(sourceTasks.collect { zipTree(it.archiveFile) }) {
+    from({ projectsWithShadowJar.tasks.shadowJar.collect { zipTree(it.archiveFile) } }) {
       // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
       into 'inst'
       rename '(^.*)\\.class$', '$1.classdata'
@@ -41,18 +41,19 @@ CopySpec isolateSpec(Collection<Task> sourceTasks) {
 
 //Includes everything needed for OOTB experience
 shadowJar {
-  def sourceTasks = [project(':instrumentation').tasks.shadowJar, project(':javaagent-exporters').tasks.shadowJar]
-  dependsOn sourceTasks
-  with isolateSpec(sourceTasks)
+  dependsOn ':instrumentation:shadowJar'
+  dependsOn ':javaagent-exporters:shadowJar'
+  def projectsWithShadowJar = [project(':instrumentation'), project(':javaagent-exporters')]
+  with isolateSpec(projectsWithShadowJar)
 }
 
 //Includes instrumentations, but not exporters
 task lightShadow(type: ShadowJar) {
   from sourceSets.main.output
 
-  def sourceTasks = [project(':instrumentation').tasks.shadowJar]
-  dependsOn sourceTasks
-  with isolateSpec(sourceTasks)
+  dependsOn ':instrumentation:shadowJar'
+  def projectsWithShadowJar = [project(':instrumentation')]
+  with isolateSpec(projectsWithShadowJar)
 }
 
 publishing {
