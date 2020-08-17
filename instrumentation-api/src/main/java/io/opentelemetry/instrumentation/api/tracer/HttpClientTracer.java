@@ -38,7 +38,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, HEADERS, RESPONSE> extends BaseTracer {
+public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -56,7 +56,7 @@ public abstract class HttpClientTracer<REQUEST, HEADERS, RESPONSE> extends BaseT
 
   protected abstract String responseHeader(RESPONSE response, String name);
 
-  protected abstract HttpTextFormat.Setter<HEADERS> getSetter();
+  protected abstract HttpTextFormat.Setter<CARRIER> getSetter();
 
   protected HttpClientTracer() {
     super();
@@ -74,15 +74,15 @@ public abstract class HttpClientTracer<REQUEST, HEADERS, RESPONSE> extends BaseT
     return startSpan(request, spanNameForRequest(request), startTimeNanos);
   }
 
-  public Scope startScope(Span span, HEADERS headers) {
+  public Scope startScope(Span span, CARRIER carrier) {
     Context context = withSpan(span, Context.current());
 
-    Setter<HEADERS> setter = getSetter();
+    Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, setter);
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, carrier, setter);
     context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
     return withScopedContext(context);
   }
