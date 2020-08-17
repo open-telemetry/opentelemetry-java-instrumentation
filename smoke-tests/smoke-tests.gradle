@@ -18,6 +18,5 @@ test {
 
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
-    jvmArgs "-Dotel.exporter.jar=${project(':javaagent-exporters:logging').tasks.shadowJar.archivePath}"
   }
 }
