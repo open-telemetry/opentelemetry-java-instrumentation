@@ -197,8 +197,3 @@ def setBuildFile(project) {
 rootProject.children.each {
   setBuildFile(it)
 }
-
-project(':javaagent-exporters:jaeger').name = 'opentelemetry-auto-exporter-jaeger'
-project(':javaagent-exporters:logging').name = 'opentelemetry-auto-exporter-logging'
-project(':javaagent-exporters:otlp').name = 'opentelemetry-auto-exporter-otlp'
-project(':javaagent-exporters:zipkin').name = 'opentelemetry-auto-exporter-zipkin'

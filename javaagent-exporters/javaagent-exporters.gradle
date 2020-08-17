@@ -8,24 +8,24 @@ dependencies {
   testImplementation project(':javaagent-tooling')
 
   testImplementation deps.opentelemetrySdkAutoConfig
-  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-otlp')
-  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-jaeger')
-  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-logging')
-  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-zipkin')
+  testImplementation project(':javaagent-exporters:otlp')
+  testImplementation project(':javaagent-exporters:jaeger')
+  testImplementation project(':javaagent-exporters:logging')
+  testImplementation project(':javaagent-exporters:zipkin')
 }
 
 tasks.withType(Test).configureEach() {
-  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-otlp:shadowJar'
-  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-jaeger:shadowJar'
-  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-logging:shadowJar'
-  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-zipkin:shadowJar'
+  dependsOn ':javaagent-exporters:otlp:shadowJar'
+  dependsOn ':javaagent-exporters:jaeger:shadowJar'
+  dependsOn ':javaagent-exporters:logging:shadowJar'
+  dependsOn ':javaagent-exporters:zipkin:shadowJar'
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
     systemProperty 'adapterRoot', "$rootDir/javaagent-exporters"
-    systemProperty 'otlpExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-otlp').tasks.shadowJar.archivePath
-    systemProperty 'jaegerExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-jaeger').tasks.shadowJar.archivePath
-    systemProperty 'loggingExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath
-    systemProperty 'zipkinExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-zipkin').tasks.shadowJar.archivePath
+    systemProperty 'otlpExporterJar', project(':javaagent-exporters:otlp').tasks.shadowJar.archivePath
+    systemProperty 'jaegerExporterJar', project(':javaagent-exporters:jaeger').tasks.shadowJar.archivePath
+    systemProperty 'loggingExporterJar', project(':javaagent-exporters:logging').tasks.shadowJar.archivePath
+    systemProperty 'zipkinExporterJar', project(':javaagent-exporters:zipkin').tasks.shadowJar.archivePath
   }
 }
 
@@ -34,10 +34,10 @@ configurations {
 }
 
 dependencies {
-  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-logging', configuration: 'shadow')
-  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-otlp', configuration: 'shadow')
-  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-jaeger', configuration: 'shadow')
-  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-zipkin', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:logging', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:otlp', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:jaeger', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:zipkin', configuration: 'shadow')
 }
 
 
