@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.common.exec;
+package io.opentelemetry.javaagent.tooling;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
