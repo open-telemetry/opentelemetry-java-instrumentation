@@ -46,11 +46,11 @@ public class BaseTracerHelper {
     }
   }
 
-  public static void onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public static void onPeerConnection(Span span, InetAddress remoteAddress) {
     setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
-  public static void setPeer(final Span span, String peerName, String peerIp) {
+  public static void setPeer(Span span, String peerName, String peerIp) {
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
     }
