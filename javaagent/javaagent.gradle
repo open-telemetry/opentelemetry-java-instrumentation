@@ -41,7 +41,7 @@ CopySpec isolateSpec(Collection<Task> sourceTasks) {
 
 //Includes everything needed for OOTB experience
 shadowJar {
-  def sourceTasks = [project(':instrumentation').tasks.shadowJar, project(':auto-exporters').tasks.shadowJar]
+  def sourceTasks = [project(':instrumentation').tasks.shadowJar, project(':javaagent-exporters').tasks.shadowJar]
   dependsOn sourceTasks
   with isolateSpec(sourceTasks)
 }

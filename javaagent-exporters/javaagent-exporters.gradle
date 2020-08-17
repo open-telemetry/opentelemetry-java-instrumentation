@@ -1,0 +1,66 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation project(':javaagent-tooling')
+
+  testImplementation deps.opentelemetrySdkAutoConfig
+  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-otlp')
+  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-jaeger')
+  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-logging')
+  testImplementation project(':javaagent-exporters:opentelemetry-auto-exporter-zipkin')
+}
+
+tasks.withType(Test).configureEach() {
+  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-otlp:shadowJar'
+  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-jaeger:shadowJar'
+  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-logging:shadowJar'
+  dependsOn ':javaagent-exporters:opentelemetry-auto-exporter-zipkin:shadowJar'
+  doFirst {
+    systemProperty 'projectVersion', allprojects.version[0]
+    systemProperty 'adapterRoot', "$rootDir/javaagent-exporters"
+    systemProperty 'otlpExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-otlp').tasks.shadowJar.archivePath
+    systemProperty 'jaegerExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-jaeger').tasks.shadowJar.archivePath
+    systemProperty 'loggingExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath
+    systemProperty 'zipkinExporterJar', project(':javaagent-exporters:opentelemetry-auto-exporter-zipkin').tasks.shadowJar.archivePath
+  }
+}
+
+configurations {
+  shadowInclude
+}
+
+dependencies {
+  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-logging', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-otlp', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-jaeger', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:opentelemetry-auto-exporter-zipkin', configuration: 'shadow')
+}
+
+
+shadowJar {
+  configurations = [project.configurations.shadowInclude]
+
+  archiveClassifier = ''
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.javaagent.shaded.io.opentelemetry.correlationcontext"
+  relocate "io.opentelemetry.internal", "io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"
+  relocate "io.opentelemetry.metrics", "io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"
+  relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"
+}
