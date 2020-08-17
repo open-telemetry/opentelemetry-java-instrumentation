@@ -43,7 +43,8 @@ dependencies {
   compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.0.0'
 
   implementation project(':instrumentation:play-ws:play-ws-common')
-  testImplementation project(path: ':instrumentation:play-ws:play-ws-common', configuration: 'testArtifacts')
+
+  testImplementation project(':instrumentation:play-ws:testing')
 
   // These are to ensure cross compatibility
   testImplementation project(':instrumentation:netty:netty-4.0')
