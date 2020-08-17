@@ -26,6 +26,7 @@ if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
 
+def testLatestDeps = findProperty('testLatestDeps')
 configurations {
   // library is where to define dependencies on the library that is being instrumented. It will not
   // be packaged in the agent but will be available at runtime for tests.
@@ -37,25 +38,35 @@ configurations {
     canBeResolved = false
     canBeConsumed = false
   }
-  compileOnly.extendsFrom(library)
-  if (findProperty('testLatestDeps')) {
-    library.dependencies.whenObjectAdded {
-      def dep = it.copy()
-      dep.version {
-        it.strictly '+'
-      }
-      testImplementation.dependencies.add(dep)
-    }
-    testLibrary.dependencies.whenObjectAdded {
-      def dep = it.copy()
-      dep.version {
-        it.strictly '+'
-      }
-      testImplementation.dependencies.add(dep)
-    }
-  } else {
-    testImplementation.extendsFrom(library, testLibrary)
+  latestDepTestLibrary {
+    canBeResolved = false
+    canBeConsumed = false
   }
+  [library, testLibrary].each {configuration ->
+    // We use whenObjectAdded and copy into the real configurations instead of extension to allow
+    // mutating the version for latest dep tests.
+    configuration.dependencies.whenObjectAdded {
+      def dep = it.copy()
+      if (testLatestDeps) {
+        dep.version {
+          it.require '+'
+        }
+      }
+      testImplementation.dependencies.add(dep)
+    }
+  }
+  if (testLatestDeps) {
+    latestDepTestLibrary.dependencies.whenObjectAdded {
+      def dep = it.copy()
+      def declaredVersion = dep.version
+      dep.version {
+        it.strictly declaredVersion
+      }
+      testImplementation.dependencies.add(dep)
+    }
+  }
+  compileOnly.extendsFrom(library)
+  testCompileClasspath.extendsFrom(latestDepTestLibrary)
 }
 
 afterEvaluate {

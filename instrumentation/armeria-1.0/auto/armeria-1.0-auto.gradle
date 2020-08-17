@@ -20,4 +20,6 @@ dependencies {
   implementation project(':instrumentation:armeria-1.0:library')
 
   library group: 'com.linecorp.armeria', name: 'armeria', version: '0.99.8'
+
+  testImplementation project(':instrumentation:armeria-1.0:testing')
 }
