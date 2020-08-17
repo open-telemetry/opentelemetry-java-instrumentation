@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.auto.play.v2_4;
 import static io.opentelemetry.instrumentation.auto.play.v2_4.PlayTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -57,7 +58,7 @@ public class PlayAdvice {
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
-    Span rootSpan = TRACER.getCurrentServerSpan();
+    Span rootSpan = BaseTracerHelper.getCurrentServerSpan();
     // set the span name on the upstream akka/netty span
     TRACER.updateSpanName(rootSpan, req);
   }

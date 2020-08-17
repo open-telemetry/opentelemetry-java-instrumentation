@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.auto.springwebmvc;
 
 import static io.opentelemetry.instrumentation.auto.springwebmvc.SpringWebMvcTracer.TRACER;
 
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.util.List;
@@ -39,7 +40,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    Span serverSpan = TRACER.getCurrentServerSpan();
+    Span serverSpan = BaseTracerHelper.getCurrentServerSpan();
 
     if (handlerMappings != null && serverSpan != null) {
       try {

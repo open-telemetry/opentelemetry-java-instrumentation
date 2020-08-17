@@ -29,6 +29,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -76,8 +78,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   public static class ControllerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameResourceAndStartSpan(
-        @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
-      Span serverSpan = TRACER.getCurrentServerSpan();
+        @Advice.Argument(0) final HttpServletRequest request,
+        @Advice.Argument(2) final Object handler) {
+      Span serverSpan = BaseTracerHelper.getCurrentServerSpan();
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
         TRACER.onRequest(serverSpan, request);

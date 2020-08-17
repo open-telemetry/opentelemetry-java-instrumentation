@@ -44,7 +44,7 @@ public abstract class BaseHttpClientServerTracer extends BaseTracer {
       }
       if (url.getHost() != null) {
         urlBuilder.append(url.getHost());
-        setPeer(span, url.getHost(), null);
+        BaseTracerHelper.setPeer(span, url.getHost(), null);
         if (url.getPort() > 0) {
           span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
           if (url.getPort() != 80 && url.getPort() != 443) {

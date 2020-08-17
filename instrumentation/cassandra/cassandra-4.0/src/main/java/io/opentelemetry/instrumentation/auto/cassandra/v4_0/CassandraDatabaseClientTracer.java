@@ -20,6 +20,7 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
@@ -63,7 +64,8 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
-      address.ifPresent(inetSocketAddress -> onPeerConnection(span, inetSocketAddress));
+      address.ifPresent(
+          inetSocketAddress -> BaseTracerHelper.onPeerConnection(span, inetSocketAddress));
     }
   }
 }

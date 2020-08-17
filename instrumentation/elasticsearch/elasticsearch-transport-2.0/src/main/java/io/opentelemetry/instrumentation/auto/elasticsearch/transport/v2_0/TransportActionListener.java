@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_0;
+package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v2_0;
 
 import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
@@ -29,11 +29,9 @@ import org.elasticsearch.action.DocumentRequest;
 import org.elasticsearch.action.IndicesRequest;
 import org.elasticsearch.action.bulk.BulkShardResponse;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.broadcast.BroadcastResponse;
 import org.elasticsearch.action.support.nodes.BaseNodesResponse;
-import org.elasticsearch.action.support.replication.ReplicationResponse;
 
 public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
@@ -41,13 +39,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   private final Span span;
 
   public TransportActionListener(
-      ActionRequest actionRequest, ActionListener<T> listener, Span span) {
+      final ActionRequest actionRequest, final ActionListener<T> listener, final Span span) {
     this.listener = listener;
     this.span = span;
     onRequest(actionRequest);
   }
 
-  private void onRequest(ActionRequest request) {
+  private void onRequest(final ActionRequest request) {
     if (request instanceof IndicesRequest) {
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
@@ -70,7 +68,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onResponse(T response) {
+  public void onResponse(final T response) {
     if (response.remoteAddress() != null) {
       BaseTracerHelper.setPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
@@ -91,29 +89,16 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       span.setAttribute("elasticsearch.shard.broadcast.failed", resp.getFailedShards());
     }
 
-    if (response instanceof ReplicationResponse) {
-      ReplicationResponse resp = (ReplicationResponse) response;
-      span.setAttribute("elasticsearch.shard.replication.total", resp.getShardInfo().getTotal());
-      span.setAttribute(
-          "elasticsearch.shard.replication.successful", resp.getShardInfo().getSuccessful());
-      span.setAttribute("elasticsearch.shard.replication.failed", resp.getShardInfo().getFailed());
-    }
-
-    if (response instanceof IndexResponse) {
-      span.setAttribute(
-          "elasticsearch.response.status", ((IndexResponse) response).status().getStatus());
-    }
-
     if (response instanceof BulkShardResponse) {
       BulkShardResponse resp = (BulkShardResponse) response;
       span.setAttribute("elasticsearch.shard.bulk.id", resp.getShardId().getId());
-      span.setAttribute("elasticsearch.shard.bulk.index", resp.getShardId().getIndexName());
+      span.setAttribute("elasticsearch.shard.bulk.index", resp.getShardId().getIndex());
     }
 
     if (response instanceof BaseNodesResponse) {
       BaseNodesResponse resp = (BaseNodesResponse) response;
-      if (resp.hasFailures()) {
-        span.setAttribute("elasticsearch.node.failures", resp.failures().size());
+      if (resp.failures() != null && resp.failures().length > 0) {
+        span.setAttribute("elasticsearch.node.failures", resp.failures().length);
       }
       span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
     }
@@ -127,12 +112,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onFailure(Exception e) {
+  public void onFailure(final Throwable e) {
     DECORATE.onError(span, e);
 
     try {
       listener.onFailure(e);
     } finally {
+      DECORATE.beforeFinish(span);
       span.end();
     }
   }

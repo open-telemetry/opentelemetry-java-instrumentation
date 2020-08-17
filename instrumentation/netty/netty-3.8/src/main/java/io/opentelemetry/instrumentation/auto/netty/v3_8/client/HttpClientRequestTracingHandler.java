@@ -24,7 +24,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.trace.Span;
@@ -64,7 +64,8 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     Span span = TRACER.startSpan(request);
-    BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    BaseTracerHelper.onPeerConnection(
+        span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
     Context context = withSpan(span, Context.current());
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
 
