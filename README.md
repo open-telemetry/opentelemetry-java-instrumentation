@@ -257,7 +257,29 @@ only supports manual instrumentation using the `opentelemetry-api` version with 
 number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
 multiple (1.0.0+) versions of `opentelemetry-api`.
 
-You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
+You'll need to add a dependency on the `opentelemetry-api` library to get started.
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+	compile('io.opentelemetry:opentelemetry-api:0.7.0')
+}
+```
+
+Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
 
 ### Configure the OpenTelemetry getTracer
