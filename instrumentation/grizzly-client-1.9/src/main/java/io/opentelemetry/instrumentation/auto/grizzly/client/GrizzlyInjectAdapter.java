@@ -16,16 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.grizzly.client;
 
-import com.ning.http.client.FluentCaseInsensitiveStringsMap;
+import com.ning.http.client.Request;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 
-public class GrizzlyInjectAdapter
-    implements HttpTextFormat.Setter<FluentCaseInsensitiveStringsMap> {
+public class GrizzlyInjectAdapter implements HttpTextFormat.Setter<Request> {
 
   public static final GrizzlyInjectAdapter SETTER = new GrizzlyInjectAdapter();
 
   @Override
-  public void set(FluentCaseInsensitiveStringsMap carrier, String key, String value) {
-    carrier.replaceWith(key, value);
+  public void set(Request carrier, String key, String value) {
+    carrier.getHeaders().replaceWith(key, value);
   }
 }
