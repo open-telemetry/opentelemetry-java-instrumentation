@@ -275,7 +275,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
 
 ```groovy
 dependencies {
-	compile('io.opentelemetry:opentelemetry-api:0.7.0')
+    compile('io.opentelemetry:opentelemetry-api:0.7.0')
 }
 ```
 
