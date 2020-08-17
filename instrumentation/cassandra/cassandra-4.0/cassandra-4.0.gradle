@@ -20,4 +20,6 @@ dependencies {
   library group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
 
   testImplementation group: 'org.cassandraunit', name: 'cassandra-unit', version: '4.3.1.0'
+
+  latestDepTestLibrary group: 'com.datastax.oss', name: 'java-driver-core', version: '4.+'
 }

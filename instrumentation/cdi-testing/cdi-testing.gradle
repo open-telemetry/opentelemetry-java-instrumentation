@@ -5,4 +5,8 @@ dependencies {
   testLibrary group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
   testLibrary group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'
   testLibrary group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.3.0.Final'
+
+  latestDepTestLibrary group: 'org.jboss.weld', name: 'weld-core', version: '2.+'
+  latestDepTestLibrary group: 'org.jboss.weld.se', name: 'weld-se', version: '2.+'
+  latestDepTestLibrary group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.+'
 }
