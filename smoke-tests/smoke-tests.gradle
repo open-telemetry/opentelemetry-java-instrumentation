@@ -13,7 +13,7 @@ dependencies {
 }
 
 test {
-  dependsOn = ':javaagent:shadowJar'
+  dependsOn ':javaagent:shadowJar'
 
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
