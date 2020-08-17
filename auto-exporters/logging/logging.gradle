@@ -11,6 +11,7 @@ dependencies {
   compileOnly deps.opentelemetrySdkAutoConfig
 }
 
+jar.enabled = false
 shadowJar {
   archiveClassifier = ''
 }
