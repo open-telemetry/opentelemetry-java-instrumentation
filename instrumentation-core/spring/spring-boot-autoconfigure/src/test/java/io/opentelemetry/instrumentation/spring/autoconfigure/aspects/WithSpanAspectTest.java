@@ -27,8 +27,6 @@ import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,8 +64,6 @@ public class WithSpanAspectTest {
   @Mock private Span span;
   @Mock private Span.Builder spanBuilder;
   @Mock private Scope scope;
-  @Mock private ProceedingJoinPoint pjp;
-  @Mock private MethodSignature signature;
 
   private WithSpanTester withSpanTester;
 
