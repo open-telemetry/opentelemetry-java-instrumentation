@@ -20,8 +20,8 @@ import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsT
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -40,15 +40,14 @@ import net.bytebuddy.asm.Advice;
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope createGenericSpan(
-        @Advice.This final ContainerRequestContext context) {
+    public static SpanWithScope createGenericSpan(@Advice.This ContainerRequestContext context) {
 
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null) {
         Class filterClass = (Class) context.getProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS);
         Method method = null;
         try {
           method = filterClass.getMethod("filter", ContainerRequestContext.class);
-        } catch (final NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
           // Unable to find the filter method.  This should not be reachable because the context
           // can only be aborted inside the filter method
         }
@@ -63,7 +62,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

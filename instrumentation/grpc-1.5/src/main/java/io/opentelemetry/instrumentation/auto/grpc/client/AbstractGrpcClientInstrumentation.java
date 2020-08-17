@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.grpc.client;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Map;

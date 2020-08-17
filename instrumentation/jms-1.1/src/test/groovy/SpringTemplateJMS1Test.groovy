@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
+import static JMS1Test.consumerSpan
+import static JMS1Test.producerSpan
+
 import com.google.common.base.Stopwatch
 import io.opentelemetry.auto.test.AgentTestRunner
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Connection
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
-
-import javax.jms.Connection
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.TimeUnit
-
-import static JMS1Test.consumerSpan
-import static JMS1Test.producerSpan
 
 class SpringTemplateJMS1Test extends AgentTestRunner {
   @Shared
@@ -57,7 +57,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     broker.stop()
   }
 
-  def "sending a message to #expectedSpanName generates spans"() {
+  def "sending a message to #destinationName generates spans"() {
     setup:
     template.convertAndSend(destination, messageText)
     TextMessage receivedMessage = template.receive(destination)
@@ -66,23 +66,25 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS1") | "queue/SpringTemplateJMS1"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS1") | "queue"         | "SpringTemplateJMS1"
   }
 
   def "send and receive message generates spans"() {
     setup:
+    AtomicReference<String> msgId = new AtomicReference<>()
     Thread.start {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
+      msgId.set(msg.getJMSMessageID())
 
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
@@ -101,21 +103,22 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, expectedSpanName)
+        producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, ActiveMQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "queue/<temporary>") // receive doesn't propagate the trace, so this is a root
+        // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "<temporary>")
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue/<temporary>", false, ActiveMQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[2][0])
       }
     }
 
     where:
-    destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS1") | "queue/SpringTemplateJMS1"
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJMS1") | "queue"         | "SpringTemplateJMS1"
   }
 }

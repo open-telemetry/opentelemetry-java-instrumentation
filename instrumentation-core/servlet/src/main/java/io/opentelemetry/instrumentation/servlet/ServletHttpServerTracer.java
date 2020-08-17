@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.servlet;
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,11 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 
 public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
-
-  @Override
-  protected String getVersion() {
-    return null;
-  }
 
   @Override
   // TODO this violates convention

@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.otlp.OtlpSpanExporterFactory
+io.opentelemetry.javaagent.exporters.otlp.OtlpSpanExporterFactory

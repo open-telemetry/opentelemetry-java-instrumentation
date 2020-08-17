@@ -21,7 +21,7 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
@@ -35,17 +35,17 @@ public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResp
   }
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }
 
   @Override
-  protected URI url(final HttpRequest httpRequest) throws URISyntaxException {
+  protected URI url(HttpRequest httpRequest) throws URISyntaxException {
     return new URI(httpRequest.uri().toString());
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.status().intValue();
   }
 

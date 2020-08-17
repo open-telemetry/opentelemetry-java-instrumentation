@@ -33,8 +33,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer;
 
-  public LettuceFluxTerminationRunnable(
-      final RedisCommand<?, ?, ?> command, final boolean finishSpanOnClose) {
+  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
   }
 
@@ -42,7 +41,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
     return onSubscribeConsumer;
   }
 
-  private void finishSpan(final boolean isCommandCancelled, final Throwable throwable) {
+  private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
     if (span != null) {
       span.setAttribute("db.command.results.count", numResults);
       if (isCommandCancelled) {
@@ -62,7 +61,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   }
 
   @Override
-  public void accept(final Signal signal) {
+  public void accept(Signal signal) {
     if (SignalType.ON_COMPLETE.equals(signal.getType())
         || SignalType.ON_ERROR.equals(signal.getType())) {
       finishSpan(false, signal.getThrowable());
@@ -83,16 +82,16 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
-        final LettuceFluxTerminationRunnable owner,
-        final RedisCommand<?, ?, ?> command,
-        final boolean finishSpanOnClose) {
+        LettuceFluxTerminationRunnable owner,
+        RedisCommand<?, ?, ?> command,
+        boolean finishSpanOnClose) {
       this.owner = owner;
       this.command = command;
       this.finishSpanOnClose = finishSpanOnClose;
     }
 
     @Override
-    public void accept(final Subscription subscription) {
+    public void accept(Subscription subscription) {
       owner.span = TRACER.startSpan(null, command);
       if (finishSpanOnClose) {
         TRACER.end(owner.span);

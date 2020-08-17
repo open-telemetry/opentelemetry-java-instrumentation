@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import java.net.URI;
@@ -37,7 +37,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
   public static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
   @Override
-  protected String method(final HttpRequest request) {
+  protected String method(HttpRequest request) {
     if (request instanceof HttpUriRequest) {
       return ((HttpUriRequest) request).getMethod();
     } else {
@@ -47,7 +47,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
   }
 
   @Override
-  protected URI url(final HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) throws URISyntaxException {
     /*
      * Note: this is essentially an optimization: HttpUriRequest allows quicker access to required information.
      * The downside is that we need to load HttpUriRequest which essentially means we depend on httpasyncclient
@@ -62,7 +62,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
   }
 
   @Override
-  protected Integer status(final HttpResponse response) {
+  protected Integer status(HttpResponse response) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine != null ? statusLine.getStatusCode() : null;
   }

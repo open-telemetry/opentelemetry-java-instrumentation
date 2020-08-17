@@ -38,27 +38,27 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span) {
+  public AsyncHandlerWrapper(AsyncHandler delegate, Span span) {
     this.delegate = delegate;
     this.span = span;
     parentSpan = TRACER.getCurrentSpan();
   }
 
   @Override
-  public State onBodyPartReceived(final HttpResponseBodyPart content) throws Exception {
+  public State onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
     builder.accumulate(content);
     return delegate.onBodyPartReceived(content);
   }
 
   @Override
-  public State onStatusReceived(final HttpResponseStatus status) throws Exception {
+  public State onStatusReceived(HttpResponseStatus status) throws Exception {
     builder.reset();
     builder.accumulate(status);
     return delegate.onStatusReceived(status);
   }
 
   @Override
-  public State onHeadersReceived(final HttpHeaders httpHeaders) throws Exception {
+  public State onHeadersReceived(HttpHeaders httpHeaders) throws Exception {
     builder.accumulate(httpHeaders);
     return delegate.onHeadersReceived(httpHeaders);
   }
@@ -78,7 +78,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onThrowable(final Throwable throwable) {
+  public void onThrowable(Throwable throwable) {
     TRACER.endExceptionally(span, throwable);
 
     if (parentSpan.getContext().isValid()) {
@@ -91,37 +91,37 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public State onTrailingHeadersReceived(final HttpHeaders headers) throws Exception {
+  public State onTrailingHeadersReceived(HttpHeaders headers) throws Exception {
     return delegate.onTrailingHeadersReceived(headers);
   }
 
   @Override
-  public void onHostnameResolutionAttempt(final String name) {
+  public void onHostnameResolutionAttempt(String name) {
     delegate.onHostnameResolutionAttempt(name);
   }
 
   @Override
-  public void onHostnameResolutionSuccess(final String name, final List list) {
+  public void onHostnameResolutionSuccess(String name, List list) {
     delegate.onHostnameResolutionSuccess(name, list);
   }
 
   @Override
-  public void onHostnameResolutionFailure(final String name, final Throwable cause) {
+  public void onHostnameResolutionFailure(String name, Throwable cause) {
     delegate.onHostnameResolutionFailure(name, cause);
   }
 
   @Override
-  public void onTcpConnectAttempt(final InetSocketAddress remoteAddress) {
+  public void onTcpConnectAttempt(InetSocketAddress remoteAddress) {
     delegate.onTcpConnectAttempt(remoteAddress);
   }
 
   @Override
-  public void onTcpConnectSuccess(final InetSocketAddress remoteAddress, final Channel connection) {
+  public void onTcpConnectSuccess(InetSocketAddress remoteAddress, Channel connection) {
     delegate.onTcpConnectSuccess(remoteAddress, connection);
   }
 
   @Override
-  public void onTcpConnectFailure(final InetSocketAddress remoteAddress, final Throwable cause) {
+  public void onTcpConnectFailure(InetSocketAddress remoteAddress, Throwable cause) {
     delegate.onTcpConnectFailure(remoteAddress, cause);
   }
 
@@ -136,7 +136,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onTlsHandshakeFailure(final Throwable cause) {
+  public void onTlsHandshakeFailure(Throwable cause) {
     delegate.onTlsHandshakeFailure(cause);
   }
 
@@ -146,17 +146,17 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onConnectionPooled(final Channel connection) {
+  public void onConnectionPooled(Channel connection) {
     delegate.onConnectionPooled(connection);
   }
 
   @Override
-  public void onConnectionOffer(final Channel connection) {
+  public void onConnectionOffer(Channel connection) {
     delegate.onConnectionOffer(connection);
   }
 
   @Override
-  public void onRequestSend(final NettyRequest request) {
+  public void onRequestSend(NettyRequest request) {
     delegate.onRequestSend(request);
   }
 

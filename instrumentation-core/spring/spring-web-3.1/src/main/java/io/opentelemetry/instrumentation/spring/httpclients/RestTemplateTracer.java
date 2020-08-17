@@ -21,7 +21,7 @@ import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInj
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,7 +38,7 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpRespons
   }
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }
 

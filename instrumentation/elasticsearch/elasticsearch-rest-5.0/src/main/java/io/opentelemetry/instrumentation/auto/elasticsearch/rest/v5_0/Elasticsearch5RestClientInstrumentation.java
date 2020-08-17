@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.elasticsearch.rest.v5_0;
 
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,8 +27,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -73,8 +73,8 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) final String method,
-        @Advice.Argument(1) final String endpoint,
+        @Advice.Argument(0) String method,
+        @Advice.Argument(1) String endpoint,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
       Span span = TRACER.spanBuilder(method + " " + endpoint).startSpan();
@@ -88,7 +88,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);

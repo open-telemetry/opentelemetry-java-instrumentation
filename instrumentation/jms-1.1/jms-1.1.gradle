@@ -15,9 +15,13 @@ muzzle {
 }
 
 testSets {
-  latestDepTest {
+  jms2Test {
   }
 }
+
+// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
+jms2Test.forkEvery 1
+test.dependsOn jms2Test
 
 dependencies {
   compileOnly group: 'javax.jms', name: 'jms-api', version: '1.1-rev-1'
@@ -31,6 +35,6 @@ dependencies {
   // 4.x required for Java 7
   testImplementation group: 'org.springframework', name: 'spring-jms', version: '4.3.21.RELEASE'
 
-  latestDepTestImplementation group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
-  latestDepTestImplementation group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
+  jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
+  jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
 }

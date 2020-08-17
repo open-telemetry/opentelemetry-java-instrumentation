@@ -16,15 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -69,8 +69,8 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
   public static class ClientRedirectAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     private static void onAfterExecute(
-        @Advice.Argument(0) final HttpRequest original,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final HttpRequest redirect) {
+        @Advice.Argument(0) HttpRequest original,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) HttpRequest redirect) {
       if (redirect == null) {
         return;
       }

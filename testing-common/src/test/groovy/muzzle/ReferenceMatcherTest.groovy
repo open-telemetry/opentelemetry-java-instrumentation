@@ -16,26 +16,26 @@
 
 package muzzle
 
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.INTERFACE
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_INTERFACE
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_STATIC
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.STATIC
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingClass
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingField
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingMethod
+import static muzzle.TestClasses.MethodBodyAdvice
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
-import io.opentelemetry.auto.tooling.muzzle.Reference
-import io.opentelemetry.auto.tooling.muzzle.Reference.Source
-import io.opentelemetry.auto.tooling.muzzle.ReferenceCreator
-import io.opentelemetry.auto.tooling.muzzle.ReferenceMatcher
+import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.INTERFACE
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.NON_INTERFACE
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.NON_STATIC
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Flag.STATIC
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Mismatch.MissingClass
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Mismatch.MissingField
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Mismatch.MissingFlag
-import static io.opentelemetry.auto.tooling.muzzle.Reference.Mismatch.MissingMethod
-import static muzzle.TestClasses.MethodBodyAdvice
 
 class ReferenceMatcherTest extends AgentTestRunner {
 

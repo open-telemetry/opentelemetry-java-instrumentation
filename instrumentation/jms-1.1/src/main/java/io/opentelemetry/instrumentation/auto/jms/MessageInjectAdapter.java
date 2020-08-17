@@ -31,11 +31,11 @@ public class MessageInjectAdapter implements HttpTextFormat.Setter<Message> {
   static final String DASH = "__dash__";
 
   @Override
-  public void set(final Message carrier, final String key, final String value) {
+  public void set(Message carrier, String key, String value) {
     String propName = key.replace("-", DASH);
     try {
       carrier.setStringProperty(propName, value);
-    } catch (final JMSException e) {
+    } catch (JMSException e) {
       if (log.isDebugEnabled()) {
         log.debug("Failure setting jms property: " + propName, e);
       }

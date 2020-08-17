@@ -30,18 +30,18 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
+  public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
     Span span = TRACER.startSpan("play.request");
     return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopTraceOnResponse(
-      @Advice.Enter final SpanWithScope playControllerScope,
-      @Advice.This final Object thisAction,
-      @Advice.Thrown final Throwable throwable,
-      @Advice.Argument(0) final Request<?> req,
-      @Advice.Return(readOnly = false) final Future<Result> responseFuture) {
+      @Advice.Enter SpanWithScope playControllerScope,
+      @Advice.This Object thisAction,
+      @Advice.Thrown Throwable throwable,
+      @Advice.Argument(0) Request<?> req,
+      @Advice.Return(readOnly = false) Future<Result> responseFuture) {
     Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.

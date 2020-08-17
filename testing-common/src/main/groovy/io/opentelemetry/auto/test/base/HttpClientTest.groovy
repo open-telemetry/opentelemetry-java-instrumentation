@@ -16,20 +16,6 @@
 
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.api.MoreAttributes
-import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import spock.lang.AutoCleanup
-import spock.lang.Requires
-import spock.lang.Shared
-import spock.lang.Unroll
-
-import java.util.concurrent.ExecutionException
-
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
@@ -38,6 +24,19 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.SERVER
 import static org.junit.Assume.assumeTrue
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.api.MoreAttributes
+import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.ExecutionException
+import spock.lang.AutoCleanup
+import spock.lang.Requires
+import spock.lang.Shared
+import spock.lang.Unroll
 
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {
@@ -466,7 +465,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 
   int extraClientSpans() {

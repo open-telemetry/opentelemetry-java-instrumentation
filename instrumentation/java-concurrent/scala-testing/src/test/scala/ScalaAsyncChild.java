@@ -38,7 +38,7 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
   }
 
   @Override
-  protected void setRawResult(final Object value) {}
+  protected void setRawResult(Object value) {}
 
   @Override
   protected boolean exec() {
@@ -46,7 +46,7 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
     return true;
   }
 
-  public ScalaAsyncChild(final boolean doTraceableWork, final boolean blockThread) {
+  public ScalaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }

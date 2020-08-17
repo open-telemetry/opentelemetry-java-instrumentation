@@ -16,6 +16,8 @@
 
 package client
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
@@ -24,8 +26,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Timeout
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {

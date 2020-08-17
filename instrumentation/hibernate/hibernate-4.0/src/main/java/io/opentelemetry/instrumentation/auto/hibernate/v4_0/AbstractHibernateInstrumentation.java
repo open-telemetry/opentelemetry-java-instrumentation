@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v4_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 
@@ -49,7 +49,7 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
      * Some cases of instrumentation will match more broadly than others, so this unused method
      * allows all instrumentation to uniformly match versions of Hibernate starting at 4.0.
      */
-    public static void muzzleCheck(final SharedSessionContract contract) {
+    public static void muzzleCheck(SharedSessionContract contract) {
       contract.createCriteria("");
     }
   }

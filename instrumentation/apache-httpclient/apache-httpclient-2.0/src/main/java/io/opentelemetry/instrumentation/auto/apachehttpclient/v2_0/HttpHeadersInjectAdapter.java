@@ -25,7 +25,7 @@ public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpMetho
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
-  public void set(final HttpMethod carrier, final String key, final String value) {
+  public void set(HttpMethod carrier, String key, String value) {
     carrier.setRequestHeader(new Header(key, value));
   }
 }

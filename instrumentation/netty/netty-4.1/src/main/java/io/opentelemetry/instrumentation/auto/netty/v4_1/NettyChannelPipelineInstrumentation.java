@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -35,7 +35,6 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientResponseTracingHandler;
@@ -43,6 +42,7 @@ import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracing
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,7 +113,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAddAdvice {
     @Advice.OnMethodEnter
-    public static int trackCallDepth(@Advice.Argument(2) final ChannelHandler handler) {
+    public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -128,9 +128,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter final int callDepth,
-        @Advice.This final ChannelPipeline pipeline,
-        @Advice.Argument(2) final ChannelHandler handler) {
+        @Advice.Enter int callDepth,
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(2) ChannelHandler handler) {
       if (callDepth > 0) {
         return;
       }
@@ -163,7 +163,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
               HttpClientResponseTracingHandler.class.getName(),
               new HttpClientResponseTracingHandler());
         }
-      } catch (final IllegalArgumentException e) {
+      } catch (IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
       }
     }
@@ -171,7 +171,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
-    public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
+    public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         Attribute<Span> attribute =

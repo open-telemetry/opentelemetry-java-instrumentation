@@ -33,17 +33,17 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   }
 
   @Override
-  protected String dbUser(final Connection connection) {
+  protected String dbUser(Connection connection) {
     return null;
   }
 
   @Override
-  protected String dbName(final Connection connection) {
+  protected String dbName(Connection connection) {
     return null;
   }
 
   @Override
-  protected String dbConnectionString(final Connection connection) {
+  protected String dbConnectionString(Connection connection) {
     return connection.getHost() + ":" + connection.getPort();
   }
 }

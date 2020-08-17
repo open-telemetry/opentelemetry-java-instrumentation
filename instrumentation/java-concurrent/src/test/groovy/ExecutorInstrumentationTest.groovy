@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static org.junit.Assume.assumeTrue
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.auto.api.concurrent.CallableWrapper
 import io.opentelemetry.instrumentation.auto.api.concurrent.RunnableWrapper
 import io.opentelemetry.sdk.trace.data.SpanData
-import spock.lang.Shared
-
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
@@ -37,9 +38,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static org.junit.Assume.assumeTrue
+import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
 

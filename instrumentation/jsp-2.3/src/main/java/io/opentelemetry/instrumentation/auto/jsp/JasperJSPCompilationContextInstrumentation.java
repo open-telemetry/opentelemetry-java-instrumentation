@@ -25,8 +25,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -65,8 +65,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This final JspCompilationContext jspCompilationContext) {
+    public static SpanWithScope onEnter(@Advice.This JspCompilationContext jspCompilationContext) {
       Span span = TRACER.spanBuilder(DECORATE.spanNameOnCompile(jspCompilationContext)).startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
@@ -74,9 +73,9 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final JspCompilationContext jspCompilationContext,
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This JspCompilationContext jspCompilationContext,
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable) {
       Span span = spanWithScope.getSpan();
       DECORATE.onCompile(span, jspCompilationContext);
       // ^ Decorate on return because additional properties are available

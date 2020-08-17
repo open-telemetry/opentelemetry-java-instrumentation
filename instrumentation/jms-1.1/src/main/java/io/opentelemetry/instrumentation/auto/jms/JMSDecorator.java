@@ -18,38 +18,44 @@ package io.opentelemetry.instrumentation.auto.jms;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JMSDecorator extends ClientDecorator {
+  private static final Logger log = LoggerFactory.getLogger(JMSDecorator.class);
+
   public static final JMSDecorator DECORATE = new JMSDecorator();
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
 
-  public String spanNameForReceive(final Message message) {
+  public String spanNameForReceive(Message message) {
     return toSpanName(message, null);
   }
 
-  public String spanNameForConsumer(final Message message) {
+  public String spanNameForConsumer(Message message) {
     return toSpanName(message, null);
   }
 
-  public String spanNameForProducer(final Message message, final Destination destination) {
+  public String spanNameForProducer(Message message, Destination destination) {
     return toSpanName(message, destination);
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";
 
-  public static String toSpanName(final Message message, final Destination destination) {
+  public static String toSpanName(Message message, Destination destination) {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
-    } catch (final Exception e) {
+    } catch (Exception e) {
     }
     if (jmsDestination == null) {
       jmsDestination = destination;
@@ -75,8 +81,42 @@ public class JMSDecorator extends ClientDecorator {
           return "topic/" + topicName;
         }
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
     }
     return "destination";
+  }
+
+  public void afterStart(Span span, String spanName, Message message) {
+    super.afterStart(span);
+    if (spanName.startsWith("queue/")) {
+      SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "queue");
+      SemanticAttributes.MESSAGING_DESTINATION.set(span, spanName.replaceFirst("queue/", ""));
+    } else if (spanName.startsWith("topic/")) {
+      SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "topic");
+      SemanticAttributes.MESSAGING_DESTINATION.set(span, spanName.replaceFirst("topic/", ""));
+    }
+    if (spanName.equals("queue/<temporary>") || spanName.equals("topic/<temporary>")) {
+      SemanticAttributes.MESSAGING_TEMP_DESTINATION.set(span, true);
+    }
+
+    if (message != null) {
+      try {
+        String messageID = message.getJMSMessageID();
+        if (messageID != null) {
+          SemanticAttributes.MESSAGING_MESSAGE_ID.set(span, messageID);
+        }
+      } catch (Exception e) {
+        log.debug("Failure getting JMS message id", e);
+      }
+
+      try {
+        String correlationID = message.getJMSCorrelationID();
+        if (correlationID != null) {
+          SemanticAttributes.MESSAGING_CONVERSATION_ID.set(span, correlationID);
+        }
+      } catch (Exception e) {
+        log.debug("Failure getting JMS correlation id", e);
+      }
+    }
   }
 }

@@ -22,7 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -68,7 +68,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
       segment = ActionWrapper.wrapIfNeeded(segment);
     }
 
-    public void muzzleCheck(final PathBinding binding) {
+    public void muzzleCheck(PathBinding binding) {
       // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
       binding.getDescription();
     }

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.armeria.v1_0;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 
 public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Default {
 

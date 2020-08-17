@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -21,8 +23,6 @@ import spock.lang.Shared
 import spring.jpa.Customer
 import spring.jpa.CustomerRepository
 import spring.jpa.PersistenceConfig
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 /**
  * Unfortunately this test verifies that our hibernate instrumentation doesn't currently work with Spring Data Repositories.

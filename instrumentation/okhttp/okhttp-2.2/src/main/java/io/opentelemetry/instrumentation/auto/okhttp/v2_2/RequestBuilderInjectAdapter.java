@@ -23,7 +23,7 @@ public class RequestBuilderInjectAdapter implements HttpTextFormat.Setter<Reques
   public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 
   @Override
-  public void set(final Request.Builder carrier, final String key, final String value) {
+  public void set(Request.Builder carrier, String key, String value) {
     carrier.addHeader(key, value);
   }
 }

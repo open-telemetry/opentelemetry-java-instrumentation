@@ -284,4 +284,8 @@ tasks.withType(Test).configureEach {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
     maxRetries = System.getenv("CI") != null ? 5 : 0
   }
+
+  reports {
+    junitXml.outputPerTestCase = true
+  }
 }

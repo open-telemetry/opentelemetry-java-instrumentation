@@ -33,16 +33,16 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
   }
 
   @Override
-  protected String dbUser(final MemcachedConnection session) {
+  protected String dbUser(MemcachedConnection session) {
     return null;
   }
 
   @Override
-  protected String dbName(final MemcachedConnection connection) {
+  protected String dbName(MemcachedConnection connection) {
     return null;
   }
 
-  public String spanNameOnOperation(final String methodName) {
+  public String spanNameOnOperation(String methodName) {
 
     char[] chars =
         methodName

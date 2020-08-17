@@ -25,6 +25,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.junit.Before
 import spock.lang.Specification
+
 /**
  * A spock test runner which automatically initializes an in-memory exporter that can be used to
  * verify traces.
@@ -44,24 +45,24 @@ abstract class InstrumentationTestRunner extends Specification {
   }
 
   protected void assertTraces(
-      final int size,
-      @ClosureParams(
-          value = SimpleType,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-      final Closure spec) {
+    final int size,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec) {
     InMemoryExporterAssert.assertTraces(
-        TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec)
+      TEST_WRITER, size, Predicates.<List<SpanData>> alwaysFalse(), spec)
   }
 
   protected void assertTracesWithFilter(
-      final int size,
-      final Predicate<List<SpanData>> excludes,
-      @ClosureParams(
-          value = SimpleType,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-      final Closure spec) {
+    final int size,
+    final Predicate<List<SpanData>> excludes,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec)
   }
 }

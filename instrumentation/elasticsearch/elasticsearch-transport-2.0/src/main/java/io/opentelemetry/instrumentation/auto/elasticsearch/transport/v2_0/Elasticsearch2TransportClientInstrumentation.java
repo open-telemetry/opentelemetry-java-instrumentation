@@ -26,8 +26,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -82,8 +82,8 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.Argument(0) final Action action,
-        @Advice.Argument(1) final ActionRequest actionRequest,
+        @Advice.Argument(0) Action action,
+        @Advice.Argument(1) ActionRequest actionRequest,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
@@ -99,7 +99,7 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);

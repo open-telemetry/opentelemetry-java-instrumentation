@@ -20,7 +20,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -33,12 +33,12 @@ public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRe
   }
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getRequestMethod();
   }
 
   @Override
-  protected URI url(final HttpRequest httpRequest) throws URISyntaxException {
+  protected URI url(HttpRequest httpRequest) throws URISyntaxException {
     // Google uses %20 (space) instead of "+" for spaces in the fragment
     // Add "+" back for consistency with the other http client instrumentations
     String url = httpRequest.getUrl().build();
@@ -47,7 +47,7 @@ public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRe
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
   }
 

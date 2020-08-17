@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentracing.contrib.dropwizard.Trace
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentTestRunner {
 

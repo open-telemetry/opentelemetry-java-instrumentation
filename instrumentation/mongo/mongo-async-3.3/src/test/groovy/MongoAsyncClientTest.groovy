@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import com.mongodb.ConnectionString
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoClient
@@ -27,17 +30,13 @@ import com.mongodb.connection.ClusterSettings
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CountDownLatch
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(10)
 class MongoAsyncClientTest extends MongoBaseTest {

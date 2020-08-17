@@ -16,18 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v4_0;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +61,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
+        @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
 
       ContextStore<Criteria, Span> contextStore =
           InstrumentationContext.get(Criteria.class, Span.class);
@@ -72,10 +72,10 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity,
-        @Advice.Origin("#m") final String name) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object entity,
+        @Advice.Origin("#m") String name) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, "Criteria." + name, entity);
     }

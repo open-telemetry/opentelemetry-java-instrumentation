@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
+
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.instrumentation.auto.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.auto.spymemcached.CompletionListener
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.time.Duration
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.locks.ReentrantLock
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -30,16 +39,6 @@ import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
-
-import java.time.Duration
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.locks.ReentrantLock
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 // Do not run tests on Java7 since testcontainers are not compatible with Java7
 @Requires({ jvm.java8Compatible })

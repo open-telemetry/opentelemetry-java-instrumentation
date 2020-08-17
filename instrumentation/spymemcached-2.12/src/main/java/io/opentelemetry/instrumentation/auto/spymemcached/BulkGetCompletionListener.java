@@ -24,17 +24,17 @@ import net.spy.memcached.internal.BulkGetFuture;
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
     implements net.spy.memcached.internal.BulkGetCompletionListener {
 
-  public BulkGetCompletionListener(final MemcachedConnection connection, final String methodName) {
+  public BulkGetCompletionListener(MemcachedConnection connection, String methodName) {
     super(connection, methodName);
   }
 
   @Override
-  public void onComplete(final BulkGetFuture<?> future) {
+  public void onComplete(BulkGetFuture<?> future) {
     closeAsyncSpan(future);
   }
 
   @Override
-  protected void processResult(final Span span, final BulkGetFuture<?> future)
+  protected void processResult(Span span, BulkGetFuture<?> future)
       throws ExecutionException, InterruptedException {
     /*
     Note: for now we do not have an affective way of representing results of bulk operations,

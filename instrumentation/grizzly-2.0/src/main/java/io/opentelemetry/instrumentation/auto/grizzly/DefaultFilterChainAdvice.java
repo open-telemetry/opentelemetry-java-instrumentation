@@ -26,8 +26,7 @@ public class DefaultFilterChainAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onFail(
-      @Advice.Argument(0) final FilterChainContext ctx,
-      @Advice.Argument(1) final Throwable throwable) {
+      @Advice.Argument(0) FilterChainContext ctx, @Advice.Argument(1) Throwable throwable) {
     Span span = TRACER.getServerSpan(ctx);
     if (span != null) {
       TRACER.endExceptionally(span, throwable);

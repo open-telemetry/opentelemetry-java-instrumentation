@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.finatra;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.instrumentation.auto.finatra.FinatraTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -32,8 +32,8 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -81,8 +81,8 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public static class RouteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
-        @Advice.FieldValue("routeInfo") final RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") final Class clazz) {
+        @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
+        @Advice.FieldValue("clazz") Class clazz) {
 
       Span serverSpan = TRACER.getCurrentServerSpan();
       if (serverSpan != null) {
@@ -96,9 +96,9 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Some<Future<Response>> responseOption) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return Some<Future<Response>> responseOption) {
 
       if (spanWithScope == null) {
         return;
@@ -118,19 +118,19 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public static class Listener implements FutureEventListener<Response> {
     private final SpanWithScope spanWithScope;
 
-    public Listener(final SpanWithScope spanWithScope) {
+    public Listener(SpanWithScope spanWithScope) {
       this.spanWithScope = spanWithScope;
     }
 
     @Override
-    public void onSuccess(final Response response) {
+    public void onSuccess(Response response) {
       Span span = spanWithScope.getSpan();
       TRACER.end(span);
       spanWithScope.closeScope();
     }
 
     @Override
-    public void onFailure(final Throwable cause) {
+    public void onFailure(Throwable cause) {
       Span span = spanWithScope.getSpan();
       TRACER.endExceptionally(span, cause);
       spanWithScope.closeScope();

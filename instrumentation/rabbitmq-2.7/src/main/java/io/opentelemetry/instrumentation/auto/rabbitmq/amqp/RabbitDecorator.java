@@ -30,7 +30,7 @@ public class RabbitDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracer("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
-  public void onPublish(final Span span, final String exchange, final String routingKey) {
+  public void onPublish(Span span, String exchange, String routingKey) {
     String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     String routing =
         routingKey == null || routingKey.isEmpty()
@@ -46,16 +46,16 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public String spanNameOnGet(final String queue) {
+  public String spanNameOnGet(String queue) {
     return queue.startsWith("amq.gen-") ? "<generated>" : queue;
   }
 
-  public void onGet(final Span span, final String queue) {
+  public void onGet(Span span, String queue) {
     span.setAttribute("amqp.command", "basic.get");
     span.setAttribute("amqp.queue", queue);
   }
 
-  public String spanNameOnDeliver(final String queue) {
+  public String spanNameOnDeliver(String queue) {
     if (queue == null || queue.isEmpty()) {
       return "<default>";
     } else if (queue.startsWith("amq.gen-")) {
@@ -65,7 +65,7 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public void onDeliver(final Span span, final Envelope envelope) {
+  public void onDeliver(Span span, Envelope envelope) {
     span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
@@ -80,7 +80,7 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public void onCommand(final Span span, final Command command) {
+  public void onCommand(Span span, Command command) {
     String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {

@@ -26,7 +26,7 @@ public class ClientTracingFeature implements Feature {
   private static final Logger log = LoggerFactory.getLogger(ClientTracingFeature.class);
 
   @Override
-  public boolean configure(final FeatureContext context) {
+  public boolean configure(FeatureContext context) {
     context.register(new ClientTracingFilter());
     log.debug("ClientTracingFilter registered");
     return true;

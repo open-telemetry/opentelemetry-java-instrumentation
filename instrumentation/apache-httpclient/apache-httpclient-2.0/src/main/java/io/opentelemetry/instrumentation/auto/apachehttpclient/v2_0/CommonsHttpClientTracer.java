@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
@@ -41,22 +41,22 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
   }
 
   @Override
-  protected String method(final HttpMethod httpMethod) {
+  protected String method(HttpMethod httpMethod) {
     return httpMethod.getName();
   }
 
   @Override
-  protected URI url(final HttpMethod httpMethod) throws URISyntaxException {
+  protected URI url(HttpMethod httpMethod) throws URISyntaxException {
     try {
       //  org.apache.commons.httpclient.URI -> java.net.URI
       return new URI(httpMethod.getURI().toString());
-    } catch (final URIException e) {
+    } catch (URIException e) {
       throw new URISyntaxException("", e.getMessage());
     }
   }
 
   @Override
-  protected Integer status(final HttpMethod httpMethod) {
+  protected Integer status(HttpMethod httpMethod) {
     StatusLine statusLine = httpMethod.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
   }

@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.httpurlconnection;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.httpurlconnection.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.auto.httpurlconnection.HttpUrlConnectionTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -32,11 +32,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.net.HttpURLConnection;
 import java.util.Map;
@@ -88,8 +88,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HttpUrlState methodEnter(
-        @Advice.This final HttpURLConnection thiz,
-        @Advice.FieldValue("connected") final boolean connected) {
+        @Advice.This HttpURLConnection thiz, @Advice.FieldValue("connected") boolean connected) {
 
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
       if (callDepth > 0) {
@@ -114,10 +113,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final HttpUrlState state,
-        @Advice.FieldValue("responseCode") final int responseCode,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Origin("#m") final String methodName) {
+        @Advice.Enter HttpUrlState state,
+        @Advice.FieldValue("responseCode") int responseCode,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Origin("#m") String methodName) {
 
       if (state == null) {
         return;
@@ -149,7 +148,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile Span span = null;
     private volatile boolean finished = false;
 
-    public Span start(final HttpURLConnection connection) {
+    public Span start(HttpURLConnection connection) {
       span = TRACER.startSpan(connection);
       return span;
     }
@@ -162,7 +161,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       return finished;
     }
 
-    public void finishSpan(final Throwable throwable) {
+    public void finishSpan(Throwable throwable) {
       try (Scope scope = currentContextWith(span)) {
         TRACER.endExceptionally(span, throwable);
         span = null;
@@ -170,7 +169,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       }
     }
 
-    public void finishSpan(final int responseCode) {
+    public void finishSpan(int responseCode) {
       /*
        * responseCode field is sometimes not populated.
        * We can't call getResponseCode() due to some unwanted side-effects

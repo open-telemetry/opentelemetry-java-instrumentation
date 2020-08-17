@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.spymemcached;
 
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,8 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -97,10 +97,10 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final int callDepth,
-        @Advice.This final MemcachedClient client,
-        @Advice.Origin("#m") final String methodName,
-        @Advice.Return final OperationFuture future) {
+        @Advice.Enter int callDepth,
+        @Advice.This MemcachedClient client,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Return OperationFuture future) {
       if (callDepth > 0) {
         return;
       }
@@ -123,10 +123,10 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final int callDepth,
-        @Advice.This final MemcachedClient client,
-        @Advice.Origin("#m") final String methodName,
-        @Advice.Return final GetFuture future) {
+        @Advice.Enter int callDepth,
+        @Advice.This MemcachedClient client,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Return GetFuture future) {
       if (callDepth > 0) {
         return;
       }
@@ -149,10 +149,10 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final int callDepth,
-        @Advice.This final MemcachedClient client,
-        @Advice.Origin("#m") final String methodName,
-        @Advice.Return final BulkFuture future) {
+        @Advice.Enter int callDepth,
+        @Advice.This MemcachedClient client,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Return BulkFuture future) {
       if (callDepth > 0) {
         return;
       }
@@ -170,7 +170,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SyncCompletionListener methodEnter(
-        @Advice.This final MemcachedClient client, @Advice.Origin("#m") final String methodName) {
+        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
       if (callDepth > 0) {
         return null;
@@ -181,8 +181,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SyncCompletionListener listener,
-        @Advice.Thrown final Throwable thrown) {
+        @Advice.Enter SyncCompletionListener listener, @Advice.Thrown Throwable thrown) {
       if (listener == null) {
         return;
       }

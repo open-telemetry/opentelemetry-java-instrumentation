@@ -24,7 +24,7 @@ public final class GrpcInjectAdapter implements HttpTextFormat.Setter<Metadata> 
   public static final GrpcInjectAdapter SETTER = new GrpcInjectAdapter();
 
   @Override
-  public void set(final Metadata carrier, final String key, final String value) {
+  public void set(Metadata carrier, String key, String value) {
     carrier.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value);
   }
 }

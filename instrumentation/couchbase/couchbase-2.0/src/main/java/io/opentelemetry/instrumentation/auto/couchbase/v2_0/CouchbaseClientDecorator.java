@@ -28,12 +28,12 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String dbUser(final Object o) {
+  protected String dbUser(Object o) {
     return null;
   }
 
   @Override
-  protected String dbName(final Object o) {
+  protected String dbName(Object o) {
     return null;
   }
 }

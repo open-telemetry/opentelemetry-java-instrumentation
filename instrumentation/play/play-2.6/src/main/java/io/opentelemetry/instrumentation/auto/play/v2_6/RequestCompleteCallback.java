@@ -30,19 +30,19 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
 
   private final Span span;
 
-  public RequestCompleteCallback(final Span span) {
+  public RequestCompleteCallback(Span span) {
     this.span = span;
   }
 
   @Override
-  public Object apply(final Try<Result> result) {
+  public Object apply(Try<Result> result) {
     try {
       if (result.isFailure()) {
         DECORATE.endExceptionally(span, result.failed().get());
       } else {
         DECORATE.end(span);
       }
-    } catch (final Throwable t) {
+    } catch (Throwable t) {
       log.debug("error in play instrumentation", t);
     }
     return null;

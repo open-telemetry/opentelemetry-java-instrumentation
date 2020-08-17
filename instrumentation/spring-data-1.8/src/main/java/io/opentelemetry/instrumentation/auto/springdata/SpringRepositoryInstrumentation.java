@@ -24,8 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -72,13 +72,13 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   public static class RepositoryFactorySupportAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction(
-        @Advice.This final RepositoryFactorySupport repositoryFactorySupport) {
+        @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
           InterceptingRepositoryProxyPostProcessor.INSTANCE);
     }
 
     // Muzzle doesn't detect the "Override" implementation dependency, so we have to help it.
-    private void muzzleCheck(final RepositoryProxyPostProcessor processor) {
+    private void muzzleCheck(RepositoryProxyPostProcessor processor) {
       processor.postProcess(null, null);
       // (see usage in InterceptingRepositoryProxyPostProcessor below)
     }
@@ -97,8 +97,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
     // }
 
     @Override
-    public void postProcess(
-        final ProxyFactory factory, final RepositoryInformation repositoryInformation) {
+    public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
       factory.addAdvice(0, RepositoryInterceptor.INSTANCE);
     }
   }
@@ -109,7 +108,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
     private RepositoryInterceptor() {}
 
     @Override
-    public Object invoke(final MethodInvocation methodInvocation) throws Throwable {
+    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       Method invokedMethod = methodInvocation.getMethod();
       Class<?> clazz = invokedMethod.getDeclaringClass();
 
@@ -128,7 +127,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       Object result = null;
       try {
         result = methodInvocation.proceed();
-      } catch (final Throwable t) {
+      } catch (Throwable t) {
         DECORATE.onError(span, t);
         throw t;
       } finally {

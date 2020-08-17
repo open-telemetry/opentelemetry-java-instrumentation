@@ -28,7 +28,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.AttributeKeys;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -36,7 +36,7 @@ import java.net.InetSocketAddress;
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
-  public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
     if (!(msg instanceof HttpRequest)) {
       ctx.write(msg, prm);
       return;
@@ -74,7 +74,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
       try {
         ctx.write(msg, prm);
-      } catch (final Throwable throwable) {
+      } catch (Throwable throwable) {
         TRACER.endExceptionally(span, throwable);
         throw throwable;
       }

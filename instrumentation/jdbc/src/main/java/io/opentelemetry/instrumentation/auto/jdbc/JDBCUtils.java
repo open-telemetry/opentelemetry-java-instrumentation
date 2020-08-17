@@ -34,7 +34,7 @@ public abstract class JDBCUtils {
    * @param statement
    * @return the unwrapped connection or null if exception was thrown.
    */
-  public static Connection connectionFromStatement(final Statement statement) {
+  public static Connection connectionFromStatement(Statement statement) {
     Connection connection;
     try {
       connection = statement.getConnection();
@@ -51,7 +51,7 @@ public abstract class JDBCUtils {
         if (connection.isWrapperFor(Connection.class)) {
           connection = connection.unwrap(Connection.class);
         }
-      } catch (final Exception | AbstractMethodError e) {
+      } catch (Exception | AbstractMethodError e) {
         if (connection != null) {
           // Attempt to work around c3po delegating to an connection that doesn't support
           // unwrapping.
@@ -69,7 +69,7 @@ public abstract class JDBCUtils {
         // or: jdts.jdbc which always throws `AbstractMethodError` (at least up to version 1.3)
         // Stick with original connection.
       }
-    } catch (final Throwable e) {
+    } catch (Throwable e) {
       // Had some problem getting the connection.
       log.debug("Could not get connection for StatementAdvice", e);
       return null;

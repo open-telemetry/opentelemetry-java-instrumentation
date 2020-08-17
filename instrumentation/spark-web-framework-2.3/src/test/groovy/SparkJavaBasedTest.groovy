@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -22,8 +24,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import spark.Spark
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class SparkJavaBasedTest extends AgentTestRunner {
 

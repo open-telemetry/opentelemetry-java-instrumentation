@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
@@ -28,9 +31,6 @@ import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.TransportService
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Elasticsearch2TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds

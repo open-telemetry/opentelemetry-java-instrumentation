@@ -16,14 +16,14 @@
 
 package io.opentelemetry.instrumentation.auto.kubernetesclient;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.kubernetes.client.openapi.ApiClient;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -77,10 +77,9 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
   public static class KubernetesAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addTracingInterceptor(
-        @Advice.This ApiClient apiClient,
-        @Advice.Argument(0) final List<Interceptor> interceptors) {
+        @Advice.This ApiClient apiClient, @Advice.Argument(0) List<Interceptor> interceptors) {
 
-      for (final Interceptor interceptor : interceptors) {
+      for (Interceptor interceptor : interceptors) {
         if (interceptor instanceof TracingInterceptor) {
           return;
         }

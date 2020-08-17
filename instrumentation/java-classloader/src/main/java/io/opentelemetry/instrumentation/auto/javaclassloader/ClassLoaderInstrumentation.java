@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.javaclassloader;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedNoneOf;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedNoneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -29,9 +29,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Constants;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.tooling.Constants;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -89,7 +89,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
 
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) final String name) {
+    public static Class<?> onEnter(@Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
@@ -103,7 +103,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
-            } catch (final ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
             }
           }
         }
@@ -121,7 +121,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter final Class<?> resultFromBootstrapLoader) {
+        @Advice.Enter Class<?> resultFromBootstrapLoader) {
       if (resultFromBootstrapLoader != null) {
         result = resultFromBootstrapLoader;
       }

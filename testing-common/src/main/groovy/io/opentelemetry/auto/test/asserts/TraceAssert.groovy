@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.test.asserts
 
+import static SpanAssert.assertSpan
+
 import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -23,8 +25,6 @@ import io.opentelemetry.auto.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.TraceId
 import java.util.concurrent.TimeUnit
-
-import static SpanAssert.assertSpan
 
 class TraceAssert {
   private final List<SpanData> spans

@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.rediscala;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -31,8 +31,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -89,7 +89,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
   public static class RediscalaAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand cmd) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) RedisCommand cmd) {
       String statement = DECORATE.spanNameForClass(cmd.getClass());
       Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
@@ -99,10 +99,10 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope scope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.FieldValue("executionContext") final ExecutionContext ctx,
-        @Advice.Return(readOnly = false) final Future<Object> responseFuture) {
+        @Advice.Enter SpanWithScope scope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.FieldValue("executionContext") ExecutionContext ctx,
+        @Advice.Return(readOnly = false) Future<Object> responseFuture) {
 
       Span span = scope.getSpan();
 
@@ -121,12 +121,12 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
   public static class OnCompleteHandler extends AbstractFunction1<Try<Object>, Void> {
     private final Span span;
 
-    public OnCompleteHandler(final Span span) {
+    public OnCompleteHandler(Span span) {
       this.span = span;
     }
 
     @Override
-    public Void apply(final Try<Object> result) {
+    public Void apply(Try<Object> result) {
       try {
         if (result.isFailure()) {
           DECORATE.onError(span, result.failed().get());

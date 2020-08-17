@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.v3_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,8 +27,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;
@@ -84,7 +84,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   public static class DispatchAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean enter(
-        @Advice.This final AsyncContext context, @Advice.AllArguments final Object[] args) {
+        @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {
       int depth = CallDepthThreadLocalMap.incrementCallDepth(AsyncContext.class);
       if (depth > 0) {
         return false;
@@ -109,7 +109,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final boolean topLevel) {
+    public static void exit(@Advice.Enter boolean topLevel) {
       if (topLevel) {
         CallDepthThreadLocalMap.reset(AsyncContext.class);
       }

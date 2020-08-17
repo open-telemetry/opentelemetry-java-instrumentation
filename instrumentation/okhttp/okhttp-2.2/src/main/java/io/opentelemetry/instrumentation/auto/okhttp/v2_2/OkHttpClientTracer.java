@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.okhttp.v2_2;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -27,17 +27,17 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   @Override
-  protected String method(final Request request) {
+  protected String method(Request request) {
     return request.method();
   }
 
   @Override
-  protected URI url(final Request request) throws URISyntaxException {
+  protected URI url(Request request) throws URISyntaxException {
     return request.url().toURI();
   }
 
   @Override
-  protected Integer status(final Response response) {
+  protected Integer status(Response response) {
     return response.code();
   }
 

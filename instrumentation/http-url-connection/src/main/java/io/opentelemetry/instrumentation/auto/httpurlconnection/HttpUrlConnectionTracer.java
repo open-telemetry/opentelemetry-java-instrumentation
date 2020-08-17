@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.httpurlconnection;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import java.net.HttpURLConnection;
@@ -29,17 +29,17 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
   public static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
 
   @Override
-  protected String method(final HttpURLConnection connection) {
+  protected String method(HttpURLConnection connection) {
     return connection.getRequestMethod();
   }
 
   @Override
-  protected URI url(final HttpURLConnection connection) throws URISyntaxException {
+  protected URI url(HttpURLConnection connection) throws URISyntaxException {
     return connection.getURL().toURI();
   }
 
   @Override
-  protected Integer status(final Integer status) {
+  protected Integer status(Integer status) {
     return status;
   }
 

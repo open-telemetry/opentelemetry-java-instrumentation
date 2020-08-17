@@ -24,7 +24,7 @@ public class TracingIterable implements Iterable<ConsumerRecord> {
   private final KafkaDecorator decorator;
   private boolean firstIterator = true;
 
-  public TracingIterable(final Iterable<ConsumerRecord> delegate, final KafkaDecorator decorator) {
+  public TracingIterable(Iterable<ConsumerRecord> delegate, KafkaDecorator decorator) {
     this.delegate = delegate;
     this.decorator = decorator;
   }

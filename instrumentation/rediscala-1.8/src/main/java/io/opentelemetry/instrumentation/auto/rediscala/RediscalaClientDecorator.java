@@ -37,12 +37,12 @@ public class RediscalaClientDecorator
   }
 
   @Override
-  protected String dbUser(final RedisCommand<? extends RedisReply, ?> session) {
+  protected String dbUser(RedisCommand<? extends RedisReply, ?> session) {
     return null;
   }
 
   @Override
-  protected String dbName(final RedisCommand<? extends RedisReply, ?> session) {
+  protected String dbName(RedisCommand<? extends RedisReply, ?> session) {
     return null;
   }
 }

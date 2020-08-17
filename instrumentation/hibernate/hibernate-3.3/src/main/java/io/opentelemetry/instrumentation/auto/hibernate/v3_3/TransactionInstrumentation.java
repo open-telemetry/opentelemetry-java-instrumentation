@@ -16,18 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -59,7 +59,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
   public static class TransactionCommitAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startCommit(@Advice.This final Transaction transaction) {
+    public static SpanWithScope startCommit(@Advice.This Transaction transaction) {
 
       ContextStore<Transaction, Span> contextStore =
           InstrumentationContext.get(Transaction.class, Span.class);
@@ -70,7 +70,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }

@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -28,11 +28,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,7 +126,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
-        @Advice.This final Object session, @Advice.Thrown final Throwable throwable) {
+        @Advice.This Object session, @Advice.Thrown Throwable throwable) {
 
       Span sessionSpan = null;
       if (session instanceof Session) {
@@ -153,9 +153,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final Object session,
-        @Advice.Origin("#m") final String name,
-        @Advice.Argument(0) final Object entity) {
+        @Advice.This Object session,
+        @Advice.Origin("#m") String name,
+        @Advice.Argument(0) Object entity) {
 
       boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
       if (session instanceof Session) {
@@ -174,10 +174,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
-        @Advice.Origin("#m") final String name) {
+        @Advice.Enter SpanWithScope spanWithScope,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
+        @Advice.Origin("#m") String name) {
 
       SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
     }
@@ -186,8 +186,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public static class GetQueryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getQuery(
-        @Advice.This final Object session, @Advice.Return final Query query) {
+    public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
       ContextStore<Query, Span> queryContextStore =
           InstrumentationContext.get(Query.class, Span.class);
@@ -209,7 +208,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
-        @Advice.This final Object session, @Advice.Return final Transaction transaction) {
+        @Advice.This Object session, @Advice.Return Transaction transaction) {
 
       ContextStore<Transaction, Span> transactionContextStore =
           InstrumentationContext.get(Transaction.class, Span.class);
@@ -231,8 +230,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public static class GetCriteriaAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void getCriteria(
-        @Advice.This final Object session, @Advice.Return final Criteria criteria) {
+    public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
       ContextStore<Criteria, Span> criteriaContextStore =
           InstrumentationContext.get(Criteria.class, Span.class);

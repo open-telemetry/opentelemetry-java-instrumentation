@@ -47,42 +47,39 @@ public class TracedDelegatingConsumer implements Consumer {
   private final String queue;
   private final Consumer delegate;
 
-  public TracedDelegatingConsumer(final String queue, final Consumer delegate) {
+  public TracedDelegatingConsumer(String queue, Consumer delegate) {
     this.queue = queue;
     this.delegate = delegate;
   }
 
   @Override
-  public void handleConsumeOk(final String consumerTag) {
+  public void handleConsumeOk(String consumerTag) {
     delegate.handleConsumeOk(consumerTag);
   }
 
   @Override
-  public void handleCancelOk(final String consumerTag) {
+  public void handleCancelOk(String consumerTag) {
     delegate.handleCancelOk(consumerTag);
   }
 
   @Override
-  public void handleCancel(final String consumerTag) throws IOException {
+  public void handleCancel(String consumerTag) throws IOException {
     delegate.handleCancel(consumerTag);
   }
 
   @Override
-  public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
+  public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
     delegate.handleShutdownSignal(consumerTag, sig);
   }
 
   @Override
-  public void handleRecoverOk(final String consumerTag) {
+  public void handleRecoverOk(String consumerTag) {
     delegate.handleRecoverOk(consumerTag);
   }
 
   @Override
   public void handleDelivery(
-      final String consumerTag,
-      final Envelope envelope,
-      final AMQP.BasicProperties properties,
-      final byte[] body)
+      String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
     Span span = null;
     Scope scope = null;
@@ -115,7 +112,7 @@ public class TracedDelegatingConsumer implements Consumer {
 
       scope = currentContextWith(span);
 
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);
     } finally {
       try {
@@ -123,7 +120,7 @@ public class TracedDelegatingConsumer implements Consumer {
         // Call delegate.
         delegate.handleDelivery(consumerTag, envelope, properties, body);
 
-      } catch (final Throwable throwable) {
+      } catch (Throwable throwable) {
         if (span != null) {
           DECORATE.onError(span, throwable);
         }

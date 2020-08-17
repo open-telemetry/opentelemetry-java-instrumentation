@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import java.util.concurrent.TimeUnit
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
@@ -24,8 +25,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
 
 class PlayJavaWSClientTest extends PlayWSClientTestBase {
   @Shared
