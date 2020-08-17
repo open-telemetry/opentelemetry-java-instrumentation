@@ -32,7 +32,6 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;

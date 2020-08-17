@@ -29,7 +29,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;

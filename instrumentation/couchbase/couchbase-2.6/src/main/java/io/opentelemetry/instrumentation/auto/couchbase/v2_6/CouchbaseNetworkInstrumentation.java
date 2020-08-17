@@ -28,7 +28,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
