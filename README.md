@@ -306,6 +306,28 @@ public class MyClass {
 }
 ```
 
+You'll also need to add a dependency for this annotation:
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
+}
+```
+
 Each time the application invokes the annotated method, it creates a span
 that denote its duration and provides any thrown exceptions.
 
