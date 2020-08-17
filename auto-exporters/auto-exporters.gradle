@@ -40,7 +40,7 @@ dependencies {
     shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporter-zipkin', configuration: 'shadow')
 }
 
-
+jar.enabled = false
 shadowJar {
     configurations = [project.configurations.shadowInclude]
 
