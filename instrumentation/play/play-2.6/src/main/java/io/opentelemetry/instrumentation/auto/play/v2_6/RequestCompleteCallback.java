@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.play.v2_6;
 
-import static io.opentelemetry.instrumentation.auto.play.v2_6.PlayTracer.DECORATE;
+import static io.opentelemetry.instrumentation.auto.play.v2_6.PlayTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import org.slf4j.Logger;
@@ -38,9 +38,9 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
   public Object apply(Try<Result> result) {
     try {
       if (result.isFailure()) {
-        DECORATE.endExceptionally(span, result.failed().get());
+        TRACER.endExceptionally(span, result.failed().get());
       } else {
-        DECORATE.end(span);
+        TRACER.end(span);
       }
     } catch (Throwable t) {
       log.debug("error in play instrumentation", t);
