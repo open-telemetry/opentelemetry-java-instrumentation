@@ -24,8 +24,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.MoreAttributes;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
@@ -38,13 +36,11 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
+public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseHttpClientServerTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
-
-  protected static final String USER_AGENT = "User-Agent";
 
   protected abstract String method(REQUEST request);
 
@@ -139,49 +135,10 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
         SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
       }
 
-      // Copy of HttpServerDecorator url handling
       try {
         URI url = url(request);
-        if (url != null) {
-          StringBuilder urlBuilder = new StringBuilder();
-          if (url.getScheme() != null) {
-            urlBuilder.append(url.getScheme());
-            urlBuilder.append("://");
-          }
-          if (url.getHost() != null) {
-            urlBuilder.append(url.getHost());
-            setPeer(span, url.getHost(), null);
-            if (url.getPort() > 0) {
-              span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
-              if (url.getPort() != 80 && url.getPort() != 443) {
-                urlBuilder.append(":");
-                urlBuilder.append(url.getPort());
-              }
-            }
-          }
-          String path = url.getPath();
-          if (path.isEmpty()) {
-            urlBuilder.append("/");
-          } else {
-            urlBuilder.append(path);
-          }
-          String query = url.getQuery();
-          if (query != null) {
-            urlBuilder.append("?").append(query);
-          }
-          String fragment = url.getFragment();
-          if (fragment != null) {
-            urlBuilder.append("#").append(fragment);
-          }
-
-          span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
-
-          if (Config.get().isHttpClientTagQueryString()) {
-            span.setAttribute(MoreAttributes.HTTP_QUERY, query);
-            span.setAttribute(MoreAttributes.HTTP_FRAGMENT, fragment);
-          }
-        }
-      } catch (Exception e) {
+        tagUrl(url, span);
+      } catch (final Exception e) {
         log.debug("Error tagging url", e);
       }
     }
