@@ -22,6 +22,7 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Headers;
@@ -31,8 +32,8 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
-    Span span = TRACER.startSpan("play.request");
+  public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
+    Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
 
     return new SpanWithScope(span, currentContextWith(span));
   }

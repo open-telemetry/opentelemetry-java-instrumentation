@@ -20,6 +20,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -45,13 +46,13 @@ public abstract class BaseTracer {
     this.tracer = tracer;
   }
 
-  public Span startSpan(Class<?> clazz) {
+  public Span startSpan(Class<?> clazz, Kind kind) {
     String spanName = spanNameForClass(clazz);
-    return startSpan(spanName);
+    return startSpan(spanName, kind);
   }
 
-  public Span startSpan(String spanName) {
-    return tracer.spanBuilder(spanName).startSpan();
+  public Span startSpan(String spanName, Kind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
   public Span getCurrentSpan() {
