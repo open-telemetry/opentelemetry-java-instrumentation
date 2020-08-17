@@ -45,7 +45,6 @@ include ':auto-api'
 // misc
 include ':testing-common'
 include ':utils:test-utils'
-include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests'

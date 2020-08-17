@@ -46,7 +46,6 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(':utils:thread-utils'))
   library group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.0.0'
 
   testLibrary group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'

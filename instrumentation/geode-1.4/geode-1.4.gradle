@@ -5,8 +5,6 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-apply plugin: 'org.unbroken-dome.test-sets'
-
 muzzle {
   pass {
     group = "org.apache.geode"
@@ -15,15 +13,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'org.apache.geode', name: 'geode-core', version: '1.4.0'
-
-  testImplementation group: 'org.apache.geode', name: 'geode-core', version: '1.4.0'
-  latestDepTestImplementation group: 'org.apache.geode', name: 'geode-core', version: '+'
+  library group: 'org.apache.geode', name: 'geode-core', version: '1.4.0'
 }
