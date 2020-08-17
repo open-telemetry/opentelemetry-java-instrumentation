@@ -41,6 +41,7 @@ jobs:
         continue-on-error: true
         env:
           CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "PR / jdk${{matrix.java}}"
         run: |
           wget -q https://get.cimate.io/release/linux/cimate
           chmod +x cimate
