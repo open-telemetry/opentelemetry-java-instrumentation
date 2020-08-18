@@ -23,10 +23,9 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
-import javax.ws.rs.core.MultivaluedMap;
 
 public class JaxRsClientTracer
-    extends HttpClientTracer<ClientRequestContext, MultivaluedMap, ClientResponseContext> {
+    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, ClientResponseContext> {
   public static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
 
   @Override
@@ -55,7 +54,7 @@ public class JaxRsClientTracer
   }
 
   @Override
-  protected Setter<MultivaluedMap> getSetter() {
+  protected Setter<ClientRequestContext> getSetter() {
     return SETTER;
   }
 
