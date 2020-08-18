@@ -35,7 +35,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(ClientRequestContext requestContext) {
     Span span = TRACER.startSpan(requestContext);
     // TODO (trask) expose inject separate from startScope, e.g. for async cases
-    Scope scope = TRACER.startScope(span, requestContext.getHeaders());
+    Scope scope = TRACER.startScope(span, requestContext);
     scope.close();
     requestContext.setProperty(SPAN_PROPERTY_NAME, span);
   }
