@@ -14,32 +14,16 @@
  * limitations under the License.
  */
 
-package springdata
+package io.opentelemetry.instrumentation.auto.cassandra.v3_0;
 
-import groovy.transform.EqualsAndHashCode
-import org.springframework.data.annotation.Id
-import org.springframework.data.elasticsearch.annotations.Document
+import java.util.concurrent.Executor;
 
-@Document(indexName = "test-index")
-@EqualsAndHashCode
-class Doc {
-  @Id
-  private String id = "1"
-  private String data = "some data"
+public class SameThreadExecutor implements Executor {
 
-  String getId() {
-    return id
-  }
+  public static final SameThreadExecutor INSTANCE = new SameThreadExecutor();
 
-  void setId(String id) {
-    this.id = id
-  }
-
-  String getData() {
-    return data
-  }
-
-  void setData(String data) {
-    this.data = data
+  @Override
+  public void execute(Runnable command) {
+    command.run();
   }
 }

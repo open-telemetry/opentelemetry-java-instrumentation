@@ -44,14 +44,6 @@ java {
   withSourcesJar()
 }
 
-sourceSets {
-  main {
-    java {
-      srcDir 'src/main/java'
-    }
-  }
-}
-
 tasks.withType(JavaCompile) {
   options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
 }
@@ -296,4 +288,9 @@ tasks.withType(Test).configureEach {
   reports {
     junitXml.outputPerTestCase = true
   }
+}
+
+tasks.withType(AbstractArchiveTask) {
+  preserveFileTimestamps = false
+  reproducibleFileOrder = true
 }

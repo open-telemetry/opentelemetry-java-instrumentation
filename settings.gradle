@@ -45,7 +45,6 @@ include ':auto-api'
 // misc
 include ':testing-common'
 include ':utils:test-utils'
-include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests'
@@ -74,7 +73,6 @@ include ':instrumentation:elasticsearch:elasticsearch-rest-common'
 include ':instrumentation:elasticsearch:elasticsearch-rest-5.0'
 include ':instrumentation:elasticsearch:elasticsearch-rest-6.4'
 include ':instrumentation:elasticsearch:elasticsearch-transport-common'
-include ':instrumentation:elasticsearch:elasticsearch-transport-2.0'
 include ':instrumentation:elasticsearch:elasticsearch-transport-5.0'
 include ':instrumentation:elasticsearch:elasticsearch-transport-5.3'
 include ':instrumentation:elasticsearch:elasticsearch-transport-6.0'

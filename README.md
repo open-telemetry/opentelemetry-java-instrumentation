@@ -181,7 +181,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
-| [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 2.0+ (not including 7.x yet)   |
+| [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 5.0+ (not including 7.x yet)   |
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
@@ -257,7 +257,29 @@ only supports manual instrumentation using the `opentelemetry-api` version with 
 number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
 multiple (1.0.0+) versions of `opentelemetry-api`.
 
-You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
+You'll need to add a dependency on the `opentelemetry-api` library to get started.
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    compile('io.opentelemetry:opentelemetry-api:0.7.0')
+}
+```
+
+Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
 
 ### Configure the OpenTelemetry getTracer
@@ -281,6 +303,28 @@ public class MyClass {
   public void MyLogic() {
       <...>
   }
+}
+```
+
+You'll also need to add a dependency for this annotation:
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
 }
 ```
 

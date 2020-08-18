@@ -40,7 +40,7 @@ dependencies {
   shadowInclude project(path: ':javaagent-exporters:zipkin', configuration: 'shadow')
 }
 
-
+jar.enabled = false
 shadowJar {
   configurations = [project.configurations.shadowInclude]
 
