@@ -182,7 +182,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE>
         span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
         span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
       }
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.debug("Error tagging url", e);
     }
     // TODO set resource name from URL.

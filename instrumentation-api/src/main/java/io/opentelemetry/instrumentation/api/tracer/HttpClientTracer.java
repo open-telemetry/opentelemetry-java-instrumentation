@@ -140,7 +140,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseHttpClient
       try {
         URI url = url(request);
         if (url != null && url.getHost() != null) {
-          NetPeerHelper.setPeer(span, url.getHost(), null);
+          NetPeerUtils.setAttributes(span, url.getHost(), null);
           if (url.getPort() > 0) {
             span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
           }
