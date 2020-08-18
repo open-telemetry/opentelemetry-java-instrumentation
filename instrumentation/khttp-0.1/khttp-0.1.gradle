@@ -3,7 +3,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -14,15 +13,6 @@ muzzle {
   }
 }
 
-
-testSets {
-  latestDepTest
-}
-
 dependencies {
-  compileOnly group: 'khttp', name: 'khttp', version: '0.1.0'
-
-  testImplementation group: 'khttp', name: 'khttp', version: '0.1.0'
-
-  latestDepTestImplementation group: 'khttp', name: 'khttp', version: '+'
+  library group: 'khttp', name: 'khttp', version: '0.1.0'
 }

@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,14 +9,8 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  library group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
   implementation project(':instrumentation:hibernate:hibernate-common')
 
@@ -26,13 +19,10 @@ dependencies {
   testImplementation project(':instrumentation:hibernate:hibernate-3.3')
   testImplementation project(':instrumentation:hibernate:hibernate-4.0')
 
-  testImplementation group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
-  testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+  testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  testImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.5.1.RELEASE'
+  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.5.1.RELEASE'
 
-  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '(,6.0.0.Final)'
-  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '(,6.0.0.Final)'
-  latestDepTestImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
+  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-core', version: '(,6.0.0.Final)'
+  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '(,6.0.0.Final)'
 }
