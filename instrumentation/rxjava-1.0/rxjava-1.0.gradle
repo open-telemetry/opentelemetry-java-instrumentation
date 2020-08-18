@@ -1,11 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
 
 dependencies {
   compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'

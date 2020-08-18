@@ -6,7 +6,6 @@ dependencies {
   api deps.spock
   api project(':testing-common')
 
-  implementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
   implementation deps.slf4j
   implementation deps.opentelemetryProto
   implementation "org.testcontainers:testcontainers:1.14.3"
@@ -14,10 +13,9 @@ dependencies {
 }
 
 test {
-  dependsOn = [':javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
+  dependsOn ':javaagent:shadowJar'
 
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
-    jvmArgs "-Dotel.exporter.jar=${project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath}"
   }
 }

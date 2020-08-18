@@ -30,32 +30,12 @@ muzzle {
   }
 }
 
-// TODO(anuraaga): Move tests to an actual model to reduce hackiness.
-// Create test artifacts so couchbase-2.6 can reuse tests
-task testJar(type: Jar, dependsOn: testClasses) {
-  from sourceSets.test.groovy
-  classifier "tests"
-}
-
-configurations {
-  testArtifacts
-}
-
-artifacts {
-  testArtifacts testJar
-}
-
 dependencies {
   implementation project(':instrumentation:rxjava-1.0')
 
   library group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 
-  testImplementation group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
-
-  testLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
-  // Earliest version that seems to allow queries with CouchbaseMock:
-  testLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
-  testLibrary group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
+  testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
   latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
   latestDepTestLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.+'

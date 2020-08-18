@@ -1,0 +1,20 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = 'javaagent-exporters-zipkin'
+
+dependencies {
+  implementation(deps.opentelemetryZipkin) {
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+  }
+  compileOnly deps.opentelemetrySdkAutoConfig
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+}
