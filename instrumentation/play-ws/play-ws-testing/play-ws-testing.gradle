@@ -1,0 +1,12 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+def scalaVersion = '2.12'
+
+dependencies {
+  api project(':testing-common')
+  api group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

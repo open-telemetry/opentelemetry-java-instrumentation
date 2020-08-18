@@ -1,0 +1,19 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = 'javaagent-exporters-logging'
+
+dependencies {
+  compileOnly deps.opentelemetrySdk
+  compileOnly deps.opentelemetryApi
+  compileOnly deps.opentelemetrySdkAutoConfig
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+}

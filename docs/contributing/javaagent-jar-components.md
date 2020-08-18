@@ -18,14 +18,14 @@ agent](https://docs.oracle.com/javase/7/docs/api/java/lang/instrument/package-su
 This class is loaded during application startup by application classloader.
 Its sole responsibility is to push agent's classes into JVM's bootstrap
 classloader and immediately delegate to
-`io.opentelemetry.javaagent.bootstrap.Agent` (now in the bootstrap class loader)
+`io.opentelemetry.javaagent.bootstrap.AgentInitializer` (now in the bootstrap class loader)
 class from there.
 
 ### Modules that live in the bootstrap class loader
 
 #### `javaagent-bootstrap` module
 
-`io.opentelemetry.javaagent.bootstrap.Agent` and a few other classes that live in the bootstrap class
+`io.opentelemetry.javaagent.bootstrap.AgentInitializer` and a few other classes that live in the bootstrap class
 loader but are not used directly by auto-instrumentation
 
 #### `instrumentation-api` and `auto-api` modules
@@ -56,7 +56,7 @@ host application. This is achieved in the following way:
 folder inside final jar file, called`inst`.
 In addition, the extension of all class files is changed from `class` to `classdata`.
 This ensures that general classloaders cannot find nor load these classes.
-- When `io.opentelemetry.javaagent.bootstrap.Agent` starts up, it creates an
+- When `io.opentelemetry.javaagent.bootstrap.AgentInitializer` is invoked, it creates an
 instance of `io.opentelemetry.instrumentation.auto.api.AgentClassLoader`, loads an
 `io.opentelemetry.javaagent.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the

@@ -1,6 +1,5 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  javaSubPackage = 'log4j.v2_13_2'
 }
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"

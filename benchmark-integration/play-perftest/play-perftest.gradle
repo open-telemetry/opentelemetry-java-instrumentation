@@ -2,6 +2,12 @@ plugins {
   id "org.gradle.playframework" version "0.9"
 }
 
+afterEvaluate {
+  // assemble fails without this because gradle play plugin looks for the jar file without
+  // considering the updated archivesBaseName that we have set in java.gradle
+  archivesBaseName = 'play-perftest'
+}
+
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
   playVersion = "2.6.20"

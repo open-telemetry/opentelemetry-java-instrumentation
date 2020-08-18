@@ -53,7 +53,6 @@ testSets {
 }
 
 dependencies {
-  implementation(project(':utils:thread-utils'))
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.0.0'
 
   testImplementation group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'

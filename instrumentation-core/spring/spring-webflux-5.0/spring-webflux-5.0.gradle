@@ -1,6 +1,5 @@
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  javaSubPackage = 'spring.webflux.client'
 }
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
