@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,21 +9,12 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   implementation(project(':instrumentation:mongo:mongo-common'))
 
   // a couple of test attribute verifications don't pass until 3.8.0
-  compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.8.0'
+  library group: 'org.mongodb', name: 'mongo-java-driver', version: '3.8.0'
 
   testImplementation project(':instrumentation:mongo:mongo-testing')
   testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
-
-  testImplementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.8.0'
-  latestDepTestImplementation group: 'org.mongodb', name: 'mongo-java-driver', version: '+'
 }
