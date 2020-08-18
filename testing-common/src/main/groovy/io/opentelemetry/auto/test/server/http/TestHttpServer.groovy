@@ -27,17 +27,18 @@ import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.HandlerList
+
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class TestHttpServer implements AutoCloseable {
 
@@ -323,6 +324,12 @@ class TestHttpServer implements AutoCloseable {
         send()
         resp.setContentLength(body.bytes.length)
         resp.writer.print(body)
+      }
+
+      void send(String body, String contentType) {
+        assert contentType != null
+        resp.setContentType(contentType)
+        send(body)
       }
     }
 

@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.auto.test.base.HttpClientTest
-import java.util.concurrent.TimeUnit
+import io.opentelemetry.trace.attributes.SemanticAttributes
+import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
+import org.glassfish.jersey.client.ClientConfig
+import org.glassfish.jersey.client.ClientProperties
+import org.glassfish.jersey.client.JerseyClientBuilder
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import spock.lang.Timeout
+import spock.lang.Unroll
+
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -23,12 +33,7 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
-import org.glassfish.jersey.client.ClientConfig
-import org.glassfish.jersey.client.ClientProperties
-import org.glassfish.jersey.client.JerseyClientBuilder
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
+import java.util.concurrent.TimeUnit
 
 abstract class JaxRsClientTest extends HttpClientTest {
 
@@ -47,6 +52,44 @@ abstract class JaxRsClientTest extends HttpClientTest {
   }
 
   abstract ClientBuilder builder()
+
+  @Unroll
+  def "should properly convert HTTP status #statusCode to span error status"() {
+    given:
+    def method = "GET"
+    def uri = server.address.resolve(path)
+
+    when:
+    def actualStatusCode = doRequest(method, uri)
+
+    then:
+    assert actualStatusCode == statusCode
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          parent()
+          operationName expectedOperationName(method)
+          spanKind CLIENT
+          errored true
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
+            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
+            "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
+            "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
+            "${SemanticAttributes.HTTP_METHOD.key()}" method
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" statusCode
+          }
+        }
+        serverSpan(it, 1, span(0))
+      }
+    }
+
+    where:
+    path            | statusCode
+    "/client-error" | 400
+    "/error"        | 500
+  }
 }
 
 @Timeout(5)
