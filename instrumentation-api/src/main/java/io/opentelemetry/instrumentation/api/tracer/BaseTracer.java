@@ -46,9 +46,9 @@ public abstract class BaseTracer {
     this.tracer = tracer;
   }
 
-  public Span startSpan(Class<?> clazz, Kind kind) {
+  public Span startSpan(Class<?> clazz) {
     String spanName = spanNameForClass(clazz);
-    return startSpan(spanName, kind);
+    return startSpan(spanName, Kind.INTERNAL);
   }
 
   public Span startSpan(String spanName, Kind kind) {

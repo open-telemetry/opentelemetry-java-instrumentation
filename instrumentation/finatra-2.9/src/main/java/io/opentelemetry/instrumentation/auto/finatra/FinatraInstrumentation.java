@@ -36,7 +36,6 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -91,7 +90,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         serverSpan.updateName(routeInfo.path());
       }
 
-      Span span = TRACER.startSpan(clazz, Kind.INTERNAL);
+      Span span = TRACER.startSpan(clazz);
 
       return new SpanWithScope(span, currentContextWith(span));
     }
