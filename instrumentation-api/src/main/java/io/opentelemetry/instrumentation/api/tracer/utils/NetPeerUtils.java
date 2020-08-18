@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.tracer.utils;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;

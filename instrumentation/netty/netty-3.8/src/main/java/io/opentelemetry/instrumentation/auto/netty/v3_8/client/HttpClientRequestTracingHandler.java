@@ -24,7 +24,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.trace.Span;

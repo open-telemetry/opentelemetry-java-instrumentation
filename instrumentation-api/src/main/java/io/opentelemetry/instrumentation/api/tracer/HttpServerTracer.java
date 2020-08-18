@@ -28,6 +28,7 @@ import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
+import io.opentelemetry.instrumentation.api.tracer.utils.HttpUrlUtils;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
