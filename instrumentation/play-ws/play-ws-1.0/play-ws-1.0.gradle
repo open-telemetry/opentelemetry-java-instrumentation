@@ -39,7 +39,7 @@ dependencies {
 
   implementation project(':instrumentation:play-ws:play-ws-common')
 
-  testImplementation project(':instrumentation:play-ws:testing')
+  testImplementation project(':instrumentation:play-ws:play-ws-testing')
 
   // These are to ensure cross compatibility
   testImplementation project(':instrumentation:netty:netty-4.0')

@@ -42,7 +42,7 @@ dependencies {
 
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 
-  testImplementation project(':instrumentation:couchbase:testing')
+  testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
   latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
   latestDepTestImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.+'

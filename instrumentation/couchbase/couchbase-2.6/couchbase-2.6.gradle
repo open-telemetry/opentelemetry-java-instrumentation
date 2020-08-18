@@ -50,7 +50,7 @@ dependencies {
   testImplementation project(':instrumentation:couchbase:couchbase-2.0')
   testImplementation group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
 
-  testImplementation project(':instrumentation:couchbase:testing')
+  testImplementation project(':instrumentation:couchbase:couchbase-testing')
   testImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
 
   testImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
