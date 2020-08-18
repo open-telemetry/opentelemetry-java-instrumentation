@@ -32,7 +32,7 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
+  public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
     Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
     return new SpanWithScope(span, currentContextWith(span));
   }
