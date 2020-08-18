@@ -104,7 +104,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         return null;
       }
       Scope parentScope = currentContextWith(parentSpan);
-      Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT", Kind.INTERNAL);
+      Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT", Kind.CLIENT);
       NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
       return parentScope;
     }
