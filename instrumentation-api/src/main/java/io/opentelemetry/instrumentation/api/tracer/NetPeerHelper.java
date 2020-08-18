@@ -24,7 +24,7 @@ import java.net.InetSocketAddress;
 
 public class NetPeerHelper {
 
-  public static void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public static void onPeerConnection(Span span, InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
