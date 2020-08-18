@@ -24,6 +24,8 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.instrumentation.api.MoreAttributes;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
@@ -137,7 +139,17 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseHttpClient
 
       try {
         URI url = url(request);
+        if (url != null && url.getHost() != null) {
+          BaseTracerHelper.setPeer(span, url.getHost(), null);
+          if (url.getPort() > 0) {
+            span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
+          }
+        }
         tagUrl(url, span);
+        if (Config.get().isHttpClientTagQueryString()) {
+          span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+          span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
+        }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);
       }

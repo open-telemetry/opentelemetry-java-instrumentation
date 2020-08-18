@@ -16,8 +16,6 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.instrumentation.api.MoreAttributes;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -44,13 +42,9 @@ public abstract class BaseHttpClientServerTracer extends BaseTracer {
       }
       if (url.getHost() != null) {
         urlBuilder.append(url.getHost());
-        BaseTracerHelper.setPeer(span, url.getHost(), null);
-        if (url.getPort() > 0) {
-          span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
-          if (url.getPort() != 80 && url.getPort() != 443) {
-            urlBuilder.append(":");
-            urlBuilder.append(url.getPort());
-          }
+        if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
+          urlBuilder.append(":");
+          urlBuilder.append(url.getPort());
         }
       }
       String path = url.getPath();
@@ -69,11 +63,6 @@ public abstract class BaseHttpClientServerTracer extends BaseTracer {
       }
 
       span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
-
-      if (Config.get().isHttpClientTagQueryString()) {
-        span.setAttribute(MoreAttributes.HTTP_QUERY, query);
-        span.setAttribute(MoreAttributes.HTTP_FRAGMENT, fragment);
-      }
     }
   }
 

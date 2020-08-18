@@ -25,6 +25,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -177,6 +178,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE>
     try {
       URI url = url(request);
       tagUrl(url, span);
+      if (Config.get().isHttpServerTagQueryString()) {
+        span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+        span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
+      }
     } catch (final Exception e) {
       log.debug("Error tagging url", e);
     }
