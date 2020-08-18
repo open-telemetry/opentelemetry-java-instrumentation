@@ -1,0 +1,10 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+  api group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}
