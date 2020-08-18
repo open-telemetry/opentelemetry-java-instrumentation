@@ -63,4 +63,6 @@ dependencies {
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.0')
 }
 
-test.dependsOn test_before_1_11_106
+if (!testLatestDeps) {
+  test.dependsOn test_before_1_11_106
+}

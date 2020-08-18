@@ -22,11 +22,16 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
+  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
+  // here.
+  compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
 
   testImplementation project(':instrumentation:netty:netty-4.1')
-
-  testLibrary group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
+  // TODO(anuraaga): Something about finatra test compilation doesn't work well when this is
+  // present with testLatestDeps.
+  if (!testLatestDeps) {
+    testLibrary group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
+  }
   testLibrary(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.10')
   // Required for older versions of finatra on JDKs >= 11
   testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'

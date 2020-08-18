@@ -23,7 +23,7 @@ dependencies {
   testImplementation project(':instrumentation:netty:netty-4.1')
   testImplementation project(':instrumentation:jdbc')
 
-  testLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
 
   // Vert.x 4.0 is incompatible with our tests.
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-web', version: '3.+'

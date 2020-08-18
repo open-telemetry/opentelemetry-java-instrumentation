@@ -26,7 +26,9 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
+  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
+  // here.
+  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
   testImplementation project(':instrumentation:netty:netty-4.0')
   testImplementation project(':instrumentation:netty:netty-4.1')

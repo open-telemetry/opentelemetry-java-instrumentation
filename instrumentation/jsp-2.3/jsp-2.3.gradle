@@ -11,7 +11,7 @@ muzzle {
 
 dependencies {
   // compiling against tomcat 7.0.20 because there seems to be some issues with Tomcat's dependency < 7.0.20
-  library group: 'org.apache.tomcat', name: 'tomcat-jasper', version: '7.0.20'
+  compileOnly group: 'org.apache.tomcat', name: 'tomcat-jasper', version: '7.0.20'
   compileOnly group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '2.3.0'
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 
