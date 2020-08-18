@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -9,16 +8,9 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest
-}
-
 dependencies {
-  compileOnly group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
+  library group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
 
-  testImplementation group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
   testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   testImplementation group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.5.2' // Last version to support Java7
-
-  latestDepTestImplementation group: 'com.twilio.sdk', name: 'twilio', version: '+'
 }

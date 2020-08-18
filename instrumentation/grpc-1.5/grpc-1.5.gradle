@@ -44,7 +44,6 @@ dependencies {
   testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
   testImplementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
-  testImplementation sourceSets.test.output // include the protobuf generated classes
 
   // this instrumentation needs to be able to be able to reference the OpenTelemetry API's gRPC Context
   // that is shaded in the bootstrap class loader (for sending telemetry to the agent),

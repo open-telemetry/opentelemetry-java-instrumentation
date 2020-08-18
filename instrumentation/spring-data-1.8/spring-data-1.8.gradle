@@ -1,7 +1,6 @@
 // This file includes software developed at SignalFx
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   // We have two independent covariants, so we have to test them independently.
@@ -31,23 +30,19 @@ testSets {
 // For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
 // For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
 dependencies {
-  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE')
+  library group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE'
   compileOnly(group: 'org.springframework', name: 'spring-aop', version: '1.2')
 
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
-  testImplementation group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
+  testLibrary group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
 
   // JPA dependencies
   testImplementation project(':instrumentation:jdbc')
-  testImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
   testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
 
-  latestDepTestImplementation group: 'org.springframework', name: 'spring-test', version: '+'
-  latestDepTestImplementation group: 'org.springframework', name: 'spring-context', version: '+'
-
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
+  latestDepTestLibrary group: 'org.springframework', name: 'spring-context', version: '+'
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
 }
 

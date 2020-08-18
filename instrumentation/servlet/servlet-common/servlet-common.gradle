@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,10 +9,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest
-}
-
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
@@ -22,7 +17,4 @@ dependencies {
   }
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
-
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
 }

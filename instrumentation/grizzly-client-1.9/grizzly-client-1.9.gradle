@@ -3,7 +3,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -17,12 +16,6 @@ muzzle {
     module = "async-http-client"
     versions = "[1.9.0,)"
     assertInverse = true
-  }
-}
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
   }
 }
 

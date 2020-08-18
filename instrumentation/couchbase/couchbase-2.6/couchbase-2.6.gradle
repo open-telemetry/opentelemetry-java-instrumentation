@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   // Version 2.7.5 and 2.7.8 were not released properly and muzzle cannot test against it causing failure.

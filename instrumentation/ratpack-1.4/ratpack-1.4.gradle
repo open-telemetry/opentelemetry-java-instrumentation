@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -15,18 +14,10 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
+  library group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
   testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
-  latestDepTestImplementation group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation group: 'com.sun.activation', name: 'jakarta.activation', version: '1.2.2'
   }

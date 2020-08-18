@@ -4,7 +4,6 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
-
 dependencies {
   library group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
 

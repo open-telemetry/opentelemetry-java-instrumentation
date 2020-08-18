@@ -2,6 +2,7 @@ group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
+apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
 archivesBaseName = projectDir.parentFile.name
 
