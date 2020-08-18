@@ -21,7 +21,7 @@
  *   version is enabled. This dependency will be added as-is to testImplementation, but only if
  *   -PtestLatestDeps=true. The version will not be modified but it will be given highest
  *   precedence. Use this to restrict the latest version dependency from the default `+`, for
- *   example to restrict to just a major version by specifying `2.x`.
+ *   example to restrict to just a major version by specifying `2.+`.
  */
 
 ext.testLatestDeps = findProperty('testLatestDeps')

@@ -15,6 +15,6 @@ dependencies {
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
 }

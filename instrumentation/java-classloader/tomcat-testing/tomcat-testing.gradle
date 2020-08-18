@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   testImplementation project(':instrumentation:java-classloader')
 
-  //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
-  //Older versions would require slightly different instrumentation.
+  // This is the earliest version that has org.apache.catalina.loader.ParallelWebappClassLoader
+  // which is used in the test
   testLibrary group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
 }
