@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
+import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.InjectAdapter.SETTER;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -23,7 +25,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 
 public class JaxRsClientTracer
-    extends HttpClientTracer<ClientRequestContext, ClientResponseContext> {
+    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, ClientResponseContext> {
   public static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
 
   @Override
@@ -53,7 +55,7 @@ public class JaxRsClientTracer
 
   @Override
   protected Setter<ClientRequestContext> getSetter() {
-    return null;
+    return SETTER;
   }
 
   @Override

@@ -25,7 +25,7 @@ import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class KubernetesClientTracer extends HttpClientTracer<Request, Response> {
+public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
   public static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   @Override
@@ -55,6 +55,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
 
   @Override
   protected Setter<Request> getSetter() {
+    // TODO (trask) no propagation implemented yet?
     return null;
   }
 

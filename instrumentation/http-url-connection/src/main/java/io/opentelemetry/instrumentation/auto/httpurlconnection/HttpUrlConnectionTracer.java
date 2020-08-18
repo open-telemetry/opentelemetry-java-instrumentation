@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.httpurlconnection;
 
+import static io.opentelemetry.instrumentation.auto.httpurlconnection.HeadersInjectAdapter.SETTER;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
@@ -24,7 +26,8 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection, Integer> {
+public class HttpUrlConnectionTracer
+    extends HttpClientTracer<HttpURLConnection, HttpURLConnection, Integer> {
 
   public static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
 
@@ -55,7 +58,7 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
 
   @Override
   protected Setter<HttpURLConnection> getSetter() {
-    return null;
+    return SETTER;
   }
 
   @Override

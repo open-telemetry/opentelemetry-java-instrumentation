@@ -24,7 +24,8 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+public class GoogleHttpClientTracer
+    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
   public static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
 
   @Override
@@ -62,7 +63,7 @@ public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRe
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
+  protected Setter<HttpHeaders> getSetter() {
     return HeadersInjectAdapter.SETTER;
   }
 

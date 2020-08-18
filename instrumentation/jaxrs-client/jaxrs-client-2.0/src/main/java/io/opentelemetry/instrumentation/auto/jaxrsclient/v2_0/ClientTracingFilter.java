@@ -16,12 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
-import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.InjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -37,12 +34,9 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   @Override
   public void filter(ClientRequestContext requestContext) {
     Span span = TRACER.startSpan(requestContext);
-
-    Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators()
-        .getHttpTextFormat()
-        .inject(context, requestContext.getHeaders(), SETTER);
-
+    // TODO (trask) expose inject separate from startScope, e.g. for async cases
+    Scope scope = TRACER.startScope(span, requestContext);
+    scope.close();
     requestContext.setProperty(SPAN_PROPERTY_NAME, span);
   }
 

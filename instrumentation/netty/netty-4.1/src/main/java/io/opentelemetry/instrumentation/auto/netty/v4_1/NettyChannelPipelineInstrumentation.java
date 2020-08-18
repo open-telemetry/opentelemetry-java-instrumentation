@@ -16,7 +16,6 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1;
 
-import static io.opentelemetry.instrumentation.auto.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,6 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -43,7 +43,6 @@ import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerRequest
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -172,12 +171,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Span span = TRACER.getCurrentSpan();
-      if (span.getContext().isValid()) {
-        Attribute<Span> attribute =
-            pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);
-        attribute.compareAndSet(null, span);
-      }
+      Attribute<Context> attribute =
+          pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
+      attribute.compareAndSet(null, Context.current());
     }
   }
 }

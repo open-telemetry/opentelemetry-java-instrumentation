@@ -17,12 +17,8 @@
 package io.opentelemetry.instrumentation.auto.netty.v3_8.client;
 
 import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
@@ -65,12 +61,9 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     Span span = TRACER.startSpan(request);
     BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-    Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
-
     channelTraceContext.setClientSpan(span);
 
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = TRACER.startScope(span, request.headers())) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);

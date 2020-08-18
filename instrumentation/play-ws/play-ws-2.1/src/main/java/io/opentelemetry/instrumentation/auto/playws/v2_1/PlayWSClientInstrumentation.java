@@ -16,13 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.playws.v2_1;
 
-import static io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -42,8 +39,9 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Local("otelSpan") Span span) {
 
       span = TRACER.startSpan(request);
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+      // TODO (trask) expose inject separate from startScope, e.g. for async cases
+      Scope scope = TRACER.startScope(span, request.getHeaders());
+      scope.close();
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);

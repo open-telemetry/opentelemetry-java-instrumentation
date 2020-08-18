@@ -16,16 +16,19 @@
 
 package io.opentelemetry.instrumentation.auto.khttp;
 
+import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.SETTER;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import khttp.KHttp;
 import khttp.responses.Response;
 
-public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
+public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
   public static final KHttpTracer TRACER = new KHttpTracer();
 
   public Depth getCallDepth() {
@@ -58,8 +61,8 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
   }
 
   @Override
-  protected Setter<RequestWrapper> getSetter() {
-    return null;
+  protected Setter<Map<String, String>> getSetter() {
+    return SETTER;
   }
 
   @Override

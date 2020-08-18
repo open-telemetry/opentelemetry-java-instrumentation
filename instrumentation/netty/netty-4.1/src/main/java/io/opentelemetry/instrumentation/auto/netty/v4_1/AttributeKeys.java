@@ -37,8 +37,8 @@ public class AttributeKeys {
             }
           };
 
-  public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_1.parent.connect.span");
+  public static final AttributeKey<Context> PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY =
+      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_1.parent.connect.context");
 
   /**
    * This constant is copied over to

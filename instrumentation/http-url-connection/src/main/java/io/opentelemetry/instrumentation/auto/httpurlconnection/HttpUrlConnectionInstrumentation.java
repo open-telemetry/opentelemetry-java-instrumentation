@@ -16,12 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.httpurlconnection;
 
-import static io.opentelemetry.instrumentation.auto.httpurlconnection.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.auto.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -30,8 +28,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
@@ -88,7 +84,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HttpUrlState methodEnter(
-        @Advice.This HttpURLConnection thiz, @Advice.FieldValue("connected") boolean connected) {
+        @Advice.This HttpURLConnection thiz,
+        @Advice.FieldValue("connected") boolean connected,
+        @Advice.Local("otelScope") Scope scope) {
 
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
       if (callDepth > 0) {
@@ -103,8 +101,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         if (!state.hasSpan() && !state.isFinished()) {
           Span span = state.start(thiz);
           if (!connected) {
-            Context context = withSpan(span, Context.current());
-            OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, thiz, SETTER);
+            scope = TRACER.startScope(span, thiz);
           }
         }
         return state;
@@ -116,8 +113,12 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.Enter HttpUrlState state,
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
-        @Advice.Origin("#m") String methodName) {
+        @Advice.Origin("#m") String methodName,
+        @Advice.Local("otelScope") Scope scope) {
 
+      if (scope != null) {
+        scope.close();
+      }
       if (state == null) {
         return;
       }

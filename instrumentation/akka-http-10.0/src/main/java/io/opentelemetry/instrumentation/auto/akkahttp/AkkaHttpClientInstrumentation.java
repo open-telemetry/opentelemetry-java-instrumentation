@@ -16,9 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.akkahttp;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.akkahttp.AkkaHttpClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -27,8 +25,6 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
@@ -60,6 +56,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
+      AkkaHttpClientInstrumentation.class.getName() + "$InjectAdapter",
       packageName + ".AkkaHttpClientTracer",
     };
   }
@@ -95,15 +92,10 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(request);
-
-        Context context = withSpan(span, Context.current());
-        if (request != null) {
-          AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-          OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, headers);
-          // Request is immutable, so we have to assign new value once we update headers
-          request = headers.getRequest();
-        }
-        scope = withScopedContext(context);
+        // Request is immutable, so we have to assign new value once we update headers
+        AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
+        scope = TRACER.startScope(span, headers);
+        request = headers.getRequest();
       }
     }
 
@@ -145,21 +137,33 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class AkkaHttpHeaders implements HttpTextFormat.Setter<HttpRequest> {
+  public static class AkkaHttpHeaders {
     private HttpRequest request;
 
     public AkkaHttpHeaders(HttpRequest request) {
       this.request = request;
     }
 
-    @Override
-    public void set(HttpRequest carrier, String key, String value) {
-      // It looks like this cast is only needed in Java, Scala would have figured it out
-      request = (HttpRequest) request.addHeader(RawHeader.create(key, value));
-    }
-
     public HttpRequest getRequest() {
       return request;
+    }
+
+    public void setRequest(HttpRequest request) {
+      this.request = request;
+    }
+  }
+
+  public static class InjectAdapter implements HttpTextFormat.Setter<AkkaHttpHeaders> {
+
+    public static final InjectAdapter SETTER = new InjectAdapter();
+
+    @Override
+    public void set(AkkaHttpHeaders carrier, String key, String value) {
+      HttpRequest request = carrier.getRequest();
+      if (request != null) {
+        // It looks like this cast is only needed in Java, Scala would have figured it out
+        carrier.setRequest((HttpRequest) request.addHeader(RawHeader.create(key, value)));
+      }
     }
   }
 }

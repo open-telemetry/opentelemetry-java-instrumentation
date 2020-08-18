@@ -29,7 +29,8 @@ import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-final class AwsSdkClientTracer extends HttpClientTracer<SdkHttpRequest, SdkHttpResponse> {
+final class AwsSdkClientTracer
+    extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
   static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
 
   // Certain headers in the request like User-Agent are only available after execution.

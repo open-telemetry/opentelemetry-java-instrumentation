@@ -28,7 +28,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
 
-public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod> {
+public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod, HttpMethod> {
   public static final CommonsHttpClientTracer TRACER = new CommonsHttpClientTracer();
 
   @Override
