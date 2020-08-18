@@ -16,16 +16,12 @@ testSets {
   }
 }
 
-// this is needed to force mongo-common test classes to be built first
-// so that the dependency below on its test sourceSet will work
-compileTestJava.dependsOn tasks.getByPath(':instrumentation:mongo:mongo-common:testClasses')
-
 dependencies {
   implementation(project(':instrumentation:mongo:mongo-common'))
 
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 
-  testImplementation project(':instrumentation:mongo:mongo-common').sourceSets.test.output
+  testImplementation project(':instrumentation:mongo:mongo-testing')
   testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 
   testImplementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
