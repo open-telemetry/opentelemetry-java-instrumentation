@@ -37,25 +37,12 @@ muzzle {
   }
 }
 
-configurations {
-  testArtifacts
-}
-
-// Create test artifacts so couchbase-2.6 can reuse tests
-artifacts {
-  testArtifacts testJar
-}
-
 dependencies {
   implementation project(':instrumentation:rxjava-1.0')
 
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 
-  testImplementation group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
-
-  testImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
-  // Earliest version that seems to allow queries with CouchbaseMock:
-  testImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
+  testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
   latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
   latestDepTestImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.+'

@@ -16,7 +16,7 @@
 
 import io.opentelemetry.auto.test.asserts.TraceAssert
 
-class CouchbaseAsyncClient26Test extends CouchbaseAsyncClientTest {
+class CouchbaseAsyncClient26Test extends AbstractCouchbaseAsyncClientTest {
 
   @Override
   void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
