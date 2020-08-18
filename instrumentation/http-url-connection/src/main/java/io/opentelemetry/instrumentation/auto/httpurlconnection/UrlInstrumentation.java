@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.auto.api.InternalJarURLHandler;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Map;
