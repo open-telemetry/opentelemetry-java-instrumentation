@@ -4,13 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
 
 muzzle {
   pass {
@@ -35,7 +28,7 @@ muzzle {
 def scalaVersion = '2.12'
 
 dependencies {
-  compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
+  library group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
 
   implementation project(':instrumentation:play-ws:play-ws-common')
 
@@ -46,7 +39,5 @@ dependencies {
   testImplementation project(':instrumentation:netty:netty-4.1')
   testImplementation project(':instrumentation:akka-http-10.0')
 
-  testImplementation group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
-
-  latestDepTestImplementation group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
+  latestDepTestLibrary group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
 }

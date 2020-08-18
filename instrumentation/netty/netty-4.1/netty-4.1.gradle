@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -32,21 +31,13 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
+  library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
-  testImplementation group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
-  testImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
+  testLibrary group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 
-  latestDepTestImplementation group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
+  latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
   // latest async-http-client incompatable with 5.0+ netty
-  latestDepTestImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.

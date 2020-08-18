@@ -21,6 +21,8 @@ if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
 
+apply from: "$rootDir/gradle/instrumentation-common.gradle"
+
 afterEvaluate {
   byteBuddy {
     transformation {

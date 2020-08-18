@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
     pass {
@@ -7,12 +6,6 @@ muzzle {
         module = "okhttp"
         versions = "[3.0,)"
         assertInverse = true
-    }
-}
-
-testSets {
-    latestDepTest {
-        dirName = 'test'
     }
 }
 
@@ -26,15 +19,14 @@ because it looks like exclusions using configurations excludes dependency even i
 not transitive.
  */
 dependencies {
-    compileOnly(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
+    library(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
 
     implementation project(':javaagent-tooling')
 
     testImplementation(project(':testing-common')) {
         exclude module: 'okhttp'
     }
-    testImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
 
     // 4.x.x-alpha has been released and it looks like there are lots of incompatible changes
-    latestDepTestImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '[3.11.0, 4.0.0*)'
+    latestDepTestLibrary group: 'com.squareup.okhttp3', name: 'okhttp', version: '[3.11.0, 4.0.0*)'
 }

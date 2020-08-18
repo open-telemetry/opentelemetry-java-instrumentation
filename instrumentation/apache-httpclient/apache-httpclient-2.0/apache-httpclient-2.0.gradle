@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -11,16 +10,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
-
-  testImplementation group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
-
-  latestDepTestImplementation group: 'commons-httpclient', name: 'commons-httpclient', version: '+'
+  library group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
 }

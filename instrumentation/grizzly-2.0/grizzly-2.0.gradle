@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,20 +9,13 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-
   compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http', version: '2.0'
 
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-  testImplementation group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.0'
+  testLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.0'
 
-  latestDepTestImplementation group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
-  latestDepTestImplementation group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
+  latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
+  latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
 }

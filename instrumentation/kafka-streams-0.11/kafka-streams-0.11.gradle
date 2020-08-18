@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -9,35 +8,28 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'
+  library group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'
 
   // Include kafka-clients instrumentation for tests.
   testImplementation project(':instrumentation:kafka-clients-0.11')
 
-  testImplementation group: 'org.apache.kafka', name: 'kafka-clients', version: '0.11.0.0'
-  testImplementation group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'
-  testImplementation group: 'org.springframework.kafka', name: 'spring-kafka', version: '1.3.3.RELEASE'
-  testImplementation group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '1.3.3.RELEASE'
+  testLibrary group: 'org.apache.kafka', name: 'kafka-clients', version: '0.11.0.0'
+  testLibrary group: 'org.springframework.kafka', name: 'spring-kafka', version: '1.3.3.RELEASE'
+  testLibrary group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '1.3.3.RELEASE'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
+  testLibrary group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
 
 
   // Include latest version of kafka itself along with latest version of client libs.
   // This seems to help with jar compatibility hell.
-  latestDepTestImplementation group: 'org.apache.kafka', name: 'kafka_2.11', version: '2.3.+'
+  latestDepTestLibrary group: 'org.apache.kafka', name: 'kafka_2.11', version: '2.3.+'
   // (Pinning to 2.3.x: 2.4.0 introduces an error when executing compileLatestDepTestGroovy)
   //  Caused by: java.lang.NoClassDefFoundError: org.I0Itec.zkclient.ZkClient
-  latestDepTestImplementation group: 'org.apache.kafka', name: 'kafka-clients', version: '2.3.+'
-  latestDepTestImplementation group: 'org.apache.kafka', name: 'kafka-streams', version: '2.3.+'
-  latestDepTestImplementation group: 'org.springframework.kafka', name: 'spring-kafka', version: '2.2.+'
-  latestDepTestImplementation group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.2.+'
-  latestDepTestImplementation group: 'org.assertj', name: 'assertj-core', version: '3.+'
+  latestDepTestLibrary group: 'org.apache.kafka', name: 'kafka-clients', version: '2.3.+'
+  latestDepTestLibrary group: 'org.apache.kafka', name: 'kafka-streams', version: '2.3.+'
+  latestDepTestLibrary group: 'org.springframework.kafka', name: 'spring-kafka', version: '2.2.+'
+  latestDepTestLibrary group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.2.+'
+  latestDepTestLibrary group: 'org.assertj', name: 'assertj-core', version: '3.+'
 }

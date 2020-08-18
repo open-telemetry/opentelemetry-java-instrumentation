@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -11,16 +10,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'com.sun.jersey', name: 'jersey-client', version: '1.1.4'
-
-  testImplementation group: 'com.sun.jersey', name: 'jersey-client', version: '1.1.4'
-
-  latestDepTestImplementation group: 'com.sun.jersey', name: 'jersey-client', version: '+'
+  library group: 'com.sun.jersey', name: 'jersey-client', version: '1.1.4'
 }

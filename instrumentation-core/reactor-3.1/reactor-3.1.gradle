@@ -20,26 +20,12 @@ ext {
 
 group = 'io.opentelemetry.instrumentation'
 
-apply from: "$rootDir/gradle/java.gradle"
-apply from: "$rootDir/gradle/publish.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
-  compileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+  library group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
-  implementation deps.opentelemetryApi
-
-  testImplementation project(':testing-common')
-
-  testImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
-
-  latestDepTestImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
+  latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
-  latestDepTestImplementation group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
+  latestDepTestLibrary group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
 }

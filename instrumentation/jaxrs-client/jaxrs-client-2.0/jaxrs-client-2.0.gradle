@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -16,12 +15,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
@@ -31,17 +24,17 @@ dependencies {
 
   testImplementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
 
-  testImplementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
-  testImplementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.5.Final'
+  testLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
+  testLibrary group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.5.Final'
   // ^ This version has timeouts https://issues.redhat.com/browse/RESTEASY-975
-  testImplementation group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.1.0'
+  testLibrary group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.1.0'
   // Doesn't work with CXF 3.0.x because their context is wrong:
   // https://github.com/apache/cxf/commit/335c7bad2436f08d6d54180212df5a52157c9f21
 
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
 
-  latestDepTestImplementation group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
-  latestDepTestImplementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.27'
-  latestDepTestImplementation group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
-  latestDepTestImplementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
+  latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
+  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.27'
+  latestDepTestLibrary group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
+  latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
 }

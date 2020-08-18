@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -15,17 +14,11 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
 
 dependencies {
-  compileOnly group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+  library group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
 
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-  testImplementation group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
 
-  latestDepTestImplementation group: 'biz.paluch.redis', name: 'lettuce', version: '4.+'
+  latestDepTestLibrary group: 'biz.paluch.redis', name: 'lettuce', version: '4.+'
 }
