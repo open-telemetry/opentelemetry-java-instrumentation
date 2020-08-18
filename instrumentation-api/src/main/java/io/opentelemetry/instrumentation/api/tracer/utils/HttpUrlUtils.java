@@ -22,7 +22,7 @@ import java.net.URI;
 
 public class HttpUrlUtils {
 
-  public static void setHttpUrlAttribute(URI url, Span span) {
+  public static void setHttpUrlAttribute(Span span, URI url) {
     if (url != null) {
       StringBuilder urlBuilder = new StringBuilder();
       if (url.getScheme() != null) {

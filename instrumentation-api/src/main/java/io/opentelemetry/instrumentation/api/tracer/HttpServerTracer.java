@@ -50,10 +50,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
 
+  protected static final String USER_AGENT = "User-Agent";
+
   private static final boolean FAIL_ON_CONTEXT_LEAK =
       Boolean.getBoolean("otel.internal.failOnContextLeak");
-
-  protected static final String USER_AGENT = "User-Agent";
 
   public HttpServerTracer() {
     super();
@@ -179,7 +179,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
     try {
       URI url = url(request);
-      HttpUrlUtils.setHttpUrlAttribute(url, span);
+      HttpUrlUtils.setHttpUrlAttribute(span, url);
       if (Config.get().isHttpServerTagQueryString()) {
         span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
         span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());

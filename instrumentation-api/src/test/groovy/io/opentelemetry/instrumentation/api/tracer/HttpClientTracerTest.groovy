@@ -16,13 +16,13 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import io.opentelemetry.context.propagation.HttpTextFormat
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class HttpClientTracerTest extends BaseTracerTest {
 
@@ -208,5 +208,4 @@ class HttpClientTracerTest extends BaseTracerTest {
       }
     }
   }
-
 }
