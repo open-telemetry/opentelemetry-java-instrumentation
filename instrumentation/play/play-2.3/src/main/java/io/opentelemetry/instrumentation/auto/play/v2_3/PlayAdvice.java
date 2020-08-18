@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.play.v2_3;
 import static io.opentelemetry.instrumentation.auto.play.v2_3.PlayTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -58,7 +58,7 @@ public class PlayAdvice {
     // span finished in RequestCompleteCallback
 
     // set the span name on the upstream akka/netty span
-    TRACER.updateSpanName(BaseTracerHelper.getCurrentServerSpan(), req);
+    TRACER.updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 
   // With this muzzle prevents this instrumentation from applying on Play 2.4+

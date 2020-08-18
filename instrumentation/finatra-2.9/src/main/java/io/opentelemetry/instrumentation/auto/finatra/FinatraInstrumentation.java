@@ -32,7 +32,7 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -86,7 +86,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
         @Advice.FieldValue("clazz") Class clazz) {
 
-      Span serverSpan = BaseTracerHelper.getCurrentServerSpan();
+      Span serverSpan = BaseTracer.getCurrentServerSpan();
       if (serverSpan != null) {
         serverSpan.updateName(routeInfo.path());
       }

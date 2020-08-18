@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -79,7 +79,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
-        Span parent = BaseTracerHelper.getCurrentServerSpan();
+        Span parent = BaseTracer.getCurrentServerSpan();
         Span span = TRACER.getCurrentSpan();
 
         if (span == null) {

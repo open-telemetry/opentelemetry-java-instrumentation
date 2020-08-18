@@ -34,7 +34,7 @@ class BaseTracerTest extends AgentSpecification {
 
   def "test onPeerConnection"() {
     when:
-    BaseTracerHelper.onPeerConnection(span, connection)
+    NetPeerHelper.onPeerConnection(span, connection)
 
     then:
     if (expectedPeerName) {
@@ -59,7 +59,7 @@ class BaseTracerTest extends AgentSpecification {
     ConfigUtils.withConfigOverride(
       "endpoint.peer.service.mapping",
       "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice") {
-      BaseTracerHelper.onPeerConnection(span, connection)
+      NetPeerHelper.onPeerConnection(span, connection)
     }
 
     then:

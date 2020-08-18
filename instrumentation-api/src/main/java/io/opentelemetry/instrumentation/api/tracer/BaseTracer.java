@@ -139,4 +139,10 @@ public abstract class BaseTracer {
   public void addThrowable(Span span, Throwable throwable) {
     span.recordException(throwable);
   }
+
+  /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
+  // TODO when all decorator are replaced with tracers, make this method instance
+  public static Span getCurrentServerSpan() {
+    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
+  }
 }

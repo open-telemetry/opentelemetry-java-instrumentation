@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
@@ -45,7 +44,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
     Span span = tracer.spanBuilder("jax-rs.request").startSpan();
-    updateSpanNames(span, BaseTracerHelper.getCurrentServerSpan(), target, method);
+    updateSpanNames(span, BaseTracer.getCurrentServerSpan(), target, method);
     return span;
   }
 

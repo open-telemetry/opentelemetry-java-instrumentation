@@ -16,22 +16,13 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.instrumentation.api.tracer.BaseTracer.CONTEXT_SERVER_SPAN_KEY;
-
-import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-public class BaseTracerHelper {
-
-  /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
-  // TODO when all decorator are replaced with tracers, make this method instance
-  public static Span getCurrentServerSpan() {
-    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
-  }
+public class NetPeerHelper {
 
   public static void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {

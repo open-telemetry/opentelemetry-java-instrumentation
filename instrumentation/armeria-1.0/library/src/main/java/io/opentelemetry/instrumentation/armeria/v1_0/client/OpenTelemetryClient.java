@@ -23,7 +23,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.NetPeerHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +70,7 @@ public class OpenTelemetryClient extends SimpleDecoratingHttpClient {
           .whenComplete()
           .thenAccept(
               log -> {
-                BaseTracerHelper.onPeerConnection(span, ctx.remoteAddress());
+                NetPeerHelper.onPeerConnection(span, ctx.remoteAddress());
 
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {

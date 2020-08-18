@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.NetPeerHelper;
 import io.opentelemetry.instrumentation.auto.api.InternalJarURLHandler;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -91,7 +91,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            BaseTracerHelper.setPeer(span, host, null);
+            NetPeerHelper.setPeer(span, host, null);
           }
 
           TRACER.endExceptionally(span, throwable);

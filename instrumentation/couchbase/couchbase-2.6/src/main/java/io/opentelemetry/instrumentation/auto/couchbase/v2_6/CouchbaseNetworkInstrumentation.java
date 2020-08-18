@@ -28,7 +28,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerHelper;
+import io.opentelemetry.instrumentation.api.tracer.NetPeerHelper;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -91,7 +91,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
       Span span = contextStore.get(request);
       if (span != null) {
-        BaseTracerHelper.setPeer(span, remoteHostname, null);
+        NetPeerHelper.setPeer(span, remoteHostname, null);
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");
