@@ -17,23 +17,12 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 
-public abstract class BaseHttpClientServerTracer extends BaseTracer {
+public class HttpUrlUtils {
 
-  protected static final String USER_AGENT = "User-Agent";
-
-  public BaseHttpClientServerTracer() {
-    super();
-  }
-
-  public BaseHttpClientServerTracer(Tracer tracer) {
-    super(tracer);
-  }
-
-  protected void tagUrl(URI url, Span span) {
+  public static void tagUrl(URI url, Span span) {
     if (url != null) {
       StringBuilder urlBuilder = new StringBuilder();
       if (url.getScheme() != null) {
@@ -65,7 +54,4 @@ public abstract class BaseHttpClientServerTracer extends BaseTracer {
       span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
     }
   }
-
-  @Override
-  protected abstract String getInstrumentationName();
 }

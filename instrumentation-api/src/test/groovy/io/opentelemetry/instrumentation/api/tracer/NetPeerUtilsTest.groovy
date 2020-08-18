@@ -17,20 +17,9 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.auto.util.test.AgentSpecification
-import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import spock.lang.Shared
 
-class NetPeerUtilsTest extends AgentSpecification {
-
-  @Shared
-  def tracer = newTracer()
-
-  @Shared
-  def resolvedAddress = new InetSocketAddress("github.com", 999)
-
-  def span = Mock(Span)
+class NetPeerUtilsTest extends BaseTracerTest {
 
   def "test setAttributes"() {
     when:
@@ -75,25 +64,6 @@ class NetPeerUtilsTest extends AgentSpecification {
     new InetSocketAddress("2.3.4.5", 888)    | null
     new InetSocketAddress("dogs.com", 999)   | "dogsservice"
     new InetSocketAddress("github.com", 999) | null
-  }
-
-  def newTracer() {
-    return new BaseTracer() {
-      @Override
-      protected String getInstrumentationName() {
-        return "BaseTracerTest"
-      }
-    }
-  }
-
-  class SomeInnerClass implements Runnable {
-    void run() {
-    }
-  }
-
-  static class SomeNestedClass implements Runnable {
-    void run() {
-    }
   }
 }
 	

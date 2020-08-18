@@ -17,8 +17,36 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.auto.util.test.AgentSpecification
+import io.opentelemetry.trace.Span
+import spock.lang.Shared
 
 // TODO add more tests for BaseTracer
 class BaseTracerTest extends AgentSpecification {
+  @Shared
+  def tracer = newTracer()
+
+  @Shared
+  def resolvedAddress = new InetSocketAddress("github.com", 999)
+
+  def span = Mock(Span)
+
+  def newTracer() {
+    return new BaseTracer() {
+      @Override
+      protected String getInstrumentationName() {
+        return "BaseTracerTest"
+      }
+    }
+  }
+
+  class SomeInnerClass implements Runnable {
+    void run() {
+    }
+  }
+
+  static class SomeNestedClass implements Runnable {
+    void run() {
+    }
+  }
 }
 	

@@ -36,6 +36,8 @@ public abstract class BaseTracer {
   public static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("opentelemetry-trace-auto-client-span-key");
 
+  protected static final String USER_AGENT = "User-Agent";
+
   protected final Tracer tracer;
 
   public BaseTracer() {

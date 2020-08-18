@@ -38,7 +38,7 @@ import java.net.URISyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseHttpClientServerTracer {
+public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -145,7 +145,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseHttpClient
             span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
           }
         }
-        tagUrl(url, span);
+        HttpUrlUtils.tagUrl(url, span);
         if (Config.get().isHttpClientTagQueryString()) {
           span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
           span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());

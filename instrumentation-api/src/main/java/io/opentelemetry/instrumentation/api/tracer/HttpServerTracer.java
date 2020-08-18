@@ -43,8 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
-public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE>
-    extends BaseHttpClientServerTracer {
+public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
@@ -177,7 +176,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE>
 
     try {
       URI url = url(request);
-      tagUrl(url, span);
+      HttpUrlUtils.tagUrl(url, span);
       if (Config.get().isHttpServerTagQueryString()) {
         span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
         span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
