@@ -12,7 +12,3 @@ dependencies {
 
   testImplementation project(':testing-common')
 }
-
-afterEvaluate {
-  archivesBaseName = 'opentelemetry-' + archivesBaseName
-}

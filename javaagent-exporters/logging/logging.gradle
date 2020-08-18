@@ -5,10 +5,11 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
+archivesBaseName = 'javaagent-exporters-logging'
+
 dependencies {
-  implementation(deps.opentelemetryZipkin) {
-    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-  }
+  compileOnly deps.opentelemetrySdk
+  compileOnly deps.opentelemetryApi
   compileOnly deps.opentelemetrySdkAutoConfig
 }
 

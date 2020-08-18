@@ -169,11 +169,11 @@ include ':instrumentation-core:spring:starters:otlp-exporter-starter'
 include ':instrumentation-core:spring:starters:zipkin-exporter-starter'
 
 // exporter adapters
-include ":auto-exporters"
-include ":auto-exporters:jaeger"
-include ":auto-exporters:logging"
-include ":auto-exporters:otlp"
-include ":auto-exporters:zipkin"
+include ":javaagent-exporters"
+include ":javaagent-exporters:jaeger"
+include ":javaagent-exporters:logging"
+include ":javaagent-exporters:otlp"
+include ":javaagent-exporters:zipkin"
 
 // benchmark
 include ':benchmark'
@@ -195,8 +195,3 @@ def setBuildFile(project) {
 rootProject.children.each {
   setBuildFile(it)
 }
-
-project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporter-jaeger'
-project(':auto-exporters:logging').name = 'opentelemetry-auto-exporter-logging'
-project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporter-otlp'
-project(':auto-exporters:zipkin').name = 'opentelemetry-auto-exporter-zipkin'
