@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
+package io.opentelemetry.instrumentation.auto.servlet.v3_0.dispatcher;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.v3_0.dispatcher.RequestDispatcherDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.servlet.v3_0.dispatcher.RequestDispatcherDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -35,11 +35,14 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,7 +68,13 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RequestDispatcherDecorator",
+        packageName + ".RequestDispatcherDecorator",
+        "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse$CountingPrintWriter",
+        "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse$CountingServletOutputStream",
+        "io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse",
+        "io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer",
+        "io.opentelemetry.javaagent.shaded.instrumentation.servlet.ServletHttpServerTracer",
+        "io.opentelemetry.javaagent.shaded.instrumentation.servlet.HttpServletRequestGetter"
     };
   }
 
@@ -106,10 +115,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       Span parent;
       if (servletSpan == null
           || (parentSpan.getContext().isValid()
-              && servletSpan
-                  .getContext()
-                  .getTraceId()
-                  .equals(parentSpan.getContext().getTraceId()))) {
+          && servletSpan
+          .getContext()
+          .getTraceId()
+          .equals(parentSpan.getContext().getTraceId()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.
         parent = parentSpan;
       } else {
@@ -144,6 +153,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Local("_originalContext") Object originalContext,
         @Advice.Argument(0) ServletRequest request,
+        @Advice.Argument(1) ServletResponse response,
         @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
@@ -162,6 +172,16 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
       span.end();
       spanWithScope.closeScope();
+
+      // close parent servlet span if it's still open due to being exited exceptionally
+      if (Boolean.TRUE.equals(request.getAttribute("must-close"))) {
+        Span servletSpan =
+            originalContext instanceof Context ? getSpan((Context) originalContext) : null;
+        if (servletSpan != null && response.isCommitted()) {
+          Servlet3HttpServerTracer.TRACER.end(servletSpan, (HttpServletResponse) response);
+          request.removeAttribute("must-close");
+        }
+      }
     }
   }
 }

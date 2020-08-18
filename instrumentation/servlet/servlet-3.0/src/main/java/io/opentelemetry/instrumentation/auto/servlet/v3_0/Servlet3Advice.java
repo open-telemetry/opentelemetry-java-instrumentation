@@ -83,7 +83,12 @@ public class Servlet3Advice {
 
     TRACER.setPrincipal(span, (HttpServletRequest) request);
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable, (HttpServletResponse) response);
+      if (response.isCommitted()) {
+        TRACER.endExceptionally(span, throwable, (HttpServletResponse) response);
+        return;
+      }
+      TRACER.addThrowable(span, throwable);
+      request.setAttribute("must-close", true);
       return;
     }
 

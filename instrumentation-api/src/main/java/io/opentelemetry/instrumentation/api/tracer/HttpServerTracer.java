@@ -138,9 +138,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
     onError(span, unwrapThrowable(throwable));
-    if (response == null) {
-      setStatus(span, 500);
-    } else {
+    // no longer assuming a 500 response if null. this is not always the case.
+    if (response != null) {
       setStatus(span, responseStatus(response));
     }
     endSpan(span, timestamp);
