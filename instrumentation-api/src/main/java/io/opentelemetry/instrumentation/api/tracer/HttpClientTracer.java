@@ -46,6 +46,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
+  protected static final String USER_AGENT = "User-Agent";
+
   protected abstract String method(REQUEST request);
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;

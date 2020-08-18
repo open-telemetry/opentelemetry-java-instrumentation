@@ -53,6 +53,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   private static final boolean FAIL_ON_CONTEXT_LEAK =
       Boolean.getBoolean("otel.internal.failOnContextLeak");
 
+  protected static final String USER_AGENT = "User-Agent";
+
   public HttpServerTracer() {
     super();
   }
