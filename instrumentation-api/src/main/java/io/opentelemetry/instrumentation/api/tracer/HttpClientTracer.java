@@ -147,12 +147,12 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
             span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
           }
         }
-        HttpUrlUtils.tagUrl(url, span);
+        HttpUrlUtils.setHttpUrlAttribute(url, span);
         if (Config.get().isHttpClientTagQueryString()) {
           span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
           span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
         }
-      } catch (final Exception e) {
+      } catch (Exception e) {
         log.debug("Error tagging url", e);
       }
     }
