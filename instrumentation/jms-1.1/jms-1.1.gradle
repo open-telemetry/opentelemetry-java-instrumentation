@@ -16,6 +16,11 @@ muzzle {
 
 testSets {
   jms2Test {
+    filter {
+      // this is needed because "test.dependsOn jms2Test", and so without this,
+      // running a single test in the default test set will fail
+      setFailOnNoMatchingTests(false)
+    }
   }
 }
 

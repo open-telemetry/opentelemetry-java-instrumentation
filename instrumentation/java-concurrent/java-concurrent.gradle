@@ -10,7 +10,13 @@ apply plugin: 'org.unbroken-dome.test-sets'
 //}
 
 testSets {
-  slickTest
+  slickTest {
+    filter {
+      // this is needed because "test.dependsOn slickTest", and so without this,
+      // running a single test in the default test set will fail
+      setFailOnNoMatchingTests(false)
+    }
+  }
 }
 
 compileSlickTestGroovy {
