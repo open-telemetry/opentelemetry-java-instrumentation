@@ -35,7 +35,7 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           job-id: jdk${{ matrix.java }}
-        arguments: testJava${{ matrix.java }} --stacktrace
+        arguments: testJava${{ matrix.java }} --stacktrace -Dorg.gradle.caching.debug=true
 
       - name: Aggregate test reports with ciMate
         if: always()
