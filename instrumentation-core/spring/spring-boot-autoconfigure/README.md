@@ -80,7 +80,7 @@ For Maven add to your `pom.xml`:
   </dependency>
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporters-logging</artifactId>
+    <artifactId>opentelemetry-exporters-otlp</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
