@@ -35,7 +35,7 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           job-id: jdk${{ matrix.java }}
-        arguments: testJava${{ matrix.java }} --stacktrace -Dorg.gradle.caching.debug=true
+          arguments: testJava${{ matrix.java }} --stacktrace -Dorg.gradle.caching.debug=true
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -61,10 +61,10 @@ jobs:
         uses: burrunan/gradle-cache-action@v1
         with:
           job-id: latestDepTest
+          arguments: test -PtestLatestDeps=true --stacktrace
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        arguments: test -PtestLatestDeps=true --stacktrace
 
       - name: Aggregate test reports with ciMate
         if: always()
