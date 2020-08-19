@@ -1,6 +1,6 @@
 # OpenTelemetry Spring Starter
 
-The OpenTelemetry Spring Starter for Java is a starter package that includes packages required to enable tracing using opentelemetry. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
+The OpenTelemetry Spring Starter for Java is a starter package that includes packages required to enable tracing using OpenTelemetry. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
 
 This version is compatible with Spring Boot 2.0.
 
