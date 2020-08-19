@@ -58,9 +58,9 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
     return null;
   }
 
-  public Span onResponse(Span span, ExecutionInfo executionInfo) {
+  public void end(Span span, ExecutionInfo executionInfo) {
     Host host = executionInfo.getQueriedHost();
     NetPeerUtils.setNetPeer(span, host.getSocketAddress());
-    return span;
+    end(span);
   }
 }
