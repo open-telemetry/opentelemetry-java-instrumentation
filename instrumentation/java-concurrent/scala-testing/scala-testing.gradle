@@ -6,6 +6,4 @@ dependencies {
   compileOnly deps.scala
 
   testImplementation deps.scala
-
-  testImplementation project(':instrumentation:java-concurrent')
 }

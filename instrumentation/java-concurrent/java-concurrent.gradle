@@ -21,7 +21,6 @@ dependencies {
   // This is needed for Scala ForJoinTask/Pool instrumentation
   compileOnly deps.scala
 
-  slickTestImplementation project(':instrumentation:java-concurrent')
   slickTestImplementation project(':instrumentation:jdbc')
   slickTestImplementation deps.scala
   slickTestImplementation group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
