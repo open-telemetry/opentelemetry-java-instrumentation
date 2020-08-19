@@ -149,7 +149,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
             span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
           }
         }
-        HttpUrlUtils.setHttpUrlAttribute(span, url);
+        HttpUrlUtils.setHttpUrl(span, url);
         if (Config.get().isHttpClientTagQueryString()) {
           span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
           span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());

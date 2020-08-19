@@ -179,7 +179,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
     try {
       URI url = url(request);
-      HttpUrlUtils.setHttpUrlAttribute(span, url);
+      HttpUrlUtils.setHttpUrl(span, url);
       if (Config.get().isHttpServerTagQueryString()) {
         span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
         span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
