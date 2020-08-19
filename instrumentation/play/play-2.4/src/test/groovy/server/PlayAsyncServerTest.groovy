@@ -24,7 +24,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
-import play.libs.concurrent.HttpExecution
+import play.libs.HttpExecution
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server

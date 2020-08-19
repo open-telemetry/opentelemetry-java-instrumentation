@@ -34,16 +34,15 @@ dependencies {
   testImplementation project(':instrumentation:netty:netty-4.1')
   testImplementation project(':instrumentation:akka-http-10.0')
 
-  // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
-  testLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'
-  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.0'
-  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
+  testLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.4.0'
+  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.4.0'
+  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.4.0') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.+'
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.+'
-  latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
+  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.4.+'
+  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.4.+'
+  latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.4.+') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }
