@@ -23,7 +23,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GrizzlyClientTracer extends HttpClientTracer<Request, Response> {
+public class GrizzlyClientTracer extends HttpClientTracer<Request, Request, Response> {
 
   public static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
 

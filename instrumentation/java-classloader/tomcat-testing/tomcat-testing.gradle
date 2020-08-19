@@ -1,7 +1,6 @@
 ext.skipPublish = true
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -12,18 +11,10 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   testImplementation project(':instrumentation:java-classloader')
 
-  //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
-  //Older versions would require slightly different instrumentation.
-  testImplementation group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
-
-  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '+'
+  // This is the earliest version that has org.apache.catalina.loader.ParallelWebappClassLoader
+  // which is used in the test
+  testLibrary group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
 }

@@ -17,14 +17,14 @@
 package io.opentelemetry.instrumentation.auto.playws;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import play.shaded.ahc.org.asynchttpclient.Request;
+import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 
-public class HeadersInjectAdapter implements HttpTextFormat.Setter<Request> {
+public class HeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
 
   public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
 
   @Override
-  public void set(Request carrier, String key, String value) {
-    carrier.getHeaders().add(key, value);
+  public void set(HttpHeaders carrier, String key, String value) {
+    carrier.add(key, value);
   }
 }

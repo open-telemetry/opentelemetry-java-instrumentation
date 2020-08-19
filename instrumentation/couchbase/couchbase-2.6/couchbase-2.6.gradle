@@ -4,13 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
 
 muzzle {
   // Version 2.7.5 and 2.7.8 were not released properly and muzzle cannot test against it causing failure.
@@ -45,18 +38,14 @@ muzzle {
 dependencies {
   implementation project(':instrumentation:rxjava-1.0')
 
-  compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
+  library group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
 
   testImplementation project(':instrumentation:couchbase:couchbase-2.0')
-  testImplementation project(path: ':instrumentation:couchbase:couchbase-2.0', configuration: 'testArtifacts')
-  testImplementation group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
+  testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
-  testImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
+  testLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
+  testLibrary group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
 
-  testImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
-  testImplementation group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
-
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1+'
-  latestDepTestImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.+'
-  latestDepTestImplementation group: 'com.couchbase.client', name: 'encryption', version: '+'
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1+'
+  latestDepTestLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.+'
 }

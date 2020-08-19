@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "${rootDir}/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -15,19 +14,13 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+  library group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
 
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   // Only 5.2+ will have command arguments in the db.statement tag.
-  testImplementation group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
+  testLibrary group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
   testImplementation project(':instrumentation:reactor-3.1')
 
-  latestDepTestImplementation group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
+  latestDepTestLibrary group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
 }

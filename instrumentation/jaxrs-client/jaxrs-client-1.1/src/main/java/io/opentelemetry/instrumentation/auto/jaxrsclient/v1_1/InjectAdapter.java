@@ -24,7 +24,7 @@ public final class InjectAdapter implements HttpTextFormat.Setter<ClientRequest>
   public static final InjectAdapter SETTER = new InjectAdapter();
 
   @Override
-  public void set(ClientRequest clientRequest, String key, String value) {
-    clientRequest.getHeaders().putSingle(key, value);
+  public void set(ClientRequest carrier, String key, String value) {
+    carrier.getHeaders().putSingle(key, value);
   }
 }

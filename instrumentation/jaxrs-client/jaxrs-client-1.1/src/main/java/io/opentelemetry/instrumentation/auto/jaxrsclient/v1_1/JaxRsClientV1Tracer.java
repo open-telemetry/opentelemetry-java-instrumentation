@@ -24,7 +24,8 @@ import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 
-public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {
+public class JaxRsClientV1Tracer
+    extends HttpClientTracer<ClientRequest, ClientRequest, ClientResponse> {
   public static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   @Override

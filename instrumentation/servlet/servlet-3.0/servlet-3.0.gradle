@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -15,12 +14,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
   api(project(':instrumentation-core:servlet'))
@@ -28,17 +21,17 @@ dependencies {
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
-  testImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
-  testImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
+  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
+  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
 
   // Jetty 10 seems to refuse to run on java8.
   // TODO: we need to setup separate test for Jetty 10 when that is released.
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
 
   // FIXME: 9.0.24 seems to have changed something...
-  latestDepTestImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.22'
-  latestDepTestImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.22'
+  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.22'
+  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.22'
 }

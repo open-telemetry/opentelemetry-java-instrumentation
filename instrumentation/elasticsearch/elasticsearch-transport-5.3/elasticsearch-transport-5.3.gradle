@@ -4,7 +4,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -21,14 +20,8 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
+  library group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common')
 
@@ -39,13 +32,12 @@ dependencies {
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  testImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
-  testImplementation group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
+  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
 
   // Unfortunately this will bump the transport version up to 5.5.0.
-  testImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
+  testLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
 
-  latestDepTestImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
-  latestDepTestImplementation group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
+  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
+  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
 }

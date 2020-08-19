@@ -16,15 +16,12 @@ byteBuddy {
   }
 }
 
-// TODO(anuraaga): This needs to be added before adding publish.gradle, clean up this ordering restraint.
-afterEvaluate {
-  archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
-}
-
 apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
+
+apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
 afterEvaluate {
   byteBuddy {

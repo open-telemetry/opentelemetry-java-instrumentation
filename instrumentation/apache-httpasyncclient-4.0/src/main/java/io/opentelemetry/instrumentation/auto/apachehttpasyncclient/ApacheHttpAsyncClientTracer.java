@@ -31,7 +31,8 @@ import org.apache.http.RequestLine;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+public class ApacheHttpAsyncClientTracer
+    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
 
   public static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 

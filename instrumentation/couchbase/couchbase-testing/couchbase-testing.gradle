@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
+  // Earliest version that seems to allow queries with CouchbaseMock:
+  api group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
+  api group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

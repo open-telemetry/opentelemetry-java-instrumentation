@@ -62,7 +62,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".HttpUrlConnectionTracer",
+      packageName + ".HttpUrlConnectionTracer", packageName + ".HeadersInjectAdapter"
     };
   }
 

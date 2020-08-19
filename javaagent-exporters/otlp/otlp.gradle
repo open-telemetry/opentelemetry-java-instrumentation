@@ -5,6 +5,8 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
+archivesBaseName = 'javaagent-exporters-otlp'
+
 dependencies {
   implementation(deps.opentelemetryOtlp) {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'

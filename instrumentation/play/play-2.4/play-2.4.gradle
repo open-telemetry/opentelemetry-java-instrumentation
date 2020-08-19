@@ -5,7 +5,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -26,13 +25,9 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
+  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
+  // here.
   compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
   testImplementation project(':instrumentation:netty:netty-4.0')
@@ -40,15 +35,15 @@ dependencies {
   testImplementation project(':instrumentation:akka-http-10.0')
 
   // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
-  testImplementation group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'
-  testImplementation group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.0'
-  testImplementation(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
+  testLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'
+  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.0'
+  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
-  latestDepTestImplementation group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.+'
-  latestDepTestImplementation group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.+'
-  latestDepTestImplementation(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
+  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.+'
+  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.+'
+  latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }

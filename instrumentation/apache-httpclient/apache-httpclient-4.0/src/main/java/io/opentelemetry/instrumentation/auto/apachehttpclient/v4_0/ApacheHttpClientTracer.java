@@ -27,7 +27,8 @@ import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, HttpResponse> {
+class ApacheHttpClientTracer
+    extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   public static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 

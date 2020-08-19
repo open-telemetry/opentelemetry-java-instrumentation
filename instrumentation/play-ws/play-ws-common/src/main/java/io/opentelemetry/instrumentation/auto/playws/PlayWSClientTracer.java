@@ -22,10 +22,11 @@ import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class PlayWSClientTracer extends HttpClientTracer<Request, Response> {
+public class PlayWSClientTracer extends HttpClientTracer<Request, HttpHeaders, Response> {
   public static final PlayWSClientTracer TRACER = new PlayWSClientTracer();
 
   @Override
@@ -54,7 +55,7 @@ public class PlayWSClientTracer extends HttpClientTracer<Request, Response> {
   }
 
   @Override
-  protected Setter<Request> getSetter() {
+  protected Setter<HttpHeaders> getSetter() {
     return SETTER;
   }
 

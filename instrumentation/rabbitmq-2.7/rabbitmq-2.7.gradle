@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,22 +9,12 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  library group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
 
-  testImplementation group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
-  testImplementation group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
+  testLibrary group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
 
   testImplementation deps.testcontainers
-
-  latestDepTestImplementation group: 'com.rabbitmq', name: 'amqp-client', version: '+'
-  latestDepTestImplementation group: 'org.springframework.amqp', name: 'spring-rabbit', version: '+'
 }
 
 configurations.testRuntime {

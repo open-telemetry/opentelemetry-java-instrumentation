@@ -16,26 +16,20 @@
 
 package io.opentelemetry.instrumentation.spring.httpclients;
 
-import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
-import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpResponse> {
+class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
 
   public static final RestTemplateTracer TRACER = new RestTemplateTracer();
-
-  public void inject(Context context, HttpRequest request) {
-    getPropagators().getHttpTextFormat().inject(context, request, getSetter());
-  }
 
   @Override
   protected String method(HttpRequest httpRequest) {
@@ -43,7 +37,7 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpRespons
   }
 
   @Override
-  protected URI url(HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) {
     return request.getURI();
   }
 
@@ -67,7 +61,7 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpRespons
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
+  protected Setter<HttpHeaders> getSetter() {
     return SETTER;
   }
 
