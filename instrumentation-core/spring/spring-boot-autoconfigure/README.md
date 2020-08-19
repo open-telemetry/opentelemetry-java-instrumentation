@@ -1,6 +1,6 @@
 # OpenTelemetry Spring Auto-Configuration
 
-Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1/), [spring-webmvc](../spring-webmvc-3.1/), and [spring-webflux](../spring-webflux-5.0/). Leverages Spring Aspect Oriented Programming, dependency injection, and bean post-processing to trace spring applications. To include use all features listed below use the [opentelemetry-spring-starter](../starters/spring-starter/README.md).
+Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1/), [spring-webmvc](../spring-webmvc-3.1/), and [spring-webflux](../spring-webflux-5.0/). Leverages Spring Aspect Oriented Programming, dependency injection, and bean post-processing to trace spring applications. To include all features listed below use the [opentelemetry-spring-starter](../starters/spring-starter/README.md).
 
 ## Quickstart
 
