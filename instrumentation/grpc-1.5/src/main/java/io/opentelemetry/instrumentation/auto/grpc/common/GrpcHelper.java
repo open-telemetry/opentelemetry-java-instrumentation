@@ -71,13 +71,13 @@ public final class GrpcHelper {
         span.setAttribute(
             SemanticAttributes.NET_PEER_IP.key(), peerAddress.getAddress().getHostAddress());
       } else {
-        NetPeerUtils.setAttributes(span, peerAddress.getHostName(), null);
+        NetPeerUtils.setNetPeer(span, peerAddress.getHostName(), null);
       }
     } else {
       // The spec says these fields must be populated, so put some values in even if we don't have
       // an address recorded.
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), 0);
-      NetPeerUtils.setAttributes(span, "(unknown)", null);
+      NetPeerUtils.setNetPeer(span, "(unknown)", null);
     }
   }
 

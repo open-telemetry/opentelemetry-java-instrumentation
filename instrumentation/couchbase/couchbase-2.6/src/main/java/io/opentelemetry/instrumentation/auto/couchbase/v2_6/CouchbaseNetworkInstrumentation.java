@@ -91,7 +91,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
       Span span = contextStore.get(request);
       if (span != null) {
-        NetPeerUtils.setAttributes(span, remoteHostname, null);
+        NetPeerUtils.setNetPeer(span, remoteHostname, null);
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");

@@ -20,9 +20,11 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 
-public class HttpUrlUtils {
+public final class HttpUrlUtils {
 
-  public static void setHttpUrlAttribute(Span span, URI url) {
+  private HttpUrlUtils() {}
+
+  public static void setHttpUrl(Span span, URI url) {
     if (url != null) {
       StringBuilder urlBuilder = new StringBuilder();
       if (url.getScheme() != null) {

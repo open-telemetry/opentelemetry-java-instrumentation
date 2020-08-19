@@ -22,26 +22,28 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-public class NetPeerUtils {
+public final class NetPeerUtils {
 
-  public static void setAttributes(Span span, InetSocketAddress remoteConnection) {
+  private NetPeerUtils() {}
+
+  public static void setNetPeer(Span span, InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
-        setAttributes(span, remoteAddress);
+        setNetPeer(span, remoteAddress);
       } else {
         // Failed DNS lookup, the host string is the name.
-        setAttributes(span, remoteConnection.getHostString(), null);
+        setNetPeer(span, remoteConnection.getHostString(), null);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
   }
 
-  public static void setAttributes(Span span, InetAddress remoteAddress) {
-    setAttributes(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
+  public static void setNetPeer(Span span, InetAddress remoteAddress) {
+    setNetPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
   }
 
-  public static void setAttributes(Span span, String peerName, String peerIp) {
+  public static void setNetPeer(Span span, String peerName, String peerIp) {
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
     }

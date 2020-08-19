@@ -24,7 +24,7 @@ class NetPeerUtilsTest extends BaseTracerTest {
 
   def "test setAttributes"() {
     when:
-    NetPeerUtils.setAttributes(span, connection)
+    NetPeerUtils.setNetPeer(span, connection)
 
     then:
     if (expectedPeerName) {
@@ -49,7 +49,7 @@ class NetPeerUtilsTest extends BaseTracerTest {
     ConfigUtils.withConfigOverride(
       "endpoint.peer.service.mapping",
       "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice") {
-      NetPeerUtils.setAttributes(span, connection)
+      NetPeerUtils.setNetPeer(span, connection)
     }
 
     then:

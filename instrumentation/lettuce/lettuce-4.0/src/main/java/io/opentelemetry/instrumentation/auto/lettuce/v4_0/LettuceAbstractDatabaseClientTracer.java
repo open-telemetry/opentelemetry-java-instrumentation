@@ -50,7 +50,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   @Override
   public Span onConnection(Span span, RedisURI connection) {
     if (connection != null) {
-      NetPeerUtils.setAttributes(span, connection.getHost(), null);
+      NetPeerUtils.setNetPeer(span, connection.getHost(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
 
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());

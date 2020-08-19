@@ -91,7 +91,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            NetPeerUtils.setAttributes(span, host, null);
+            NetPeerUtils.setNetPeer(span, host, null);
           }
 
           TRACER.endExceptionally(span, throwable);

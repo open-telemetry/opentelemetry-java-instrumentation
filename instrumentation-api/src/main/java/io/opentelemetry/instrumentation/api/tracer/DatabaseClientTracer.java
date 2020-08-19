@@ -118,7 +118,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   protected void onPeerConnection(Span span, CONNECTION connection) {
-    NetPeerUtils.setAttributes(span, peerAddress(connection));
+    NetPeerUtils.setNetPeer(span, peerAddress(connection));
   }
 
   protected void onStatement(Span span, String statement) {

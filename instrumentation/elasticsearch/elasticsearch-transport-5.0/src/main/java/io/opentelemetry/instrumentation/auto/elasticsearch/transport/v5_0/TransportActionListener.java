@@ -72,7 +72,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(T response) {
     if (response.remoteAddress() != null) {
-      NetPeerUtils.setAttributes(
+      NetPeerUtils.setNetPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.remoteAddress().getPort());
     }
