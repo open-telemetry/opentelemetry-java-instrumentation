@@ -26,6 +26,8 @@ jobs:
 
       - name: Test
         uses: burrunan/gradle-cache-action@v1
+        env:
+          _JAVA_OPTIONS: '-Xlog:gc,gc+heap,gc+cpu::p,uptime,tags -XX:GCTimeLimit=90 -XX:GCHeapFreeLimit=35'
         with:
           job-id: jdk${{ matrix.java }}
           arguments: testJava${{ matrix.java }} --stacktrace
