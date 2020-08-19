@@ -36,8 +36,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 
-// @Beta was removed from Futures.addCallback() in guava 27.1
-@SuppressWarnings("UnstableApiUsage")
 public class TracingSession implements Session {
 
   private final Session session;
