@@ -28,20 +28,14 @@ jobs:
         with:
           java-version: 11
 
-      - name: Cache gradle dependencies
+      - name: Test
         uses: burrunan/gradle-cache-action@v1
-        with:
-          job-id: jdk${{ matrix.java }}
-
-      - name: Test with Gradle
-        uses: nick-invision/retry@v1
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
-          command: ./gradlew testJava${{ matrix.java }} --stacktrace
-          timeout_minutes: 60
-          max_attempts: 3
+          job-id: jdk${{ matrix.java }}
+          arguments: testJava${{ matrix.java }} --stacktrace -Dorg.gradle.caching.debug=true
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -63,20 +57,14 @@ jobs:
         with:
           java-version: 11
 
-      - name: Cache gradle dependencies
+      - name: Test
         uses: burrunan/gradle-cache-action@v1
         with:
           job-id: latestDepTest
-
-      - name: Test with Gradle
-        uses: nick-invision/retry@v1
+          arguments: test -PtestLatestDeps=true --stacktrace
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        with:
-          command: ./gradlew test -PtestLatestDeps=true --stacktrace
-          timeout_minutes: 60
-          max_attempts: 3
 
       - name: Aggregate test reports with ciMate
         if: always()
