@@ -1,6 +1,6 @@
 # OpenTelemetry Zipkin Exporter Starter
 
-The OpenTelemetry Zipkin Exporter Starter for Java is a starter package that includes packages required to enable tracing using opentelemetry. It also provides the [opentelemetry-exporters-zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/zipkin) dependency and corresponding autoconfigurations.  Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
+The OpenTelemetry Zipkin Exporter Starter for Java is a starter package that includes packages required to enable tracing using OpenTelemetry. It also provides the [opentelemetry-exporters-zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/zipkin) dependency and corresponding auto-configuration.  Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
 
 ## Quickstart
 
