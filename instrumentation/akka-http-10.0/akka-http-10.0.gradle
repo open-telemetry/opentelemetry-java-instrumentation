@@ -13,10 +13,6 @@ testSets {
     version101Test {
         dirName = 'test'
     }
-
-    latestDepTest {
-        dirName = 'test'
-    }
 }
 
 compileLagomTestJava {
@@ -28,7 +24,6 @@ compileLagomTestGroovy {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 }
-
 
 muzzle {
     pass {
@@ -70,13 +65,13 @@ muzzle {
 }
 
 dependencies {
-    compileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+    library group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+    library group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.4.14'
 
     implementation project(':javaagent-tooling')
     implementation deps.autoservice
     annotationProcessor deps.autoservice
 
-    testImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
     testImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 
     lagomTestImplementation project(':instrumentation:akka-http-10.0')
@@ -86,9 +81,6 @@ dependencies {
     // There are some internal API changes in 10.1 that we would like to test separately for
     version101TestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
     version101TestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'
-
-    latestDepTestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '+'
-    latestDepTestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '+'
 }
 
 test.dependsOn lagomTest
@@ -97,11 +89,6 @@ test.dependsOn version101Test
 compileVersion101TestGroovy {
     classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
     dependsOn compileVersion101TestScala
-}
-
-compileLatestDepTestGroovy {
-    classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
-    dependsOn compileLatestDepTestScala
 }
 
 // Lagom test supports running only on java 8 for now.

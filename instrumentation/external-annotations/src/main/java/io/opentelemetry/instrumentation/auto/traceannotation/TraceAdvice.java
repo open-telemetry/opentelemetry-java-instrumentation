@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice;
 public class TraceAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Origin final Method method) {
+  public static SpanWithScope onEnter(@Advice.Origin Method method) {
     Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
     DECORATE.afterStart(span);
     return new SpanWithScope(span, currentContextWith(span));
@@ -36,7 +36,7 @@ public class TraceAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
     Span span = spanWithScope.getSpan();
     DECORATE.onError(span, throwable);
     DECORATE.beforeFinish(span);

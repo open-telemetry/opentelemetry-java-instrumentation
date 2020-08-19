@@ -33,7 +33,7 @@ class AttributesAssert {
 
   static void assertAttributes(ReadableAttributes attributes,
                                @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
-                         @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+                               @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new AttributesAssert(attributes)
     def clone = (Closure) spec.clone()
     clone.delegate = asserter

@@ -49,7 +49,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
 
-  public static Vertx start(final int port)
+  public static Vertx start(int port)
       throws ExecutionException, InterruptedException, TimeoutException {
     /* This is highly against Vertx ideas, but our tests are synchronous
     so we have to make sure server is up and running */
@@ -83,7 +83,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   }
 
   @Override
-  public void start(final io.vertx.core.Future<Void> startFuture) {
+  public void start(io.vertx.core.Future<Void> startFuture) {
     setUpInitialData(
         ready -> {
           Router router = Router.router(vertx);
@@ -103,7 +103,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         });
   }
 
-  private void handleListProducts(final RoutingContext routingContext) {
+  private void handleListProducts(RoutingContext routingContext) {
     Span span = tracer.spanBuilder("handleListProducts").startSpan();
     try (Scope ignored = tracer.withSpan(span)) {
       HttpServerResponse response = routingContext.response();
@@ -133,7 +133,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
     }
   }
 
-  private void setUpInitialData(final Handler<Void> done) {
+  private void setUpInitialData(Handler<Void> done) {
     client.getConnection(
         res -> {
           if (res.failed()) {

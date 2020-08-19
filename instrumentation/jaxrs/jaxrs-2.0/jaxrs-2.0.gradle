@@ -15,10 +15,6 @@ muzzle {
 }
 
 testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-
   resteasy31Test {
     dirName = 'test'
   }
@@ -34,27 +30,16 @@ dependencies {
 
   // Jersey
   // First version with DropwizardTestSupport:
-  testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
+  testLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
-  latestDepTestImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+  latestDepTestLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
 
   // Resteasy
-  testImplementation group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
+  testLibrary group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
 
   resteasy31TestImplementation(group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final')
-
-  latestDepTestImplementation group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
 }
 
 test.dependsOn resteasy31Test
-
-// Until custom source sets can use minJavaVersionForTests separately from other tests
-// force this one test to run on java8 only
-resteasy31Test {
-  onlyIf {
-    String java8Home = findJavaHome(JavaVersion.VERSION_1_8)
-    java8Home != null && executable == toExecutable(java8Home)
-  }
-}

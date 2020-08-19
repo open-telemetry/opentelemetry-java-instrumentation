@@ -23,13 +23,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.CallableWrapper;
 import io.opentelemetry.instrumentation.auto.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.RunnableWrapper;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -94,7 +94,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
+        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
@@ -110,9 +110,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
@@ -121,8 +121,8 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
+        @Advice.This Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -133,9 +133,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
@@ -144,7 +144,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
+        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
@@ -160,10 +160,10 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Future future) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return Future future) {
       if (state != null && future != null) {
         ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
@@ -177,7 +177,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor,
+        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       Callable newTask = CallableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
@@ -193,10 +193,10 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final State state,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Future future) {
+        @Advice.This Executor executor,
+        @Advice.Enter State state,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Return Future future) {
       if (state != null && future != null) {
         ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
@@ -210,7 +210,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
-        @Advice.This final Executor executor,
+        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       if (tasks != null) {
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
@@ -235,9 +235,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void submitExit(
-        @Advice.This final Executor executor,
-        @Advice.Enter final Collection<? extends Callable<?>> wrappedTasks,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.This Executor executor,
+        @Advice.Enter Collection<? extends Callable<?>> wrappedTasks,
+        @Advice.Thrown Throwable throwable) {
       /*
        Note1: invokeAny doesn't return any futures so all we need to do for it
        is to make sure we close all scopes in case of an exception.

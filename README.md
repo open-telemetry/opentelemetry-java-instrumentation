@@ -167,7 +167,7 @@ The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/open
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
 Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
-provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.auto.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
 ## Supported Java libraries and frameworks
 
@@ -181,7 +181,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
-| [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 2.0+ (not including 7.x yet)   |
+| [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 5.0+ (not including 7.x yet)   |
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
@@ -257,7 +257,29 @@ only supports manual instrumentation using the `opentelemetry-api` version with 
 number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
 multiple (1.0.0+) versions of `opentelemetry-api`.
 
-You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
+You'll need to add a dependency on the `opentelemetry-api` library to get started.
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    compile('io.opentelemetry:opentelemetry-api:0.7.0')
+}
+```
+
+Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
 
 ### Configure the OpenTelemetry getTracer
@@ -284,6 +306,28 @@ public class MyClass {
 }
 ```
 
+You'll also need to add a dependency for this annotation:
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
+}
+```
+
 Each time the application invokes the annotated method, it creates a span
 that denote its duration and provides any thrown exceptions.
 
@@ -301,7 +345,7 @@ and you want to suppress some of them without modifying the code.
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.

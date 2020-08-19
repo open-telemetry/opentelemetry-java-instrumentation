@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
-
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 

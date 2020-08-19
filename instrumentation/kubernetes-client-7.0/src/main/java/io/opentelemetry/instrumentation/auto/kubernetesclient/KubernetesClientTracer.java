@@ -19,27 +19,27 @@ package io.opentelemetry.instrumentation.auto.kubernetesclient;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class KubernetesClientTracer extends HttpClientTracer<Request, Response> {
+public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
   public static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   @Override
-  protected String method(final Request httpRequest) {
+  protected String method(Request httpRequest) {
     return httpRequest.method();
   }
 
   @Override
-  protected URI url(final Request httpRequest) {
+  protected URI url(Request httpRequest) {
     return httpRequest.url().uri();
   }
 
   @Override
-  protected Integer status(final Response httpResponse) {
+  protected Integer status(Response httpResponse) {
     return httpResponse.code();
   }
 
@@ -55,6 +55,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
 
   @Override
   protected Setter<Request> getSetter() {
+    // TODO (trask) no propagation implemented yet?
     return null;
   }
 

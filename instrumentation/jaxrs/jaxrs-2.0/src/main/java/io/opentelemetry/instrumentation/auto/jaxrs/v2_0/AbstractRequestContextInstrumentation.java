@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,8 +26,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -55,8 +55,8 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
-      "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
+      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
+      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsTracer",
       AbstractRequestContextInstrumentation.class.getName() + "$RequestFilterHelper",
     };
@@ -74,7 +74,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
   public static class RequestFilterHelper {
     public static SpanWithScope createOrUpdateAbortSpan(
-        final ContainerRequestContext context, final Class<?> resourceClass, final Method method) {
+        ContainerRequestContext context, Class<?> resourceClass, Method method) {
 
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
@@ -93,8 +93,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       }
     }
 
-    public static void closeSpanAndScope(
-        final SpanWithScope spanWithScope, final Throwable throwable) {
+    public static void closeSpanAndScope(SpanWithScope spanWithScope, Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

@@ -34,7 +34,7 @@ public class Customer {
 
   protected Customer() {}
 
-  public Customer(final String firstName, final String lastName) {
+  public Customer(String firstName, String lastName) {
     this.firstName = firstName;
     this.lastName = lastName;
   }

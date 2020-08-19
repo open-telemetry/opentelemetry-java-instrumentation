@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+
 import com.google.common.io.Files
 import javax.servlet.Servlet
 import javax.servlet.ServletException
@@ -29,13 +36,6 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 @Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {

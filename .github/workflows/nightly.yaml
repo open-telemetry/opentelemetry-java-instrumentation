@@ -4,6 +4,7 @@ on:
   schedule:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"
+  workflow_dispatch:
 
 jobs:
   test:
@@ -34,10 +35,24 @@ jobs:
 
       - name: Test with Gradle
         uses: nick-invision/retry@v1
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           command: ./gradlew testJava${{ matrix.java }} --stacktrace
           timeout_minutes: 60
           max_attempts: 3
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "Night / jdk${{matrix.java}}"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"
 
   testLatestDep:
     runs-on: ubuntu-latest
@@ -55,10 +70,24 @@ jobs:
 
       - name: Test with Gradle
         uses: nick-invision/retry@v1
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
-          command: ./gradlew latestDepTest --stacktrace
+          command: ./gradlew test -PtestLatestDeps=true --stacktrace
           timeout_minutes: 60
           max_attempts: 3
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "Night / latestDep"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"
 
   issue:
     name: Open issue on failure

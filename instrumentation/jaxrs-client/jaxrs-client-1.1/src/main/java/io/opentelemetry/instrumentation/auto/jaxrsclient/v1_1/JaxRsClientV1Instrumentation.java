@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v1_1;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.auto.jaxrsclient.v1_1.JaxRsClientV1Tracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -30,8 +30,8 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -77,8 +77,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter
     public static void onEnter(
-        @Advice.Argument(0) final ClientRequest request,
-        @Advice.This final ClientHandler thisObj,
+        @Advice.Argument(0) ClientRequest request,
+        @Advice.This ClientHandler thisObj,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -92,8 +92,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Return final ClientResponse response,
-        @Advice.Thrown final Throwable throwable,
+        @Advice.Return ClientResponse response,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       if (scope != null) {

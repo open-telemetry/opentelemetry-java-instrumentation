@@ -24,7 +24,7 @@ public class GrizzlyInjectAdapter implements HttpTextFormat.Setter<Request> {
   public static final GrizzlyInjectAdapter SETTER = new GrizzlyInjectAdapter();
 
   @Override
-  public void set(final Request carrier, final String key, final String value) {
+  public void set(Request carrier, String key, String value) {
     carrier.getHeaders().replaceWith(key, value);
   }
 }

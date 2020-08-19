@@ -51,7 +51,7 @@ public class Bridging {
   // this is just an optimization to save some byte array allocations
   public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();
 
-  public static Span toApplication(final io.opentelemetry.trace.Span agentSpan) {
+  public static Span toApplication(io.opentelemetry.trace.Span agentSpan) {
     if (!agentSpan.getContext().isValid()) {
       // no need to wrap
       return DefaultSpan.getInvalid();
@@ -60,7 +60,7 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.trace.Span toAgentOrNull(final Span applicationSpan) {
+  public static io.opentelemetry.trace.Span toAgentOrNull(Span applicationSpan) {
     if (!applicationSpan.getContext().isValid()) {
       // no need to wrap
       return io.opentelemetry.trace.DefaultSpan.getInvalid();
@@ -71,7 +71,7 @@ public class Bridging {
     }
   }
 
-  public static SpanContext toApplication(final io.opentelemetry.trace.SpanContext agentContext) {
+  public static SpanContext toApplication(io.opentelemetry.trace.SpanContext agentContext) {
     if (agentContext.isRemote()) {
       return SpanContext.createFromRemoteParent(
           toApplication(agentContext.getTraceId()),
@@ -87,7 +87,7 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.trace.SpanContext toAgent(final SpanContext applicationContext) {
+  public static io.opentelemetry.trace.SpanContext toAgent(SpanContext applicationContext) {
     if (applicationContext.isRemote()) {
       return io.opentelemetry.trace.SpanContext.createFromRemoteParent(
           toAgent(applicationContext.getTraceId()),
@@ -103,7 +103,7 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.common.Attributes toAgent(final Attributes applicationAttributes) {
+  public static io.opentelemetry.common.Attributes toAgent(Attributes applicationAttributes) {
     final io.opentelemetry.common.Attributes.Builder agentAttributes =
         io.opentelemetry.common.Attributes.newBuilder();
     applicationAttributes.forEach(
@@ -120,7 +120,7 @@ public class Bridging {
   }
 
   public static io.opentelemetry.common.AttributeValue toAgentOrNull(
-      final AttributeValue applicationValue) {
+      AttributeValue applicationValue) {
     switch (applicationValue.getType()) {
       case STRING:
         return io.opentelemetry.common.AttributeValue.stringAttributeValue(
@@ -140,13 +140,13 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.trace.Status toAgentOrNull(final Status applicationStatus) {
+  public static io.opentelemetry.trace.Status toAgentOrNull(Status applicationStatus) {
     io.opentelemetry.trace.Status.CanonicalCode agentCanonicalCode;
     try {
       agentCanonicalCode =
           io.opentelemetry.trace.Status.CanonicalCode.valueOf(
               applicationStatus.getCanonicalCode().name());
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       log.debug(
           "unexpected status canonical code: {}", applicationStatus.getCanonicalCode().name());
       return null;
@@ -154,40 +154,39 @@ public class Bridging {
     return agentCanonicalCode.toStatus().withDescription(applicationStatus.getDescription());
   }
 
-  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(
-      final Span.Kind applicationSpanKind) {
+  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
     try {
       return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
-    } catch (final IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       log.debug("unexpected span kind: {}", applicationSpanKind.name());
       return null;
     }
   }
 
   public static io.opentelemetry.trace.EndSpanOptions toAgent(
-      final EndSpanOptions applicationEndSpanOptions) {
+      EndSpanOptions applicationEndSpanOptions) {
     return io.opentelemetry.trace.EndSpanOptions.builder()
         .setEndTimestamp(applicationEndSpanOptions.getEndTimestamp())
         .build();
   }
 
-  private static TraceId toApplication(final io.opentelemetry.trace.TraceId agentTraceId) {
+  private static TraceId toApplication(io.opentelemetry.trace.TraceId agentTraceId) {
     byte[] bytes = getBuffer();
     agentTraceId.copyBytesTo(bytes, 0);
     return TraceId.fromBytes(bytes, 0);
   }
 
-  private static SpanId toApplication(final io.opentelemetry.trace.SpanId agentSpanId) {
+  private static SpanId toApplication(io.opentelemetry.trace.SpanId agentSpanId) {
     byte[] bytes = getBuffer();
     agentSpanId.copyBytesTo(bytes, 0);
     return SpanId.fromBytes(bytes, 0);
   }
 
-  private static TraceFlags toApplication(final io.opentelemetry.trace.TraceFlags agentTraceFlags) {
+  private static TraceFlags toApplication(io.opentelemetry.trace.TraceFlags agentTraceFlags) {
     return TraceFlags.fromByte(agentTraceFlags.getByte());
   }
 
-  private static TraceState toApplication(final io.opentelemetry.trace.TraceState agentTraceState) {
+  private static TraceState toApplication(io.opentelemetry.trace.TraceState agentTraceState) {
     TraceState.Builder applicationTraceState = TraceState.builder();
     for (io.opentelemetry.trace.TraceState.Entry entry : agentTraceState.getEntries()) {
       applicationTraceState.set(entry.getKey(), entry.getValue());
@@ -195,26 +194,26 @@ public class Bridging {
     return applicationTraceState.build();
   }
 
-  private static io.opentelemetry.trace.TraceId toAgent(final TraceId applicationTraceId) {
+  private static io.opentelemetry.trace.TraceId toAgent(TraceId applicationTraceId) {
     byte[] bytes = getBuffer();
     applicationTraceId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.TraceId.fromBytes(bytes, 0);
   }
 
-  private static io.opentelemetry.trace.SpanId toAgent(final SpanId applicationSpanId) {
+  private static io.opentelemetry.trace.SpanId toAgent(SpanId applicationSpanId) {
     byte[] bytes = getBuffer();
     applicationSpanId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.SpanId.fromBytes(bytes, 0);
   }
 
-  private static io.opentelemetry.trace.TraceFlags toAgent(final TraceFlags applicationTraceFlags) {
+  private static io.opentelemetry.trace.TraceFlags toAgent(TraceFlags applicationTraceFlags) {
     return io.opentelemetry.trace.TraceFlags.fromByte(applicationTraceFlags.getByte());
   }
 
-  private static io.opentelemetry.trace.TraceState toAgent(final TraceState applicationTraceState) {
+  private static io.opentelemetry.trace.TraceState toAgent(TraceState applicationTraceState) {
     io.opentelemetry.trace.TraceState.Builder agentTraceState =
         io.opentelemetry.trace.TraceState.builder();
-    for (final TraceState.Entry entry : applicationTraceState.getEntries()) {
+    for (TraceState.Entry entry : applicationTraceState.getEntries()) {
       agentTraceState.set(entry.getKey(), entry.getValue());
     }
     return agentTraceState.build();

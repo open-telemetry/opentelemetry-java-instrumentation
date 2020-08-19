@@ -16,15 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import javax.ws.rs.client.Client;
 import net.bytebuddy.asm.Advice;
@@ -72,7 +72,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit
     public static void registerFeature(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Client client) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Client client) {
       // Register on the generated client instead of the builder
       // The build() can be called multiple times and is not thread safe
       // A client is only created once

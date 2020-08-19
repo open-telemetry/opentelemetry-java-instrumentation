@@ -26,13 +26,13 @@ import com.amazonaws.Response;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
+public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -44,7 +44,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
   public AwsSdkClientTracer() {}
 
   @Override
-  public String spanNameForRequest(final Request<?> request) {
+  public String spanNameForRequest(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
@@ -87,7 +87,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
   }
 
   @Override
-  public Span onResponse(final Span span, final Response<?> response) {
+  public Span onResponse(Span span, Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
@@ -95,14 +95,14 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     return super.onResponse(span, response);
   }
 
-  private String remapServiceName(final String serviceName) {
+  private String remapServiceName(String serviceName) {
     if (!serviceNames.containsKey(serviceName)) {
       serviceNames.put(serviceName, serviceName.replace("Amazon", "").trim());
     }
     return serviceNames.get(serviceName);
   }
 
-  private String remapOperationName(final Class<?> awsOperation) {
+  private String remapOperationName(Class<?> awsOperation) {
     if (!operationNames.containsKey(awsOperation)) {
       operationNames.put(awsOperation, awsOperation.getSimpleName().replace("Request", ""));
     }
@@ -110,17 +110,17 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
   }
 
   @Override
-  protected String method(final Request<?> request) {
+  protected String method(Request<?> request) {
     return request.getHttpMethod().name();
   }
 
   @Override
-  protected URI url(final Request<?> request) {
+  protected URI url(Request<?> request) {
     return request.getEndpoint();
   }
 
   @Override
-  protected Integer status(final Response<?> response) {
+  protected Integer status(Response<?> response) {
     return response.getHttpResponse().getStatusCode();
   }
 

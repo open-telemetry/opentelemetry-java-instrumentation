@@ -36,22 +36,22 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String dbUser(final Object o) {
+  protected String dbUser(Object o) {
     return null;
   }
 
   @Override
-  protected String dbName(final Object o) {
+  protected String dbName(Object o) {
     return null;
   }
 
-  public Span onRequest(final Span span, final String method, final String endpoint) {
+  public Span onRequest(Span span, String method, String endpoint) {
     span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method);
     span.setAttribute(SemanticAttributes.HTTP_URL.key(), endpoint);
     return span;
   }
 
-  public Span onResponse(final Span span, final Response response) {
+  public Span onResponse(Span span, Response response) {
     if (response != null && response.getHost() != null) {
       setPeer(span, response.getHost().getHostName(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.getHost().getPort());

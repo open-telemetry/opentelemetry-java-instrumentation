@@ -4,22 +4,9 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 def scalaVersion = '2.12'
 
-configurations {
-  testArtifacts
-}
-
-// Create test artifact so that test base class can be reused
-artifacts {
-  testArtifacts testJar
-}
-
-
 dependencies {
   compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
-
-  testImplementation group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
 }

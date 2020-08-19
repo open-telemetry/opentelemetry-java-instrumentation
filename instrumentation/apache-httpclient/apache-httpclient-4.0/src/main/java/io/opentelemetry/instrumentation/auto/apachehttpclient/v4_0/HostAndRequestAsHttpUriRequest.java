@@ -35,7 +35,7 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
 
   private final HttpRequest actualRequest;
 
-  public HostAndRequestAsHttpUriRequest(final HttpHost httpHost, final HttpRequest httpRequest) {
+  public HostAndRequestAsHttpUriRequest(HttpHost httpHost, HttpRequest httpRequest) {
 
     method = httpRequest.getRequestLine().getMethod();
     requestLine = httpRequest.getRequestLine();
@@ -44,7 +44,7 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
     URI calculatedURI;
     try {
       calculatedURI = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
-    } catch (final URISyntaxException e) {
+    } catch (URISyntaxException e) {
       calculatedURI = null;
     }
     URI = calculatedURI;
@@ -62,7 +62,7 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
   }
 
   @Override
-  public void addHeader(final String name, final String value) {
+  public void addHeader(String name, String value) {
     actualRequest.addHeader(name, value);
   }
 

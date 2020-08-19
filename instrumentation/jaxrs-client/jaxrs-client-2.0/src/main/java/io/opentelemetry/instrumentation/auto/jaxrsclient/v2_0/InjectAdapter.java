@@ -17,15 +17,15 @@
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.client.ClientRequestContext;
 
-public final class InjectAdapter implements HttpTextFormat.Setter<MultivaluedMap> {
+public final class InjectAdapter implements HttpTextFormat.Setter<ClientRequestContext> {
 
   public static final InjectAdapter SETTER = new InjectAdapter();
 
   @Override
-  public void set(final MultivaluedMap headers, final String key, final String value) {
+  public void set(ClientRequestContext carrier, String key, String value) {
     // Don't allow duplicates.
-    headers.putSingle(key, value);
+    carrier.getHeaders().putSingle(key, value);
   }
 }

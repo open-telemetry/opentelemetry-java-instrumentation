@@ -17,13 +17,12 @@
 package client
 
 import io.opentelemetry.auto.test.base.HttpClientTest
+import java.util.concurrent.TimeUnit
 import play.GlobalSettings
 import play.libs.ws.WS
 import play.test.FakeApplication
 import play.test.Helpers
 import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
 
 class PlayWSClientTest extends HttpClientTest {
   @Shared

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {

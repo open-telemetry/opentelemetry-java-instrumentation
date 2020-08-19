@@ -16,45 +16,39 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
-import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.util.List;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, ClientResponse> {
+public class SpringWebfluxHttpClientTracer
+    extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
   public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
-  public void onCancel(final Span span) {
+  public void onCancel(Span span) {
     span.setAttribute("event", "cancelled");
     span.setAttribute("message", "The subscription was cancelled");
   }
 
-  public void inject(Context context, HttpHeaders httpHeaders) {
-    getPropagators().getHttpTextFormat().inject(context, httpHeaders, SETTER);
-  }
-
   @Override
-  protected String method(final ClientRequest httpRequest) {
+  protected String method(ClientRequest httpRequest) {
     return httpRequest.method().name();
   }
 
   @Override
-  protected URI url(final ClientRequest httpRequest) {
+  protected URI url(ClientRequest httpRequest) {
     return httpRequest.url();
   }
 
   @Override
-  protected Integer status(final ClientResponse httpResponse) {
+  protected Integer status(ClientResponse httpResponse) {
     return httpResponse.statusCode().value();
   }
 
@@ -70,8 +64,8 @@ class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, Clie
   }
 
   @Override
-  protected Setter<ClientRequest> getSetter() {
-    return null;
+  protected Setter<ClientRequest.Builder> getSetter() {
+    return SETTER;
   }
 
   @Override

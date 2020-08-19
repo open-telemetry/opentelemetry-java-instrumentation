@@ -1,5 +1,6 @@
 plugins {
   id 'com.gradle.enterprise' version '3.0'
+  id 'com.github.burrunan.s3-build-cache' version '1.1'
 }
 
 def isCI = System.getenv("CI") != null
@@ -16,6 +17,16 @@ gradleEnterprise {
   }
 }
 
+apply plugin: 'com.github.burrunan.s3-build-cache'
+
+buildCache {
+  remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
+    region = 'us-west-2'
+    bucket = 'opentelemetry-java-instrumentation-gradle-test1'
+    push = System.getenv('S3_BUILD_CACHE_ACCESS_KEY_ID') != null
+  }
+}
+
 rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
@@ -28,13 +39,12 @@ include ':javaagent-tooling'
 include ':javaagent'
 include ':load-generator'
 
-include ':library-api'
+include ':instrumentation-api'
 include ':auto-api'
 
 // misc
 include ':testing-common'
 include ':utils:test-utils'
-include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests'
@@ -57,13 +67,13 @@ include ':instrumentation:cassandra:cassandra-4.0'
 include ':instrumentation:cdi-testing'
 include ':instrumentation:couchbase:couchbase-2.0'
 include ':instrumentation:couchbase:couchbase-2.6'
+include ':instrumentation:couchbase:couchbase-testing'
 include ':instrumentation:dropwizard-views-0.7'
 include ':instrumentation:dropwizard-testing'
 include ':instrumentation:elasticsearch:elasticsearch-rest-common'
 include ':instrumentation:elasticsearch:elasticsearch-rest-5.0'
 include ':instrumentation:elasticsearch:elasticsearch-rest-6.4'
 include ':instrumentation:elasticsearch:elasticsearch-transport-common'
-include ':instrumentation:elasticsearch:elasticsearch-transport-2.0'
 include ':instrumentation:elasticsearch:elasticsearch-transport-5.0'
 include ':instrumentation:elasticsearch:elasticsearch-transport-5.3'
 include ':instrumentation:elasticsearch:elasticsearch-transport-6.0'
@@ -114,6 +124,7 @@ include ':instrumentation:mongo:mongo-3.1'
 include ':instrumentation:mongo:mongo-3.7'
 include ':instrumentation:mongo:mongo-async-3.3'
 include ':instrumentation:mongo:mongo-common'
+include ':instrumentation:mongo:mongo-testing'
 include ':instrumentation:netty:netty-3.8'
 include ':instrumentation:netty:netty-4.0'
 include ':instrumentation:netty:netty-4.1'
@@ -127,6 +138,7 @@ include ':instrumentation:play-ws:play-ws-1.0'
 include ':instrumentation:play-ws:play-ws-2.0'
 include ':instrumentation:play-ws:play-ws-2.1'
 include ':instrumentation:play-ws:play-ws-common'
+include ':instrumentation:play-ws:play-ws-testing'
 include ':instrumentation:rabbitmq-2.7'
 include ':instrumentation:ratpack-1.4'
 include ':instrumentation:reactor-3.1'
@@ -137,8 +149,6 @@ include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common'
 include ':instrumentation:servlet:servlet-2.2'
 include ':instrumentation:servlet:servlet-3.0'
-// FIXME this instrumentation relied on scope listener
-// include ':instrumentation:slf4j-mdc'
 include ':instrumentation:spark-web-framework-2.3'
 include ':instrumentation:spring-data-1.8'
 include ':instrumentation:spring-scheduling-3.1'
@@ -162,11 +172,11 @@ include ':instrumentation-core:spring:starters:otlp-exporter-starter'
 include ':instrumentation-core:spring:starters:zipkin-exporter-starter'
 
 // exporter adapters
-include ":auto-exporters"
-include ":auto-exporters:jaeger"
-include ":auto-exporters:logging"
-include ":auto-exporters:otlp"
-include ":auto-exporters:zipkin"
+include ":javaagent-exporters"
+include ":javaagent-exporters:jaeger"
+include ":javaagent-exporters:logging"
+include ":javaagent-exporters:otlp"
+include ":javaagent-exporters:zipkin"
 
 // benchmark
 include ':benchmark'
@@ -188,8 +198,3 @@ def setBuildFile(project) {
 rootProject.children.each {
   setBuildFile(it)
 }
-
-project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporter-jaeger'
-project(':auto-exporters:logging').name = 'opentelemetry-auto-exporter-logging'
-project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporter-otlp'
-project(':auto-exporters:zipkin').name = 'opentelemetry-auto-exporter-zipkin'

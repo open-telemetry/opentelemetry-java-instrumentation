@@ -3,7 +3,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -49,17 +48,8 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
-  compileOnly group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
+  library group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
 
-  testImplementation group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-
-  latestDepTestImplementation group: 'com.github.etaty', name: 'rediscala_2.11', version: '+'
 }

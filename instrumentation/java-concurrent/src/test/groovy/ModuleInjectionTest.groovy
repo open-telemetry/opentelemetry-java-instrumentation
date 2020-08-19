@@ -15,7 +15,6 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-
 import javax.swing.*
 
 /**

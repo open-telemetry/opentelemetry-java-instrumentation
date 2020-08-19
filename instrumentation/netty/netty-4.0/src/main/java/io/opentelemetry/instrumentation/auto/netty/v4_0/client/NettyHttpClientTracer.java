@@ -22,26 +22,41 @@ import static io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyRespo
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
+public class NettyHttpClientTracer
+    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
   public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  public Scope startScope(Span span, HttpHeaders headers) {
+    if (!headers.contains("amz-sdk-invocation-id")) {
+      return super.startScope(span, headers);
+    } else {
+      // TODO (trask) if we move injection up to aws-sdk layer, and start suppressing nested netty
+      //  spans, do we still need this condition?
+      // AWS calls are often signed, so we can't add headers without breaking the signature.
+      Context context = withSpan(span, Context.current());
+      context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
+      return withScopedContext(context);
+    }
+  }
+
+  @Override
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }
 
   @Override
-  protected URI url(final HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.getUri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.getUri());
@@ -51,7 +66,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatus().code();
   }
 
@@ -66,15 +81,8 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
-    return null;
-  }
-
-  @Override
-  public Scope startScope(Span span, HttpRequest request) {
-    Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
-    return withScopedContext(context);
+  protected Setter<HttpHeaders> getSetter() {
+    return SETTER;
   }
 
   @Override

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
 import akka.http.javadsl.model.HttpMethods
@@ -21,11 +23,9 @@ import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(5)
 class AkkaHttpClientInstrumentationTest extends HttpClientTest {
@@ -75,7 +75,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
       trace(0, 1) {
         span(0) {
           parent()
-          operationName HttpClientDecorator.DEFAULT_SPAN_NAME
+          operationName HttpClientTracer.DEFAULT_SPAN_NAME
           spanKind CLIENT
           errored true
           errorEvent(NullPointerException)

@@ -17,14 +17,10 @@
 package io.opentelemetry.instrumentation.auto.netty.v3_8.client;
 
 import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.trace.Span;
@@ -39,13 +35,12 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
   private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpClientRequestTracingHandler(
-      final ContextStore<Channel, ChannelTraceContext> contextStore) {
+  public HttpClientRequestTracingHandler(ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
-  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg) {
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     if (!(msg.getMessage() instanceof HttpRequest)) {
       ctx.sendDownstream(msg);
       return;
@@ -66,14 +61,11 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     Span span = TRACER.startSpan(request);
     BaseTracer.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-    Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
-
     channelTraceContext.setClientSpan(span);
 
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = TRACER.startScope(span, request.headers())) {
       ctx.sendDownstream(msg);
-    } catch (final Throwable throwable) {
+    } catch (Throwable throwable) {
       TRACER.endExceptionally(span, throwable);
       throw throwable;
     } finally {

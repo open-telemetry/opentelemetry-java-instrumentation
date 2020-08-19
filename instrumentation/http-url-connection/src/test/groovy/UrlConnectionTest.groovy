@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
-import io.opentelemetry.instrumentation.api.decorator.HttpClientDecorator
-import io.opentelemetry.trace.attributes.SemanticAttributes
-
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class UrlConnectionTest extends AgentTestRunner {
 
@@ -133,6 +133,6 @@ class UrlConnectionTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
 }

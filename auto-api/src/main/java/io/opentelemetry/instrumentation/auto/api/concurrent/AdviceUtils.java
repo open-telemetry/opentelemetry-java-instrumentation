@@ -37,7 +37,7 @@ public class AdviceUtils {
    * @param <T> task's type
    * @return scope if scope was started, or null
    */
-  public static <T> Scope startTaskScope(final ContextStore<T, State> contextStore, final T task) {
+  public static <T> Scope startTaskScope(ContextStore<T, State> contextStore, T task) {
     State state = contextStore.get(task);
     if (state != null) {
       Context parentContext = state.getAndResetParentContext();

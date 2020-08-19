@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.TRACER;
 
-import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -37,25 +36,22 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     this.tracer = tracer;
   }
 
-  public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
+  public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     addFilter(exchangeFilterFunctions, TRACER.getTracer());
   }
 
   public static void addFilter(
-      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
+      List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
     exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 
   @Override
-  public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
+  public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
     Span span = TRACER.startSpan(request);
 
-    try (Scope scope = tracer.withSpan(span)) {
-      ClientRequest mutatedRequest =
-          ClientRequest.from(request)
-              .headers(httpHeaders -> TRACER.inject(Context.current(), httpHeaders))
-              .build();
-      return next.exchange(mutatedRequest)
+    ClientRequest.Builder requestBuilder = ClientRequest.from(request);
+    try (Scope ignored = TRACER.startScope(span, requestBuilder)) {
+      return next.exchange(requestBuilder.build())
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {
                 if (throwable != null) {
@@ -66,6 +62,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
               })
           .doOnCancel(
               () -> {
+                TRACER.onCancel(span);
                 TRACER.end(span);
               });
     }

@@ -16,17 +16,17 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.v2_2;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +85,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
 
   public static class Servlet2ResponseRedirectAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.This final HttpServletResponse response) {
+    public static void onEnter(@Advice.This HttpServletResponse response) {
       InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
     }
   }
@@ -93,7 +93,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
   public static class Servlet2ResponseStatusAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This final HttpServletResponse response, @Advice.Argument(0) final Integer status) {
+        @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
       InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, status);
     }
   }

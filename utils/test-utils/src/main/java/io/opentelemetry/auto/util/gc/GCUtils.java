@@ -27,7 +27,7 @@ public abstract class GCUtils {
     awaitGC(ref);
   }
 
-  public static void awaitGC(final WeakReference<?> ref) throws InterruptedException {
+  public static void awaitGC(WeakReference<?> ref) throws InterruptedException {
     while (ref.get() != null) {
       if (Thread.interrupted()) {
         throw new InterruptedException();

@@ -20,7 +20,7 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -40,17 +40,17 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String dbSystem(final CqlSession session) {
+  protected String dbSystem(CqlSession session) {
     return DbSystem.CASSANDRA;
   }
 
   @Override
-  protected String dbUser(final CqlSession session) {
+  protected String dbUser(CqlSession session) {
     return null;
   }
 
   @Override
-  protected String dbName(final CqlSession session) {
+  protected String dbName(CqlSession session) {
     return session.getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
@@ -59,7 +59,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     return null;
   }
 
-  public void onResponse(final Span span, final ExecutionInfo executionInfo) {
+  public void onResponse(Span span, ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();

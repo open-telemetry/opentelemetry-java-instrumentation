@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.lettuce.v5_1
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
@@ -28,18 +30,15 @@ import io.lettuce.core.codec.StringCodec
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import redis.embedded.RedisServer
-import spock.lang.Shared
-import spock.util.concurrent.AsyncConditions
-
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import redis.embedded.RedisServer
+import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
 
 class LettuceAsyncClientTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"

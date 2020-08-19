@@ -25,7 +25,7 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
   private final io.opentelemetry.metrics.DoubleValueRecorder agentDoubleValueRecorder;
 
   protected ApplicationDoubleValueRecorder(
-      final io.opentelemetry.metrics.DoubleValueRecorder agentDoubleValueRecorder) {
+      io.opentelemetry.metrics.DoubleValueRecorder agentDoubleValueRecorder) {
     this.agentDoubleValueRecorder = agentDoubleValueRecorder;
   }
 
@@ -34,12 +34,12 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
   }
 
   @Override
-  public void record(final double delta, final Labels labels) {
+  public void record(double delta, Labels labels) {
     agentDoubleValueRecorder.record(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
-  public BoundDoubleValueRecorder bind(final Labels labels) {
+  public BoundDoubleValueRecorder bind(Labels labels) {
     return new BoundInstrument(agentDoubleValueRecorder.bind(LabelBridging.toAgent(labels)));
   }
 
@@ -49,13 +49,13 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
         agentBoundDoubleMeasure;
 
     public BoundInstrument(
-        final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
+        io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
             agentBoundDoubleMeasure) {
       this.agentBoundDoubleMeasure = agentBoundDoubleMeasure;
     }
 
     @Override
-    public void record(final double delta) {
+    public void record(double delta) {
       agentBoundDoubleMeasure.record(delta);
     }
 
@@ -69,24 +69,24 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 
     private final io.opentelemetry.metrics.DoubleValueRecorder.Builder agentBuilder;
 
-    public Builder(final io.opentelemetry.metrics.DoubleValueRecorder.Builder agentBuilder) {
+    public Builder(io.opentelemetry.metrics.DoubleValueRecorder.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleValueRecorder.Builder setDescription(final String description) {
+    public DoubleValueRecorder.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleValueRecorder.Builder setUnit(final String unit) {
+    public DoubleValueRecorder.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleValueRecorder.Builder setConstantLabels(final Labels constantLabels) {
+    public DoubleValueRecorder.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

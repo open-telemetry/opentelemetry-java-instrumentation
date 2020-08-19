@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 
 public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Default {
   private static final String INSTRUMENTATION_NAME = "aws-sdk";

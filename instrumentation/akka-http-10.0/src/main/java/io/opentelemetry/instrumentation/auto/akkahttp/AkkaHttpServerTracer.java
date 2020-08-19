@@ -21,7 +21,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -30,7 +30,7 @@ public class AkkaHttpServerTracer
   public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }
 
@@ -53,12 +53,12 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected URI url(final HttpRequest httpRequest) throws URISyntaxException {
+  protected URI url(HttpRequest httpRequest) throws URISyntaxException {
     return new URI(httpRequest.uri().toString());
   }
 
   @Override
-  protected String peerHostIP(final HttpRequest httpRequest) {
+  protected String peerHostIP(HttpRequest httpRequest) {
     return null;
   }
 
@@ -78,12 +78,7 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
-  protected Integer peerPort(final HttpRequest httpRequest) {
+  protected Integer peerPort(HttpRequest httpRequest) {
     return null;
   }
 }

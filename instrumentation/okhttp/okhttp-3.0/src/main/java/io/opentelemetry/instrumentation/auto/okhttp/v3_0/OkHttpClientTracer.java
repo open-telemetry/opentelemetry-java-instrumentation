@@ -16,27 +16,29 @@
 
 package io.opentelemetry.instrumentation.auto.okhttp.v3_0;
 
+import static io.opentelemetry.instrumentation.auto.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
+
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
+public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
   public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   @Override
-  protected String method(final Request httpRequest) {
+  protected String method(Request httpRequest) {
     return httpRequest.method();
   }
 
   @Override
-  protected URI url(final Request httpRequest) {
+  protected URI url(Request httpRequest) {
     return httpRequest.url().uri();
   }
 
   @Override
-  protected Integer status(final Response httpResponse) {
+  protected Integer status(Response httpResponse) {
     return httpResponse.code();
   }
 
@@ -51,8 +53,8 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   }
 
   @Override
-  protected Setter<Request> getSetter() {
-    return null;
+  protected Setter<Request.Builder> getSetter() {
+    return SETTER;
   }
 
   @Override

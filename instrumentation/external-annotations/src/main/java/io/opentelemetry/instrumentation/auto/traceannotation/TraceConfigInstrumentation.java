@@ -16,14 +16,14 @@
 
 package io.opentelemetry.instrumentation.auto.traceannotation;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +87,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
       this("io.opentracing.contrib.dropwizard.Trace", Collections.singleton("noop"));
     }
 
-    public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
+    public TracerClassInstrumentation(String className, Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
       this.methodNames = methodNames;

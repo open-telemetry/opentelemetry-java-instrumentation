@@ -17,7 +17,6 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
-
 import java.util.concurrent.Callable
 
 class TraceAnnotationsTest extends AgentTestRunner {

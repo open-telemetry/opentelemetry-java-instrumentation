@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
@@ -22,12 +24,9 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletionException
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import java.util.concurrent.CompletionException
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceSyncClientTest extends AgentTestRunner {
   public static final String PEER_NAME = "localhost"

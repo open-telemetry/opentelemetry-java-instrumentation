@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import spock.lang.Requires
-
-import java.util.concurrent.CompletableFuture
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
+import io.opentelemetry.auto.test.AgentTestRunner
+import java.util.concurrent.CompletableFuture
+import spock.lang.Requires
 
 @Requires({ javaVersion >= 1.8 })
 class CompletableFutureTest extends AgentTestRunner {

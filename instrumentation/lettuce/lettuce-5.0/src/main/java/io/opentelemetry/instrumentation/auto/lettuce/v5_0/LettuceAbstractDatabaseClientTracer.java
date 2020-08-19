@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -30,17 +30,17 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected String dbSystem(final RedisURI connection) {
+  protected String dbSystem(RedisURI connection) {
     return DbSystem.REDIS;
   }
 
   @Override
-  protected String dbUser(final RedisURI connection) {
+  protected String dbUser(RedisURI connection) {
     return null;
   }
 
   @Override
-  protected String dbName(final RedisURI connection) {
+  protected String dbName(RedisURI connection) {
     return null;
   }
 
@@ -50,7 +50,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  public Span onConnection(final Span span, final RedisURI connection) {
+  public Span onConnection(Span span, RedisURI connection) {
     span.setAttribute("db.redis.dbIndex", connection.getDatabase());
     return super.onConnection(span, connection);
   }

@@ -33,7 +33,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class WebMvcFilterAutoConfiguration {
 
   @Bean
-  public WebMvcTracingFilter otelWebMvcTracingFilter(final Tracer tracer) {
+  public WebMvcTracingFilter otelWebMvcTracingFilter(Tracer tracer) {
     return new WebMvcTracingFilter(tracer);
   }
 }

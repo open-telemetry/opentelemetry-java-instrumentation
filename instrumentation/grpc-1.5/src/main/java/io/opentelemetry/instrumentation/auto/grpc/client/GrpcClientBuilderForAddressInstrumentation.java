@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.grpc.client;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,9 +24,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +55,8 @@ public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClie
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-        @Advice.This final ManagedChannelBuilder thiz,
-        @Advice.FieldValue("interceptors") final List<ClientInterceptor> interceptors) {
+        @Advice.This ManagedChannelBuilder thiz,
+        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
       boolean shouldRegister = true;
       for (ClientInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingClientInterceptor) {
@@ -76,9 +76,9 @@ public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClie
   public static class ForAddressAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static final void forAddress(
-        @Advice.Argument(0) final String address,
-        @Advice.Argument(1) final int port,
-        @Advice.Return final ManagedChannelBuilder builder) {
+        @Advice.Argument(0) String address,
+        @Advice.Argument(1) int port,
+        @Advice.Return ManagedChannelBuilder builder) {
       ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
           InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
       contextStore.put(builder, InetSocketAddress.createUnresolved(address, port));

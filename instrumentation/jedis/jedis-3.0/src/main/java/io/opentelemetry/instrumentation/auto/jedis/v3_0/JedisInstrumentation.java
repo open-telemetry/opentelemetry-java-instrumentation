@@ -26,9 +26,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -73,8 +73,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This final Connection connection,
-        @Advice.Argument(0) final ProtocolCommand command) {
+        @Advice.This Connection connection, @Advice.Argument(0) ProtocolCommand command) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
         return null;
@@ -97,7 +96,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

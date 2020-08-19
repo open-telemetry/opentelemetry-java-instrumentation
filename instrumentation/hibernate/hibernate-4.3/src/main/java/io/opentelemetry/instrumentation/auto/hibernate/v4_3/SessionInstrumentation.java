@@ -16,19 +16,19 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate.v4_3;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,8 +85,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getProcedureCall(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Return final ProcedureCall returned) {
+        @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 
       ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);

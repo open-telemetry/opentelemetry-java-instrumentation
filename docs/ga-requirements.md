@@ -1,4 +1,4 @@
-P1 (e.g. cannot GA without these):
+### P1 (e.g. cannot GA without these):
 * End-to-end tests ([#298](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/298#issuecomment-664162169))
   * OTLP, Jaeger and Zipkin
   * Spring Boot and Wildfly
@@ -23,7 +23,7 @@ P1 (e.g. cannot GA without these):
   Spring WebMVC, Spring WebFlux, Spring RestTemplate, JDBC
   * (this requirement is to ensure that we have a good path forward for supporting both auto and manual instrumentation)
 
-P2:
+### P2
 * Contributor experience (tag "contributor experience" plus tag "cleanup" plus tag "sporadic test failure")
   * New contributor documentation
     * How to write new instrumentation (auto, library, tests)
@@ -33,7 +33,7 @@ P2:
   * Fewer sporadic CI failures
   * Publish a debug jar without the classdata obfuscation
 
-P3:
+### P3
 * Auto-collected metrics
   * System / JVM metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/651)
   * Request metrics (https://github.com/open-telemetry/opentelemetry-specification/issues/522, https://github.com/open-telemetry/opentelemetry-specification/pull/657)
@@ -51,3 +51,38 @@ P3:
     * Span attributes (including explanation of any non-semantic attributes)
     * Events
   * Document any other effects (e.g. updating SERVER span name with route)
+
+### Instrumentation prioritization
+
+When it comes to prioritizing work, sometimes it's helpful to know the relative importance of a
+particular instrumentation, e.g. making improvements in Spring WebFlux instrumentation would
+generally take priority over making improvement in Grizzly instrumentation.
+
+This is only intended as a guide for prioritizing work.
+
+### P1
+
+* Apache AsyncHttpClient
+* Apache HttpClient
+* Cassandra Driver
+* gRPC
+* HttpURLConnection
+* JAX-RS
+* JDBC
+* Jedis
+* JMS
+* Kafka
+* Lettuce
+* MongoDB Drivers
+* Netty
+* OkHttp
+* RabbitMQ
+* Reactor
+* Servlet
+* Spring Scheduling
+* Spring Web MVC
+* Spring Webflux
+
+### P2
+
+* All others

@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.Map;
@@ -72,7 +72,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   public static class RoutesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void routeMatchEnricher(@Advice.Return final RouteMatch routeMatch) {
+    public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
       Span span = TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {

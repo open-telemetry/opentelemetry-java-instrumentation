@@ -16,14 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.khttp;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.asWritable;
 import static io.opentelemetry.instrumentation.auto.khttp.KHttpTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.trace.Span;
@@ -46,18 +41,16 @@ public class KHttpAdvice {
     if (callDepth.getAndIncrement() == 0) {
       span = TRACER.startSpan(new RequestWrapper(method, uri, headers));
       if (span.getContext().isValid()) {
-        Context context = withSpan(span, Context.current());
         headers = asWritable(headers);
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
-        scope = withScopedContext(context);
+        scope = TRACER.startScope(span, headers);
       }
     }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Return final Response response,
-      @Advice.Thrown final Throwable throwable,
+      @Advice.Return Response response,
+      @Advice.Thrown Throwable throwable,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") Depth callDepth) {

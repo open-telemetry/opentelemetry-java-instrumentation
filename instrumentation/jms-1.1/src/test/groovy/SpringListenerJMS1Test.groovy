@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
+import static JMS1Test.consumerSpan
+import static JMS1Test.producerSpan
+
 import io.opentelemetry.auto.test.AgentTestRunner
+import javax.jms.ConnectionFactory
 import listener.Config
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
 import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
-
-import javax.jms.ConnectionFactory
-
-import static JMS1Test.consumerSpan
-import static JMS1Test.producerSpan
 
 class SpringListenerJMS1Test extends AgentTestRunner {
 
@@ -39,11 +38,11 @@ class SpringListenerJMS1Test extends AgentTestRunner {
     expect:
     assertTraces(2) {
       trace(0, 2) {
-        producerSpan(it, 0, "queue/SpringListenerJMS1")
-        consumerSpan(it, 1, "queue/SpringListenerJMS1", true, MessagingMessageListenerAdapter, span(0))
+        producerSpan(it, 0, "queue", "SpringListenerJMS1")
+        consumerSpan(it, 1, "queue", "SpringListenerJMS1", null, true, MessagingMessageListenerAdapter, span(0))
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue/SpringListenerJMS1", false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, "queue", "SpringListenerJMS1", null, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 

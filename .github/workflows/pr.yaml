@@ -35,3 +35,14 @@ jobs:
           command: ./gradlew testJava${{ matrix.java }} --stacktrace
           timeout_minutes: 60
           max_attempts: 3
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "PR / jdk${{matrix.java}}"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"

@@ -2,6 +2,4 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
-
-  testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 }

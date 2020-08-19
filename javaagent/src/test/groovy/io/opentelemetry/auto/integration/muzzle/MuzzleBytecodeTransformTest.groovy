@@ -18,10 +18,9 @@ package io.opentelemetry.auto.integration.muzzle
 
 import io.opentelemetry.auto.test.IntegrationTestUtils
 import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader
-import spock.lang.Specification
-
 import java.lang.reflect.Field
 import java.lang.reflect.Method
+import spock.lang.Specification
 
 class MuzzleBytecodeTransformTest extends Specification {
 
@@ -30,13 +29,13 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> unMuzzledClasses = []
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
-    for (Object instrumenter : SafeServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.auto.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
+    for (Object instrumenter : SafeServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
       if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
         // TraceConfigInstrumentation doesn't do muzzle checks
         // check on TracerClassInstrumentation instead
         instrumenter = IntegrationTestUtils.getAgentClassLoader().loadClass(instrumenter.getClass().getName() + '$TracerClassInstrumentation').newInstance()
       }
-      if (!IntegrationTestUtils.getAgentClassLoader().loadClass('io.opentelemetry.auto.tooling.Instrumenter$Default').isAssignableFrom(instrumenter.getClass())) {
+      if (!IntegrationTestUtils.getAgentClassLoader().loadClass('io.opentelemetry.javaagent.tooling.Instrumenter$Default').isAssignableFrom(instrumenter.getClass())) {
         // muzzle only applies to default instrumenters
         continue
       }

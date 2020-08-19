@@ -16,16 +16,16 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
@@ -75,8 +75,7 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Argument(0) final Destination destination,
-        @Advice.Return final MessageConsumer consumer) {
+        @Advice.Argument(0) Destination destination, @Advice.Return MessageConsumer consumer) {
       String spanName = JMSDecorator.toSpanName(destination);
       InstrumentationContext.get(MessageConsumer.class, String.class).put(consumer, spanName);
     }

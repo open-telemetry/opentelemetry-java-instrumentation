@@ -19,12 +19,13 @@ package io.opentelemetry.instrumentation.armeria.v1_0.client;
 import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, RequestLog> {
+public class ArmeriaClientTracer
+    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
 
   ArmeriaClientTracer() {}
 

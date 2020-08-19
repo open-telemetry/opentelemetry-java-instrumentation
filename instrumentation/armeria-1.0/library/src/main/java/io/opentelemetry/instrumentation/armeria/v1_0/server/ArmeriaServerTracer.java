@@ -21,7 +21,7 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -44,11 +44,6 @@ public class ArmeriaServerTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.armeria-1.0";
-  }
-
-  @Override
-  protected String getVersion() {
-    return null;
   }
 
   @Override

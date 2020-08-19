@@ -25,8 +25,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -71,7 +71,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
   public static class RunnableWrapper implements Runnable {
     private final Runnable runnable;
 
-    private RunnableWrapper(final Runnable runnable) {
+    private RunnableWrapper(Runnable runnable) {
       this.runnable = runnable;
     }
 
@@ -85,7 +85,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
 
       try (Scope scope = currentContextWith(span)) {
         runnable.run();
-      } catch (final Throwable throwable) {
+      } catch (Throwable throwable) {
         DECORATE.onError(span, throwable);
         throw throwable;
       } finally {
@@ -94,7 +94,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
       }
     }
 
-    public static Runnable wrapIfNeeded(final Runnable task) {
+    public static Runnable wrapIfNeeded(Runnable task) {
       // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
       // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
       if (task instanceof RunnableWrapper) {

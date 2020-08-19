@@ -41,7 +41,7 @@ public class HttpBenchmark {
         while (!AbstractLifeCycle.STARTED.equals(jettyServer.getState())) {
           Thread.sleep(500);
         }
-      } catch (final Exception e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
@@ -50,7 +50,7 @@ public class HttpBenchmark {
     public void doTearDown() {
       try {
         jettyServer.stop();
-      } catch (final Exception e) {
+      } catch (Exception e) {
         e.printStackTrace();
       } finally {
         jettyServer.destroy();
@@ -62,7 +62,7 @@ public class HttpBenchmark {
   }
 
   @Benchmark
-  public void testMakingRequest(final BenchmarkState state) throws IOException {
+  public void testMakingRequest(BenchmarkState state) throws IOException {
     state.http.executeRequest();
   }
 

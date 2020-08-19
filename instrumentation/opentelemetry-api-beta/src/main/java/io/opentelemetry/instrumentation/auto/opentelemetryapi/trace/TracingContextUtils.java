@@ -33,9 +33,9 @@ public class TracingContextUtils {
   private static final Logger log = LoggerFactory.getLogger(TracingContextUtils.class);
 
   public static Context withSpan(
-      final Span applicationSpan,
-      final Context applicationContext,
-      final ContextStore<Context, io.grpc.Context> contextStore) {
+      Span applicationSpan,
+      Context applicationContext,
+      ContextStore<Context, io.grpc.Context> contextStore) {
     io.opentelemetry.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
     if (agentSpan == null) {
       if (log.isDebugEnabled()) {
@@ -63,7 +63,7 @@ public class TracingContextUtils {
   }
 
   public static Span getSpan(
-      final Context applicationContext, final ContextStore<Context, io.grpc.Context> contextStore) {
+      Context applicationContext, ContextStore<Context, io.grpc.Context> contextStore) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -76,7 +76,7 @@ public class TracingContextUtils {
   }
 
   public static Span getSpanWithoutDefault(
-      final Context applicationContext, final ContextStore<Context, io.grpc.Context> contextStore) {
+      Context applicationContext, ContextStore<Context, io.grpc.Context> contextStore) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -90,7 +90,7 @@ public class TracingContextUtils {
     return agentSpan == null ? null : toApplication(agentSpan);
   }
 
-  public static Scope currentContextWith(final Span applicationSpan) {
+  public static Scope currentContextWith(Span applicationSpan) {
     if (!applicationSpan.getContext().isValid()) {
       // this supports direct usage of DefaultSpan.getInvalid()
       return new ApplicationScope(

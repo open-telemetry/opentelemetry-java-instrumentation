@@ -3,7 +3,6 @@ plugins {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 
 muzzle {
@@ -25,32 +24,19 @@ tasks.withType(Checkstyle).configureEach {
   exclude '**/jdbc/normalizer/*.java'
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   // jdbc unit testing
-  testImplementation group: 'com.h2database', name: 'h2', version: '1.3.169'
+  testLibrary group: 'com.h2database', name: 'h2', version: '1.3.169'
   // first version jdk 1.6 compatible
-  testImplementation group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'
-  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testLibrary group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'
+  testLibrary group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 
-  testImplementation group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '7.0.19'
+  testLibrary group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '7.0.19'
   // tomcat needs this to run
-  testImplementation group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
-  testImplementation group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
-  testImplementation group: 'com.mchange', name: 'c3p0', version: '0.9.5'
+  testLibrary group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
+  testLibrary group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
+  testLibrary group: 'com.mchange', name: 'c3p0', version: '0.9.5'
 
-  latestDepTestImplementation group: 'com.h2database', name: 'h2', version: '+'
-  latestDepTestImplementation group: 'org.apache.derby', name: 'derby', version: '10.14.+'
-  latestDepTestImplementation group: 'org.hsqldb', name: 'hsqldb', version: '+'
-
-  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
-  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
-  latestDepTestImplementation group: 'com.zaxxer', name: 'HikariCP', version: '+'
-  latestDepTestImplementation group: 'com.mchange', name: 'c3p0', version: '+'
+  latestDepTestLibrary group: 'org.apache.derby', name: 'derby', version: '10.14.+'
 }
 

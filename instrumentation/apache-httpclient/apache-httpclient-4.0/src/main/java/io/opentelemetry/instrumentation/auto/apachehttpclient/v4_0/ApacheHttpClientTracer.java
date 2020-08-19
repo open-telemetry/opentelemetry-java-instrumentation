@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 import static io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import org.apache.http.Header;
@@ -27,22 +27,23 @@ import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, HttpResponse> {
+class ApacheHttpClientTracer
+    extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   public static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 
   @Override
-  protected String method(final HttpUriRequest httpRequest) {
+  protected String method(HttpUriRequest httpRequest) {
     return httpRequest.getMethod();
   }
 
   @Override
-  protected URI url(final HttpUriRequest request) {
+  protected URI url(HttpUriRequest request) {
     return request.getURI();
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
+  protected Integer status(HttpResponse httpResponse) {
     return httpResponse.getStatusLine().getStatusCode();
   }
 

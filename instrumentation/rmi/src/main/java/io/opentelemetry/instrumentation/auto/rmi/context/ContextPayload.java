@@ -46,24 +46,24 @@ public class ContextPayload {
     context = new HashMap<>();
   }
 
-  public ContextPayload(final Map<String, String> context) {
+  public ContextPayload(Map<String, String> context) {
     this.context = context;
   }
 
-  public static ContextPayload from(final Span span) {
+  public static ContextPayload from(Span span) {
     ContextPayload payload = new ContextPayload();
     Context context = withSpan(span, Context.current());
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, payload, SETTER);
     return payload;
   }
 
-  public static ContextPayload read(final ObjectInput oi) throws IOException {
+  public static ContextPayload read(ObjectInput oi) throws IOException {
     try {
       Object object = oi.readObject();
       if (object instanceof Map) {
         return new ContextPayload((Map<String, String>) object);
       }
-    } catch (final ClassCastException | ClassNotFoundException ex) {
+    } catch (ClassCastException | ClassNotFoundException ex) {
       log.debug("Error reading object", ex);
     }
 
@@ -74,20 +74,20 @@ public class ContextPayload {
     return context;
   }
 
-  public void write(final ObjectOutput out) throws IOException {
+  public void write(ObjectOutput out) throws IOException {
     out.writeObject(context);
   }
 
   public static class ExtractAdapter implements HttpTextFormat.Getter<ContextPayload> {
     @Override
-    public String get(final ContextPayload carrier, final String key) {
+    public String get(ContextPayload carrier, String key) {
       return carrier.getContext().get(key);
     }
   }
 
   public static class InjectAdapter implements HttpTextFormat.Setter<ContextPayload> {
     @Override
-    public void set(final ContextPayload carrier, final String key, final String value) {
+    public void set(ContextPayload carrier, String key, String value) {
       carrier.getContext().put(key, value);
     }
   }

@@ -30,19 +30,19 @@ import spock.lang.Specification
  */
 abstract class InstrumentationSpecification extends Specification {
   abstract void assertTraces(
-      final int size,
-      @ClosureParams(
-          value = SimpleType,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-      final Closure spec)
+    final int size,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec)
 
   abstract void assertTracesWithFilter(
-      final int size,
-      final Predicate<List<SpanData>> excludes,
-      @ClosureParams(
-          value = SimpleType,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-      final Closure spec)
+    final int size,
+    final Predicate<List<SpanData>> excludes,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec)
 }

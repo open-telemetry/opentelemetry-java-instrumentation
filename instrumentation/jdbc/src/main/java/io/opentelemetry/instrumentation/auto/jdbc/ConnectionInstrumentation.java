@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.jdbc;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.sql.PreparedStatement;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -79,7 +79,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
   public static class ConnectionPrepareAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
-        @Advice.Argument(0) final String sql, @Advice.Return final PreparedStatement statement) {
+        @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
       String normalizedSql = JDBCUtils.normalizeSql(sql);
       if (normalizedSql != null) {
         JDBCMaps.preparedStatements.put(statement, normalizedSql);

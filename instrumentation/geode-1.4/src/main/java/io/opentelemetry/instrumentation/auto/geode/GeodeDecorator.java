@@ -33,12 +33,12 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   }
 
   @Override
-  protected String dbUser(final Region region) {
+  protected String dbUser(Region region) {
     return null;
   }
 
   @Override
-  protected String dbName(final Region region) {
+  protected String dbName(Region region) {
     return region.getName();
   }
 }

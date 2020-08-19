@@ -23,7 +23,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -35,7 +35,7 @@ public class NettyHttpServerTracer
   public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.method().name();
   }
 
@@ -65,17 +65,12 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
   protected Getter<HttpRequest> getGetter() {
     return NettyRequestExtractAdapter.GETTER;
   }
 
   @Override
-  protected URI url(final HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.uri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.uri());
@@ -85,7 +80,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(final Channel channel) {
+  protected String peerHostIP(Channel channel) {
     SocketAddress socketAddress = channel.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
@@ -99,7 +94,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected Integer peerPort(final Channel channel) {
+  protected Integer peerPort(Channel channel) {
     SocketAddress socketAddress = channel.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getPort();

@@ -1,5 +1,4 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -9,21 +8,9 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   implementation project(':instrumentation:rxjava-1.0')
 
-  compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
-  compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
-
-  testImplementation group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
-  testImplementation group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
-
-  latestDepTestImplementation group: 'io.reactivex', name: 'rxjava', version: '+'
-  latestDepTestImplementation group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
+  library group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+  library group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 }

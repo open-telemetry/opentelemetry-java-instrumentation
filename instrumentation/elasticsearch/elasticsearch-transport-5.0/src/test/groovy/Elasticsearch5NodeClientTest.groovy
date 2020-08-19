@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
@@ -25,10 +29,6 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch5NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds

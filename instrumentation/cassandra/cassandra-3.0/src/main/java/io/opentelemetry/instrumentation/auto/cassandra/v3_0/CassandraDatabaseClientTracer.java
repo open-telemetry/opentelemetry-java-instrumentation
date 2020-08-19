@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.cassandra.v3_0;
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.Session;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -38,17 +38,17 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
   }
 
   @Override
-  protected String dbSystem(final Session session) {
+  protected String dbSystem(Session session) {
     return DbSystem.CASSANDRA;
   }
 
   @Override
-  protected String dbUser(final Session session) {
+  protected String dbUser(Session session) {
     return null;
   }
 
   @Override
-  protected String dbName(final Session session) {
+  protected String dbName(Session session) {
     return session.getLoggedKeyspace();
   }
 
@@ -57,9 +57,9 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
     return null;
   }
 
-  public Span onResponse(final Span span, final ExecutionInfo executionInfo) {
+  public void end(Span span, ExecutionInfo executionInfo) {
     Host host = executionInfo.getQueriedHost();
     onPeerConnection(span, host.getSocketAddress());
-    return span;
+    end(span);
   }
 }

@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
 import org.hibernate.MappingException
@@ -21,10 +25,6 @@ import org.hibernate.Query
 import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class SessionTest extends AbstractHibernateTest {
 

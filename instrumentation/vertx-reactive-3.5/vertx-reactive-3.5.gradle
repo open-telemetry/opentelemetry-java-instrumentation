@@ -3,7 +3,6 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -13,34 +12,26 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 //The first Vert.x version that uses rx-java 2
 ext.vertxVersion = '3.5.0'
 
 dependencies {
-  compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
-  compileOnly group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
+  library group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  library group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
 
   testImplementation project(':instrumentation:jdbc')
   testImplementation project(':instrumentation:netty:netty-4.1')
   testImplementation project(':instrumentation:vertx-3.0')
 
-  testImplementation group: 'io.vertx', name: 'vertx-web', version: vertxVersion
-  testImplementation group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
-  testImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
-  testImplementation group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
-  testImplementation group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
+  testLibrary group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
+  testLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testLibrary group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
   testImplementation 'org.hsqldb:hsqldb:2.3.4'
 
   // Vert.x 4.0 is incompatible with our tests.
-  latestDepTestImplementation group: 'io.vertx', name: 'vertx-web', version: '3.+'
-  latestDepTestImplementation group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
-  latestDepTestImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
-  latestDepTestImplementation group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
-  latestDepTestImplementation group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
+  latestDepTestLibrary group: 'io.vertx', name: 'vertx-web', version: '3.+'
+  latestDepTestLibrary group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
+  latestDepTestLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
+  latestDepTestLibrary group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
+  latestDepTestLibrary group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
 }

@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +56,9 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$WrappedFuture", JaxRsClientTracer.class.getName(),
+      getClass().getName() + "$WrappedFuture",
+      packageName + ".JaxRsClientTracer",
+      packageName + ".InjectAdapter",
     };
   }
 
@@ -79,8 +81,8 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("configuration") final ClientConfiguration context,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.FieldValue("configuration") ClientConfiguration context,
+        @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
@@ -94,7 +96,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("configuration") final ClientConfiguration context,
+        @Advice.FieldValue("configuration") ClientConfiguration context,
         @Advice.Return(readOnly = false) Future<?> future) {
       if (!(future instanceof WrappedFuture)) {
         future = new WrappedFuture<>(future, context);
@@ -107,13 +109,13 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
     private final Future<T> wrapped;
     private final ClientConfiguration context;
 
-    public WrappedFuture(final Future<T> wrapped, final ClientConfiguration context) {
+    public WrappedFuture(Future<T> wrapped, ClientConfiguration context) {
       this.wrapped = wrapped;
       this.context = context;
     }
 
     @Override
-    public boolean cancel(final boolean mayInterruptIfRunning) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
       return wrapped.cancel(mayInterruptIfRunning);
     }
 
@@ -131,7 +133,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
     public T get() throws InterruptedException, ExecutionException {
       try {
         return wrapped.get();
-      } catch (final ExecutionException e) {
+      } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
           TRACER.endExceptionally((Span) prop, e.getCause());
@@ -141,11 +143,11 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
     }
 
     @Override
-    public T get(final long timeout, final TimeUnit unit)
+    public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
       try {
         return wrapped.get(timeout, unit);
-      } catch (final ExecutionException e) {
+      } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
           TRACER.endExceptionally((Span) prop, e.getCause());

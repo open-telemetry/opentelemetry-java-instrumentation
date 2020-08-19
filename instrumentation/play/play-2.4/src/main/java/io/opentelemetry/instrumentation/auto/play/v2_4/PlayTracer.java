@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.play.v2_4;
 
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -26,7 +26,7 @@ import scala.Option;
 public class PlayTracer extends BaseTracer {
   public static final PlayTracer TRACER = new PlayTracer();
 
-  public void updateSpanName(final Span span, final Request<?> request) {
+  public void updateSpanName(Span span, Request<?> request) {
     if (request != null) {
       Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {

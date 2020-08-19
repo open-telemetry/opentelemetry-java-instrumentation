@@ -24,7 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,7 +52,6 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
       packageName + ".TracingSession",
       packageName + ".TracingSession$1",
       packageName + ".TracingSession$2",
-      "io.opentelemetry.auto.common.exec.DaemonThreadFactory",
     };
   }
 

@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.function.Function
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
-
-import java.util.function.Function
-
-import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
-import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
-import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class LagomTest extends AgentTestRunner {
 

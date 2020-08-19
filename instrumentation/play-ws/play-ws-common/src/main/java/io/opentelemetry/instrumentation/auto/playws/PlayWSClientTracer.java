@@ -19,27 +19,28 @@ package io.opentelemetry.instrumentation.auto.playws;
 import static io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class PlayWSClientTracer extends HttpClientTracer<Request, Response> {
+public class PlayWSClientTracer extends HttpClientTracer<Request, HttpHeaders, Response> {
   public static final PlayWSClientTracer TRACER = new PlayWSClientTracer();
 
   @Override
-  protected String method(final Request request) {
+  protected String method(Request request) {
     return request.getMethod();
   }
 
   @Override
-  protected URI url(final Request request) throws URISyntaxException {
+  protected URI url(Request request) throws URISyntaxException {
     return request.getUri().toJavaNetURI();
   }
 
   @Override
-  protected Integer status(final Response response) {
+  protected Integer status(Response response) {
     return response.getStatusCode();
   }
 
@@ -54,7 +55,7 @@ public class PlayWSClientTracer extends HttpClientTracer<Request, Response> {
   }
 
   @Override
-  protected Setter<Request> getSetter() {
+  protected Setter<HttpHeaders> getSetter() {
     return SETTER;
   }
 

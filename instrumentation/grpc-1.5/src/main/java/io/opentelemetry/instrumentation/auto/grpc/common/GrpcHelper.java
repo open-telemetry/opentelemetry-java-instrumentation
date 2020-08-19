@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.grpc.common;
 
 import io.grpc.Status.Code;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Status.CanonicalCode;
@@ -53,10 +53,7 @@ public final class GrpcHelper {
   }
 
   public static void prepareSpan(
-      final Span span,
-      final String methodName,
-      final InetSocketAddress peerAddress,
-      final boolean server) {
+      Span span, String methodName, InetSocketAddress peerAddress, boolean server) {
     String serviceName =
         "(unknown)"; // Spec says it's mandatory, so populate even if we couldn't determine it.
     int slash = methodName.indexOf('/');

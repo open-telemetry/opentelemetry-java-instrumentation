@@ -1,3 +1,7 @@
+import java.lang.reflect.Method
+import java.security.SecureClassLoader
+import java.util.concurrent.atomic.AtomicReference
+import java.util.regex.Pattern
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
@@ -20,11 +24,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
-
-import java.lang.reflect.Method
-import java.security.SecureClassLoader
-import java.util.concurrent.atomic.AtomicReference
-import java.util.regex.Pattern
 
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
@@ -70,7 +69,7 @@ class MuzzlePlugin implements Plugin<Project> {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
           ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
           ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
         }
@@ -82,7 +81,7 @@ class MuzzlePlugin implements Plugin<Project> {
       description = "Print references created by instrumentation muzzle"
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
+        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
       }
@@ -336,7 +335,7 @@ class MuzzlePlugin implements Plugin<Project> {
         ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
         } finally {

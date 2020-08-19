@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import com.netflix.hystrix.HystrixCommand
-import io.opentelemetry.auto.test.AgentTestRunner
-import spock.lang.Timeout
-
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
-
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
+import com.netflix.hystrix.HystrixCommand
+import io.opentelemetry.auto.test.AgentTestRunner
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import spock.lang.Timeout
 
 @Timeout(10)
 class HystrixTest extends AgentTestRunner {

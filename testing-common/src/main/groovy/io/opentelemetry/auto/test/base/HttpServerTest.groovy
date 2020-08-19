@@ -16,27 +16,6 @@
 
 package io.opentelemetry.auto.test.base
 
-import ch.qos.logback.classic.Level
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.auto.test.utils.OkHttpUtils
-import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.instrumentation.api.MoreAttributes
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import spock.lang.Shared
-import spock.lang.Unroll
-
-import java.util.concurrent.Callable
-
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -47,6 +26,26 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
+
+import ch.qos.logback.classic.Level
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.utils.OkHttpUtils
+import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.api.MoreAttributes
+import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.Callable
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import spock.lang.Shared
+import spock.lang.Unroll
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends AgentTestRunner {

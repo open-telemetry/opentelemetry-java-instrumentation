@@ -40,7 +40,7 @@ public class JettyPerftest {
 
   private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
 
-  public static void main(final String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
     servletContext.addServlet(PerfServlet.class, PATH);
     jettyServer.setHandler(servletContext);
     jettyServer.start();
@@ -53,7 +53,7 @@ public class JettyPerftest {
                 try {
                   jettyServer.stop();
                   jettyServer.destroy();
-                } catch (final Exception e) {
+                } catch (Exception e) {
                   throw new IllegalStateException(e);
                 }
               }
@@ -63,7 +63,7 @@ public class JettyPerftest {
   @WebServlet
   public static class PerfServlet extends HttpServlet {
     @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
       if (request.getParameter("error") != null) {
         throw new RuntimeException("some sync error");
@@ -77,7 +77,7 @@ public class JettyPerftest {
       response.getWriter().print("Did " + workTimeMS + "ms of work.");
     }
 
-    private void scheduleWork(final long workTimeMS) {
+    private void scheduleWork(long workTimeMS) {
       Span span = TRACER.spanBuilder("work").startSpan();
       try (Scope scope = currentContextWith(span)) {
         if (span != null) {

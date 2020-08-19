@@ -24,8 +24,7 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
   private final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter;
 
-  ApplicationLongUpDownCounter(
-      final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
+  ApplicationLongUpDownCounter(io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
     this.agentLongUpDownCounter = agentLongUpDownCounter;
   }
 
@@ -34,12 +33,12 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
   }
 
   @Override
-  public void add(final long delta, final Labels labels) {
+  public void add(long delta, Labels labels) {
     agentLongUpDownCounter.add(delta, LabelBridging.toAgent(labels));
   }
 
   @Override
-  public BoundLongUpDownCounter bind(final Labels labels) {
+  public BoundLongUpDownCounter bind(Labels labels) {
     return new BoundInstrument(agentLongUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }
 
@@ -49,13 +48,13 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
         agentBoundLongUpDownCounter;
 
     BoundInstrument(
-        final io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
+        io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
             agentBoundLongUpDownCounter) {
       this.agentBoundLongUpDownCounter = agentBoundLongUpDownCounter;
     }
 
     @Override
-    public void add(final long delta) {
+    public void add(long delta) {
       agentBoundLongUpDownCounter.add(delta);
     }
 
@@ -69,24 +68,24 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
     private final io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder;
 
-    Builder(final io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongUpDownCounter.Builder setDescription(final String description) {
+    public LongUpDownCounter.Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongUpDownCounter.Builder setUnit(final String unit) {
+    public LongUpDownCounter.Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongUpDownCounter.Builder setConstantLabels(final Labels constantLabels) {
+    public LongUpDownCounter.Builder setConstantLabels(Labels constantLabels) {
       agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
       return this;
     }

@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_0;
 import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
-import io.opentelemetry.instrumentation.api.decorator.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
@@ -41,13 +41,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   private final Span span;
 
   public TransportActionListener(
-      final ActionRequest actionRequest, final ActionListener<T> listener, final Span span) {
+      ActionRequest actionRequest, ActionListener<T> listener, Span span) {
     this.listener = listener;
     this.span = span;
     onRequest(actionRequest);
   }
 
-  private void onRequest(final ActionRequest request) {
+  private void onRequest(ActionRequest request) {
     if (request instanceof IndicesRequest) {
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
@@ -70,7 +70,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onResponse(final T response) {
+  public void onResponse(T response) {
     if (response.remoteAddress() != null) {
       BaseTracer.setPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
@@ -127,7 +127,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   @Override
-  public void onFailure(final Exception e) {
+  public void onFailure(Exception e) {
     DECORATE.onError(span, e);
 
     try {

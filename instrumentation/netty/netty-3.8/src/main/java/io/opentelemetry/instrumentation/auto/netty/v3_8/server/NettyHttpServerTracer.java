@@ -20,7 +20,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.instrumentation.api.decorator.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -35,7 +35,7 @@ public class NettyHttpServerTracer
   public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
-  protected String method(final HttpRequest httpRequest) {
+  protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().getName();
   }
 
@@ -60,7 +60,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected URI url(final HttpRequest request) throws URISyntaxException {
+  protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.getUri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.getUri());
@@ -70,7 +70,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(final Channel channel) {
+  protected String peerHostIP(Channel channel) {
     SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
@@ -94,12 +94,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String getVersion() {
-    return null;
-  }
-
-  @Override
-  protected Integer peerPort(final Channel channel) {
+  protected Integer peerPort(Channel channel) {
     SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getPort();

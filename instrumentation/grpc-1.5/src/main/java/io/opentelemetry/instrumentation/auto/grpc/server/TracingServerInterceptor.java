@@ -48,9 +48,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-      final ServerCall<ReqT, RespT> call,
-      final Metadata headers,
-      final ServerCallHandler<ReqT, RespT> next) {
+      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
     String methodName = call.getMethodDescriptor().getFullMethodName();
     Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
@@ -72,7 +70,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
         // call other interceptors
         result = next.startCall(tracingServerCall, headers);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
         span.end();
@@ -89,17 +87,17 @@ public class TracingServerInterceptor implements ServerInterceptor {
       extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
     final Span span;
 
-    TracingServerCall(final Span span, final ServerCall<ReqT, RespT> delegate) {
+    TracingServerCall(Span span, ServerCall<ReqT, RespT> delegate) {
       super(delegate);
       this.span = span;
     }
 
     @Override
-    public void close(final Status status, final Metadata trailers) {
+    public void close(Status status, Metadata trailers) {
       DECORATE.onClose(span, status);
       try (Scope scope = currentContextWith(span)) {
         delegate().close(status, trailers);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         throw e;
       }
@@ -111,13 +109,13 @@ public class TracingServerInterceptor implements ServerInterceptor {
     private final Span span;
     private final AtomicInteger messageId = new AtomicInteger();
 
-    TracingServerCallListener(final Span span, final ServerCall.Listener<ReqT> delegate) {
+    TracingServerCallListener(Span span, ServerCall.Listener<ReqT> delegate) {
       super(delegate);
       this.span = span;
     }
 
     @Override
-    public void onMessage(final ReqT message) {
+    public void onMessage(ReqT message) {
       Attributes attributes =
           Attributes.of(
               "message.type", AttributeValue.stringAttributeValue("RECEIVED"),
@@ -132,7 +130,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onHalfClose() {
       try (Scope scope = currentContextWith(span)) {
         delegate().onHalfClose();
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
         span.end();
@@ -146,7 +144,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       try (Scope scope = currentContextWith(span)) {
         delegate().onCancel();
         span.setAttribute("canceled", true);
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         throw e;
       } finally {
@@ -160,7 +158,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       // Finishes span.
       try (Scope scope = currentContextWith(span)) {
         delegate().onComplete();
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         throw e;
       } finally {
@@ -173,7 +171,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onReady() {
       try (Scope scope = currentContextWith(span)) {
         delegate().onReady();
-      } catch (final Throwable e) {
+      } catch (Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
         span.end();

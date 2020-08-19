@@ -16,9 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.geode;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.TRACER;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,9 +27,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
@@ -88,8 +88,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This final Region thiz, @Advice.Origin final Method method) {
+    public static SpanWithScope onEnter(@Advice.This Region thiz, @Advice.Origin Method method) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
@@ -105,7 +104,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
@@ -124,9 +123,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
-        @Advice.This final Region thiz,
-        @Advice.Origin final Method method,
-        @Advice.Argument(0) final String query) {
+        @Advice.This Region thiz, @Advice.Origin Method method, @Advice.Argument(0) String query) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
@@ -143,7 +140,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }

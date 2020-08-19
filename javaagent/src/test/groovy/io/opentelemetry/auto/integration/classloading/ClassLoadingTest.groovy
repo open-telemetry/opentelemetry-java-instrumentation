@@ -16,15 +16,14 @@
 
 package io.opentelemetry.auto.integration.classloading
 
+import static io.opentelemetry.auto.test.IntegrationTestUtils.createJarWithClasses
+
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.test.ClassToInstrument
 import io.opentelemetry.test.ClassToInstrumentChild
+import java.lang.ref.WeakReference
 import spock.lang.Specification
 import spock.lang.Timeout
-
-import java.lang.ref.WeakReference
-
-import static io.opentelemetry.auto.test.IntegrationTestUtils.createJarWithClasses
 
 @Timeout(10)
 class ClassLoadingTest extends Specification {

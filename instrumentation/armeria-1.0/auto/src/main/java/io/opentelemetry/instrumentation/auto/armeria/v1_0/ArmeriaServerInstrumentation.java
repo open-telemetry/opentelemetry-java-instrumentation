@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.linecorp.armeria.server.ServerBuilder;
-import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

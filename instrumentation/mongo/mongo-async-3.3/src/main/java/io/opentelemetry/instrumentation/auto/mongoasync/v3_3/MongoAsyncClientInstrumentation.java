@@ -27,8 +27,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
 import com.mongodb.event.CommandListener;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.instrumentation.auto.mongo.TracingCommandListener;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
@@ -81,8 +81,8 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void injectTraceListener(
-        @Advice.This final MongoClientSettings.Builder builder,
-        @Advice.FieldValue("commandListeners") final List<CommandListener> commandListeners) {
+        @Advice.This MongoClientSettings.Builder builder,
+        @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
       for (CommandListener commandListener : commandListeners) {
         if (commandListener instanceof TracingCommandListener) {
           return;

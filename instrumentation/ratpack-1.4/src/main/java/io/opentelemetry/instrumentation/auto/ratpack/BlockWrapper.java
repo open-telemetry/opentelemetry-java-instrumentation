@@ -35,7 +35,7 @@ public class BlockWrapper implements Block {
   private final Block delegate;
   private final Span span;
 
-  private BlockWrapper(final Block delegate, final Span span) {
+  private BlockWrapper(Block delegate, Span span) {
     assert span != null;
     this.delegate = delegate;
     this.span = span;
@@ -43,12 +43,12 @@ public class BlockWrapper implements Block {
 
   @Override
   public void execute() throws Exception {
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       delegate.execute();
     }
   }
 
-  public static Block wrapIfNeeded(final Block delegate) {
+  public static Block wrapIfNeeded(Block delegate) {
     Span span = TRACER.getCurrentSpan();
     if (delegate instanceof BlockWrapper || !span.getContext().isValid()) {
       return delegate;

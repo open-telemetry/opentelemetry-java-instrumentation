@@ -16,19 +16,19 @@
 
 package io.opentelemetry.instrumentation.auto.javaconcurrent;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
+import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
@@ -64,14 +64,14 @@ public final class CallableInstrumentation extends Instrumenter.Default {
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This final Callable thiz) {
+    public static Scope enter(@Advice.This Callable thiz) {
       ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

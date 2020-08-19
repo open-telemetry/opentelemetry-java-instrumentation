@@ -102,7 +102,7 @@ public class LoadGenerator implements Callable<Integer> {
     }
   }
 
-  public static void main(final String[] args) {
+  public static void main(String[] args) {
     int exitCode = new CommandLine(new LoadGenerator()).execute(args);
     System.exit(exitCode);
   }

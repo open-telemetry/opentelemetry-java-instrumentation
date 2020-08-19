@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
+import static io.opentelemetry.trace.TracingContextUtils.getSpan
+import static io.opentelemetry.trace.TracingContextUtils.withSpan
+
 import io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
-
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.instrumentation.api.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE
-import static io.opentelemetry.trace.TracingContextUtils.getSpan
-import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 class RequestDispatcherTest extends AgentTestRunner {
 

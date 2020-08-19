@@ -27,9 +27,9 @@ jar {
   }
 }
 
-CopySpec isolateSpec(Collection<Task> sourceTasks) {
+CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
   return copySpec {
-    from(sourceTasks.collect { zipTree(it.archiveFile) }) {
+    from({ projectsWithShadowJar.tasks.shadowJar.collect { zipTree(it.archiveFile) } }) {
       // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
       into 'inst'
       rename '(^.*)\\.class$', '$1.classdata'
@@ -41,18 +41,19 @@ CopySpec isolateSpec(Collection<Task> sourceTasks) {
 
 //Includes everything needed for OOTB experience
 shadowJar {
-  def sourceTasks = [project(':instrumentation').tasks.shadowJar, project(':auto-exporters').tasks.shadowJar]
-  dependsOn sourceTasks
-  with isolateSpec(sourceTasks)
+  dependsOn ':instrumentation:shadowJar'
+  dependsOn ':javaagent-exporters:shadowJar'
+  def projectsWithShadowJar = [project(':instrumentation'), project(':javaagent-exporters')]
+  with isolateSpec(projectsWithShadowJar)
 }
 
 //Includes instrumentations, but not exporters
 task lightShadow(type: ShadowJar) {
   from sourceSets.main.output
 
-  def sourceTasks = [project(':instrumentation').tasks.shadowJar]
-  dependsOn sourceTasks
-  with isolateSpec(sourceTasks)
+  dependsOn ':instrumentation:shadowJar'
+  def projectsWithShadowJar = [project(':instrumentation')]
+  with isolateSpec(projectsWithShadowJar)
 }
 
 publishing {
@@ -74,30 +75,30 @@ tasks.withType(ShadowJar).configureEach {
   exclude '**/module-info.class'
 
   // Prevents conflict with other SLF4J instances. Important for premain.
-  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
   // rewrite dependencies calling Logger.getLogger
-  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
 
   // prevents conflict with library instrumentation
-  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.auto.shaded.instrumentation.api'
+  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API
-  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
-  relocate "io.opentelemetry.common", "io.opentelemetry.auto.shaded.io.opentelemetry.common"
-  relocate "io.opentelemetry.context", "io.opentelemetry.auto.shaded.io.opentelemetry.context"
-  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.correlationcontext"
-  relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
-  relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"
-  relocate "io.opentelemetry.trace", "io.opentelemetry.auto.shaded.io.opentelemetry.trace"
+  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.javaagent.shaded.io.opentelemetry.correlationcontext"
+  relocate "io.opentelemetry.internal", "io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"
+  relocate "io.opentelemetry.metrics", "io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"
+  relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"
 
   // relocate OpenTelemetry API dependency
-  relocate "io.grpc", "io.opentelemetry.auto.shaded.io.grpc"
+  relocate "io.grpc", "io.opentelemetry.javaagent.shaded.io.grpc"
 }
 
 dependencies {
   testImplementation project(':javaagent-bootstrap')
   testImplementation project(':auto-api')
-  testImplementation project(':library-api')
+  testImplementation project(':instrumentation-api')
   testImplementation project(':utils:test-utils')
 
   testImplementation deps.testLogging
@@ -110,7 +111,7 @@ dependencies {
 
 tasks.withType(Test).configureEach {
   // Multi-threaded logging seems to be causing deadlocks with Gradle's log capture.
-  //  jvmArgs "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"
+  //  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
   //  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
   doFirst {
