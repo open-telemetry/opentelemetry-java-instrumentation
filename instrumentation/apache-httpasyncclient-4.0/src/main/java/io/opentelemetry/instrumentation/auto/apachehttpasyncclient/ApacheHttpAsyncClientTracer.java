@@ -21,7 +21,6 @@ import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.HttpHe
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -91,15 +90,6 @@ public class ApacheHttpAsyncClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.apache-httpasyncclient-4.0";
-  }
-
-  /**
-   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
-   * name.
-   */
-  @Override
-  public Span startSpan(String spanName) {
-    return tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).startSpan();
   }
 
   @Override

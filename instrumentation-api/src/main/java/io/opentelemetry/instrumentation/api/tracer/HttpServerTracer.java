@@ -28,6 +28,7 @@ import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
+import io.opentelemetry.instrumentation.api.tracer.utils.HttpUrlUtils;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -175,43 +176,13 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     if (userAgent != null) {
       SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
     }
-    // Copy of HttpClientTracer url handling
+
     try {
       URI url = url(request);
-      if (url != null) {
-        StringBuilder urlBuilder = new StringBuilder();
-        if (url.getScheme() != null) {
-          urlBuilder.append(url.getScheme());
-          urlBuilder.append("://");
-        }
-        if (url.getHost() != null) {
-          urlBuilder.append(url.getHost());
-          if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-            urlBuilder.append(":");
-            urlBuilder.append(url.getPort());
-          }
-        }
-        String path = url.getPath();
-        if (path.isEmpty()) {
-          urlBuilder.append("/");
-        } else {
-          urlBuilder.append(path);
-        }
-        String query = url.getQuery();
-        if (query != null) {
-          urlBuilder.append("?").append(query);
-        }
-        String fragment = url.getFragment();
-        if (fragment != null) {
-          urlBuilder.append("#").append(fragment);
-        }
-
-        span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
-
-        if (Config.get().isHttpServerTagQueryString()) {
-          span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
-          span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
-        }
+      HttpUrlUtils.setHttpUrl(span, url);
+      if (Config.get().isHttpServerTagQueryString()) {
+        span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+        span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
       }
     } catch (Exception e) {
       log.debug("Error tagging url", e);
