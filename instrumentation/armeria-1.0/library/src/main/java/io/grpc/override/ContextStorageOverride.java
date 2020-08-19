@@ -23,6 +23,19 @@ import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A {@link Storage} override of the gRPC context that uses an Armeria {@link RequestContext} as
+ * backing storage when available. Armeria provides idioms for propagating {@link RequestContext}
+ * which are inherently tied to request processing, so by using it for our storage as well, we can
+ * make sure a {@link io.opentelemetry.trace.Span} is propagated throughout the lifecycle of the
+ * request with it.
+ *
+ * <p>This class is automatically picked up by gRPC because it follows a specific package / class
+ * naming convention.
+ *
+ * <p>Contexts created when an Armeria context is not available follow the same pattern as the gRPC
+ * default of using a normal {@link ThreadLocal}.
+ */
 public class ContextStorageOverride extends Storage {
 
   private static final Logger logger = LoggerFactory.getLogger(ContextStorageOverride.class);

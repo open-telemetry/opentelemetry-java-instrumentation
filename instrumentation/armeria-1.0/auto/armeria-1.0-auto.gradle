@@ -22,9 +22,3 @@ dependencies {
 
   testImplementation project(':instrumentation:armeria-1.0:testing')
 }
-
-tasks.withType(Test) {
-  // Armeria has its own mechanism for context propagation which we don't want our automatic context
-  // propagation mechanism to interfere with.
-  jvmArgs '-Dotel.integration.java_concurrent.enabled=false'
-}
