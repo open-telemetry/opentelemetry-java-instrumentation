@@ -130,7 +130,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query);
-      Futures.addCallback(future, createCallback(span));
+      addCallbackToEndSpan(future, span);
       return future;
     }
   }
@@ -140,7 +140,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query, values);
-      Futures.addCallback(future, createCallback(span));
+      addCallbackToEndSpan(future, span);
       return future;
     }
   }
@@ -150,7 +150,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(query, values);
-      Futures.addCallback(future, createCallback(span));
+      addCallbackToEndSpan(future, span);
       return future;
     }
   }
@@ -161,7 +161,7 @@ public class TracingSession implements Session {
     Span span = TRACER.startSpan(session, query);
     try (Scope ignored = TRACER.startScope(span)) {
       ResultSetFuture future = session.executeAsync(statement);
-      Futures.addCallback(future, createCallback(span));
+      addCallbackToEndSpan(future, span);
       return future;
     }
   }
@@ -222,17 +222,20 @@ public class TracingSession implements Session {
     return query == null ? "" : query;
   }
 
-  private static FutureCallback<ResultSet> createCallback(final Span span) {
-    return new FutureCallback<ResultSet>() {
-      @Override
-      public void onSuccess(ResultSet result) {
-        TRACER.end(span, result.getExecutionInfo());
-      }
+  private void addCallbackToEndSpan(ResultSetFuture future, final Span span) {
+    Futures.addCallback(
+        future,
+        new FutureCallback<ResultSet>() {
+          @Override
+          public void onSuccess(ResultSet result) {
+            TRACER.end(span, result.getExecutionInfo());
+          }
 
-      @Override
-      public void onFailure(Throwable t) {
-        TRACER.endExceptionally(span, t);
-      }
-    };
+          @Override
+          public void onFailure(Throwable t) {
+            TRACER.endExceptionally(span, t);
+          }
+        },
+        directExecutor());
   }
 }
