@@ -39,6 +39,11 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
   }
 
   @Override
+  public void record(long l) {
+    agentLongValueRecorder.record(l);
+  }
+
+  @Override
   public BoundLongValueRecorder bind(Labels labels) {
     return new BoundInstrument(agentLongValueRecorder.bind(LabelBridging.toAgent(labels)));
   }
