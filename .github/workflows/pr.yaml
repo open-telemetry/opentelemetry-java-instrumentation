@@ -24,17 +24,14 @@ jobs:
         with:
           java-version: 11
 
-      - name: Cache gradle dependencies
+      - name: Test
         uses: burrunan/gradle-cache-action@v1
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           job-id: jdk${{ matrix.java }}
-
-      - name: Test with Gradle
-        uses: nick-invision/retry@v1
-        with:
-          command: ./gradlew testJava${{ matrix.java }} --stacktrace
-          timeout_minutes: 60
-          max_attempts: 3
+        arguments: testJava${{ matrix.java }} --stacktrace
 
       - name: Aggregate test reports with ciMate
         if: always()
