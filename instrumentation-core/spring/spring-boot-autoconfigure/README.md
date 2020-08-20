@@ -186,8 +186,7 @@ import io.opentelemetry.trace.Tracer;
 public class TracedClass {
 
     @Autowired
-    // Tracer bean is provided by
-    // io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration.java
+    // Tracer bean is provided by spring-boot-autoconfigure
     Tracer tracer;
 
     @WithSpan
