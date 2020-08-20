@@ -394,14 +394,14 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 |Feature   				|Property   										|Default Value
 |---					|---												|---
-|Otlp Exporter  	 	|opentelemetry.trace.exporters.otlp.servicename 	|OtlpGrpcSpanExporter.DEFAULT_SERVICE_NAME
-|				  		|opentelemetry.trace.exporters.otlp.endpoint		|OtlpGrpcSpanExporter.DEFAULT_ENDPOINT
-|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|OtlpGrpcSpanExporter.DEFAULT_DEADLINE_MS
-|Jaeger Exporter  	 	|opentelemetry.trace.exporters.jaeger.servicename 	|JaegerGrpcSpanExporter.DEFAULT_SERVICE_NAME
-|				  		|opentelemetry.trace.exporters.jaeger.endpoint		|JaegerGrpcSpanExporter.DEFAULT_ENDPOINT
-|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|JaegerGrpcSpanExporter.DEFAULT_DEADLINE_MS
-|Zipkin Exporter 		|opentelemetry.trace.exporters.jaeger.servicename	|ZipkinSpanExporter.DEFAULT_SERVICE_NAME
-|				 		|opentelemetry.trace.exporters.jaeger.endpoint		|ZipkinSpanExporter.DEFAULT_ENDPOINT
+|Otlp Exporter  	 	|opentelemetry.trace.exporters.otlp.servicename 	|unknown
+|				  		|opentelemetry.trace.exporters.otlp.endpoint		|localhost:55680
+|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1ms
+|Jaeger Exporter  	 	|opentelemetry.trace.exporters.jaeger.servicename 	|unknown
+|				  		|opentelemetry.trace.exporters.jaeger.endpoint		|localhost:14250
+|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1ms
+|Zipkin Exporter 		|opentelemetry.trace.exporters.jaeger.servicename	|unknown
+|				 		|opentelemetry.trace.exporters.jaeger.endpoint		|http://localhost:9411/api/v2/spans
 
 ##### Tracer Properties
 
