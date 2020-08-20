@@ -8,21 +8,9 @@ apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  lagomTest
-
   version101Test {
     dirName = 'test'
   }
-}
-
-compileLagomTestJava {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-}
-
-compileLagomTestGroovy {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
 }
 
 muzzle {
@@ -68,31 +56,14 @@ dependencies {
   library group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
   library group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.4.14'
 
-  lagomTestImplementation project(':instrumentation:akka-http-10.0')
-
-  lagomTestImplementation group: 'com.lightbend.lagom', name: 'lagom-javadsl-testkit_2.11', version: '1.4.0'
-
   // There are some internal API changes in 10.1 that we would like to test separately for
   version101TestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
   version101TestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'
 }
 
-test.dependsOn lagomTest
 test.dependsOn version101Test
 
 compileVersion101TestGroovy {
   classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
   dependsOn compileVersion101TestScala
-}
-
-// Lagom test supports running only on java 8 for now.
-// To run it on java 11 requires some complicated juggling of scala dependencies
-// At the same time, "minJavaVersionForTests"/"maxJavaVersionForTests" functionality
-// does not work currently with custom source sets.
-// They all use the same constraints as the main test source set.
-lagomTest {
-  onlyIf {
-    String java8Home = findJavaHome(JavaVersion.VERSION_1_8)
-    java8Home != null && executable == toExecutable(java8Home)
-  }
 }

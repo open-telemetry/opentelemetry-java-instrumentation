@@ -19,8 +19,10 @@ package io.opentelemetry.instrumentation.auto.play.v2_4;
 import static io.opentelemetry.instrumentation.auto.play.v2_4.PlayTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Headers;
@@ -31,7 +33,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
-    Span span = TRACER.startSpan("play.request");
+    Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
     return new SpanWithScope(span, currentContextWith(span));
   }
 
@@ -57,7 +59,7 @@ public class PlayAdvice {
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
-    Span rootSpan = TRACER.getCurrentServerSpan();
+    Span rootSpan = BaseTracer.getCurrentServerSpan();
     // set the span name on the upstream akka/netty span
     TRACER.updateSpanName(rootSpan, req);
   }

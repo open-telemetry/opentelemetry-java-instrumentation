@@ -23,6 +23,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
@@ -117,7 +118,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   protected void onPeerConnection(Span span, CONNECTION connection) {
-    onPeerConnection(span, peerAddress(connection));
+    NetPeerUtils.setNetPeer(span, peerAddress(connection));
   }
 
   protected void onStatement(Span span, String statement) {

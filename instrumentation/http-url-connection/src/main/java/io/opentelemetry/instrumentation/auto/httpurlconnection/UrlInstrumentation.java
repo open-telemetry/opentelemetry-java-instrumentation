@@ -26,10 +26,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.InternalJarURLHandler;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URL;
 import java.net.URLStreamHandler;
@@ -83,14 +84,14 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        Span span = TRACER.startSpan(protocol + ".request");
+        Span span = TRACER.startSpan(protocol + ".request", Kind.CLIENT);
         try (Scope scope = currentContextWith(span)) {
           span.setAttribute(SemanticAttributes.HTTP_URL.key(), url.toString());
           span.setAttribute(
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            BaseTracer.setPeer(span, host, null);
+            NetPeerUtils.setNetPeer(span, host, null);
           }
 
           TRACER.endExceptionally(span, throwable);

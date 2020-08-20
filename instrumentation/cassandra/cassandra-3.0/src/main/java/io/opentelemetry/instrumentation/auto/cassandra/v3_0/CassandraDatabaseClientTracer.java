@@ -20,6 +20,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -57,9 +58,9 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
     return null;
   }
 
-  public Span onResponse(Span span, ExecutionInfo executionInfo) {
+  public void end(Span span, ExecutionInfo executionInfo) {
     Host host = executionInfo.getQueriedHost();
-    onPeerConnection(span, host.getSocketAddress());
-    return span;
+    NetPeerUtils.setNetPeer(span, host.getSocketAddress());
+    end(span);
   }
 }

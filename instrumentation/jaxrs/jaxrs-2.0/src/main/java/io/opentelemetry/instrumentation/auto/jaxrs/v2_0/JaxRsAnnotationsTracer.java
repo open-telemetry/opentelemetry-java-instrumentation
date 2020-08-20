@@ -44,7 +44,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
     Span span = tracer.spanBuilder("jax-rs.request").startSpan();
-    updateSpanNames(span, getCurrentServerSpan(), target, method);
+    updateSpanNames(span, BaseTracer.getCurrentServerSpan(), target, method);
     return span;
   }
 

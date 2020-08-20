@@ -40,7 +40,7 @@ configurations {
     canBeResolved = false
     canBeConsumed = false
   }
-  [library, testLibrary].each {configuration ->
+  [library, testLibrary].each { configuration ->
     // We use whenObjectAdded and copy into the real configurations instead of extension to allow
     // mutating the version for latest dep tests.
     configuration.dependencies.whenObjectAdded {
