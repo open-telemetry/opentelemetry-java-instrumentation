@@ -20,11 +20,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class ExporterAdaptersTest extends Specification {
-  @Shared
-  def projectVersion = System.getProperty("projectVersion")
-
-  @Shared
-  def adapterRoot = System.getProperty("adapterRoot")
 
   @Shared
   def otlpExporterJar = System.getProperty("otlpExporterJar")
@@ -37,9 +32,6 @@ class ExporterAdaptersTest extends Specification {
 
   @Shared
   def zipkinExporterJar = System.getProperty("zipkinExporterJar")
-
-  @Shared
-  def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
 
   def "test jars exist"() {
     when:
