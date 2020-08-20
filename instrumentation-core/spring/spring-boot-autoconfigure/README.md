@@ -6,8 +6,10 @@ Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1
 
 ### Add these dependencies to your project.
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
- - Minimum version: `0.8.0`
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+ - Minimum version: `0.7.0`
+ - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
+
 
 For Maven add to your `pom.xml`:
 
@@ -116,14 +118,6 @@ For Maven add to your `pom.xml`:
     <artifactId>opentelemetry-extension-auto-annotations</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-
-  <!-- Slf4j log correlation support -->
-  <dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-api</artifactId>
-    <version>SLF4J_VERSION</version>
-  </dependency>
-
 </dependencies>
 ```
 
@@ -147,9 +141,6 @@ implementation "org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION"
 //Enables instrumentation using @WithSpan
 implementation "org.springframework:spring-aop:SPRING_VERSION"
 implementation "io.opentelemetry:opentelemetry-extension-auto-annotations:OPENTELEMETRY_VERSION"
-
-//Slf4j log correlation support
-implementation "org.sl4j:slf4j-api:SLF4J_VERSION"
 ```
 
 #### OpenTelemetry Auto Configuration
@@ -359,9 +350,6 @@ public class TracedClass {
    },
 ]
 ```
-
-<!-- #### In Development - Slf4j Log Correlation  -->
-<!-- TODO: Blocked by:  -->
 
 #### Spring Support
 
