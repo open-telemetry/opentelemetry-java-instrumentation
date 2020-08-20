@@ -12,8 +12,12 @@ Even for supporting old Android API levels:
 
 There are some Java 8 APIs that Android does not desugar, but we can use
 [animal sniffer plugin](https://github.com/xvik/gradle-animalsniffer-plugin) to ensure we don't use
-those particular Java 8 APIs that not available in whatever base Android level we decide to support,
-e.g. OkHttp takes this approach to [ensure compliance with Android API level 21](https://github.com/square/okhttp/blob/96a2118dd447ebc28a64d9b11a431ca642edc441/build.gradle#L144-L153)
+those particular Java 8 APIs that are not available in the base Android level we decide to support,
+e.g. OkHttp takes this approach to
+[ensure compliance with Android API level 21](https://github.com/square/okhttp/blob/96a2118dd447ebc28a64d9b11a431ca642edc441/build.gradle#L144-L153)
+
+We will use this approach for the `instrumentation-api` module and for any library instrumentation
+that would be useful to Android developers.
 
 ### Modern test tooling requires Java 8+
 
