@@ -1,6 +1,6 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-    compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
-    implementation project(':javaagent-tooling')
+  compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
+  implementation project(':javaagent-tooling')
 }
