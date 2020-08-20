@@ -31,6 +31,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.io.IOException;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -98,7 +99,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Span parentSpan = TRACER.getCurrentSpan();
-      Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME);
+      Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
