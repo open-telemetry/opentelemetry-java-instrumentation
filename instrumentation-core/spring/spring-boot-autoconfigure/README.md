@@ -209,7 +209,7 @@ public class TracedClass {
 
 #### Sample Traces
 
-The traces below were exported using Zipkin. 
+The traces below were exported using Zipkin.
 
 ##### Spring Web MVC - Server Span
 ```json
