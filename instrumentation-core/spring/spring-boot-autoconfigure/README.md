@@ -166,7 +166,7 @@ Provides auto-configurations for the OpenTelemtry WebClient ExchangeFilter defin
 
 This feature uses spring-aop to wrap methods annotated with `@WithSpan` in a span.
 
-Note - This annotation can only be applied to bean methods managed by the spring application context. Check out [spring-aop](https://docs.spring.io/spring/docs/3.0.x/spring-framework-reference/html/aop.html) to learn more about aspect weaving in spring.
+Note - This annotation can only be applied to bean methods managed by the spring application context. Check out [spring-aop](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop) to learn more about aspect weaving in spring.
 
 ##### Usage
 
