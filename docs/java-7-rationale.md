@@ -38,3 +38,21 @@ standard tests against it.
 We believe that Java 7 users are primarily in maintenance mode and not interested in cracking open
 their code anymore and adding library (manual) instrumentation, so we don't believe there is much
 interest in library instrumentation targeting Java 7.
+
+### Java 7 usage
+
+Certainly one factor to consider is what percentage of production applications are running Java 7.
+
+Luckily, New Relic
+[published their numbers recently](https://blog.newrelic.com/technology/state-of-java),
+so we know that ~2.5% of production applications are still running Java 7 as of March 2020.
+
+### Alternatives for Java 7 users
+
+We understand the situations that lead applications to get stuck on Java 7 (we've been there
+ourselves), and we agree that those applications need monitoring too.
+
+Our decision would probably be different if those Java 7 users did not have any other alternative
+for codeless monitoring, but there are many existing codeless monitoring solutions that still
+support Java 7 (both open source and commercial), and probably many of those applications, having
+been in production for a long time already, are already using one of those solutions.
