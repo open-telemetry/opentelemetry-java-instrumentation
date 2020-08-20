@@ -50,7 +50,6 @@ dependencies {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
 
-  latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
   latestDepTestImplementation(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.+') {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
