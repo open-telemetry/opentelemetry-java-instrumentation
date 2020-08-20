@@ -1,21 +1,19 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 ext {
-    minJavaVersionForTests = JavaVersion.VERSION_1_8
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 muzzle {
-    pass {
-        group = "io.kubernetes"
-        module = "client-java-api"
-        versions = "[7.0.0,)"
-        assertInverse = true
-    }
+  pass {
+    group = "io.kubernetes"
+    module = "client-java-api"
+    versions = "[7.0.0,)"
+    assertInverse = true
+  }
 }
 
 dependencies {
-    library(group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0')
-
-    implementation project(':javaagent-tooling')
+  library(group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0')
 }
 

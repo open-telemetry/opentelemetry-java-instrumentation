@@ -19,11 +19,13 @@ gradleEnterprise {
 
 apply plugin: 'com.github.burrunan.s3-build-cache'
 
+def awsAccessKeyId = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")
+
 buildCache {
   remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
     region = 'us-west-2'
     bucket = 'opentelemetry-java-instrumentation-gradle-test1'
-    push = System.getenv('S3_BUILD_CACHE_ACCESS_KEY_ID') != null
+    push = isCI && awsAccessKeyId != null && !awsAccessKeyId.isEmpty()
   }
 }
 
@@ -50,7 +52,7 @@ include ':utils:test-utils'
 include ':smoke-tests'
 
 // instrumentation:
-include ':instrumentation:akka-context-propagation'
+include ':instrumentation:akka-context-propagation-2.5'
 include ':instrumentation:akka-http-10.0'
 include ':instrumentation:apache-httpasyncclient-4.0'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0'

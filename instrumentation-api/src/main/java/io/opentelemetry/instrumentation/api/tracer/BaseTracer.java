@@ -18,15 +18,12 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
 public abstract class BaseTracer {
@@ -51,21 +48,15 @@ public abstract class BaseTracer {
 
   public Span startSpan(Class<?> clazz) {
     String spanName = spanNameForClass(clazz);
-    return startSpan(spanName);
+    return startSpan(spanName, Kind.INTERNAL);
   }
 
-  public Span startSpan(String spanName) {
-    return tracer.spanBuilder(spanName).startSpan();
+  public Span startSpan(String spanName, Kind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
   public Span getCurrentSpan() {
     return tracer.getCurrentSpan();
-  }
-
-  /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
-  // TODO when all decorator are replaced with tracers, make this method instance
-  public static Span getCurrentServerSpan() {
-    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
   }
 
   protected abstract String getInstrumentationName();
@@ -149,44 +140,9 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public static void onPeerConnection(Span span, InetSocketAddress remoteConnection) {
-    if (remoteConnection != null) {
-      InetAddress remoteAddress = remoteConnection.getAddress();
-      if (remoteAddress != null) {
-        onPeerConnection(span, remoteAddress);
-      } else {
-        // Failed DNS lookup, the host string is the name.
-        setPeer(span, remoteConnection.getHostString(), null);
-      }
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
-    }
-  }
-
-  public static void onPeerConnection(Span span, InetAddress remoteAddress) {
-    setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
-  }
-
-  public static void setPeer(Span span, String peerName, String peerIp) {
-    if (peerName != null && !peerName.equals(peerIp)) {
-      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
-    }
-    if (peerIp != null) {
-      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
-    }
-    String peerService = mapToPeer(peerName);
-    if (peerService == null) {
-      peerService = mapToPeer(peerIp);
-    }
-    if (peerService != null) {
-      SemanticAttributes.PEER_SERVICE.set(span, peerService);
-    }
-  }
-
-  protected static String mapToPeer(String endpoint) {
-    if (endpoint == null) {
-      return null;
-    }
-
-    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
+  /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
+  // TODO when all decorator are replaced with tracers, make this method instance
+  public static Span getCurrentServerSpan() {
+    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
   }
 }

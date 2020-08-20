@@ -2,5 +2,4 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   compileOnly group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
-  implementation project(':javaagent-tooling')
 }

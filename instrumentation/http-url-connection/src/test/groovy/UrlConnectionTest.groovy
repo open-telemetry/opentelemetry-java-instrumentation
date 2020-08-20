@@ -20,7 +20,6 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
-import io.opentelemetry.instrumentation.auto.api.AgentClassLoader
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class UrlConnectionTest extends AgentTestRunner {
@@ -67,69 +66,6 @@ class UrlConnectionTest extends AgentTestRunner {
     scheme << ["http", "https"]
 
     url = new URI("$scheme://localhost:$UNUSABLE_PORT").toURL()
-  }
-
-  def "trace request with connection failure to a local file with broken url path"() {
-    setup:
-    def url = new URI("file:/some-random-file%abc").toURL()
-
-    when:
-    runUnderTrace("someTrace") {
-      url.openConnection()
-    }
-
-    then:
-    thrown IllegalArgumentException
-
-    expect:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          operationName "someTrace"
-          parent()
-          errored true
-          errorEvent IllegalArgumentException, String
-        }
-        span(1) {
-          operationName "file.request"
-          spanKind CLIENT
-          childOf span(0)
-          errored true
-          errorEvent IllegalArgumentException, String
-          attributes {
-            "${SemanticAttributes.NET_PEER_PORT.key()}" 80
-            // FIXME: These attributes really make no sense for non-http connections, why do we set them?
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-          }
-        }
-      }
-    }
-  }
-
-  def "AgentClassloader ClassNotFoundException doesn't create span"() {
-    given:
-    ClassLoader agentLoader = new AgentClassLoader(null, null, null)
-    ClassLoader childLoader = new URLClassLoader(new URL[0], agentLoader)
-
-    when:
-    runUnderTrace("someTrace") {
-      childLoader.loadClass("io.opentelemetry.auto.doesnotexist")
-    }
-
-    then:
-    thrown ClassNotFoundException
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "someTrace"
-          parent()
-          errored true
-          errorEvent ClassNotFoundException, String
-        }
-      }
-    }
   }
 
   String expectedOperationName(String method) {

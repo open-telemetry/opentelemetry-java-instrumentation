@@ -7,5 +7,5 @@ allprojects {
     omitVisitors = ["FindDeadLocalStores"]
     effort = "max"
   }
-  
+
 }

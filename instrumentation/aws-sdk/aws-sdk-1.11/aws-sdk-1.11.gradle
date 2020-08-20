@@ -25,7 +25,11 @@ testSets {
   // We test older version in separate test set to test newer version and latest deps in the 'default'
   // test dir. Otherwise we get strange warnings in Idea.
   test_before_1_11_106 {
-    dirName = 'test_before_1_11_106'
+    filter {
+      // this is needed because "test.dependsOn test_before_1_11_106", and so without this,
+      // running a single test in the default test set will fail
+      setFailOnNoMatchingTests(false)
+    }
   }
 }
 

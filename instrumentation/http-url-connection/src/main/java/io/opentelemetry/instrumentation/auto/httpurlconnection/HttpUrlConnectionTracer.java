@@ -20,8 +20,6 @@ import static io.opentelemetry.instrumentation.auto.httpurlconnection.HeadersInj
 
 import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -64,14 +62,5 @@ public class HttpUrlConnectionTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.http-url-connection";
-  }
-
-  /**
-   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
-   * name.
-   */
-  @Override
-  public Span startSpan(String spanName) {
-    return tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).startSpan();
   }
 }
