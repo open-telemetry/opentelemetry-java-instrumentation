@@ -2,14 +2,9 @@
 
 apply plugin: 'scala'
 
-configurations {
-  all {
-    if (it.name != "zinc") {
-      resolutionStrategy {
-        force deps.scala
-      }
-    }
-  }
+dependencies {
+  implementation deps.scala
+  testImplementation deps.scala
 }
 
 compileTestGroovy {
