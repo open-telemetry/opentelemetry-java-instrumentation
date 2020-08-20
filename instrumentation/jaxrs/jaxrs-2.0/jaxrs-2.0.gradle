@@ -50,7 +50,7 @@ dependencies {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
 
-  latestDepTestImplementation(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.+') {
+  latestDepTestLibrary(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.+') {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
 
