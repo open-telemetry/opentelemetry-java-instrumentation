@@ -22,7 +22,7 @@ instrumentation that would be useful to Android developers
 
 ### Modern test tooling requires Java 8+
 
-Both JUnit 5 and Testcontainers both require Java 8+.
+Both JUnit 5 and Testcontainers require Java 8+.
 
 ### Auto-instrumentation (Javaagent)
 
