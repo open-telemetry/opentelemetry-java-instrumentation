@@ -16,10 +16,6 @@ muzzle {
 dependencies {
   library(group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0')
 
-  implementation project(':javaagent-tooling')
-
-  testImplementation project(':instrumentation:java-concurrent')
-
   latestDepTestLibrary group: 'com.squareup.okhttp', name: 'okhttp', version: '[2.6,3)'
 }
 

@@ -56,12 +56,6 @@ dependencies {
   library group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
   library group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.4.14'
 
-  implementation project(':javaagent-tooling')
-  implementation deps.autoservice
-  annotationProcessor deps.autoservice
-
-  testImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
-
   // There are some internal API changes in 10.1 that we would like to test separately for
   version101TestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
   version101TestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'

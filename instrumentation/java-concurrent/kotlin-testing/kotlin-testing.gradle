@@ -5,6 +5,4 @@ apply from: "$rootDir/gradle/test-with-kotlin.gradle"
 dependencies {
   testImplementation deps.kotlin
   testImplementation deps.coroutines
-
-  testImplementation project(':instrumentation:java-concurrent')
 }

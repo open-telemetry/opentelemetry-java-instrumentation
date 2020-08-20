@@ -21,8 +21,6 @@ not transitive.
 dependencies {
   library(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
 
-  implementation project(':javaagent-tooling')
-
   testImplementation(project(':testing-common')) {
     exclude module: 'okhttp'
   }
