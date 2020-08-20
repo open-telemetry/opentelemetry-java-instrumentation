@@ -32,12 +32,11 @@ import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.ExecutionException
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import java.util.concurrent.ExecutionException
 
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {

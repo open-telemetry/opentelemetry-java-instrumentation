@@ -22,7 +22,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.auto.test.base.HttpServerTest
-
+import java.util.concurrent.CompletableFuture
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -32,7 +32,6 @@ import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Application
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import java.util.concurrent.CompletableFuture
 
 @Path("")
 class JaxRsTestResource {

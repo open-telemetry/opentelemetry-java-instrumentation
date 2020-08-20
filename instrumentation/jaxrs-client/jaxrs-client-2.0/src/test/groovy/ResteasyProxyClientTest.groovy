@@ -14,96 +14,75 @@
  * limitations under the License.
  */
 
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget
-import spock.lang.AutoCleanup
-import spock.lang.Shared
-import spock.lang.Unroll
-
+import io.opentelemetry.auto.test.base.HttpClientTest
+import java.nio.charset.StandardCharsets
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
+import org.apache.http.client.utils.URLEncodedUtils
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 
-class ResteasyProxyClientTest extends AgentTestRunner {
-  @AutoCleanup
-  @Shared
-  def server = httpServer {
-    handlers {
-      prefix("hello") {
-        response.status(200)
-          .send("hello from proxy", "text/plain")
-      }
-    }
+class ResteasyProxyClientTest extends HttpClientTest {
+  @Override
+  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    def proxyMethodName = "${method}_${uri.path}".toLowerCase()
+      .replace("/", "")
+      .replace('-', '_')
+
+    def param = URLEncodedUtils.parse(uri, StandardCharsets.UTF_8.name())
+      .stream().findFirst()
+      .map({ it.value })
+      .orElse(null)
+
+    def isTestServer = headers.get("is-test-server")
+
+    def proxy = new ResteasyClientBuilder()
+      .build()
+      .target(new ResteasyUriBuilder().uri(server.address))
+      .proxy(ResteasyProxyResource)
+
+    def response = proxy."$proxyMethodName"(param, isTestServer)
+
+    callback?.call()
+
+    return response.status
   }
 
-  @Unroll
-  def "should call HTTP through Resteasy proxy (#desc)"() {
-    given:
-    def client = new ResteasyClientBuilder().build()
-    def target = client.target(server.address)
-    def proxy = ((ResteasyWebTarget) target).proxy(HttpProxyResource)
-
-    when:
-    def response = proxyMethod(proxy)
-
-    then:
-    assert getResponseBody(response) == "hello from proxy"
-
-    assertTraces(1) {
-      trace(0, 1) {
-        clientSpan(it, 0, null, path)
-      }
-    }
-
-    where:
-    desc                     | proxyMethod           | getResponseBody           | path
-    "proxy returns Response" | { it.response() }     | { it.readEntity(String) } | "/hello-response"
-    "proxy returns String"   | { it.responseBody() } | { it }                    | "/hello-body"
+  @Override
+  boolean testRedirects() {
+    false
   }
 
-  void clientSpan(TraceAssert trace, int index, Object parentSpan,
-                  String path,
-                  String method = "GET",
-                  Integer status = 200) {
-    URI uri = server.address.resolve(path)
-    trace.span(index) {
-      if (parentSpan == null) {
-        parent()
-      } else {
-        childOf((SpanData) parentSpan)
-      }
-      operationName "HTTP ${method}"
-      spanKind CLIENT
-      errored false
-      attributes {
-        "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-        "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
-      }
-    }
+  @Override
+  boolean testConnectionFailure() {
+    false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    false
   }
 }
 
 @Path("")
-interface HttpProxyResource {
+interface ResteasyProxyResource {
   @GET
-  @Path("hello-response")
-  @Produces("text/plain")
-  Response response()
+  @Path("success")
+  Response get_success(@QueryParam("with") String param,
+                       @HeaderParam("is-test-server") String isTestServer)
 
-  @GET
-  @Path("hello-body")
-  @Produces("text/plain")
-  String responseBody()
+  @POST
+  @Path("success")
+  Response post_success(@QueryParam("with") String param,
+                        @HeaderParam("is-test-server") String isTestServer)
+
+  @PUT
+  @Path("success")
+  Response put_success(@QueryParam("with") String param,
+                       @HeaderParam("is-test-server") String isTestServer)
 }

@@ -15,8 +15,6 @@ muzzle {
 }
 
 testSets {
-  latestDepTest
-
   resteasy31Test {
     dirName = 'test'
   }
@@ -56,7 +54,7 @@ dependencies {
 
   // TODO: resteasy 4.+ has changed artifact name to resteasy-core
 //  latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-core', version: '+'
-//  latestDepTestImplementation(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '+') {
+//  latestDepTestLibrary(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '+') {
 //    exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
 //  }
 }
