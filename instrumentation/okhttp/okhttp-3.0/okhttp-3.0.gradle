@@ -1,12 +1,12 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
-    pass {
-        group = "com.squareup.okhttp3"
-        module = "okhttp"
-        versions = "[3.0,)"
-        assertInverse = true
-    }
+  pass {
+    group = "com.squareup.okhttp3"
+    module = "okhttp"
+    versions = "[3.0,)"
+    assertInverse = true
+  }
 }
 
 /*
@@ -19,14 +19,14 @@ because it looks like exclusions using configurations excludes dependency even i
 not transitive.
  */
 dependencies {
-    library(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
+  library(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
 
-    implementation project(':javaagent-tooling')
+  implementation project(':javaagent-tooling')
 
-    testImplementation(project(':testing-common')) {
-        exclude module: 'okhttp'
-    }
+  testImplementation(project(':testing-common')) {
+    exclude module: 'okhttp'
+  }
 
-    // 4.x.x-alpha has been released and it looks like there are lots of incompatible changes
-    latestDepTestLibrary group: 'com.squareup.okhttp3', name: 'okhttp', version: '[3.11.0, 4.0.0*)'
+  // 4.x.x-alpha has been released and it looks like there are lots of incompatible changes
+  latestDepTestLibrary group: 'com.squareup.okhttp3', name: 'okhttp', version: '[3.11.0, 4.0.0*)'
 }
