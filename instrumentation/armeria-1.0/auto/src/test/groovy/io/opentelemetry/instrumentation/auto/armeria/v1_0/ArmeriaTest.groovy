@@ -33,10 +33,19 @@ class ArmeriaTest extends AbstractArmeriaTest implements AgentTestTrait {
   }
 
   def childSetupSpec() {
-    server.before()
+    backend.before()
+    frontend.before()
   }
 
   def childCleanupSpec() {
-    server.after()
+    backend.after()
+    frontend.after()
+  }
+
+  // Because our unit tests include io.grpc.Context in the bootstrap classloader, there does not
+  // seem to be a simple way of testing this yet.
+  @Override
+  boolean supportsContext() {
+    return false
   }
 }

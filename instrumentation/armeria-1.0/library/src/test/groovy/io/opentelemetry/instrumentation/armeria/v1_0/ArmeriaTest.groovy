@@ -34,10 +34,12 @@ class ArmeriaTest extends AbstractArmeriaTest implements InstrumentationTestTrai
   }
 
   def childSetupSpec() {
-    server.before()
+    backend.before()
+    frontend.before()
   }
 
   def cleanupSpec() {
-    server.after()
+    backend.after()
+    frontend.after()
   }
 }
