@@ -324,6 +324,12 @@ class TestHttpServer implements AutoCloseable {
         resp.setContentLength(body.bytes.length)
         resp.writer.print(body)
       }
+
+      void send(String body, String contentType) {
+        assert contentType != null
+        resp.setContentType(contentType)
+        send(body)
+      }
     }
 
     static class Headers {

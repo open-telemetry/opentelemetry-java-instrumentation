@@ -204,6 +204,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       .query(uri.query)
       .fragment(uri.fragment)
       .build()
+    return request(url, method, body)
+  }
+
+  Request.Builder request(HttpUrl url, String method, RequestBody body) {
     return new Request.Builder()
       .url(url)
       .method(method, body)

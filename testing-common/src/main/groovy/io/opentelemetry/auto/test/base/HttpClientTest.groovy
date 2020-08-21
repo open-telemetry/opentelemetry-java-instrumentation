@@ -54,6 +54,11 @@ abstract class HttpClientTest extends AgentTestRunner {
         String msg = "Hello."
         response.status(200).send(msg)
       }
+      prefix("client-error") {
+        handleDistributedRequest()
+        String msg = "Invalid RQ"
+        response.status(400).send(msg)
+      }
       prefix("error") {
         handleDistributedRequest()
         String msg = "Sorry."
