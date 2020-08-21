@@ -17,20 +17,13 @@
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.auto.test.AgentTestRunner
-import javax.ws.rs.client.Entity
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
-import org.jboss.resteasy.core.Dispatcher
-import org.jboss.resteasy.mock.MockDispatcherFactory
-import org.jboss.resteasy.mock.MockHttpRequest
-import org.jboss.resteasy.mock.MockHttpResponse
-import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -52,12 +45,9 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     def abort = abortNormal || abortPrematch
 
     when:
-    def responseText
-    def responseStatus
-
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    runUnderServerTrace("test.span") {
-      (responseText, responseStatus) = makeRequest(resource)
+    def (responseText, responseStatus) = runUnderServerTrace("test.span") {
+      makeRequest(resource)
     }
 
     then:
@@ -109,12 +99,9 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     prematchRequestFilter.abort = false
 
     when:
-    def responseText
-    def responseStatus
-
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    runUnderServerTrace("test.span") {
-      (responseText, responseStatus) = makeRequest(resource)
+    def (responseText, responseStatus) = runUnderServerTrace("test.span") {
+      makeRequest(resource)
     }
 
     then:
@@ -175,52 +162,4 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
       }
     }
   }
-}
-
-class JerseyFilterTest extends JaxRsFilterTest {
-  @Shared
-  @ClassRule
-  ResourceTestRule resources = ResourceTestRule.builder()
-    .addResource(new Resource.Test1())
-    .addResource(new Resource.Test2())
-    .addResource(new Resource.Test3())
-    .addProvider(simpleRequestFilter)
-    .addProvider(prematchRequestFilter)
-    .build()
-
-  @Override
-  def makeRequest(String url) {
-    Response response = resources.client().target(url).request().post(Entity.text(""))
-
-    return [response.readEntity(String), response.statusInfo.statusCode]
-  }
-}
-
-class ResteasyFilterTest extends JaxRsFilterTest {
-  @Shared
-  Dispatcher dispatcher
-
-  def setupSpec() {
-    dispatcher = MockDispatcherFactory.createDispatcher()
-    def registry = dispatcher.getRegistry()
-    registry.addSingletonResource(new Resource.Test1())
-    registry.addSingletonResource(new Resource.Test2())
-    registry.addSingletonResource(new Resource.Test3())
-
-    dispatcher.getProviderFactory().register(simpleRequestFilter)
-    dispatcher.getProviderFactory().register(prematchRequestFilter)
-  }
-
-  @Override
-  def makeRequest(String url) {
-    MockHttpRequest request = MockHttpRequest.post(url)
-    request.contentType(MediaType.TEXT_PLAIN_TYPE)
-    request.content(new byte[0])
-
-    MockHttpResponse response = new MockHttpResponse()
-    dispatcher.invoke(request, response)
-
-    return [response.contentAsString, response.status]
-  }
-
 }

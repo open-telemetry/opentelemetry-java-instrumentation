@@ -20,19 +20,12 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-import io.dropwizard.jetty.NonblockingServletHolder
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.undertow.Undertow
 import okhttp3.HttpUrl
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.servlet.ServletContextHandler
-import org.glassfish.jersey.server.ResourceConfig
-import org.glassfish.jersey.servlet.ServletContainer
-import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer
 import spock.lang.Unroll
 
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
@@ -184,42 +177,4 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
   }
 }
 
-class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
-  @Override
-  UndertowJaxrsServer startServer(int port) {
-    def server = new UndertowJaxrsServer()
-    server.deploy(JaxRsTestApplication)
-    server.start(Undertow.builder()
-      .addHttpListener(port, "localhost"))
-    return server
-  }
-
-  @Override
-  void stopServer(UndertowJaxrsServer server) {
-    server.stop()
-  }
-}
-
-class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
-
-  @Override
-  Server startServer(int port) {
-    def servlet = new ServletContainer(ResourceConfig.forApplicationClass(JaxRsTestApplication))
-
-    def handler = new ServletContextHandler(ServletContextHandler.SESSIONS)
-    handler.setContextPath("/")
-    handler.addServlet(new NonblockingServletHolder(servlet), "/*")
-
-    def server = new Server(port)
-    server.setHandler(handler)
-    server.start()
-
-    return server
-  }
-
-  @Override
-  void stopServer(Server httpServer) {
-    httpServer.stop()
-  }
-}

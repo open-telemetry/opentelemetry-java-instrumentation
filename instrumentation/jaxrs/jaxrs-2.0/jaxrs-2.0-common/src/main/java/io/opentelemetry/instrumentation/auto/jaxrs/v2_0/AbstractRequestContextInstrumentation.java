@@ -19,15 +19,14 @@ package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -74,39 +73,35 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
   }
 
   public static class RequestFilterHelper {
-    public static SpanWithScope createOrUpdateAbortSpan(
+    public static Span createOrUpdateAbortSpan(
         ContainerRequestContext context, Class<?> resourceClass, Method method) {
 
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
-        Span parent = BaseTracer.getCurrentServerSpan();
-        Span span = TRACER.getCurrentSpan();
+        Span serverSpan = BaseTracer.getCurrentServerSpan();
+        Span currentSpan = TRACER.getCurrentSpan();
 
-        if (span == null) {
-          span = TRACER.startSpan(resourceClass, method);
-          return new SpanWithScope(span, currentContextWith(span));
+        if (currentSpan == null || currentSpan == serverSpan) {
+          return TRACER.startSpan(resourceClass, method);
         } else {
-          TRACER.updateSpanNames(span, parent, resourceClass, method);
-          return null;
+          TRACER.updateSpanNames(currentSpan, serverSpan, resourceClass, method);
         }
-      } else {
-        return null;
       }
+      return null;
     }
 
-    public static void closeSpanAndScope(SpanWithScope spanWithScope, Throwable throwable) {
-      if (spanWithScope == null) {
+    public static void closeSpanAndScope(Span span, Scope scope, Throwable throwable) {
+      if (span == null || scope == null) {
         return;
       }
 
-      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
       } else {
         TRACER.end(span);
       }
 
-      spanWithScope.closeScope();
+      scope.close();
     }
   }
 }

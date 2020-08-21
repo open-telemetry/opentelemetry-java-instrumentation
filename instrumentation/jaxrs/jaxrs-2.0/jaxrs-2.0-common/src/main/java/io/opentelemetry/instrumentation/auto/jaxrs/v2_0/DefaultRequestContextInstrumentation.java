@@ -17,15 +17,15 @@
 package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
 import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.Local;
 
 /**
  * Default context instrumentation.
@@ -40,10 +40,13 @@ import net.bytebuddy.asm.Advice;
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope createGenericSpan(@Advice.This ContainerRequestContext context) {
-
+    public static void createGenericSpan(
+        @Advice.This ContainerRequestContext context,
+        @Local("otelSpan") Span span,
+        @Local("otelScope") Scope scope) {
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null) {
-        Class filterClass = (Class) context.getProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS);
+        Class<?> filterClass =
+            (Class<?>) context.getProperty(JaxRsAnnotationsTracer.ABORT_FILTER_CLASS);
         Method method = null;
         try {
           method = filterClass.getMethod("filter", ContainerRequestContext.class);
@@ -52,29 +55,19 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        Span span = TRACER.startSpan(filterClass, method);
-
-        return new SpanWithScope(span, currentContextWith(span));
+        span = RequestFilterHelper.createOrUpdateAbortSpan(context, filterClass, method);
+        if (span != null) {
+          scope = TRACER.startScope(span);
+        }
       }
-
-      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
-      }
-
-      Span span = spanWithScope.getSpan();
-      if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
-      } else {
-        TRACER.end(span);
-      }
-
-      spanWithScope.closeScope();
+        @Local("otelSpan") Span span,
+        @Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      RequestFilterHelper.closeSpanAndScope(span, scope, throwable);
     }
   }
 }
