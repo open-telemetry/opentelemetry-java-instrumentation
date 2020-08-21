@@ -81,9 +81,8 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
         Arrays.copyOf(
             BOOTSTRAP_PACKAGE_PREFIXES_COPY,
             BOOTSTRAP_PACKAGE_PREFIXES_COPY.length + testBS.length);
-    for (int i = 0; i < testBS.length; ++i) {
-      TEST_BOOTSTRAP_PREFIXES[i + BOOTSTRAP_PACKAGE_PREFIXES_COPY.length] = testBS[i];
-    }
+    System.arraycopy(testBS, 0, TEST_BOOTSTRAP_PREFIXES, BOOTSTRAP_PACKAGE_PREFIXES_COPY.length,
+        testBS.length);
     for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; i++) {
       TEST_BOOTSTRAP_PREFIXES[i] = TEST_BOOTSTRAP_PREFIXES[i].replace('.', '/');
     }
@@ -166,8 +165,8 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   }
 
   private static boolean isBootstrapClass(String filePath) {
-    for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; ++i) {
-      if (filePath.startsWith(TEST_BOOTSTRAP_PREFIXES[i])) {
+    for (String testBootstrapPrefix : TEST_BOOTSTRAP_PREFIXES) {
+      if (filePath.startsWith(testBootstrapPrefix)) {
         return true;
       }
     }

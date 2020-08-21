@@ -16,23 +16,3 @@ muzzle {
 dependencies {
   library group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 }
-
-//gradle.taskGraph.afterTask { task ->
-//  if (task.name == 'testBootstrapJar') {
-//    StringBuffer taskDetails = new StringBuffer()
-//    taskDetails << """"-------------
-//name:$task.name group:$task.group : $task.description
-//conv:$task.convention.plugins
-//inputs:
-//"""
-//    task.inputs.files.each { it ->
-//      taskDetails << "${it.absolutePath}\n"
-//    }
-//    taskDetails << "outputs:\n"
-//    task.outputs.files.each { it ->
-//      taskDetails << "${it.absolutePath}\n"
-//    }
-//    taskDetails << "-------------"
-//    println taskDetails
-//  }
-//}
