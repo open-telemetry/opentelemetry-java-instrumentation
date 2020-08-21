@@ -8,9 +8,9 @@ The [first section](#manual-instrumentation-with-java-sdk) will walk you through
 
 The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
 
-The third section will walk you through the annotations and configurations defined in the opentelemetry-instrumentation-spring package. This section will equip you with new tools to streamline the setup and instrumentation of OpenTelemetry on Spring and Spring Boot applications. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
+The [third section](#auto-instrumentation-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
-In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace the requests between these services using two different approaches. Finally, in section three we will explore tools in the opentelemetry-instrumentation-spring package which can improve this process.
+In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](/spring-boot-autoconfigure/README.md#features) which can improve this process.
 
 # Manual Instrumentation Guide
 
@@ -22,6 +22,10 @@ Using the [spring project initializer](https://start.spring.io/), we will create
 
 Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeService`. The Jaeger and LoggingExporter packages are recommended for exporting traces but are not required. As of May 2020, Jaeger, Zipkin, OTLP, and Logging exporters are supported by opentelemetry-java. Feel free to use whatever exporter you are most comfortable with.
 
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+ - Minimum version: `0.7.0`
+ - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
+ 
 ### Maven
 
 #### OpenTelemetry
@@ -29,46 +33,35 @@ Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeSer
 <dependency>
    <groupId>io.opentelemetry</groupId>
    <artifactId>opentelemetry-api</artifactId>
-   <version>0.5.0</version>
+   <version>OPENTELEMETRY_VERSION</version>
 </dependency>
 <dependency>
    <groupId>io.opentelemetry</groupId>
    <artifactId>opentelemetry-sdk</artifactId>
-   <version>0.5.0</version>
+   <version>OPENTELEMETRY_VERSION</version>
 </dependency>
-<dependency>
-   <groupId>io.grpc</groupId>
-   <artifactId>grpc-context</artifactId>
-   <version>1.24.0</version>
-</dependency>
-
 ```
 
-#### LoggingExporter
+#### LoggingSpanExporter
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
    <artifactId>opentelemetry-exporters-logging</artifactId>
-   <version>0.5.0</version>
+   <version>OPENTELEMETRY_VERSION</version>
 </dependency>
 ```
 
-#### JaegerExporter
+#### Jaeger Exporter
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
    <artifactId>opentelemetry-exporters-jaeger</artifactId>
-   <version>0.5.0</version>
-</dependency>
-<dependency>
-   <groupId>io.grpc</groupId>
-   <artifactId>grpc-protobuf</artifactId>
-   <version>1.27.2</version>
+   <version>OPENTELEMETRY_VERSION</version>
 </dependency>
 <dependency>
    <groupId>io.grpc</groupId>
    <artifactId>grpc-netty</artifactId>
-   <version>1.27.2</version>
+   <version>1.30.2</version>
 </dependency>
 ```
 
@@ -76,21 +69,19 @@ Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeSer
 
 #### OpenTelemetry
 ```gradle
-compile "io.opentelemetry:opentelemetry-api:0.5.0"
-compile "io.opentelemetry:opentelemetry-sdk:0.5.0"
-compile "io.grpc:grpc-context:1.24.0"
+implementation "io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION"
+implementation "io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION"
 ```
 
 #### LoggingExporter
 ```gradle
-compile "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
+implementation "io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION"
 ```
 
-#### JaegerExporter
+#### Jaeger Exporter
 ```gradle
-compile "io.opentelemetry:opentelemetry-exporters-jaeger:0.5.0"
-compile "io.grpc:grpc-protobuf:1.27.2"
-compile "io.grpc:grpc-netty:1.27.2"
+implementation "io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION"
+compile "io.grpc:grpc-netty:1.30.2"
 ```
 
 ### Tracer Configuration
@@ -598,3 +589,10 @@ Run both the MainService and TimeService projects in terminal or using an IDE (e
 To visualize this trace add a trace exporter to one or both of your applications. Instructions on how to setup LogExporter and Jaeger can be seen [above](#tracer-configuration).
 
 To create a sample trace enter `localhost:8080/message` in a browser. This trace should include a span for MainService and a span for TimeService.
+
+
+
+## Auto Instrumentation: Spring Starters
+
+<!-- TODO: Add Tutorial -->
+
