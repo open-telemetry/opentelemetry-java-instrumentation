@@ -39,13 +39,12 @@ class PlayWSClientTest extends HttpClientTest {
       request.setHeader(it.key, it.value)
     }
 
-    def status = request.execute(method).thenApply {
+    return request.execute(method).map({
       callback?.call()
       it
-    }.thenApply {
+    }).map({
       it.status
-    }
-    return status.toCompletableFuture().get()
+    }).get(1000)
   }
 
   @Override

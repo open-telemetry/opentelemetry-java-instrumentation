@@ -26,42 +26,60 @@ import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.function.Supplier
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
+import play.libs.F
 
 class PlayServerTest extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     def router =
       new RoutingDsl()
-        .GET(SUCCESS.getPath()).routeTo({
-        controller(SUCCESS) {
-          Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
-        }
-      } as Supplier)
-        .GET(QUERY_PARAM.getPath()).routeTo({
-        controller(QUERY_PARAM) {
-          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
-        }
-      } as Supplier)
-        .GET(REDIRECT.getPath()).routeTo({
-        controller(REDIRECT) {
-          Results.found(REDIRECT.getBody())
-        }
-      } as Supplier)
-        .GET(ERROR.getPath()).routeTo({
-        controller(ERROR) {
-          Results.status(ERROR.getStatus(), ERROR.getBody())
-        }
-      } as Supplier)
-        .GET(EXCEPTION.getPath()).routeTo({
-        controller(EXCEPTION) {
-          throw new Exception(EXCEPTION.getBody())
-        }
-      } as Supplier)
-
+        .GET(SUCCESS.getPath()).routeTo(
+        new F.Function0<Results.Status>() {
+          @Override
+          Results.Status apply() throws Throwable {
+            return controller(SUCCESS) {
+              Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+            }
+          }})
+        .GET(QUERY_PARAM.getPath()).routeTo(
+        new F.Function0<Results.Status>() {
+          @Override
+          Results.Status apply() throws Throwable {
+            return controller(QUERY_PARAM) {
+              Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
+            }
+          }
+        })
+        .GET(REDIRECT.getPath()).routeTo(
+        new F.Function0<Results.Status>() {
+          @Override
+          Results.Status apply() throws Throwable {
+            return controller(REDIRECT) {
+              Results.found(REDIRECT.getBody())
+            }
+          }
+        })
+        .GET(ERROR.getPath()).routeTo(
+        new F.Function0<Results.Status>() {
+          @Override
+          Results.Status apply() throws Throwable {
+            return controller(ERROR) {
+              Results.status(ERROR.getStatus(), ERROR.getBody())
+            }
+          }
+        })
+        .GET(EXCEPTION.getPath()).routeTo(
+        new F.Function0<Results.Status>() {
+          @Override
+          Results.Status apply() throws Throwable {
+            return controller(EXCEPTION) {
+              throw new Exception(EXCEPTION.getBody())
+            }
+          }
+        })
     return Server.forRouter(router.build(), port)
   }
 
