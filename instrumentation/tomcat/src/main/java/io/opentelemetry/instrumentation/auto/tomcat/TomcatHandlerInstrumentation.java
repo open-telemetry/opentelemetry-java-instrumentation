@@ -51,8 +51,8 @@ public final class TomcatHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".TomcatHttpServerTracer",
-        packageName + ".TomcatHttpServerTracer$RequestGetter",
+      packageName + ".TomcatHttpServerTracer",
+      packageName + ".TomcatHttpServerTracer$RequestGetter",
     };
   }
 

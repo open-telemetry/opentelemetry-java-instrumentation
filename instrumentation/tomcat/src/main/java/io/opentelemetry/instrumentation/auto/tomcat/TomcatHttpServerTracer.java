@@ -59,8 +59,7 @@ public class TomcatHttpServerTracer extends HttpServerTracer<Request, Response, 
   }
 
   @Override
-  protected URI url(Request request)
-      throws URISyntaxException {
+  protected URI url(Request request) throws URISyntaxException {
     org.apache.catalina.connector.Request httpServletRequest = wrapRequest(request);
     return new URI(
         httpServletRequest.getScheme(),
