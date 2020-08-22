@@ -1,0 +1,18 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat"
+    module = 'tomcat-coyote'
+    versions = "[9.0.35,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.apache.tomcat', name: 'tomcat-coyote', version: '9.0.35'
+  library group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '9.0.35'
+  implementation project(':instrumentation:servlet:servlet-3.0')
+
+  testImplementation(project(':testing-common'))
+}
