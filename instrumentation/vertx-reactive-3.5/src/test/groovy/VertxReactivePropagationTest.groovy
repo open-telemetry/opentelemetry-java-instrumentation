@@ -86,7 +86,7 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test?shutdown=true"
+            "${SemanticAttributes.DB_NAME.key()}" "test"
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"

@@ -83,7 +83,6 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
       return null;
     }
 
-    String originType = statement.getClass().getName();
     DBInfo dbInfo = extractDbInfo(connection);
 
     return startSpan(dbInfo, query);

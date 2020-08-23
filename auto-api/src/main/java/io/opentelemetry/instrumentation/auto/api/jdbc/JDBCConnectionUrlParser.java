@@ -623,6 +623,15 @@ public enum JDBCConnectionUrlParser {
         builder.user(DEFAULT_USER);
       }
       String hsqlUrl = jdbcUrl.substring("hsqldb:".length());
+      int proIndex = hsqlUrl.indexOf(";");
+      if (proIndex >= 0) {
+        hsqlUrl = hsqlUrl.substring(0, proIndex);
+      } else {
+        int varIndex = hsqlUrl.indexOf("?");
+        if (varIndex >= 0) {
+          hsqlUrl = hsqlUrl.substring(0, varIndex);
+        }
+      }
       if (hsqlUrl.startsWith("mem:")) {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl.substring("mem:".length());
