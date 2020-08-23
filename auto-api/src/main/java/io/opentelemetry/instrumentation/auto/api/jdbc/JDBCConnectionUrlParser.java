@@ -624,11 +624,13 @@ public enum JDBCConnectionUrlParser {
       }
       String hsqlUrl = jdbcUrl.substring("hsqldb:".length());
       int proIndex = hsqlUrl.indexOf(";");
-      int varIndex = hsqlUrl.indexOf("?");
       if (proIndex >= 0) {
         hsqlUrl = hsqlUrl.substring(0, proIndex);
-      } else if (varIndex >= 0) {
-        hsqlUrl = hsqlUrl.substring(0, varIndex);
+      } else {
+        int varIndex = hsqlUrl.indexOf("?");
+        if (varIndex >= 0) {
+          hsqlUrl = hsqlUrl.substring(0, varIndex);
+        }
       }
       if (hsqlUrl.startsWith("mem:")) {
         builder.subtype("mem").host(null).port(null);
