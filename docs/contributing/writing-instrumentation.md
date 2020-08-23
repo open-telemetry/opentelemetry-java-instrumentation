@@ -35,7 +35,7 @@ auto instrumentation.
 #### Folder Structure
 
 Please also refer to some of our existing instrumentation for examples of our structure, for example,
-[aws-sdk-2.2](./instrumentation/aws-sdk/aws-sdk-2.2).
+[aws-sdk-2.2](../../instrumentation/aws-sdk/aws-sdk-2.2).
 
 When writing new instrumentation, create a new subfolder of `instrumentation` to correspond to the
 instrumented library and the oldest version being targeted. Ideally an old version of the library is
@@ -74,7 +74,7 @@ Begin by writing the instrumentation for the library in `library`. This generall
 `Tracer` and using the typed tracers in our `instrumentation-common` library to create and annotate
 spans as part of the implementation of an interceptor for the library. The module should generally
 only depend on the OpenTelemetry API, `instrumentation-common`, and the instrumented library itself.
-[instrumentation-library.gradle](./gradle/instrumentation-library.gradle) needs to be applied to
+[instrumentation-library.gradle](../../gradle/instrumentation-library.gradle) needs to be applied to
 configure build tooling for the library.
 
 #### Writing unit tests
