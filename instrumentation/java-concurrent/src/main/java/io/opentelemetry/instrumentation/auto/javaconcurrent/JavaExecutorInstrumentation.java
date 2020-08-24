@@ -217,14 +217,10 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         for (Callable<?> task : tasks) {
           if (task != null) {
             Callable newTask = CallableWrapper.wrapIfNeeded(task);
-            if (ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, newTask)) {
-              wrappedTasks.add(task);
-            } else {
-              wrappedTasks.add(newTask);
-              ContextStore<Callable, State> contextStore =
-                  InstrumentationContext.get(Callable.class, State.class);
-              ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
-            }
+            wrappedTasks.add(newTask);
+            ContextStore<Callable, State> contextStore =
+                InstrumentationContext.get(Callable.class, State.class);
+            ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
           }
         }
         tasks = wrappedTasks;
