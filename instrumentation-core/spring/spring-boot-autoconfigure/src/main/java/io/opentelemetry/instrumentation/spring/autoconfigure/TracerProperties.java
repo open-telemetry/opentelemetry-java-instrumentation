@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
 
-  private String name = "otel-spring-tracer";
+  private String name = "io.opentelemetry.instrumentation.spring-boot-autoconfigure";
 
   /**
    * If Sample probability == 1: always sample
