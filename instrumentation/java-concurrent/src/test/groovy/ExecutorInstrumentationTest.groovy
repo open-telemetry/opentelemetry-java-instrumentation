@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
