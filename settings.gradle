@@ -183,7 +183,6 @@ include ":javaagent-exporters:zipkin"
 include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
-include ':benchmark-integration:play-perftest'
 
 def setBuildFile(project) {
   if (['auto', 'library', 'testing'].contains(project.projectDir.name)) {

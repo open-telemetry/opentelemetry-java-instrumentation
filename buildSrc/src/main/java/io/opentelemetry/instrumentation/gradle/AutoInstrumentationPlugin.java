@@ -151,8 +151,12 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   }
 
   private static class BootstrapClasspath implements CommandLineArgumentProvider {
+    private final File bootstrapJar;
+
     @Internal
-    File bootstrapJar;
+    public File getBootstrapJar() {
+      return bootstrapJar;
+    }
 
     public BootstrapClasspath(File bootstrapJar) {
       this.bootstrapJar = bootstrapJar;

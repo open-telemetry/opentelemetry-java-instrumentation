@@ -1,5 +1,3 @@
-// This file includes software developed at SignalFx
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
@@ -17,12 +15,6 @@ muzzle {
     versions = "[1.2,]"
     extraDependency "org.springframework.data:spring-data-commons:1.8.0.RELEASE"
     assertInverse = true
-  }
-}
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
   }
 }
 
