@@ -1,0 +1,42 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.springframework"
+    module = "spring-webflux"
+    versions = "[5.0.0.RELEASE,)"
+    assertInverse = true
+    extraDependency "io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE"
+  }
+
+  pass {
+    group = "io.projectreactor.ipc"
+    module = "reactor-netty"
+    versions = "[0.7.0.RELEASE,)"
+    extraDependency "org.springframework:spring-webflux:5.0.0.RELEASE"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:spring:spring-webflux-5.0:spring-webflux-5.0-library')
+  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+  compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
+
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:reactor-3.1')
+
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
+  testImplementation group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+
+  // FIXME: reactor-netty packages have changed so test imports are failing
+  latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
+  latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
+  latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
+}
