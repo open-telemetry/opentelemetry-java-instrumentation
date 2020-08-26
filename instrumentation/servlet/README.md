@@ -4,13 +4,17 @@
 
 We support Servlet API starting from version 2.2.
 But various instrumentations apply to different versions of the API.
-They are divided into 3 sub-modules:
+They are divided into several sub-modules:
 
 `servlet-common` contains instrumentations applicable to all API versions that we support.
 
 `servlet-2.2` contains instrumentations applicable to Servlet API 2.2, but not to to 3+.
 
-`servlet-3.0` contains instrumentations that require Servlet API 3.0 or newer.
+`servlet-3/servlet-3-common` contains instrumentations that are applicable to Servlet API 3.0 or newer.
+
+`servlet-3/servlet-3.0` contains instrumentations that require Servlet API 3.0, but lower than 3.1.
+
+`servlet-3/servlet-3.1` contains instrumentations that require Servlet API 3.1 or newer.
 
 ## Implementation details
 

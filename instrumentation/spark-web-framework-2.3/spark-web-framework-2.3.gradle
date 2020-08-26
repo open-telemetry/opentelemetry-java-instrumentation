@@ -28,7 +28,7 @@ compileJava {
 dependencies {
   library group: 'com.sparkjava', name: 'spark-core', version: '2.3'
 
-  testImplementation project(':instrumentation:jetty-8.0')
+  testImplementation project(':instrumentation:jetty:jetty-9.1')
 
   testLibrary group: 'com.sparkjava', name: 'spark-core', version: '2.4'
 }

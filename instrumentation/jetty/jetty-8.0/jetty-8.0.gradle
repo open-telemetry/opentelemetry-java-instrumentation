@@ -1,0 +1,26 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.eclipse.jetty"
+    module = 'jetty-server'
+    versions = "[8.0.0.v20110901,9.1)"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:servlet:servlet-3:servlet-3-common')
+  implementation project(':instrumentation:servlet:servlet-3:servlet-3.0')
+
+  library group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+
+  testImplementation(project(':instrumentation:jetty:jetty-testing'))
+
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '8.0.0.v20110901'
+
+  // 9.0 is the last Jetty version to use Servlet 3.0
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.0.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.0.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '9.0.+'
+}

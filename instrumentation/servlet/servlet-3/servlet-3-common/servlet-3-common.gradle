@@ -1,0 +1,21 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
+    assertInverse = true
+  }
+  fail {
+    group = "javax.servlet"
+    module = 'servlet-api'
+    versions = "(,)"
+  }
+}
+
+dependencies {
+  api(project(':instrumentation-core:servlet'))
+
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+}

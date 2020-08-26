@@ -7,7 +7,8 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 
 dependencies {
-  testImplementation project(':instrumentation:servlet:servlet-3.0')
+  testImplementation project(':instrumentation:servlet:servlet-3:servlet-3.0')
+  testImplementation project(':instrumentation:servlet:servlet-3:servlet-3.1')
   testImplementation project(':instrumentation:grizzly-2.0')
 
   testLibrary group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'

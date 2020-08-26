@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api(project(':testing-common')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+  compileOnly group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+  implementation deps.slf4j
+  implementation deps.testLogging
+
+  implementation project(':instrumentation-api')
+}

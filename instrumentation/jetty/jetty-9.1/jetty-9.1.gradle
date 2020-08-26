@@ -1,0 +1,28 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.eclipse.jetty"
+    module = 'jetty-server'
+    versions = "[9.1.0.v20131115,)"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:servlet:servlet-3:servlet-3-common')
+  implementation project(':instrumentation:servlet:servlet-3:servlet-3.1')
+
+  // 9.1 is the first Jetty version that introduces Servlet 3.1
+  library group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.1.0.v20131115'
+
+  testImplementation(project(':instrumentation:jetty:jetty-testing'))
+
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.1.0.v20131115'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '9.1.0.v20131115'
+
+  // Jetty 10 seems to refuse to run on java8.
+  // TODO: we need to setup separate test for Jetty 10 when that is released.
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '9.+'
+}
