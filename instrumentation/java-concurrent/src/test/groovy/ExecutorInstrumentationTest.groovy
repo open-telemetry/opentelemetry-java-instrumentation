@@ -19,8 +19,6 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.auto.api.concurrent.CallableWrapper
-import io.opentelemetry.instrumentation.auto.api.concurrent.RunnableWrapper
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -157,7 +155,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     "execute Runnable"       | executeRunnable     | java7SafeCompletableFutureThreadPerTaskExecutor()
   }
 
-  def "#poolImpl '#name' disabled wrapping"() {
+  def "#poolImpl '#name' wrap lambdas"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -174,30 +172,28 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     }.run()
     // We block in child to make sure spans close in predictable order
     child.unblock()
+    child.waitForCompletion()
 
-    TEST_WRITER.waitForTraces(2)
+    TEST_WRITER.waitForTraces(1)
+    List<SpanData> trace = TEST_WRITER.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 2
-    TEST_WRITER.traces[0].size() == 1
-    TEST_WRITER.traces[0][0].name == "parent"
-    TEST_WRITER.traces[1].size() == 1
-    TEST_WRITER.traces[1][0].name == "asyncChild"
+    TEST_WRITER.traces.size() == 1
+    trace.size() == 2
+    trace.get(0).name == "parent"
+    trace.get(1).name == "asyncChild"
+    trace.get(1).parentSpanId == trace.get(0).spanId
 
     cleanup:
     pool?.shutdown()
 
     where:
-    // Scheduled executor cannot accept wrapped tasks
-    // TODO: we should have a test that passes lambda, but this is hard
-    // because this requires tests to be run in java8+ only.
-    // Instead we 'hand-wrap' tasks in this test.
-    name                | method           | wrap                        | poolImpl
-    "execute Runnable"  | executeRunnable  | { new RunnableWrapper(it) } | new ScheduledThreadPoolExecutor(1)
-    "submit Runnable"   | submitRunnable   | { new RunnableWrapper(it) } | new ScheduledThreadPoolExecutor(1)
-    "submit Callable"   | submitCallable   | { new CallableWrapper(it) } | new ScheduledThreadPoolExecutor(1)
-    "schedule Runnable" | scheduleRunnable | { new RunnableWrapper(it) } | new ScheduledThreadPoolExecutor(1)
-    "schedule Callable" | scheduleCallable | { new CallableWrapper(it) } | new ScheduledThreadPoolExecutor(1)
+    name                | method           | wrap                           | poolImpl
+    "execute Runnable"  | executeRunnable  | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "submit Runnable"   | submitRunnable   | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "submit Callable"   | submitCallable   | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
+    "schedule Runnable" | scheduleRunnable | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "schedule Callable" | scheduleCallable | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
   }
 
   def "#poolImpl '#name' reports after canceled jobs"() {
