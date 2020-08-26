@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.api.concurrent;
+import java.util.concurrent.Callable;
 
-/** Used by ThreadPoolExecutorInstrumentation to check executor support */
-public class GenericRunnable implements Runnable {
+class LambdaGen {
 
-  @Override
-  public void run() {}
+  static Callable<?> wrapCallable(Callable<?> callable) {
+    return () -> callable.call();
+  }
+
+  static Runnable wrapRunnable(Runnable runnable) {
+    return () -> runnable.run();
+  }
 }

@@ -21,7 +21,6 @@ import static io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils.T
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.trace.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,9 +32,6 @@ import org.slf4j.LoggerFactory;
 public class ExecutorInstrumentationUtils {
 
   private static final Logger log = LoggerFactory.getLogger(ExecutorInstrumentationUtils.class);
-
-  private static final WeakMap<Executor, Boolean> EXECUTORS_DISABLED_FOR_WRAPPED_TASKS =
-      WeakMap.Provider.newWeakMap();
 
   /**
    * Checks if given task should get state attached.
@@ -54,7 +50,6 @@ public class ExecutorInstrumentationUtils {
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
     return span.getContext().isValid()
-        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task)
         // TODO Workaround for
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
         && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
@@ -108,21 +103,5 @@ public class ExecutorInstrumentationUtils {
        */
       state.clearParentContext();
     }
-  }
-
-  public static void disableExecutorForWrappedTasks(Executor executor) {
-    log.debug("Disabling Executor tracing for wrapped tasks for instance {}", executor);
-    EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.put(executor, true);
-  }
-
-  /**
-   * Check if Executor can accept given task.
-   *
-   * <p>Disabled executors cannot accept wrapped tasks, non wrapped tasks (i.e. tasks with injected
-   * fields) should still work fine.
-   */
-  public static boolean isExecutorDisabledForThisTask(Executor executor, Object task) {
-    return (task instanceof RunnableWrapper || task instanceof CallableWrapper)
-        && EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.containsKey(executor);
   }
 }

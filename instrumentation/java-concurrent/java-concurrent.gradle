@@ -1,3 +1,9 @@
+ext {
+  // TODO (trask) currently this is only needed for LambdaGen
+  //  revisit if we don't end up dropping Java 7
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
