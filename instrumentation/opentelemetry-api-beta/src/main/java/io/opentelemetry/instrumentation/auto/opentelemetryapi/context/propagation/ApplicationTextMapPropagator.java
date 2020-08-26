@@ -17,34 +17,34 @@
 package io.opentelemetry.instrumentation.auto.opentelemetryapi.context.propagation;
 
 import application.io.grpc.Context;
-import application.io.opentelemetry.context.propagation.HttpTextFormat;
+import application.io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ApplicationHttpTextFormat implements HttpTextFormat {
+class ApplicationTextMapPropagator implements TextMapPropagator {
 
-  private static final Logger log = LoggerFactory.getLogger(ApplicationHttpTextFormat.class);
+  private static final Logger log = LoggerFactory.getLogger(ApplicationTextMapPropagator.class);
 
-  private final io.opentelemetry.context.propagation.HttpTextFormat agentHttpTextFormat;
+  private final io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator;
   private final ContextStore<Context, io.grpc.Context> contextStore;
 
-  ApplicationHttpTextFormat(
-      io.opentelemetry.context.propagation.HttpTextFormat agentHttpTextFormat,
+  ApplicationTextMapPropagator(
+      io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator,
       ContextStore<Context, io.grpc.Context> contextStore) {
-    this.agentHttpTextFormat = agentHttpTextFormat;
+    this.agentTextMapPropagator = agentTextMapPropagator;
     this.contextStore = contextStore;
   }
 
   @Override
   public List<String> fields() {
-    return agentHttpTextFormat.fields();
+    return agentTextMapPropagator.fields();
   }
 
   @Override
   public <C> Context extract(
-      Context applicationContext, C carrier, HttpTextFormat.Getter<C> applicationGetter) {
+      Context applicationContext, C carrier, TextMapPropagator.Getter<C> applicationGetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -54,7 +54,7 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
       return applicationContext;
     }
     io.grpc.Context agentUpdatedContext =
-        agentHttpTextFormat.extract(agentContext, carrier, new AgentGetter<>(applicationGetter));
+        agentTextMapPropagator.extract(agentContext, carrier, new AgentGetter<>(applicationGetter));
     if (agentUpdatedContext == agentContext) {
       return applicationContext;
     }
@@ -64,7 +64,7 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
 
   @Override
   public <C> void inject(
-      Context applicationContext, C carrier, HttpTextFormat.Setter<C> applicationSetter) {
+      Context applicationContext, C carrier, TextMapPropagator.Setter<C> applicationSetter) {
     io.grpc.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
@@ -73,15 +73,15 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
       }
       return;
     }
-    agentHttpTextFormat.inject(agentContext, carrier, new AgentSetter<>(applicationSetter));
+    agentTextMapPropagator.inject(agentContext, carrier, new AgentSetter<>(applicationSetter));
   }
 
   private static class AgentGetter<C>
-      implements io.opentelemetry.context.propagation.HttpTextFormat.Getter<C> {
+      implements io.opentelemetry.context.propagation.TextMapPropagator.Getter<C> {
 
-    private final HttpTextFormat.Getter<C> applicationGetter;
+    private final TextMapPropagator.Getter<C> applicationGetter;
 
-    AgentGetter(HttpTextFormat.Getter<C> applicationGetter) {
+    AgentGetter(TextMapPropagator.Getter<C> applicationGetter) {
       this.applicationGetter = applicationGetter;
     }
 
@@ -92,9 +92,9 @@ class ApplicationHttpTextFormat implements HttpTextFormat {
   }
 
   private static class AgentSetter<C>
-      implements io.opentelemetry.context.propagation.HttpTextFormat.Setter<C> {
+      implements io.opentelemetry.context.propagation.TextMapPropagator.Setter<C> {
 
-    private final HttpTextFormat.Setter<C> applicationSetter;
+    private final TextMapPropagator.Setter<C> applicationSetter;
 
     AgentSetter(Setter<C> applicationSetter) {
       this.applicationSetter = applicationSetter;

@@ -18,22 +18,22 @@ package io.opentelemetry.instrumentation.auto.opentelemetryapi.context.propagati
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
-import application.io.opentelemetry.context.propagation.HttpTextFormat;
+import application.io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 
 public class ApplicationContextPropagators implements ContextPropagators {
 
-  private final ApplicationHttpTextFormat applicationHttpTextFormat;
+  private final ApplicationTextMapPropagator applicationTextMapPropagator;
 
   public ApplicationContextPropagators(ContextStore<Context, io.grpc.Context> contextStore) {
-    applicationHttpTextFormat =
-        new ApplicationHttpTextFormat(
-            OpenTelemetry.getPropagators().getHttpTextFormat(), contextStore);
+    applicationTextMapPropagator =
+        new ApplicationTextMapPropagator(
+            OpenTelemetry.getPropagators().getTextMapPropagator(), contextStore);
   }
 
   @Override
-  public HttpTextFormat getHttpTextFormat() {
-    return applicationHttpTextFormat;
+  public TextMapPropagator getTextMapPropagator() {
+    return applicationTextMapPropagator;
   }
 }

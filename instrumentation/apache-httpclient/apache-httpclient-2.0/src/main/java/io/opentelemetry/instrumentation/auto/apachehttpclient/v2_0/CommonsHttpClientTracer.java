@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0;
 
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;

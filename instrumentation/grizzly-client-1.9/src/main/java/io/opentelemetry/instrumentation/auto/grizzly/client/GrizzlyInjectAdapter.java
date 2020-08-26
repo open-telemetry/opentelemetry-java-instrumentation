@@ -17,9 +17,9 @@
 package io.opentelemetry.instrumentation.auto.grizzly.client;
 
 import com.ning.http.client.Request;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public class GrizzlyInjectAdapter implements HttpTextFormat.Setter<Request> {
+public class GrizzlyInjectAdapter implements TextMapPropagator.Setter<Request> {
 
   public static final GrizzlyInjectAdapter SETTER = new GrizzlyInjectAdapter();
 

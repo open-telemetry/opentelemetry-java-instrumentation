@@ -197,7 +197,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         Context context = withSpan(span, Context.current());
 
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
+        OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(

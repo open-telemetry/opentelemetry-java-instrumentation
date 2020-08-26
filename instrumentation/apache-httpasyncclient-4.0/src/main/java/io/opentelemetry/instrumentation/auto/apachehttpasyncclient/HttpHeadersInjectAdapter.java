@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.apache.http.HttpRequest;
 
-public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpRequest> {
+public class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpRequest> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

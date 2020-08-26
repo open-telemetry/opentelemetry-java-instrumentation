@@ -38,6 +38,11 @@ class ApplicationDoubleCounter implements DoubleCounter {
   }
 
   @Override
+  public void add(double v) {
+    agentDoubleCounter.add(v);
+  }
+
+  @Override
   public BoundDoubleCounter bind(Labels labels) {
     return new BoundInstrument(agentDoubleCounter.bind(LabelBridging.toAgent(labels)));
   }

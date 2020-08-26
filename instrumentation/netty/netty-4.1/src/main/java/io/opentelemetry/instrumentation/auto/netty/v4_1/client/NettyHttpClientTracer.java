@@ -22,7 +22,7 @@ import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyRespo
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -19,7 +19,7 @@ package io.opentelemetry.javaagent.tooling;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
@@ -44,8 +44,8 @@ public class PropagatorsInitializer {
   private static final String OT_TRACER = "ottracer";
   private static final String XRAY = "xray";
 
-  private static final Map<String, HttpTextFormat> TEXTMAP_PROPAGATORS =
-      ImmutableMap.<String, HttpTextFormat>builder()
+  private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
+      ImmutableMap.<String, TextMapPropagator>builder()
           .put(TRACE_CONTEXT, new HttpTraceContext())
           .put(B3, B3Propagator.getMultipleHeaderPropagator())
           .put(B3_SINGLE, B3Propagator.getSingleHeaderPropagator())
@@ -63,9 +63,9 @@ public class PropagatorsInitializer {
 
     DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
 
-    List<HttpTextFormat> textPropagators = new ArrayList<>(propagators.size());
+    List<TextMapPropagator> textPropagators = new ArrayList<>(propagators.size());
     for (String propagatorId : propagators) {
-      HttpTextFormat textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
+      TextMapPropagator textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
       if (textPropagator != null) {
         textPropagators.add(textPropagator);
         log.info("Added " + textPropagator + " propagator");
@@ -75,12 +75,12 @@ public class PropagatorsInitializer {
     }
     if (textPropagators.size() > 1) {
       Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
-      for (HttpTextFormat textPropagator : textPropagators) {
+      for (TextMapPropagator textPropagator : textPropagators) {
         traceMultiPropagatorBuilder.addPropagator(textPropagator);
       }
-      propagatorsBuilder.addHttpTextFormat(traceMultiPropagatorBuilder.build());
+      propagatorsBuilder.addTextMapPropagator(traceMultiPropagatorBuilder.build());
     } else if (textPropagators.size() == 1) {
-      propagatorsBuilder.addHttpTextFormat(textPropagators.get(0));
+      propagatorsBuilder.addTextMapPropagator(textPropagators.get(0));
     }
     // Register it in the global propagators:
     OpenTelemetry.setPropagators(propagatorsBuilder.build());

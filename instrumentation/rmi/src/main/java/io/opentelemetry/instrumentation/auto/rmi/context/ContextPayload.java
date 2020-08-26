@@ -20,7 +20,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class ContextPayload {
   public static ContextPayload from(Span span) {
     ContextPayload payload = new ContextPayload();
     Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, payload, SETTER);
+    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, payload, SETTER);
     return payload;
   }
 
@@ -78,14 +78,14 @@ public class ContextPayload {
     out.writeObject(context);
   }
 
-  public static class ExtractAdapter implements HttpTextFormat.Getter<ContextPayload> {
+  public static class ExtractAdapter implements TextMapPropagator.Getter<ContextPayload> {
     @Override
     public String get(ContextPayload carrier, String key) {
       return carrier.getContext().get(key);
     }
   }
 
-  public static class InjectAdapter implements HttpTextFormat.Setter<ContextPayload> {
+  public static class InjectAdapter implements TextMapPropagator.Setter<ContextPayload> {
     @Override
     public void set(ContextPayload carrier, String key, String value) {
       carrier.getContext().put(key, value);

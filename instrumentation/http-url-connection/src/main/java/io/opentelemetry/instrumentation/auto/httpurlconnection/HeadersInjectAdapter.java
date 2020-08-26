@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.httpurlconnection;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.net.HttpURLConnection;
 
-public class HeadersInjectAdapter implements HttpTextFormat.Setter<HttpURLConnection> {
+public class HeadersInjectAdapter implements TextMapPropagator.Setter<HttpURLConnection> {
 
   public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
 

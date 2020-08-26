@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import io.grpc.Context;
-import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
