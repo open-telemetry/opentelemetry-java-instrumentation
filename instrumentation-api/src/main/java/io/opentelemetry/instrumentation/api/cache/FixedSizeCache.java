@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api;
+package io.opentelemetry.instrumentation.api.cache;
 
 /**
  * This is a fixed size cache that only has one operation <code>computeIfAbsent</code>, that is used
@@ -30,7 +30,7 @@ package io.opentelemetry.instrumentation.api;
  * @param <K> key type
  * @param <V> value type
  */
-public final class FixedSizeCache<K, V> {
+final class FixedSizeCache<K, V> implements Cache<K, V> {
 
   static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -79,6 +79,7 @@ public final class FixedSizeCache<K, V> {
    * @param creator how to create a cached value base on the key if the lookup fails
    * @return the cached or created and stored value
    */
+  @Override
   public V computeIfAbsent(K key, Function<K, ? extends V> creator) {
     if (key == null) {
       return null;
@@ -86,9 +87,9 @@ public final class FixedSizeCache<K, V> {
 
     int h = key.hashCode();
     int firstPos = h & mask;
-    V value = null;
+    V value;
     // try to find a slot or a match 3 times
-    for (int i = 1; i <= 3; i++) {
+    for (int i = 1; true; i++) {
       int pos = h & mask;
       Node<K, V> current = elements[pos];
       if (current == null) {

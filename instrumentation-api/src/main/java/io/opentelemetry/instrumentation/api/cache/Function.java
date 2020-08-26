@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api;
+package io.opentelemetry.instrumentation.api.cache;
 
-// TODO replace with BiFunction if/when dropping Java 7
-public interface TwoArgFunction<T, U, V> {
-  V apply(T left, U right);
-
-  Function<T, V> curry(U specialisation);
+// TODO replace this with java.util.Function if/when dropping Java 7
+public interface Function<T, U> {
+  U apply(T input);
 }

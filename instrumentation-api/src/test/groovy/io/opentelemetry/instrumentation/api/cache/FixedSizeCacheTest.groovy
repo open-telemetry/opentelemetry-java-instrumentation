@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.api
 
+import io.opentelemetry.instrumentation.api.cache.Caches
+import io.opentelemetry.instrumentation.api.cache.Function
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,9 +25,9 @@ import spock.lang.Specification
 import spock.util.concurrent.AsyncConditions
 
 class FixedSizeCacheTest extends Specification {
-  def "should store and retrieve values"() {
+  def "fixed size should store and retrieve values"() {
     setup:
-    def fsCache = new FixedSizeCache<TKey, String>(15)
+    def fsCache = Caches.newFixedSizeCache(15)
     def creationCount = new AtomicInteger(0)
     def tvc = new TVC(creationCount)
     def tk1 = new TKey(1, 1, "one")
@@ -51,6 +53,33 @@ class FixedSizeCacheTest extends Specification {
     null                      | null           | 3     // do nothing
   }
 
+  def "chm cache should store and retrieve values"() {
+    setup:
+    def fsCache = Caches.newUnboundedCache(15)
+    def creationCount = new AtomicInteger(0)
+    def tvc = new TVC(creationCount)
+    def tk1 = new TKey(1, 1, "one")
+    def tk6 = new TKey(6, 6, "six")
+    def tk10 = new TKey(10, 10, "ten")
+    fsCache.computeIfAbsent(tk1, tvc)
+    fsCache.computeIfAbsent(tk6, tvc)
+    fsCache.computeIfAbsent(tk10, tvc)
+
+    expect:
+    fsCache.computeIfAbsent(tk, tvc) == value
+    creationCount.get() == count
+
+    where:
+    tk                        | value          | count
+    new TKey(1, 1, "foo")     | "one_value"    | 3
+    new TKey(1, 6, "foo")     | "foo_value"    | 4
+    new TKey(1, 10, "foo")    | "foo_value"    | 4
+    new TKey(6, 6, "foo")     | "six_value"    | 3
+    new TKey(1, 11, "eleven") | "eleven_value" | 4
+    new TKey(4, 4, "four")    | "four_value"   | 4
+    null                      | null           | 3
+  }
+
   def "should handle concurrent usage"() {
     setup:
     def numThreads = 5
@@ -58,9 +87,9 @@ class FixedSizeCacheTest extends Specification {
     def conds = new AsyncConditions(numThreads)
     def started = new CountDownLatch(numThreads)
     def runTest = new CountDownLatch(1)
-    def fsCache = new FixedSizeCache<TKey, String>(64)
 
     when:
+    def fsCache = cacheImpl(64)
     for (int t = 0; t < numThreads; t++) {
       Thread.start {
         def tlr = ThreadLocalRandom.current()
@@ -81,6 +110,9 @@ class FixedSizeCacheTest extends Specification {
 
     then:
     conds.await(30.0) // the test is really fast locally, but I don't know how fast CI is
+
+    where:
+    cacheImpl << [{ capacity -> Caches.newFixedSizeCache(capacity) }, { capacity -> Caches.newUnboundedCache(capacity) }]
   }
 
   private class TVC implements Function<TKey, String> {

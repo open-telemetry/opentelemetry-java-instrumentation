@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api;
+package io.opentelemetry.instrumentation.api.cache;
 
 public final class Functions {
 

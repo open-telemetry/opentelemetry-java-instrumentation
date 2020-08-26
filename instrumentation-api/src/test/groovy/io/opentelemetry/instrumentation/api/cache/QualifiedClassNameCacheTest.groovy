@@ -16,6 +16,9 @@
 
 package io.opentelemetry.instrumentation.api
 
+import io.opentelemetry.instrumentation.api.cache.Function
+import io.opentelemetry.instrumentation.api.cache.Functions
+import io.opentelemetry.instrumentation.api.cache.QualifiedClassNameCache
 import spock.lang.Specification
 
 class QualifiedClassNameCacheTest extends Specification {

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api;
+package io.opentelemetry.instrumentation.api.cache;
 
-public class QualifiedClassNameCache {
+public final class QualifiedClassNameCache {
 
   private static final int LEAF_SIZE = 16;
 
@@ -48,12 +48,14 @@ public class QualifiedClassNameCache {
 
     private final String name;
 
-    private final FixedSizeCache<String, String> cache;
+    private final Cache<String, String> cache;
     private final Function<String, String> joiner;
 
     private Leaf(String name, TwoArgFunction<String, String, String> joiner) {
       this.name = name;
-      this.cache = new FixedSizeCache<>(LEAF_SIZE);
+      // the class provides a natural bound on the number of elements
+      // (e.g. the number of methods)
+      this.cache = Caches.newUnboundedCache(LEAF_SIZE);
       this.joiner = joiner.curry(name);
     }
 

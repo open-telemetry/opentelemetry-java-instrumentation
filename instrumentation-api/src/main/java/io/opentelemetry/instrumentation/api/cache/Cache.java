@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api;
+package io.opentelemetry.instrumentation.api.cache;
 
-// TODO replace this with java.util.Function if/when dropping Java 7
-public interface Function<T, U> {
-  U apply(T input);
+public interface Cache<K, V> {
+
+  V computeIfAbsent(final K key, Function<K, ? extends V> func);
 }

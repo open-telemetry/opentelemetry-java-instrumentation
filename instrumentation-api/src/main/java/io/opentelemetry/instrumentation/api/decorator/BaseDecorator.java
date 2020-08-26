@@ -21,9 +21,9 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.Function;
-import io.opentelemetry.instrumentation.api.Functions;
-import io.opentelemetry.instrumentation.api.QualifiedClassNameCache;
+import io.opentelemetry.instrumentation.api.cache.Function;
+import io.opentelemetry.instrumentation.api.cache.Functions;
+import io.opentelemetry.instrumentation.api.cache.QualifiedClassNameCache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
