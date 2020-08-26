@@ -20,7 +20,7 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan
 
 import io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.context.propagation.HttpTextFormat
+import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.trace.propagation.HttpTraceContext
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -196,7 +196,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    Context context = new HttpTraceContext().extract(Context.ROOT, "", new HttpTextFormat.Getter<String>() {
+    Context context = new HttpTraceContext().extract(Context.ROOT, "", new TextMapPropagator.Getter<String>() {
       @Override
       String get(String carrier, String key) {
         if (key == "traceparent") {

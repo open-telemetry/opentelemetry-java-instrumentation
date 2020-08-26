@@ -110,7 +110,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);
+      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
 
       return new SpanWithScope(span, currentContextWith(span));
     }
@@ -148,7 +148,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       DECORATE.afterStart(span, spanName, message);
 
       Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);
+      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
 
       return new SpanWithScope(span, currentContextWith(span));
     }

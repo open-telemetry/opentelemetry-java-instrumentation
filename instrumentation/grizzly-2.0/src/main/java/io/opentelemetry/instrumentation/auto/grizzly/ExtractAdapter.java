@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.grizzly;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class ExtractAdapter implements HttpTextFormat.Getter<HttpRequestPacket> {
+public class ExtractAdapter implements TextMapPropagator.Getter<HttpRequestPacket> {
   public static final ExtractAdapter GETTER = new ExtractAdapter();
 
   @Override

@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.springframework.web.reactive.function.client.ClientRequest;
 
-class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<ClientRequest.Builder> {
+class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<ClientRequest.Builder> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

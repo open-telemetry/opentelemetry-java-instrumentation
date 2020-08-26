@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.server.http;
+package io.opentelemetry.javaagent.typed.server.http;
 
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 
-import io.opentelemetry.auto.typed.server.ServerTypedTracer;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.javaagent.typed.server.ServerTypedTracer;
 import io.opentelemetry.trace.Span;
 
 public abstract class HttpServerTypedTracer<
@@ -32,5 +32,5 @@ public abstract class HttpServerTypedTracer<
     return super.buildSpan(request, spanBuilder);
   }
 
-  protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
+  protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
 }

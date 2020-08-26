@@ -22,7 +22,7 @@ import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.AttributeKeys;
 import java.net.InetSocketAddress;

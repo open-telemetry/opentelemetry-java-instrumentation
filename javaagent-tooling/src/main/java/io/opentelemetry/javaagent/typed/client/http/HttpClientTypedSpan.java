@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.client.http;
+package io.opentelemetry.javaagent.typed.client.http;
 
-import io.opentelemetry.auto.typed.client.ClientTypedSpan;
+import io.opentelemetry.javaagent.typed.client.ClientTypedSpan;
 import io.opentelemetry.trace.Span;
 
 public abstract class HttpClientTypedSpan<T extends HttpClientTypedSpan, REQUEST, RESPONSE>

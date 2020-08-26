@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.servlet;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import javax.servlet.http.HttpServletRequest;
 
-public class HttpServletRequestGetter implements HttpTextFormat.Getter<HttpServletRequest> {
+public class HttpServletRequestGetter implements TextMapPropagator.Getter<HttpServletRequest> {
 
   public static final HttpServletRequestGetter GETTER = new HttpServletRequestGetter();
 

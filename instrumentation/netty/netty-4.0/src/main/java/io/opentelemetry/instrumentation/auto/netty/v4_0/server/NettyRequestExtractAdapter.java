@@ -17,9 +17,9 @@
 package io.opentelemetry.instrumentation.auto.netty.v4_0.server;
 
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public class NettyRequestExtractAdapter implements HttpTextFormat.Getter<HttpRequest> {
+public class NettyRequestExtractAdapter implements TextMapPropagator.Getter<HttpRequest> {
 
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 

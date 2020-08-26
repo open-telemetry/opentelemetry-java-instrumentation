@@ -6,6 +6,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   implementation deps.opentelemetryApi
+  implementation deps.opentelemetryContextProp
 }
 
 // OpenTelemetry API shaded so that it can be used in opentelemetry-api-beta instrumentation,

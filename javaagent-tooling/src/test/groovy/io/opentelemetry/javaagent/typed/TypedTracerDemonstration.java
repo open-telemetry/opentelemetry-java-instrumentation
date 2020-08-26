@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed;
+package io.opentelemetry.javaagent.typed;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.auto.typed.client.SampleHttpClientTypedSpan;
-import io.opentelemetry.auto.typed.client.SampleHttpClientTypedTracer;
-import io.opentelemetry.auto.typed.server.SampleHttpServerTypedSpan;
-import io.opentelemetry.auto.typed.server.SampleHttpServerTypedTracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.typed.client.SampleHttpClientTypedSpan;
+import io.opentelemetry.javaagent.typed.client.SampleHttpClientTypedTracer;
+import io.opentelemetry.javaagent.typed.server.SampleHttpServerTypedSpan;
+import io.opentelemetry.javaagent.typed.server.SampleHttpServerTypedTracer;
 
 class TypedTracerDemonstration {
 

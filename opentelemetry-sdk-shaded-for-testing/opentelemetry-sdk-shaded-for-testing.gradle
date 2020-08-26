@@ -6,6 +6,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   implementation deps.opentelemetrySdk
+  implementation deps.opentelemetryContextProp
 }
 
 // OpenTelemetry SDK with shaded dependencies so that they do not conflict with other libraries (in particular guava)

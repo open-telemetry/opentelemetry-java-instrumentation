@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.grizzly;
 
 import io.grpc.Context;
-import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -24,7 +24,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
@@ -247,14 +247,15 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     return forwarded.substring(start);
   }
 
-  private <C> SpanContext extract(C carrier, HttpTextFormat.Getter<C> getter) {
+  private <C> SpanContext extract(C carrier, TextMapPropagator.Getter<C> getter) {
     if (Config.THREAD_PROPAGATION_DEBUGGER) {
       debugContextLeak();
     }
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    Context context = getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
+    Context context =
+        getPropagators().getTextMapPropagator().extract(Context.ROOT, carrier, getter);
     Span span = getSpan(context);
     return span.getContext();
   }
@@ -309,7 +310,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected abstract String flavor(CONNECTION connection, REQUEST request);
 
-  protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
+  protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 

@@ -18,6 +18,7 @@ dependencies {
   implementation project(':instrumentation-api')
 
   implementation deps.opentelemetryApi
+  implementation deps.opentelemetryContextProp
   implementation deps.opentelemetrySdk
   implementation deps.opentelemetrySdkAutoConfig
   implementation deps.opentelemetryTraceProps

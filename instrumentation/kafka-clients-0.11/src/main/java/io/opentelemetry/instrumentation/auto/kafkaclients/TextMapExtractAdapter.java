@@ -16,12 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.kafkaclients;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.nio.charset.StandardCharsets;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
-public class TextMapExtractAdapter implements HttpTextFormat.Getter<Headers> {
+public class TextMapExtractAdapter implements TextMapPropagator.Getter<Headers> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 

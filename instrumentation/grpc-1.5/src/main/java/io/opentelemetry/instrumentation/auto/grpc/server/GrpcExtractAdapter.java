@@ -17,9 +17,9 @@
 package io.opentelemetry.instrumentation.auto.grpc.server;
 
 import io.grpc.Metadata;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public final class GrpcExtractAdapter implements HttpTextFormat.Getter<Metadata> {
+public final class GrpcExtractAdapter implements TextMapPropagator.Getter<Metadata> {
 
   public static final GrpcExtractAdapter GETTER = new GrpcExtractAdapter();
 

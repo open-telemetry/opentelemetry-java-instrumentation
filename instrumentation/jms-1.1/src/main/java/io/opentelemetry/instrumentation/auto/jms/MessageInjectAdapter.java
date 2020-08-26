@@ -16,13 +16,13 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageInjectAdapter implements HttpTextFormat.Setter<Message> {
+public class MessageInjectAdapter implements TextMapPropagator.Setter<Message> {
 
   private static final Logger log = LoggerFactory.getLogger(MessageInjectAdapter.class);
 

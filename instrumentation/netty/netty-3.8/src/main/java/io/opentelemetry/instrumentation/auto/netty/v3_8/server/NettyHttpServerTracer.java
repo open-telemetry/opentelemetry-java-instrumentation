@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.netty.v3_8.server;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.grpc.Context;
-import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
