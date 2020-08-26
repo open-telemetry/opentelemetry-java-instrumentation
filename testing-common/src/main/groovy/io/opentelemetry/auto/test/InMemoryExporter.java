@@ -25,6 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -62,7 +63,7 @@ public class InMemoryExporter implements SpanProcessor {
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
   @Override
-  public void onStart(ReadableSpan readableSpan) {
+  public void onStart(ReadWriteSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
         ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
