@@ -20,7 +20,7 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -187,9 +187,9 @@ public abstract class BaseDecorator {
     return simpleName;
   }
 
-  public static <C> SpanContext extract(C carrier, HttpTextFormat.Getter<C> getter) {
+  public static <C> SpanContext extract(C carrier, TextMapPropagator.Getter<C> getter) {
     Context context =
-        getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
+        getPropagators().getTextMapPropagator().extract(Context.current(), carrier, getter);
     Span span = getSpan(context);
     return span.getContext();
   }

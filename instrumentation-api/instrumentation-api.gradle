@@ -5,6 +5,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   api deps.opentelemetryApi
+  api deps.opentelemetryContextProp
   implementation deps.slf4j
 
   testImplementation project(':testing-common')

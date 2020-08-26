@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpUriRequest> {
+class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpUriRequest> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

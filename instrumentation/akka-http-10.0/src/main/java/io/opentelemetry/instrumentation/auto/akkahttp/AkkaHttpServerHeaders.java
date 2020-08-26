@@ -18,10 +18,10 @@ package io.opentelemetry.instrumentation.auto.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Optional;
 
-public class AkkaHttpServerHeaders implements HttpTextFormat.Getter<HttpRequest> {
+public class AkkaHttpServerHeaders implements TextMapPropagator.Getter<HttpRequest> {
 
   public static final AkkaHttpServerHeaders GETTER = new AkkaHttpServerHeaders();
 

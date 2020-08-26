@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrsclient.v2_0;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import javax.ws.rs.client.ClientRequestContext;
 
-public final class InjectAdapter implements HttpTextFormat.Setter<ClientRequestContext> {
+public final class InjectAdapter implements TextMapPropagator.Setter<ClientRequestContext> {
 
   public static final InjectAdapter SETTER = new InjectAdapter();
 

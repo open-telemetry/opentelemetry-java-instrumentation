@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.client;
+package io.opentelemetry.javaagent.typed.client;
 
-import io.opentelemetry.auto.typed.base.BaseTypedTracer;
+import io.opentelemetry.javaagent.typed.base.BaseTypedTracer;
 import io.opentelemetry.trace.Span;
 
 public abstract class ClientTypedTracer<

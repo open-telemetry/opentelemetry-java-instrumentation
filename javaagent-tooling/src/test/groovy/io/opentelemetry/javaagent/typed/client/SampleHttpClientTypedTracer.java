@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.client;
+package io.opentelemetry.javaagent.typed.client;
 
-import io.opentelemetry.auto.typed.client.http.HttpClientTypedTracer;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.javaagent.typed.client.http.HttpClientTypedTracer;
 import io.opentelemetry.trace.Span;
 
 public class SampleHttpClientTypedTracer
@@ -38,8 +38,8 @@ public class SampleHttpClientTypedTracer
   }
 
   @Override
-  protected HttpTextFormat.Setter<String> getSetter() {
-    return new HttpTextFormat.Setter<String>() {
+  protected TextMapPropagator.Setter<String> getSetter() {
+    return new TextMapPropagator.Setter<String>() {
       @Override
       public void set(String carrier, String key, String value) {}
     };

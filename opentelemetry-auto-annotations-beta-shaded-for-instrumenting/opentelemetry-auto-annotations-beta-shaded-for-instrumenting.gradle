@@ -6,6 +6,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   implementation deps.opentelemetryAutoAnnotations
+  implementation deps.opentelemetryContextProp
 }
 
 // OpenTelemetry Auto Annotations shaded so that it can be used in opentelemetry-api-beta

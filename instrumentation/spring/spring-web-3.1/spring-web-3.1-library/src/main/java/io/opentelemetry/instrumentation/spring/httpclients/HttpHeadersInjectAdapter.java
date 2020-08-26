@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.spring.httpclients;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.springframework.http.HttpHeaders;
 
-class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
+class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpHeaders> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

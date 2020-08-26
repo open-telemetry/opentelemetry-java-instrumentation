@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Map;
 
-public class TextMapInjectAdapter implements HttpTextFormat.Setter<Map<String, Object>> {
+public class TextMapInjectAdapter implements TextMapPropagator.Setter<Map<String, Object>> {
 
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 

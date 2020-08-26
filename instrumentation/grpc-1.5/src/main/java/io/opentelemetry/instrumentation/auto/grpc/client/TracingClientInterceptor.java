@@ -91,7 +91,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       // (luckily the grpc instrumentation doesn't need to reference unshaded grpc Context, so we
       // don't need to worry about distinguishing them like in the opentelemetry-api
       // instrumentation)
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
+      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = withScopedContext(context)) {
         super.start(new TracingClientCallListener<>(context, responseListener), headers);
       } catch (Throwable e) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.base;
+package io.opentelemetry.javaagent.typed.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
