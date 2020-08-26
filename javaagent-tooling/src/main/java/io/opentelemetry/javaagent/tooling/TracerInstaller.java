@@ -76,7 +76,7 @@ public class TracerInstaller {
       DefaultExporterConfig config = new DefaultExporterConfig("exporter");
       installExporter(metricExporterFactory, config);
     } else {
-      log.warn("No {} metric exporter found", exporterName);
+      log.debug("No {} metric exporter found", exporterName);
     }
   }
 
