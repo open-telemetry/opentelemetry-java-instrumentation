@@ -112,7 +112,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         Context context = withSpan(span, Context.current());
         try {
           OpenTelemetry.getPropagators()
-              .getHttpTextFormat()
+              .getTextMapPropagator()
               .inject(context, record.headers(), SETTER);
         } catch (IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
@@ -126,7 +126,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.headers());
 
           OpenTelemetry.getPropagators()
-              .getHttpTextFormat()
+              .getTextMapPropagator()
               .inject(context, record.headers(), SETTER);
         }
       }

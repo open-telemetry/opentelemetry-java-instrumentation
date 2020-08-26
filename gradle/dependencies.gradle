@@ -9,10 +9,10 @@ configurations.all {
 ext {
   versions = [
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
-    opentelemetry     : '0.8.0-20200811.154243-20',
+    opentelemetry     : '0.8.0-20200826.153459-48',
     // Snapshot versions are often split into two suffixes based on jfrog's whims, best to keep
     // these separate until GA
-    opentelemetryOther: '0.8.0-20200811.154243-20',
+    opentelemetryOther: '0.8.0-20200826.153459-49',
 
     slf4j             : "1.7.30",
     guava             : "20.0", // Last version to support Java 7
@@ -32,14 +32,15 @@ ext {
   deps = [
     // OpenTelemetry
     opentelemetryApi            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
+    opentelemetryContextProp    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryOther),
     opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
     opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetryOther),
-    opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
+    opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryOther),
     opentelemetrySdkAutoConfig  : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-auto-config', version: versions.opentelemetryOther),
     opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
-    opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryOther),
+    opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetry),
     opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
-    opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetryOther),
+    opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetry),
     opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther),
 
     // General

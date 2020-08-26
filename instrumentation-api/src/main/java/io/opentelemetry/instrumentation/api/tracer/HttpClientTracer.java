@@ -22,8 +22,8 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
@@ -58,7 +58,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected abstract String responseHeader(RESPONSE response, String name);
 
-  protected abstract HttpTextFormat.Setter<CARRIER> getSetter();
+  protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
 
   protected HttpClientTracer() {
     super();
@@ -84,7 +84,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, carrier, setter);
+    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
     context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
     return withScopedContext(context);
   }

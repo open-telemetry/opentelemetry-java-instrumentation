@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.base;
+package io.opentelemetry.javaagent.typed.base;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;

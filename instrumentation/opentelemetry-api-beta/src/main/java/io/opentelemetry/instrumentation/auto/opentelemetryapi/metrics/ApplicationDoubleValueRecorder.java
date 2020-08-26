@@ -39,6 +39,11 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
   }
 
   @Override
+  public void record(double v) {
+    agentDoubleValueRecorder.record(v);
+  }
+
+  @Override
   public BoundDoubleValueRecorder bind(Labels labels) {
     return new BoundInstrument(agentDoubleValueRecorder.bind(LabelBridging.toAgent(labels)));
   }

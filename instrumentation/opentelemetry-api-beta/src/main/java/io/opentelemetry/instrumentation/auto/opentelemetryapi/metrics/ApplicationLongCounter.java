@@ -38,6 +38,11 @@ class ApplicationLongCounter implements LongCounter {
   }
 
   @Override
+  public void add(long l) {
+    agentLongCounter.add(l);
+  }
+
+  @Override
   public BoundLongCounter bind(Labels labels) {
     return new BoundInstrument(agentLongCounter.bind(LabelBridging.toAgent(labels)));
   }

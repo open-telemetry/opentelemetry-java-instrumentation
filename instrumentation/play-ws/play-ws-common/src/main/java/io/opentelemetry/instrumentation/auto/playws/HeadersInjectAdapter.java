@@ -16,10 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.playws;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 
-public class HeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
+public class HeadersInjectAdapter implements TextMapPropagator.Setter<HttpHeaders> {
 
   public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
 

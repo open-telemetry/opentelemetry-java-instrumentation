@@ -38,6 +38,11 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
   }
 
   @Override
+  public void add(long l) {
+    agentLongUpDownCounter.add(l);
+  }
+
+  @Override
   public BoundLongUpDownCounter bind(Labels labels) {
     return new BoundInstrument(agentLongUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }

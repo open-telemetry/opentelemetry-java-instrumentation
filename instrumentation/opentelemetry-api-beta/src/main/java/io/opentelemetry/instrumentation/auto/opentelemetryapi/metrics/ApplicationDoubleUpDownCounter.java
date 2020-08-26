@@ -39,6 +39,11 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
   }
 
   @Override
+  public void add(double v) {
+    agentDoubleUpDownCounter.add(v);
+  }
+
+  @Override
   public BoundDoubleUpDownCounter bind(Labels labels) {
     return new BoundInstrument(agentDoubleUpDownCounter.bind(LabelBridging.toAgent(labels)));
   }

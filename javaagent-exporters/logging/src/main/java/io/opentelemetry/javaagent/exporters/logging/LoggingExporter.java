@@ -18,6 +18,7 @@ package io.opentelemetry.javaagent.exporters.logging;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import io.opentelemetry.sdk.common.export.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
@@ -30,7 +31,7 @@ public class LoggingExporter implements SpanExporter {
   }
 
   @Override
-  public ResultCode export(Collection<SpanData> list) {
+  public CompletableResultCode export(Collection<SpanData> list) {
     for (SpanData span : list) {
       System.out.print(
           prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");
@@ -59,12 +60,12 @@ public class LoggingExporter implements SpanExporter {
               });
     }
     System.out.println();
-    return ResultCode.SUCCESS;
+    return CompletableResultCode.ofSuccess();
   }
 
   @Override
-  public ResultCode flush() {
-    return ResultCode.SUCCESS;
+  public CompletableResultCode flush() {
+    return CompletableResultCode.ofSuccess();
   }
 
   @Override

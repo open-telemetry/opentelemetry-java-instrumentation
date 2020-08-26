@@ -209,7 +209,7 @@ public class MainServiceController {
 
 6. Configure `HttpUtils.callEndpoint` to inject span context into request. This is key to propagate the trace to the TimeService
 
-HttpUtils is a helper class that injects the current span context into outgoing requests. This involves adding the tracer id and the trace-state to a request header. For this example, we used `RestTemplate` to send requests from `MainService` to `TimeService`. A similar approach can be used with popular Java Web Clients such as [okhttp](https://square.github.io/okhttp/) and [apache http client](https://www.tutorialspoint.com/apache_httpclient/apache_httpclient_quick_guide.htm). The key to this implementation is to override the put method in `HttpTextFormat.Setter<?>` to handle your request format. `HttpTextFormat.inject` will use this setter to set `traceparent` and `tracestate` headers in your requests. These values will be used to propagate your span context to external services.
+HttpUtils is a helper class that injects the current span context into outgoing requests. This involves adding the tracer id and the trace-state to a request header. For this example, we used `RestTemplate` to send requests from `MainService` to `TimeService`. A similar approach can be used with popular Java Web Clients such as [okhttp](https://square.github.io/okhttp/) and [apache http client](https://www.tutorialspoint.com/apache_httpclient/apache_httpclient_quick_guide.htm). The key to this implementation is to override the put method in `TextMapPropagator.Setter<?>` to handle your request format. `TextMapPropagator.inject` will use this setter to set `traceparent` and `tracestate` headers in your requests. These values will be used to propagate your span context to external services.
 
 
 ```java
@@ -223,7 +223,7 @@ import org.springframework.web.client.RestTemplate;
 
 import io.grpc.Context;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
@@ -231,7 +231,7 @@ import io.opentelemetry.trace.Tracer;
 @Component
 public class HttpUtils {
 
-   private static final HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
+   private static final TextMapPropagator.Setter<HttpHeaders> setter = new TextMapPropagator.Setter<HttpHeaders>() {
          @Override
          public void set(HttpHeaders headers, String key, String value) {
             headers.set(key, value);
@@ -241,10 +241,10 @@ public class HttpUtils {
    @Autowired
    private Tracer tracer;
 
-   private HttpTextFormat<SpanContext> textFormat;
+   private TextMapPropagator<SpanContext> textFormat;
 
    public HttpUtils(Tracer tracer) {
-      textFormat = tracer.getHttpTextFormat();
+      textFormat = tracer.getTextMapPropagator();
    }
 
    public String callEndpoint(String url) throws Exception {
@@ -400,8 +400,8 @@ public class ControllerFilter implements Filter {
   @Autowired
   Tracer tracer;
 
-  private final HttpTextFormat.Getter<HttpServletRequest> GETTER =
-      new HttpTextFormat.Getter<HttpServletRequest>() {
+  private final TextMapPropagator.Getter<HttpServletRequest> GETTER =
+      new TextMapPropagator.Getter<HttpServletRequest>() {
         public String get(HttpServletRequest req, String key) {
           return req.getHeader(key);
         }
@@ -415,7 +415,7 @@ public class ControllerFilter implements Filter {
     HttpServletRequest req = (HttpServletRequest) request;
     Span currentSpan;
     try (Scope scope = tracer.withSpan(currentSpan)) {
-      Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
+      Context context = OpenTelemetry.getPropagators().getTextMapPropagator()
         .extract(Context.current(), req, GETTER);
       currentSpan = createSpanWithParent(req, context);
       currentSpan.addEvent("dofilter");
@@ -513,7 +513,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -523,8 +523,8 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
    @Autowired
    private Tracer tracer;
 
-   private static final HttpTextFormat.Setter<HttpRequest> setter =
-         new HttpTextFormat.Setter<HttpRequest>() {
+   private static final TextMapPropagator.Setter<HttpRequest> setter =
+         new TextMapPropagator.Setter<HttpRequest>() {
             @Override
             public void set(HttpRequest carrier, String key, String value) {
                carrier.getHeaders().set(key, value);
@@ -540,7 +540,7 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
       Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(Span.Kind.CLIENT).startSpan();
 
       try (Scope scope = tracer.withSpan(currentSpan)) {
-         OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
+         OpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), request, setter);
          ClientHttpResponse response = execution.execute(request, body);
          LOG.info(String.format("Request sent from RestTemplateInterceptor"));
 

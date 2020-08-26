@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.okhttp.v3_0;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import okhttp3.Request;
 
 /**
@@ -24,7 +24,7 @@ import okhttp3.Request;
  *
  * @author Pavol Loffay
  */
-public class RequestBuilderInjectAdapter implements HttpTextFormat.Setter<Request.Builder> {
+public class RequestBuilderInjectAdapter implements TextMapPropagator.Setter<Request.Builder> {
 
   public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 

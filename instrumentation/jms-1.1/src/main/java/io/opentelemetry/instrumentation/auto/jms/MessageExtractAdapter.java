@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-public class MessageExtractAdapter implements HttpTextFormat.Getter<Message> {
+public class MessageExtractAdapter implements TextMapPropagator.Getter<Message> {
 
   public static final MessageExtractAdapter GETTER = new MessageExtractAdapter();
 

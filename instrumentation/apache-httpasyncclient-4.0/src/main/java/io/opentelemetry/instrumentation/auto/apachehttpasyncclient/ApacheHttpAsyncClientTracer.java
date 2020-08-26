@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
 import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.HttpTextFormat.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;

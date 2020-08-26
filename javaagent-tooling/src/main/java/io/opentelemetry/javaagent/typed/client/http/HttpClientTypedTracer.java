@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.typed.client.http;
+package io.opentelemetry.javaagent.typed.client.http;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.typed.client.ClientTypedTracer;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.javaagent.typed.client.ClientTypedTracer;
 import io.opentelemetry.trace.TracingContextUtils;
 
 public abstract class HttpClientTypedTracer<
@@ -29,9 +29,9 @@ public abstract class HttpClientTypedTracer<
   @Override
   protected T startSpan(REQUEST request, T span) {
     Context context = TracingContextUtils.withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, getSetter());
+    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, request, getSetter());
     return super.startSpan(request, span);
   }
 
-  protected abstract HttpTextFormat.Setter<REQUEST> getSetter();
+  protected abstract TextMapPropagator.Setter<REQUEST> getSetter();
 }

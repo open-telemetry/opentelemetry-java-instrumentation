@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
-import io.opentelemetry.context.propagation.HttpTextFormat
+import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -198,7 +198,7 @@ class HttpClientTracerTest extends BaseTracerTest {
       }
 
       @Override
-      protected HttpTextFormat.Setter<Map> getSetter() {
+      protected TextMapPropagator.Setter<Map> getSetter() {
         return null
       }
 

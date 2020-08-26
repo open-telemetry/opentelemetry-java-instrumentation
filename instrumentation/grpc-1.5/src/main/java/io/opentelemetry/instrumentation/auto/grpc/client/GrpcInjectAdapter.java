@@ -17,9 +17,9 @@
 package io.opentelemetry.instrumentation.auto.grpc.client;
 
 import io.grpc.Metadata;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public final class GrpcInjectAdapter implements HttpTextFormat.Setter<Metadata> {
+public final class GrpcInjectAdapter implements TextMapPropagator.Setter<Metadata> {
 
   public static final GrpcInjectAdapter SETTER = new GrpcInjectAdapter();
 

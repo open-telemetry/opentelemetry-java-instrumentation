@@ -17,9 +17,9 @@
 package io.opentelemetry.instrumentation.auto.netty.v4_0.client;
 
 import io.netty.handler.codec.http.HttpHeaders;
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public class NettyResponseInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
+public class NettyResponseInjectAdapter implements TextMapPropagator.Setter<HttpHeaders> {
 
   public static final NettyResponseInjectAdapter SETTER = new NettyResponseInjectAdapter();
 

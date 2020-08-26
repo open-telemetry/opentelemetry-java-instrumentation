@@ -16,11 +16,11 @@
 
 package io.opentelemetry.instrumentation.auto.khttp;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KHttpHeadersInjectAdapter implements HttpTextFormat.Setter<Map<String, String>> {
+public class KHttpHeadersInjectAdapter implements TextMapPropagator.Setter<Map<String, String>> {
 
   public static Map<String, String> asWritable(Map<String, String> headers) {
     // Kotlin likes to use read-only data structures, so wrap into new writable map
