@@ -183,10 +183,14 @@ public class TracerInstaller {
   }
 
   private static void configure() {
+    TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
+
+    // Register additional thread details logging span processor
+    tracerSdkProvider.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+
     // Execute any user-provided (usually vendor-provided) configuration logic.
     ServiceLoader<TracerCustomizer> serviceLoader =
         ServiceLoader.load(TracerCustomizer.class, TracerInstaller.class.getClassLoader());
-    TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
     for (TracerCustomizer customizer : serviceLoader) {
       customizer.configure(tracerSdkProvider);
     }

@@ -63,8 +63,8 @@ public class InMemoryExporter implements SpanProcessor {
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
   @Override
-  public void onStart(ReadWriteSpan readableSpan) {
-    SpanData sd = readableSpan.toSpanData();
+  public void onStart(ReadWriteSpan readWriteSpan) {
+    SpanData sd = readWriteSpan.toSpanData();
     log.debug(
         ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
         sd.getName(),
@@ -73,7 +73,7 @@ public class InMemoryExporter implements SpanProcessor {
         sd.getParentSpanId().toLowerBase16(),
         sd.getInstrumentationLibraryInfo());
     synchronized (tracesLock) {
-      spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+      spanOrders.put(readWriteSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
     }
   }
 
