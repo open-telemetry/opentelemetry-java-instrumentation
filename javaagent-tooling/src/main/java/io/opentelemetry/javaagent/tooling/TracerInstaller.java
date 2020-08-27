@@ -70,6 +70,30 @@ public class TracerInstaller {
       log.warn("No {} span exporter found", exporterName);
       log.warn("No valid span exporter found. Tracing will run but spans are dropped");
     }
+
+    MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
+    if (metricExporterFactory != null) {
+      DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+      installExporter(metricExporterFactory, config);
+    } else {
+      log.debug("No {} metric exporter found", exporterName);
+    }
+  }
+
+  private static MetricExporterFactory findMetricExporterFactory(String exporterName) {
+    ServiceLoader<MetricExporterFactory> serviceLoader =
+        ServiceLoader.load(MetricExporterFactory.class, TracerInstaller.class.getClassLoader());
+
+    for (MetricExporterFactory metricExporterFactory : serviceLoader) {
+      if (metricExporterFactory
+          .getClass()
+          .getSimpleName()
+          .toLowerCase()
+          .startsWith(exporterName.toLowerCase())) {
+        return metricExporterFactory;
+      }
+    }
+    return null;
   }
 
   private static SpanExporterFactory findSpanExporterFactory(String exporterName) {
