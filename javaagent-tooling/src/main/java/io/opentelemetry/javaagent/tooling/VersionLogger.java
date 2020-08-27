@@ -16,7 +16,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.AgentVersion;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ public class VersionLogger {
 
   /** Log version string for java-agent */
   public static void logAllVersions() {
-    log.info("opentelemetry-javaagent - version: {}", AgentVersion.VERSION);
+    log.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
     if (log.isDebugEnabled()) {
       log.debug(
           "Running on Java {}. JVM {} - {} - {}",

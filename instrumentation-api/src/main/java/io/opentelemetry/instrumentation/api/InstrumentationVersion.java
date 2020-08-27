@@ -16,6 +16,6 @@
 
 package io.opentelemetry.instrumentation.api;
 
-public class AgentVersion {
-  public static final String VERSION = AgentVersion.class.getPackage().getImplementationVersion();
+public class InstrumentationVersion {
+  public static final String VERSION = InstrumentationVersion.class.getPackage().getImplementationVersion();
 }
