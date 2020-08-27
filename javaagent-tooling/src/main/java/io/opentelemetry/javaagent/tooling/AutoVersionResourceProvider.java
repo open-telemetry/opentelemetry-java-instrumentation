@@ -27,6 +27,7 @@ import io.opentelemetry.sdk.resources.ResourceProvider;
 public class AutoVersionResourceProvider extends ResourceProvider {
   @Override
   protected Attributes getAttributes() {
-    return Attributes.of("telemetry.auto.version", stringAttributeValue(InstrumentationVersion.VERSION));
+    return Attributes.of(
+        "telemetry.auto.version", stringAttributeValue(InstrumentationVersion.VERSION));
   }
 }
