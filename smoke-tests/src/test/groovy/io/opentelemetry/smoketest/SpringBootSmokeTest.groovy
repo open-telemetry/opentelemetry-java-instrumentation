@@ -16,7 +16,11 @@
 
 package io.opentelemetry.smoketest
 
+
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+import java.util.stream.Collectors
 import okhttp3.Request
 
 class SpringBootSmokeTest extends SmokeTest {
@@ -31,6 +35,8 @@ class SpringBootSmokeTest extends SmokeTest {
     String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
+    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
     when:
     def response = client.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
@@ -41,11 +47,14 @@ class SpringBootSmokeTest extends SmokeTest {
     countSpansByName(traces, 'WebController.greeting') == 1
     countSpansByName(traces, 'WebController.withSpan') == 1
 
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+      .map { it.stringValue }
+      .collect(Collectors.toSet())
+
     cleanup:
     stopTarget()
 
     where:
     jdk << [8, 11, 14]
   }
-
 }

@@ -19,6 +19,7 @@ package io.opentelemetry.smoketest
 import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -93,6 +94,15 @@ abstract class SmokeTest extends Specification {
 
   def cleanupSpec() {
     collector.stop()
+  }
+
+  protected static Stream<AnyValue> findResourceAttribute(Collection<ExportTraceServiceRequest> traces,
+                                                          String attributeKey) {
+    return traces.stream()
+      .flatMap { it.getResourceSpansList().stream() }
+      .flatMap { it.getResource().getAttributesList().stream() }
+      .filter { it.key == attributeKey }
+      .map { it.value }
   }
 
   protected static int countSpansByName(Collection<ExportTraceServiceRequest> traces, String spanName) {

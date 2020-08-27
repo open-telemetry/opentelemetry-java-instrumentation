@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -62,7 +63,7 @@ public abstract class BaseTracer {
   protected abstract String getInstrumentationName();
 
   protected String getVersion() {
-    return null;
+    return InstrumentationVersion.VERSION;
   }
 
   /**
