@@ -397,10 +397,10 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 |---					|---												|---
 |Otlp Exporter  	 	|opentelemetry.trace.exporters.otlp.servicename 	|unknown
 |				  		|opentelemetry.trace.exporters.otlp.endpoint		|localhost:55680
-|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1ms
+|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1s
 |Jaeger Exporter  	 	|opentelemetry.trace.exporters.jaeger.servicename 	|unknown
 |				  		|opentelemetry.trace.exporters.jaeger.endpoint		|localhost:14250
-|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1ms
+|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1s
 |Zipkin Exporter 		|opentelemetry.trace.exporters.jaeger.servicename	|unknown
 |				 		|opentelemetry.trace.exporters.jaeger.endpoint		|http://localhost:9411/api/v2/spans
 
@@ -408,7 +408,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 |Feature   				|Property   										|Default Value
 |---					|---												|---
-|Tracer			  	 	|opentelemetry.trace.tracer.name 					|otel-spring-tracer
+|Tracer			  	 	|opentelemetry.trace.tracer.name 					|io.opentelemetry.instrumentation.spring-boot-autoconfigure
 |				  	 	|opentelemetry.trace.tracer.samplerprobability 		|1.0
 
 
