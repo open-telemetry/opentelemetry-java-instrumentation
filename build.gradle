@@ -1,3 +1,5 @@
+import nebula.plugin.release.git.opinion.Strategies
+
 plugins {
   id 'idea'
 
@@ -12,14 +14,14 @@ plugins {
 
   id 'com.dorongold.task-tree' version '1.5'
 
-  id "com.github.johnrengelman.shadow" version "5.2.0"
+  id "com.github.johnrengelman.shadow" version "6.0.0"
 
   id "com.diffplug.gradle.spotless" version "4.3.0"
   id "com.github.spotbugs" version "4.0.1"
 }
 
 release {
-  defaultVersionStrategy = nebula.plugin.release.git.opinion.Strategies.SNAPSHOT
+  defaultVersionStrategy = Strategies.SNAPSHOT
 }
 
 def isCI = System.getenv("CI") != null
