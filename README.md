@@ -39,14 +39,14 @@ Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.exporter=zipkin
+     -Dotel.exporter=zipkin \
      -jar myapp.jar
 ```
 
 External exporter jar can be specified via `otel.exporter.jar` system property:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.exporter.jar=path/to/external-exporter.jar
+     -Dotel.exporter.jar=path/to/external-exporter.jar \
      -jar myapp.jar
 ```
 
@@ -345,7 +345,7 @@ and you want to suppress some of them without modifying the code.
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
