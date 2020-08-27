@@ -775,8 +775,8 @@ parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterI
 sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, 
 http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, 
 http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, 
-http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, status=Status{canonicalCode=OK, 
-description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693},
 resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0},
 net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
 http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/message},
@@ -794,7 +794,8 @@ delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032
 spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d}, 
 name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null, 
 totalRecordedEvents=1,totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[], 
-resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, 
+resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], 
+attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, 
 status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598409410740607921, hasEnded=true
 }
 
