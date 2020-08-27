@@ -43,7 +43,7 @@ public class ServerRegistryInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RatpackDecorator", packageName + ".TracingHandler",
+      packageName + ".RatpackTracer", packageName + ".TracingHandler",
     };
   }
 

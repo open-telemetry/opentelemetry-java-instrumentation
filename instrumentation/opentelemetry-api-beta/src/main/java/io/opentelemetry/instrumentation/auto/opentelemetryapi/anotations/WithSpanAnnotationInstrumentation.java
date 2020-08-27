@@ -59,7 +59,7 @@ public final class WithSpanAnnotationInstrumentation
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".TraceDecorator",
+      packageName + ".TraceAnnotationTracer",
     };
   }
 

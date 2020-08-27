@@ -6,9 +6,5 @@
  * route handlers in order to update the name of the currently active SERVER span with the name of
  * route. This is, arguably, a much more user-friendly name that defaults provided by HTTP server
  * instrumentations.
- *
- * <p>{@link io.opentelemetry.instrumentation.auto.vertx.reactive.VertxRxInstrumentation} wraps
- * {code AsyncResultSingle} classes from Vert.x RxJava library to ensure proper span context
- * propagation in reactive Vert.x applications.
  */
 package io.opentelemetry.instrumentation.auto.vertx;

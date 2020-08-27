@@ -18,20 +18,16 @@ package io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import application.io.opentelemetry.trace.Span;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.trace.Span.Kind;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TraceDecorator extends BaseDecorator {
-  public static final TraceDecorator DECORATE = new TraceDecorator();
+public class TraceAnnotationTracer extends BaseTracer {
+  public static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.trace-annotation");
-
-  private static final Logger log = LoggerFactory.getLogger(TraceDecorator.class);
+  private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
@@ -46,18 +42,23 @@ public class TraceDecorator extends BaseDecorator {
     return spanNameForMethod(method);
   }
 
-  public io.opentelemetry.trace.Span.Kind extractSpanKind(WithSpan applicationAnnotation) {
+  public Kind extractSpanKind(WithSpan applicationAnnotation) {
     Span.Kind applicationKind =
         applicationAnnotation != null ? applicationAnnotation.kind() : Span.Kind.INTERNAL;
     return toAgentOrNull(applicationKind);
   }
 
-  public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
+  public static Kind toAgentOrNull(Span.Kind applicationSpanKind) {
     try {
-      return io.opentelemetry.trace.Span.Kind.valueOf(applicationSpanKind.name());
+      return Kind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
       log.debug("unexpected span kind: {}", applicationSpanKind.name());
-      return io.opentelemetry.trace.Span.Kind.INTERNAL;
+      return Kind.INTERNAL;
     }
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.trace-annotation";
   }
 }

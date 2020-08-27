@@ -16,16 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.ratpack;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import ratpack.handling.Context;
 
-public class RatpackDecorator extends BaseDecorator {
-  public static final RatpackDecorator DECORATE = new RatpackDecorator();
-
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
+public class RatpackTracer extends BaseTracer {
+  public static final RatpackTracer TRACER = new RatpackTracer();
 
   public Span onContext(Span span, Context ctx) {
     String description = ctx.getPathBinding().getDescription();
@@ -41,11 +37,16 @@ public class RatpackDecorator extends BaseDecorator {
   }
 
   @Override
-  public Span onError(Span span, Throwable throwable) {
-    // Attempt to unwrap ratpack.handling.internal.HandlerException without direct reference.
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.ratpack-1.4";
+  }
+
+  @Override
+  protected Throwable unwrapThrowable(Throwable throwable) {
     if (throwable instanceof Error && throwable.getCause() != null) {
-      return super.onError(span, throwable.getCause());
+      return throwable.getCause();
+    } else {
+      return throwable;
     }
-    return super.onError(span, throwable);
   }
 }

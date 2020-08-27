@@ -52,6 +52,11 @@ public abstract class BaseTracer {
     return startSpan(spanName, Kind.INTERNAL);
   }
 
+  public Span startSpan(Method method) {
+    String spanName = spanNameForMethod(method);
+    return startSpan(spanName, Kind.INTERNAL);
+  }
+
   public Span startSpan(String spanName, Kind kind) {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }

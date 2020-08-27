@@ -16,10 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.jsp;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
@@ -30,10 +28,8 @@ import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
-public class JSPDecorator extends BaseDecorator {
-  public static final JSPDecorator DECORATE = new JSPDecorator();
-
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jsp-2.3");
+public class JSPTracer extends BaseTracer {
+  public static final JSPTracer TRACER = new JSPTracer();
 
   public String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null
@@ -83,5 +79,10 @@ public class JSPDecorator extends BaseDecorator {
       LoggerFactory.getLogger(HttpJspPage.class)
           .warn("Failed to get and normalize request URL: " + uriSE.getMessage());
     }
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jsp-2.3";
   }
 }

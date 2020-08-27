@@ -58,9 +58,7 @@ public class VertxRxInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".AsyncResultConsumerWrapper",
-      packageName + ".AsyncResultHandlerWrapper",
-      packageName + ".VertxDecorator"
+      packageName + ".AsyncResultConsumerWrapper", packageName + ".AsyncResultHandlerWrapper"
     };
   }
 

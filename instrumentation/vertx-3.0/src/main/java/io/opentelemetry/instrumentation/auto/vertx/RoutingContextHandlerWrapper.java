@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.vertx;
 
-import static io.opentelemetry.instrumentation.auto.vertx.VertxDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.vertx.VertxTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import io.vertx.core.Handler;
@@ -38,11 +38,11 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   @Override
   public void handle(RoutingContext context) {
     try {
-      Span currentSpan = TRACER.getCurrentSpan();
-      if (currentSpan.getContext().isValid()) {
+      Span serverSpan = TRACER.getCurrentServerSpan();
+      if (serverSpan != null) {
         // TODO should update only SERVER span using
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/465
-        currentSpan.updateName(context.currentRoute().getPath());
+        serverSpan.updateName(context.currentRoute().getPath());
       }
     } catch (Exception ex) {
       log.error("Failed to update server span name with vert.x route", ex);
