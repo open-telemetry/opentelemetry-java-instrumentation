@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.instrumentation.api;
 
 public class AgentVersion {
   public static final String VERSION = AgentVersion.class.getPackage().getImplementationVersion();

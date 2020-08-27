@@ -20,6 +20,7 @@ import static io.opentelemetry.common.AttributeValue.stringAttributeValue;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.common.Attributes;
+import io.opentelemetry.instrumentation.api.AgentVersion;
 import io.opentelemetry.sdk.resources.ResourceProvider;
 
 @AutoService(ResourceProvider.class)
