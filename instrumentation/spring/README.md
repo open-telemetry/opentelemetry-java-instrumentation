@@ -8,7 +8,7 @@ The [first section](#manual-instrumentation-with-java-sdk) will walk you through
 
 The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
 
-The [third section](#auto-instrumentation-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
+The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](/spring-boot-autoconfigure/README.md#features) which can improve this process.
 
@@ -756,19 +756,63 @@ To generate a trace run MainServiceApplication and TimeServiceApplication and th
 
 #### MainService
 
-```
-span: SpanWrapper{delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5}, parentSpanId=SpanId{spanId=57f0106dd1121b54}, name=HTTP GET, kind=CLIENT, attributes={net.peer.name=AttributeValueString{stringValue=localhost}, http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181, endEpochNanos=1598409410925420912}, resolvedLinks=[], resolvedEvents=[], attributes={net.peer.name=AttributeValueString{stringValue=localhost}, http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5, totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=HTTP GET, endEpochNanos=1598409410925420912, hasEnded=true}
+```java
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5}, 
+parentSpanId=SpanId{spanId=57f0106dd1121b54}, name=HTTP GET, kind=CLIENT, attributes={net.peer.name=AttributeValueString{stringValue=localhost},
+http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181, 
+endEpochNanos=1598409410925420912}, resolvedLinks=[], resolvedEvents=[], attributes={net.peer.name=AttributeValueString{stringValue=localhost},
+http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5, 
+totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=HTTP GET, endEpochNanos=1598409410925420912, hasEnded=true
+}
 
-Span: SpanWrapper{delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54}, parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409411045782693, hasEnded=true}
-
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54}, 
+parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, 
+sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, 
+http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, 
+http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, status=Status{canonicalCode=OK, 
+description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693}, 
+resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0},
+net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
+http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/message},
+net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET}, 
+http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0, 
+status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409411045782693, hasEnded=true
+}
 ```
 
 #### TimeService
 
-```
-span: SpanWrapper{delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d}, name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null, totalRecordedEvents=1, totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[], resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598409410740607921, hasEnded=true}
+```java
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, 
+spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d}, 
+name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null, 
+totalRecordedEvents=1,totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[], 
+resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, 
+status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598409410740607921, hasEnded=true
+}
 
-SpanWrapper{delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d}, parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/time}, net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805, endEpochNanos=1598409410921631068}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/time}, net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409410921631068, hasEnded=true}
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d}, 
+parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, 
+attributes={http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=40174}, 
+http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, 
+http.url=AttributeValueString{stringValue=/time}, net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805, 
+endEpochNanos=1598409410921631068}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200},
+net.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, 
+http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/time}, 
+net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, 
+http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0, 
+status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409410921631068, hasEnded=true
+}
 
 ```
 
