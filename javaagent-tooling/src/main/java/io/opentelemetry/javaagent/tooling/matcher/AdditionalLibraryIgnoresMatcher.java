@@ -16,6 +16,8 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
+import com.google.common.collect.Sets;
+import java.util.Set;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -26,6 +28,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>This is separated from {@link GlobalIgnoresMatcher} to allow for better testing. The idea is
  * that we should be able to remove this matcher from the agent and all tests should still pass.
  * Moreover, no classes matched by this matcher should be modified during test run.
+ *
+ * <p>TODO: refactor/optimize this class (spring boot approach as a possible solution)
  */
 public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
@@ -109,21 +113,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       }
 
       if (name.startsWith("org.springframework.boot.")) {
-        // More runnables to deal with
-        if (name.startsWith("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
-            || name.startsWith("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
-            || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")
-            || name.startsWith(
-                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
-            || name.equals(
-                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader")
-            || name.equals(
-                "org.springframework.boot.context.embedded.EmbeddedWebApplicationContext")
-            || name.equals(
-                "org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext")) {
-          return false;
-        }
-        return true;
+        return !instrumentedSpringBootClasses(name);
       }
 
       if (name.startsWith("org.springframework.cglib.")) {
@@ -317,6 +307,31 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     }
 
     return false;
+  }
+
+  private static Set<String> INSTRUMENTED_SPRING_BOOT_CLASSES =
+      Sets.newHashSet(
+          "org.springframework.boot.autoconfigure.BackgroundPreinitializer$",
+          "org.springframework.boot.autoconfigure.condition.OnClassCondition$",
+          "org.springframework.boot.web.embedded.netty.NettyWebServer$",
+          "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$",
+          "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader",
+          "org.springframework.boot.context.embedded.EmbeddedWebApplicationContext",
+          "org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext",
+          // spring boot 2 classes
+          "org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext",
+          "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext",
+          "org.springframework.boot.web.embedded.tomcat.TomcatWebServer$",
+          "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
+
+  private static String outerClassName(final String name) {
+    int separator = name.indexOf('$');
+    return (separator == -1 ? name : name.substring(0, separator + 1));
+  }
+
+  private static boolean instrumentedSpringBootClasses(final String name) {
+    String outerName = outerClassName(name);
+    return INSTRUMENTED_SPRING_BOOT_CLASSES.contains(outerName);
   }
 
   @Override

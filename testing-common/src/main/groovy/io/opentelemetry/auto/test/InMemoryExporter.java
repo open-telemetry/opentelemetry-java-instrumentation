@@ -86,11 +86,12 @@ public class InMemoryExporter implements SpanProcessor {
   public void onEnd(ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "<<< SPAN END: {} id={} traceid={} parent={}, attributes={}",
+        "<<< SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
         sd.getName(),
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16(),
+        sd.getInstrumentationLibraryInfo(),
         printSpanAttributes(sd));
     SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {

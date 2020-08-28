@@ -22,8 +22,8 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
-import static java.util.Collections.singletonMap
 
+import com.google.common.collect.ImmutableMap
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
@@ -38,7 +38,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(FilteredAppConfig, SecurityConfig)
-    app.setDefaultProperties(singletonMap("server.port", port))
+    app.setDefaultProperties(ImmutableMap.of("server.port", port, "server.error.include-message", "always"))
     def context = app.run()
     return context
   }
