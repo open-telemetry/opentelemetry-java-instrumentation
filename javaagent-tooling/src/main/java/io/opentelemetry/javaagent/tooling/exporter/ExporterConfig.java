@@ -17,9 +17,8 @@
 package io.opentelemetry.javaagent.tooling.exporter;
 
 /**
- * An interface used to provide configuration information to {@link SpanExporterFactory}
- * implementations. Callers (such as the Java Auto Instrumenter) typically provide an implementation
- * mapping directly to their native configuration framework.
+ * An interface used to provide configuration information to {@link SpanExporterFactory} and {@link
+ * MetricExporterFactory} implementations.
  *
  * <p>This interface is intentionally kept very simple since the underlying implementations may only
  * have access to very basic configuration mechanisms such as system properties and environment
