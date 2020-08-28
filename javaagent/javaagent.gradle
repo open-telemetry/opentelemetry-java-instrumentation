@@ -42,8 +42,14 @@ CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
 shadowJar {
   dependsOn ':instrumentation:shadowJar'
   dependsOn ':javaagent-exporters:shadowJar'
-  def projectsWithShadowJar = [project(':instrumentation'), project(':javaagent-exporters')]
+  def projectsWithShadowJar = [project(':javaagent-exporters'), project(':instrumentation')]
   with isolateSpec(projectsWithShadowJar)
+
+  // Exclude dependencies pulled in from instrumentation that exist in javaagent-exporters.
+  // Instrumentation is in the agent class loader, which is the parent for the exporter classloader
+  // and will be used, removing duplicates can prevent issues when downstream projects repackage the
+  // jar.
+  duplicatesStrategy = 'exclude'
 }
 
 //Includes instrumentations, but not exporters
