@@ -28,7 +28,8 @@ import java.time.temporal.ChronoUnit
 class JdkHttpClientTest extends HttpClientTest {
 
   @Shared
-  def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS, ChronoUnit.MILLIS)).build();
+  def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
+    ChronoUnit.MILLIS)).build()
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
