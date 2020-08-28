@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.tooling.exporter;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 
-public class DefaultExporterConfig implements io.opentelemetry.sdk.extensions.auto.config.Config {
+public class DefaultExporterConfig implements ExporterConfig {
   private final String prefix;
 
   public DefaultExporterConfig(String prefix) {

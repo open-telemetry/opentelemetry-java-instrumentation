@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.exporters.otlp;
+package io.opentelemetry.javaagent.tooling.exporter;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.exporters.otlp.OtlpGrpcSpanExporter;
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-@AutoService(SpanExporterFactory.class)
-public class OtlpSpanExporterFactory implements SpanExporterFactory {
-
-  @Override
-  public SpanExporter fromConfig(ExporterConfig config) {
-    return OtlpGrpcSpanExporter.newBuilder()
-        .readEnvironmentVariables()
-        .readSystemProperties()
-        .build();
-  }
+/**
+ * A {@link SpanExporterFactory} acts as the bootstrap for a {@link SpanExporter} implementation. An
+ * exporter must register its implementation of a {@link SpanExporterFactory} through the Java SPI
+ * framework.
+ */
+public interface SpanExporterFactory {
+  /**
+   * Creates an instance of a {@link SpanExporter} based on the provided configuration.
+   *
+   * @param config The configuration
+   * @return An implementation of a {@link SpanExporter}
+   */
+  SpanExporter fromConfig(ExporterConfig config);
 }

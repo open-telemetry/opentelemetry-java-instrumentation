@@ -76,9 +76,9 @@ public class ExporterClassLoader extends URLClassLoader {
     // A small hack to prevent other exporters from being loaded by this classloader if they
     // should happen to appear on the classpath.
     if (name.equals(
-            "META-INF/services/io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory")
+            "META-INF/services/io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory")
         || name.equals(
-            "META-INF/services/io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory")) {
+            "META-INF/services/io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory")) {
       return findResources(name);
     }
     return super.getResources(name);
