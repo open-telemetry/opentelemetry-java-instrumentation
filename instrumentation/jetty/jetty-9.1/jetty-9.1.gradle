@@ -12,7 +12,7 @@ dependencies {
   implementation project(':instrumentation:servlet:servlet-3:servlet-3-common')
   implementation project(':instrumentation:servlet:servlet-3:servlet-3.1')
 
-  // 9.1 is the first Jetty version that introduces Servlet 3.1
+  // 9.1 is the first Jetty version that supports Servlet 3.1
   library group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.1.0.v20131115'
 
   testImplementation(project(':instrumentation:jetty:jetty-testing'))

@@ -8,7 +8,7 @@
  * Handlers</a>.
  *
  * <p>As instrumentation points differ between servlet instrumentations and this one, this module
- * has its own {@code JettyHandlerInstrumentation} and {@code JettyHandlerAdvice}. But this is the
+ * has its own {@code Jetty8HandlerInstrumentation} and {@code Jetty8HandlerAdvice}. But this is the
  * only difference between two instrumentations, thus {@link
  * io.opentelemetry.instrumentation.auto.jetty.Jetty8HttpServerTracer} is a very thin subclass of
  * {@link io.opentelemetry.instrumentation.auto.servlet.v3.Servlet3HttpServerTracer}.

@@ -45,7 +45,7 @@ abstract class JettyContinuationHandlerTest extends JettyHandlerTest {
           continuation.resume()
         }
       } else {
-        JettyHandlerTest.handleRequest(baseRequest, response)
+        handleRequest(baseRequest, response)
       }
       baseRequest.handled = true
     }
