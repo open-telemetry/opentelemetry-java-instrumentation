@@ -40,6 +40,12 @@ dependencies {
   implementation(project(':javaagent-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+    // need explicit excludes on transitive dependencies because they are included explicitly
+    // due to issue with depending on snapshots (see further comment in dependencies.gradle)
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-correlation-context'
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-tracing'
   }
   api project(':utils:test-utils')
 

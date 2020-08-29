@@ -40,6 +40,12 @@ afterEvaluate {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
       // is brought in for tests by project(:testing-common) below
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+      // need explicit excludes on transitive dependencies because they are included explicitly
+      // due to issue with depending on snapshots (see further comment in dependencies.gradle)
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-correlation-context'
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-tracing'
     }
     implementation deps.bytebuddy
     annotationProcessor deps.autoservice
