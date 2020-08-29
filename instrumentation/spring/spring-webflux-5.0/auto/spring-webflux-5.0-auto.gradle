@@ -23,7 +23,7 @@ muzzle {
 }
 
 dependencies {
-  implementation project(':instrumentation:spring:spring-webflux-5.0:spring-webflux-5.0-library')
+  implementation project(':instrumentation:spring:spring-webflux-5.0:library')
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
   compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
 
