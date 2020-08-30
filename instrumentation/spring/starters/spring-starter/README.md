@@ -1,6 +1,6 @@
 # OpenTelemetry Spring Starter
 
-The OpenTelemetry Spring Starter for Java is a starter package that includes packages required to enable tracing using OpenTelemetry. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the list of supported libraries and features.
+OpenTelemetry Spring Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-auto-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the full list of supported libraries and features.
 
 This version is compatible with Spring Boot 2.0.
 
@@ -9,11 +9,12 @@ This version is compatible with Spring Boot 2.0.
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.7.0`
+ - Minimum version: `0.8.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
-For Maven add to your `pom.xml`:
+### Maven
+Add the following dependencies to your `pom.xml` file:
 
 ```xml
 <dependencies>
@@ -27,7 +28,8 @@ For Maven add to your `pom.xml`:
 </dependencies>
 ```
 
-For Gradle add to your dependencies:
+### Gradle
+Add the following dependencies to your gradle.build file:
 
 ```groovy
 implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION'

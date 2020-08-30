@@ -16,15 +16,17 @@
 
 package io.opentelemetry.javaagent.exporters.jaeger;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
-import io.opentelemetry.sdk.extensions.auto.config.Config;
-import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
+import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
+import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
+@AutoService(SpanExporterFactory.class)
 public class JaegerExporterFactory implements SpanExporterFactory {
 
   @Override
-  public SpanExporter fromConfig(Config config) {
+  public SpanExporter fromConfig(ExporterConfig config) {
     return JaegerGrpcSpanExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()

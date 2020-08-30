@@ -8,10 +8,15 @@ apply from: "$rootDir/gradle/publish.gradle"
 archivesBaseName = 'javaagent-exporters-jaeger'
 
 dependencies {
+  compileOnly(project(":javaagent-tooling"))
+  compileOnly deps.opentelemetrySdk
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
   implementation(deps.opentelemetryJaeger) {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
-  compileOnly deps.opentelemetrySdkAutoConfig
   implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
   implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.24.0'
 }
