@@ -15,9 +15,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly group: 'org.redisson', name: 'redisson', version: '3.0.0'
-
-  testLibrary group: 'org.redisson', name: 'redisson', version: '3.0.0'
+  library group: 'org.redisson', name: 'redisson', version: '3.0.0'
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-  latestDepTestLibrary group: 'org.redisson', name: 'redisson', version: '3.+'
 }
