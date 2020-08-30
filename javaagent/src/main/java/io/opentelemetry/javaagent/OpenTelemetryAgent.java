@@ -208,31 +208,10 @@ public class OpenTelemetryAgent {
    */
   public static void main(String... args) {
     try {
-      System.out.println(getAgentVersion());
+      System.out.println(OpenTelemetryAgent.class.getPackage().getImplementationVersion());
     } catch (Exception e) {
       System.out.println("Failed to parse agent version");
       e.printStackTrace();
     }
-  }
-
-  /**
-   * Read version file out of the agent jar.
-   *
-   * @return Agent version
-   */
-  public static String getAgentVersion() throws IOException {
-    StringBuilder sb = new StringBuilder();
-    try (BufferedReader reader =
-        new BufferedReader(
-            new InputStreamReader(
-                thisClass.getResourceAsStream("/opentelemetry-javaagent.version"),
-                StandardCharsets.UTF_8))) {
-
-      for (int c = reader.read(); c != -1; c = reader.read()) {
-        sb.append((char) c);
-      }
-    }
-
-    return sb.toString().trim();
   }
 }

@@ -16,10 +16,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +26,7 @@ public class VersionLogger {
 
   /** Log version string for java-agent */
   public static void logAllVersions() {
-    log.info(
-        "opentelemetry-javaagent - version: {}",
-        getVersionString(
-            ClassLoader.getSystemClassLoader()
-                .getResourceAsStream("opentelemetry-javaagent.version")));
+    log.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
     if (log.isDebugEnabled()) {
       log.debug(
           "Running on Java {}. JVM {} - {} - {}",
@@ -42,29 +35,5 @@ public class VersionLogger {
           System.getProperty("java.vm.vendor"),
           System.getProperty("java.vm.version"));
     }
-  }
-
-  private static String getVersionString(InputStream stream) {
-    String v;
-    try {
-      StringBuilder sb = new StringBuilder();
-      BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-      for (int c = br.read(); c != -1; c = br.read()) {
-        sb.append((char) c);
-      }
-
-      v = sb.toString().trim();
-    } catch (Exception e) {
-      log.error("failed to read version stream", e);
-      v = "unknown";
-    } finally {
-      try {
-        if (null != stream) {
-          stream.close();
-        }
-      } catch (IOException e) {
-      }
-    }
-    return v;
   }
 }

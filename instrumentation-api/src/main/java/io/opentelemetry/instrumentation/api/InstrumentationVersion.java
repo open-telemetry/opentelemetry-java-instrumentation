@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.exporters.logging;
+package io.opentelemetry.instrumentation.api;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
-import io.opentelemetry.sdk.trace.export.SpanExporter;
-
-@AutoService(SpanExporterFactory.class)
-public class LoggingExporterFactory implements SpanExporterFactory {
-  @Override
-  public SpanExporter fromConfig(ExporterConfig config) {
-    return new LoggingExporter(config.getString("logging.prefix", "Logging Exporter:"));
-  }
+public class InstrumentationVersion {
+  public static final String VERSION =
+      InstrumentationVersion.class.getPackage().getImplementationVersion();
 }

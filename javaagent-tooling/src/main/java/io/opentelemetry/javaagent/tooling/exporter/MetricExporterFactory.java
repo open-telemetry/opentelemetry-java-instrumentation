@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.exporters.otlp;
+package io.opentelemetry.javaagent.tooling.exporter;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
-@AutoService(MetricExporterFactory.class)
-public class OtlpMetricExporterFactory implements MetricExporterFactory {
-
-  @Override
-  public MetricExporter fromConfig(ExporterConfig config) {
-    return OtlpGrpcMetricExporter.newBuilder()
-        .readEnvironmentVariables()
-        .readSystemProperties()
-        .build();
-  }
+/**
+ * A {@link MetricExporterFactory} acts as the bootstrap for a {@link MetricExporter}
+ * implementation. An exporter must register its implementation of a {@link MetricExporterFactory}
+ * through the Java SPI framework.
+ */
+public interface MetricExporterFactory {
+  /**
+   * Creates an instance of a {@link MetricExporter} based on the provided configuration.
+   *
+   * @param config The configuration
+   * @return An implementation of a {@link MetricExporter}
+   */
+  MetricExporter fromConfig(ExporterConfig config);
 }
