@@ -207,7 +207,7 @@ class RedissonClientTest extends AgentTestRunner {
 
   def "test sorted set command"() {
     when:
-    Map<String, Double> scores = new HashMap<>();
+    Map<String, Double> scores = new HashMap<>()
     scores.put("u1", 1.0d)
     scores.put("u2", 3.0d)
     scores.put("u3", 0.0d)
