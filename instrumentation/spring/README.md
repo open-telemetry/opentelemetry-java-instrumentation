@@ -682,11 +682,11 @@ opentelemetry.trace.tracer.name=time_service
 opentelemetry.trace.tracer.samplerProbability=1
 
 ## Default configurations
-#opentelemetry.trace.web.enabled = True
-#opentelemetry.trace.httpclients.enabled = True
+#opentelemetry.trace.web.enabled=true
+#opentelemetry.trace.httpclients.enabled=true
 #opentelemetry.trace.tracer.samplingProbablity=1
-#opentelemetry.trace.exporter.loggin.enabled=True
-#opentelemetry.trace.aspects.enabled=True
+#opentelemetry.trace.exporter.loggin.enabled=true
+#opentelemetry.trace.aspects.enabled=true
 
 ```
 
