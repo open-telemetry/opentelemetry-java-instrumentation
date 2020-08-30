@@ -884,7 +884,7 @@ opentelemetry.trace.tracer.name=main_service
 
 To generate a trace using the zipkin exporter follow the steps below: 
  1. Replace `opentelemetry-spring-starter` with `opentelemetry-zipkin-starter` in your pom or gradle build file
- 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin exporter jar 
+ 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar 
     - Ensure the zipkin endpoint matches the default value listed in your application properties
  3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
  4. Use your favorite browser to send a request to `http://localhost:8080/message`
