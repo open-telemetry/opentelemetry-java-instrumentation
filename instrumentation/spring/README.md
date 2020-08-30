@@ -820,7 +820,7 @@ status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFi
 
 ### Exporter Starters 
 
-To configure the OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemtry Spring Starter dependency with one of the artifacts listed below:
+To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemetry Spring Starter dependency with one of the artifacts listed below:
 
 #### Maven
 ```xml
