@@ -112,6 +112,9 @@ dependencies {
   testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 
   constraints {
+    // need to pin the opentelemetry-sdk transitive dependency versions explicitly, otherwise the
+    // latest snapshots are used, because the opentelemetry-sdk snapshot pom references these
+    // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-correlation-context', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAnother
