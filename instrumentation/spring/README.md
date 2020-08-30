@@ -696,7 +696,7 @@ Check out [OpenTelemetry Spring Boot AutoConfigure](spring-boot-autoconfigure/RE
 
 ### TimeService
 
-Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry to create an internal span and set some additional events and attributes. 
+Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry starter to create an internal span and set some additional events and attributes. 
 
 ```java 
 
