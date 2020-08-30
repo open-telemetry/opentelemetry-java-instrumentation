@@ -887,7 +887,7 @@ To generate a trace using the zipkin exporter follow the steps below:
  2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin exporter jar 
     - Ensure the zipkin endpoint matches the default value listed in your application properties
  3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
- 4. Use your favorite browser to send a request to `localhost:8080/message`
+ 4. Use your favorite browser to send a request to `http://localhost:8080/message`
  5. Navigate to `localhost:9411` to see your trace
 
 
