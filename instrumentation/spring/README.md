@@ -620,7 +620,7 @@ implementation "io.opentelemetry.instrumentation:opentelemetry-spring-starter:OP
 
 ### Create two Spring Projects
 
-Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies listed above.  and they will be dealing with time.
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies listed above.
 
 ### Main Service Application
 
