@@ -69,4 +69,11 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
     Channel channel = connection.getChannel();
     return (InetSocketAddress) channel.remoteAddress();
   }
+
+  @Override
+  protected String dbConnectionString(RedisConnection connection) {
+    Channel channel = connection.getChannel();
+    InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
+    return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
+  }
 }

@@ -46,24 +46,21 @@ public final class RedissonInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-        packageName + ".RedissonClientTracer",
-    };
+    return new String[] {packageName + ".RedissonClientTracer"};
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(named("send")),
-        RedissonInstrumentation.class.getName() + "$RedissonAdvice");
+        isMethod().and(named("send")), RedissonInstrumentation.class.getName() + "$RedissonAdvice");
   }
 
   public static class RedissonAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This RedisConnection connection, @Advice.Argument(0) Object arg,
+        @Advice.This RedisConnection connection,
+        @Advice.Argument(0) Object arg,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       span = TRACER.startSpan(connection, arg);
