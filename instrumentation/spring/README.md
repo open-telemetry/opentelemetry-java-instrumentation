@@ -8,7 +8,7 @@ The [first section](#manual-instrumentation-with-java-sdk) will walk you through
 
 The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations.
 
-The [third section](#auto-instrumentation-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
+The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters/) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](/spring-boot-autoconfigure/README.md#features) which can improve this process.
 
@@ -23,7 +23,7 @@ Using the [spring project initializer](https://start.spring.io/), we will create
 Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeService`. The Jaeger and LoggingExporter packages are recommended for exporting traces but are not required. As of May 2020, Jaeger, Zipkin, OTLP, and Logging exporters are supported by opentelemetry-java. Feel free to use whatever exporter you are most comfortable with.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.7.0`
+ - Minimum version: `0.8.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
  
 ### Maven
@@ -592,7 +592,396 @@ To create a sample trace enter `localhost:8080/message` in a browser. This trace
 
 
 
-## Auto Instrumentation: Spring Starters
+## Auto Instrumentation using Spring Starters
 
-<!-- TODO: Add Tutorial -->
+In this tutorial we will create two SpringBoot applications (MainService and TimeService). We will use [opentelemetry-spring-starter](starters/spring-starter) to enable distributed tracing using OpenTelemetry and export spans using the default LoggingSpanExporter. We will also use the [opentelemetry-zipkin-exporter-starter](starters/zipkin-exporter-starter) to export traces to Zipkin.
 
+### OpenTelemetry Spring Starter Dependencies
+
+Add the following dependencies to your build file.
+
+Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
+ - Minimum version: `0.8.0`
+ - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
+
+#### Maven
+```xml
+<dependency>
+   <groupId>io.opentelemetry.instrumentation</groupId>
+   <artifactId>opentelemetry-spring-starter</artifactId>
+   <version>OPENTELEMETRY_VERSION</version>
+</dependency>
+```
+
+#### Gradle
+```gradle
+implementation "io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION"
+```
+
+### Create two Spring Projects
+
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies listed above.
+
+### Main Service Application
+
+Configure the main class in your `MainService` project to match the file below. In this example `MainService` will be a client of `TimeService`. The RestController and RestTemplate Bean initialized in the file below will be auto-instrumented by the opentelemetry spring starter.
+
+```java
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+@SpringBootApplication
+public class MainServiceApplication {
+
+  public static void main(String[] args) throws IOException {
+    SpringApplication.run(MainServiceApplication.class, args);
+  }
+  
+  @RestController
+  @RequestMapping(value = "/message")
+  public class MainServiceController {
+     private static final String TIME_SERVICE_URL = "http://localhost:8080/time";
+     
+     @Autowired
+     private RestTemplate restTemplate;
+
+     @GetMapping
+     public String message() {
+        return restTemplate.exchange(TIME_SERVICE_URL, HttpMethod.GET, null, String.class).getBody();
+     }
+    
+    @Bean
+    public RestTemplate restTemplate() {
+  	  return new RestTemplate();
+    }
+  }
+}
+```
+
+#### Application Configurations
+
+The following tracer configurations can be used to customize your instrumentation. Add the following values to your project's resource/application.properties file:
+
+```properties
+
+## TimeService will run on port 8080
+## Setting the server port of MainService to 8081 will prevent conflicts
+server.port=8081
+
+## Set Tracer name
+opentelemetry.trace.tracer.name=time_service
+opentelemetry.trace.tracer.samplerProbability=1
+
+## Default configurations
+#opentelemetry.trace.web.enabled=true
+#opentelemetry.trace.httpclients.enabled=true
+#opentelemetry.trace.tracer.samplingProbablity=1
+#opentelemetry.trace.exporter.loggin.enabled=true
+#opentelemetry.trace.aspects.enabled=true
+
+```
+
+Check out [OpenTelemetry Spring Boot AutoConfigure](spring-boot-autoconfigure/README.md) to learn more.
+
+
+
+### TimeService
+
+Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry starter to create an internal span and set some additional events and attributes. 
+
+```java 
+
+import java.io.IOException;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+
+@SpringBootApplication
+public class TimeServiceApplication {
+
+  public static void main(String[] args) throws IOException {
+    SpringApplication.run(TimeServiceApplication.class, args);
+  }
+
+  @RestController
+  @RequestMapping(value = "/time")
+  public class TimeServiceController {
+     @Autowired
+     private Tracer tracer;
+
+     @GetMapping
+     public String time() {
+        withSpanMethod();
+
+        Span span = tracer.spanBuilder("time").startSpan();
+        try (Scope scope = tracer.withSpan(span)) {
+           span.addEvent("TimeServiceController Entered");
+           span.setAttribute("what.am.i", "Tu es une legume");
+           return "It's time to get a watch";
+        } finally {
+           span.end();
+        }
+     }
+     
+     @WithSpan(kind=Span.Kind.SERVER)
+     public void withSpanMethod() {}
+  }
+}
+```
+
+
+### Generating Trace - LoggingSpanExporter
+
+To generate a trace, run MainServiceApplication and TimeServiceApplication, and then send a request to `localhost:8080/message`. Shown below is the output of the default span exporter - (LoggingSpanExporter)[https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/logging].
+
+#### MainService
+
+```java
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5}, 
+parentSpanId=SpanId{spanId=57f0106dd1121b54}, name=HTTP GET, kind=CLIENT, attributes={net.peer.name=AttributeValueString{stringValue=localhost},
+http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181, 
+endEpochNanos=1598409410925420912}, resolvedLinks=[], resolvedEvents=[], attributes={net.peer.name=AttributeValueString{stringValue=localhost},
+http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5, 
+totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=HTTP GET, endEpochNanos=1598409410925420912, hasEnded=true
+}
+
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54}, 
+parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, 
+sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, 
+http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, 
+http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693},
+resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0},
+net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
+http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/message},
+net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET}, 
+http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0, 
+status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409411045782693, hasEnded=true
+}
+```
+
+#### TimeService
+
+```java
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, 
+spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d}, 
+name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null, 
+totalRecordedEvents=1,totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[], 
+resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], 
+attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, 
+status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598409410740607921, hasEnded=true
+}
+
+SpanWrapper{
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d}, 
+parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, 
+attributes={http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=40174}, 
+http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=HTTP/1.1}, 
+http.url=AttributeValueString{stringValue=/time}, net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, 
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805, 
+endEpochNanos=1598409410921631068}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200},
+net.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, 
+http.flavor=AttributeValueString{stringValue=HTTP/1.1}, http.url=AttributeValueString{stringValue=/time}, 
+net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, 
+http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0, 
+status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409410921631068, hasEnded=true
+}
+
+```
+
+
+### Exporter Starters 
+
+To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemetry Spring Starter dependency with one of the artifacts listed below:
+
+#### Maven
+```xml
+
+<!-- opentelemetry starter with zipkin -->
+<dependency>
+	<groupId>io.opentelemetry.instrumentation</groupId>
+	<artifactId>opentelemetry-zipkin-exporter-starter</artifactId>
+	<version>OPENTELEMETRY_VERSION</version>
+</dependency> 
+
+<!-- opentelemetry starter with jaeger -->
+<dependency>
+	<groupId>io.opentelemetry.instrumentation</groupId>
+	<artifactId>opentelemetry-jaeger-exporter-starter</artifactId>
+	<version>OPENTELEMETRY_VERSION</version>
+</dependency> 
+
+<!-- opentelemetry starter with otlp -->
+<dependency>
+	<groupId>io.opentelemetry.instrumentation</groupId>
+	<artifactId>opentelemetry-otlp-exporter-starter</artifactId>
+	<version>OPENTELEMETRY_VERSION</version>
+</dependency> 
+```
+
+#### Gradle
+```gradle
+
+//opentelemetry starter with zipkin configurations
+implementation "io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION"
+
+//opentelemetry starter with jaeger configurations
+implementation "io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION"
+
+//opentelemetry starter with otlp configurations
+implementation "io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION"
+```
+
+#### Exporter Configuration Properties
+
+Add the following configurations to overwrite the default exporter values listed below.
+
+```
+## Default tracer configurations
+opentelemetry.trace.tracer.name=main_service
+#opentelemetry.trace.tracer.samplerProbability=1
+
+## Default exporter configurations
+#opentelemetry.trace.exporters.otlp.servicename=unknown
+#opentelemetry.trace.exporters.otlp.endpoint=localhost:55680
+#opentelemetry.trace.exporters.otlp.spantimeout=1s
+#opentelemetry.trace.exporters.jaeger.servicename=unknown
+#opentelemetry.trace.exporters.jaeger.endpoint=localhost:14250
+#opentelemetry.trace.exporters.jaeger.spantimeout=1s
+#opentelemetry.trace.exporters.zipkin.servicename=unknown
+#opentelemetry.trace.exporters.zipkin.endpoint=http://localhost:9411/api/v2/spans
+```
+
+### Sample Trace Zipkin
+
+To generate a trace using the zipkin exporter follow the steps below: 
+ 1. Replace `opentelemetry-spring-starter` with `opentelemetry-zipkin-starter` in your pom or gradle build file
+ 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar 
+    - Ensure the zipkin endpoint matches the default value listed in your application properties
+ 3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
+ 4. Use your favorite browser to send a request to `http://localhost:8080/message`
+ 5. Navigate to `http://localhost:9411` to see your trace
+
+
+Shown below is the sample trace generated by `MainService` and `TimeService` using the opentelemetry-zipkin-exporter-starter. 
+
+```json
+[
+   {
+      "traceId":"52d6edec17bbf842cf5032ebce2043f8",
+      "parentId":"b4ae77c523215f9d",
+      "id":"f2d824704be8ab10",
+      "name":"time",
+      "timestamp":1598409410738665,
+      "duration":1942,
+      "localEndpoint":{
+         "serviceName":"time_service_zipkin_trace",
+         "ipv4":"192.XXX.X.XXX"
+      },
+      "annotations":[
+         {
+            "timestamp":1598409410738760,
+            "value":"TimeServiceController Entered"
+         }
+      ],
+      "tags":{
+         "what.am.i":"Tu es une legume"
+      }
+   },
+   {
+      "traceId":"52d6edec17bbf842cf5032ebce2043f8",
+      "parentId":"15b72a8e85c842c5",
+      "id":"b4ae77c523215f9d",
+      "kind":"SERVER",
+      "name":"webmvctracingfilter.dofilterinteral",
+      "timestamp":1598409410680549,
+      "duration":241082,
+      "localEndpoint":{
+         "serviceName":"time_service_zipkin_trace",
+         "ipv4":"192.XXX.X.XXX"
+      },
+      "tags":{
+         "http.client_ip":"127.0.0.1",
+         "http.flavor":"HTTP/1.1",
+         "http.method":"GET",
+         "http.status_code":"200",
+         "http.url":"/time",
+         "http.user_agent":"Java/11.0.8",
+         "net.peer.ip":"127.0.0.1",
+         "net.peer.port":"40174"
+      }
+   },
+   {
+      "traceId":"52d6edec17bbf842cf5032ebce2043f8",
+      "parentId":"57f0106dd1121b54",
+      "id":"15b72a8e85c842c5",
+      "kind":"CLIENT",
+      "name":"http get",
+      "timestamp":1598409410457933,
+      "duration":467487,
+      "localEndpoint":{
+         "serviceName":"main_service_zipkin_trace",
+         "ipv4":"192.XXX.X.XXX"
+      },
+      "tags":{
+         "http.method":"GET",
+         "http.status_code":"200",
+         "http.url":"http://localhost:8080/time",
+         "net.peer.name":"localhost",
+         "net.peer.port":"8080"
+      }
+   },
+   {
+      "traceId":"52d6edec17bbf842cf5032ebce2043f8",
+      "id":"57f0106dd1121b54",
+      "kind":"SERVER",
+      "name":"webmvctracingfilter.dofilterinteral",
+      "timestamp":1598409410399317,
+      "duration":646465,
+      "localEndpoint":{
+         "serviceName":"main_service_zipkin_trace",
+         "ipv4":"192.XXX.X.XXX"
+      },
+      "tags":{
+         "http.client_ip":"0:0:0:0:0:0:0:1",
+         "http.flavor":"HTTP/1.1",
+         "http.method":"GET",
+         "http.status_code":"200",
+         "http.url":"/message",
+         "http.user_agent":"PostmanRuntime/7.26.2",
+         "net.peer.ip":"0:0:0:0:0:0:0:1",
+         "net.peer.port":"57578",
+         "sampling.probability":"1.0"
+      }
+   }
+]
+
+```
