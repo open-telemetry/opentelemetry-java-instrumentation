@@ -10,7 +10,6 @@ muzzle {
     group = "org.redisson"
     module = "redisson"
     versions = "[3.0.0,)"
-    assertInverse = true
   }
 }
 
