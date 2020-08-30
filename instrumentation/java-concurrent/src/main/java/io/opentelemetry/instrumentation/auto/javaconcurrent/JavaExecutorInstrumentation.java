@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import net.bytebuddy.asm.Advice;
@@ -94,12 +93,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      // It is important to check potentially wrapped task if we can instrument task in this
-      // executor. Some executors do not support wrapped tasks.
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
         task = newTask;
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
@@ -110,9 +106,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This Executor executor,
-        @Advice.Enter State state,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
@@ -121,9 +115,8 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, task, Context.current());
@@ -133,9 +126,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This Executor executor,
-        @Advice.Enter State state,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
@@ -144,12 +135,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      // It is important to check potentially wrapped task if we can instrument task in this
-      // executor. Some executors do not support wrapped tasks.
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
         task = newTask;
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
@@ -160,7 +148,6 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Enter State state,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future future) {
@@ -177,12 +164,9 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       Callable newTask = CallableWrapper.wrapIfNeeded(task);
-      // It is important to check potentially wrapped task if we can instrument task in this
-      // executor. Some executors do not support wrapped tasks.
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
         task = newTask;
         ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
@@ -193,7 +177,6 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Enter State state,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future future) {
@@ -210,7 +193,6 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       if (tasks != null) {
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
@@ -231,7 +213,6 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void submitExit(
-        @Advice.This Executor executor,
         @Advice.Enter Collection<? extends Callable<?>> wrappedTasks,
         @Advice.Thrown Throwable throwable) {
       /*

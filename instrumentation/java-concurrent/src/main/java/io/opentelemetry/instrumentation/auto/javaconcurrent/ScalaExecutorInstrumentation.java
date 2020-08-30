@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.auto.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -70,9 +69,8 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This Executor executor,
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, task, Context.current());
@@ -82,9 +80,7 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.This Executor executor,
-        @Advice.Enter State state,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter State state, @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
