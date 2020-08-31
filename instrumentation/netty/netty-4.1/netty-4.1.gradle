@@ -4,6 +4,7 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -31,6 +32,18 @@ muzzle {
   }
 }
 
+testSets {
+  reactorTest {
+    filter {
+      // this is needed because "test.dependsOn jms2Test", and so without this,
+      // running a single test in the default test set will fail
+      setFailOnNoMatchingTests(false)
+    }
+  }
+}
+
+test.dependsOn reactorTest
+
 dependencies {
   library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
@@ -38,6 +51,9 @@ dependencies {
 
   latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
   // latest async-http-client incompatable with 5.0+ netty
+
+  reactorTestImplementation project(':instrumentation:reactor-3.1')
+  reactorTestImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.2.0.RELEASE'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.

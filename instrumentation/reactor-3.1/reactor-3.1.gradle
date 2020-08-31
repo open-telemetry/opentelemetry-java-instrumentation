@@ -19,6 +19,10 @@ dependencies {
 
   testLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
+  testLibrary project(':instrumentation:opentelemetry-api-beta')
+  testLibrary project(path: ':opentelemetry-auto-annotations-beta-shaded-for-instrumenting', configuration: 'shadow')
+
+
   latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
   latestDepTestLibrary group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
