@@ -45,10 +45,10 @@ shadowJar {
   def projectsWithShadowJar = [project(':javaagent-exporters'), project(':instrumentation')]
   with isolateSpec(projectsWithShadowJar)
 
-  // Exclude dependencies pulled in from instrumentation that exist in javaagent-exporters.
-  // Instrumentation is in the agent class loader, which is the parent for the exporter classloader
-  // and will be used, removing duplicates can prevent issues when downstream projects repackage the
-  // jar.
+  // Exclude class files pulled in from the javaagent-exporters project that are also pulled in from the
+  // instrumentation project.
+  // Removing duplicates reduces jar size and can prevent issues when downstream projects repackage
+  // the jar.
   duplicatesStrategy = 'exclude'
 }
 
