@@ -1,0 +1,38 @@
+plugins {
+  id 'java'
+  id 'com.google.cloud.tools.jib' version '2.5.0'
+}
+
+group = 'io.opentelemetry'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+  jcenter()
+
+  // this is only needed for the working against unreleased otel-java snapshots
+  maven {
+    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+    content {
+      includeGroup "io.opentelemetry"
+    }
+  }
+}
+
+compileJava {
+  options.release = 11
+}
+
+dependencies {
+  implementation("com.linecorp.armeria:armeria-grpc:1.0.0")
+  implementation("io.opentelemetry:opentelemetry-proto:0.8.0-20200826.153459-49")
+  implementation("org.slf4j:slf4j-simple:1.7.30")
+}
+
+jib {
+  to {
+    image = "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend"
+  }
+  from {
+    image = "gcr.io/distroless/java-debian10:11"
+  }
+}
