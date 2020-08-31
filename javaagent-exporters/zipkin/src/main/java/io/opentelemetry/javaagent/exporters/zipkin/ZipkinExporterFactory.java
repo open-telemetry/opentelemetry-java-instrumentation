@@ -16,15 +16,17 @@
 
 package io.opentelemetry.javaagent.exporters.zipkin;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
-import io.opentelemetry.sdk.extensions.auto.config.Config;
-import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
+import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
+import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
+@AutoService(SpanExporterFactory.class)
 public class ZipkinExporterFactory implements SpanExporterFactory {
 
   @Override
-  public SpanExporter fromConfig(Config config) {
+  public SpanExporter fromConfig(ExporterConfig config) {
     return ZipkinSpanExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()

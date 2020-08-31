@@ -11,7 +11,7 @@ into something like
 
 ```
 instrumentation/
-  aws-sdk-2.2/
+  aws-sdk/
     aws-sdk-2.2/
-    aws-sdk-2.2-auto/
+      auto/
 ```

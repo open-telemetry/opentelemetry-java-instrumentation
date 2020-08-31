@@ -7,7 +7,7 @@ Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.7.0`
+ - Minimum version: `0.8.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
@@ -397,10 +397,10 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 |---					|---												|---
 |Otlp Exporter  	 	|opentelemetry.trace.exporters.otlp.servicename 	|unknown
 |				  		|opentelemetry.trace.exporters.otlp.endpoint		|localhost:55680
-|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1ms
+|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1s
 |Jaeger Exporter  	 	|opentelemetry.trace.exporters.jaeger.servicename 	|unknown
 |				  		|opentelemetry.trace.exporters.jaeger.endpoint		|localhost:14250
-|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1ms
+|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1s
 |Zipkin Exporter 		|opentelemetry.trace.exporters.jaeger.servicename	|unknown
 |				 		|opentelemetry.trace.exporters.jaeger.endpoint		|http://localhost:9411/api/v2/spans
 
@@ -408,7 +408,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 |Feature   				|Property   										|Default Value
 |---					|---												|---
-|Tracer			  	 	|opentelemetry.trace.tracer.name 					|otel-spring-tracer
+|Tracer			  	 	|opentelemetry.trace.tracer.name 					|io.opentelemetry.instrumentation.spring-boot-autoconfigure
 |				  	 	|opentelemetry.trace.tracer.samplerprobability 		|1.0
 
 
