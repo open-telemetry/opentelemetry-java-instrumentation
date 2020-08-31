@@ -16,9 +16,9 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.sdk.extensions.auto.config.Config
-import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory
-import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory
+import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig
+import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory
+import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import java.nio.charset.StandardCharsets
@@ -56,7 +56,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryParent implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(Config config) {
+    MetricExporter fromConfig(ExporterConfig config) {
       return null
     }
   }
@@ -64,7 +64,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryChild implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(Config config) {
+    MetricExporter fromConfig(ExporterConfig config) {
       return null
     }
   }
@@ -72,7 +72,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryParent implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(Config config) {
+    SpanExporter fromConfig(ExporterConfig config) {
       return null
     }
   }
@@ -80,7 +80,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryChild implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(Config config) {
+    SpanExporter fromConfig(ExporterConfig config) {
       return null
     }
   }

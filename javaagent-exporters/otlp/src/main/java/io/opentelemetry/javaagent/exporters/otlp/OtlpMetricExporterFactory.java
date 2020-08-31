@@ -16,15 +16,17 @@
 
 package io.opentelemetry.javaagent.exporters.otlp;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
-import io.opentelemetry.sdk.extensions.auto.config.Config;
-import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory;
+import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
+import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
+@AutoService(MetricExporterFactory.class)
 public class OtlpMetricExporterFactory implements MetricExporterFactory {
 
   @Override
-  public MetricExporter fromConfig(Config config) {
+  public MetricExporter fromConfig(ExporterConfig config) {
     return OtlpGrpcMetricExporter.newBuilder()
         .readEnvironmentVariables()
         .readSystemProperties()
