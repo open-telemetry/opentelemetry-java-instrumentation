@@ -36,17 +36,18 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
 
   @Override
   protected String normalizeQuery(Object args) {
-    String commandName = "Redis Command";
     // get command
     if (args instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) args).getCommands();
-      if (commands != null && !commands.isEmpty()) {
-        commandName = commands.get(0).getCommand().getName() + "... [bulk]";
+      StringBuilder commandStrings = new StringBuilder();
+      for (CommandData commandData : commands) {
+        commandStrings.append(commandData.getCommand().getName()).append(";");
       }
+      return commandStrings.toString();
     } else if (args instanceof CommandData) {
-      commandName = ((CommandData) args).getCommand().getName();
+      return ((CommandData) args).getCommand().getName();
     }
-    return commandName;
+    return "Redis Command";
   }
 
   @Override

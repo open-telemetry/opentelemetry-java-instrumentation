@@ -113,7 +113,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET... [bulk]"
+          operationName "SET;SET;"
           spanKind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -121,7 +121,7 @@ class RedissonClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET... [bulk]"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET;SET;"
           }
         }
       }
