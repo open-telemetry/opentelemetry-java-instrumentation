@@ -16,26 +16,30 @@
 
 package io.opentelemetry.smoketest
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
-import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.MountableFile
 import spock.lang.Shared
 import spock.lang.Specification
 
 abstract class SmokeTest extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(SmokeTest)
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
   protected static OkHttpClient client = OkHttpUtils.client()
 
@@ -57,11 +61,22 @@ abstract class SmokeTest extends Specification {
   }
 
   @Shared
+  private GenericContainer backend
+
+  @Shared
   private GenericContainer collector
 
-  def setup() {
-    //We have to recreate collector for every test to wipe exported file with traces
+  def setupSpec() {
+    backend = new GenericContainer<>("open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend")
+      .withExposedPorts(8080)
+      .waitingFor(Wait.forHttp("/health").forPort(8080))
+      .withNetwork(network)
+      .withNetworkAliases("backend")
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+    backend.start()
+
     collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
+      .dependsOn(backend)
       .withNetwork(network)
       .withNetworkAliases("collector")
       .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -85,7 +100,11 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanup() {
-    collector.stop()
+    client.newCall(new Request.Builder()
+      .url("http://localhost:${backend.getMappedPort(8080)}/clear-requests")
+      .build())
+      .execute()
+      .close()
   }
 
   def stopTarget() {
@@ -93,6 +112,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanupSpec() {
+    backend.stop()
     collector.stop()
   }
 
@@ -117,49 +137,39 @@ abstract class SmokeTest extends Specification {
   }
 
   protected Collection<ExportTraceServiceRequest> waitForTraces() {
-    def file = new FileInDocker(collector, "/traces.json")
-    waitForFileSizeToStabilize(file)
+    def content = waitForContent()
 
-    return file.readLines().collect {
+    return OBJECT_MAPPER.readTree(content).collect {
       def builder = ExportTraceServiceRequest.newBuilder()
-      JsonFormat.parser().merge(it, builder)
+      // TODO(anuraaga): Register parser into object mapper to avoid de -> re -> deserialize.
+      JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder)
       return builder.build()
     }
   }
 
-
-  private static void waitForFileSizeToStabilize(FileInDocker file) {
+  private String waitForContent() {
     long previousSize = 0
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
-    while ((previousSize == 0) || previousSize != file.getSize() && System.currentTimeMillis() < deadline) {
-      previousSize = file.getSize()
-      println "Curent file size $previousSize"
+    String content = "[]"
+    while (System.currentTimeMillis() < deadline) {
+      def body = content = client.newCall(new Request.Builder()
+        .url("http://localhost:${backend.getMappedPort(8080)}/get-requests")
+        .build())
+        .execute()
+        .body()
+      try {
+        content = body.string()
+      } finally {
+        body.close()
+      }
+      if (content.length() > 2 && content.length() == previousSize) {
+        break
+      }
+      previousSize = content.length()
+      println "Curent content size $previousSize"
       TimeUnit.MILLISECONDS.sleep(500)
     }
-  }
 
-  private static class FileInDocker {
-    private final GenericContainer collector
-    private final File localFile
-    private final String pathInDocker
-
-    FileInDocker(GenericContainer collector, String pathInDocker) {
-      this.pathInDocker = pathInDocker
-      this.collector = collector
-
-      this.localFile = Files.createTempFile("traces", ".json").toFile()
-      localFile.deleteOnExit()
-      println localFile
-    }
-
-    long getSize() {
-      collector.copyFileFromContainer(pathInDocker, localFile.absolutePath)
-      return localFile.size()
-    }
-
-    List<String> readLines() {
-      collector.copyFileFromContainer(pathInDocker, localFile.absolutePath)
-      return localFile.readLines()
-    }
+    return content
   }
 }
