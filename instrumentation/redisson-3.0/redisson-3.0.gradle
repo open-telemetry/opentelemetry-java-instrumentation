@@ -15,6 +15,9 @@ muzzle {
 
 dependencies {
   library group: 'org.redisson', name: 'redisson', version: '3.0.0'
-  testImplementation group: 'org.redisson', name: 'redisson', version: '3.4.3'
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+}
+
+test {
+  systemProperty "testLatestDeps", testLatestDeps
 }

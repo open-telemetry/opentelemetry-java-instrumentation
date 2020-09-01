@@ -42,8 +42,13 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     .port(port).build()
   @Shared
   RedissonClient redisson
+  @Shared
+  String address = "localhost:" + port
 
   def setupSpec() {
+    if ("true".equals(System.properties.getProperty("testLatestDeps"))) {
+      address = "redis://" + address
+    }
     println "Using redis: $redisServer.args"
     redisServer.start()
   }
@@ -55,7 +60,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
 
   def setup() {
     Config config = new Config()
-    config.useSingleServer().setAddress("redis://localhost:" + port)
+    config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
     TEST_WRITER.clear()
   }
