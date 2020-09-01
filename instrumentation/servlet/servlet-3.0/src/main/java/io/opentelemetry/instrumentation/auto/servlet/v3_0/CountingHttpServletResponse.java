@@ -19,7 +19,11 @@ package io.opentelemetry.instrumentation.auto.servlet.v3_0;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
@@ -75,6 +79,37 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
   }
 
   static class CountingServletOutputStream extends ServletOutputStream {
+    private static final MethodHandle IS_READY_HANDLE;
+    private static final MethodHandle SET_WRITE_LISTENER_HANDLE;
+
+    static {
+      MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+      MethodHandle isReadyHandle;
+      try {
+        isReadyHandle =
+            lookup.findVirtual(
+                ServletOutputStream.class, "isReady", MethodType.methodType(boolean.class));
+      } catch (NoSuchMethodException | IllegalAccessException e) {
+        // servlet-api 3.0 does not have that method
+        isReadyHandle = null;
+      }
+
+      MethodHandle setWriteListenerHandle;
+      try {
+        setWriteListenerHandle =
+            lookup.findVirtual(
+                ServletOutputStream.class,
+                "setWriteListener",
+                MethodType.methodType(void.class, WriteListener.class));
+      } catch (NoSuchMethodException | IllegalAccessException e) {
+        // servlet-api 3.0 does not have that method
+        setWriteListenerHandle = null;
+      }
+
+      IS_READY_HANDLE = isReadyHandle;
+      SET_WRITE_LISTENER_HANDLE = setWriteListenerHandle;
+    }
 
     private final ServletOutputStream delegate;
     private int counter = 0;
@@ -109,6 +144,33 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
     @Override
     public void close() throws IOException {
       delegate.close();
+    }
+
+    // New abstract methods introduced in servlet-api 3.1, 3.0 does not have them.
+
+    // @Override
+    public boolean isReady() {
+      if (IS_READY_HANDLE != null) {
+        try {
+          return (boolean) IS_READY_HANDLE.invoke(delegate);
+        } catch (Error | RuntimeException e) {
+          throw e;
+        } catch (Throwable ignored) {
+        }
+      }
+      return false;
+    }
+
+    // @Override
+    public void setWriteListener(WriteListener writeListener) {
+      if (SET_WRITE_LISTENER_HANDLE != null) {
+        try {
+          SET_WRITE_LISTENER_HANDLE.invoke(delegate, writeListener);
+        } catch (Error | RuntimeException e) {
+          throw e;
+        } catch (Throwable ignored) {
+        }
+      }
     }
   }
 
