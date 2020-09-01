@@ -84,6 +84,8 @@ public class Config {
 
   public static final String KAFKA_CLIENT_PROPAGATION_ENABLED = "kafka.client.propagation.enabled";
 
+  public static final String HYSTRIX_TAGS_ENABLED = "hystrix.tags.enabled";
+
   public static final String ENDPOINT_PEER_SERVICE_MAPPING = "endpoint.peer.service.mapping";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
@@ -99,6 +101,8 @@ public class Config {
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
 
   public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
+
+  public static final boolean DEFAULT_HYSTRIX_TAGS_ENABLED = false;
 
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
@@ -131,6 +135,8 @@ public class Config {
   private final boolean sqlNormalizerEnabled;
 
   private final boolean kafkaClientPropagationEnabled;
+
+  private final boolean hystrixTagsEnabled;
 
   private final Map<String, String> endpointPeerServiceMapping;
 
@@ -185,6 +191,9 @@ public class Config {
         getBooleanSettingFromEnvironment(
             KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
 
+    hystrixTagsEnabled =
+        getBooleanSettingFromEnvironment(HYSTRIX_TAGS_ENABLED, DEFAULT_HYSTRIX_TAGS_ENABLED);
+
     endpointPeerServiceMapping = getMapSettingFromEnvironment(ENDPOINT_PEER_SERVICE_MAPPING);
 
     log.debug("New instance: {}", this);
@@ -236,6 +245,9 @@ public class Config {
     kafkaClientPropagationEnabled =
         getPropertyBooleanValue(
             properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
+
+    hystrixTagsEnabled =
+        getBooleanSettingFromEnvironment(HYSTRIX_TAGS_ENABLED, parent.hystrixTagsEnabled);
 
     endpointPeerServiceMapping =
         getPropertyMapValue(
@@ -567,6 +579,10 @@ public class Config {
     return kafkaClientPropagationEnabled;
   }
 
+  public boolean isHystrixTagsEnabled() {
+    return hystrixTagsEnabled;
+  }
+
   public Map<String, String> getEndpointPeerServiceMapping() {
     return endpointPeerServiceMapping;
   }
@@ -613,6 +629,8 @@ public class Config {
         + sqlNormalizerEnabled
         + ", kafkaClientPropagationEnabled="
         + kafkaClientPropagationEnabled
+        + ", hystrixTagsEnabled="
+        + hystrixTagsEnabled
         + ", endpointPeerServiceMapping="
         + endpointPeerServiceMapping
         + '}';

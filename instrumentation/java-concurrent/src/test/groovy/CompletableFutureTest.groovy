@@ -18,11 +18,71 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.function.Function
+import java.util.function.Supplier
 import spock.lang.Requires
 
 @Requires({ javaVersion >= 1.8 })
 class CompletableFutureTest extends AgentTestRunner {
+
+  def "CompletableFuture test"() {
+    setup:
+    def pool = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
+    def differentPool = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
+    def supplier = new Supplier<String>() {
+      @Override
+      String get() {
+        TEST_TRACER.spanBuilder("supplier").startSpan().end()
+        sleep(1000)
+        return "a"
+      }
+    }
+
+    def function = new Function<String, String>() {
+      @Override
+      String apply(String s) {
+        TEST_TRACER.spanBuilder("function").startSpan().end()
+        return s + "c"
+      }
+    }
+
+    def result = new Supplier<String>() {
+      @Override
+      String get() {
+        runUnderTrace("parent") {
+          return CompletableFuture.supplyAsync(supplier, pool)
+            .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
+            .thenApply(function)
+            .get()
+        }
+      }
+    }.get()
+
+    TEST_WRITER.waitForTraces(1)
+    List<SpanData> trace = TEST_WRITER.traces[0]
+
+    expect:
+    result == "abc"
+
+    TEST_WRITER.traces.size() == 1
+    trace.size() == 4
+    trace.get(0).name == "parent"
+    trace.get(1).name == "supplier"
+    trace.get(1).parentSpanId == trace.get(0).spanId
+    trace.get(2).name == "appendingSupplier"
+    trace.get(2).parentSpanId == trace.get(0).spanId
+    trace.get(3).name == "function"
+    trace.get(3).parentSpanId == trace.get(0).spanId
+
+    cleanup:
+    pool?.shutdown()
+    differentPool?.shutdown()
+  }
 
   def "test supplyAsync"() {
     when:
@@ -176,6 +236,20 @@ class CompletableFutureTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         basicSpan(it, 1, "child", span(0))
       }
+    }
+  }
+
+  class AppendingSupplier implements Supplier<String> {
+    String letter
+
+    AppendingSupplier(String letter) {
+      this.letter = letter
+    }
+
+    @Override
+    String get() {
+      TEST_TRACER.spanBuilder("appendingSupplier").startSpan().end()
+      return letter + "b"
     }
   }
 }

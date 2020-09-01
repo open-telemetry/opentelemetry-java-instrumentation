@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import java.util.concurrent.TimeUnit
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 class SpringSchedulingTest extends AgentTestRunner {
@@ -62,5 +63,29 @@ class SpringSchedulingTest extends AgentTestRunner {
       }
     }
 
+  }
+
+  def "schedule lambda test"() {
+    setup:
+    def context = new AnnotationConfigApplicationContext(LambdaTaskConfig)
+    def configurer = context.getBean(LambdaTaskConfigurer)
+
+    configurer.singleUseLatch.await(2000, TimeUnit.MILLISECONDS)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationNameContains "LambdaTaskConfigurer\$\$Lambda\$"
+          parent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+
+    cleanup:
+    context.close()
   }
 }

@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.google.guava"
+    module = "guava"
+    versions = "[10.0,]"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'com.google.guava', name: 'guava', version: '10.0'
+}

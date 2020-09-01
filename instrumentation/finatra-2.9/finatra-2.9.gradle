@@ -6,6 +6,12 @@ ext {
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest
+}
+
 muzzle {
   // There are some weird library issues below 2.9 so can't assert inverse
   pass {
@@ -36,5 +42,10 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
-  latestDepTestLibrary group: 'com.twitter', name: 'finatra-http_2.11', version: '20.6.+'
+  // TODO latestDepTestLibrary doesn't work here
+  latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
+}
+
+compileLatestDepTestGroovy {
+  classpath += files(sourceSets.latestDepTest.scala.classesDirectory)
 }

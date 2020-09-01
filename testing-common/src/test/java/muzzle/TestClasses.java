@@ -36,7 +36,7 @@ public class TestClasses {
     public static class A {
       public B b = new B();
       protected Object protectedField = null;
-      private Object privateField = null;
+      private final Object privateField = null;
       public static B staticB = new B();
     }
 
@@ -89,5 +89,20 @@ public class TestClasses {
     public static void ldcMethod() {
       MethodBodyAdvice.A.class.getName();
     }
+  }
+
+  public static class InstanceofAdvice {
+    public static boolean instanceofMethod(Object a) {
+      return a instanceof MethodBodyAdvice.A;
+    }
+  }
+
+  // TODO Can't test this until java 7 is dropped.
+  public static class InDyAdvice {
+    //    public static MethodBodyAdvice.SomeInterface indyMethod(
+    //        final MethodBodyAdvice.SomeImplementation a) {
+    //      Runnable aStaticMethod = MethodBodyAdvice.B::aStaticMethod;
+    //      return a::someMethod;
+    //    }
   }
 }

@@ -28,24 +28,30 @@ import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
-import io.opentelemetry.instrumentation.auto.javaconcurrent.AbstractExecutorInstrumentation;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumentation {
+public final class AkkaForkJoinPoolInstrumentation extends Instrumenter.Default {
 
-  public AkkaExecutorInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME + ".akka_fork_join");
+  public AkkaForkJoinPoolInstrumentation() {
+    super("akka_context_propagation");
   }
 
   @Override
   protected boolean defaultEnabled() {
     return false;
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    // This might need to be an extendsClass matcher...
+    return named("akka.dispatch.forkjoin.ForkJoinPool");
   }
 
   @Override
@@ -59,15 +65,15 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
     transformers.put(
         named("execute")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     transformers.put(
         named("submit")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     transformers.put(
         nameMatches("invoke")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
+        AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     return transformers;
   }
 

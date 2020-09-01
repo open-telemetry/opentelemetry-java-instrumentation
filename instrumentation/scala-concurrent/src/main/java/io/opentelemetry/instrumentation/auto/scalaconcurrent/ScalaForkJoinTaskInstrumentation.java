@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.javaconcurrent;
+package io.opentelemetry.instrumentation.auto.scalaconcurrent;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -54,7 +54,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
   static final String TASK_CLASS_NAME = "scala.concurrent.forkjoin.ForkJoinTask";
 
   public ScalaForkJoinTaskInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super("java_concurrent", "scala_concurrent");
   }
 
   @Override
