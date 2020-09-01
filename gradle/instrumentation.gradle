@@ -6,6 +6,7 @@ apply plugin: 'muzzle'
 
 ext {
   packageInAgentBundle = true
+  mavenGroupId = 'io.opentelemetry.instrumentation.auto'
 }
 
 byteBuddy {
