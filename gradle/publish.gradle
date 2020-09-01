@@ -20,6 +20,10 @@ publishing {
       }
 
       afterEvaluate {
+        def mavenGroupId = project.findProperty('mavenGroupId')
+        if (mavenGroupId) {
+          groupId = mavenGroupId
+        }
         artifactId = artifactPrefix(project, archivesBaseName) + archivesBaseName
       }
 
