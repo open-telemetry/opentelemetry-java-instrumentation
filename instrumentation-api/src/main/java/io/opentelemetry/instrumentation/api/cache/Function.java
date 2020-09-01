@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
-// TODO replace this with java.util.Function if/when dropping Java 7
+// TODO replace this with java.util.Function when dropping Java 7
 public interface Function<T, U> {
   U apply(T input);
 }

@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.api.cache;
 
 public final class Functions {
 
-  // TODO the majority of this can be removed/simplified if/when dropping Java 7
+  // TODO the majority of this can be removed/simplified when dropping Java 7
 
   public static final class Zero<T> implements Function<T, T> {
 
