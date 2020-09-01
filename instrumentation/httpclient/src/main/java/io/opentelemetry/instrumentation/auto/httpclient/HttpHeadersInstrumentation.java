@@ -22,19 +22,12 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -43,9 +36,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
-public class HttpClientInstrumentation extends Instrumenter.Default {
+public class HttpHeadersInstrumentation extends Instrumenter.Default {
 
-  public HttpClientInstrumentation() {
+  public HttpHeadersInstrumentation() {
     super("httpclient");
   }
 
@@ -58,8 +51,10 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
         .or(ElementMatchers.<TypeDescription>nameStartsWith("jdk.internal."))
-        .and(not(named("jdk.internal.net.http.HttpClientFacade")))
-        .and(extendsClass(named("java.net.http.HttpClient")));
+        // .and(not(named("jdk.internal.net.http.ImmutableHttpRequest")))
+        .and(extendsClass(named("java.net.http.HttpRequest")));
+
+    // return named("java.net.http.HttpHeaders");
   }
 
   @Override
@@ -72,46 +67,16 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(named("send"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
-        HttpClientInstrumentation.class.getName() + "$SendAdvice");
+        isMethod().and(named("headers")),
+        HttpHeadersInstrumentation.class.getName() + "$HeadersAdvice");
   }
 
-  public static class SendAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
-
-      callDepth = TRACER.getCallDepth();
-      if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(httpRequest);
-        if (span.getContext().isValid()) {
-          scope = TRACER.startScope(span, httpRequest);
-        }
-      }
-    }
+  public static class HeadersAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return HttpResponse result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
-
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable == null) {
-          TRACER.end(span, result);
-        } else {
-          TRACER.endExceptionally(span, result, throwable);
-        }
+    public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
+      if (TRACER.getCurrentSpan().isRecording()) {
+        headers = TRACER.inject(headers);
       }
     }
   }
