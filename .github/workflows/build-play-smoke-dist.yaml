@@ -18,7 +18,7 @@ jobs:
           java-version: 11
 
       - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1
+        uses: burrunan/gradle-cache-action@v1.4
         with:
           job-id: play-smoke
 
