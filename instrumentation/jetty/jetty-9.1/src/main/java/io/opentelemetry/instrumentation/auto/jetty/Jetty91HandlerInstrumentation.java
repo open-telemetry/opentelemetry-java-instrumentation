@@ -40,7 +40,7 @@ public final class Jetty91HandlerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Jetty 9.0 uses servlet-api 3.1
+    // Jetty 9.1 uses servlet-api 3.1
     // WriteListener was added in servlet-api 3.1, 3.0 does not have it
     return hasClassesNamed("org.eclipse.jetty.server.Handler", "javax.servlet.WriteListener");
   }
