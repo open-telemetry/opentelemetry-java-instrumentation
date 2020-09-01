@@ -9,6 +9,7 @@ dependencies {
   implementation deps.slf4j
   implementation deps.opentelemetryProto
   implementation "org.testcontainers:testcontainers:1.14.3"
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
   implementation 'com.google.protobuf:protobuf-java-util:3.12.4'
 }
 
