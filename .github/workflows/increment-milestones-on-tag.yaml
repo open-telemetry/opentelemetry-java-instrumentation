@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Get milestone title
         id: milestoneTitle
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           result-encoding: string
           script: |
@@ -17,7 +17,7 @@ jobs:
             return '${{github.event.ref}}'.startsWith('v') ? '${{github.event.ref}}'.substring(1) : '${{github.event.ref}}';
       - name: Get milestone for tag
         id: milestone
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -38,7 +38,7 @@ jobs:
             }
       - name: Close milestone
         if: fromJSON(steps.milestone.outputs.result)
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
