@@ -18,7 +18,7 @@ jobs:
           java-version: 11
 
       - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.3
+        uses: burrunan/gradle-cache-action@v1
         with:
           job-id: fakebackend-smoke
 
