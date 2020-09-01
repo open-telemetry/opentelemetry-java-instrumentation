@@ -60,7 +60,7 @@ class RedissonClientTest extends AgentTestRunner {
 
   def setup() {
     Config config = new Config()
-    config.useSingleServer().setAddress("localhost:" + port)
+    config.useSingleServer().setAddress("redis://localhost:" + port)
     redisson = Redisson.create(config)
     TEST_WRITER.clear()
   }
