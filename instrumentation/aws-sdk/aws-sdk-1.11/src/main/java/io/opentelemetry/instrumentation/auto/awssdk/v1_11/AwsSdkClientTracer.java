@@ -29,7 +29,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
@@ -38,8 +37,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
 
-  private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
-  private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
+  private final NamesCache namesCache = new NamesCache();
 
   public AwsSdkClientTracer() {}
 
@@ -50,7 +48,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     }
     String awsServiceName = request.getServiceName();
     Class<?> awsOperation = request.getOriginalRequest().getClass();
-    return remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation);
+    return qualifiedOperation(awsServiceName, awsOperation);
   }
 
   public Span startSpan(Request<?> request, RequestMeta requestMeta) {
@@ -95,18 +93,17 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return super.onResponse(span, response);
   }
 
-  private String remapServiceName(String serviceName) {
-    if (!serviceNames.containsKey(serviceName)) {
-      serviceNames.put(serviceName, serviceName.replace("Amazon", "").trim());
+  private String qualifiedOperation(String service, Class<?> operation) {
+    ConcurrentHashMap<String, String> cache = namesCache.get(operation);
+    String qualified = cache.get(service);
+    if (qualified == null) {
+      qualified =
+          service.replace("Amazon", "").trim()
+              + '.'
+              + operation.getSimpleName().replace("Request", "");
+      cache.put(service, qualified);
     }
-    return serviceNames.get(serviceName);
-  }
-
-  private String remapOperationName(Class<?> awsOperation) {
-    if (!operationNames.containsKey(awsOperation)) {
-      operationNames.put(awsOperation, awsOperation.getSimpleName().replace("Request", ""));
-    }
-    return operationNames.get(awsOperation);
+    return qualified;
   }
 
   @Override
@@ -142,5 +139,12 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.aws-sdk-1.11";
+  }
+
+  private static class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {
+    @Override
+    protected ConcurrentHashMap<String, String> computeValue(Class<?> type) {
+      return new ConcurrentHashMap<>();
+    }
   }
 }
