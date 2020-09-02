@@ -37,7 +37,6 @@ public class JettyHandlerAdvice {
       @Advice.Origin Method method,
       @Advice.This Object source,
       @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
-      @Advice.Argument(value = 3, readOnly = false) HttpServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -49,11 +48,6 @@ public class JettyHandlerAdvice {
 
     span = TRACER.startSpan(request, request, method);
     scope = TRACER.startScope(span, request);
-
-    if (!(response instanceof CountingHttpServletResponse)) {
-      response = new CountingHttpServletResponse(response);
-      request = new CountingHttpServletRequest(request, response);
-    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
