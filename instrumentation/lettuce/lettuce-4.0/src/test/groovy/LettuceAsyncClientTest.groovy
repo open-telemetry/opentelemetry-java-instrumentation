@@ -40,7 +40,7 @@ import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
 class LettuceAsyncClientTest extends AgentTestRunner {
-  public static final String HOST = "127.0.0.1"
+  public static final String HOST = "localhost"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
@@ -131,6 +131,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
@@ -165,6 +166,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errorEvent RedisConnectionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
