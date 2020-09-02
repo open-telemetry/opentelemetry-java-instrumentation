@@ -17,6 +17,8 @@ dependencies {
   implementation(deps.opentelemetryGCP) {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
+
+  implementation deps.slf4j
 }
 
 jar.enabled = false
