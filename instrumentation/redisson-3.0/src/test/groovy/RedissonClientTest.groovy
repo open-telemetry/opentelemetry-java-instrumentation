@@ -47,8 +47,14 @@ class RedissonClientTest extends AgentTestRunner {
     .port(port).build()
   @Shared
   RedissonClient redisson
+  @Shared
+  String address = "localhost:" + port
 
   def setupSpec() {
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // Newer versions of redisson require scheme, older versions forbid it
+      address = "redis://" + address
+    }
     println "Using redis: $redisServer.args"
     redisServer.start()
   }
@@ -60,7 +66,7 @@ class RedissonClientTest extends AgentTestRunner {
 
   def setup() {
     Config config = new Config()
-    config.useSingleServer().setAddress("localhost:" + port)
+    config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
     TEST_WRITER.clear()
   }
@@ -113,7 +119,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET;SET;"
+          operationName "SET;SET"
           spanKind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -121,7 +127,7 @@ class RedissonClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET;SET;"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET;SET"
           }
         }
       }
