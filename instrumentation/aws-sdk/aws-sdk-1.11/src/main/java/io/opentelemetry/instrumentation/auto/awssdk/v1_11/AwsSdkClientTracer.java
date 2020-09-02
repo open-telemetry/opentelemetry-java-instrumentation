@@ -141,7 +141,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return "io.opentelemetry.auto.aws-sdk-1.11";
   }
 
-  private static class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {
+  private static final class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {
     @Override
     protected ConcurrentHashMap<String, String> computeValue(Class<?> type) {
       return new ConcurrentHashMap<>();
