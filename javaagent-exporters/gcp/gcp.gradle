@@ -1,0 +1,25 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = 'javaagent-exporters-gcp'
+
+dependencies {
+  compileOnly(project(":javaagent-tooling"))
+  compileOnly deps.opentelemetrySdk
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  implementation(deps.opentelemetryGCP) {
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+  }
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+}

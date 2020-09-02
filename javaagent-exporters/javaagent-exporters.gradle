@@ -8,6 +8,7 @@ dependencies {
   testImplementation project(':javaagent-spi')
   testImplementation project(':javaagent-tooling')
 
+  testImplementation project(':javaagent-exporters:gcp')
   testImplementation project(':javaagent-exporters:otlp')
   testImplementation project(':javaagent-exporters:jaeger')
   testImplementation project(':javaagent-exporters:logging')
@@ -15,6 +16,7 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach() {
+  dependsOn ':javaagent-exporters:gcp:shadowJar'
   dependsOn ':javaagent-exporters:otlp:shadowJar'
   dependsOn ':javaagent-exporters:jaeger:shadowJar'
   dependsOn ':javaagent-exporters:logging:shadowJar'
@@ -22,6 +24,7 @@ tasks.withType(Test).configureEach() {
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
     systemProperty 'adapterRoot', "$rootDir/javaagent-exporters"
+    systemProperty 'gcpExporterJar', project(':javaagent-exporters:gcp').tasks.shadowJar.archivePath
     systemProperty 'otlpExporterJar', project(':javaagent-exporters:otlp').tasks.shadowJar.archivePath
     systemProperty 'jaegerExporterJar', project(':javaagent-exporters:jaeger').tasks.shadowJar.archivePath
     systemProperty 'loggingExporterJar', project(':javaagent-exporters:logging').tasks.shadowJar.archivePath
@@ -34,6 +37,7 @@ configurations {
 }
 
 dependencies {
+  shadowInclude project(path: ':javaagent-exporters:gcp', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:logging', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:otlp', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:jaeger', configuration: 'shadow')

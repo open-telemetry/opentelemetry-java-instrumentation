@@ -185,6 +185,7 @@ include ':instrumentation-core:servlet'
 
 // exporter adapters
 include ":javaagent-exporters"
+include ":javaagent-exporters:gcp"
 include ":javaagent-exporters:jaeger"
 include ":javaagent-exporters:logging"
 include ":javaagent-exporters:otlp"
