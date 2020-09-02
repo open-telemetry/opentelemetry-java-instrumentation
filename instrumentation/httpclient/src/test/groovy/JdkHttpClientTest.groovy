@@ -41,7 +41,7 @@ class JdkHttpClientTest extends HttpClientTest {
     }
     def request = builder.build()
 
-    def resp = client.send(request, HttpResponse.BodyHandlers.ofString())
+    def resp = client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).get()
     callback?.call()
     return resp.statusCode()
 
