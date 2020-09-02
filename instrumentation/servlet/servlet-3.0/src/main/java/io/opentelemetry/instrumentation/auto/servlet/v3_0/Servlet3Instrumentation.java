@@ -52,7 +52,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "javax.servlet.WriteListener",
       "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       packageName + ".CountingHttpServletRequest",
