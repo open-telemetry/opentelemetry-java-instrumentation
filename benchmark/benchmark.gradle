@@ -55,6 +55,6 @@ tasks.jmh.dependsOn(':javaagent:shadowJar')
 If using libasyncProfiler, use the following to generate nice svg flamegraphs.
 sed '/unknown/d' benchmark/build/reports/jmh/profiler.txt | sed '/^thread_start/d' | sed '/not_walkable/d' > benchmark/build/reports/jmh/profiler-cleaned.txt
 (using https://github.com/brendangregg/FlameGraph)
-./flamegraph.pl --color=java benchmark/build/reports/jmh/profiler-cleaned.txt > benchmark/build/reports/jmh/jmh-master.svg
+./flamegraph.pl --color=java benchmark/build/reports/jmh/profiler-cleaned.txt > benchmark/build/reports/jmh/jmh-main.svg
  */
 

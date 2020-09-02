@@ -45,13 +45,13 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
-   * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
-   * may be lifted to include all executors.
+   * Only apply executor instrumentation to allowed executors. In the future, this restriction may
+   * be lifted to include all executors.
    */
-  private static final Collection<String> WHITELISTED_FUTURES;
+  private static final Collection<String> ALLOWED_FUTURES;
 
   static {
-    String[] whitelist = {
+    String[] allowed = {
       "akka.dispatch.forkjoin.ForkJoinTask",
       "akka.dispatch.forkjoin.ForkJoinTask$AdaptedCallable",
       "akka.dispatch.forkjoin.ForkJoinTask$AdaptedRunnable",
@@ -84,7 +84,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedRunnableAction",
       "scala.concurrent.impl.ExecutionContextImpl$AdaptedForkJoinTask",
     };
-    WHITELISTED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
+    ALLOWED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(allowed)));
   }
 
   public FutureInstrumentation() {
@@ -98,11 +98,11 @@ public final class FutureInstrumentation extends Instrumenter.Default {
     return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
       @Override
       public boolean matches(TypeDescription target) {
-        boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
-        if (!whitelisted && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+        boolean allowed = ALLOWED_FUTURES.contains(target.getName());
+        if (!allowed && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
           log.debug("Skipping future instrumentation for {}", target.getName());
         }
-        return whitelisted;
+        return allowed;
       }
     }.and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
   }
