@@ -46,7 +46,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
   String address = "localhost:" + port
 
   def setupSpec() {
-    if ("true".equals(System.properties.getProperty("testLatestDeps"))) {
+    if (Boolean.getBoolean("testLatestDeps")) {
       // Newer versions of redisson require scheme, older versions forbid it
       address = "redis://" + address
     }
