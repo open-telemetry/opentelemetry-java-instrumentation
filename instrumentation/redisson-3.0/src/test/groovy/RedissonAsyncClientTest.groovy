@@ -47,6 +47,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
 
   def setupSpec() {
     if ("true".equals(System.properties.getProperty("testLatestDeps"))) {
+      // Newer versions of redisson require scheme, older versions forbid it
       address = "redis://" + address
     }
     println "Using redis: $redisServer.args"
