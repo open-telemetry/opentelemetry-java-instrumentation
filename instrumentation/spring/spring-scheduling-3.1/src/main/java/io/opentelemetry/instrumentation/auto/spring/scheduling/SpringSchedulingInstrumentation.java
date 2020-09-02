@@ -16,18 +16,13 @@
 
 package io.opentelemetry.instrumentation.auto.spring.scheduling;
 
-import static io.opentelemetry.instrumentation.auto.spring.scheduling.SpringSchedulingDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.spring.scheduling.SpringSchedulingDecorator.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -49,7 +44,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringSchedulingDecorator", getClass().getName() + "$RunnableWrapper",
+      packageName + ".SpringSchedulingDecorator", packageName + ".SpringSchedulingRunnableWrapper",
     };
   }
 
@@ -64,43 +59,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onConstruction(
         @Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
-      runnable = RunnableWrapper.wrapIfNeeded(runnable);
-    }
-  }
-
-  public static class RunnableWrapper implements Runnable {
-    private final Runnable runnable;
-
-    private RunnableWrapper(Runnable runnable) {
-      this.runnable = runnable;
-    }
-
-    @Override
-    public void run() {
-      if (runnable == null) {
-        return;
-      }
-      Span span = TRACER.spanBuilder(DECORATE.spanNameOnRun(runnable)).startSpan();
-      DECORATE.afterStart(span);
-
-      try (Scope scope = currentContextWith(span)) {
-        runnable.run();
-      } catch (Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        throw throwable;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
-      }
-    }
-
-    public static Runnable wrapIfNeeded(Runnable task) {
-      // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
-      // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
-      if (task instanceof RunnableWrapper) {
-        return task;
-      }
-      return new RunnableWrapper(task);
+      runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
     }
   }
 }

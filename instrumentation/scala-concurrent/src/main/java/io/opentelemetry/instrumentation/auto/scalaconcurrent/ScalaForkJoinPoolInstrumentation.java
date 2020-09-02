@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.javaconcurrent;
+package io.opentelemetry.instrumentation.auto.scalaconcurrent;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
@@ -32,14 +32,21 @@ import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
 @AutoService(Instrumenter.class)
-public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrumentation {
+public final class ScalaForkJoinPoolInstrumentation extends Instrumenter.Default {
 
-  public ScalaExecutorInstrumentation() {
-    super(EXEC_NAME + ".scala_fork_join");
+  public ScalaForkJoinPoolInstrumentation() {
+    super("java_concurrent", "scala_concurrent");
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    // This might need to be an extendsClass matcher...
+    return named("scala.concurrent.forkjoin.ForkJoinPool");
   }
 
   @Override
@@ -53,15 +60,15 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
     transformers.put(
         named("execute")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
+        ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     transformers.put(
         named("submit")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
+        ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     transformers.put(
         nameMatches("invoke")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
+        ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     return transformers;
   }
 

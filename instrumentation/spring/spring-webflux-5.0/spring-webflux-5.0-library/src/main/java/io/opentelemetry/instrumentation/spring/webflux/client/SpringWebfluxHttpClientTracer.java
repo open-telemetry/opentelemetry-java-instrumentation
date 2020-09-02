@@ -22,6 +22,9 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.URI;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -31,6 +34,8 @@ public class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
   public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+
+  private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
   public void onCancel(Span span) {
     span.setAttribute("event", "cancelled");
@@ -49,6 +54,15 @@ public class SpringWebfluxHttpClientTracer
 
   @Override
   protected Integer status(ClientResponse httpResponse) {
+    if (RAW_STATUS_CODE != null) {
+      // rawStatusCode() method was introduced in webflux 5.1
+      try {
+        return (int) RAW_STATUS_CODE.invokeExact(httpResponse);
+      } catch (Throwable ignored) {
+      }
+    }
+    // prior to webflux 5.1, the best we can get is HttpStatus enum, which only covers standard
+    // status codes
     return httpResponse.statusCode().value();
   }
 
@@ -75,5 +89,17 @@ public class SpringWebfluxHttpClientTracer
 
   public Tracer getTracer() {
     return tracer;
+  }
+
+  // rawStatusCode() method was introduced in webflux 5.1
+  // prior to this method, the best we can get is HttpStatus enum, which only covers standard status
+  // codes (see usage above)
+  private static MethodHandle findRawStatusCode() {
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(ClientResponse.class, "rawStatusCode", MethodType.methodType(int.class));
+    } catch (IllegalAccessException | NoSuchMethodException e) {
+      return null;
+    }
   }
 }

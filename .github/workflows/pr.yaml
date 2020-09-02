@@ -25,7 +25,7 @@ jobs:
           java-version: 11
 
       - name: Test
-        uses: burrunan/gradle-cache-action@v1
+        uses: burrunan/gradle-cache-action@v1.4
         with:
           job-id: jdk${{ matrix.java }}
           arguments: testJava${{ matrix.java }} --stacktrace

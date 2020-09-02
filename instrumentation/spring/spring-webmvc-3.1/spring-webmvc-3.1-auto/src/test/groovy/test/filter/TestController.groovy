@@ -16,6 +16,7 @@
 
 package test.filter
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -25,45 +26,49 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.servlet.view.RedirectView
 
+/**
+ * None of the methods in this controller should be called because they are intercepted
+ * by the filter
+ */
 @Controller
 class TestController {
 
   @RequestMapping("/success")
   @ResponseBody
   String success() {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @RequestMapping("/query")
   @ResponseBody
   String query_param(@RequestParam("some") String param) {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @RequestMapping("/path/{id}/param")
   @ResponseBody
   String path_param(@PathVariable Integer id) {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @RequestMapping("/redirect")
   @ResponseBody
   RedirectView redirect() {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @RequestMapping("/error-status")
   ResponseEntity error() {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @RequestMapping("/exception")
   ResponseEntity exception() {
-    // stub to test that route is captured when intercepted by filter
+    throw new Exception("This should not be called")
   }
 
   @ExceptionHandler
   ResponseEntity handleException(Throwable throwable) {
-    // stub to test that route is captured when intercepted by filter
+    new ResponseEntity(throwable.message, HttpStatus.INTERNAL_SERVER_ERROR)
   }
 }
