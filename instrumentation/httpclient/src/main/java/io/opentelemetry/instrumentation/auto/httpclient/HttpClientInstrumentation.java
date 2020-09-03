@@ -35,7 +35,6 @@ import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -71,7 +70,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".HttpHeadersInjectAdapter",
       packageName + ".JdkHttpClientTracer",
-      packageName + ".TracingBodyHandler"
+      packageName + ".ResponseConsumer"
     };
   }
 
@@ -140,7 +139,6 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(value = 1, readOnly = false) BodyHandler<?> bodyHandler,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
@@ -148,7 +146,6 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(httpRequest);
-        bodyHandler = new TracingBodyHandler<>(bodyHandler, span);
         if (span.getContext().isValid()) {
           scope = TRACER.startScope(span, httpRequest);
         }
@@ -157,7 +154,8 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) CompletableFuture<?> future,
+        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC)
+            CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
@@ -168,13 +166,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
         if (throwable != null) {
           TRACER.endExceptionally(span, null, throwable);
         } else {
-          // FIXME: next lines breaks interception
-          future =
-              future.whenComplete(
-                  (o, t) -> {
-                    System.out.println("TEST");
-                    span.end();
-                  });
+          future = future.whenComplete(new ResponseConsumer(span));
         }
       }
     }

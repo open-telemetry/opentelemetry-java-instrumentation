@@ -16,25 +16,27 @@
 
 package io.opentelemetry.instrumentation.auto.httpclient;
 
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
-import java.net.http.HttpResponse.BodyHandler;
-import java.net.http.HttpResponse.BodySubscriber;
-import java.net.http.HttpResponse.ResponseInfo;
+import static io.opentelemetry.instrumentation.auto.httpclient.JdkHttpClientTracer.TRACER;
 
-public class TracingBodyHandler<T> implements BodyHandler<T> {
-  private final BodyHandler<T> bodyHandler;
+import io.opentelemetry.trace.Span;
+import java.net.http.HttpResponse;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+
+public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> {
   private final Span span;
 
-  public TracingBodyHandler(BodyHandler<T> bodyHandler, Span span) {
-    this.bodyHandler = bodyHandler;
+  public ResponseConsumer(Span span) {
     this.span = span;
   }
 
   @Override
-  public BodySubscriber<T> apply(ResponseInfo responseInfo) {
-    SemanticAttributes.HTTP_STATUS_CODE.set(span, responseInfo.statusCode());
-    span.end();
-    return bodyHandler.apply(responseInfo);
+  public void accept(HttpResponse<?> httpResponse, Throwable throwable) {
+    if (throwable == null) {
+      TRACER.end(span, httpResponse);
+    } else {
+      final Throwable cause = throwable.getCause();
+      TRACER.endExceptionally(span, httpResponse, Objects.requireNonNullElse(cause, throwable));
+    }
   }
 }

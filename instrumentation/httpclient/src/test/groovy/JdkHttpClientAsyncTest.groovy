@@ -25,7 +25,7 @@ import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 @Timeout(5)
-class JdkHttpClientTest extends HttpClientTest {
+class JdkHttpClientAsyncTest extends HttpClientTest {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
@@ -41,7 +41,7 @@ class JdkHttpClientTest extends HttpClientTest {
     }
     def request = builder.build()
 
-    def resp = client.send(request, HttpResponse.BodyHandlers.ofString())
+    def resp = client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).get()
     callback?.call()
     return resp.statusCode()
   }
