@@ -46,7 +46,7 @@ abstract class JdkHttpClientTest extends HttpClientTest {
     return resp.statusCode()
   }
 
-  abstract HttpResponse send(HttpRequest request);
+  abstract HttpResponse send(HttpRequest request)
 
   @Override
   boolean testRedirects() {
