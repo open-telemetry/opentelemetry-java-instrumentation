@@ -88,7 +88,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   String method = "GET",
                   Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS) {
-    serverSpan(trace, index, traceID, parentID, method, responseContentLength,
+    serverSpan(trace, index, traceID, parentID, method,
       endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.errored,
@@ -101,7 +101,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                        HttpUrl url,
                        int statusCode) {
     def rawUrl = url.url()
-    serverSpan(trace, index, null, null, "GET", null,
+    serverSpan(trace, index, null, null, "GET",
       rawUrl.path,
       rawUrl.toURI(),
       statusCode >= 500,
@@ -114,7 +114,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   String traceID,
                   String parentID,
                   String method,
-                  Long responseContentLength,
                   String path,
                   URI fullUrl,
                   boolean isError,
@@ -139,11 +138,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        if (responseContentLength) {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
-        } else {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" Long
-        }
         "servlet.path" String
         "servlet.context" String
         if (query) {

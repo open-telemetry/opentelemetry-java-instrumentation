@@ -31,7 +31,6 @@ dependencies {
   latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
   latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
 
-  // FIXME: 9.0.24 seems to have changed something...
-  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.22'
-  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.22'
+  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.+'
+  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.+'
 }
