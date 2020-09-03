@@ -24,7 +24,7 @@ compileJava {
 
 dependencies {
   implementation("com.linecorp.armeria:armeria-grpc:1.0.0")
-  implementation("io.opentelemetry:opentelemetry-proto:0.8.0-20200826.153459-49")
+  implementation("io.opentelemetry:opentelemetry-proto:0.8.0")
   implementation("org.slf4j:slf4j-simple:1.7.30")
 }
 
