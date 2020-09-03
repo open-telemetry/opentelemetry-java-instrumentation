@@ -90,8 +90,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("sendAsync"))
             .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest")))
-            .and(takesArgument(1, named("java.net.http.HttpResponse$BodyHandler"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
 
     return transformers;
