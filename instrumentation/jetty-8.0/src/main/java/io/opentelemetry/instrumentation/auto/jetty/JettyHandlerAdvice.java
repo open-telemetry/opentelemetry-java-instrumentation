@@ -20,8 +20,6 @@ import static io.opentelemetry.instrumentation.auto.jetty.JettyHttpServerTracer.
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletRequest;
-import io.opentelemetry.instrumentation.auto.servlet.v3_0.CountingHttpServletResponse;
 import io.opentelemetry.instrumentation.auto.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -37,7 +35,6 @@ public class JettyHandlerAdvice {
       @Advice.Origin Method method,
       @Advice.This Object source,
       @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
-      @Advice.Argument(value = 3, readOnly = false) HttpServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -49,11 +46,6 @@ public class JettyHandlerAdvice {
 
     span = TRACER.startSpan(request, request, method);
     scope = TRACER.startScope(span, request);
-
-    if (!(response instanceof CountingHttpServletResponse)) {
-      response = new CountingHttpServletResponse(response);
-      request = new CountingHttpServletRequest(request, response);
-    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
