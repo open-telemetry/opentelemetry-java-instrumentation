@@ -43,7 +43,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   /**
    * Only apply executor instrumentation to whitelisted executors. To apply to all executors, use
-   * override setting above.
+   * master setting above.
    */
   private final Collection<String> WHITELIST_EXECUTORS;
 
