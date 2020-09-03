@@ -1,4 +1,23 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.opentelemetry.instrumentation.auto.javaconcurrent;
+
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
@@ -14,9 +33,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 @AutoService(Instrumenter.class)
 public class KotlinProbeInstrumentation extends Instrumenter.Default {
@@ -70,16 +86,17 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[]{
-        "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineWrapper",
-        "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$TraceScopeKey",
-        "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineContextWrapper",
+    return new String[] {
+      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineWrapper",
+      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$TraceScopeKey",
+      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineContextWrapper",
     };
   }
 
   public static class CoroutineCreatedAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Return(readOnly = false) kotlin.coroutines.Continuation retVal) {
+    public static void exit(
+        @Advice.Return(readOnly = false) kotlin.coroutines.Continuation retVal) {
       if (!(retVal instanceof CoroutineWrapper)) {
         retVal = new CoroutineWrapper(retVal);
       }
@@ -88,17 +105,20 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
   public static class CoroutineResumedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(@Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
+    public static void enter(
+        @Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
       continutation.getContext().get(TraceScopeKey.INSTANCE);
     }
   }
 
   public static class CoroutineSuspendedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(@Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
+    public static void enter(
+        @Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
       continutation.getContext().minusKey(TraceScopeKey.INSTANCE);
     }
   }
+
   public static class TraceScopeKey implements CoroutineContext.Key {
     public static final TraceScopeKey INSTANCE = new TraceScopeKey();
   }
