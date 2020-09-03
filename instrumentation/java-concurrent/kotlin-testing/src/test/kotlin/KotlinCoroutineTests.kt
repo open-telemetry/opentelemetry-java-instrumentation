@@ -141,17 +141,16 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   }
 
   fun launchConcurrentSuspendFunctions(numIters: Int) {
-    for (i in 0 until numIters) {
-      GlobalScope.launch {
-        a(i.toLong())
-      }
-      GlobalScope.launch {
-        b(i.toLong())
+    runBlocking {
+      for (i in 0 until numIters) {
+        GlobalScope.launch {
+          a(i.toLong())
+        }
+        GlobalScope.launch {
+          b(i.toLong())
+        }
       }
     }
-    // A simple and generous timeout (as opposed to joining on all the generated Jobs) also helps
-    // fail the test if our overhead throws the cost of context switching 100s of times way out of normal
-    Thread.sleep(4000)
   }
 
   suspend fun a(iter: Long) {
