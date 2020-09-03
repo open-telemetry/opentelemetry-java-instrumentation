@@ -17,10 +17,11 @@
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class JdkHttpClientAsyncTest extends JdkHttpClientTest {
+class JdkHttpClientSyncTest extends JdkHttpClientTest {
 
   @Override
   HttpResponse send(HttpRequest request) {
-    return client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).get()
+    return client.send(request, HttpResponse.BodyHandlers.ofString())
   }
+
 }

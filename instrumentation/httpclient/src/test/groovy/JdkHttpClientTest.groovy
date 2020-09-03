@@ -25,7 +25,7 @@ import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 @Timeout(5)
-class JdkHttpClientTest extends HttpClientTest {
+abstract class JdkHttpClientTest extends HttpClientTest {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
@@ -41,10 +41,12 @@ class JdkHttpClientTest extends HttpClientTest {
     }
     def request = builder.build()
 
-    def resp = client.send(request, HttpResponse.BodyHandlers.ofString())
+    def resp = send(request)
     callback?.call()
     return resp.statusCode()
   }
+
+  abstract HttpResponse send(HttpRequest request);
 
   @Override
   boolean testRedirects() {
