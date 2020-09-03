@@ -23,6 +23,7 @@ import static application.io.opentelemetry.trace.TracingContextUtils.withSpan
 
 import application.io.grpc.Context
 import application.io.opentelemetry.OpenTelemetry
+import application.io.opentelemetry.common.Attributes
 import application.io.opentelemetry.context.Scope
 import application.io.opentelemetry.trace.DefaultSpan
 import application.io.opentelemetry.trace.Span
@@ -306,6 +307,34 @@ class TracerTest extends AgentTestRunner {
             attributes {
               "${SemanticAttributes.EXCEPTION_TYPE.key()}" "java.lang.IllegalStateException"
               "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+            }
+          }
+          attributes {
+          }
+        }
+      }
+    }
+  }
+  def "capture exception with Attributes()"() {
+    when:
+    def tracer = OpenTelemetry.getTracer("test")
+    def testSpan = tracer.spanBuilder("test").startSpan()
+    testSpan.recordException(
+      new IllegalStateException(),
+      Attributes.newBuilder().setAttribute("dog", "bark").build())
+    testSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "test"
+          event(0) {
+            eventName("exception")
+            attributes {
+              "${SemanticAttributes.EXCEPTION_TYPE.key()}" "java.lang.IllegalStateException"
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              "dog" "bark"
             }
           }
           attributes {
