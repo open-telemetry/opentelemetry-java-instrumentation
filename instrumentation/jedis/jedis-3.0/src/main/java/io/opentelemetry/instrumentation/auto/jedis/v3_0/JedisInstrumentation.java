@@ -26,6 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -87,10 +88,12 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         // us if that changes
         query = new String(command.getRaw(), StandardCharsets.UTF_8);
       }
+
       Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, query);
+      NetPeerUtils.setNetPeer(span, connection.getHost(), connection.getPort());
       return new SpanWithScope(span, currentContextWith(span));
     }
 

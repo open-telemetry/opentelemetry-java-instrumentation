@@ -34,6 +34,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 
+/**
+ * This instrumentation adds the HandlerMappingResourceNameFilter definition to the spring context
+ * When the context is created, the filter will be added to the beginning of the filter chain
+ */
 @AutoService(Instrumenter.class)
 public class WebApplicationContextInstrumentation extends Instrumenter.Default {
   public WebApplicationContextInstrumentation() {

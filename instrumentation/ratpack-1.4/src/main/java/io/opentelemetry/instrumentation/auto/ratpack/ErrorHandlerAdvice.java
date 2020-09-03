@@ -16,9 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.ratpack;
 
-import static io.opentelemetry.instrumentation.auto.ratpack.RatpackDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.ratpack.RatpackTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import java.util.Optional;
 import net.bytebuddy.asm.Advice;
 import ratpack.handling.Context;
@@ -29,7 +30,9 @@ public class ErrorHandlerAdvice {
       @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {
     Optional<Span> span = ctx.maybeGet(Span.class);
     if (span.isPresent()) {
-      DECORATE.onError(span.get(), throwable);
+      // TODO this emulates old behaviour of BaseDecorator. Has to review
+      span.get().setStatus(Status.UNKNOWN);
+      TRACER.addThrowable(span.get(), throwable);
     }
   }
 }

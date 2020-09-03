@@ -17,14 +17,15 @@ processors:
 exporters:
   logging:
     loglevel: debug
-  file:
-    path: /traces.json
+  otlp:
+    endpoint: backend:8080
+    insecure: true
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch, queued_retry]
-      exporters: [logging, file]
+      exporters: [logging, otlp]
 
   extensions: [health_check, pprof, zpages]

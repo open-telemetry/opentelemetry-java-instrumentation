@@ -42,27 +42,27 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
   private final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
 
   /**
-   * Only apply executor instrumentation to whitelisted executors. To apply to all executors, use
+   * Only apply executor instrumentation to allowed executors. To apply to all executors, use
    * override setting above.
    */
-  private final Collection<String> WHITELISTED_EXECUTORS;
+  private final Collection<String> ALLOWED_EXECUTORS;
 
   /**
    * Some frameworks have their executors defined as anon classes inside other classes. Referencing
    * anon classes by name would be fragile, so instead we will use list of class prefix names. Since
    * checking this list is more expensive (O(n)) we should try to keep it short.
    */
-  private final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
+  private final Collection<String> ALLOWED_EXECUTORS_PREFIXES;
 
   public AbstractExecutorInstrumentation(String... additionalNames) {
     super(EXEC_NAME, additionalNames);
 
     if (TRACE_ALL_EXECUTORS) {
       log.info("Tracing all executors enabled.");
-      WHITELISTED_EXECUTORS = Collections.emptyList();
-      WHITELISTED_EXECUTORS_PREFIXES = Collections.emptyList();
+      ALLOWED_EXECUTORS = Collections.emptyList();
+      ALLOWED_EXECUTORS_PREFIXES = Collections.emptyList();
     } else {
-      String[] whitelist = {
+      String[] allowed = {
         "akka.actor.ActorSystemImpl$$anon$1",
         "akka.dispatch.BalancingDispatcher",
         "akka.dispatch.Dispatcher",
@@ -107,13 +107,13 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
       };
 
       Set<String> executors = new HashSet<>(Config.get().getTraceExecutors());
-      executors.addAll(Arrays.asList(whitelist));
+      executors.addAll(Arrays.asList(allowed));
 
-      WHITELISTED_EXECUTORS = Collections.unmodifiableSet(executors);
+      ALLOWED_EXECUTORS = Collections.unmodifiableSet(executors);
 
-      String[] whitelistPrefixes = {"slick.util.AsyncExecutor$"};
-      WHITELISTED_EXECUTORS_PREFIXES =
-          Collections.unmodifiableCollection(Arrays.asList(whitelistPrefixes));
+      String[] allowedPrefixes = {"slick.util.AsyncExecutor$"};
+      ALLOWED_EXECUTORS_PREFIXES =
+          Collections.unmodifiableCollection(Arrays.asList(allowedPrefixes));
     }
   }
 
@@ -128,24 +128,24 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
               new ElementMatcher<TypeDescription>() {
                 @Override
                 public boolean matches(TypeDescription target) {
-                  boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
+                  boolean allowed = ALLOWED_EXECUTORS.contains(target.getName());
 
-                  // Check for possible prefixes match only if not whitelisted already
-                  if (!whitelisted) {
-                    for (String name : WHITELISTED_EXECUTORS_PREFIXES) {
+                  // Check for possible prefixes match only if not allowed already
+                  if (!allowed) {
+                    for (String name : ALLOWED_EXECUTORS_PREFIXES) {
                       if (target.getName().startsWith(name)) {
-                        whitelisted = true;
+                        allowed = true;
                         break;
                       }
                     }
                   }
 
-                  if (!whitelisted
+                  if (!allowed
                       && log.isDebugEnabled()
                       && hasExecutorInterfaceMatcher.matches(target)) {
                     log.debug("Skipping executor instrumentation for {}", target.getName());
                   }
-                  return whitelisted;
+                  return allowed;
                 }
               });
     }

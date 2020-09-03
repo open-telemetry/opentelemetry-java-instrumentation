@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 
 public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
@@ -50,9 +49,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   @Override
   public Span onConnection(Span span, RedisURI connection) {
     if (connection != null) {
-      NetPeerUtils.setNetPeer(span, connection.getHost(), null);
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
-
+      NetPeerUtils.setNetPeer(span, connection.getHost(), connection.getPort());
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());
     }
     return super.onConnection(span, connection);

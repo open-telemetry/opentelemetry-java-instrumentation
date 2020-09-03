@@ -24,6 +24,8 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
@@ -31,6 +33,9 @@ class CassandraClientTest extends AgentTestRunner {
 
   @Shared
   Cluster cluster
+
+  @Shared
+  def executor = Executors.newCachedThreadPool()
 
   def setupSpec() {
     /*
@@ -86,9 +91,15 @@ class CassandraClientTest extends AgentTestRunner {
 
   def "test async"() {
     setup:
+    def callbackExecuted = new AtomicBoolean()
     Session session = cluster.connect(keyspace)
     runUnderTrace("parent") {
-      session.executeAsync(statement)
+      def future = session.executeAsync(statement)
+      future.addListener({ ->
+        runUnderTrace("callbackListener") {
+          callbackExecuted.set(true)
+        }
+      }, executor)
     }
 
     expect:
@@ -98,9 +109,10 @@ class CassandraClientTest extends AgentTestRunner {
           cassandraSpan(it, 0, "USE $keyspace", null)
         }
       }
-      trace(keyspace ? 1 : 0, 2) {
+      trace(keyspace ? 1 : 0, 3) {
         basicSpan(it, 0, "parent")
         cassandraSpan(it, 1, statement, keyspace, span(0))
+        basicSpan(it, 2, "callbackListener", span(0))
       }
     }
 

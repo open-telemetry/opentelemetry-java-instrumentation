@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils;
 import io.opentelemetry.instrumentation.auto.api.concurrent.State;
-import io.opentelemetry.instrumentation.auto.javaconcurrent.AbstractExecutorInstrumentation;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +54,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
 
   public AkkaForkJoinTaskInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME + ".akka_fork_join");
+    super("akka_context_propagation");
   }
 
   @Override

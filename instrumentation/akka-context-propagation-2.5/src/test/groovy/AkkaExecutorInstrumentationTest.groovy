@@ -36,7 +36,7 @@ import spock.lang.Shared
 class AkkaExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
-    System.setProperty("otel.integration.java_concurrent.akka_fork_join.enabled", "true")
+    System.setProperty("otel.integration.akka_context_propagation.enabled", "true")
   }
 
   @Shared

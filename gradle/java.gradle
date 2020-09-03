@@ -10,7 +10,7 @@ apply from: "$rootDir/gradle/codenarc.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"
 
 afterEvaluate {
-  if (group == 'io.opentelemetry.instrumentation.auto') {
+  if (group == 'io.opentelemetry.instrumentation.auto' || findProperty('mavenGroupId') == 'io.opentelemetry.instrumentation.auto') {
     archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
   } else {
     archivesBaseName = 'opentelemetry-' + archivesBaseName
@@ -117,6 +117,7 @@ dependencies {
     // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-correlation-context', version: versions.opentelemetryAnother
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-tracing', version: versions.opentelemetryAnother
   }

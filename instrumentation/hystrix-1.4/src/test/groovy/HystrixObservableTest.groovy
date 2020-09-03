@@ -21,6 +21,7 @@ import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import rx.Observable
@@ -30,6 +31,9 @@ class HystrixObservableTest extends AgentTestRunner {
   static {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
+    ConfigUtils.updateConfig {
+      System.setProperty("otel.hystrix.tags.enabled", "true")
+    }
 
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
