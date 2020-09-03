@@ -109,10 +109,6 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     }
 
     if (name.startsWith("java.")) {
-      if (name.equals("java.net.http")) {
-        return false;
-      }
-
       if (name.equals("java.net.URL") || name.equals("java.net.HttpURLConnection")) {
         return false;
       }
