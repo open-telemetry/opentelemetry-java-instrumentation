@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.jdbc;
 
-import static io.opentelemetry.instrumentation.auto.jdbc.DataSourceDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jdbc.DataSourceDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jdbc.DataSourceTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -25,7 +24,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -49,7 +48,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".DataSourceDecorator",
+      packageName + ".DataSourceTracer",
     };
   }
 
@@ -66,33 +65,35 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
   public static class GetConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope start(@Advice.This DataSource ds) {
+    public static void start(
+        @Advice.This DataSource ds,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      // TODO this is very strange condition
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
-        return null;
+        return;
       }
 
-      Span span =
-          TRACER
-              .spanBuilder(ds.getClass().getSimpleName() + ".getConnection")
-              .setSpanKind(CLIENT)
-              .startSpan();
-      DECORATE.afterStart(span);
-
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
+      scope = currentContextWith(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      if (scope == null) {
         return;
       }
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      scope.close();
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

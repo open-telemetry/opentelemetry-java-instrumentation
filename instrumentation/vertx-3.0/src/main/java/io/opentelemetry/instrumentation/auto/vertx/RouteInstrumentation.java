@@ -55,7 +55,7 @@ public final class RouteInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RoutingContextHandlerWrapper", packageName + ".VertxDecorator",
+      packageName + ".RoutingContextHandlerWrapper", packageName + ".VertxTracer",
     };
   }
 

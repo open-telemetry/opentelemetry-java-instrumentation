@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.jsp;
 
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -27,9 +26,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +58,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JSPDecorator",
+      packageName + ".JSPTracer",
     };
   }
 
@@ -75,25 +75,28 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) HttpServletRequest req) {
-      Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameOnRender(req))
-              .setAttribute("servlet.context", req.getContextPath())
-              .startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onRender(span, req);
-      return new SpanWithScope(span, currentContextWith(span));
+    public static void onEnter(
+        @Advice.Argument(0) HttpServletRequest req,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = TRACER.startSpan(TRACER.spanNameOnRender(req), Kind.INTERNAL);
+      span.setAttribute("servlet.context", req.getContextPath());
+      TRACER.onRender(span, req);
+      scope = currentContextWith(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

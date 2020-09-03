@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.jsp;
 
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jsp.JSPDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jsp.JSPTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -25,9 +24,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -50,7 +50,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JSPDecorator",
+      packageName + ".JSPTracer",
     };
   }
 
@@ -65,25 +65,30 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.This JspCompilationContext jspCompilationContext) {
-      Span span = TRACER.spanBuilder(DECORATE.spanNameOnCompile(jspCompilationContext)).startSpan();
-      DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+    public static void onEnter(
+        @Advice.This JspCompilationContext jspCompilationContext,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = TRACER.startSpan(TRACER.spanNameOnCompile(jspCompilationContext), Kind.INTERNAL);
+      scope = currentContextWith(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This JspCompilationContext jspCompilationContext,
-        @Advice.Enter SpanWithScope spanWithScope,
-        @Advice.Thrown Throwable throwable) {
-      Span span = spanWithScope.getSpan();
-      DECORATE.onCompile(span, jspCompilationContext);
-      // ^ Decorate on return because additional properties are available
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
 
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      // Decorate on return because additional properties are available
+      TRACER.onCompile(span, jspCompilationContext);
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

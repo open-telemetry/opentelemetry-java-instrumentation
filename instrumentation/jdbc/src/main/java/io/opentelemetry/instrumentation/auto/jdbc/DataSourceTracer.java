@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.vertx;
+package io.opentelemetry.instrumentation.auto.jdbc;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public class VertxDecorator extends BaseDecorator {
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.vertx");
+public class DataSourceTracer extends BaseTracer {
+  public static final DataSourceTracer TRACER = new DataSourceTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jdbc";
+  }
 }

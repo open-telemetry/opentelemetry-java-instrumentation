@@ -140,7 +140,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".TraceDecorator",
+      packageName + ".TraceAnnotationTracer",
     };
   }
 

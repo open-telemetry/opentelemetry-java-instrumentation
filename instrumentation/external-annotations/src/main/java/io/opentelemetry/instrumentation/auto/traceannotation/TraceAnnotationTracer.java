@@ -16,13 +16,13 @@
 
 package io.opentelemetry.instrumentation.auto.traceannotation;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public class TraceDecorator extends BaseDecorator {
-  public static final TraceDecorator DECORATE = new TraceDecorator();
+public class TraceAnnotationTracer extends BaseTracer {
+  public static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.trace-annotation");
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.trace-annotation";
+  }
 }

@@ -16,11 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.traceannotation;
 
-import static io.opentelemetry.instrumentation.auto.traceannotation.TraceDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.traceannotation.TraceDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -28,19 +27,24 @@ import net.bytebuddy.asm.Advice;
 public class TraceAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Origin Method method) {
-    Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
-    DECORATE.afterStart(span);
-    return new SpanWithScope(span, currentContextWith(span));
+  public static void onEnter(
+      @Advice.Origin Method method,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    span = TRACER.startSpan(method);
+    scope = currentContextWith(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-    Span span = spanWithScope.getSpan();
-    DECORATE.onError(span, throwable);
-    DECORATE.beforeFinish(span);
-    span.end();
-    spanWithScope.closeScope();
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope,
+      @Advice.Thrown Throwable throwable) {
+    scope.close();
+    if (throwable != null) {
+      TRACER.endExceptionally(span, throwable);
+    } else {
+      TRACER.end(span);
+    }
   }
 }
