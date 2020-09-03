@@ -9,6 +9,7 @@ apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
+  // We need separate test sources to compile against latest Finatra.
   latestDepTest
 }
 
@@ -38,7 +39,6 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
-  // TODO latestDepTestLibrary doesn't work here
   latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
 }
 
