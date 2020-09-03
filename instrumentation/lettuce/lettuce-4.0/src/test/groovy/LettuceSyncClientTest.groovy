@@ -113,6 +113,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
@@ -145,6 +146,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errorEvent RedisConnectionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
