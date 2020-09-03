@@ -106,16 +106,16 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
   public static class CoroutineResumedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
-        @Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
-      continutation.getContext().get(TraceScopeKey.INSTANCE);
+        @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
+      continuation.getContext().get(TraceScopeKey.INSTANCE);
     }
   }
 
   public static class CoroutineSuspendedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
-        @Advice.Argument(0) final kotlin.coroutines.Continuation continutation) {
-      continutation.getContext().minusKey(TraceScopeKey.INSTANCE);
+        @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
+      continuation.getContext().minusKey(TraceScopeKey.INSTANCE);
     }
   }
 
