@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-apply from: "$rootDir/gradle/java.gradle"
+package io.opentelemetry.instrumentation.logback.v1_0_0
 
-dependencies {
-  compileOnly project(":instrumentation:logback:logback-1.0.0:library")
-
-  api project(':testing-common')
-
-  api group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.0'
-
-  implementation deps.guava
-
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+class LogbackTest extends AbstractLogbackTest {
 }

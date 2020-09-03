@@ -22,8 +22,8 @@
     <appender-ref ref="LIST" />
   </appender>
 
-  <root>
+  <logger name="test">
     <level value="info" />
     <appender-ref ref="OTEL" />
-  </root>
+  </logger>
 </configuration>

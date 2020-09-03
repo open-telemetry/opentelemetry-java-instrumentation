@@ -92,5 +92,4 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   public boolean detachAppender(String name) {
     return aai.detachAppender(name);
   }
-
 }
