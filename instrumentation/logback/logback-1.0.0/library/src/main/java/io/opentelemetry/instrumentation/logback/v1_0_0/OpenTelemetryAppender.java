@@ -16,18 +16,17 @@
 
 package io.opentelemetry.instrumentation.logback.v1_0_0;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.IThrowableProxy;
-import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.TracingContextUtils;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import jdk.internal.jline.internal.Nullable;
-import org.slf4j.Marker;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
@@ -35,43 +34,63 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
   @Override
-  protected void append(ILoggingEvent iLoggingEvent) {
+  protected void append(ILoggingEvent event) {
+    Span currentSpan = TracingContextUtils.getCurrentSpan();
+    if (!currentSpan.getContext().isValid()) {
+      aai.appendLoopOnAppenders(event);
+      return;
+    }
 
+    Map<String, String> contextData = new HashMap<>();
+    SpanContext spanContext = currentSpan.getContext();
+    contextData.put("traceId", spanContext.getTraceId().toLowerBase16());
+    contextData.put("spanId", spanContext.getSpanId().toLowerBase16());
+    contextData.put("traceFlags", spanContext.getTraceFlags().toLowerBase16());
+
+    Map<String, String> eventContext = event.getMDCPropertyMap();
+    if (eventContext == null) {
+      eventContext = contextData;
+    } else {
+      eventContext = new UnionMap<>(eventContext, contextData);
+    }
+
+    ILoggingEvent wrapped = new LoggingEventWrapper(event, eventContext);
+    aai.appendLoopOnAppenders(wrapped);
   }
 
   @Override
   public void addAppender(Appender<ILoggingEvent> appender) {
-
+    aai.addAppender(appender);
   }
 
   @Override
   public Iterator<Appender<ILoggingEvent>> iteratorForAppenders() {
-    return null;
+    return aai.iteratorForAppenders();
   }
 
   @Override
-  public Appender<ILoggingEvent> getAppender(String s) {
-    return null;
+  public Appender<ILoggingEvent> getAppender(String name) {
+    return aai.getAppender(name);
   }
 
   @Override
   public boolean isAttached(Appender<ILoggingEvent> appender) {
-    return false;
+    return aai.isAttached(appender);
   }
 
   @Override
   public void detachAndStopAllAppenders() {
-
+    aai.detachAndStopAllAppenders();
   }
 
   @Override
   public boolean detachAppender(Appender<ILoggingEvent> appender) {
-    return false;
+    return aai.detachAppender(appender);
   }
 
   @Override
-  public boolean detachAppender(String s) {
-    return false;
+  public boolean detachAppender(String name) {
+    return aai.detachAppender(name);
   }
 
 }
