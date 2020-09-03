@@ -42,10 +42,10 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
   private final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
 
   /**
-   * Only apply executor instrumentation to allowed executors. To apply to all executors, use
+   * Only apply executor instrumentation to whitelisted executors. To apply to all executors, use
    * override setting above.
    */
-  private final Collection<String> ALLOWED_EXECUTORS;
+  private final Collection<String> WHITELIST_EXECUTORS;
 
   /**
    * Some frameworks have their executors defined as anon classes inside other classes. Referencing
@@ -59,7 +59,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
     if (TRACE_ALL_EXECUTORS) {
       log.info("Tracing all executors enabled.");
-      ALLOWED_EXECUTORS = Collections.emptyList();
+      WHITELIST_EXECUTORS = Collections.emptyList();
       ALLOWED_EXECUTORS_PREFIXES = Collections.emptyList();
     } else {
       String[] allowed = {
@@ -109,7 +109,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
       Set<String> executors = new HashSet<>(Config.get().getTraceExecutors());
       executors.addAll(Arrays.asList(allowed));
 
-      ALLOWED_EXECUTORS = Collections.unmodifiableSet(executors);
+      WHITELIST_EXECUTORS = Collections.unmodifiableSet(executors);
 
       String[] allowedPrefixes = {"slick.util.AsyncExecutor$"};
       ALLOWED_EXECUTORS_PREFIXES =
@@ -128,7 +128,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
               new ElementMatcher<TypeDescription>() {
                 @Override
                 public boolean matches(TypeDescription target) {
-                  boolean allowed = ALLOWED_EXECUTORS.contains(target.getName());
+                  boolean allowed = WHITELIST_EXECUTORS.contains(target.getName());
 
                   // Check for possible prefixes match only if not allowed already
                   if (!allowed) {
