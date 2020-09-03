@@ -17,22 +17,13 @@
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
 import io.opentelemetry.trace.TracingContextUtils.currentContextWith
+import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.toChannel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.yield
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   val tracer: Tracer = OpenTelemetry.getTracer("io.opentelemetry.auto")
@@ -136,6 +127,55 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
         }
       }
     }
+  }
+
+  fun launchConcurrentSuspendFunctions(numIters: Int) {
+    for(i in 0 until numIters) {
+      GlobalScope.launch {
+        a(i.toLong())
+      }
+      GlobalScope.launch {
+        b(i.toLong())
+      }
+    }
+    // A simple and generous timeout (as opposed to joining on all the generated Jobs) also helps
+    // fail the test if our overhead throws the cost of context switching 100s of times way out of normal
+    Thread.sleep(4000)
+  }
+
+  suspend fun a(iter: Long) {
+    var span = tracer.spanBuilder("a").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    a2(iter)
+    scope.close()
+    span.end()
+  }
+  suspend fun a2(iter: Long) {
+    var span = tracer.spanBuilder("a2").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    scope.close()
+    span.end()
+  }
+  suspend fun b(iter: Long) {
+    var span = tracer.spanBuilder("b").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    b2(iter)
+    scope.close()
+    span.end()
+  }
+  suspend fun b2(iter: Long) {
+    var span = tracer.spanBuilder("b2").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    scope.close()
+    span.end()
   }
 
   fun tracedChild(opName: String) {
