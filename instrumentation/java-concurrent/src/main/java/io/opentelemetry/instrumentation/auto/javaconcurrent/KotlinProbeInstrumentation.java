@@ -44,7 +44,9 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
   run again).
 
   Without this instrumentation, heavy concurrency and usage of kotlin suspend functions will break causality
-  and cause nonsensical span parents/context propagation.
+  and cause nonsensical span parents/context propagation.  This is because a single JVM thread will run a series of
+  coroutines in an "arbitrary" order, and a context set by coroutine A (which then gets suspended) will be picked up
+  by completely-unrelated coroutine B.
 
   The basic strategy here is:
   1) Use the DebugProbes callbacks to learn about coroutine create, resume, and suspend operations
@@ -55,9 +57,6 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
   5) Test with highly concurrent well-known span causality and ensure everything looks right.
      Without this instrumentation, this test fails with concurrency=2; with this instrumentation,
      it passes with concurrency=200.
-
-  I've run the basic shape of this by an expert in kotlin coroutines (Roman Elizarov) and he agreed that the
-  overhead should be fine for production usage.
   */
 
   public KotlinProbeInstrumentation() {
