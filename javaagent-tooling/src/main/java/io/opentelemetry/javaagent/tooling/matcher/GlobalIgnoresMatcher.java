@@ -111,6 +111,10 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("java.rmi.") || name.startsWith("java.util.concurrent.")) {
         return false;
       }
+      if (name.equals("java.lang.ClassLoader")) {
+        return false;
+      }
+
       // Concurrent instrumentation modifies the structure of
       // Cleaner class incompatibly with java9+ modules.
       // Working around until a long-term fix for modules can be

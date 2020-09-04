@@ -20,12 +20,15 @@ import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeak
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.bootstrap.HelperResources;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.nio.file.Files;
 import java.security.SecureClassLoader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +64,7 @@ public class HelperInjector implements Transformer {
   private final String requestingName;
 
   private final Set<String> helperClassNames;
+  private final Set<String> helperResourceNames;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
   private final WeakMap<ClassLoader, Boolean> injectedClassLoaders = newWeakMap();
@@ -75,10 +79,12 @@ public class HelperInjector implements Transformer {
    *     order provided. This is important if there is interdependency between helper classes that
    *     requires them to be injected in a specific order.
    */
-  public HelperInjector(String requestingName, String... helperClassNames) {
+  public HelperInjector(
+      String requestingName, List<String> helperClassNames, List<String> helperResourceNames) {
     this.requestingName = requestingName;
 
-    this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
+    this.helperClassNames = new LinkedHashSet<>(helperClassNames);
+    this.helperResourceNames = new LinkedHashSet<>(helperResourceNames);
   }
 
   public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
@@ -86,6 +92,8 @@ public class HelperInjector implements Transformer {
 
     helperClassNames = helperMap.keySet();
     dynamicTypeMap.putAll(helperMap);
+
+    helperResourceNames = Collections.emptySet();
   }
 
   public static HelperInjector forDynamicTypes(
@@ -161,6 +169,25 @@ public class HelperInjector implements Transformer {
 
       ensureModuleCanReadHelperModules(module);
     }
+
+    if (!helperResourceNames.isEmpty()) {
+      for (String resourceName : helperResourceNames) {
+        URL resource = Utils.getAgentClassLoader().getResource(resourceName);
+        if (resource == null) {
+          log.debug("Helper resource {} requested but not found.", resourceName);
+          continue;
+        }
+
+        final byte[] content = toByteArray(resource);
+        if (content.length == 0) {
+          log.debug("Helper resource {} could not be read.", resourceName);
+          continue;
+        }
+
+        HelperResources.register(classLoader, resourceName, content);
+      }
+    }
+
     return builder;
   }
 
@@ -222,6 +249,26 @@ public class HelperInjector implements Transformer {
     boolean deleted = file.delete();
     if (!deleted) {
       file.deleteOnExit();
+    }
+  }
+
+  private static byte[] toByteArray(URL url) {
+    final InputStream is;
+    try {
+      is = url.openStream();
+      byte[] buf = new byte[8192];
+      ByteArrayOutputStream os = new ByteArrayOutputStream(is.available());
+
+      while (true) {
+        int r = is.read(buf);
+        if (r == -1) {
+          break;
+        }
+        os.write(buf, 0, r);
+      }
+      return os.toByteArray();
+    } catch (IOException e) {
+      return new byte[0];
     }
   }
 }

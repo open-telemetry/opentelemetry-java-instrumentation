@@ -66,6 +66,8 @@ public interface Instrumenter {
 
     private static final Logger log = LoggerFactory.getLogger(Default.class);
 
+    private static final String[] EMPTY = new String[0];
+
     // Added here instead of AgentInstaller's ignores because it's relatively
     // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
     public static final Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
@@ -123,10 +125,14 @@ public interface Instrumenter {
     private AgentBuilder.Identified.Extendable injectHelperClasses(
         AgentBuilder.Identified.Extendable agentBuilder) {
       String[] helperClassNames = helperClassNames();
-      if (helperClassNames.length > 0) {
+      String[] helperResourceNames = helperResourceNames();
+      if (helperClassNames.length > 0 || helperResourceNames.length > 0) {
         agentBuilder =
             agentBuilder.transform(
-                new HelperInjector(getClass().getSimpleName(), helperClassNames));
+                new HelperInjector(
+                    getClass().getSimpleName(),
+                    Arrays.asList(helperClassNames),
+                    Arrays.asList(helperResourceNames)));
       }
       return agentBuilder;
     }
@@ -201,7 +207,12 @@ public interface Instrumenter {
 
     /** @return Class names of helpers to inject into the user's classloader */
     public String[] helperClassNames() {
-      return new String[0];
+      return EMPTY;
+    }
+
+    /** @return Resource names to inject into the user's classloader */
+    public String[] helperResourceNames() {
+      return EMPTY;
     }
 
     /** @return A type matcher used to match the classloader under transform */
