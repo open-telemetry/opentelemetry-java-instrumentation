@@ -1,0 +1,21 @@
+ext {
+  // TODO (trask) currently this is only needed for LambdaGen
+  //  revisit if we don't end up dropping Java 7
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    extraDependency('org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72')
+    extraDependency('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7')
+    coreJdk()
+  }
+}
+dependencies {
+  implementation project(':instrumentation:java-concurrent')
+
+  compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72'
+  compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7'
+}

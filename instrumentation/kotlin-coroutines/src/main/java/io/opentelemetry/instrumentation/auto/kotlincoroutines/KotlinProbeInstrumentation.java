@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.javaconcurrent;
+package io.opentelemetry.instrumentation.auto.kotlincoroutines;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -86,9 +86,9 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineWrapper",
-      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$TraceScopeKey",
-      "io.opentelemetry.instrumentation.auto.javaconcurrent.KotlinProbeInstrumentation$CoroutineContextWrapper",
+      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$CoroutineWrapper",
+      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$TraceScopeKey",
+      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$CoroutineContextWrapper",
     };
   }
 

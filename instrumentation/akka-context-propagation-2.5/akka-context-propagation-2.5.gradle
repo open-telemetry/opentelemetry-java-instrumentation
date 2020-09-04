@@ -3,9 +3,6 @@ apply from: "$rootDir/gradle/test-with-scala.gradle"
 
 muzzle {
   pass {
-    // because this pulls in java-concurrent, it pulls in all its dependencies as well
-    extraDependency('org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72')
-    extraDependency('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7')
     group = 'com.typesafe.akka'
     module = 'akka-actor_2.11'
     versions = "[2.5.0,)"

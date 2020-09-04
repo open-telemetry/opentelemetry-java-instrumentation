@@ -3,6 +3,8 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-kotlin.gradle"
 
 dependencies {
+  testImplementation project(':instrumentation:kotlin-coroutines')
+
   testImplementation deps.kotlin
   testImplementation deps.coroutines
 }
