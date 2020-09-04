@@ -1,0 +1,7 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  library group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.0'
+
+  testImplementation project(':instrumentation:logback:logback-1.0.0:testing')
+}
