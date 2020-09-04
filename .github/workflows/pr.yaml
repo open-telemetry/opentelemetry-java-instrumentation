@@ -37,6 +37,6 @@ jobs:
           CIMATE_PROJECT_ID: mz1jo49x
           CIMATE_CI_KEY: "PR / jdk${{matrix.java}}"
         run: |
-          wget -q https://get.cimate.io/release/linux/cimate
+          wget -q https://get.cimate.io/next/linux/cimate
           chmod +x cimate
           ./cimate -v "**/TEST-*.xml"
