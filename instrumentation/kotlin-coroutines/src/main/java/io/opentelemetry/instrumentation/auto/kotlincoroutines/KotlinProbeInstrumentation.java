@@ -166,8 +166,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Override
     public <E extends Element> E get(@NotNull Key<E> key) {
       if (key == TraceScopeKey.INSTANCE) {
-        prevContext = Context.current();
-        Context.current().detach(myContext);
+        prevContext = myContext.attach();
       }
       return proxy.get(key);
     }
@@ -176,8 +175,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Override
     public CoroutineContext minusKey(@NotNull Key<?> key) {
       if (key == TraceScopeKey.INSTANCE) {
-        myContext = Context.current();
-        Context.current().detach(prevContext);
+        myContext = prevContext.attach();
       }
       return proxy.minusKey(key);
     }
