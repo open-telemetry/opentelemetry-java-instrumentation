@@ -18,15 +18,15 @@ package io.opentelemetry.instrumentation.logback.v1_0_0
 
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
+import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.TracingContextUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
-import spock.lang.Specification
 
-abstract class AbstractLogbackTest extends Specification {
+abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
   private static final Logger logger = LoggerFactory.getLogger("test")
 
@@ -35,8 +35,15 @@ abstract class AbstractLogbackTest extends Specification {
 
   def setupSpec() {
     ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger
-    listAppender = (logbackLogger.getAppender("OTEL") as OpenTelemetryAppender)
-      .getAppender("LIST") as ListAppender<ILoggingEvent>
+    def topLevelListAppender = logbackLogger.getAppender("LIST")
+    if (topLevelListAppender != null) {
+      // Auto instrumentation test.
+      listAppender = topLevelListAppender as ListAppender<ILoggingEvent>
+    } else {
+      // Library instrumentation test.
+      listAppender = (logbackLogger.getAppender("OTEL") as OpenTelemetryAppender)
+        .getAppender("LIST") as ListAppender<ILoggingEvent>
+    }
   }
 
   def setup() {
