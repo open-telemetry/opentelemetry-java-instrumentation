@@ -279,6 +279,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
@@ -371,6 +372,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
@@ -382,6 +384,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
@@ -492,6 +495,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
@@ -503,6 +507,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
