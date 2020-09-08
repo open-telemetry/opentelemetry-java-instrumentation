@@ -37,10 +37,6 @@ public class JMSDecorator extends ClientDecorator {
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
 
-  public String spanNameForReceive(Message message) {
-    return toSpanName(message, null, "receive");
-  }
-
   public String spanNameForConsumer(Message message) {
     return toSpanName(message, null, "receive");
   }
