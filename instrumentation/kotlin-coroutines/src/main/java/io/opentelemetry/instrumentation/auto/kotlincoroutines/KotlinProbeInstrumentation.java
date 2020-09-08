@@ -149,12 +149,12 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
   public static class CoroutineContextWrapper implements CoroutineContext {
     private final CoroutineContext proxy;
-    private Context myContext;
-    private Context prevContext;
+    private Context myTracingContext;
+    private Context prevTracingContext;
 
     public CoroutineContextWrapper(CoroutineContext proxy) {
       this.proxy = proxy;
-      this.myContext = Context.current();
+      this.myTracingContext = Context.current();
     }
 
     @Override
@@ -166,7 +166,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Override
     public <E extends Element> E get(@NotNull Key<E> key) {
       if (key == TraceScopeKey.INSTANCE) {
-        prevContext = myContext.attach();
+        prevTracingContext = myTracingContext.attach();
       }
       return proxy.get(key);
     }
@@ -175,7 +175,8 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Override
     public CoroutineContext minusKey(@NotNull Key<?> key) {
       if (key == TraceScopeKey.INSTANCE) {
-        myContext = prevContext.attach();
+        myTracingContext = Context.current();
+        myTracingContext.detach(prevTracingContext);
       }
       return proxy.minusKey(key);
     }
