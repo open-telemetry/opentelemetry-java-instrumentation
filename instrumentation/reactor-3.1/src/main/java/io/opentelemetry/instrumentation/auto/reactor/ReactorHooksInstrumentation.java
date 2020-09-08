@@ -40,24 +40,6 @@ public final class ReactorHooksInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$MonoTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$ParallelFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$ConnectableFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$GroupedFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableMonoTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableParallelFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableConnectableFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableGroupedFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingPublishers$FuseableFluxTracingPublisher",
-      "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isTypeInitializer().or(named("resetOnEachOperator")), packageName + ".ReactorHooksAdvice");

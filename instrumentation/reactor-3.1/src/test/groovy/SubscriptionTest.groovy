@@ -1,4 +1,4 @@
-import application.io.opentelemetry.extensions.auto.annotations.WithSpan
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.AgentTestRunner
 import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
@@ -33,8 +33,9 @@ class SubscriptionTest extends AgentTestRunner {
   }
 
   static class Connection {
-    @WithSpan
     static int query() {
+      def span = OpenTelemetry.getTracer("test").spanBuilder("Connection.query").startSpan()
+      span.end()
       return new Random().nextInt()
     }
   }

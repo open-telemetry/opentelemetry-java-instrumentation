@@ -56,7 +56,7 @@ class ReactorNettyTest extends AgentTestRunner {
   }
 
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200) {
-    def userAgent = "ReactorNetty/0.8.2.RELEASE"
+    def userAgent = "ReactorNetty/0.9.0.RELEASE"
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -71,7 +71,7 @@ class ReactorNettyTest extends AgentTestRunner {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-        "${SemanticAttributes.HTTP_URL.key()}" uri
+        "${SemanticAttributes.HTTP_URL.key()}" uri.toString()
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
         if (status) {
