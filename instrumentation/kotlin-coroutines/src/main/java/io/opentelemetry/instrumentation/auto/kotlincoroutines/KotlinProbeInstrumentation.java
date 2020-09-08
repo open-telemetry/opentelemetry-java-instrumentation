@@ -153,7 +153,8 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class CoroutineContextWrapper implements CoroutineContext, CoroutineContext.Element {
+  public static class CoroutineContextWrapper
+      implements CoroutineContext, CoroutineContext.Element {
     private final CoroutineContext proxy;
     private Context myTracingContext;
     private Context prevTracingContext;
@@ -205,6 +206,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
       myTracingContext = Context.current();
       myTracingContext.detach(prevTracingContext);
     }
+
     public void tracingResume() {
       prevTracingContext = myTracingContext.attach();
     }
