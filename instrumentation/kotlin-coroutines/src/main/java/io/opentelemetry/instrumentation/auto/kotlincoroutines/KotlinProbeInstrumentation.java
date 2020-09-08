@@ -106,7 +106,10 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
         @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
-      continuation.getContext().get(TraceScopeKey.INSTANCE);
+      CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
+      if (w != null) {
+        w.tracingResume();
+      }
     }
   }
 
@@ -114,11 +117,14 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
         @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
-      continuation.getContext().minusKey(TraceScopeKey.INSTANCE);
+      CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
+      if (w != null) {
+        w.tracingSuspend();
+      }
     }
   }
 
-  public static class TraceScopeKey implements CoroutineContext.Key {
+  public static class TraceScopeKey implements CoroutineContext.Key<CoroutineContextWrapper> {
     public static final TraceScopeKey INSTANCE = new TraceScopeKey();
   }
 
@@ -147,7 +153,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class CoroutineContextWrapper implements CoroutineContext {
+  public static class CoroutineContextWrapper implements CoroutineContext, CoroutineContext.Element {
     private final CoroutineContext proxy;
     private Context myTracingContext;
     private Context prevTracingContext;
@@ -166,7 +172,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Override
     public <E extends Element> E get(@NotNull Key<E> key) {
       if (key == TraceScopeKey.INSTANCE) {
-        prevTracingContext = myTracingContext.attach();
+        return (E) this;
       }
       return proxy.get(key);
     }
@@ -174,10 +180,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @NotNull
     @Override
     public CoroutineContext minusKey(@NotNull Key<?> key) {
-      if (key == TraceScopeKey.INSTANCE) {
-        myTracingContext = Context.current();
-        myTracingContext.detach(prevTracingContext);
-      }
+      // I can't be removed!
       return proxy.minusKey(key);
     }
 
@@ -189,6 +192,21 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
     public String toString() {
       return proxy.toString();
+    }
+
+    @NotNull
+    @Override
+    public Key<?> getKey() {
+      return TraceScopeKey.INSTANCE;
+    }
+
+    // Actual tracing context-switch logic
+    public void tracingSuspend() {
+      myTracingContext = Context.current();
+      myTracingContext.detach(prevTracingContext);
+    }
+    public void tracingResume() {
+      prevTracingContext = myTracingContext.attach();
     }
   }
 }
