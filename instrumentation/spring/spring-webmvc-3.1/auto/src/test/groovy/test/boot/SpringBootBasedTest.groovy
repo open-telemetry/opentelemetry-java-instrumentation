@@ -16,12 +16,12 @@
 
 package test.boot
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGIN
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_ERROR
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -196,8 +196,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" {responseContentLength == null || it == responseContentLength}
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.query) {

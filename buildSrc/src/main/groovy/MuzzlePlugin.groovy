@@ -146,7 +146,7 @@ class MuzzlePlugin implements Plugin<Project> {
           toolingProject.getLogger().info('--' + f)
           urls.add(f.toURI().toURL())
         }
-        def loader = new URLClassLoader(urls.toArray(new URL[0]), (ClassLoader) null)
+        def loader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.platformClassLoader)
         assert TOOLING_LOADER.compareAndSet(null, loader)
         return TOOLING_LOADER.get()
       } else {
