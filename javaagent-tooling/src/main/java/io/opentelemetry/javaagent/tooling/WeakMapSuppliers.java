@@ -121,6 +121,11 @@ class WeakMapSuppliers {
           }
         }
       }
+
+      @Override
+      public V remove(K key) {
+        return map.remove(key);
+      }
     }
 
     static class Inline implements WeakMap.Implementation {
