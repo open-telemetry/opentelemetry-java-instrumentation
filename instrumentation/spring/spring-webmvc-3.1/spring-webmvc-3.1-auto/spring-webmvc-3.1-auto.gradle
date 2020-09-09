@@ -38,10 +38,11 @@ dependencies {
   testImplementation group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
 
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+  
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'
 
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'
   testImplementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.0.16.RELEASE'
 
   // For spring security

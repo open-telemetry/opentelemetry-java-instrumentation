@@ -41,3 +41,7 @@ rule will kick in and do the following:
 This works both for tasks named `test` and `latestDepTest`. But currently
 does not work for other custom test tasks, such as those created by test sets
 plugin.
+
+#### Executing single test
+
+Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOVY TEST FILE NAME>` will run only the selected test.
