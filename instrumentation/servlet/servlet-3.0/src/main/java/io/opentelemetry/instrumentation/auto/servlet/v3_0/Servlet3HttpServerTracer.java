@@ -22,7 +22,6 @@ import io.grpc.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -48,7 +47,6 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   @Override
   public void endExceptionally(
       Span span, Throwable throwable, HttpServletResponse response, long timestamp) {
-    captureContentLength(span, response);
     if (response.isCommitted()) {
       super.endExceptionally(span, throwable, response, timestamp);
     } else {
@@ -62,7 +60,6 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
 
   @Override
   public void end(Span span, HttpServletResponse response, long timestamp) {
-    captureContentLength(span, response);
     super.end(span, response, timestamp);
   }
 
@@ -70,13 +67,6 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
     span.setStatus(Status.DEADLINE_EXCEEDED);
     span.setAttribute("timeout", timeout);
     span.end();
-  }
-
-  private static void captureContentLength(Span span, HttpServletResponse response) {
-    if (response instanceof CountingHttpServletResponse) {
-      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(
-          span, ((CountingHttpServletResponse) response).getContentLength());
-    }
   }
 
   /*

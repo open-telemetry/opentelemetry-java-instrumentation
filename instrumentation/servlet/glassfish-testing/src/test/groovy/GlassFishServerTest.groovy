@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -108,9 +105,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        // exception bodies are not yet recorded
-        // TODO(anuraaga): Bodies do seem to be recorded for these endpoints here, update to make assertion more precise.
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION || endpoint == ERROR || endpoint == NOT_FOUND || endpoint == REDIRECT }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
         if (endpoint.query) {
