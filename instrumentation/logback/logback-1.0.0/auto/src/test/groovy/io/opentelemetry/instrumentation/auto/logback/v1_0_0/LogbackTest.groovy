@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.logback.v1_0_0
+package io.opentelemetry.instrumentation.auto.logback.v1_0_0
 
-import io.opentelemetry.auto.test.InstrumentationTestTrait
+import io.opentelemetry.auto.test.AgentTestTrait
+import io.opentelemetry.instrumentation.logback.v1_0_0.AbstractLogbackTest
 
-class LogbackTest extends AbstractLogbackTest implements InstrumentationTestTrait {
+class LogbackTest extends AbstractLogbackTest implements AgentTestTrait {
 }

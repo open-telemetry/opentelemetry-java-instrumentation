@@ -33,12 +33,16 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
-  @Override
-  protected void append(ILoggingEvent event) {
+  public static ILoggingEvent wrapEvent(ILoggingEvent event) {
     Span currentSpan = TracingContextUtils.getCurrentSpan();
     if (!currentSpan.getContext().isValid()) {
-      aai.appendLoopOnAppenders(event);
-      return;
+      return event;
+    }
+
+    Map<String, String> eventContext = event.getMDCPropertyMap();
+    if (eventContext != null && eventContext.containsKey("traceId")) {
+      // Assume already instrumented event if traceId is present.
+      return event;
     }
 
     Map<String, String> contextData = new HashMap<>();
@@ -47,15 +51,18 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     contextData.put("spanId", spanContext.getSpanId().toLowerBase16());
     contextData.put("traceFlags", spanContext.getTraceFlags().toLowerBase16());
 
-    Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext == null) {
       eventContext = contextData;
     } else {
       eventContext = new UnionMap<>(eventContext, contextData);
     }
 
-    ILoggingEvent wrapped = new LoggingEventWrapper(event, eventContext);
-    aai.appendLoopOnAppenders(wrapped);
+    return new LoggingEventWrapper(event, eventContext);
+  }
+
+  @Override
+  protected void append(ILoggingEvent event) {
+    aai.appendLoopOnAppenders(wrapEvent(event));
   }
 
   @Override

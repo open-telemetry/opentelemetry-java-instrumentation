@@ -137,7 +137,7 @@ final class UnionMap<K, V> extends AbstractMap<K, V> {
   }
 
   // Member sets must be deduped by caller.
-  private static final class ConcatenatedSet<T> extends AbstractSet<T> {
+  static final class ConcatenatedSet<T> extends AbstractSet<T> {
 
     private final Set<T> first;
     private final Set<T> second;
@@ -183,29 +183,32 @@ final class UnionMap<K, V> extends AbstractMap<K, V> {
 
     @Override
     public Iterator<T> iterator() {
-      return new Iterator<T>() {
+      return new ConcatenatedSetIterator();
+    }
 
-        final Iterator<T> firstItr = first.iterator();
-        final Iterator<T> secondItr = second.iterator();
+    class ConcatenatedSetIterator implements Iterator<T> {
+      final Iterator<T> firstItr = first.iterator();
+      final Iterator<T> secondItr = second.iterator();
 
-        @Override
-        public boolean hasNext() {
-          return firstItr.hasNext() || secondItr.hasNext();
+      ConcatenatedSetIterator() {}
+
+      @Override
+      public boolean hasNext() {
+        return firstItr.hasNext() || secondItr.hasNext();
+      }
+
+      @Override
+      public T next() {
+        if (firstItr.hasNext()) {
+          return firstItr.next();
         }
+        return secondItr.next();
+      }
 
-        @Override
-        public T next() {
-          if (firstItr.hasNext()) {
-            return firstItr.next();
-          }
-          return secondItr.next();
-        }
-
-        @Override
-        public void remove() {
-          throw new UnsupportedOperationException();
-        }
-      };
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
     }
   }
 }
