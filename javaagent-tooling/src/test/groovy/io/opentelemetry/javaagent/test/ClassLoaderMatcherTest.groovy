@@ -54,7 +54,7 @@ class ClassLoaderMatcherTest extends AgentSpecification {
 
   def "AgentClassLoader class name is hardcoded in ClassLoaderMatcher"() {
     expect:
-    AgentClassLoader.name == "io.opentelemetry.instrumentation.auto.api.AgentClassLoader"
+    AgentClassLoader.name == "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"
   }
 
   def "ExporterClassLoader class name is hardcoded in ClassLoaderMatcher"() {

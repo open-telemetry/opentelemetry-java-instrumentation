@@ -54,7 +54,7 @@ public final class ClassLoaderMatcher {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
     private static final String AGENT_CLASSLOADER_NAME =
-        "io.opentelemetry.instrumentation.auto.api.AgentClassLoader";
+        "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
     private static final String EXPORTER_CLASSLOADER_NAME =
         "io.opentelemetry.javaagent.tooling.ExporterClassLoader";
     private static final WeakCache<ClassLoader, Boolean> skipCache = AgentTooling.newWeakCache();

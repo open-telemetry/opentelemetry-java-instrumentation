@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.api
+package io.opentelemetry.javaagent.bootstrap
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import java.util.concurrent.Phaser
