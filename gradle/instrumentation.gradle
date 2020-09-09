@@ -24,6 +24,10 @@ if (project.ext.find("skipPublish") != true) {
 
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
+if (projectDir.name == 'auto') {
+  archivesBaseName = projectDir.parentFile.name
+}
+
 afterEvaluate {
   byteBuddy {
     transformation {

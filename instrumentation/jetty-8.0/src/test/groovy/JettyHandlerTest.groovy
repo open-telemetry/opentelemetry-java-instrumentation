@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.SERVER
-
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
@@ -31,10 +23,19 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Request
+import org.eclipse.jetty.server.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.ErrorHandler
 import spock.lang.Shared
+
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JettyHandlerTest extends HttpServerTest<Server> {
 
@@ -108,8 +109,11 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   static class TestHandler extends AbstractHandler {
     @Override
     void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+      //This line here is to verify that we don't break Jetty if it wants to cast to implementation class
+      //See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1096
+      Response jettyResponse = response as Response
       if (baseRequest.dispatcherType != DispatcherType.ERROR) {
-        handleRequest(baseRequest, response)
+        handleRequest(baseRequest, jettyResponse)
         baseRequest.handled = true
       } else {
         errorHandler.handle(target, baseRequest, response, response)
@@ -141,8 +145,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == responseContentLength || endpoint == EXCEPTION }
         "servlet.path" ''
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query

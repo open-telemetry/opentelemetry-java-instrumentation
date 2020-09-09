@@ -33,11 +33,7 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import org.apache.catalina.connector.Connector
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory
-import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpInputMessage
 import org.springframework.http.HttpOutputMessage
@@ -68,21 +64,6 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
           return [MediaType.TEXT_PLAIN]
         }
       })
-  }
-
-  @Bean
-  EmbeddedServletContainerFactory servletContainerFactory() {
-    def factory = new TomcatEmbeddedServletContainerFactory()
-
-    factory.addConnectorCustomizers(
-      new TomcatConnectorCustomizer() {
-        @Override
-        void customize(final Connector connector) {
-          connector.setEnableLookups(true)
-        }
-      })
-
-    return factory
   }
 
   @Bean

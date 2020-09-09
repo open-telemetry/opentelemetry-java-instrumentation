@@ -67,6 +67,9 @@ class JedisClientTest extends AgentTestRunner {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
       }
@@ -90,6 +93,9 @@ class JedisClientTest extends AgentTestRunner {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
       }
@@ -101,6 +107,9 @@ class JedisClientTest extends AgentTestRunner {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
       }
@@ -124,6 +133,9 @@ class JedisClientTest extends AgentTestRunner {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
       }
@@ -135,6 +147,9 @@ class JedisClientTest extends AgentTestRunner {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
             "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
       }

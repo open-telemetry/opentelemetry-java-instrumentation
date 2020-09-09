@@ -57,6 +57,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
         named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
     transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
     transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
+    transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
     transformers.put(
         named("incorrectKeyClassUsage"), IncorrectKeyClassContextApiUsageAdvice.class.getName());
     transformers.put(
@@ -116,7 +117,8 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
-      contextCount = contextStore.get(thiz).count;
+      Context context = contextStore.get(thiz);
+      contextCount = context == null ? 0 : context.count;
     }
   }
 
@@ -128,6 +130,15 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
       Context context = new Context();
       context.count = value;
       contextStore.put(thiz, context);
+    }
+  }
+
+  public static class RemoveApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit(@Advice.This KeyClass thiz) {
+      ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      contextStore.put(thiz, null);
     }
   }
 
@@ -189,6 +200,10 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     }
 
     public void putContextCount(int value) {
+      // implementation replaced with test instrumentation
+    }
+
+    public void removeContextCount() {
       // implementation replaced with test instrumentation
     }
   }

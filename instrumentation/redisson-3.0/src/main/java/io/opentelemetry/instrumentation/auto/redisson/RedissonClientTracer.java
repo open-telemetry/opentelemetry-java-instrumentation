@@ -43,6 +43,9 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
       for (CommandData commandData : commands) {
         commandStrings.append(commandData.getCommand().getName()).append(";");
       }
+      if (commandStrings.length() > 0) {
+        commandStrings.deleteCharAt(commandStrings.length() - 1);
+      }
       return commandStrings.toString();
     } else if (args instanceof CommandData) {
       return ((CommandData) args).getCommand().getName();

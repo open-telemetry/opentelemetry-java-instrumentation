@@ -126,6 +126,22 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass() | _
   }
 
+  def "remove test"() {
+    given:
+    instance1.putContextCount(10)
+
+    when:
+    instance1.removeContextCount()
+
+    then:
+    instance1.getContextCount() == 0
+
+    where:
+    instance1                     | _
+    new KeyClass()                | _
+    new UntransformableKeyClass() | _
+  }
+
   def "works with cglib enhanced instances which duplicates context getter and setter methods"() {
     setup:
     Enhancer enhancer = new Enhancer()

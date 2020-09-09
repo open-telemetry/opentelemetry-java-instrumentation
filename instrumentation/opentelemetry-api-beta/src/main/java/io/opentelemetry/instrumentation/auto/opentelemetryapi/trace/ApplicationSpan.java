@@ -116,6 +116,11 @@ class ApplicationSpan implements Span {
   }
 
   @Override
+  public void recordException(Throwable throwable, Attributes attributes) {
+    agentSpan.recordException(throwable, Bridging.toAgent(attributes));
+  }
+
+  @Override
   public void updateName(String name) {
     agentSpan.updateName(name);
   }

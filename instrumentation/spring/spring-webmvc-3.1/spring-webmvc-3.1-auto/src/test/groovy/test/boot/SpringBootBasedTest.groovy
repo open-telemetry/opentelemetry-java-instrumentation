@@ -21,10 +21,11 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_ERROR
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
-import static java.util.Collections.singletonMap
 
+import com.google.common.collect.ImmutableMap
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
@@ -41,7 +42,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(AppConfig, SecurityConfig, AuthServerConfig)
-    app.setDefaultProperties(singletonMap("server.port", port))
+    app.setDefaultProperties(ImmutableMap.of("server.port", port, "server.error.include-message", "always"))
     def context = app.run()
     return context
   }
@@ -73,6 +74,27 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     true
   }
 
+  def "test spans with auth error"() {
+    setup:
+    def authProvider = server.getBean(SavingAuthenticationProvider)
+    def request = request(AUTH_ERROR, "GET", null).build()
+
+    when:
+    authProvider.latestAuthentications.clear()
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 401 // not secured
+
+    and:
+    assertTraces(1) {
+      trace(0, 2) {
+        serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
+        errorPageSpans(it, 1, null)
+      }
+    }
+  }
+
   def "test character encoding of #testPassword"() {
     setup:
     def authProvider = server.getBean(SavingAuthenticationProvider)
@@ -100,6 +122,17 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     where:
     testPassword << ["password", "dfsdföääöüüä", "🤓"]
+  }
+
+  @Override
+  void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName "BasicErrorController.error"
+      spanKind INTERNAL
+      errored false
+      attributes {
+      }
+    }
   }
 
   @Override
@@ -140,6 +173,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
+
     trace.span(index) {
       operationName endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
       spanKind SERVER
@@ -163,7 +197,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
         // exception bodies are not yet recorded
-        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" responseContentLength
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" {responseContentLength == null || it == responseContentLength}
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.query) {

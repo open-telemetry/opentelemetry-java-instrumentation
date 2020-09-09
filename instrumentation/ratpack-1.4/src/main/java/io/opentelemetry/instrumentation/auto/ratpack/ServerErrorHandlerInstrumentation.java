@@ -52,7 +52,7 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RatpackDecorator",
+      packageName + ".RatpackTracer",
     };
   }
 

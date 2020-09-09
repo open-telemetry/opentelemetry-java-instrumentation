@@ -109,7 +109,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
           spanName = "destination";
         }
       } else {
-        spanName = DECORATE.spanNameForReceive(message);
+        spanName = DECORATE.spanNameForConsumer(message);
       }
       Span.Builder spanBuilder =
           TRACER

@@ -30,20 +30,34 @@ public final class NetPeerUtils {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
-        setNetPeer(span, remoteAddress);
+        setNetPeer(span, remoteAddress, remoteConnection.getPort());
       } else {
         // Failed DNS lookup, the host string is the name.
-        setNetPeer(span, remoteConnection.getHostString(), null);
+        setNetPeer(span, remoteConnection.getHostString(), null, remoteConnection.getPort());
       }
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
   }
 
-  public static void setNetPeer(Span span, InetAddress remoteAddress) {
-    setNetPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
+  public static void setNetPeer(Span span, InetAddress remoteAddress, int port) {
+    setNetPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress(), port);
+  }
+
+  public static void setNetPeer(Span span, String nameOrIp, int port) {
+    try {
+      InetSocketAddress address = new InetSocketAddress(nameOrIp, port);
+      setNetPeer(span, address);
+    } catch (IllegalArgumentException iae) {
+      // can't create address, try setting directly
+      setNetPeer(span, nameOrIp, null, port);
+    }
   }
 
   public static void setNetPeer(Span span, String peerName, String peerIp) {
+    setNetPeer(span, peerName, peerIp, -1);
+  }
+
+  public static void setNetPeer(Span span, String peerName, String peerIp, int port) {
+
     if (peerName != null && !peerName.equals(peerIp)) {
       SemanticAttributes.NET_PEER_NAME.set(span, peerName);
     }
@@ -56,6 +70,9 @@ public final class NetPeerUtils {
     }
     if (peerService != null) {
       SemanticAttributes.PEER_SERVICE.set(span, peerService);
+    }
+    if (port > 0) {
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port);
     }
   }
 
