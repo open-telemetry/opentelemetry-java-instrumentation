@@ -22,12 +22,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.toChannel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
@@ -136,6 +138,54 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
         }
       }
     }
+  }
+
+  fun launchConcurrentSuspendFunctions(numIters: Int) {
+    runBlocking {
+      for (i in 0 until numIters) {
+        GlobalScope.launch {
+          a(i.toLong())
+        }
+        GlobalScope.launch {
+          b(i.toLong())
+        }
+      }
+    }
+  }
+
+  suspend fun a(iter: Long) {
+    var span = tracer.spanBuilder("a").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    a2(iter)
+    scope.close()
+    span.end()
+  }
+  suspend fun a2(iter: Long) {
+    var span = tracer.spanBuilder("a2").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    scope.close()
+    span.end()
+  }
+  suspend fun b(iter: Long) {
+    var span = tracer.spanBuilder("b").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    b2(iter)
+    scope.close()
+    span.end()
+  }
+  suspend fun b2(iter: Long) {
+    var span = tracer.spanBuilder("b2").startSpan()
+    span.setAttribute("iter", iter)
+    var scope = currentContextWith(span)
+    delay(10)
+    scope.close()
+    span.end()
   }
 
   fun tracedChild(opName: String) {

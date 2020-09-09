@@ -313,6 +313,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutins code
     if (name.startsWith("kotlin.")) {
+      if (name.equals("kotlin.coroutines.jvm.internal.DebugProbesKt")) {
+        return false;
+      }
       return true;
     }
 

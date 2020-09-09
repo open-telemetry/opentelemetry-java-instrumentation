@@ -1,5 +1,5 @@
 // Enable testing kotlin code in groovy spock tests.
-apply plugin: 'kotlin'
+apply plugin: 'org.jetbrains.kotlin.jvm'
 
 compileTestGroovy {
   //Note: look like it should be `classpath += files(sourceSets.test.kotlin.classesDirectory)`

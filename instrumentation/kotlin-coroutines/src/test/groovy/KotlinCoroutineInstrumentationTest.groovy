@@ -194,4 +194,44 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     where:
     dispatcher << dispatchersToTest
   }
+  def "test concurrent suspend functions"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(Dispatchers.Default)
+    int numIters = 100
+    HashSet<Long> seenItersA = new HashSet<>()
+    HashSet<Long> seenItersB = new HashSet<>()
+    HashSet<Long> expectedIters = new HashSet<>((0L..(numIters-1)).toList())
+
+    when:
+    kotlinTest.launchConcurrentSuspendFunctions(numIters)
+
+    then:
+    // This generates numIters each of "a calls a2" and "b calls b2" traces.  Each
+    // trace should have a single pair of spans (a and a2) and each of those spans
+    // should have the same iteration number (attribute "iter").
+    // The traces are in some random order, so let's keep track and make sure we see
+    // each iteration # exactly once
+    assertTraces(numIters*2) {
+      for(int i=0; i < numIters*2; i++) {
+        trace(i, 2) {
+          boolean a = false
+          long iter = -1
+          span(0) {
+            a = span.name.matches("a")
+            iter = span.getAttributes().get("iter").getLongValue()
+            (a ? seenItersA : seenItersB).add(iter)
+            operationName(a ? "a" : "b")
+          }
+          span(1) {
+            operationName(a ? "a2" : "b2")
+            childOf(span(0))
+            assert span.getAttributes().get("iter").getLongValue() == iter
+
+          }
+        }
+      }
+    }
+    assert seenItersA.equals(expectedIters)
+    assert seenItersB.equals(expectedIters)
+  }
 }
