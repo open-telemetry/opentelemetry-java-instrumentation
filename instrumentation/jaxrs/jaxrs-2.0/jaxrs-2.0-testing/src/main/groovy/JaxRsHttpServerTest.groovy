@@ -19,16 +19,25 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
+import static java.util.concurrent.TimeUnit.SECONDS
+import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletableFuture
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl
+import okhttp3.Request
+import okhttp3.Response
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
+  @Timeout(10)
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
@@ -37,8 +46,16 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
       .build()
     def request = request(url, "GET", null).build()
 
-    when:
-    def response = client.newCall(request).execute()
+    when: "async call is started"
+    def futureResponse = asyncCall(request)
+
+    then: "there are no traces yet"
+    assertTraces(0) {
+    }
+
+    when: "barrier is released and resource class sends response"
+    JaxRsTestResource.BARRIER.await(1, SECONDS)
+    def response = futureResponse.join()
 
     then:
     assert response.code() == statusCode
@@ -58,6 +75,45 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
     "canceled"   | "cancel"  | 503        | { it instanceof String } | true        | false   | null
   }
 
+  @Timeout(10)
+  @Unroll
+  def "should handle #desc CompletionStage (JAX-RS 2.1+ only)"() {
+    assumeTrue(shouldTestCompletableStageAsync())
+
+    given:
+    def url = HttpUrl.get(address.resolve("/async-completion-stage")).newBuilder()
+      .addQueryParameter("action", action)
+      .build()
+    def request = request(url, "GET", null).build()
+
+    when: "async call is started"
+    def futureResponse = asyncCall(request)
+
+    then: "there are no traces yet"
+    assertTraces(0) {
+    }
+
+    when: "barrier is released and resource class sends response"
+    JaxRsTestResource.BARRIER.await(1, SECONDS)
+    def response = futureResponse.join()
+
+    then:
+    assert response.code() == statusCode
+    assert bodyPredicate(response.body().string())
+
+    assertTraces(1) {
+      trace(0, 2) {
+        asyncServerSpan(it, 0, url, statusCode)
+        handlerSpan(it, 1, span(0), "jaxRs21Async", false, isError, errorMessage)
+      }
+    }
+
+    where:
+    desc         | action    | statusCode | bodyPredicate       | isError | errorMessage
+    "successful" | "succeed" | 200        | { it == "success" } | false   | null
+    "failing"    | "throw"   | 500        | { it == "failure" } | true    | "failure"
+  }
+
   @Override
   boolean hasHandlerSpan() {
     true
@@ -71,6 +127,10 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
   @Override
   boolean testPathParam() {
     true
+  }
+
+  private static boolean shouldTestCompletableStageAsync() {
+    Boolean.getBoolean("testLatestDeps")
   }
 
   @Override
@@ -175,6 +235,22 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
       }
     }
   }
+
+  private CompletableFuture<Response> asyncCall(Request request) {
+    def future = new CompletableFuture()
+
+    client.newCall(request).enqueue(new Callback() {
+      @Override
+      void onFailure(Call call, IOException e) {
+        future.completeExceptionally(e)
+      }
+
+      @Override
+      void onResponse(Call call, Response response) throws IOException {
+        future.complete(response)
+      }
+    })
+
+    return future
+  }
 }
-
-

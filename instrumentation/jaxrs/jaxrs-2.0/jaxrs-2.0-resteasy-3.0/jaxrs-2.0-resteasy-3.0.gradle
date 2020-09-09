@@ -39,3 +39,7 @@ dependencies {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
 }
+
+test {
+  systemProperty 'testLatestDeps', testLatestDeps
+}

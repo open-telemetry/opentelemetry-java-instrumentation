@@ -36,18 +36,17 @@ import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
-
-  private static final String JAX_ENDPOINT_OPERATION_NAME = "jax-rs.request";
-
   public JaxRsAnnotationsInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-annotations");
   }
@@ -76,6 +75,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
       "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsTracer",
+      packageName + ".CompletionStageFinishCallback"
     };
   }
 
@@ -92,6 +92,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
                             "javax.ws.rs.GET",
                             "javax.ws.rs.HEAD",
                             "javax.ws.rs.OPTIONS",
+                            "javax.ws.rs.PATCH",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
         JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
@@ -140,6 +141,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
@@ -155,15 +157,23 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return;
       }
 
+      CompletionStage<?> asyncReturnValue =
+          returnValue instanceof CompletionStage ? (CompletionStage<?>) returnValue : null;
+
       if (asyncResponse != null && !asyncResponse.isSuspended()) {
         // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
         InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, null);
       }
-      if (asyncResponse == null || !asyncResponse.isSuspended()) {
+      if (asyncReturnValue != null) {
+        // span finished by CompletionStageFinishCallback
+        asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(span));
+      }
+      if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
         TRACER.end(span);
       }
-      scope.close();
       // else span finished by AsyncResponseAdvice
+
+      scope.close();
     }
   }
 }
