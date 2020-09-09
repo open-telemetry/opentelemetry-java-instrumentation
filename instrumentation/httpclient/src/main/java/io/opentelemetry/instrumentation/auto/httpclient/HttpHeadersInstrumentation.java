@@ -33,7 +33,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
 public class HttpHeadersInstrumentation extends Instrumenter.Default {
@@ -50,11 +49,8 @@ public class HttpHeadersInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
-        .or(ElementMatchers.<TypeDescription>nameStartsWith("jdk.internal."))
-        // .and(not(named("jdk.internal.net.http.ImmutableHttpRequest")))
+        .or(nameStartsWith("jdk.internal."))
         .and(extendsClass(named("java.net.http.HttpRequest")));
-
-    // return named("java.net.http.HttpHeaders");
   }
 
   @Override

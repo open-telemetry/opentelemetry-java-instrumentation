@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.auto.httpclient;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.net.http.HttpRequest;
 
+/** Context propagation is implemented via {@link HttpHeadersInstrumentation} */
 public class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpRequest> {
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.auto.httpclient;
 
 import static io.opentelemetry.instrumentation.auto.httpclient.JdkHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -43,13 +44,18 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
 public class HttpClientInstrumentation extends Instrumenter.Default {
 
   public HttpClientInstrumentation() {
     super("httpclient");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("java.net.http.HttpClient");
   }
 
   @Override
@@ -60,7 +66,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
-        .or(ElementMatchers.<TypeDescription>nameStartsWith("jdk.internal."))
+        .or(nameStartsWith("jdk.internal."))
         .and(not(named("jdk.internal.net.http.HttpClientFacade")))
         .and(extendsClass(named("java.net.http.HttpClient")));
   }

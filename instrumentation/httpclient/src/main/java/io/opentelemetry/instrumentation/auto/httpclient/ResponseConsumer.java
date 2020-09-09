@@ -20,7 +20,6 @@ import static io.opentelemetry.instrumentation.auto.httpclient.JdkHttpClientTrac
 
 import io.opentelemetry.trace.Span;
 import java.net.http.HttpResponse;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> {
@@ -35,8 +34,7 @@ public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> 
     if (throwable == null) {
       TRACER.end(span, httpResponse);
     } else {
-      final Throwable cause = throwable.getCause();
-      TRACER.endExceptionally(span, httpResponse, Objects.requireNonNullElse(cause, throwable));
+      TRACER.endExceptionally(span, httpResponse, throwable);
     }
   }
 }

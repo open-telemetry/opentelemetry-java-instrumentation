@@ -4,9 +4,8 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-// FIXME: how to pass muzzle (only for jdk 11+)
-//muzzle {
-//  pass {
-//    coreJdk()
-//  }
-//}
+muzzle {
+  pass {
+    coreJdk()
+  }
+}
