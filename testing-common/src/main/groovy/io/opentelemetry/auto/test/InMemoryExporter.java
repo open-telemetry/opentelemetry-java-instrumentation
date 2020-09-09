@@ -25,6 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
@@ -86,11 +87,12 @@ public class InMemoryExporter implements SpanProcessor {
   public void onEnd(ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "<<< SPAN END: {} id={} traceid={} parent={}, attributes={}",
+        "<<< SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
         sd.getName(),
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16(),
+        sd.getInstrumentationLibraryInfo(),
         printSpanAttributes(sd));
     SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
@@ -228,10 +230,14 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   @Override
-  public void shutdown() {}
+  public CompletableResultCode shutdown() {
+    return CompletableResultCode.ofSuccess();
+  }
 
   @Override
-  public void forceFlush() {}
+  public CompletableResultCode forceFlush() {
+    return CompletableResultCode.ofSuccess();
+  }
 
   // must be called under tracesLock
   private void sortTraces() {

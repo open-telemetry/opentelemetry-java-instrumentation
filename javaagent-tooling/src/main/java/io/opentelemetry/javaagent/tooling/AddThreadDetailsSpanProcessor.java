@@ -16,6 +16,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
@@ -43,8 +44,12 @@ public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   }
 
   @Override
-  public void shutdown() {}
+  public CompletableResultCode shutdown() {
+    return CompletableResultCode.ofSuccess();
+  }
 
   @Override
-  public void forceFlush() {}
+  public CompletableResultCode forceFlush() {
+    return CompletableResultCode.ofSuccess();
+  }
 }

@@ -37,21 +37,17 @@ public class JMSDecorator extends ClientDecorator {
 
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jms-1.1");
 
-  public String spanNameForReceive(Message message) {
-    return toSpanName(message, null);
-  }
-
   public String spanNameForConsumer(Message message) {
-    return toSpanName(message, null);
+    return toSpanName(message, null, "receive");
   }
 
   public String spanNameForProducer(Message message, Destination destination) {
-    return toSpanName(message, destination);
+    return toSpanName(message, destination, "send");
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";
 
-  public static String toSpanName(Message message, Destination destination) {
+  public static String toSpanName(Message message, Destination destination, String operationName) {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
@@ -60,25 +56,25 @@ public class JMSDecorator extends ClientDecorator {
     if (jmsDestination == null) {
       jmsDestination = destination;
     }
-    return toSpanName(jmsDestination);
+    return toSpanName(jmsDestination, operationName);
   }
 
-  public static String toSpanName(Destination destination) {
+  public static String toSpanName(Destination destination, String operationName) {
     try {
       if (destination instanceof Queue) {
         String queueName = ((Queue) destination).getQueueName();
         if (destination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
-          return "queue/<temporary>";
+          return "queue/<temporary> " + operationName;
         } else {
-          return "queue/" + queueName;
+          return "queue/" + queueName + " " + operationName;
         }
       }
       if (destination instanceof Topic) {
         String topicName = ((Topic) destination).getTopicName();
         if (destination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
-          return "topic/<temporary>";
+          return "topic/<temporary> " + operationName;
         } else {
-          return "topic/" + topicName;
+          return "topic/" + topicName + " " + operationName;
         }
       }
     } catch (Exception e) {
@@ -90,12 +86,14 @@ public class JMSDecorator extends ClientDecorator {
     super.afterStart(span);
     if (spanName.startsWith("queue/")) {
       SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "queue");
-      SemanticAttributes.MESSAGING_DESTINATION.set(span, spanName.replaceFirst("queue/", ""));
+      SemanticAttributes.MESSAGING_DESTINATION.set(
+          span, spanName.replaceFirst("^queue/", "").replaceFirst(" (send|receive)$", ""));
     } else if (spanName.startsWith("topic/")) {
       SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "topic");
-      SemanticAttributes.MESSAGING_DESTINATION.set(span, spanName.replaceFirst("topic/", ""));
+      SemanticAttributes.MESSAGING_DESTINATION.set(
+          span, spanName.replaceFirst("^topic/", "").replaceFirst(" (send|receive)$", ""));
     }
-    if (spanName.equals("queue/<temporary>") || spanName.equals("topic/<temporary>")) {
+    if (spanName.startsWith("queue/<temporary>") || spanName.startsWith("topic/<temporary>")) {
       SemanticAttributes.MESSAGING_TEMP_DESTINATION.set(span, true);
     }
 

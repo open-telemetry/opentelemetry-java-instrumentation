@@ -255,13 +255,13 @@ public class AgentInstaller {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      //      log.debug("onComplete {}", typeName);
+      // log.debug("onComplete {}", typeName);
     }
 
     @Override
     public void onDiscovery(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      //      log.debug("onDiscovery {}", typeName);
+      // log.debug("onDiscovery {}", typeName);
     }
   }
 

@@ -18,7 +18,7 @@ package io.opentelemetry.javaagent.exporters.logging;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
-import io.opentelemetry.sdk.common.export.CompletableResultCode;
+import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
@@ -69,5 +69,7 @@ public class LoggingExporter implements SpanExporter {
   }
 
   @Override
-  public void shutdown() {}
+  public CompletableResultCode shutdown() {
+    return CompletableResultCode.ofSuccess();
+  }
 }

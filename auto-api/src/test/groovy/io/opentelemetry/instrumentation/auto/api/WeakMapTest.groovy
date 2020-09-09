@@ -55,6 +55,19 @@ class WeakMapTest extends Specification {
     supplier.counter == 2
   }
 
+  def "remove a value"() {
+    given:
+    weakMap.put('key',  42)
+
+    when:
+    def removed = weakMap.remove('key')
+
+    then:
+    removed == 42
+    weakMap.get('key') == null
+    weakMap.size() == 0
+  }
+
   class CounterSupplier implements WeakMap.ValueSupplier<String, Integer> {
 
     def counter = 0

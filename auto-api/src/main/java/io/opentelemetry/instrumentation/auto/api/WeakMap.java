@@ -37,6 +37,8 @@ public interface WeakMap<K, V> {
 
   V computeIfAbsent(K key, ValueSupplier<? super K, ? extends V> supplier);
 
+  V remove(K key);
+
   class Provider {
 
     private static final Logger log = LoggerFactory.getLogger(Provider.class);
@@ -143,6 +145,11 @@ public interface WeakMap<K, V> {
           return value;
         }
       }
+    }
+
+    @Override
+    public V remove(K key) {
+      return map.remove(key);
     }
 
     @Override

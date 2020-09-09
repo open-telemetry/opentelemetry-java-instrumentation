@@ -152,6 +152,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
+    AUTH_ERROR("basicsecured/endpoint", 401, null)
 
     private final URI uriObj
     private final String path
