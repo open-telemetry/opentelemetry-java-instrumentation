@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.api;
+package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
  * <p>It is built around the concept of a jar inside another jar. This classloader loads the files
  * of the internal jar to load classes and resources.
  */
-// TODO remove this from api
 public class AgentClassLoader extends URLClassLoader {
   static {
     ClassLoader.registerAsParallelCapable();

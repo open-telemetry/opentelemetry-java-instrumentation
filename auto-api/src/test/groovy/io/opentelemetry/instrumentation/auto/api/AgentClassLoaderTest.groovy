@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.api
 
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import java.util.concurrent.Phaser
 import java.util.concurrent.TimeUnit
 import spock.lang.Specification
