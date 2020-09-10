@@ -29,13 +29,14 @@ import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import reactor.util.annotation.Nullable;
+
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import reactor.util.annotation.Nullable;
 
 public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
@@ -265,7 +266,7 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement = args != null && !args.isEmpty() ? name + " " + args : name;
+          String statement = (args != null && !args.isEmpty()) && !name.equals("AUTH") ? name + " " + args : name;
           SemanticAttributes.DB_STATEMENT.set(span, statement);
         }
         span.end();
