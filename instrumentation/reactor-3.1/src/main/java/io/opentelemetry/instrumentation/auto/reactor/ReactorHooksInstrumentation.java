@@ -37,12 +37,11 @@ public final class ReactorHooksInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        "io.opentelemetry.instrumentation.reactor.TracingOperator$Lifter",
-        "io.opentelemetry.instrumentation.reactor.TracingOperator",
-        "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
+      "io.opentelemetry.instrumentation.reactor.TracingOperator$Lifter",
+      "io.opentelemetry.instrumentation.reactor.TracingOperator",
+      "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
     };
   }
-
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
