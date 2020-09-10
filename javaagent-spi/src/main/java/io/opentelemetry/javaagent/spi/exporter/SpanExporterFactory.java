@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.tooling.exporter;
+package io.opentelemetry.javaagent.spi.exporter;
 
-import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 /**
- * A {@link MetricExporterFactory} acts as the bootstrap for a {@link MetricExporter}
- * implementation. An exporter must register its implementation of a {@link MetricExporterFactory}
- * through the Java SPI framework.
+ * A {@link SpanExporterFactory} acts as the bootstrap for a {@link SpanExporter} implementation. An
+ * exporter must register its implementation of a {@link SpanExporterFactory} through the Java SPI
+ * framework.
  */
-public interface MetricExporterFactory {
+public interface SpanExporterFactory {
   /**
-   * Creates an instance of a {@link MetricExporter} based on the provided configuration.
+   * Creates an instance of a {@link SpanExporter} based on the provided configuration.
    *
    * @param config The configuration
-   * @return An implementation of a {@link MetricExporter}
+   * @return An implementation of a {@link SpanExporter}
    */
-  MetricExporter fromConfig(ExporterConfig config);
+  SpanExporter fromConfig(ExporterConfig config);
 }

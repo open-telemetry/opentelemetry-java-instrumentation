@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.tooling.exporter;
+package io.opentelemetry.javaagent.spi.exporter;
 
 /**
  * An interface used to provide configuration information to {@link SpanExporterFactory} and {@link

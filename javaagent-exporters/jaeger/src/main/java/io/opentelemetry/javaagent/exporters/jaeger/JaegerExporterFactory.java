@@ -18,8 +18,8 @@ package io.opentelemetry.javaagent.exporters.jaeger;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
+import io.opentelemetry.javaagent.spi.exporter.ExporterConfig;
+import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 @AutoService(SpanExporterFactory.class)

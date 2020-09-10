@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.javaagent.bootstrap.spi;
+package io.opentelemetry.javaagent.spi;
 
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
