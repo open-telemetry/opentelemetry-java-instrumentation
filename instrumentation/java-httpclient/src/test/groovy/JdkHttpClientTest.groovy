@@ -29,7 +29,7 @@ abstract class JdkHttpClientTest extends HttpClientTest {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
-    ChronoUnit.MILLIS)).build()
+    ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -47,12 +47,6 @@ abstract class JdkHttpClientTest extends HttpClientTest {
   }
 
   abstract HttpResponse send(HttpRequest request)
-
-  @Override
-  boolean testRedirects() {
-    // Generates 4 spans
-    false
-  }
 
   @Override
   boolean testCircularRedirects() {
