@@ -24,9 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -39,11 +37,6 @@ public class HttpHeadersInstrumentation extends Instrumenter.Default {
 
   public HttpHeadersInstrumentation() {
     super("httpclient");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(HttpClient.class.getName(), State.class.getName());
   }
 
   @Override
