@@ -49,7 +49,13 @@ abstract class JdkHttpClientTest extends HttpClientTest {
   abstract HttpResponse send(HttpRequest request)
 
   @Override
-  boolean testCircularRedirects() {
+  boolean testRedirects() {
+    // Generates 4 spans
     false
+  }
+
+  @Override
+  boolean testCircularRedirects() {
+    return false;
   }
 }

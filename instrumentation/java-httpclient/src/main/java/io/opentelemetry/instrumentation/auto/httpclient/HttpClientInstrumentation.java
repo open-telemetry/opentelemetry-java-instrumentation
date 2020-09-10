@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.auto.httpclient;
 import static io.opentelemetry.instrumentation.auto.httpclient.JdkHttpClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -29,7 +28,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -42,7 +40,6 @@ import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)

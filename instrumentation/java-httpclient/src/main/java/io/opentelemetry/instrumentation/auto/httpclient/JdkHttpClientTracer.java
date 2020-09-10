@@ -42,7 +42,7 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpReque
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.httpclient";
+    return "io.opentelemetry.auto.java-httpclient";
   }
 
   @Override
