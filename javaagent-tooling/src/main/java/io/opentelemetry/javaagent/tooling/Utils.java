@@ -18,8 +18,8 @@ package io.opentelemetry.javaagent.tooling;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.auto.api.AgentClassLoader;
-import io.opentelemetry.instrumentation.auto.api.AgentClassLoader.BootstrapClassLoaderProxy;
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.Method;
 import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;

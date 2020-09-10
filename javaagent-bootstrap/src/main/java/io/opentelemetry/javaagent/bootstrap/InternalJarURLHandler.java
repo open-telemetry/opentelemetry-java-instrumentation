@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.api;
+package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -31,18 +31,17 @@ import java.util.jar.JarFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO remove this from api
 public class InternalJarURLHandler extends URLStreamHandler {
 
   private static final Logger log = LoggerFactory.getLogger(InternalJarURLHandler.class);
 
-  private static final WeakReference<Pair<String, JarEntry>> NULL = new WeakReference<>(null);
+  private static final WeakReference<ResolvedJarEntry> NULL = new WeakReference<>(null);
 
   private final String name;
   private final FileNotInInternalJar notFound;
   private final JarFile bootstrapJarFile;
 
-  private WeakReference<Pair<String, JarEntry>> cache = NULL;
+  private WeakReference<ResolvedJarEntry> cache = NULL;
 
   public InternalJarURLHandler(String internalJarFileName, URL bootstrapJarLocation) {
     name = internalJarFileName;
@@ -71,11 +70,11 @@ public class InternalJarURLHandler extends URLStreamHandler {
     }
     // believe it or not, we're going to get called twice for this,
     // and the key will be a new object each time.
-    Pair<String, JarEntry> pair = cache.get();
-    if (null == pair || !filename.equals(pair.getLeft())) {
+    ResolvedJarEntry pair = cache.get();
+    if (null == pair || !filename.equals(pair.filename)) {
       JarEntry entry = bootstrapJarFile.getJarEntry(getResourcePath(filename));
       if (null != entry) {
-        pair = Pair.of(filename, entry);
+        pair = new ResolvedJarEntry(filename, entry);
         // the cache field is not volatile as a performance optimization
         // in the rare event this write is not visible to another thread,
         // it just means the same work is recomputed but does not affect consistency
@@ -88,7 +87,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
       // so dismiss cache after a hit
       cache = NULL;
     }
-    return new InternalJarURLConnection(url, bootstrapJarFile.getInputStream(pair.getRight()));
+    return new InternalJarURLConnection(url, bootstrapJarFile.getInputStream(pair.entry));
   }
 
   private String getResourcePath(String filename) {
@@ -139,6 +138,16 @@ public class InternalJarURLHandler extends URLStreamHandler {
     @Override
     public Throwable fillInStackTrace() {
       return this;
+    }
+  }
+
+  private static class ResolvedJarEntry {
+    private final String filename;
+    private final JarEntry entry;
+
+    private ResolvedJarEntry(String filename, JarEntry entry) {
+      this.filename = filename;
+      this.entry = entry;
     }
   }
 }
