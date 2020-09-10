@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -36,14 +35,14 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final Context context;
 
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
-    this(subscriber, ctx, ctx.getOrDefault(Span.class, io.grpc.Context.current()));
+    this(subscriber, ctx, io.grpc.Context.current());
   }
 
   public TracingSubscriber(
       Subscriber<? super T> subscriber, Context ctx, io.grpc.Context contextToPropagate) {
     this.subscriber = subscriber;
     this.traceContext = contextToPropagate;
-    this.context = ctx.put(Span.class, this.traceContext);
+    this.context = ctx;
   }
 
   @Override
