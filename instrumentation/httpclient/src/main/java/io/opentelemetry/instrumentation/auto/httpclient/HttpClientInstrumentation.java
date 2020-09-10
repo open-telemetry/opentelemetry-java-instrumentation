@@ -159,8 +159,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC)
-            CompletableFuture<HttpResponse<?>> future,
+        @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
