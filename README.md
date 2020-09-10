@@ -346,7 +346,7 @@ and you want to suppress some of them without modifying the code.
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
