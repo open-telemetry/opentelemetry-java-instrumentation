@@ -1,0 +1,11 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    coreJdk()
+  }
+}
