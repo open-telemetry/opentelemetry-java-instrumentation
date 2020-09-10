@@ -59,11 +59,6 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("java.net.http.HttpRequest", Context.class.getName());
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
         .or(nameStartsWith("jdk.internal."))
