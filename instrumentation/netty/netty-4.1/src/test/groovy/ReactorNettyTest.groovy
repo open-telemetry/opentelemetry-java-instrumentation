@@ -56,7 +56,7 @@ class ReactorNettyTest extends AgentTestRunner {
   }
 
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200) {
-    def userAgent = "ReactorNetty/0.9.0.RELEASE"
+    def userAgent = "ReactorNetty/"
     trace.span(index) {
       if (parentSpan == null) {
         parent()
