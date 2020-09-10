@@ -33,11 +33,13 @@ dependencies {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
 
+  // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
   latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-core', version: '+'
 }
 
 if (findProperty('testLatestDeps')) {
   configurations {
+    // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
     testImplementation.exclude group: 'org.jboss.resteasy', module: 'resteasy-jaxrs'
   }
 }
