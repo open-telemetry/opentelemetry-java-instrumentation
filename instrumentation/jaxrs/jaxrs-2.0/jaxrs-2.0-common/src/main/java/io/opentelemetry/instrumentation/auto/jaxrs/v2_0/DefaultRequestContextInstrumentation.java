@@ -55,10 +55,8 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        span = RequestFilterHelper.createOrUpdateAbortSpan(context, filterClass, method);
-        if (span != null) {
-          scope = TRACER.startScope(span);
-        }
+        span = TRACER.startSpan(filterClass, method);
+        scope = TRACER.startScope(span);
       }
     }
 

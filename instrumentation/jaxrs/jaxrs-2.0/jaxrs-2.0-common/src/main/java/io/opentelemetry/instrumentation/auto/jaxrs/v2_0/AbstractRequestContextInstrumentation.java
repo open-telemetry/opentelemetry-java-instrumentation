@@ -81,6 +81,10 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         Span serverSpan = BaseTracer.getCurrentServerSpan();
         Span currentSpan = TRACER.getCurrentSpan();
 
+        // if there's no current span or it's the same as the server (servlet) span we need to start
+        // a JAX-RS one
+        // in other case, DefaultRequestContextInstrumentation must have already run so it's enough
+        // to just update the names
         if (currentSpan == null || currentSpan == serverSpan) {
           return TRACER.startSpan(resourceClass, method);
         } else {
