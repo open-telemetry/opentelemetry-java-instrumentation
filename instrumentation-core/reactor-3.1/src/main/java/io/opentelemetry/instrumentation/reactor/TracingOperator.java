@@ -26,9 +26,7 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 
-/**
- * @author Based on Spring Sleuth's Reactor instrumentation.
- */
+/** @author Based on Spring Sleuth's Reactor instrumentation. */
 public class TracingOperator {
 
   /**
@@ -50,8 +48,8 @@ public class TracingOperator {
     return Operators.lift(new Lifter<>());
   }
 
-  public static class Lifter<T> implements
-      BiFunction<Scannable, CoreSubscriber<? super T>, CoreSubscriber<? super T>> {
+  public static class Lifter<T>
+      implements BiFunction<Scannable, CoreSubscriber<? super T>, CoreSubscriber<? super T>> {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {

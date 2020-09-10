@@ -60,12 +60,12 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
       try (Scope ignored = TRACER.startScope(span, builder)) {
         this.next
             .exchange(builder.build())
-            .doOnCancel(() -> {
-              TRACER.onCancel(span);
-              TRACER.end(span);
-            })
-            .subscribe(new TraceWebClientSubscriber(subscriber, span,
-                io.grpc.Context.current()));
+            .doOnCancel(
+                () -> {
+                  TRACER.onCancel(span);
+                  TRACER.end(span);
+                })
+            .subscribe(new TraceWebClientSubscriber(subscriber, span, io.grpc.Context.current()));
       }
     }
   }
