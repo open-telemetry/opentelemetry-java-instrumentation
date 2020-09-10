@@ -50,6 +50,6 @@ abstract class JdkHttpClientTest extends HttpClientTest {
 
   @Override
   boolean testCircularRedirects() {
-    return false;
+    return false
   }
 }
