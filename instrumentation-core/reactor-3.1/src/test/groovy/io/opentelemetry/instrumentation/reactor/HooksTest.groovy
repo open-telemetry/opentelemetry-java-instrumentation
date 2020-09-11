@@ -49,7 +49,7 @@ class HooksTest extends InstrumentationTestRunner {
   }
 
   private static class CapturingMono extends Mono<Integer> {
-    final AtomicReference subscriber;
+    final AtomicReference subscriber
 
     CapturingMono(AtomicReference subscriber) {
       this.subscriber = subscriber
