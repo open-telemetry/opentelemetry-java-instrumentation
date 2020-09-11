@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -30,9 +33,6 @@ import server.EchoHandlerFunction
 import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
-
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {
@@ -207,6 +207,7 @@ class SpringWebfluxTest extends AgentTestRunner {
   merely wraps handler call into Mono and thus actual invocation of handler function happens later,
   when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
    */
+
   def "Create span during handler function"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -268,9 +269,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     }
 
     where:
-    testName                                  | urlPath                       | urlPathWithVariables             | annotatedMethod       | expectedResponseBody
-    "functional API traced method"            | "/greet-traced-method/5"      | "/greet-traced-method/{id}"      | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"
-    "annotation API traced method"            | "/foo-traced-method/8"        | "/foo-traced-method/{id}"        | "getTracedMethod"     | new FooModel(8L, "tracedMethod").toString()
+    testName                       | urlPath                  | urlPathWithVariables        | annotatedMethod   | expectedResponseBody
+    "functional API traced method" | "/greet-traced-method/5" | "/greet-traced-method/{id}" | null              | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"
+    "annotation API traced method" | "/foo-traced-method/8"   | "/foo-traced-method/{id}"   | "getTracedMethod" | new FooModel(8L, "tracedMethod").toString()
   }
 
   def "404 GET test"() {

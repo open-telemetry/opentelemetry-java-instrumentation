@@ -24,10 +24,8 @@ import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
 
 /**
- * Based on Spring Sleuth's Reactor instrumentation. A trace representation of the {@link
- * Subscriber}
- *
- * @author Jose Montoya
+ * Based on OpenTracing code.
+ * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
 public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final io.grpc.Context traceContext;

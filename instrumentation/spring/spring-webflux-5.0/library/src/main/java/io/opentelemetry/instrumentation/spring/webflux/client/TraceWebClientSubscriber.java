@@ -26,8 +26,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;
 
 /**
- * @author Based on Spring Sleuth's Reactor instrumentation.
- * @author Marcin Grzejszczak
+ * Based on Spring Sleuth's Reactor instrumentation.
+ * https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientBeanPostProcessor.java
  */
 public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
