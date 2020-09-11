@@ -386,13 +386,16 @@ class LettuceSyncClientTest extends AgentTestRunner {
   def "debug segfault command (returns void) with no argument produces no span"() {
     setup:
     syncCommands.debugSegfault()
+
     expect:
     // lettuce tracing does not trace debug
     assertTraces(0) {}
   }
+
   def "shutdown command (returns void) produces no span"() {
     setup:
     syncCommands.shutdown(false)
+
     expect:
     // lettuce tracing does not trace shutdown
     assertTraces(0) {}
