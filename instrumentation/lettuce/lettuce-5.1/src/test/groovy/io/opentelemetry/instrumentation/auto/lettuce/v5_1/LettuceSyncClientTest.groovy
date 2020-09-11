@@ -38,11 +38,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
   @Shared
   int port
   @Shared
-  int authRedisPort
-  @Shared
   int incorrectPort
-  @Shared
-  String password
   @Shared
   String dbAddr
   @Shared
@@ -52,17 +48,10 @@ class LettuceSyncClientTest extends AgentTestRunner {
   @Shared
   String embeddedDbUri
   @Shared
-  String dbAddrForAuthServer
-  @Shared
   String embeddedDbLocalhostUri
-  @Shared
-  String embeddedDbUriWithAuth
 
   @Shared
   RedisServer redisServer
-
-  @Shared
-  RedisServer redisServerWithAuth
 
   @Shared
   Map<String, String> testHashMap = [
@@ -77,16 +66,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def setupSpec() {
     port = PortUtils.randomOpenPort()
-    authRedisPort = PortUtils.randomOpenPort()
     incorrectPort = PortUtils.randomOpenPort()
     dbAddr = HOST + ":" + port + "/" + DB_INDEX
-    dbAddrForAuthServer = HOST + ":" + authRedisPort + "/" + DB_INDEX
     dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
     embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
-    embeddedDbUriWithAuth = "redis://"  + dbAddrForAuthServer
-    password = "password"
 
     redisServer = RedisServer.builder()
     // bind to localhost to avoid firewall popup
@@ -94,22 +79,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     // set max memory to avoid problems in CI
       .setting("maxmemory 128M")
       .port(port).build()
-
-    redisServerWithAuth = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-            .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-            .setting("maxmemory 64M")
-    // Set password
-            .setting("requirepass " + password)
-            .port(authRedisPort).build()
   }
 
   def setup() {
     redisClient = RedisClient.create(embeddedDbUri)
 
     redisServer.start()
-    redisServerWithAuth.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
 
@@ -124,7 +99,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
   def cleanup() {
     connection.close()
     redisServer.stop()
-    redisServerWithAuth.stop()
   }
 
   def "connect"() {
@@ -378,39 +352,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "auth command"() {
-    setup:
-    RedisClient testConnectionClient = RedisClient.create(embeddedDbUriWithAuth)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
-    def res =  testConnectionClient.connect().sync().auth(password)
-
-    expect:
-    res == "OK"
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "AUTH"
-          spanKind CLIENT
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" authRedisPort
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$authRedisPort"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "AUTH"
-          }
-          event(0) {
-            eventName "redis.encode.start"
-          }
-          event(1) {
-            eventName "redis.encode.end"
-          }
-        }
-      }
-    }
-  }
-
   def "hash getall command"() {
     setup:
     Map<String, String> res = syncCommands.hgetall("TESTHM")
@@ -445,16 +386,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
   def "debug segfault command (returns void) with no argument produces no span"() {
     setup:
     syncCommands.debugSegfault()
-
     expect:
     // lettuce tracing does not trace debug
     assertTraces(0) {}
   }
-
   def "shutdown command (returns void) produces no span"() {
     setup:
     syncCommands.shutdown(false)
-
     expect:
     // lettuce tracing does not trace shutdown
     assertTraces(0) {}
