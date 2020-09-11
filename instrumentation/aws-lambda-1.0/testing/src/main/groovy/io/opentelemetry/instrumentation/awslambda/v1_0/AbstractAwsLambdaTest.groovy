@@ -27,9 +27,8 @@ abstract class AbstractAwsLambdaTest extends InstrumentationSpecification {
   protected static String doHandleRequest(String input, Context context) {
     if (input == "hello") {
       return "world"
-    } else {
-      throw new IllegalArgumentException("bad argument")
     }
+    throw new IllegalArgumentException("bad argument")
   }
 
   abstract RequestHandler<String, String> handler()
