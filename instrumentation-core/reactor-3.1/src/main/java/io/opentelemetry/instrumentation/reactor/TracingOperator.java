@@ -36,12 +36,12 @@ public class TracingOperator {
    * application.
    */
   public static void registerOnEachOperator() {
-    Hooks.onEachOperator(tracingLift());
+    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public static void resetOnEachOperator() {
-    Hooks.onEachOperator(tracingLift());
+    Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {
