@@ -28,7 +28,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
-class JaxRsAnnotations2InstrumentationTest extends AgentTestRunner {
+abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
   def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
     setup:

@@ -21,7 +21,6 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -29,10 +28,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -101,11 +100,13 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope nameSpan(
+    public static void nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
-        @Advice.Local("asyncResponse") AsyncResponse asyncResponse) {
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
       ContextStore<AsyncResponse, Span> contextStore = null;
       for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
@@ -118,39 +119,39 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
              * could work around this by using a list instead, but we likely don't want the extra
              * span anyway.
              */
-            return null;
+            return;
           }
           break;
         }
       }
 
       if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
-        return null;
+        return;
       }
 
-      Span span = TRACER.startSpan(target.getClass(), method);
+      span = TRACER.startSpan(target.getClass(), method);
 
       if (contextStore != null && asyncResponse != null) {
         contextStore.put(asyncResponse, span);
       }
 
-      return new SpanWithScope(span, currentContextWith(span));
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("asyncResponse") AsyncResponse asyncResponse) {
-      if (spanWithScope == null) {
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
+      if (span == null || scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(Path.class);
 
-      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
-        spanWithScope.closeScope();
+        scope.close();
         return;
       }
 
@@ -161,7 +162,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       if (asyncResponse == null || !asyncResponse.isSuspended()) {
         TRACER.end(span);
       }
-      spanWithScope.closeScope();
+      scope.close();
       // else span finished by AsyncResponseAdvice
     }
   }
