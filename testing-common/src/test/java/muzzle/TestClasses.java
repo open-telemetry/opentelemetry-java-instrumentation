@@ -16,6 +16,7 @@
 
 package muzzle;
 
+import io.opentelemetry.instrumentation.TestHelperClasses.Helper;
 import net.bytebuddy.asm.Advice;
 
 public class TestClasses {
@@ -104,5 +105,11 @@ public class TestClasses {
     //      Runnable aStaticMethod = MethodBodyAdvice.B::aStaticMethod;
     //      return a::someMethod;
     //    }
+  }
+
+  public static class HelperAdvice {
+    public static void adviceMethod() {
+      Helper h = new Helper();
+    }
   }
 }

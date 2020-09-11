@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -295,17 +296,17 @@ public class Reference {
 
     public static class MissingMethod extends Mismatch {
       private final String className;
-      private final String method;
+      private final String methodSignature;
 
-      public MissingMethod(Source[] sources, String className, String method) {
+      public MissingMethod(Source[] sources, String className, String methodSignature) {
         super(sources);
         this.className = className;
-        this.method = method;
+        this.methodSignature = methodSignature;
       }
 
       @Override
       String getMismatchDetails() {
-        return "Missing method " + className + "#" + method;
+        return "Missing method " + className + "#" + methodSignature;
       }
     }
   }
@@ -363,23 +364,34 @@ public class Reference {
     NON_FINAL {
       @Override
       public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == FINAL;
+        return anotherFlag == FINAL || anotherFlag == ABSTRACT;
       }
 
       @Override
       public boolean matches(int asmFlags) {
-        return (Opcodes.ACC_FINAL & asmFlags) == 0;
+        return ((Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL) & asmFlags) == 0;
       }
     },
     FINAL {
       @Override
       public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_FINAL;
+        return anotherFlag == NON_FINAL || anotherFlag == ABSTRACT;
       }
 
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_FINAL & asmFlags) != 0;
+      }
+    },
+    ABSTRACT {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == NON_FINAL || anotherFlag == FINAL;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_ABSTRACT & asmFlags) != 0;
       }
     },
     STATIC {
@@ -615,13 +627,27 @@ public class Reference {
       return this;
     }
 
+    public Builder withInterfaces(Collection<String> interfaceNames) {
+      interfaces.addAll(interfaceNames);
+      return this;
+    }
+
     public Builder withInterface(String interfaceName) {
       interfaces.add(interfaceName);
       return this;
     }
 
+    public Builder withSource(String sourceName) {
+      return withSource(sourceName, 0);
+    }
+
     public Builder withSource(String sourceName, int line) {
       sources.add(new Source(sourceName, line));
+      return this;
+    }
+
+    public Builder withFlags(Collection<Flag> flags) {
+      this.flags.addAll(flags);
       return this;
     }
 

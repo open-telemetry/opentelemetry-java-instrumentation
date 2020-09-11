@@ -16,10 +16,12 @@
 
 package muzzle
 
+import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
 import spock.lang.Ignore
@@ -27,82 +29,145 @@ import spock.lang.Ignore
 class ReferenceCreatorTest extends AgentTestRunner {
   def "method body creates references"() {
     setup:
-    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.getName(), this.getClass().getClassLoader())
+    def references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.name, this.class.classLoader)
 
     expect:
-    references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
-    references.get('muzzle.TestClasses$MethodBodyAdvice$B') != null
-    references.get('muzzle.TestClasses$MethodBodyAdvice$SomeInterface') != null
-    references.get('muzzle.TestClasses$MethodBodyAdvice$SomeImplementation') != null
-    references.keySet().size() == 4
+    references.keySet() == [
+      MethodBodyAdvice.A.name,
+      MethodBodyAdvice.B.name,
+      MethodBodyAdvice.SomeInterface.name,
+      MethodBodyAdvice.SomeImplementation.name
+    ] as Set
+
+    def bRef = references[MethodBodyAdvice.B.name]
+    def aRef = references[MethodBodyAdvice.A.name]
 
     // interface flags
-    references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFlags().contains(Reference.Flag.NON_INTERFACE)
-    references.get('muzzle.TestClasses$MethodBodyAdvice$SomeInterface').getFlags().contains(Reference.Flag.INTERFACE)
+    bRef.flags.contains(Reference.Flag.NON_INTERFACE)
+    references[MethodBodyAdvice.SomeInterface.name].flags.contains(Reference.Flag.INTERFACE)
 
     // class access flags
-    references.get('muzzle.TestClasses$MethodBodyAdvice$A').getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
-    references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
+    aRef.flags.contains(Reference.Flag.PACKAGE_OR_HIGHER)
+    bRef.flags.contains(Reference.Flag.PACKAGE_OR_HIGHER)
 
     // method refs
-    Set<Reference.Method> bMethods = references.get('muzzle.TestClasses$MethodBodyAdvice$B').getMethods()
-    findMethod(bMethods, "aMethod", "(Ljava/lang/String;)Ljava/lang/String;") != null
-    findMethod(bMethods, "aMethodWithPrimitives", "(Z)V") != null
-    findMethod(bMethods, "aStaticMethod", "()V") != null
-    findMethod(bMethods, "aMethodWithArrays", "([Ljava/lang/String;)[Ljava/lang/Object;") != null
-
-    findMethod(bMethods, "aMethod", "(Ljava/lang/String;)Ljava/lang/String;").getFlags().contains(Reference.Flag.NON_STATIC)
-    findMethod(bMethods, "aStaticMethod", "()V").getFlags().contains(Reference.Flag.STATIC)
+    assertMethod bRef, 'aMethod', '(Ljava/lang/String;)Ljava/lang/String;',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.NON_STATIC
+    assertMethod bRef, 'aMethodWithPrimitives', '(Z)V',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.NON_STATIC
+    assertMethod bRef, 'aStaticMethod', '()V',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.STATIC
+    assertMethod bRef, 'aMethodWithArrays', '([Ljava/lang/String;)[Ljava/lang/Object;',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.NON_STATIC
 
     // field refs
-    references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFields().isEmpty()
-    Set<Reference.Field> aFieldRefs = references.get('muzzle.TestClasses$MethodBodyAdvice$A').getFields()
-    findField(aFieldRefs, "b").getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
-    findField(aFieldRefs, "b").getFlags().contains(Reference.Flag.NON_STATIC)
-    findField(aFieldRefs, "staticB").getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
-    findField(aFieldRefs, "staticB").getFlags().contains(Reference.Flag.STATIC)
-    aFieldRefs.size() == 2
+    bRef.fields.isEmpty()
+    aRef.fields.size() == 2
+    assertField aRef, 'b', Reference.Flag.PACKAGE_OR_HIGHER, Reference.Flag.NON_STATIC
+    assertField aRef, 'staticB', Reference.Flag.PACKAGE_OR_HIGHER, Reference.Flag.STATIC
   }
 
   def "protected ref test"() {
     setup:
-    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.B2.getName(), this.getClass().getClassLoader())
+    def references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.B2.name, this.class.classLoader)
 
     expect:
-    Set<Reference.Method> bMethods = references.get('muzzle.TestClasses$MethodBodyAdvice$B').getMethods()
-    findMethod(bMethods, "protectedMethod", "()V") != null
-    findMethod(bMethods, "protectedMethod", "()V").getFlags().contains(Reference.Flag.PROTECTED_OR_HIGHER)
+    assertMethod references[MethodBodyAdvice.B.name], 'protectedMethod', '()V',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.NON_STATIC
   }
 
   def "ldc creates references"() {
     setup:
-    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(LdcAdvice.getName(), this.getClass().getClassLoader())
+    def references = ReferenceCreator.createReferencesFrom(LdcAdvice.name, this.class.classLoader)
 
     expect:
-    references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
+    references[MethodBodyAdvice.A.name] != null
   }
 
   def "instanceof creates references"() {
     setup:
-    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(TestClasses.InstanceofAdvice.getName(), this.getClass().getClassLoader())
+    def references = ReferenceCreator.createReferencesFrom(TestClasses.InstanceofAdvice.name, this.class.classLoader)
 
     expect:
-    references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
+    references[MethodBodyAdvice.A.name] != null
   }
 
   // TODO: remove ignore when we drop java 7 support.
   @Ignore
   def "invokedynamic creates references"() {
     setup:
-    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(TestClasses.InDyAdvice.getName(), this.getClass().getClassLoader())
+    def references = ReferenceCreator.createReferencesFrom(TestClasses.InDyAdvice.name, this.class.classLoader)
 
     expect:
-    references.get('muzzle.TestClasses$MethodBodyAdvice$SomeImplementation') != null
-    references.get('muzzle.TestClasses$MethodBodyAdvice$B') != null
+    references['muzzle.TestClasses$MethodBodyAdvice$SomeImplementation'] != null
+    references['muzzle.TestClasses$MethodBodyAdvice$B'] != null
   }
 
-  private static Reference.Method findMethod(Set<Reference.Method> methods, String methodName, String methodDesc) {
-    for (Reference.Method method : methods) {
+  def "should create references for helper classes"() {
+    when:
+    def references = ReferenceCreator.createReferencesFrom(HelperAdvice.name, this.class.classLoader)
+
+    then:
+    references.keySet() == [
+      TestHelperClasses.Helper.name,
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name
+    ] as Set
+
+    with(references[TestHelperClasses.HelperSuperClass.name]) { helperSuperClass ->
+      helperSuperClass.flags.contains(Reference.Flag.ABSTRACT)
+      assertHelperSuperClassMethod(helperSuperClass, true)
+      assertMethod helperSuperClass, 'finalMethod', '()Ljava/lang/String;',
+        Reference.Flag.PUBLIC,
+        Reference.Flag.NON_STATIC,
+        Reference.Flag.FINAL
+      assertMethod helperSuperClass, 'bar', '()I',
+        Reference.Flag.PACKAGE_OR_HIGHER,
+        Reference.Flag.STATIC,
+        Reference.Flag.NON_FINAL
+    }
+
+    with(references[TestHelperClasses.HelperInterface.name]) { helperInterface ->
+      helperInterface.flags.contains(Reference.Flag.ABSTRACT)
+      assertHelperInterfaceMethod helperInterface, true
+    }
+
+    with(references[TestHelperClasses.Helper.name]) { helperClass ->
+      assertHelperSuperClassMethod helperClass, false
+      assertHelperInterfaceMethod helperClass, false
+      assertMethod helperClass, 'getStr', '()Ljava/lang/String;',
+        Reference.Flag.PRIVATE_OR_HIGHER,
+        Reference.Flag.NON_STATIC,
+        Reference.Flag.NON_FINAL
+    }
+  }
+
+  private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
+    assertMethod reference, 'abstractMethod', '()I',
+      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.NON_STATIC,
+      isAbstract ? Reference.Flag.ABSTRACT : Reference.Flag.NON_FINAL
+  }
+
+  private static assertHelperInterfaceMethod(Reference reference, boolean isAbstract) {
+    assertMethod reference, 'foo', '()V',
+      Reference.Flag.PUBLIC,
+      Reference.Flag.NON_STATIC,
+      isAbstract ? Reference.Flag.ABSTRACT : Reference.Flag.NON_FINAL
+  }
+
+  private static assertMethod(Reference reference, String methodName, String methodDesc, Reference.Flag... flags) {
+    def method = findMethod reference, methodName, methodDesc
+    method != null && (method.flags == flags as Set)
+  }
+
+  private static findMethod(Reference reference, String methodName, String methodDesc) {
+    for (def method : reference.methods) {
       if (method == new Reference.Method(methodName, methodDesc)) {
         return method
       }
@@ -110,9 +175,14 @@ class ReferenceCreatorTest extends AgentTestRunner {
     return null
   }
 
-  private static Reference.Field findField(Set<Reference.Field> fields, String fieldName) {
-    for (Reference.Field field : fields) {
-      if (field.getName().equals(fieldName)) {
+  private static assertField(Reference reference, String fieldName, Reference.Flag... flags) {
+    def field = findField reference, fieldName
+    field != null && (field.flags == flags as Set)
+  }
+
+  private static Reference.Field findField(Reference reference, String fieldName) {
+    for (def field : reference.fields) {
+      if (field.name == fieldName) {
         return field
       }
     }
