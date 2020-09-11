@@ -20,9 +20,12 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static java.util.concurrent.TimeUnit.SECONDS
 
 import io.opentelemetry.auto.test.base.HttpServerTest
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.CyclicBarrier
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -87,10 +90,15 @@ class JaxRsTestResource {
     }
   }
 
+  static final BARRIER = new CyclicBarrier(2)
+
   @Path("async")
   @GET
   void asyncOp(@Suspended AsyncResponse response, @QueryParam("action") String action) {
     CompletableFuture.runAsync({
+      // await for the test method to verify that there are no spans yet
+      BARRIER.await(1, SECONDS)
+
       switch (action) {
         case "succeed":
           response.resume("success")
@@ -106,6 +114,29 @@ class JaxRsTestResource {
           break
       }
     })
+  }
+
+  @Path("async-completion-stage")
+  @GET
+  CompletionStage<String> jaxRs21Async(@QueryParam("action") String action) {
+    def result = new CompletableFuture<String>()
+    CompletableFuture.runAsync({
+      // await for the test method to verify that there are no spans yet
+      BARRIER.await(1, SECONDS)
+
+      switch (action) {
+        case "succeed":
+          result.complete("success")
+          break
+        case "throw":
+          result.completeExceptionally(new Exception("failure"))
+          break
+        default:
+          result.completeExceptionally(new AssertionError((Object) ("invalid action value: " + action)))
+          break
+      }
+    })
+    result
   }
 }
 

@@ -24,3 +24,7 @@ dependencies {
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 }
+
+test {
+  systemProperty 'testLatestDeps', testLatestDeps
+}
