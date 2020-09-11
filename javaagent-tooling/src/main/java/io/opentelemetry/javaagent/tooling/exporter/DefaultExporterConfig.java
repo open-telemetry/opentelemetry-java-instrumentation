@@ -17,6 +17,7 @@
 package io.opentelemetry.javaagent.tooling.exporter;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.spi.exporter.ExporterConfig;
 
 public class DefaultExporterConfig implements ExporterConfig {
   private final String prefix;
