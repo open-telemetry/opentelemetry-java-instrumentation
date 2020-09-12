@@ -59,6 +59,36 @@ class CassandraClientTest extends AgentTestRunner {
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
   }
 
+  def "test sync"() {
+    setup:
+    Session session = cluster.connect(keyspace)
+
+    session.execute(statement)
+
+    expect:
+    assertTraces(keyspace ? 2 : 1) {
+      if (keyspace) {
+        trace(0, 1) {
+          cassandraSpan(it, 0, "USE $keyspace", null)
+        }
+      }
+      trace(keyspace ? 1 : 0, 1) {
+        cassandraSpan(it, 0, statement, keyspace)
+      }
+    }
+
+    cleanup:
+    session.close()
+
+    where:
+    statement                                                                                         | keyspace
+    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null
+    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
+    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test"
+    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test"
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test"
+  }
+
   def "test async"() {
     setup:
     def callbackExecuted = new AtomicBoolean()
@@ -90,8 +120,12 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                            | keyspace
-    "DROP KEYSPACE IF EXISTS async_test" | null
+    statement                                                                                          | keyspace
+    "DROP KEYSPACE IF EXISTS async_test"                                                               | null
+    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
+    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test"
+    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test"
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test"
   }
 
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
