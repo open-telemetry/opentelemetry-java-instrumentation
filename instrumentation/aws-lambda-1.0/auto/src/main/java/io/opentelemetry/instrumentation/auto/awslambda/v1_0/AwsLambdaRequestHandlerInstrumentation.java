@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.awslambda.v1_0;
 
-import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.tracer;
+import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -29,7 +29,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -66,8 +65,8 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
         @Advice.Argument(1) Context context,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(context);
-      scope = TracingContextUtils.currentContextWith(span);
+      span = TRACER.startSpan(context);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -78,9 +77,9 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        TRACER.endExceptionally(span, throwable);
       } else {
-        tracer().end(span);
+        TRACER.end(span);
       }
     }
   }

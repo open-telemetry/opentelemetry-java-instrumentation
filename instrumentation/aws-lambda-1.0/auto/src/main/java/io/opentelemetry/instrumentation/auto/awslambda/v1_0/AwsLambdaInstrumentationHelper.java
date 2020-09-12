@@ -20,11 +20,7 @@ import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer;
 
 public final class AwsLambdaInstrumentationHelper {
 
-  private static final AwsLambdaTracer TRACER = new AwsLambdaTracer();
-
-  public static AwsLambdaTracer tracer() {
-    return TRACER;
-  }
+  public static final AwsLambdaTracer TRACER = new AwsLambdaTracer();
 
   private AwsLambdaInstrumentationHelper() {}
 }

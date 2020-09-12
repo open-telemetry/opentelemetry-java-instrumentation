@@ -21,7 +21,6 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 
 /**
  * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
@@ -55,7 +54,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   public final O handleRequest(I input, Context context) {
     Span span = tracer.startSpan(context);
     Throwable error = null;
-    try (Scope unused = TracingContextUtils.currentContextWith(span)) {
+    try (Scope ignored = tracer.startScope(span)) {
       return doHandleRequest(input, context);
     } catch (Throwable t) {
       error = t;
