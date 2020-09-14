@@ -24,11 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -51,13 +47,6 @@ public class ResourceInjectionInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.auto.javaclassloader.BytesUtil",
-    };
-  }
-
-  @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return extendsClass(named("java.lang.ClassLoader"));
   }
@@ -76,7 +65,7 @@ public class ResourceInjectionInstrumentation extends Instrumenter.Default {
   }
 
   public static class GetResourceAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
@@ -91,7 +80,7 @@ public class ResourceInjectionInstrumentation extends Instrumenter.Default {
   }
 
   public static class GetResourcesAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
@@ -106,45 +95,19 @@ public class ResourceInjectionInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      // TODO(anuraaga): Don't inline BytesUtil.toByteArray after understanding AccessError when
-      // trying to use the class from bootstrap classloader.
-      byte[] buf = new byte[8192];
-      try {
-        InputStream is = helper.openStream();
-        ByteArrayOutputStream os = new ByteArrayOutputStream(is.available());
-        while (true) {
-          int r = is.read(buf);
-          if (r == -1) {
-            break;
-          }
-          os.write(buf, 0, r);
+      List<URL> result = Collections.list(resources);
+      boolean duplicate = false;
+      for (URL loadedUrl : result) {
+        if (helper.sameFile(loadedUrl)) {
+          duplicate = true;
+          break;
         }
-        byte[] injected = os.toByteArray();
-
-        List<URL> result = Collections.list(resources);
-        for (URL loadedUrl : result) {
-          is = loadedUrl.openStream();
-          os = new ByteArrayOutputStream(is.available());
-          while (true) {
-            int r = is.read(buf);
-            if (r == -1) {
-              break;
-            }
-            os.write(buf, 0, r);
-          }
-
-          byte[] loaded = os.toByteArray();
-          if (Arrays.equals(injected, loaded)) {
-            // Same resource already present, don't inject a duplicate.
-            resources = Collections.enumeration(result);
-            return;
-          }
-        }
-        result.add(helper);
-        resources = Collections.enumeration(result);
-      } catch (IOException e) {
-        // Shouldn't happen but ignore if it does.
       }
+      if (!duplicate) {
+        result.add(helper);
+      }
+
+      resources = Collections.enumeration(result);
     }
   }
 }

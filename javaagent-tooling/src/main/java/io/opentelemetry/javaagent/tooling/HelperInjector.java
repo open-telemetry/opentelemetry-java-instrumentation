@@ -21,10 +21,8 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CL
 
 import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.file.Files;
@@ -178,13 +176,7 @@ public class HelperInjector implements Transformer {
           continue;
         }
 
-        final byte[] content = toByteArray(resource);
-        if (content.length == 0) {
-          log.debug("Helper resource {} could not be read.", resourceName);
-          continue;
-        }
-
-        HelperResources.register(classLoader, resourceName, content);
+        HelperResources.register(classLoader, resourceName, resource);
       }
     }
 
@@ -249,26 +241,6 @@ public class HelperInjector implements Transformer {
     boolean deleted = file.delete();
     if (!deleted) {
       file.deleteOnExit();
-    }
-  }
-
-  private static byte[] toByteArray(URL url) {
-    final InputStream is;
-    try {
-      is = url.openStream();
-      byte[] buf = new byte[8192];
-      ByteArrayOutputStream os = new ByteArrayOutputStream(is.available());
-
-      while (true) {
-        int r = is.read(buf);
-        if (r == -1) {
-          break;
-        }
-        os.write(buf, 0, r);
-      }
-      return os.toByteArray();
-    } catch (IOException e) {
-      return new byte[0];
     }
   }
 }
