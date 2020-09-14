@@ -4,15 +4,12 @@ muzzle {
   pass {
     group = "org.apache.logging.log4j"
     module = "log4j-core"
-    versions = "[2.13.2,)"
-    assertInverse = true
+    versions = "[2.7,2.13.2)"
   }
 }
 
 dependencies {
-  library group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
-
-  implementation project(':instrumentation:log4j:log4j-2.13.2:library')
+  library group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
 
   testImplementation project(':instrumentation:log4j:log4j-2-testing')
 }

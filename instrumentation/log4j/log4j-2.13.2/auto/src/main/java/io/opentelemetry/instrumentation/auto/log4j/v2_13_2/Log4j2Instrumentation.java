@@ -40,7 +40,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
 @AutoService(Instrumenter.class)
 public final class Log4j2Instrumentation extends Instrumenter.Default {
   public Log4j2Instrumentation() {
-    super("log4j2", "log4j");
+    super("log4j2", "log4j", "log4j2.13.2");
   }
 
   @Override
