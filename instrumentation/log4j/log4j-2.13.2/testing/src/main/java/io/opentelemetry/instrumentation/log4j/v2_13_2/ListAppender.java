@@ -41,7 +41,7 @@ public class ListAppender extends AbstractAppender {
 
   private static final ListAppender INSTANCE = new ListAppender();
 
-  private final List<LogEvent> events = Collections.synchronizedList(new ArrayList<>());
+  private final List<LogEvent> events = Collections.synchronizedList(new ArrayList<LogEvent>());
 
   public ListAppender() {
     super("ListAppender", null, null, true, Property.EMPTY_ARRAY);

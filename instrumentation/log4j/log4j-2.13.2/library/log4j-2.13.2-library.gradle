@@ -10,5 +10,5 @@ dependencies {
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
 
-  testAnnotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
+  testImplementation project(':instrumentation:log4j:log4j-2.13.2:testing')
 }

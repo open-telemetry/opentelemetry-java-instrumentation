@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.log4j.v2_13_2
-
+import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.TraceUtils
+import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.TracingContextUtils
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
-import spock.lang.Specification
 
-class Log4j2Test extends Specification {
-
-  private static final Logger logger = LogManager.getLogger("TestLogger")
-
+abstract class Log4j2Test extends AgentTestRunner {
   def cleanup() {
     ListAppender.get().clearEvents()
   }
 
   def "no ids when no span"() {
+    given:
+    def logger = LogManager.getLogger("TestLogger")
+
     when:
     logger.info("log message 1")
     logger.info("log message 2")
@@ -52,6 +50,9 @@ class Log4j2Test extends Specification {
   }
 
   def "ids when span"() {
+    given:
+    def logger = LogManager.getLogger("TestLogger")
+
     when:
     Span span1
     TraceUtils.runUnderTrace("test") {

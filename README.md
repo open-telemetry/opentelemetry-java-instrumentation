@@ -204,6 +204,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
+| [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                      | 2.13.2+                        |
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
