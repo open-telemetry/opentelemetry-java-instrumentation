@@ -29,8 +29,8 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
 /**
- * @author Based on Spring Sleuth's Reactor instrumentation.
- * @author Marcin Grzejszczak
+ * Based on Spring Sleuth's Reactor instrumentation.
+ * https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientBeanPostProcessor.java
  */
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 

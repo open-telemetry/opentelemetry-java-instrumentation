@@ -26,7 +26,7 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 
-/** @author Based on Spring Sleuth's Reactor instrumentation. */
+/** Based on Spring Sleuth's Reactor instrumentation. */
 public class TracingOperator {
 
   /**
