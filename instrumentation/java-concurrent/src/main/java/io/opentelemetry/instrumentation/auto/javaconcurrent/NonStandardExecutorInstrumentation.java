@@ -44,11 +44,6 @@ public final class NonStandardExecutorInstrumentation extends AbstractExecutorIn
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
-        named("dispatch")
-            .and(takesArgument(0, Runnable.class))
-            .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
-        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
 
     transformers.put( // org.eclipse.jetty.util.thread.QueuedThreadPool
         named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),

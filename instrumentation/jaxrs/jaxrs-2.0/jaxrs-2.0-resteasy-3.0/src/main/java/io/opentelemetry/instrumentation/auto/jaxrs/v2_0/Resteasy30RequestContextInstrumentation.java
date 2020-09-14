@@ -16,12 +16,16 @@
 
 package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
 
+import static io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.Local;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 
@@ -38,27 +42,32 @@ import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 @AutoService(Instrumenter.class)
 public class Resteasy30RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
-
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope decorateAbortSpan(@Advice.This ContainerRequestContext context) {
+    public static void decorateAbortSpan(
+        @Advice.This ContainerRequestContext context,
+        @Local("otelSpan") Span span,
+        @Local("otelScope") Scope scope) {
       if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
           && context instanceof PostMatchContainerRequestContext) {
 
         ResourceMethodInvoker resourceMethodInvoker =
             ((PostMatchContainerRequestContext) context).getResourceMethod();
         Method method = resourceMethodInvoker.getMethod();
-        Class resourceClass = resourceMethodInvoker.getResourceClass();
+        Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
-        return RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
+        span = RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
+        if (span != null) {
+          scope = TRACER.startScope(span);
+        }
       }
-
-      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope scope, @Advice.Thrown Throwable throwable) {
-      RequestFilterHelper.closeSpanAndScope(scope, throwable);
+        @Local("otelSpan") Span span,
+        @Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      RequestFilterHelper.closeSpanAndScope(span, scope, throwable);
     }
   }
 }

@@ -18,8 +18,8 @@ package io.opentelemetry.javaagent.exporters.otlp;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory;
+import io.opentelemetry.javaagent.spi.exporter.ExporterConfig;
+import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
 @AutoService(MetricExporterFactory.class)

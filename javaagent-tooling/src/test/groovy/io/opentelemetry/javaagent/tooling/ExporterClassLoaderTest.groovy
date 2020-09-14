@@ -16,9 +16,9 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.javaagent.tooling.exporter.ExporterConfig
-import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory
+import io.opentelemetry.javaagent.spi.exporter.ExporterConfig
+import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory
+import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import java.nio.charset.StandardCharsets

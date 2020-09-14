@@ -265,7 +265,8 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement = args != null && !args.isEmpty() ? name + " " + args : name;
+          String statement =
+              (args != null && !args.isEmpty()) && !name.equals("AUTH") ? name + " " + args : name;
           SemanticAttributes.DB_STATEMENT.set(span, statement);
         }
         span.end();

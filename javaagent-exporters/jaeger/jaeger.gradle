@@ -8,7 +8,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 archivesBaseName = 'javaagent-exporters-jaeger'
 
 dependencies {
-  compileOnly(project(":javaagent-tooling"))
+  compileOnly(project(":javaagent-spi"))
   compileOnly deps.opentelemetrySdk
 
   annotationProcessor deps.autoservice
