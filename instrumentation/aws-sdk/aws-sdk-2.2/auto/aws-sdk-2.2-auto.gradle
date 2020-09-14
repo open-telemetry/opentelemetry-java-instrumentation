@@ -4,9 +4,6 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-// TODO(anuraaga): Move into instrumentation.gradle
-archivesBaseName = projectDir.parentFile.name
-
 muzzle {
   pass {
     group = "software.amazon.awssdk"

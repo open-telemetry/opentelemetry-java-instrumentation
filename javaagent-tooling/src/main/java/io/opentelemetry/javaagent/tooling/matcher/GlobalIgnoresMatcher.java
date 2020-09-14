@@ -64,6 +64,10 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
   public boolean matches(T target) {
     String name = target.getActualName();
 
+    if (name.startsWith("jdk.internal.net.http.")) {
+      return false;
+    }
+
     if (name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")

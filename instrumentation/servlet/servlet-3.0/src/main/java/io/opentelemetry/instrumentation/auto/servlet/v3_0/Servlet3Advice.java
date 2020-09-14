@@ -56,12 +56,6 @@ public class Servlet3Advice {
 
     span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
     scope = TRACER.startScope(span, httpServletRequest);
-    if (!(response instanceof CountingHttpServletResponse)) {
-      response = new CountingHttpServletResponse((HttpServletResponse) response);
-      request =
-          new CountingHttpServletRequest(
-              (HttpServletRequest) request, (HttpServletResponse) response);
-    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

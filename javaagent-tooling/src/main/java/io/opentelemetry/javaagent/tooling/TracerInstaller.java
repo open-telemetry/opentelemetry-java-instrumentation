@@ -17,10 +17,10 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.bootstrap.spi.TracerCustomizer;
+import io.opentelemetry.javaagent.spi.TracerCustomizer;
+import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
+import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.javaagent.tooling.exporter.DefaultExporterConfig;
-import io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory;
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;

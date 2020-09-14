@@ -1,0 +1,32 @@
+ext {
+  // TODO (trask) currently this is only needed for LambdaGen
+  //  revisit if we don't end up dropping Java 7
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-kotlin.gradle"
+
+muzzle {
+  pass {
+    group = 'org.jetbrains.kotlinx'
+    module = 'kotlinx-coroutines-core'
+    versions = "[1.0.0,1.3.8)"
+    skipVersions += ['1.3.2-js-ir-01', '1.3.2-js-ir-02']
+  }
+  // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
+  pass {
+    group = 'org.jetbrains.kotlinx'
+    module = 'kotlinx-coroutines-core-jvm'
+    versions = "[1.3.9,)"
+  }
+}
+dependencies {
+  implementation project(':instrumentation:java-concurrent')
+
+  compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72'
+  compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7'
+
+  testImplementation deps.kotlin
+  testImplementation deps.coroutines
+}

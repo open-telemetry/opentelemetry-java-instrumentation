@@ -936,7 +936,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
 
     private void mapPut(Object key, Object value) {
-      map.put(key, value);
+      if (value == null) {
+        map.remove(key);
+      } else {
+        map.put(key, value);
+      }
     }
 
     private Object mapSynchronizeInstance(Object key) {

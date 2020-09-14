@@ -143,7 +143,7 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName destinationType + "/" + destinationName
+          operationName destinationType + "/" + destinationName + " receive"
           spanKind CLIENT
           errored false
           attributes {
@@ -176,7 +176,7 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName destinationType + "/" + destinationName
+          operationName destinationType + "/" + destinationName + " receive"
           spanKind CLIENT
           errored false
           attributes {
@@ -224,7 +224,7 @@ class JMS1Test extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           parent()
-          operationName destinationType + "/" + destinationName
+          operationName destinationType + "/" + destinationName + " receive"
           spanKind CLIENT
           errored false
           attributes {
@@ -253,7 +253,7 @@ class JMS1Test extends AgentTestRunner {
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
     trace.span(index) {
-      operationName destinationType + "/" + destinationName
+      operationName destinationType + "/" + destinationName + " send"
       spanKind PRODUCER
       errored false
       parent()
@@ -269,7 +269,7 @@ class JMS1Test extends AgentTestRunner {
 
   static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
     trace.span(index) {
-      operationName destinationType + "/" + destinationName
+      operationName destinationType + "/" + destinationName + " receive"
       if (messageListener) {
         spanKind CONSUMER
         childOf((SpanData) parentOrLinkedSpan)

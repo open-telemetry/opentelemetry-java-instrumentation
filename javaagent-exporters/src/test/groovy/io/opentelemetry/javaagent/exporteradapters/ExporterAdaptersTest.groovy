@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
-import io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory
+import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import spock.lang.Shared
 import spock.lang.Specification
 

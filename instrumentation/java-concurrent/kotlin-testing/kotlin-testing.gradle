@@ -1,8 +1,0 @@
-ext.skipPublish = true
-apply from: "$rootDir/gradle/instrumentation.gradle"
-apply from: "$rootDir/gradle/test-with-kotlin.gradle"
-
-dependencies {
-  testImplementation deps.kotlin
-  testImplementation deps.coroutines
-}

@@ -203,6 +203,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
+| [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
@@ -345,7 +346,7 @@ and you want to suppress some of them without modifying the code.
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.

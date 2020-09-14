@@ -214,7 +214,7 @@ public class AgentInitializer {
 
     Class<?> loaderClass =
         ClassLoader.getSystemClassLoader()
-            .loadClass("io.opentelemetry.instrumentation.auto.api.AgentClassLoader");
+            .loadClass("io.opentelemetry.javaagent.bootstrap.AgentClassLoader");
     Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
     return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);

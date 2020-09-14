@@ -75,10 +75,9 @@ public class ExporterClassLoader extends URLClassLoader {
   public Enumeration<URL> getResources(String name) throws IOException {
     // A small hack to prevent other exporters from being loaded by this classloader if they
     // should happen to appear on the classpath.
-    if (name.equals(
-            "META-INF/services/io.opentelemetry.javaagent.tooling.exporter.SpanExporterFactory")
+    if (name.equals("META-INF/services/io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory")
         || name.equals(
-            "META-INF/services/io.opentelemetry.javaagent.tooling.exporter.MetricExporterFactory")) {
+            "META-INF/services/io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory")) {
       return findResources(name);
     }
     return super.getResources(name);
