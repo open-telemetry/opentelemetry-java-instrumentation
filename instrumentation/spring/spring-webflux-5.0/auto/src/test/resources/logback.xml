@@ -13,6 +13,8 @@
     <appender-ref ref="console"/>
   </root>
 
+  <!-- this is needed because when Spring Boot starts it overrides the debug log level that was
+        configured in AgentTestRunner -->
   <logger name="io.opentelemetry" level="debug"/>
 
 </configuration>
