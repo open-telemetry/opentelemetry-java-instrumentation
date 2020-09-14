@@ -35,6 +35,11 @@ import reactor.core.publisher.Mono;
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
+    for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
+      if (filterFunction instanceof WebClientTracingFilter) {
+        return;
+      }
+    }
     exchangeFilterFunctions.add(0, new WebClientTracingFilter());
   }
 
