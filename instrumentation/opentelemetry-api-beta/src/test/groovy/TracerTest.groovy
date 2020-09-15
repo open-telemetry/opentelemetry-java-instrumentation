@@ -399,6 +399,6 @@ class TracerTest extends AgentTestRunner {
     def context = withSpan(span, Context.current())
 
     then:
-    getSpan(context).getContext().getSpanId() == span.getContext().getSpanId()
+    getSpan(context).getContext().getSpanIdAsHexString() == span.getContext().getSpanIdAsHexString()
   }
 }

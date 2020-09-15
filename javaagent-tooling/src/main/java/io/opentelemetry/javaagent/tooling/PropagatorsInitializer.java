@@ -46,12 +46,12 @@ public class PropagatorsInitializer {
 
   private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
       ImmutableMap.<String, TextMapPropagator>builder()
-          .put(TRACE_CONTEXT, new HttpTraceContext())
+          .put(TRACE_CONTEXT, HttpTraceContext.getInstance())
           .put(B3, B3Propagator.getMultipleHeaderPropagator())
           .put(B3_SINGLE, B3Propagator.getSingleHeaderPropagator())
-          .put(JAEGER, new JaegerPropagator())
+          .put(JAEGER, JaegerPropagator.getInstance())
           .put(OT_TRACER, OtTracerPropagator.getInstance())
-          .put(XRAY, new AwsXRayPropagator())
+          .put(XRAY, AwsXRayPropagator.getInstance())
           .build();
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */

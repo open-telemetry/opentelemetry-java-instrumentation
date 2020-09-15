@@ -34,7 +34,7 @@ public class LabelBridging {
     return builder.build();
   }
 
-  static class Consumer implements KeyValueConsumer<String> {
+  static class Consumer implements KeyValueConsumer<String, String> {
 
     private final Builder builder;
 

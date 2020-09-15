@@ -17,72 +17,46 @@
 package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 
-/** AWS SDK v2 instrumentation */
+/**
+ * Injects resource file with reference to our {@link TracingExecutionInterceptor} to allow SDK's
+ * service loading mechanism to pick it up.
+ */
 @AutoService(Instrumenter.class)
-public final class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
-
+public class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("software.amazon.awssdk.core.client.builder.SdkClientBuilder");
+  public String[] helperResourceNames() {
+    return new String[] {
+      "software/amazon/awssdk/global/handlers/execution.interceptors",
+    };
   }
 
   @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return nameStartsWith("software.amazon.awssdk.")
-        .and(
-            implementsInterface(
-                named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // We don't actually transform it but want to make sure we only apply the instrumentation when
+    // our key dependency is present.
+    return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
+  }
+
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    // We don't actually need to transform anything but need a class to match to make sure our
+    // helpers are injected. Pick an arbitrary class we happen to reference.
+    return named("software.amazon.awssdk.core.SdkRequest");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
-        isMethod().and(isPublic()).and(named("build")),
-        AwsClientInstrumentation.class.getName() + "$AwsSdkClientBuilderBuildAdvice");
-
-    transformers.put(
-        isMethod().and(isPublic()).and(named("overrideConfiguration")),
-        AwsClientInstrumentation.class.getName()
-            + "$AwsSdkClientBuilderOverrideConfigurationAdvice");
-
-    return Collections.unmodifiableMap(transformers);
-  }
-
-  public static class AwsSdkClientBuilderOverrideConfigurationAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This SdkClientBuilder thiz) {
-      TracingExecutionInterceptor.OVERRIDDEN.put(thiz, true);
-    }
-  }
-
-  public static class AwsSdkClientBuilderBuildAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.This SdkClientBuilder thiz) {
-      if (!Boolean.TRUE.equals(TracingExecutionInterceptor.OVERRIDDEN.get(thiz))) {
-        TracingExecutionInterceptor.overrideConfiguration(thiz);
-      }
-    }
+    // Nothing to do, helpers are injected but no class transformation happens here.
+    return Collections.emptyMap();
   }
 }

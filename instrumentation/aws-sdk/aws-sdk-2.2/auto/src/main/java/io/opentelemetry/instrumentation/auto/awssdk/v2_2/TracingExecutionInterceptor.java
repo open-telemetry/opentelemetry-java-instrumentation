@@ -16,24 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
-
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
-import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.Context.AfterExecution;
 import software.amazon.awssdk.core.interceptor.Context.AfterMarshalling;
 import software.amazon.awssdk.core.interceptor.Context.AfterTransmission;
@@ -60,45 +54,14 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  // Keeps track of SDK clients that have been overridden by the user and don't need to be
-  // overridden by us.
-  public static final WeakMap<SdkClientBuilder, Boolean> OVERRIDDEN = newWeakMap();
-
   public static class ScopeHolder {
     public static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
   }
 
-  // Note: it looks like this lambda doesn't get generated as a separate class file so we do not
-  // need to inject helper for it.
-  private static final Consumer<ClientOverrideConfiguration.Builder>
-      OVERRIDE_CONFIGURATION_CONSUMER =
-          builder ->
-              builder.addExecutionInterceptor(
-                  new TracingExecutionInterceptor(AwsSdk.newInterceptor()));
-
   private final ExecutionInterceptor delegate;
 
-  private TracingExecutionInterceptor(ExecutionInterceptor delegate) {
-    this.delegate = delegate;
-  }
-
-  /**
-   * We keep this method here because it references Java8 classes and we would like to avoid
-   * compiling this for instrumentation code that should load into Java7.
-   */
-  public static void overrideConfiguration(SdkClientBuilder client) {
-    // We intercept calls to overrideConfiguration to make sure when a user overrides the
-    // configuration, we join their configuration. This means all we need to do is call the method
-    // here and we will intercept the builder and add our interceptor.
-    client.overrideConfiguration(builder -> {});
-  }
-
-  /**
-   * We keep this method here because it references Java8 classes and we would like to avoid
-   * compiling this for instrumentation code that should load into Java7.
-   */
-  public static void overrideConfiguration(ClientOverrideConfiguration.Builder builder) {
-    OVERRIDE_CONFIGURATION_CONSUMER.accept(builder);
+  public TracingExecutionInterceptor() {
+    delegate = AwsSdk.newInterceptor();
   }
 
   public static void muzzleCheck() {

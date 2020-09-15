@@ -47,9 +47,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
     Map<String, String> contextData = new HashMap<>();
     SpanContext spanContext = currentSpan.getContext();
-    contextData.put("traceId", spanContext.getTraceId().toLowerBase16());
-    contextData.put("spanId", spanContext.getSpanId().toLowerBase16());
-    contextData.put("traceFlags", spanContext.getTraceFlags().toLowerBase16());
+    contextData.put("traceId", spanContext.getTraceIdAsHexString());
+    contextData.put("spanId", spanContext.getSpanIdAsHexString());
+    if (spanContext.isSampled()) {
+      contextData.put("sampled", "true");
+    }
 
     if (eventContext == null) {
       eventContext = contextData;

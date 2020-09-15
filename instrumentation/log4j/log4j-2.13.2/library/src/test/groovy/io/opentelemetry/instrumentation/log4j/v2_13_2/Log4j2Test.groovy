@@ -72,18 +72,18 @@ class Log4j2Test extends Specification {
     then:
     events.size() == 3
     events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue("traceId") == span1.context.traceId.toLowerBase16()
-    events[0].getContextData().getValue("spanId") == span1.context.spanId.toLowerBase16()
-    events[0].getContextData().getValue("traceFlags") == span1.context.traceFlags.toLowerBase16()
+    events[0].getContextData().getValue("traceId") == span1.context.traceIdAsHexString
+    events[0].getContextData().getValue("spanId") == span1.context.spanIdAsHexString
+    events[0].getContextData().getValue("sampled") == "true"
 
     events[1].message.formattedMessage == "log message 2"
     events[1].getContextData().getValue("traceId") == null
     events[1].getContextData().getValue("spanId") == null
-    events[1].getContextData().getValue("traceFlags") == null
+    events[1].getContextData().getValue("sampled") == null
 
     events[2].message.formattedMessage == "log message 3"
-    events[2].getContextData().getValue("traceId") == span2.context.traceId.toLowerBase16()
-    events[2].getContextData().getValue("spanId") == span2.context.spanId.toLowerBase16()
-    events[2].getContextData().getValue("traceFlags") == span2.context.traceFlags.toLowerBase16()
+    events[2].getContextData().getValue("traceId") == span2.context.traceIdAsHexString
+    events[2].getContextData().getValue("spanId") == span2.context.spanIdAsHexString
+    events[2].getContextData().getValue("sampled") == "true"
   }
 }

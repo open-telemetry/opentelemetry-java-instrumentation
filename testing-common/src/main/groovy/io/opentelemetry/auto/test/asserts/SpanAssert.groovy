@@ -23,6 +23,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.SpanId
 import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.regex.Pattern
@@ -95,29 +96,29 @@ class SpanAssert {
   }
 
   def parent() {
-    assert !span.parentSpanId.isValid()
+    assert !SpanId.isValid(span.parentSpanId)
     checked.parentSpanId = true
   }
 
   def parentId(String parentId) {
-    assert span.parentSpanId.toLowerBase16() == parentId
+    assert span.parentSpanId == parentId
     checked.parentId = true
   }
 
   def traceId(String traceId) {
-    assert span.traceId.toLowerBase16() == traceId
+    assert span.traceId == traceId
     checked.traceId = true
   }
 
   def childOf(SpanData parent) {
-    parentId(parent.spanId.toLowerBase16())
-    traceId(parent.traceId.toLowerBase16())
+    parentId(parent.spanId)
+    traceId(parent.traceId)
   }
 
   def hasLink(SpanData linked) {
     def found = false
     for (def link : span.links) {
-      if (link.context.traceId == linked.traceId && link.context.spanId == linked.spanId) {
+      if (link.context.traceIdAsHexString == linked.traceId && link.context.spanIdAsHexString == linked.spanId) {
         found = true
         break
       }

@@ -52,7 +52,9 @@ import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+import spock.lang.Unroll
 
+@Unroll
 abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
