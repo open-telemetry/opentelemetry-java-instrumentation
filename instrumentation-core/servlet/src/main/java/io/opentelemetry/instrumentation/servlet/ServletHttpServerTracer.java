@@ -73,8 +73,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-    request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
+    request.setAttribute("traceId", span.getContext().getTraceIdAsHexString());
+    request.setAttribute("spanId", span.getContext().getSpanIdAsHexString());
 
     // TODO why? they are not in semantic convention, right?
     span.setAttribute("servlet.path", request.getServletPath());

@@ -20,7 +20,6 @@ import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import io.opentelemetry.javaagent.tooling.ClassLoaderMatcher
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
-import io.opentelemetry.javaagent.tooling.log.LogContextScopeListener
 
 class ClassLoaderMatcherTest extends AgentSpecification {
 
@@ -60,10 +59,5 @@ class ClassLoaderMatcherTest extends AgentSpecification {
   def "ExporterClassLoader class name is hardcoded in ClassLoaderMatcher"() {
     expect:
     ExporterClassLoader.name == "io.opentelemetry.javaagent.tooling.ExporterClassLoader"
-  }
-
-  def "helper class names are hardcoded in Log Instrumentations"() {
-    expect:
-    LogContextScopeListener.name == "io.opentelemetry.javaagent.tooling.log.LogContextScopeListener"
   }
 }

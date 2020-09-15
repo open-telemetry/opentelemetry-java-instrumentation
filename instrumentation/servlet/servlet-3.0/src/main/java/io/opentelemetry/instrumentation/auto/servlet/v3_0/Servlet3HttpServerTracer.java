@@ -86,6 +86,9 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
-    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
+    return oneSpan
+        .getContext()
+        .getTraceIdAsHexString()
+        .equals(otherSpan.getContext().getTraceIdAsHexString());
   }
 }

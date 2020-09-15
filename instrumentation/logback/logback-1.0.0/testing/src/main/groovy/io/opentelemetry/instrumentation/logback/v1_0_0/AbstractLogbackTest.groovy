@@ -91,18 +91,18 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDCPropertyMap().get("traceId") == span1.context.traceId.toLowerBase16()
-    events[0].getMDCPropertyMap().get("spanId") == span1.context.spanId.toLowerBase16()
-    events[0].getMDCPropertyMap().get("traceFlags") == span1.context.traceFlags.toLowerBase16()
+    events[0].getMDCPropertyMap().get("traceId") == span1.context.traceIdAsHexString
+    events[0].getMDCPropertyMap().get("spanId") == span1.context.spanIdAsHexString
+    events[0].getMDCPropertyMap().get("sampled") == "true"
 
     events[1].message == "log message 2"
     events[1].getMDCPropertyMap().get("traceId") == null
     events[1].getMDCPropertyMap().get("spanId") == null
-    events[1].getMDCPropertyMap().get("traceFlags") == null
+    events[1].getMDCPropertyMap().get("sampled") == null
 
     events[2].message == "log message 3"
-    events[2].getMDCPropertyMap().get("traceId") == span2.context.traceId.toLowerBase16()
-    events[2].getMDCPropertyMap().get("spanId") == span2.context.spanId.toLowerBase16()
-    events[2].getMDCPropertyMap().get("traceFlags") == span2.context.traceFlags.toLowerBase16()
+    events[2].getMDCPropertyMap().get("traceId") == span2.context.traceIdAsHexString
+    events[2].getMDCPropertyMap().get("spanId") == span2.context.spanIdAsHexString
+    events[2].getMDCPropertyMap().get("sampled") == "true"
   }
 }

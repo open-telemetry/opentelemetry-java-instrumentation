@@ -31,7 +31,6 @@ import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.SpanId;
-import io.opentelemetry.trace.TraceId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,12 +54,12 @@ public class InMemoryExporter implements SpanProcessor {
   private final List<List<SpanData>> traces = new ArrayList<>(); // guarded by tracesLock
 
   private boolean needsTraceSorting; // guarded by tracesLock
-  private final Set<TraceId> needsSpanSorting = new HashSet<>(); // guarded by tracesLock
+  private final Set<String> needsSpanSorting = new HashSet<>(); // guarded by tracesLock
 
   private final Object tracesLock = new Object();
 
   // not using span startEpochNanos since that is not strictly increasing so can lead to ties
-  private final Map<SpanId, Integer> spanOrders = new ConcurrentHashMap<>();
+  private final Map<String, Integer> spanOrders = new ConcurrentHashMap<>();
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
   @Override
@@ -69,12 +68,13 @@ public class InMemoryExporter implements SpanProcessor {
     log.debug(
         ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
         sd.getName(),
-        sd.getSpanId().toLowerBase16(),
-        sd.getTraceId().toLowerBase16(),
-        sd.getParentSpanId().toLowerBase16(),
+        sd.getSpanId(),
+        sd.getTraceId(),
+        sd.getParentSpanId(),
         sd.getInstrumentationLibraryInfo());
     synchronized (tracesLock) {
-      spanOrders.put(readWriteSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+      spanOrders.put(
+          readWriteSpan.getSpanContext().getSpanIdAsHexString(), nextSpanOrder.getAndIncrement());
     }
   }
 
@@ -89,9 +89,9 @@ public class InMemoryExporter implements SpanProcessor {
     log.debug(
         "<<< SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
         sd.getName(),
-        sd.getSpanId().toLowerBase16(),
-        sd.getTraceId().toLowerBase16(),
-        sd.getParentSpanId().toLowerBase16(),
+        sd.getSpanId(),
+        sd.getTraceId(),
+        sd.getParentSpanId(),
         sd.getInstrumentationLibraryInfo(),
         printSpanAttributes(sd));
     SpanData span = readableSpan.toSpanData();
@@ -125,7 +125,7 @@ public class InMemoryExporter implements SpanProcessor {
     final StringBuilder attributes = new StringBuilder();
     sd.getAttributes()
         .forEach(
-            new KeyValueConsumer<AttributeValue>() {
+            new KeyValueConsumer<String, AttributeValue>() {
               @Override
               public void consume(String key, AttributeValue value) {
                 String sValue = null;
@@ -261,14 +261,14 @@ public class InMemoryExporter implements SpanProcessor {
 
   private List<SpanData> sort(List<SpanData> trace) {
 
-    Map<SpanId, Node> lookup = new HashMap<>();
+    Map<String, Node> lookup = new HashMap<>();
     for (SpanData span : trace) {
       lookup.put(span.getSpanId(), new Node(span));
     }
 
     for (Node node : lookup.values()) {
-      SpanId parentSpanId = node.span.getParentSpanId();
-      if (parentSpanId.isValid()) {
+      String parentSpanId = node.span.getParentSpanId();
+      if (SpanId.isValid(parentSpanId)) {
         Node parentNode = lookup.get(parentSpanId);
         if (parentNode != null) {
           parentNode.childNodes.add(node);
@@ -328,10 +328,10 @@ public class InMemoryExporter implements SpanProcessor {
   // trace is completed if root span is present
   private static boolean isCompleted(List<SpanData> trace) {
     for (SpanData span : trace) {
-      if (!span.getParentSpanId().isValid()) {
+      if (!SpanId.isValid(span.getParentSpanId())) {
         return true;
       }
-      if (span.getParentSpanId().toLowerBase16().equals("0000000000000456")) {
+      if (span.getParentSpanId().equals("0000000000000456")) {
         // this is a special parent id that some tests use
         return true;
       }

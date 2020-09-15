@@ -72,7 +72,7 @@ class AttributesAssert {
 
   void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>()
-    attributes.forEach(new ReadableKeyValuePairs.KeyValueConsumer<AttributeValue>() {
+    attributes.forEach(new ReadableKeyValuePairs.KeyValueConsumer<String, AttributeValue>() {
       @Override
       void consume(String key, AttributeValue value) {
         allAttributes.add(key)
