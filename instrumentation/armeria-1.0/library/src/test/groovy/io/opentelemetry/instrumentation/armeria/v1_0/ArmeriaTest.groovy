@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient
 import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService
 
 class ArmeriaTest extends AbstractArmeriaTest implements InstrumentationTestTrait {
-
   @Override
   ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(OpenTelemetryService.newDecorator())
