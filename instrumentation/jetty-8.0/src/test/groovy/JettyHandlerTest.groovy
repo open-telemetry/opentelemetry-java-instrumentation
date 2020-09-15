@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
@@ -28,14 +35,6 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.ErrorHandler
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JettyHandlerTest extends HttpServerTest<Server> {
 
@@ -145,10 +144,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        "servlet.path" ''
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
-        }
       }
     }
   }

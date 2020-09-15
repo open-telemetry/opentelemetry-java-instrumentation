@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaServerTracer
@@ -81,8 +80,8 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  protected URI url(HttpRequest req) {
-    return req.uri();
+  protected String url(HttpRequest req) {
+    return req.uri().toString();
   }
 
   @Override

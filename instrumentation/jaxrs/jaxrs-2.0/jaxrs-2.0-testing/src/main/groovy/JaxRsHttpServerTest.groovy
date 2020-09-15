@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
@@ -191,11 +190,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-        "servlet.path" String
-        "servlet.context" String
-        if (query) {
-          "$MoreAttributes.HTTP_QUERY" query
-        }
       }
     }
   }

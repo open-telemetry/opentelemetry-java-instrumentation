@@ -32,7 +32,6 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.instrumentation.api.MoreAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -479,20 +478,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        // Optional
         "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP }
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
-        }
-        // OkHttp never sends the fragment in the request.
-//        if (endpoint.fragment) {
-//          "$MoreAttributes.HTTP_FRAGMENT" endpoint.fragment
-//        }
       }
     }
   }

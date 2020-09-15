@@ -115,8 +115,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/$forwardFromFileName"
           }
         }
         span(1) {
@@ -196,8 +194,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/forwards/forwardToHtml.jsp"
           }
         }
         span(1) {
@@ -252,8 +248,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/forwards/forwardToIncludeMulti.jsp"
           }
         }
         span(1) {
@@ -368,8 +362,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/forwards/forwardToJspForward.jsp"
           }
         }
         span(1) {
@@ -465,8 +457,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/forwards/forwardToCompileError.jsp"
           }
         }
         span(1) {
@@ -533,8 +523,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/forwards/forwardToNonExistent.jsp"
           }
         }
         span(1) {

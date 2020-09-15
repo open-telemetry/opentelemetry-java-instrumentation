@@ -24,8 +24,6 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -60,10 +58,10 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected URI url(HttpRequest request) throws URISyntaxException {
-    URI uri = new URI(request.getUri());
-    if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
-      return new URI("http://" + request.headers().get(HOST) + request.getUri());
+  protected String url(HttpRequest request) {
+    String uri = request.getUri();
+    if (!uri.startsWith("http") && request.headers().contains(HOST)) {
+      return "http://" + request.headers().get(HOST) + request.getUri();
     } else {
       return uri;
     }
