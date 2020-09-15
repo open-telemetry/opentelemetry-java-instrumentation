@@ -56,7 +56,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer() {
     return functions -> {
       if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {
-        WebClientTracingFilter.addFilter(functions, tracer);
+        WebClientTracingFilter.addFilter(functions);
       }
     };
   }
