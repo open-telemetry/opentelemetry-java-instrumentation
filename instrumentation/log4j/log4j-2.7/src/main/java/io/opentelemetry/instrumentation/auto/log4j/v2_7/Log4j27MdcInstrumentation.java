@@ -16,6 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.log4j.v2_7;
 
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -38,9 +41,9 @@ import org.apache.logging.log4j.util.SortedArrayStringMap;
 import org.apache.logging.log4j.util.StringMap;
 
 @AutoService(Instrumenter.class)
-public class Log4j27Instrumentation extends Instrumenter.Default {
-  public Log4j27Instrumentation() {
-    super("log4j2", "log4j", "log4j2.7");
+public class Log4j27MdcInstrumentation extends Instrumenter.Default {
+  public Log4j27MdcInstrumentation() {
+    super("log4j2", "log4j", "log4j-2.7");
   }
 
   @Override
@@ -59,7 +62,7 @@ public class Log4j27Instrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("injectContextData"))
             .and(returns(named("org.apache.logging.log4j.util.StringMap"))),
-        Log4j27Instrumentation.class.getName() + "$InjectContextDataAdvice");
+        Log4j27MdcInstrumentation.class.getName() + "$InjectContextDataAdvice");
   }
 
   public static class InjectContextDataAdvice {
@@ -71,15 +74,17 @@ public class Log4j27Instrumentation extends Instrumenter.Default {
         return;
       }
 
-      if (contextData.containsKey("traceId")) {
+      if (contextData.containsKey(TRACE_ID)) {
         // Assume already instrumented event if traceId is present.
         return;
       }
 
       StringMap newContextData = new SortedArrayStringMap(contextData);
-      newContextData.putValue("traceId", currentContext.getTraceId().toLowerBase16());
-      newContextData.putValue("spanId", currentContext.getSpanId().toLowerBase16());
-      newContextData.putValue("traceFlags", currentContext.getTraceFlags().toLowerBase16());
+      newContextData.putValue(TRACE_ID, currentContext.getTraceIdAsHexString());
+      newContextData.putValue(SPAN_ID, currentContext.getSpanIdAsHexString());
+      if (currentContext.isSampled()) {
+        newContextData.putValue(SAMPLED, "true");
+      }
       contextData = newContextData;
     }
   }
