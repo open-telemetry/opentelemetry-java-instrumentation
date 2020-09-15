@@ -100,6 +100,8 @@ repositories {
 }
 
 dependencies {
+  compileOnly group: 'org.checkerframework', name: 'checker-qual', version: versions.checkerFramework
+
   testImplementation enforcedPlatform(group: 'org.junit', name: 'junit-bom', version: versions.junit5)
   testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api'
   testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
@@ -305,4 +307,24 @@ tasks.withType(Test).configureEach {
 tasks.withType(AbstractArchiveTask) {
   preserveFileTimestamps = false
   reproducibleFileOrder = true
+}
+
+plugins.withId('net.ltgt.errorprone') {
+  dependencies {
+    annotationProcessor group: "com.uber.nullaway", name: "nullaway", version: versions.nullaway
+    errorprone group: "com.google.errorprone", name: "error_prone_core", version: versions.errorprone
+  }
+
+  tasks.withType(JavaCompile) {
+    if (!name.toLowerCase().contains("test")) {
+      options.errorprone {
+        error("NullAway")
+
+        // Doesn't work well with Java 8
+        disable("FutureReturnValueIgnored")
+
+        option("NullAway:AnnotatedPackages", "io.opentelemetry,com.linecorp.armeria")
+      }
+    }
+  }
 }

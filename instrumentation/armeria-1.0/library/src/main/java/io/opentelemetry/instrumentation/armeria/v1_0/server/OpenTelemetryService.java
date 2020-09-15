@@ -30,6 +30,7 @@ import io.opentelemetry.trace.TracingContextUtils;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
 public class OpenTelemetryService extends SimpleDecoratingHttpService {
@@ -91,6 +92,7 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     }
   }
 
+  @Nullable
   private static String route(ServiceRequestContext ctx) {
     Route route = ctx.config().route();
     List<String> paths = route.paths();
