@@ -73,4 +73,23 @@ class AdditionalLibraryIgnoresMatcherTest extends Specification {
     typeName << ["org.springframework.boot.autoconfigure.BackgroundPreinitializer\$InnerClass1",
                  "org.springframework.boot.autoconfigure.condition.OnClassCondition\$ConditionMatch"]
   }
+
+  def "logback - don't match logger and logging events"() {
+    setup:
+    def type = Mock(TypeDescription)
+    type.getActualName() >> typeName
+
+    when:
+    def matches = underTest.matches(type)
+
+    then:
+    !matches
+
+    where:
+    typeName << [
+      "ch.qos.logback.classic.Logger",
+      "ch.qos.logback.classic.spi.LoggingEvent",
+      "ch.qos.logback.classic.spi.LoggingEventVO"
+    ]
+  }
 }

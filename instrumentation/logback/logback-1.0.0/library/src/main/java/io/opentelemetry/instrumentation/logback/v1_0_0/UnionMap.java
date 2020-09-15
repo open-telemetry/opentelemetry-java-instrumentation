@@ -29,14 +29,14 @@ import java.util.Set;
  * An immutable view over two maps, with keys resolving from the first map first, or otherwise the
  * second if not present in the first.
  */
-final class UnionMap<K, V> extends AbstractMap<K, V> {
+public final class UnionMap<K, V> extends AbstractMap<K, V> {
 
   private final Map<K, V> first;
   private final Map<K, V> second;
   private int size = -1;
   private Set<Entry<K, V>> entrySet;
 
-  UnionMap(Map<K, V> first, Map<K, V> second) {
+  public UnionMap(Map<K, V> first, Map<K, V> second) {
     this.first = first;
     this.second = second;
   }
