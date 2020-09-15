@@ -18,34 +18,49 @@ package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
-import reactor.core.Scannable;
 import reactor.util.context.Context;
 
-public class TracingSubscriber<T>
-    implements Subscription, CoreSubscriber<T>, Fuseable.QueueSubscription<T>, Scannable {
-
-  private final io.grpc.Context upstreamContext;
-  private final CoreSubscriber<T> delegate;
+/**
+ * Based on OpenTracing code.
+ * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
+ */
+public class TracingSubscriber<T> implements CoreSubscriber<T> {
+  private final io.grpc.Context traceContext;
+  private final Subscriber<? super T> subscriber;
   private final Context context;
-  private final io.grpc.Context downstreamContext;
-  private Subscription subscription;
 
-  public TracingSubscriber(io.grpc.Context upstreamContext, CoreSubscriber<T> delegate) {
-    this.delegate = delegate;
-    this.upstreamContext = upstreamContext;
-    this.downstreamContext =
-        (io.grpc.Context)
-            delegate
-                .currentContext()
-                .getOrEmpty(io.grpc.Context.class)
-                .orElse(io.grpc.Context.ROOT);
+  public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
+    this(subscriber, ctx, io.grpc.Context.current());
+  }
 
-    // The context is exposed upstream so we put our upstream context here for use by the next
-    // TracingSubscriber
-    context = this.delegate.currentContext().put(io.grpc.Context.class, this.upstreamContext);
+  public TracingSubscriber(
+      Subscriber<? super T> subscriber, Context ctx, io.grpc.Context contextToPropagate) {
+    this.subscriber = subscriber;
+    this.traceContext = contextToPropagate;
+    this.context = ctx;
+  }
+
+  @Override
+  public void onSubscribe(Subscription subscription) {
+    subscriber.onSubscribe(subscription);
+  }
+
+  @Override
+  public void onNext(T o) {
+    withActiveSpan(() -> subscriber.onNext(o));
+  }
+
+  @Override
+  public void onError(Throwable throwable) {
+    withActiveSpan(() -> subscriber.onError(throwable));
+  }
+
+  @Override
+  public void onComplete() {
+    withActiveSpan(subscriber::onComplete);
   }
 
   @Override
@@ -53,97 +68,13 @@ public class TracingSubscriber<T>
     return context;
   }
 
-  @Override
-  public void onSubscribe(Subscription subscription) {
-    this.subscription = subscription;
-
-    try (Scope scope = ContextUtils.withScopedContext(downstreamContext)) {
-      delegate.onSubscribe(this);
+  private void withActiveSpan(Runnable runnable) {
+    if (traceContext != null) {
+      try (Scope ignored = ContextUtils.withScopedContext(traceContext)) {
+        runnable.run();
+      }
+    } else {
+      runnable.run();
     }
   }
-
-  @Override
-  public void onNext(T t) {
-    try (Scope scope = ContextUtils.withScopedContext(downstreamContext)) {
-      delegate.onNext(t);
-    }
-  }
-
-  private Scope finalScopeForDownstream() {
-    return ContextUtils.withScopedContext(downstreamContext);
-  }
-
-  @Override
-  public void onError(Throwable t) {
-    try (Scope scope = finalScopeForDownstream()) {
-      delegate.onError(t);
-    }
-  }
-
-  @Override
-  public void onComplete() {
-    try (Scope scope = finalScopeForDownstream()) {
-      delegate.onComplete();
-    }
-  }
-
-  /*
-   * Methods from Subscription
-   */
-
-  @Override
-  public void request(long n) {
-    try (Scope scope = ContextUtils.withScopedContext(upstreamContext)) {
-      subscription.request(n);
-    }
-  }
-
-  @Override
-  public void cancel() {
-    try (Scope scope = ContextUtils.withScopedContext(upstreamContext)) {
-      subscription.cancel();
-    }
-  }
-
-  /*
-   * Methods from Scannable
-   */
-
-  @Override
-  public Object scanUnsafe(Attr attr) {
-    if (attr == Attr.PARENT) {
-      return subscription;
-    }
-    if (attr == Attr.ACTUAL) {
-      return delegate;
-    }
-    return null;
-  }
-
-  /*
-   * Methods from Fuseable.QueueSubscription
-   */
-
-  @Override
-  public int requestFusion(int requestedMode) {
-    return Fuseable.NONE;
-  }
-
-  @Override
-  public T poll() {
-    return null;
-  }
-
-  @Override
-  public int size() {
-    return 0;
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return false;
-  }
-
-  @Override
-  public void clear() {}
 }

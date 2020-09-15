@@ -131,7 +131,6 @@ class SpringWebfluxTest extends AgentTestRunner {
     response.code == 200
     response.body().string() == expectedResponseBody
     assertTraces(1) {
-      println TEST_WRITER
       trace(0, 3) {
         span(0) {
           operationName urlPathWithVariables
@@ -173,7 +172,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(2) {
           operationName "tracedMethod"
-          childOf span(1)
+          childOf span(0)
           errored false
           attributes {
           }
@@ -184,12 +183,95 @@ class SpringWebfluxTest extends AgentTestRunner {
     where:
     testName                                  | urlPath                       | urlPathWithVariables             | annotatedMethod       | expectedResponseBody
     "functional API traced method from mono"  | "/greet-mono-from-callable/4" | "/greet-mono-from-callable/{id}" | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 4"
-    "functional API traced method"            | "/greet-traced-method/5"      | "/greet-traced-method/{id}"      | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"
     "functional API traced method with delay" | "/greet-delayed-mono/6"       | "/greet-delayed-mono/{id}"       | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 6"
 
     "annotation API traced method from mono"  | "/foo-mono-from-callable/7"   | "/foo-mono-from-callable/{id}"   | "getMonoFromCallable" | new FooModel(7L, "tracedMethod").toString()
-    "annotation API traced method"            | "/foo-traced-method/8"        | "/foo-traced-method/{id}"        | "getTracedMethod"     | new FooModel(8L, "tracedMethod").toString()
     "annotation API traced method with delay" | "/foo-delayed-mono/9"         | "/foo-delayed-mono/{id}"         | "getFooDelayedMono"   | new FooModel(9L, "tracedMethod").toString()
+  }
+
+  /*
+  This test differs from the previous in one important aspect.
+  The test above calls endpoints which does not create any spans during their invocation.
+  They merely assemble reactive pipeline where some steps create spans.
+  Thus all those spans are created when WebFlux span created by DispatcherHandlerInstrumentation
+  has already finished. Therefore, they have `SERVER` span as their parent.
+
+  This test below calls endpoints which do create spans right inside endpoint handler.
+  Therefore, in theory, those spans should have INTERNAL span created by DispatcherHandlerInstrumentation
+  as their parent. But there is a difference how Spring WebFlux handles functional endpoints
+  (created in server.SpringWebFluxTestApplication.greetRouterFunction) and annotated endpoints
+  (created in server.TestController).
+  In the former case org.springframework.web.reactive.function.server.support.HandlerFunctionAdapter.handle
+  calls handler function directly. Thus "tracedMethod" span below has INTERNAL handler span as its parent.
+  In the latter case org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerAdapter.handle
+  merely wraps handler call into Mono and thus actual invocation of handler function happens later,
+  when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
+   */
+
+  def "Create span during handler function"() {
+    setup:
+    String url = "http://localhost:$port$urlPath"
+    def request = new Request.Builder().url(url).get().build()
+    when:
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code == 200
+    response.body().string() == expectedResponseBody
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          operationName urlPathWithVariables
+          spanKind SERVER
+          parent()
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" url
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+          }
+        }
+        span(1) {
+          if (annotatedMethod == null) {
+            // Functional API
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+          } else {
+            // Annotation API
+            operationName TestController.getSimpleName() + "." + annotatedMethod
+          }
+          spanKind INTERNAL
+          childOf span(0)
+          attributes {
+            if (annotatedMethod == null) {
+              // Functional API
+              "request.predicate" "(GET && $urlPathWithVariables)"
+              "handler.type" { String tagVal ->
+                return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+              }
+            } else {
+              // Annotation API
+              "handler.type" TestController.getName()
+            }
+          }
+        }
+        span(2) {
+          operationName "tracedMethod"
+          childOf span(annotatedMethod ? 0 : 1)
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+
+    where:
+    testName                       | urlPath                  | urlPathWithVariables        | annotatedMethod   | expectedResponseBody
+    "functional API traced method" | "/greet-traced-method/5" | "/greet-traced-method/{id}" | null              | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"
+    "annotation API traced method" | "/foo-traced-method/8"   | "/foo-traced-method/{id}"   | "getTracedMethod" | new FooModel(8L, "tracedMethod").toString()
   }
 
   def "404 GET test"() {
