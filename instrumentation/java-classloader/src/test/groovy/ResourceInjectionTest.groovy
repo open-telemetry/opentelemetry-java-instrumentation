@@ -30,28 +30,21 @@ class ResourceInjectionTest extends AgentTestRunner {
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 
     when:
-    def resourceUrl = emptyLoader.get().getResource(resourceName)
     def resourceUrls = emptyLoader.get().getResources(resourceName)
     then:
-    resourceUrl == null
     !resourceUrls.hasMoreElements()
 
     when:
     URLClassLoader notInjectedLoader = new URLClassLoader(new URL[0], (ClassLoader) null)
 
     injector.transform(null, null, emptyLoader.get(), null)
-    resourceUrl = emptyLoader.get().getResource(resourceName)
     resourceUrls = emptyLoader.get().getResources(resourceName)
 
     then:
-    resourceUrl != null
-    resourceUrl.openStream().text.trim() == 'Hello world!'
-    emptyLoader.get().getResourceAsStream(resourceName).text.trim() == 'Hello world!'
-
     resourceUrls.hasMoreElements()
     resourceUrls.nextElement().openStream().text.trim() == 'Hello world!'
 
-    notInjectedLoader.getResource(resourceName) == null
+    !notInjectedLoader.getResources(resourceName).hasMoreElements()
 
     when: "references to emptyLoader are gone"
     emptyLoader.get().close() // cleanup

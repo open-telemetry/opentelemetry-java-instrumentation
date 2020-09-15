@@ -27,7 +27,6 @@ import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,6 +37,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Instruments {@link ClassLoader} to have calls to get resources intercepted and check our map of
  * helper resources that is filled by instrumentation when they need helpers.
+ *
+ * <p>We currently only intercept {@link ClassLoader#getResources(String)} because this is the case
+ * we are currently always interested in, where it's used for service loading.
  */
 @AutoService(Instrumenter.class)
 public class ResourceInjectionInstrumentation extends Instrumenter.Default {
@@ -53,30 +55,9 @@ public class ResourceInjectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        isMethod().and(named("getResource")).and(takesArguments(String.class)),
-        ResourceInjectionInstrumentation.class.getName() + "$GetResourceAdvice");
-
-    transformers.put(
+    return Collections.singletonMap(
         isMethod().and(named("getResources")).and(takesArguments(String.class)),
         ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
-    return transformers;
-  }
-
-  public static class GetResourceAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ClassLoader classLoader,
-        @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) URL resourceUrl) {
-      if (resourceUrl != null) {
-        // Give their classloader precedence.
-        return;
-      }
-
-      resourceUrl = HelperResources.load(classLoader, name);
-    }
   }
 
   public static class GetResourcesAdvice {
