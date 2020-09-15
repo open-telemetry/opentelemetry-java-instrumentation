@@ -65,6 +65,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(span);
       }
+      tracer.forceFlush();
     }
   }
 

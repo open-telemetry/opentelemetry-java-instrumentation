@@ -22,6 +22,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -52,5 +53,9 @@ public class AwsLambdaTracer extends BaseTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.aws-lambda-1.0";
+  }
+
+  public void forceFlush() {
+    OpenTelemetrySdk.getTracerProvider().forceFlush();
   }
 }
