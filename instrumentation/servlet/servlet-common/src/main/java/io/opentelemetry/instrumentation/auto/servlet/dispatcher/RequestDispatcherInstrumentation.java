@@ -108,8 +108,8 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
           || (parentSpan.getContext().isValid()
               && servletSpan
                   .getContext()
-                  .getTraceId()
-                  .equals(parentSpan.getContext().getTraceId()))) {
+                  .getTraceIdAsHexString()
+                  .equals(parentSpan.getContext().getTraceIdAsHexString()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.
         parent = parentSpan;
       } else {

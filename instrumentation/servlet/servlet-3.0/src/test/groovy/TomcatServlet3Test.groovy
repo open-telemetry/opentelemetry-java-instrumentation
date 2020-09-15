@@ -134,8 +134,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
           controllerSpan(it, 1, span(0))
         }
 
-        assert loggedTraces.contains(traces[it][0].traceId.toLowerBase16())
-        assert loggedSpans.contains(traces[it][0].spanId.toLowerBase16())
+        assert loggedTraces.contains(traces[it][0].traceId)
+        assert loggedSpans.contains(traces[it][0].spanId)
       }
     }
 
@@ -162,8 +162,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
       }
 
       def (String traceId, String spanId) = accessLogValue.loggedIds[0]
-      assert traces[0][0].traceId.toLowerBase16() == traceId
-      assert traces[0][0].spanId.toLowerBase16() == spanId
+      assert traces[0][0].traceId == traceId
+      assert traces[0][0].spanId == spanId
     }
 
     where:

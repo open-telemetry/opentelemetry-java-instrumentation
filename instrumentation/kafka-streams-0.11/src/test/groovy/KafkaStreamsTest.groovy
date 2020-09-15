@@ -206,8 +206,8 @@ class KafkaStreamsTest extends AgentTestRunner {
       }
     })
     def spanContext = getSpan(context).getContext()
-    spanContext.traceId == TEST_WRITER.traces[0][3].traceId
-    spanContext.spanId == TEST_WRITER.traces[0][3].spanId
+    spanContext.traceIdAsHexString == TEST_WRITER.traces[0][3].traceId
+    spanContext.spanIdAsHexString == TEST_WRITER.traces[0][3].spanId
 
 
     cleanup:
