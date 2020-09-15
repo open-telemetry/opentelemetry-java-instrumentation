@@ -323,7 +323,7 @@ plugins.withId('net.ltgt.errorprone') {
         // Doesn't work well with Java 8
         disable("FutureReturnValueIgnored")
 
-        option("NullAway:AnnotatedPackages", "io.opentelemetry,com.linecorp.armeria")
+        option("NullAway:AnnotatedPackages", "io.opentelemetry,com.linecorp.armeria,com.google.common")
       }
     }
   }
