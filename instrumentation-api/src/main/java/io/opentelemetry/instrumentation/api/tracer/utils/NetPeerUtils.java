@@ -21,12 +21,13 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class NetPeerUtils {
 
   private NetPeerUtils() {}
 
-  public static void setNetPeer(Span span, InetSocketAddress remoteConnection) {
+  public static void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {

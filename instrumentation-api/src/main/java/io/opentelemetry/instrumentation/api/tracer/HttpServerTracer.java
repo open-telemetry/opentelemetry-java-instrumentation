@@ -40,6 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,9 +156,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   /**
    * Returns context stored to the given request-response-loop storage by {@link
    * #attachServerContext(Context, STORAGE)}.
-   *
-   * <p>May be null.
    */
+  @Nullable
   public abstract Context getServerContext(STORAGE storage);
 
   protected void onConnection(Span span, CONNECTION connection) {
@@ -304,8 +304,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     }
   }
 
+  @Nullable
   protected abstract Integer peerPort(CONNECTION connection);
 
+  @Nullable
   protected abstract String peerHostIP(CONNECTION connection);
 
   protected abstract String flavor(CONNECTION connection, REQUEST request);
@@ -316,6 +318,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected abstract String method(REQUEST request);
 
+  @Nullable
   protected abstract String requestHeader(REQUEST request, String name);
 
   protected abstract int responseStatus(RESPONSE response);

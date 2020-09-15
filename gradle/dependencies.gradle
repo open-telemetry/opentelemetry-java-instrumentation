@@ -28,6 +28,9 @@ ext {
     springboot          : "2.3.1.RELEASE",
     // TODO(anuraaga): Switch off of milestones, this version fixes compatibility with Spock Unroll
     junit5              : "5.7.0-M1",
+    checkerFramework    : "3.6.1",
+    errorprone          : "2.4.0",
+    nullaway            : "0.8.0",
   ]
 
   deps = [

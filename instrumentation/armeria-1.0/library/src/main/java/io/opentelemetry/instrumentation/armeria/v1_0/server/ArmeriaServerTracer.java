@@ -26,6 +26,7 @@ import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaServerTracer
     extends HttpServerTracer<HttpRequest, RequestLog, ServiceRequestContext, Void> {
@@ -37,6 +38,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
+  @Nullable
   public Context getServerContext(Void ctx) {
     return null;
   }
@@ -47,6 +49,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
+  @Nullable
   protected Integer peerPort(ServiceRequestContext ctx) {
     SocketAddress socketAddress = ctx.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
@@ -57,6 +60,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
+  @Nullable
   protected String peerHostIP(ServiceRequestContext ctx) {
     SocketAddress socketAddress = ctx.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
@@ -87,6 +91,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
+  @Nullable
   protected String requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.headers().get(name);
   }
@@ -104,6 +109,7 @@ public class ArmeriaServerTracer
     private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 
     @Override
+    @Nullable
     public String get(HttpRequest carrier, String key) {
       return carrier.headers().get(key);
     }

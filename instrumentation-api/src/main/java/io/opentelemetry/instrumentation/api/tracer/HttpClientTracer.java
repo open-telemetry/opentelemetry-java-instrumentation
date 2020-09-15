@@ -37,6 +37,7 @@ import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +51,15 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected abstract String method(REQUEST request);
 
+  @Nullable
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract Integer status(RESPONSE response);
 
+  @Nullable
   protected abstract String requestHeader(REQUEST request, String name);
 
+  @Nullable
   protected abstract String responseHeader(RESPONSE response, String name);
 
   protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
