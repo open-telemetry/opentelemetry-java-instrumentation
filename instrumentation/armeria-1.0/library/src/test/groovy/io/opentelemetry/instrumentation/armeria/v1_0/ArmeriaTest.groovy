@@ -24,10 +24,6 @@ import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService
 
 class ArmeriaTest extends AbstractArmeriaTest implements InstrumentationTestTrait {
 
-  def cleanup() {
-    assert testWriter.forceFlushCalled()
-  }
-
   @Override
   ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(OpenTelemetryService.newDecorator())
