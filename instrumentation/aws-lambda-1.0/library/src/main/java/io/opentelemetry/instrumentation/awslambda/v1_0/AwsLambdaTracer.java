@@ -26,6 +26,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
+import java.util.concurrent.TimeUnit;
 
 public class AwsLambdaTracer extends BaseTracer {
 
@@ -56,6 +57,6 @@ public class AwsLambdaTracer extends BaseTracer {
   }
 
   public void forceFlush() {
-    OpenTelemetrySdk.getTracerProvider().forceFlush();
+    OpenTelemetrySdk.getTracerProvider().forceFlush().join(1, TimeUnit.SECONDS);
   }
 }

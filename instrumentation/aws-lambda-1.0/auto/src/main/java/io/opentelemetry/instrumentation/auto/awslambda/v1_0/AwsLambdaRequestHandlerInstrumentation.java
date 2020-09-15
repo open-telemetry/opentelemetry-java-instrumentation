@@ -81,6 +81,7 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
       } else {
         TRACER.end(span);
       }
+      TRACER.forceFlush();
     }
   }
 }
