@@ -17,57 +17,52 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 
-/**
- * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
- * #doHandleRequest(Object, Context)}.
- */
-public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O> {
-
-  private final AwsLambdaTracer tracer;
+public abstract class TracingSQSMessageHandler extends TracingSQSEventHandler {
 
   /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
-  protected TracingRequestHandler() {
-    this.tracer = new AwsLambdaTracer();
+  protected TracingSQSMessageHandler() {
+    super(new AwsLambdaMessageTracer());
   }
 
   /**
    * Creates a new {@link TracingRequestHandler} which traces using the specified {@link Tracer}.
    */
-  protected TracingRequestHandler(Tracer tracer) {
-    this.tracer = new AwsLambdaTracer(tracer);
+  protected TracingSQSMessageHandler(Tracer tracer) {
+    super(new AwsLambdaMessageTracer(tracer));
   }
 
   /**
    * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * AwsLambdaTracer}.
+   * AwsLambdaMessageTracer}.
    */
-  protected TracingRequestHandler(AwsLambdaTracer tracer) {
-    this.tracer = tracer;
+  protected TracingSQSMessageHandler(AwsLambdaMessageTracer tracer) {
+    super(tracer);
   }
 
-  @Override
-  public final O handleRequest(I input, Context context) {
-    Span span = tracer.startSpan(context, Kind.SERVER);
-    Throwable error = null;
-    try (Scope ignored = tracer.startScope(span)) {
-      return doHandleRequest(input, context);
-    } catch (Throwable t) {
-      error = t;
-      throw t;
-    } finally {
-      if (error != null) {
-        tracer.endExceptionally(span, error);
-      } else {
-        tracer.end(span);
+  protected final void handleEvent(SQSEvent event, Context context) {
+    for (SQSMessage message : event.getRecords()) {
+      Span span = getTracer().startSpan(message);
+      Throwable error = null;
+      try (Scope ignored = getTracer().startScope(span)) {
+        handleEvent(event, context);
+      } catch (Throwable t) {
+        error = t;
+        throw t;
+      } finally {
+        if (error != null) {
+          getTracer().endExceptionally(span, error);
+        } else {
+          getTracer().end(span);
+        }
       }
     }
   }
 
-  protected abstract O doHandleRequest(I input, Context context);
+  protected abstract void handleMessage(SQSMessage message, SQSEvent event, Context context);
 }

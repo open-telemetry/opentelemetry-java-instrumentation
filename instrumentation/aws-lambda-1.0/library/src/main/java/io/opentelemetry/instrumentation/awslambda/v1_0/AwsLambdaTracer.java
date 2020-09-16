@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaTracer extends BaseTracer {
 
@@ -34,11 +35,14 @@ public class AwsLambdaTracer extends BaseTracer {
     super(tracer);
   }
 
-  public Span startSpan(Context context) {
-    Span span = startSpan(context.getFunctionName(), Kind.SERVER);
-    // TODO(anuraaga): Migrate to SemanticAttributes when they exist.
-    span.setAttribute("faas.execution", context.getAwsRequestId());
+  Span.Builder createSpan(Context context) {
+    Span.Builder span = tracer.spanBuilder(context.getFunctionName());
+    SemanticAttributes.FAAS_EXECUTION.set(span, context.getAwsRequestId());
     return span;
+  }
+
+  public Span startSpan(Context context, Kind kind) {
+    return createSpan(context).setSpanKind(kind).startSpan();
   }
 
   /** Creates new scoped context with the given span. */

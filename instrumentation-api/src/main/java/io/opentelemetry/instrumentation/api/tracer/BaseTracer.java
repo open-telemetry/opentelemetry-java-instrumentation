@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class BaseTracer {
   // Keeps track of the server span for the current trace.
+  // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
+  // or other non-server root.
   public static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
       Context.key("opentelemetry-trace-server-span-key");
 

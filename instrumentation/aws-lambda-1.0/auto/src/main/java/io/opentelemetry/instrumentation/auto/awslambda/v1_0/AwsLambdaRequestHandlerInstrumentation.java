@@ -29,6 +29,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -65,7 +66,7 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
         @Advice.Argument(1) Context context,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(context);
+      span = TRACER.startSpan(context, Kind.SERVER);
       scope = TRACER.startScope(span);
     }
 
