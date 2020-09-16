@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-class AutoLog4j2Test extends Log4j2Test {
+import io.opentelemetry.auto.test.AgentTestTrait
+
+class AutoLog4j2Test extends Log4j2Test implements AgentTestTrait {
 }

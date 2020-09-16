@@ -16,20 +16,16 @@
 
 package io.opentelemetry.instrumentation.auto.log4j.v2_7;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -37,13 +33,19 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.logging.log4j.util.SortedArrayStringMap;
-import org.apache.logging.log4j.util.StringMap;
+import org.apache.logging.log4j.core.ContextDataInjector;
 
 @AutoService(Instrumenter.class)
 public class Log4j27MdcInstrumentation extends Instrumenter.Default {
   public Log4j27MdcInstrumentation() {
     super("log4j2", "log4j", "log4j-2.7");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.instrumentation.auto.log4j.v2_7.SpanDecoratingContextDataInjector"
+    };
   }
 
   @Override
@@ -53,39 +55,25 @@ public class Log4j27MdcInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.apache.logging.log4j.core.ContextDataInjector"));
+    return named("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
         isMethod()
-            .and(named("injectContextData"))
-            .and(returns(named("org.apache.logging.log4j.util.StringMap"))),
-        Log4j27MdcInstrumentation.class.getName() + "$InjectContextDataAdvice");
+            .and(isPublic())
+            .and(isStatic())
+            .and(named("createInjector"))
+            .and(returns(named("org.apache.logging.log4j.core.ContextDataInjector"))),
+        Log4j27MdcInstrumentation.class.getName() + "$CreateInjectorAdvice");
   }
 
-  public static class InjectContextDataAdvice {
+  public static class CreateInjectorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) StringMap contextData) {
-      SpanContext currentContext = TracingContextUtils.getCurrentSpan().getContext();
-      if (!currentContext.isValid()) {
-        return;
-      }
-
-      if (contextData.containsKey(TRACE_ID)) {
-        // Assume already instrumented event if traceId is present.
-        return;
-      }
-
-      StringMap newContextData = new SortedArrayStringMap(contextData);
-      newContextData.putValue(TRACE_ID, currentContext.getTraceIdAsHexString());
-      newContextData.putValue(SPAN_ID, currentContext.getSpanIdAsHexString());
-      if (currentContext.isSampled()) {
-        newContextData.putValue(SAMPLED, "true");
-      }
-      contextData = newContextData;
+        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) ContextDataInjector injector) {
+      injector = new SpanDecoratingContextDataInjector(injector);
     }
   }
 }

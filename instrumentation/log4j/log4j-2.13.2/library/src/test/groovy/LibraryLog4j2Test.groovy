@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-class LibraryLog4j2Test extends Log4j2Test {
+import io.opentelemetry.auto.test.InstrumentationTestTrait
+
+class LibraryLog4j2Test extends Log4j2Test implements InstrumentationTestTrait {
 }

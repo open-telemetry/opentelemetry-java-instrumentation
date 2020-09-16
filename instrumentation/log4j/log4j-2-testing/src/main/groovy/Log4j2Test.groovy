@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.TracingContextUtils
 import org.apache.logging.log4j.LogManager
 
-abstract class Log4j2Test extends AgentTestRunner {
+abstract class Log4j2Test extends InstrumentationSpecification {
   def cleanup() {
     ListAppender.get().clearEvents()
   }
