@@ -26,21 +26,30 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
+  private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+
   @Override
-  // TODO this violates convention
-  protected URI url(HttpServletRequest httpServletRequest) throws URISyntaxException {
-    return new URI(
-        httpServletRequest.getScheme(),
-        null,
-        httpServletRequest.getServerName(),
-        httpServletRequest.getServerPort(),
-        httpServletRequest.getRequestURI(),
-        httpServletRequest.getQueryString(),
-        null);
+  protected String url(HttpServletRequest httpServletRequest) {
+    try {
+      return new URI(
+              httpServletRequest.getScheme(),
+              null,
+              httpServletRequest.getServerName(),
+              httpServletRequest.getServerPort(),
+              httpServletRequest.getRequestURI(),
+              httpServletRequest.getQueryString(),
+              null)
+          .toString();
+    } catch (URISyntaxException e) {
+      log.debug("Failed to construct request URI", e);
+      return null;
+    }
   }
 
   @Override
@@ -76,9 +85,6 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     request.setAttribute("traceId", span.getContext().getTraceIdAsHexString());
     request.setAttribute("spanId", span.getContext().getSpanIdAsHexString());
 
-    // TODO why? they are not in semantic convention, right?
-    span.setAttribute("servlet.path", request.getServletPath());
-    span.setAttribute("servlet.context", request.getContextPath());
     super.onRequest(span, request);
   }
 

@@ -70,7 +70,6 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.path" ''
           }
         }
       }

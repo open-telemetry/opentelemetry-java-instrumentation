@@ -22,8 +22,6 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 public class AkkaHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
@@ -53,8 +51,8 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected URI url(HttpRequest httpRequest) throws URISyntaxException {
-    return new URI(httpRequest.uri().toString());
+  protected String url(HttpRequest httpRequest) {
+    return httpRequest.uri().toString();
   }
 
   @Override

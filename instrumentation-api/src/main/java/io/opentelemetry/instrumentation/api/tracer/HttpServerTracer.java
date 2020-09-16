@@ -25,10 +25,8 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
-import io.opentelemetry.instrumentation.api.tracer.utils.HttpUrlUtils;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -36,8 +34,6 @@ import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -169,25 +165,28 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     }
   }
 
-  // TODO use semantic attributes
   protected void onRequest(Span span, REQUEST request) {
     SemanticAttributes.HTTP_METHOD.set(span, method(request));
-    String userAgent = requestHeader(request, USER_AGENT);
-    if (userAgent != null) {
-      SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
-    }
+    SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
 
-    try {
-      URI url = url(request);
-      HttpUrlUtils.setHttpUrl(span, url);
-      if (Config.get().isHttpServerTagQueryString()) {
-        span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
-        span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
-      }
-    } catch (Exception e) {
-      log.debug("Error tagging url", e);
-    }
+    setUrl(span, request);
+
     // TODO set resource name from URL.
+  }
+
+  /*
+  https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md
+
+  HTTP semantic convention recommends setting http.scheme, http.host, http.target attributes
+  instead of http.url because it "is usually not readily available on the server side but would have
+  to be assembled in a cumbersome and sometimes lossy process from other information".
+
+  But in Java world there is no standard way to access "The full request target as passed in a HTTP request line or equivalent"
+  which is the recommended value for http.target attribute. Therefore we cannot use any of the
+  recommended combinations of attributes and are forced to use http.url.
+   */
+  private void setUrl(Span span, REQUEST request) {
+    SemanticAttributes.HTTP_URL.set(span, url(request));
   }
 
   protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
@@ -198,7 +197,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     SemanticAttributes.HTTP_CLIENT_IP.set(span, clientIP(connection, request));
   }
 
-  protected String clientIP(CONNECTION connection, REQUEST request) {
+  private String clientIP(CONNECTION connection, REQUEST request) {
     // try Forwarded
     String forwarded = requestHeader(request, "Forwarded");
     if (forwarded != null) {
@@ -293,6 +292,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   private static void setStatus(Span span, int status) {
     SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
     // TODO status_message
+    // See https://github.com/open-telemetry/opentelemetry-specification/issues/950
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
@@ -314,7 +314,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
 
-  protected abstract URI url(REQUEST request) throws URISyntaxException;
+  protected abstract String url(REQUEST request);
 
   protected abstract String method(REQUEST request);
 
@@ -327,4 +327,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * Stores given context in the given request-response-loop storage in implementation specific way.
    */
   protected abstract void attachServerContext(Context context, STORAGE storage);
+
+  /*
+  We are making quite simple check by just verifying the presence of schema.
+   */
+  protected boolean isRelativeUrl(String url) {
+    return !(url.startsWith("http://") || url.startsWith("https://"));
+  }
 }

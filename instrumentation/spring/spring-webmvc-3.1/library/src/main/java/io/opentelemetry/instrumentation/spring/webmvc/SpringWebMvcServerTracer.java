@@ -21,8 +21,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
 import io.opentelemetry.trace.Tracer;
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,8 +48,8 @@ class SpringWebMvcServerTracer
   }
 
   @Override
-  protected URI url(HttpServletRequest request) throws URISyntaxException {
-    return new URI(request.getRequestURI());
+  protected String url(HttpServletRequest request) {
+    return request.getRequestURI();
   }
 
   @Override

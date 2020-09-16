@@ -24,10 +24,14 @@ import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GrizzlyHttpServerTracer
     extends HttpServerTracer<
         HttpRequestPacket, HttpResponsePacket, HttpRequestPacket, FilterChainContext> {
+
+  private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
 
   public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
@@ -58,14 +62,22 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected URI url(HttpRequestPacket httpRequest) throws URISyntaxException {
-    return new URI(
-        (httpRequest.isSecure() ? "https://" : "http://")
-            + httpRequest.serverName()
-            + ":"
-            + httpRequest.getServerPort()
-            + httpRequest.getRequestURI()
-            + (httpRequest.getQueryString() != null ? "?" + httpRequest.getQueryString() : ""));
+  protected String url(HttpRequestPacket httpRequest) {
+    try {
+      return new URI(
+              (httpRequest.isSecure() ? "https://" : "http://")
+                  + httpRequest.serverName()
+                  + ":"
+                  + httpRequest.getServerPort()
+                  + httpRequest.getRequestURI()
+                  + (httpRequest.getQueryString() != null
+                      ? "?" + httpRequest.getQueryString()
+                      : ""))
+          .toString();
+    } catch (URISyntaxException e) {
+      log.warn("Failed to construct request URI", e);
+      return null;
+    }
   }
 
   @Override

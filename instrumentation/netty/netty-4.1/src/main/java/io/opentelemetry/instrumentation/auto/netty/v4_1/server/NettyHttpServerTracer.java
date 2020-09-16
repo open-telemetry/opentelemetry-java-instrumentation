@@ -27,8 +27,6 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 public class NettyHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Channel> {
@@ -70,10 +68,10 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected URI url(HttpRequest request) throws URISyntaxException {
-    URI uri = new URI(request.uri());
-    if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
-      return new URI("http://" + request.headers().get(HOST) + request.uri());
+  protected String url(HttpRequest request) {
+    String uri = request.uri();
+    if (isRelativeUrl(uri) && request.headers().contains(HOST)) {
+      return "http://" + request.headers().get(HOST) + request.uri();
     } else {
       return uri;
     }

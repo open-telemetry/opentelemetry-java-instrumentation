@@ -117,8 +117,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/$jspFileName"
           }
         }
         span(1) {
@@ -180,8 +178,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/getQuery.jsp"
           }
         }
         span(1) {
@@ -240,8 +236,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/post.jsp"
           }
         }
         span(1) {
@@ -309,8 +303,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/$jspFileName"
           }
         }
         span(1) {
@@ -383,8 +375,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/includes/includeHtml.jsp"
           }
         }
         span(1) {
@@ -439,8 +429,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/includes/includeMulti.jsp"
           }
         }
         span(1) {
@@ -534,8 +522,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/$jspFileName"
           }
         }
         span(1) {
@@ -591,8 +577,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
             "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
-            "servlet.context" "/$jspWebappContext"
-            "servlet.path" "/$staticFile"
           }
         }
       }
