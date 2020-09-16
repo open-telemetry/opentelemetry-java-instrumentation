@@ -84,7 +84,7 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
       }
 
       Span currentSpan = InstrumentationContext.get(ILoggingEvent.class, Span.class).get(event);
-      if (currentSpan != null && !currentSpan.getContext().isValid()) {
+      if (currentSpan == null || !currentSpan.getContext().isValid()) {
         return;
       }
 
