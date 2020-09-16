@@ -50,7 +50,8 @@ public class Log4j27MdcInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("org.apache.logging.log4j.core.util.ContextDataProvider"));
+    return hasClassesNamed("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
+        .and(not(hasClassesNamed("org.apache.logging.log4j.core.util.ContextDataProvider")));
   }
 
   @Override

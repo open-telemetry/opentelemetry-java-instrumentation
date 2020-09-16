@@ -40,6 +40,8 @@ public final class Log4j2MdcInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
+    // need to match a class, not an interface (ContextDataProvider) - otherwise helper classes
+    // and resources are not injected
     return named("org.apache.logging.log4j.core.impl.ThreadContextDataInjector");
   }
 
