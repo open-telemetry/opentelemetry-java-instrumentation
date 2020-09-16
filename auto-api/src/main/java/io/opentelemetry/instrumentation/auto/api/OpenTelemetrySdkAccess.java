@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.api;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A helper to facilitate accessing OpenTelemetry SDK methods from instrumentation. Because
  * instrumentation runs in the app classloader, they do not have access to our SDK in the agent
@@ -25,21 +27,32 @@ package io.opentelemetry.instrumentation.auto.api;
  */
 public class OpenTelemetrySdkAccess {
 
-  private static Runnable FORCE_FLUSH;
-
   /**
-   * Forces flush of pending spans and metrics.
+   * Interface matching {@link io.opentelemetry.sdk.trace.TracerSdkProvider#forceFlush()} to allow
+   * holding a reference to it.
    */
-  public static void forceFlush() {
+  public interface ForceFlusher {
+    /** Executes force flush. */
+    void run(int timeout, TimeUnit unit);
+  }
 
+  private static volatile ForceFlusher FORCE_FLUSH;
+
+  /** Forces flush of pending spans and metrics. */
+  public static void forceFlush(int timeout, TimeUnit unit) {
+    FORCE_FLUSH.run(timeout, unit);
   }
 
   /**
    * Sets the {@link Runnable} to execute when instrumentation needs to force flush. This is called
-   * from the agent classloader to execute the SDK's force flush mechanism.
+   * from the agent classloader to execute the SDK's force flush mechanism. Instrumentation must not
+   * call this.
    */
-  public static void setForceFlush(Runnable forceFlush) {
+  public static void internalSetForceFlush(ForceFlusher forceFlush) {
+    if (FORCE_FLUSH != null) {
+      // Only possible by misuse of this API, just ignore.
+      return;
+    }
     FORCE_FLUSH = forceFlush;
   }
-
 }
