@@ -47,7 +47,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
               null)
           .toString();
     } catch (URISyntaxException e) {
-      log.warn("Failed to construct request URI", e);
+      log.debug("Failed to construct request URI", e);
       return null;
     }
   }

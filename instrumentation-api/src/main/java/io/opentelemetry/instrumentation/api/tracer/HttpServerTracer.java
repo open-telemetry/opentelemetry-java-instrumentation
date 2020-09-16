@@ -181,7 +181,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   instead of http.url because it "is usually not readily available on the server side but would have
   to be assembled in a cumbersome and sometimes lossy process from other information".
 
-  But in Java world there is now standard way to access "The full request target as passed in a HTTP request line or equivalent"
+  But in Java world there is no standard way to access "The full request target as passed in a HTTP request line or equivalent"
   which is the recommended value for http.target attribute. Therefore we cannot use any of the
   recommended combinations of attributes and are forced to use http.url.
    */
@@ -327,4 +327,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * Stores given context in the given request-response-loop storage in implementation specific way.
    */
   protected abstract void attachServerContext(Context context, STORAGE storage);
+
+  /*
+  We are making quite simple check by just verifying the presence of schema.
+   */
+  protected boolean isRelativeUrl(String url) {
+    return !(url.startsWith("http://") || url.startsWith("https://"));
+  }
 }

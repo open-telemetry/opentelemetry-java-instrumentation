@@ -32,5 +32,5 @@ attribute. As either it or `http.url` is required, we set the latter. This, in t
 **[2]: TODO** After [this PR](https://github.com/open-telemetry/opentelemetry-specification/issues/950)
  is merged, remove this line. If it rejected, then implement this attribute.
 
-**[3]:** In case of Almeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
+**[3]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.

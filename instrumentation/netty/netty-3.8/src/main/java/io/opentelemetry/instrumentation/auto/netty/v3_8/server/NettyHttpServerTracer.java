@@ -60,7 +60,7 @@ public class NettyHttpServerTracer
   @Override
   protected String url(HttpRequest request) {
     String uri = request.getUri();
-    if (!uri.startsWith("http") && request.headers().contains(HOST)) {
+    if (isRelativeUrl(uri) && request.headers().contains(HOST)) {
       return "http://" + request.headers().get(HOST) + request.getUri();
     } else {
       return uri;
