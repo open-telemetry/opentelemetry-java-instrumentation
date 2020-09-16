@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.logback.v1_0_0;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,9 +25,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.logback.v1_0_0.OpenTelemetryAppender;
+import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -41,24 +43,18 @@ public class LogbackInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.logback.v1_0_0.OpenTelemetryAppender",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.LoggingEventWrapper",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.UnionMap",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.UnionMap$ConcatenatedSet",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.UnionMap$ConcatenatedSet$ConcatenatedSetIterator",
-    };
-  }
-
-  @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("ch.qos.logback.classic.Logger");
   }
 
   @Override
+  public Map<String, String> contextStore() {
+    return singletonMap("ch.qos.logback.classic.spi.ILoggingEvent", Span.class.getName());
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+    return singletonMap(
         isMethod()
             .and(isPublic())
             .and(named("callAppenders"))
@@ -70,7 +66,8 @@ public class LogbackInstrumentation extends Instrumenter.Default {
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {
-      event = OpenTelemetryAppender.wrapEvent(event);
+      InstrumentationContext.get(ILoggingEvent.class, Span.class)
+          .put(event, TracingContextUtils.getCurrentSpan());
     }
   }
 }
