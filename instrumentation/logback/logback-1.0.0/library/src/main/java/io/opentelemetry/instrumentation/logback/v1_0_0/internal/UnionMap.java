@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.logback.v1_0_0;
+package io.opentelemetry.instrumentation.logback.v1_0_0.internal;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;

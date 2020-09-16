@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.logback.v1_0_0
+package io.opentelemetry.instrumentation.logback.v1_0_0.internal
 
 import spock.lang.Specification
 
