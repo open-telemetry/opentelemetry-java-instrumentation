@@ -23,6 +23,10 @@ import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaTest
 
 class AwsLambdaTest extends AbstractAwsLambdaTest implements AgentTestTrait {
 
+  def cleanup() {
+    assert testWriter.forceFlushCalled()
+  }
+
   class TestRequestHandler implements RequestHandler<String, String> {
     @Override
     String handleRequest(String input, Context context) {

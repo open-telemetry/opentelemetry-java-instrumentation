@@ -25,14 +25,18 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess.ForceFlusher;
 import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -94,6 +98,14 @@ public class AgentInstaller {
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);
     }
+
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        new ForceFlusher() {
+          @Override
+          public void run(int timeout, TimeUnit unit) {
+            OpenTelemetrySdk.getTracerProvider().forceFlush().join(timeout, unit);
+          }
+        });
 
     INSTRUMENTATION = inst;
 

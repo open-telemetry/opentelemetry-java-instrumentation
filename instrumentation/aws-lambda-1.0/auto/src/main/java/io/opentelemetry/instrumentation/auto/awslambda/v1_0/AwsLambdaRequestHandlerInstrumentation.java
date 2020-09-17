@@ -27,10 +27,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -81,6 +83,7 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
       } else {
         TRACER.end(span);
       }
+      OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
     }
   }
 }

@@ -22,6 +22,7 @@ apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
   library group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
+  compileOnly deps.opentelemetrySdk
 
   testImplementation project(':instrumentation:aws-lambda-1.0:testing')
 }
