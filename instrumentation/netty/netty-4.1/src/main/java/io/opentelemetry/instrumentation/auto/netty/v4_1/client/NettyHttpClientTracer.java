@@ -41,7 +41,7 @@ public class NettyHttpClientTracer
   protected @Nullable String flavor(HttpRequest httpRequest) {
     return httpRequest.protocolVersion().text();
   }
-  
+
   @Override
   protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.uri());

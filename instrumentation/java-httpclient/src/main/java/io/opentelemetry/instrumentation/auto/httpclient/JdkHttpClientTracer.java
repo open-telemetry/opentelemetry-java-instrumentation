@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
-public class JdkHttpClientTracer extends
-    HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
+public class JdkHttpClientTracer
+    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
   public static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
 
   public Depth getCallDepth() {
@@ -79,8 +79,8 @@ public class JdkHttpClientTracer extends
     span = super.onResponse(span, httpResponse);
 
     if (httpResponse != null) {
-      SemanticAttributes.HTTP_FLAVOR
-          .set(span, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
+      SemanticAttributes.HTTP_FLAVOR.set(
+          span, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
     }
 
     return span;

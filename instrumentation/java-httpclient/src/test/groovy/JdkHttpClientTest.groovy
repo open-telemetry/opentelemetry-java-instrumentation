@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.auto.test.base.HttpClientTest

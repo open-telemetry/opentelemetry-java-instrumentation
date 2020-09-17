@@ -53,7 +53,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   @Nullable
   protected String flavor(REQUEST request) {
-    //This is de facto standard nowadays, so let us use it, unless overridden
+    // This is de facto standard nowadays, so let us use it, unless overridden
     return "1.1";
   }
 
