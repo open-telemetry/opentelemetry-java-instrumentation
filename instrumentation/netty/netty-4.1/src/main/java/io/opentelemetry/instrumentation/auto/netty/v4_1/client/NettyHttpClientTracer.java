@@ -26,6 +26,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
@@ -36,6 +37,11 @@ public class NettyHttpClientTracer
     return httpRequest.method().name();
   }
 
+  @Override
+  protected @Nullable String flavor(HttpRequest httpRequest) {
+    return httpRequest.protocolVersion().text();
+  }
+  
   @Override
   protected URI url(HttpRequest request) throws URISyntaxException {
     URI uri = new URI(request.uri());

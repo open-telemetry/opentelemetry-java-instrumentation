@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
@@ -53,6 +54,11 @@ public class NettyHttpClientTracer
   @Override
   protected String method(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
+  }
+
+  @Override
+  protected @Nullable String flavor(HttpRequest httpRequest) {
+    return httpRequest.getProtocolVersion().text();
   }
 
   @Override

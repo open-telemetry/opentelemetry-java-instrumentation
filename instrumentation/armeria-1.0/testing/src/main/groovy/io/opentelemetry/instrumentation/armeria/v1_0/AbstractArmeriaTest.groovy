@@ -76,6 +76,7 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
             "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "http"
           }
         }
         span(1) {

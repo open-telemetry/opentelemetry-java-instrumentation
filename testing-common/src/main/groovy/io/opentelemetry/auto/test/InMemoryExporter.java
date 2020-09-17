@@ -66,7 +66,8 @@ public class InMemoryExporter implements SpanProcessor {
   public void onStart(ReadWriteSpan readWriteSpan) {
     SpanData sd = readWriteSpan.toSpanData();
     log.debug(
-        ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
+        ">>>{} SPAN START: {} id={} traceid={} parent={}, library={}",
+        sd.getStartEpochNanos(),
         sd.getName(),
         sd.getSpanId(),
         sd.getTraceId(),
@@ -87,7 +88,8 @@ public class InMemoryExporter implements SpanProcessor {
   public void onEnd(ReadableSpan readableSpan) {
     SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "<<< SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
+        "<<<{} SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
+        sd.getEndEpochNanos(),
         sd.getName(),
         sd.getSpanId(),
         sd.getTraceId(),

@@ -24,10 +24,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.MoreAttributes;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
-import io.opentelemetry.instrumentation.api.tracer.utils.HttpUrlUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
@@ -53,6 +50,12 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   @Nullable
   protected abstract URI url(REQUEST request) throws URISyntaxException;
+
+  @Nullable
+  protected String flavor(REQUEST request) {
+    //This is de facto standard nowadays, so let us use it, unless overridden
+    return "1.1";
+  }
 
   protected abstract Integer status(RESPONSE response);
 
@@ -138,31 +141,39 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   protected Span onRequest(Span span, REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
+      SemanticAttributes.HTTP_METHOD.set(span, method(request));
+      SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
 
-      String userAgent = requestHeader(request, USER_AGENT);
-      if (userAgent != null) {
-        SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
-      }
-
-      try {
-        URI url = url(request);
-        if (url != null && url.getHost() != null) {
-          NetPeerUtils.setNetPeer(span, url.getHost(), null);
-          if (url.getPort() > 0) {
-            span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
-          }
-        }
-        HttpUrlUtils.setHttpUrl(span, url);
-        if (Config.get().isHttpClientTagQueryString()) {
-          span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
-          span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
-        }
-      } catch (Exception e) {
-        log.debug("Error tagging url", e);
-      }
+      setFlavor(span, request);
+      setUrl(span, request);
     }
     return span;
+  }
+
+  private void setFlavor(Span span, REQUEST request) {
+    String flavor = flavor(request);
+    if (flavor == null) {
+      return;
+    }
+
+    String httpProtocolPrefix = "HTTP/";
+    if (flavor.startsWith(httpProtocolPrefix)) {
+      flavor = flavor.substring(httpProtocolPrefix.length());
+    }
+
+    SemanticAttributes.HTTP_FLAVOR.set(span, flavor);
+  }
+
+  private void setUrl(Span span, REQUEST request) {
+    try {
+      URI url = url(request);
+      if (url != null) {
+        NetPeerUtils.setNetPeer(span, url.getHost(), null, url.getPort());
+        SemanticAttributes.HTTP_URL.set(span, url.toString());
+      }
+    } catch (Exception e) {
+      log.debug("Error tagging url", e);
+    }
   }
 
   protected Span onResponse(Span span, RESPONSE response) {

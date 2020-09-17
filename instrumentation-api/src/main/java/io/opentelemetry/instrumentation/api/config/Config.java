@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -76,8 +75,6 @@ public class Config {
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
-  public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
-  public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -93,12 +90,7 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
-  private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
-
-  public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
-  public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
 
   public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
 
@@ -119,8 +111,6 @@ public class Config {
   private final boolean traceEnabled;
   private final boolean integrationsEnabled;
   private final List<String> excludedClasses;
-  private final boolean httpServerTagQueryString;
-  private final boolean httpClientTagQueryString;
   private final Integer scopeDepthLimit;
   private final boolean runtimeContextFieldInjection;
 
@@ -156,14 +146,6 @@ public class Config {
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
-
-    httpServerTagQueryString =
-        getBooleanSettingFromEnvironment(
-            HTTP_SERVER_TAG_QUERY_STRING, DEFAULT_HTTP_SERVER_TAG_QUERY_STRING);
-
-    httpClientTagQueryString =
-        getBooleanSettingFromEnvironment(
-            HTTP_CLIENT_TAG_QUERY_STRING, DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING);
 
     scopeDepthLimit =
         getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
@@ -213,13 +195,6 @@ public class Config {
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
 
-    httpServerTagQueryString =
-        getPropertyBooleanValue(
-            properties, HTTP_SERVER_TAG_QUERY_STRING, parent.httpServerTagQueryString);
-
-    httpClientTagQueryString =
-        getPropertyBooleanValue(
-            properties, HTTP_CLIENT_TAG_QUERY_STRING, parent.httpClientTagQueryString);
 
     scopeDepthLimit =
         getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);
@@ -492,10 +467,6 @@ public class Config {
     return properties;
   }
 
-  private static String toUpper(String str) {
-    return str == null ? null : str.toUpperCase(Locale.ENGLISH);
-  }
-
   // This has to be placed after all other static fields to give them a chance to initialize
   private static final Config INSTANCE = new Config();
 
@@ -533,14 +504,6 @@ public class Config {
 
   public List<String> getExcludedClasses() {
     return excludedClasses;
-  }
-
-  public boolean isHttpServerTagQueryString() {
-    return httpServerTagQueryString;
-  }
-
-  public boolean isHttpClientTagQueryString() {
-    return httpClientTagQueryString;
   }
 
   public Integer getScopeDepthLimit() {
@@ -604,10 +567,6 @@ public class Config {
         + integrationsEnabled
         + ", excludedClasses="
         + excludedClasses
-        + ", httpServerTagQueryString="
-        + httpServerTagQueryString
-        + ", httpClientTagQueryString="
-        + httpClientTagQueryString
         + ", scopeDepthLimit="
         + scopeDepthLimit
         + ", runtimeContextFieldInjection="
