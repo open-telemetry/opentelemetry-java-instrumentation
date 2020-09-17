@@ -75,16 +75,6 @@ public class AwsLambdaMessageTracer extends AwsLambdaTracer {
     return span.startSpan();
   }
 
-  private void setParent(Span.Builder span, String parentHeader) {
-    Context parent =
-        AwsXRayPropagator.getInstance()
-            .extract(
-                Context.current(),
-                Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                MapGetter.INSTANCE);
-    span.setParent(parent);
-  }
-
   private void findParent(SQSEvent event, Span.Builder span) {
     boolean foundParent = false;
 
@@ -129,8 +119,18 @@ public class AwsLambdaMessageTracer extends AwsLambdaTracer {
           span.addLink(lambdaParentSpanCtx);
         } else {
           // Span is not connected to a trace, more information if we connect directly to the lambda
-          // parent instead of treating it as a root with a link.
+          // parent instead of treating it as a root with a link. Add links to any parents for each
+          // message.
           span.setParent(lambdaParentCtx);
+          for (SQSMessage message : event.getRecords()) {
+            String messageParentHeader = getMessageParentHeader(message);
+            if (messageParentHeader != null) {
+              SpanContext parent = TracingContextUtils.getSpan(extractParent(messageParentHeader)).getContext();
+              if (parent.isValid()) {
+                span.addLink(parent);
+              }
+            }
+          }
         }
       }
     }
@@ -141,6 +141,20 @@ public class AwsLambdaMessageTracer extends AwsLambdaTracer {
     MessageAttribute parentAttribute =
         message.getMessageAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
     return parentAttribute != null ? parentAttribute.getStringValue() : null;
+  }
+
+  private static Context extractParent(String parentHeader) {
+    return AwsXRayPropagator.getInstance()
+        .extract(
+            Context.current(),
+            Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+            MapGetter.INSTANCE);
+
+  }
+
+  private static void setParent(Span.Builder span, String parentHeader) {
+    Context parent = extractParent(parentHeader);
+    span.setParent(parent);
   }
 
   private static class MapGetter implements Getter<Map<String, String>> {
