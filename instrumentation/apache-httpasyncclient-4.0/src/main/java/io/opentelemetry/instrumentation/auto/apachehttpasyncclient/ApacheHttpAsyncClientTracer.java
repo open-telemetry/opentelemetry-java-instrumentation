@@ -30,6 +30,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.RequestLine;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ApacheHttpAsyncClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
@@ -44,6 +45,11 @@ public class ApacheHttpAsyncClientTracer
       RequestLine requestLine = request.getRequestLine();
       return requestLine == null ? null : requestLine.getMethod();
     }
+  }
+
+  @Override
+  protected @Nullable String flavor(HttpRequest httpRequest) {
+    return httpRequest.getProtocolVersion().toString();
   }
 
   @Override

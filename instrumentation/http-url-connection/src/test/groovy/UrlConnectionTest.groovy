@@ -56,8 +56,9 @@ class UrlConnectionTest extends AgentTestRunner {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" UNUSABLE_PORT
-            "${SemanticAttributes.HTTP_URL.key()}" "$url/"
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }

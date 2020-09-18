@@ -79,6 +79,7 @@ abstract class JaxRsClientTest extends HttpClientTest {
             "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" statusCode
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
         serverSpan(it, 1, span(0))

@@ -41,6 +41,11 @@ public class ArmeriaClientTracer
   }
 
   @Override
+  protected @Nullable String flavor(ClientRequestContext clientRequestContext) {
+    return clientRequestContext.sessionProtocol().toString();
+  }
+
+  @Override
   @Nullable
   protected URI url(ClientRequestContext ctx) throws URISyntaxException {
     HttpRequest request = ctx.request();

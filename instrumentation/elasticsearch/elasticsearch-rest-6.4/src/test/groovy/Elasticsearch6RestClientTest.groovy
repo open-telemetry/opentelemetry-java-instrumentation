@@ -115,6 +115,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
