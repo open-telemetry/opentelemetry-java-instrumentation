@@ -34,3 +34,11 @@ attribute. As either it or `http.url` is required, we set the latter. This, in t
 
 **[3]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
+
+## RPC
+
+| Attribute | Required | Implemented? |
+| -------------- | :---: | :---: |
+| `rpc.system`   | Y | + |
+| `rpc.service`  | N | + |
+| `rpc.method`   | N | + |
