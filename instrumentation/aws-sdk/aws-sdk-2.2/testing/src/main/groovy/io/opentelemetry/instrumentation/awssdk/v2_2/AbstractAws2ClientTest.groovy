@@ -33,8 +33,8 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
@@ -101,10 +101,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     expect:
     response != null
     response.class.simpleName.startsWith(operation)
-    assertDynamoDbRequest(service, operation, path, method, requestId)
+    assertDynamoDbRequest(service, operation, path, method, requestId, statement)
 
     where:
-    [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbClient.builder())
+    [service, operation, method, path, requestId, builder, call, statement] << dynamoDbRequestDataTable(DynamoDbClient.builder())
   }
 
   def "send DynamoDB #operation async request with builder #builder.class.getName() mocked response"() {
@@ -124,13 +124,13 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
     expect:
     response != null
-    assertDynamoDbRequest(service, operation, path, method, requestId)
+    assertDynamoDbRequest(service, operation, path, method, requestId, statement)
 
     where:
-    [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbAsyncClient.builder())
+    [service, operation, method, path, requestId, builder, call, statement] << dynamoDbRequestDataTable(DynamoDbAsyncClient.builder())
   }
 
-  def assertDynamoDbRequest(service, operation, path, method, requestId) {
+  def assertDynamoDbRequest(service, operation, path, method, requestId, statement) {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -154,6 +154,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key()}" "dynamodb"
             "${SemanticAttributes.DB_NAME.key()}" "sometable"
             "${SemanticAttributes.DB_OPERATION.key()}" "${operation}"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "${statement}"
           }
         }
       }
@@ -163,20 +164,27 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
   static dynamoDbRequestDataTable(client) {
     [
-      ["DynamoDb" , "CreateTable" , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }],
-      ["DynamoDb" , "DeleteItem"  , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) }],
+      ["DynamoDb" , "CreateTable" , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) } ,
+        "CREATE TABLE sometable"],
+      ["DynamoDb" , "DeleteItem"  , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) } ,
+        "DELETE From: sometable Where: anotherKey=value and key=value Where: property in (:one :two)"],
       ["DynamoDb" , "DeleteTable" , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()) }],
-      ["DynamoDb" , "GetItem"     , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.getItem(GetItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).attributesToGet("propertyOne", "propertyTwo").build()) }],
+        { c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()) },
+        "DELETE TABLE sometable"],
+      ["DynamoDb" , "GetItem"     , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.getItem(GetItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).attributesToGet("propertyOne", "propertyTwo").build()) },
+        "GET ITEM From: sometable Select: propertyOne,propertyTwo Where: keyOne=value and keyTwo=differentValue"],
       ["DynamoDb" , "PutItem"     , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.putItem(PutItemRequest.builder().tableName("sometable").item(of("key", val("value"), "attributeOne", val("one"), "attributeTwo", val("two"))).conditionExpression("attributeOne <> :someVal").build()) }],
+        { c -> c.putItem(PutItemRequest.builder().tableName("sometable").item(of("key", val("value"), "attributeOne", val("one"), "attributeTwo", val("two"))).conditionExpression("attributeOne <> :someVal").build()) },
+        "PUT Into: sometable Values: attributeOne=one and attributeTwo=two and key=value Where: attributeOne <> :someVal"],
       ["DynamoDb" , "Query"       , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.query(QueryRequest.builder().tableName("sometable").select("ALL_ATTRIBUTES").keyConditionExpression("attribute = :aValue").filterExpression("anotherAttribute = :someVal").limit(10).build()) }],
+        { c -> c.query(QueryRequest.builder().tableName("sometable").select("ALL_ATTRIBUTES").keyConditionExpression("attribute = :aValue").filterExpression("anotherAttribute = :someVal").limit(10).build()) },
+        "QUERY From: sometable Select: ALL_ATTRIBUTES Where: attribute = :aValue Filter: anotherAttribute = :someVal Limit: 10"],
       ["DynamoDb" , "UpdateItem"  , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) }]
+        { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) },
+        "UPDATE Table: sometable Update: set attributeOne = :updateValue Where: keyOne=value and keyTwo=differentValue Where: attributeOne <> :someVal"]
     ]
   }
 

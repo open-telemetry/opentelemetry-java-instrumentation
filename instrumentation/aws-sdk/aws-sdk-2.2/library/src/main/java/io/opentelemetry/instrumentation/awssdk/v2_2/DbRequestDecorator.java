@@ -18,11 +18,14 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
 final class DbRequestDecorator implements SdkRequestDecorator {
+
+  private final DbRequestFactory dbRequestFactory = new DbRequestFactory();
 
   @Override
   public void decorate(Span span, SdkRequest sdkRequest, ExecutionAttributes attributes) {
@@ -35,7 +38,17 @@ final class DbRequestDecorator implements SdkRequestDecorator {
 
     String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     if (operation != null) {
-      span.setAttribute(SemanticAttributes.DB_OPERATION.key(), operation);
+      SemanticAttributes.DB_OPERATION.set(span, operation);
     }
+    String statement = statement(sdkRequest);
+    if (statement != null) {
+      SemanticAttributes.DB_STATEMENT.set(span, statement);
+    }
+  }
+
+  @Nullable
+  private String statement(SdkRequest sdkRequest) {
+    DbRequest dbRequest = dbRequestFactory.valueOf(sdkRequest);
+    return (dbRequest == null ? null : dbRequest.statement());
   }
 }
