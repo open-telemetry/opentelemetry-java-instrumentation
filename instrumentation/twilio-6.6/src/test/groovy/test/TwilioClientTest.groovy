@@ -266,6 +266,7 @@ class TwilioClientTest extends AgentTestRunner {
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
+          childOf(span(0))
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -277,12 +278,15 @@ class TwilioClientTest extends AgentTestRunner {
         span(2) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
+          childOf(span(1))
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -358,6 +362,7 @@ class TwilioClientTest extends AgentTestRunner {
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
+          childOf(span(0))
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -369,23 +374,29 @@ class TwilioClientTest extends AgentTestRunner {
         span(2) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
+          childOf(span(1))
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
         span(3) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
+          childOf(span(1))
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -468,6 +479,7 @@ class TwilioClientTest extends AgentTestRunner {
         span(1) {
           operationName "MessageCreator.createAsync"
           spanKind CLIENT
+          childOf(span(0))
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -479,6 +491,7 @@ class TwilioClientTest extends AgentTestRunner {
         span(2) {
           operationName "MessageCreator.create"
           spanKind CLIENT
+          childOf(span(1))
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -490,23 +503,29 @@ class TwilioClientTest extends AgentTestRunner {
         span(3) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
+          childOf(span(2))
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
         span(4) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
+          childOf(span(2))
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" String
             "${SemanticAttributes.HTTP_URL.key()}" String
             "${SemanticAttributes.HTTP_METHOD.key()}" String
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }

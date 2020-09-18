@@ -69,6 +69,7 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
           errored code != 200
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             // TODO(anuraaga): peer name shouldn't be set to IP
             "${SemanticAttributes.NET_PEER_NAME.key()}" "127.0.0.1"
@@ -76,6 +77,7 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
             "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "http"
           }
         }
         span(1) {

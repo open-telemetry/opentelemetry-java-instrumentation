@@ -22,8 +22,11 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -33,7 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
-public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
+public class JdkHttpClientTracer
+    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
   public static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
 
   public Depth getCallDepth() {
@@ -56,7 +60,7 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpReque
   }
 
   @Override
-  protected Integer status(HttpResponse httpResponse) {
+  protected Integer status(HttpResponse<?> httpResponse) {
     return httpResponse.statusCode();
   }
 
@@ -66,8 +70,20 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpReque
   }
 
   @Override
-  protected String responseHeader(HttpResponse httpResponse, String name) {
+  protected String responseHeader(HttpResponse<?> httpResponse, String name) {
     return httpResponse.headers().firstValue(name).orElse(null);
+  }
+
+  @Override
+  protected Span onResponse(Span span, HttpResponse<?> httpResponse) {
+    span = super.onResponse(span, httpResponse);
+
+    if (httpResponse != null) {
+      SemanticAttributes.HTTP_FLAVOR.set(
+          span, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
+    }
+
+    return span;
   }
 
   @Override

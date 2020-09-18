@@ -115,9 +115,11 @@ class AWS0ClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-            "${SemanticAttributes.HTTP_URL.key()}" "$server.address/"
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
+            "${SemanticAttributes.HTTP_URL.key()}" "$server.address"
             "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "aws.service" { it.contains(service) }
@@ -172,8 +174,10 @@ class AWS0ClientTest extends AgentTestRunner {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           parent()
           attributes {
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:${UNUSABLE_PORT}/"
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:${UNUSABLE_PORT}"
             "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" 61
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "aws.service" { it.contains(service) }
@@ -218,8 +222,10 @@ class AWS0ClientTest extends AgentTestRunner {
           errorEvent RuntimeException, "bad handler"
           parent()
           attributes {
-            "${SemanticAttributes.HTTP_URL.key()}" "https://s3.amazonaws.com/"
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
+            "${SemanticAttributes.HTTP_URL.key()}" "https://s3.amazonaws.com"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
@@ -262,8 +268,10 @@ class AWS0ClientTest extends AgentTestRunner {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           parent()
           attributes {
-            "${SemanticAttributes.HTTP_URL.key()}" "$server.address/"
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
+            "${SemanticAttributes.HTTP_URL.key()}" "$server.address"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "aws.service" "Amazon S3"

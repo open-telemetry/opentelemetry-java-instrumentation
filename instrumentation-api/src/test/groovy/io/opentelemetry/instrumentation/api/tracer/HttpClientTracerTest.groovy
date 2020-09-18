@@ -17,12 +17,12 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
-
 
 class HttpClientTracerTest extends BaseTracerTest {
 
@@ -41,11 +41,13 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
       1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
+      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
     }
     0 * _
 
@@ -70,12 +72,14 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
       1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
       1 * span.setAttribute("peer.service", "reservation-service")
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
+      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
     }
     0 * _
   }
@@ -85,19 +89,16 @@ class HttpClientTracerTest extends BaseTracerTest {
     def tracer = newTracer()
 
     when:
-    withConfigOverride(io.opentelemetry.instrumentation.api.config.Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
-      tracer.onRequest(span, req)
-    }
+    tracer.onRequest(span, req)
 
     then:
-    if (expectedUrl) {
+    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
+    if (expectedUrl != null) {
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), expectedUrl)
     }
-    if (expectedUrl && tagQueryString) {
-      1 * span.setAttribute(io.opentelemetry.instrumentation.api.MoreAttributes.HTTP_QUERY, expectedQuery)
-      1 * span.setAttribute(io.opentelemetry.instrumentation.api.MoreAttributes.HTTP_FRAGMENT, expectedFragment)
-    }
     1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), null)
+    1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
+    1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), null)
     if (hostname) {
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostname)
     }
@@ -107,19 +108,13 @@ class HttpClientTracerTest extends BaseTracerTest {
     0 * _
 
     where:
-    tagQueryString | url                                                   | expectedUrl                                     | expectedQuery      | expectedFragment      | hostname | port
-    false          | null                                                  | null                                            | null               | null                  | null     | null
-    false          | ""                                                    | "/"                                             | ""                 | null                  | null     | null
-    false          | "/path?query"                                         | "/path?query"                                   | ""                 | null                  | null     | null
-    false          | "https://host:0"                                      | "https://host/"                                 | ""                 | null                  | "host"   | null
-    false          | "https://host/path"                                   | "https://host/path"                             | ""                 | null                  | "host"   | null
-    false          | "http://host:99/path?query#fragment"                  | "http://host:99/path?query#fragment"            | ""                 | null                  | "host"   | 99
-    true           | null                                                  | null                                            | null               | null                  | null     | null
-    true           | ""                                                    | "/"                                             | null               | null                  | null     | null
-    true           | "/path?encoded+%28query%29%3F"                        | "/path?encoded+(query)?"                        | "encoded+(query)?" | null                  | null     | null
-    true           | "https://host:0"                                      | "https://host/"                                 | null               | null                  | "host"   | null
-    true           | "https://host/path"                                   | "https://host/path"                             | null               | null                  | "host"   | null
-    true           | "http://host:99/path?query#encoded+%28fragment%29%3F" | "http://host:99/path?query#encoded+(fragment)?" | "query"            | "encoded+(fragment)?" | "host"   | 99
+    tagQueryString | url                                  | expectedUrl                          | expectedQuery | expectedFragment | hostname | port
+    false          | null                                 | null                                 | null          | null             | null     | null
+    false          | ""                                   | ""                                   | ""            | null             | null     | null
+    false          | "/path?query"                        | "/path?query"                        | ""            | null             | null     | null
+    false          | "https://host:0"                     | "https://host:0"                     | ""            | null             | "host"   | null
+    false          | "https://host/path"                  | "https://host/path"                  | ""            | null             | "host"   | null
+    false          | "http://host:99/path?query#fragment" | "http://host:99/path?query#fragment" | ""            | null             | "host"   | 99
 
     req = [url: url == null ? null : new URI(url)]
   }
