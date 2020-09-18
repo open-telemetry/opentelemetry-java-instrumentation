@@ -139,6 +139,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
 
       String userAgent = requestHeader(request, USER_AGENT);
       if (userAgent != null) {

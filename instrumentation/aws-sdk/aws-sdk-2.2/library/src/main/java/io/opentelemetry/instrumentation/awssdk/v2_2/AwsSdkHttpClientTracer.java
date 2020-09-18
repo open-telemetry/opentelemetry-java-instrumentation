@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
@@ -29,9 +30,10 @@ import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-final class AwsSdkClientTracer
+final class AwsSdkHttpClientTracer
     extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
-  static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+
+  static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
 
   // Certain headers in the request like User-Agent are only available after execution.
   Span afterExecution(Span span, SdkHttpRequest request) {
@@ -78,13 +80,15 @@ final class AwsSdkClientTracer
     return "io.opentelemetry.auto.aws-sdk-2.2";
   }
 
-  /**
-   * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
-   * io.grpc.Context }, or an invalid {@link Span} otherwise.
-   */
-  public Span getOrCreateSpan(String name, Tracer tracer) {
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
+    return super.onRequest(span, sdkHttpRequest);
+  }
+
+  public Span getOrCreateSpan(String name, Tracer tracer, Kind kind) {
     io.grpc.Context context = io.grpc.Context.current();
-    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = BaseTracer.CONTEXT_CLIENT_SPAN_KEY.get(context);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
@@ -92,12 +96,6 @@ final class AwsSdkClientTracer
     }
 
     Span current = TracingContextUtils.getSpan(context);
-    return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
-  }
-
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    return super.onRequest(span, sdkHttpRequest);
+    return tracer.spanBuilder(name).setSpanKind(kind).setParent(current).startSpan();
   }
 }

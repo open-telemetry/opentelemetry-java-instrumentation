@@ -53,6 +53,7 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           errorEvent ConnectException, String
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" UNUSABLE_PORT
             "${SemanticAttributes.HTTP_URL.key()}" "$url/"

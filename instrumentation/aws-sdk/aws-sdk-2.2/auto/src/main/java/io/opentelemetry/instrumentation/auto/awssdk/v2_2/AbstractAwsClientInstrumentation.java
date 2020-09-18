@@ -31,8 +31,11 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
       packageName + ".TracingExecutionInterceptor",
       packageName + ".TracingExecutionInterceptor$ScopeHolder",
       "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientTracer",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.RequestType",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.SdkRequestDecorator",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.DbRequestDecorator",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor"
     };
   }
 }
