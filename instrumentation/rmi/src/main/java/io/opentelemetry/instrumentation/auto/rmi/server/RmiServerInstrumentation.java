@@ -17,10 +17,8 @@
 package io.opentelemetry.instrumentation.auto.rmi.server;
 
 import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rmi.server.RmiServerTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -30,8 +28,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.instrumentation.auto.rmi.client.RmiClientTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -52,7 +51,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".RmiServerDecorator"};
+    return new String[] {packageName + ".RmiServerTracer"};
   }
 
   @Override
@@ -68,39 +67,38 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Origin Method method) {
+    public static void onEnter(
+        @Advice.Origin Method method,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
+
+      // TODO review and unify with all other SERVER instrumentation
       SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      Span.Builder spanBuilder =
-          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(SERVER);
-      if (context != null) {
-        spanBuilder.setParent(context);
-      } else {
-        spanBuilder.setNoParent();
-      }
-      Span span = spanBuilder.startSpan();
-
-      DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(method, context);
+      scope = currentContextWith(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
+      scope.close();
+
       CallDepthThreadLocalMap.reset(RemoteServer.class);
-
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      span.end();
-
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        RmiClientTracer.TRACER.endExceptionally(span, throwable);
+      } else {
+        RmiClientTracer.TRACER.end(span);
+      }
     }
   }
 }

@@ -31,8 +31,8 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   public static final GrpcServerTracer TRACER = new GrpcServerTracer();
 
   public Span startSpan(String name, Metadata headers) {
-    Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(SERVER)
-        .setParent(extract(headers, getGetter()));
+    Builder spanBuilder =
+        tracer.spanBuilder(name).setSpanKind(SERVER).setParent(extract(headers, getGetter()));
     SemanticAttributes.RPC_SYSTEM.set(spanBuilder, "grpc");
     return spanBuilder.startSpan();
   }
