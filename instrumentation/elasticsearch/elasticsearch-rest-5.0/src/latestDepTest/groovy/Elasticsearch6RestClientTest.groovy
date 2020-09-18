@@ -99,6 +99,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
             "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"

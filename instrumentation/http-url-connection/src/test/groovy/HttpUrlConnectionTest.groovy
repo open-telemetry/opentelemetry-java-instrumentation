@@ -101,6 +101,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" "$url"
@@ -114,6 +115,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" "$url"
@@ -173,6 +175,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" "$url"
@@ -186,6 +189,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" "$url"

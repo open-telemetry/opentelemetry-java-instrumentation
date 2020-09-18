@@ -22,6 +22,10 @@ import io.opentelemetry.auto.test.InstrumentationTestTrait
 
 class AwsLambdaTest extends AbstractAwsLambdaTest implements InstrumentationTestTrait {
 
+  def cleanup() {
+    assert testWriter.forceFlushCalled()
+  }
+
   class TestRequestHandler extends TracingRequestHandler<String, String> {
 
     @Override

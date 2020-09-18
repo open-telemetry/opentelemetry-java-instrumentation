@@ -141,6 +141,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   protected Span onRequest(Span span, REQUEST request) {
     assert span != null;
     if (request != null) {
+      SemanticAttributes.NET_TRANSPORT.set(span, "IP.TCP");
       SemanticAttributes.HTTP_METHOD.set(span, method(request));
       SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
 

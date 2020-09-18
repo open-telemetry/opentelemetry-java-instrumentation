@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
-}
+package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+import io.opentelemetry.trace.Span;
+import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-dependencies {
-  library group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
-  compileOnly deps.opentelemetrySdk
+interface SdkRequestDecorator {
 
-  testImplementation project(':instrumentation:aws-lambda-1.0:testing')
+  void decorate(Span span, SdkRequest sdkRequest, ExecutionAttributes attributes);
 }

@@ -22,6 +22,7 @@ public final class DbSystem {
   public static final String COUCHBASE = "couchbase";
   public static final String DB2 = "db2";
   public static final String DERBY = "derby";
+  public static final String DYNAMODB = "dynamodb";
   public static final String GEODE = "geode";
   public static final String H2 = "h2";
   public static final String HSQLDB = "hsqldb";

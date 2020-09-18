@@ -78,6 +78,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.HTTP_URL.key()}" "${uri}"

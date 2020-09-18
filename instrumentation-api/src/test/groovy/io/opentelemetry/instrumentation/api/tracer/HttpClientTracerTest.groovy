@@ -41,6 +41,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
@@ -71,6 +72,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
@@ -90,6 +92,7 @@ class HttpClientTracerTest extends BaseTracerTest {
     tracer.onRequest(span, req)
 
     then:
+    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
     if (expectedUrl != null) {
       1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), expectedUrl)
     }

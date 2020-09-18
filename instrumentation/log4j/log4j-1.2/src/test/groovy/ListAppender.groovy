@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
-}
+import org.apache.log4j.AppenderSkeleton
+import org.apache.log4j.spi.LoggingEvent
 
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+class ListAppender extends AppenderSkeleton {
+  static events = new ArrayList<LoggingEvent>()
 
-dependencies {
-  library group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
-  compileOnly deps.opentelemetrySdk
+  @Override
+  protected void append(LoggingEvent loggingEvent) {
+    events.add(loggingEvent)
+  }
 
-  testImplementation project(':instrumentation:aws-lambda-1.0:testing')
+  @Override
+  boolean requiresLayout() {
+    return false
+  }
+
+  @Override
+  void close() {
+  }
+
+  static clearEvents() {
+    events.clear()
+  }
 }

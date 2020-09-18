@@ -69,6 +69,7 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
           errored code != 200
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             // TODO(anuraaga): peer name shouldn't be set to IP
             "${SemanticAttributes.NET_PEER_NAME.key()}" "127.0.0.1"

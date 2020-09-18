@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
+import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -34,7 +35,14 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 import software.amazon.awssdk.services.ec2.Ec2AsyncClient
 import software.amazon.awssdk.services.ec2.Ec2Client
 import software.amazon.awssdk.services.kinesis.KinesisClient
@@ -75,6 +83,108 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
   abstract void configureSdkClient(SdkClientBuilder builder)
 
+  def "send DynamoDB #operation request with builder #builder.class.getName() mocked response"() {
+    setup:
+    configureSdkClient(builder)
+    def client = builder
+      .endpointOverride(server.address)
+      .region(Region.AP_NORTHEAST_1)
+      .credentialsProvider(CREDENTIALS_PROVIDER)
+      .build()
+    responseBody.set("")
+    def response = call.call(client)
+
+    if (response instanceof Future) {
+      response = response.get()
+    }
+
+    expect:
+    response != null
+    response.class.simpleName.startsWith(operation)
+    assertDynamoDbRequest(service, operation, path, method, requestId)
+
+    where:
+    [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbClient.builder())
+  }
+
+  def "send DynamoDB #operation async request with builder #builder.class.getName() mocked response"() {
+    setup:
+    configureSdkClient(builder)
+    def client = builder
+      .endpointOverride(server.address)
+      .region(Region.AP_NORTHEAST_1)
+      .credentialsProvider(CREDENTIALS_PROVIDER)
+      .build()
+    responseBody.set("")
+    def response = call.call(client)
+
+    if (response instanceof Future) {
+      response = response.get()
+    }
+
+    expect:
+    response != null
+    assertDynamoDbRequest(service, operation, path, method, requestId)
+
+    where:
+    [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbAsyncClient.builder())
+  }
+
+  def assertDynamoDbRequest(service, operation, path, method, requestId) {
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "$service.$operation"
+          spanKind CLIENT
+          errored false
+          parent()
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
+            "aws.service" "$service"
+            "aws.operation" "${operation}"
+            "aws.agent" "java-aws-sdk"
+            "aws.requestId" "$requestId"
+            "aws.table.name" "sometable"
+            "${SemanticAttributes.DB_SYSTEM.key()}" "dynamodb"
+            "${SemanticAttributes.DB_NAME.key()}" "sometable"
+            "${SemanticAttributes.DB_OPERATION.key()}" "${operation}"
+          }
+        }
+      }
+    }
+    server.lastRequest.headers.get("traceparent") == null
+  }
+
+  static dynamoDbRequestDataTable(client) {
+    [
+      ["DynamoDb" , "CreateTable" , "POST" , "/"   , "UNKNOWN"   , client ,
+        { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }],
+      ["DynamoDb" , "DeleteItem"  , "POST" , "/"   , "UNKNOWN"   , client ,
+        { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) }],
+      ["DynamoDb" , "DeleteTable" , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()) }],
+      ["DynamoDb" , "GetItem"     , "POST" , "/"   , "UNKNOWN"   , client ,
+        { c -> c.getItem(GetItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).attributesToGet("propertyOne", "propertyTwo").build()) }],
+      ["DynamoDb" , "PutItem"     , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.putItem(PutItemRequest.builder().tableName("sometable").item(of("key", val("value"), "attributeOne", val("one"), "attributeTwo", val("two"))).conditionExpression("attributeOne <> :someVal").build()) }],
+      ["DynamoDb" , "Query"       , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.query(QueryRequest.builder().tableName("sometable").select("ALL_ATTRIBUTES").keyConditionExpression("attribute = :aValue").filterExpression("anotherAttribute = :someVal").limit(10).build()) }],
+      ["DynamoDb" , "UpdateItem"  , "POST" , "/"   , "UNKNOWN"   , client,
+        { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) }]
+    ]
+  }
+
+  static val(String value) {
+    return AttributeValue.builder().s(value).build()
+  }
+
   def "send #operation request with builder #builder.class.getName() mocked response"() {
     setup:
     configureSdkClient(builder)
@@ -102,6 +212,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errored false
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
@@ -119,8 +230,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" "someurl"
-            } else if (service == "DynamoDb") {
-              "aws.table.name" "sometable"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
@@ -134,7 +243,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     service    | operation           | method | path                  | requestId                              | builder                  | call                                                                                             | body
     "S3"       | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3Client.builder()       | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
     "S3"       | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3Client.builder()       | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
-    "DynamoDb" | "CreateTable"       | "POST" | ""                   | "UNKNOWN"                              | DynamoDbClient.builder() | { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }              | ""
     "Kinesis"  | "DeleteStream"      | "POST" | ""                   | "UNKNOWN"                              | KinesisClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
     "Sqs"      | "CreateQueue"       | "POST" | ""                   | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()      | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
         <CreateQueueResponse>
@@ -192,6 +300,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errored false
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
@@ -209,8 +318,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" "someurl"
-            } else if (service == "DynamoDb") {
-              "aws.table.name" "sometable"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
@@ -224,7 +331,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     service    | operation           | method | path                  | requestId                              | builder                       | call                                                                                                                             | body
     "S3"       | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3AsyncClient.builder()       | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
     "S3"       | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3AsyncClient.builder()       | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
-    "DynamoDb" | "CreateTable"       | "POST" | ""                   | "UNKNOWN"                              | DynamoDbAsyncClient.builder() | { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }                                              | ""
     // Kinesis seems to expect an http2 response which is incompatible with our test server.
     // "Kinesis"  | "DeleteStream"      | "POST" | "/"                   | "UNKNOWN"                              | KinesisAsyncClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }                                          | ""
     "Sqs"      | "CreateQueue"       | "POST" | ""                   | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder()      | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
@@ -294,6 +400,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           parent()
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address/somebucket/somekey"
@@ -315,5 +422,4 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   String expectedOperationName(String method) {
     return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
   }
-
 }
