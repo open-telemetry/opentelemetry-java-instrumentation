@@ -30,7 +30,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.rmi.client.RmiClientTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -95,9 +94,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
       CallDepthThreadLocalMap.reset(RemoteServer.class);
       if (throwable != null) {
-        RmiClientTracer.TRACER.endExceptionally(span, throwable);
+        RmiServerTracer.TRACER.endExceptionally(span, throwable);
       } else {
-        RmiClientTracer.TRACER.end(span);
+        RmiServerTracer.TRACER.end(span);
       }
     }
   }
