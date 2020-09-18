@@ -16,6 +16,10 @@
 
 package io.opentelemetry.instrumentation.logback.v1_0_0;
 
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
@@ -41,17 +45,17 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> eventContext = event.getMDCPropertyMap();
-    if (eventContext != null && eventContext.containsKey("traceId")) {
+    if (eventContext != null && eventContext.containsKey(TRACE_ID)) {
       // Assume already instrumented event if traceId is present.
       return event;
     }
 
     Map<String, String> contextData = new HashMap<>();
     SpanContext spanContext = currentSpan.getContext();
-    contextData.put("traceId", spanContext.getTraceIdAsHexString());
-    contextData.put("spanId", spanContext.getSpanIdAsHexString());
+    contextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
+    contextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
     if (spanContext.isSampled()) {
-      contextData.put("sampled", "true");
+      contextData.put(SAMPLED, "true");
     }
 
     if (eventContext == null) {

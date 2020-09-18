@@ -20,17 +20,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
-import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 
 @Plugin(
     name = "ListAppender",
-    category = Core.CATEGORY_NAME,
+    category = "Core",
     elementType = Appender.ELEMENT_TYPE,
     printObject = true)
 public class ListAppender extends AbstractAppender {
@@ -41,10 +39,10 @@ public class ListAppender extends AbstractAppender {
 
   private static final ListAppender INSTANCE = new ListAppender();
 
-  private final List<LogEvent> events = Collections.synchronizedList(new ArrayList<>());
+  private final List<LogEvent> events = Collections.synchronizedList(new ArrayList<LogEvent>());
 
   public ListAppender() {
-    super("ListAppender", null, null, true, Property.EMPTY_ARRAY);
+    super("ListAppender", null, null, true);
   }
 
   public List<LogEvent> getEvents() {

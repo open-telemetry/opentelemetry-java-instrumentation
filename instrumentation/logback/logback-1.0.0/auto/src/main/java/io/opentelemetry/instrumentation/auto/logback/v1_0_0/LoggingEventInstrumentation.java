@@ -16,6 +16,9 @@
 
 package io.opentelemetry.instrumentation.auto.logback.v1_0_0;
 
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -78,7 +81,7 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
     public static void onExit(
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
-      if (contextData != null && contextData.containsKey("traceId")) {
+      if (contextData != null && contextData.containsKey(TRACE_ID)) {
         // Assume already instrumented event if traceId is present.
         return;
       }
@@ -90,10 +93,10 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
 
       Map<String, String> spanContextData = new HashMap<>();
       SpanContext spanContext = currentSpan.getContext();
-      spanContextData.put("traceId", spanContext.getTraceIdAsHexString());
-      spanContextData.put("spanId", spanContext.getSpanIdAsHexString());
+      spanContextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
+      spanContextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
       if (spanContext.isSampled()) {
-        spanContextData.put("sampled", "true");
+        spanContextData.put(SAMPLED, "true");
       }
 
       if (contextData == null) {
