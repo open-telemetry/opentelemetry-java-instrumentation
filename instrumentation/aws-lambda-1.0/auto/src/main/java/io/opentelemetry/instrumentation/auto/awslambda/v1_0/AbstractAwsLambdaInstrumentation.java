@@ -28,7 +28,10 @@ public abstract class AbstractAwsLambdaInstrumentation extends Instrumenter.Defa
   public final String[] helperClassNames() {
     return new String[] {
       packageName + ".AwsLambdaInstrumentationHelper",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer"
+      "io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator",
+      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer",
+      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer",
+      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer$MapGetter"
     };
   }
 }

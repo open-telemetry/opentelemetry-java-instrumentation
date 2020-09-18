@@ -20,6 +20,7 @@ dependencies {
   api project(':testing-common')
 
   api group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
+  api group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
 
   implementation deps.guava
 

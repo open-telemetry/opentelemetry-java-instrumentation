@@ -50,7 +50,7 @@ public abstract class TracingSQSMessageHandler extends TracingSQSEventHandler {
       Span span = getTracer().startSpan(message);
       Throwable error = null;
       try (Scope ignored = getTracer().startScope(span)) {
-        handleEvent(event, context);
+        handleMessage(message, context);
       } catch (Throwable t) {
         error = t;
         throw t;
@@ -64,5 +64,9 @@ public abstract class TracingSQSMessageHandler extends TracingSQSEventHandler {
     }
   }
 
-  protected abstract void handleMessage(SQSMessage message, SQSEvent event, Context context);
+  /**
+   * Handles a {@linkplain SQSMessage message}. Implement this class to do the actual processing of
+   * incoming SQS messages.
+   */
+  protected abstract void handleMessage(SQSMessage message, Context context);
 }

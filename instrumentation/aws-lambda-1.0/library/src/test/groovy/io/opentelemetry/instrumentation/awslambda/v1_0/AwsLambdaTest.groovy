@@ -20,7 +20,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import io.opentelemetry.auto.test.InstrumentationTestTrait
 
-class AwsLambdaTest extends AbstractAwsLambdaTest implements InstrumentationTestTrait {
+class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements InstrumentationTestTrait {
 
   def cleanup() {
     assert testWriter.forceFlushCalled()
@@ -30,7 +30,7 @@ class AwsLambdaTest extends AbstractAwsLambdaTest implements InstrumentationTest
 
     @Override
     protected String doHandleRequest(String input, Context context) {
-      return AbstractAwsLambdaTest.doHandleRequest(input, context)
+      return AbstractAwsLambdaRequestHandlerTest.doHandleRequest(input, context)
     }
   }
 

@@ -16,7 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.awslambda.v1_0;
 
-import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.TRACER;
+import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.FUNCTION_TRACER;
+import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.MESSAGE_TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -25,13 +26,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
@@ -54,12 +56,28 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+    // Order of transformation matters. A bit fragile, but our unit tests will catch breakage
+    // easily.
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new LinkedHashMap<>();
+
+    // First instrument the function invocation itself.
+    transformers.put(
         isMethod()
             .and(isPublic())
             .and(named("handleRequest"))
             .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
         AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
+
+    // Then instrument message handling if appropriate.
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("handleRequest"))
+            .and(takesArgument(0, named("com.amazonaws.services.lambda.runtime.events.SQSEvent")))
+            .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
+        AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleSQSEventAdvice");
+
+    return transformers;
   }
 
   public static class HandleRequestAdvice {
@@ -68,8 +86,8 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
         @Advice.Argument(1) Context context,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(context, Kind.SERVER);
-      scope = TRACER.startScope(span);
+      span = FUNCTION_TRACER.startSpan(context, Kind.SERVER);
+      scope = FUNCTION_TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -80,11 +98,37 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        FUNCTION_TRACER.endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        FUNCTION_TRACER.end(span);
       }
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
+    }
+  }
+
+  public static class HandleSQSEventAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(0) SQSEvent event,
+        @Advice.Argument(1) Context context,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = MESSAGE_TRACER.startSpan(context, event);
+      scope = MESSAGE_TRACER.startScope(span);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
+
+      if (throwable != null) {
+        MESSAGE_TRACER.endExceptionally(span, throwable);
+      } else {
+        MESSAGE_TRACER.end(span);
+      }
     }
   }
 }
