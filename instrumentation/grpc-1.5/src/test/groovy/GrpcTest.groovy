@@ -86,7 +86,9 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
@@ -105,7 +107,9 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
@@ -159,7 +163,9 @@ class GrpcTest extends AgentTestRunner {
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
@@ -181,7 +187,9 @@ class GrpcTest extends AgentTestRunner {
             errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
           }
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
@@ -243,7 +251,9 @@ class GrpcTest extends AgentTestRunner {
           // least for the version we test against.
           status(io.opentelemetry.trace.Status.UNKNOWN)
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
@@ -265,7 +275,9 @@ class GrpcTest extends AgentTestRunner {
             errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
           }
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
