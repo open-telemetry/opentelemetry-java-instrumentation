@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.logback.v1_0_0;
+package io.opentelemetry.instrumentation.auto.log4j.v1_2;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -23,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -34,22 +33,22 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.log4j.spi.LoggingEvent;
 
 @AutoService(Instrumenter.class)
-public class LogbackInstrumentation extends Instrumenter.Default {
-
-  public LogbackInstrumentation() {
-    super("logback");
+public class Log4j1Instrumentation extends Instrumenter.Default {
+  public Log4j1Instrumentation() {
+    super("log4j1", "log4j");
   }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("ch.qos.logback.classic.Logger");
+    return named("org.apache.log4j.Category");
   }
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("ch.qos.logback.classic.spi.ILoggingEvent", Span.class.getName());
+    return singletonMap("org.apache.log4j.spi.LoggingEvent", Span.class.getName());
   }
 
   @Override
@@ -59,14 +58,14 @@ public class LogbackInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(named("callAppenders"))
             .and(takesArguments(1))
-            .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
-        LogbackInstrumentation.class.getName() + "$CallAppendersAdvice");
+            .and(takesArgument(0, named("org.apache.log4j.spi.LoggingEvent"))),
+        Log4j1Instrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
   public static class CallAppendersAdvice {
-    @Advice.OnMethodEnter
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {
-      InstrumentationContext.get(ILoggingEvent.class, Span.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
+      InstrumentationContext.get(LoggingEvent.class, Span.class)
           .put(event, TracingContextUtils.getCurrentSpan());
     }
   }

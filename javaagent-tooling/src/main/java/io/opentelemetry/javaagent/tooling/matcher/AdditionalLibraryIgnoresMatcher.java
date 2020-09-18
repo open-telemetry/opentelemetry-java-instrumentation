@@ -209,7 +209,10 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.equals("ch.qos.logback.core.AsyncAppenderBase$Worker")) {
         return false;
       }
-      if (name.equals("ch.qos.logback.classic.Logger")) {
+      // Allow instrumenting loggers & events
+      if (name.equals("ch.qos.logback.classic.Logger")
+          || name.equals("ch.qos.logback.classic.spi.LoggingEvent")
+          || name.equals("ch.qos.logback.classic.spi.LoggingEventVO")) {
         return false;
       }
       return true;

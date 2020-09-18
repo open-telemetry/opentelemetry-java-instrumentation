@@ -62,6 +62,8 @@ public class InMemoryExporter implements SpanProcessor {
   private final Map<String, Integer> spanOrders = new ConcurrentHashMap<>();
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
+  private volatile boolean forceFlushCalled;
+
   @Override
   public void onStart(ReadWriteSpan readWriteSpan) {
     SpanData sd = readWriteSpan.toSpanData();
@@ -227,6 +229,7 @@ public class InMemoryExporter implements SpanProcessor {
       traces.clear();
       spanOrders.clear();
     }
+    forceFlushCalled = false;
   }
 
   @Override
@@ -236,7 +239,12 @@ public class InMemoryExporter implements SpanProcessor {
 
   @Override
   public CompletableResultCode forceFlush() {
+    forceFlushCalled = true;
     return CompletableResultCode.ofSuccess();
+  }
+
+  public boolean forceFlushCalled() {
+    return forceFlushCalled;
   }
 
   // must be called under tracesLock
