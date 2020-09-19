@@ -63,12 +63,12 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           }
         }
         span(1) {
-          operationName("queue1 receive")
+          operationName("queue1 process")
           spanKind CONSUMER
           parentId(span(0).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM}" "AmazonSQS"
-            "${SemanticAttributes.MESSAGING_OPERATION}" "receive"
+            "${SemanticAttributes.MESSAGING_OPERATION}" "process"
           }
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad8")
         }
@@ -108,12 +108,12 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           }
         }
         span(1) {
-          operationName("multiple_sources receive")
+          operationName("multiple_sources process")
           spanKind CONSUMER
           parentId(span(0).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM}" "AmazonSQS"
-            "${SemanticAttributes.MESSAGING_OPERATION}" "receive"
+            "${SemanticAttributes.MESSAGING_OPERATION}" "process"
           }
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad8")
         }

@@ -60,10 +60,10 @@ public class AwsLambdaMessageTracer extends BaseTracer {
       }
     }
 
-    Span.Builder span = tracer.spanBuilder(source + " receive").setSpanKind(Kind.CONSUMER);
+    Span.Builder span = tracer.spanBuilder(source + " process").setSpanKind(Kind.CONSUMER);
 
     SemanticAttributes.MESSAGING_SYSTEM.set(span, "AmazonSQS");
-    SemanticAttributes.MESSAGING_OPERATION.set(span, "receive");
+    SemanticAttributes.MESSAGING_OPERATION.set(span, "process");
 
     for (SQSMessage message : event.getRecords()) {
       addLinkToMessageParent(message, span);
