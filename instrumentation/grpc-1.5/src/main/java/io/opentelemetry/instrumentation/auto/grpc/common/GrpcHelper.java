@@ -53,18 +53,15 @@ public final class GrpcHelper {
   }
 
   public static void prepareSpan(
-      Span span, String methodName, InetSocketAddress peerAddress, boolean server) {
-    String serviceName =
-        "(unknown)"; // Spec says it's mandatory, so populate even if we couldn't determine it.
-    int slash = methodName.indexOf('/');
-    if (slash != -1) {
-      String fullServiceName = methodName.substring(0, slash);
-      int dot = fullServiceName.lastIndexOf('.');
-      if (dot != -1) {
-        serviceName = fullServiceName.substring(dot + 1);
-      }
-    }
-    span.setAttribute(SemanticAttributes.RPC_SERVICE.key(), serviceName);
+      Span span, String fullMethodName, InetSocketAddress peerAddress, boolean server) {
+
+    int slash = fullMethodName.indexOf('/');
+    String serviceName = slash == -1 ? fullMethodName : fullMethodName.substring(0, slash);
+    String methodName = slash == -1 ? null : fullMethodName.substring(slash + 1);
+
+    SemanticAttributes.RPC_SERVICE.set(span, serviceName);
+    SemanticAttributes.RPC_METHOD.set(span, methodName);
+
     if (peerAddress != null) {
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), peerAddress.getPort());
       if (server) {

@@ -21,6 +21,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
 import rmi.app.Greeter
@@ -53,16 +54,22 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "Greeter.hello"
+          operationName "rmi.app.Greeter/hello"
           spanKind CLIENT
           childOf span(0)
           attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
           }
         }
         span(2) {
-          operationName "Server.hello"
+          operationName "rmi.app.Server/hello"
           spanKind SERVER
           attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Server"
+            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
           }
         }
       }
@@ -108,17 +115,28 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, thrownException)
         span(1) {
-          operationName "Greeter.exceptional"
+          operationName "rmi.app.Greeter/exceptional"
           spanKind CLIENT
           childOf span(0)
           errored true
           errorEvent(RuntimeException, String)
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "exceptional"
+
+          }
         }
         span(2) {
-          operationName "Server.exceptional"
+          operationName "rmi.app.Server/exceptional"
           spanKind SERVER
           errored true
           errorEvent(RuntimeException, String)
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Server"
+            "${SemanticAttributes.RPC_METHOD.key()}" "exceptional"
+          }
         }
       }
     }
@@ -144,17 +162,23 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "Greeter.hello"
+          operationName "rmi.app.Greeter/hello"
           spanKind CLIENT
           childOf span(0)
           attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
           }
         }
         span(2) {
           childOf span(1)
-          operationName "ServerLegacy.hello"
+          operationName "rmi.app.ServerLegacy/hello"
           spanKind SERVER
           attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.ServerLegacy"
+            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
           }
         }
       }

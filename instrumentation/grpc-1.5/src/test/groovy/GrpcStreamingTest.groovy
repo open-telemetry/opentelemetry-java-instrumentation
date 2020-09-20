@@ -121,7 +121,9 @@ class GrpcStreamingTest extends AgentTestRunner {
           errored false
           status(Status.OK)
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "Conversation"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
@@ -143,7 +145,9 @@ class GrpcStreamingTest extends AgentTestRunner {
           errored false
           status(Status.OK)
           attributes {
-            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key()}" "Conversation"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }

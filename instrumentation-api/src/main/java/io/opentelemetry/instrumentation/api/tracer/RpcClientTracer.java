@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.rmi.server;
+package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.ServerDecorator;
-import io.opentelemetry.trace.Tracer;
-
-public class RmiServerDecorator extends ServerDecorator {
-  public static final RmiServerDecorator DECORATE = new RmiServerDecorator();
-
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rmi");
-}
+public abstract class RpcClientTracer extends BaseTracer {}

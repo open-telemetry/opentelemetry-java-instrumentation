@@ -30,7 +30,7 @@ abstract class AbstractGrpcClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GrpcClientDecorator",
+      packageName + ".GrpcClientTracer",
       packageName + ".GrpcInjectAdapter",
       packageName + ".TracingClientInterceptor",
       packageName + ".TracingClientInterceptor$TracingClientCall",
