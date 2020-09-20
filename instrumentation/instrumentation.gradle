@@ -96,8 +96,9 @@ tasks.register("listInstrumentations") {
   description = "List all available instrumentation modules"
   doFirst {
     subprojects
+      .findAll {it.plugins.hasPlugin("muzzle")}
       .collect {it.path}
-      .findAll {!(it.endsWith('library') || it.endsWith('testing')) }
+//      .findAll {!(it.endsWith('library') || it.endsWith('testing')) }
       .each { println it}
   }
 }

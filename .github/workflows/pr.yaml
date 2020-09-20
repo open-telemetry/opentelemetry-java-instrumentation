@@ -53,13 +53,14 @@ jobs:
         with:
           java-version: 11
       - id: set-matrix
-        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
+        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
 
   muzzle:
     needs: setup-muzzle-matrix
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.setup-muzzle-matrix.outputs.matrix)}}
+      fail-fast: false
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
