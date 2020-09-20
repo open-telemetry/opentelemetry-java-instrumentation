@@ -72,7 +72,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.4
         with:
           job-id: muzzle${{ matrix.module }}
-          arguments: :instrumentation:${{ matrix.module }}:muzzle --no-daemon
+          arguments: ${{ matrix.module }}:muzzle --no-daemon
 
 #  muzzle:
 #    runs-on: ubuntu-latest
