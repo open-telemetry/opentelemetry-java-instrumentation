@@ -21,7 +21,8 @@ dependencies {
 
   testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.7.0.RELEASE'
+  //First version to work with Java 14
+  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
 
   // TODO(anuraaga): Investigate why these tests don't pass on 5 or 6
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1042
