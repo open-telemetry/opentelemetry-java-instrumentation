@@ -141,7 +141,9 @@ class ReferenceCreatorTest extends AgentTestRunner {
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
       assertMethod helperClass, 'getStr', '()Ljava/lang/String;',
+        // this method has both PRIVATE flags: first because it's defined in the helper class, second because it's called in foo()
         Reference.Flag.PRIVATE,
+        Reference.Flag.PRIVATE_OR_HIGHER,
         Reference.Flag.NON_STATIC,
         Reference.Flag.NON_FINAL
     }
