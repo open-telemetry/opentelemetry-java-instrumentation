@@ -286,12 +286,12 @@ public class ReferenceCreator extends ClassVisitor {
   private static Flag computeVisibilityFlag(int access) {
     if (Flag.PUBLIC.matches(access)) {
       return Flag.PUBLIC;
-    } else if (Flag.PROTECTED_OR_HIGHER.matches(access)) {
-      return Flag.PROTECTED_OR_HIGHER;
-    } else if (Flag.PACKAGE_OR_HIGHER.matches(access)) {
-      return Flag.PACKAGE_OR_HIGHER;
+    } else if (Flag.PROTECTED.matches(access)) {
+      return Flag.PROTECTED;
+    } else if (Flag.PACKAGE.matches(access)) {
+      return Flag.PACKAGE;
     } else {
-      return Flag.PRIVATE_OR_HIGHER;
+      return Flag.PRIVATE;
     }
   }
 

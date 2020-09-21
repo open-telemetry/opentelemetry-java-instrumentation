@@ -177,7 +177,7 @@ public interface HelperReferenceWrapper {
           @Override
           public boolean apply(Reference.Method input) {
             return !(input.getFlags().contains(Flag.STATIC)
-                || input.getFlags().contains(Flag.PRIVATE_OR_HIGHER)
+                || input.getFlags().contains(Flag.PRIVATE)
                 || CONSTRUCTOR_INTERNAL_NAME.equals(input.getName()));
           }
         };

@@ -313,45 +313,46 @@ public class Reference {
 
   /** Expected flag (or lack of flag) on a class, method, or field reference. */
   public enum Flag {
+    // The following constants represent the exact visibility of a referenced class/method
     PUBLIC {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        switch (anotherFlag) {
-          case PRIVATE_OR_HIGHER:
-          case PROTECTED_OR_HIGHER:
-          case PACKAGE_OR_HIGHER:
-            return true;
-          default:
-            return false;
-        }
-      }
-
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_PUBLIC & asmFlags) != 0;
       }
     },
-    PACKAGE_OR_HIGHER {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        return anotherFlag == PRIVATE_OR_HIGHER;
-      }
-
+    PROTECTED {
       @Override
       public boolean matches(int asmFlags) {
-        return (Opcodes.ACC_PUBLIC & asmFlags) != 0
-            || ((Opcodes.ACC_PRIVATE & asmFlags) == 0 && (Opcodes.ACC_PROTECTED & asmFlags) == 0);
+        return (Opcodes.ACC_PROTECTED & asmFlags) != 0;
       }
     },
-    PROTECTED_OR_HIGHER {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        return anotherFlag == PRIVATE_OR_HIGHER;
-      }
-
+    PACKAGE {
       @Override
       public boolean matches(int asmFlags) {
-        return PUBLIC.matches(asmFlags) || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
+        return !(PUBLIC.matches(asmFlags)
+            || PROTECTED.matches(asmFlags)
+            || PRIVATE.matches(asmFlags));
+      }
+    },
+    PRIVATE {
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_PRIVATE & asmFlags) != 0;
+      }
+    },
+
+    // The following constants represent a minimum access level required by a method call or field
+    // access
+    PROTECTED_OR_HIGHER {
+      @Override
+      public boolean matches(int asmFlags) {
+        return PUBLIC.matches(asmFlags) || PROTECTED.matches(asmFlags);
+      }
+    },
+    PACKAGE_OR_HIGHER {
+      @Override
+      public boolean matches(int asmFlags) {
+        return PUBLIC.matches(asmFlags) || PROTECTED.matches(asmFlags) || PACKAGE.matches(asmFlags);
       }
     },
     PRIVATE_OR_HIGHER {
@@ -361,45 +362,29 @@ public class Reference {
         return true;
       }
     },
-    NON_FINAL {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == FINAL || anotherFlag == ABSTRACT;
-      }
 
-      @Override
-      public boolean matches(int asmFlags) {
-        return ((Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL) & asmFlags) == 0;
-      }
-    },
+    // The following constants describe whether classes and methods are abstract or final
     FINAL {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_FINAL || anotherFlag == ABSTRACT;
-      }
-
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_FINAL & asmFlags) != 0;
       }
     },
-    ABSTRACT {
+    NON_FINAL {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_FINAL || anotherFlag == FINAL;
+      public boolean matches(int asmFlags) {
+        return ((Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL) & asmFlags) == 0;
       }
-
+    },
+    ABSTRACT {
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_ABSTRACT & asmFlags) != 0;
       }
     },
-    STATIC {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_STATIC;
-      }
 
+    // The following constants describe whether a method/field is static or not
+    STATIC {
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) != 0;
@@ -407,21 +392,13 @@ public class Reference {
     },
     NON_STATIC {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == STATIC;
-      }
-
-      @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) == 0;
       }
     },
-    INTERFACE {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_INTERFACE;
-      }
 
+    // The following constants describe whether a class is an interface
+    INTERFACE {
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) != 0;
@@ -429,23 +406,10 @@ public class Reference {
     },
     NON_INTERFACE {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == INTERFACE;
-      }
-
-      @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) == 0;
       }
     };
-
-    public boolean contradicts(Flag anotherFlag) {
-      return false;
-    }
-
-    public boolean supersedes(Flag anotherFlag) {
-      return false;
-    }
 
     /**
      * Predicate method that determines whether this flag is present in the passed bitmask.

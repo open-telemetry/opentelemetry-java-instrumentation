@@ -127,7 +127,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
         Reference.Flag.NON_STATIC,
         Reference.Flag.FINAL
       assertMethod helperSuperClass, 'bar', '()I',
-        Reference.Flag.PACKAGE_OR_HIGHER,
+        Reference.Flag.PACKAGE,
         Reference.Flag.STATIC,
         Reference.Flag.NON_FINAL
     }
@@ -141,7 +141,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
       assertMethod helperClass, 'getStr', '()Ljava/lang/String;',
-        Reference.Flag.PRIVATE_OR_HIGHER,
+        Reference.Flag.PRIVATE,
         Reference.Flag.NON_STATIC,
         Reference.Flag.NON_FINAL
     }
@@ -149,7 +149,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
     assertMethod reference, 'abstractMethod', '()I',
-      Reference.Flag.PROTECTED_OR_HIGHER,
+      Reference.Flag.PROTECTED,
       Reference.Flag.NON_STATIC,
       isAbstract ? Reference.Flag.ABSTRACT : Reference.Flag.NON_FINAL
   }
