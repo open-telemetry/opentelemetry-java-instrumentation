@@ -48,6 +48,10 @@ public class TestHelperClasses {
     int hashCode();
 
     boolean equals(Object other);
+
+    Object clone();
+
+    void finalize();
   }
 
   public abstract static class HelperSuperClass {

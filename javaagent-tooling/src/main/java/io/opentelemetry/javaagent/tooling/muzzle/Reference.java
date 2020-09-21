@@ -447,6 +447,11 @@ public class Reference {
       return false;
     }
 
+    /**
+     * Predicate method that determines whether this flag is present in the passed bitmask.
+     *
+     * @see Opcodes
+     */
     public abstract boolean matches(int asmFlags);
   }
 

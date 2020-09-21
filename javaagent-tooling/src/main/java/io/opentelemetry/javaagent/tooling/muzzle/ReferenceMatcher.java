@@ -211,7 +211,10 @@ public final class ReferenceMatcher {
         || "equals".equals(superMethod.getName())
             && "(Ljava/lang/Object;)Z".equals(superMethod.getDescriptor())
         || "toString".equals(superMethod.getName())
-            && "()Ljava/lang/String;".equals(superMethod.getDescriptor());
+            && "()Ljava/lang/String;".equals(superMethod.getDescriptor())
+        || "clone".equals(superMethod.getName())
+            && "()Ljava/lang/Object;".equals(superMethod.getDescriptor())
+        || "finalize".equals(superMethod.getName()) && "()V".equals(superMethod.getDescriptor());
   }
 
   private static List<Reference.Mismatch> checkMatch(
