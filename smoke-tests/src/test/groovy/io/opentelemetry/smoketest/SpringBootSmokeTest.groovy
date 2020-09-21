@@ -16,12 +16,14 @@
 
 package io.opentelemetry.smoketest
 
+import static java.util.stream.Collectors.toSet
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.trace.TraceId
 import java.util.jar.Attributes
 import java.util.jar.JarFile
-import java.util.stream.Collectors
 import okhttp3.Request
+import spock.lang.Unroll
 
 class SpringBootSmokeTest extends SmokeTest {
 
@@ -29,9 +31,10 @@ class SpringBootSmokeTest extends SmokeTest {
     "open-telemetry-docker-dev.bintray.io/java/smoke-springboot-jdk$jdk:latest"
   }
 
+  @Unroll
   def "spring boot smoke test on JDK #jdk"(int jdk) {
     setup:
-    startTarget(jdk)
+    def output = startTarget(jdk)
     String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
@@ -49,7 +52,12 @@ class SpringBootSmokeTest extends SmokeTest {
 
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
       .map { it.stringValue }
-      .collect(Collectors.toSet())
+      .collect(toSet())
+
+    then: "correct traceIds are logged via MDC instrumentation"
+    getLoggedTraceIds(output) == getSpanStream(traces)
+      .map({ TraceId.bytesToHex(it.getTraceId().toByteArray()) })
+      .collect(toSet())
 
     cleanup:
     stopTarget()
