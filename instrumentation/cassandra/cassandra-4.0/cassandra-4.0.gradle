@@ -1,6 +1,5 @@
 // Set properties before any plugins get loaded
 ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
   cassandraDriverTestVersions = "[4.0,)"
 }

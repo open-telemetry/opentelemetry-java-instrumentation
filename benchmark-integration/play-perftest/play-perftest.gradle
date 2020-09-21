@@ -9,7 +9,6 @@ afterEvaluate {
 }
 
 ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
   playVersion = "2.6.20"
   scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
 }

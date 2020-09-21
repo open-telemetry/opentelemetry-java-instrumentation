@@ -1,21 +1,12 @@
 // Set properties before any plugins get loaded
 ext {
   // TODO switch to container-based tests (away from cassandraunit)
-  // Tests use cassandraunit, which runs embedded Cassandra 3, which requires Java 8
-  // (and is currently incompatible with Java 9.)
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  // Tests use cassandraunit, which runs embedded Cassandra 3, which is currently incompatible with Java 9.
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
   cassandraDriverTestVersions = "[3.0,4.0)"
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-
-// TODO switch to container-based tests (away from cassandraunit)
-//   then we can run tests using Java 7 (see above) and won't need this override section
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_7
-  targetCompatibility = JavaVersion.VERSION_1_7
-}
 
 muzzle {
 
