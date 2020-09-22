@@ -16,13 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.rediscala;
 
-import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -31,7 +28,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -71,7 +68,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       RediscalaInstrumentation.class.getName() + "$OnCompleteHandler",
-      packageName + ".RediscalaClientDecorator",
+      packageName + ".RediscalaClientTracer",
     };
   }
 
@@ -89,32 +86,28 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
   public static class RediscalaAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) RedisCommand cmd) {
-      String statement = DECORATE.spanNameForClass(cmd.getClass());
-      Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onStatement(span, statement);
-      return new SpanWithScope(span, currentContextWith(span));
+    public static void onEnter(
+        @Advice.Argument(0) RedisCommand cmd,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = TRACER.startSpan(cmd, cmd);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope scope,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable,
         @Advice.FieldValue("executionContext") ExecutionContext ctx,
         @Advice.Return(readOnly = false) Future<Object> responseFuture) {
+      scope.close();
 
-      Span span = scope.getSpan();
-
-      if (throwable == null) {
-        responseFuture.onComplete(new OnCompleteHandler(span), ctx);
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
       } else {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        responseFuture.onComplete(new OnCompleteHandler(span), ctx);
       }
-      scope.closeScope();
-      // span finished in OnCompleteHandler
     }
   }
 
@@ -127,13 +120,10 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
     @Override
     public Void apply(Try<Object> result) {
-      try {
-        if (result.isFailure()) {
-          DECORATE.onError(span, result.failed().get());
-        }
-        DECORATE.beforeFinish(span);
-      } finally {
-        span.end();
+      if (result.isFailure()) {
+        TRACER.endExceptionally(span, result.failed().get());
+      } else {
+        TRACER.end(span);
       }
       return null;
     }

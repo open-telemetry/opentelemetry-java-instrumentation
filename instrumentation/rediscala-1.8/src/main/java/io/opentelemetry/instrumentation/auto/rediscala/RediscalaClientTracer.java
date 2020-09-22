@@ -16,33 +16,43 @@
 
 package io.opentelemetry.instrumentation.auto.rediscala;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Tracer;
+import java.net.InetSocketAddress;
 import redis.RedisCommand;
-import redis.protocol.RedisReply;
 
-public class RediscalaClientDecorator
-    extends DatabaseClientDecorator<RedisCommand<? extends RedisReply, ?>> {
+public class RediscalaClientTracer
+    extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>> {
 
-  public static final RediscalaClientDecorator DECORATE = new RediscalaClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.rediscala-1.8");
+  public static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
 
   @Override
-  protected String dbSystem() {
+  protected String dbUser(RedisCommand<?, ?> command) {
+    return null;
+  }
+
+  @Override
+  protected String dbName(RedisCommand<?, ?> command) {
+    return null;
+  }
+
+  @Override
+  protected String normalizeQuery(RedisCommand redisCommand) {
+    return spanNameForClass(redisCommand.getClass());
+  }
+
+  @Override
+  protected String dbSystem(RedisCommand redisCommand) {
     return DbSystem.REDIS;
   }
 
   @Override
-  protected String dbUser(RedisCommand<? extends RedisReply, ?> session) {
+  protected InetSocketAddress peerAddress(RedisCommand redisCommand) {
     return null;
   }
 
   @Override
-  protected String dbName(RedisCommand<? extends RedisReply, ?> session) {
-    return null;
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.rediscala-1.8";
   }
 }
