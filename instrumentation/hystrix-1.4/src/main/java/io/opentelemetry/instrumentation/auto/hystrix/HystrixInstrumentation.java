@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.hystrix;
 
-import static io.opentelemetry.instrumentation.auto.hystrix.HystrixDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.hystrix.HystrixTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -66,7 +66,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
       "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
       "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
-      packageName + ".HystrixDecorator",
+      packageName + ".HystrixTracer",
       packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
     };
   }
@@ -113,17 +113,15 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
     public HystrixOnSubscribe(
         Observable originalObservable, HystrixInvokableInfo<?> command, String methodName) {
-      super(originalObservable, OPERATION_NAME, DECORATE, INTERNAL);
+      super(originalObservable, OPERATION_NAME, TRACER, INTERNAL);
 
       this.command = command;
       this.methodName = methodName;
     }
 
     @Override
-    protected void afterStart(Span span) {
-      super.afterStart(span);
-
-      DECORATE.onCommand(span, command, methodName);
+    protected void decorateSpan(Span span) {
+      TRACER.onCommand(span, command, methodName);
     }
   }
 }

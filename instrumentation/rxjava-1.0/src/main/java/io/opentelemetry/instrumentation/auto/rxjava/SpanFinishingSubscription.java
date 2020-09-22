@@ -16,17 +16,17 @@
 
 package io.opentelemetry.instrumentation.auto.rxjava;
 
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;
 
 public class SpanFinishingSubscription implements Subscription {
-  private final BaseDecorator decorator;
+  private final BaseTracer tracer;
   private final AtomicReference<Span> spanRef;
 
-  public SpanFinishingSubscription(BaseDecorator decorator, AtomicReference<Span> spanRef) {
-    this.decorator = decorator;
+  public SpanFinishingSubscription(BaseTracer tracer, AtomicReference<Span> spanRef) {
+    this.tracer = tracer;
     this.spanRef = spanRef;
   }
 
@@ -34,8 +34,7 @@ public class SpanFinishingSubscription implements Subscription {
   public void unsubscribe() {
     Span span = spanRef.getAndSet(null);
     if (span != null) {
-      decorator.beforeFinish(span);
-      span.end();
+      tracer.end(span);
     }
   }
 
