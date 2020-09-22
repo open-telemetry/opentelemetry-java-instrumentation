@@ -16,29 +16,23 @@
 
 package io.opentelemetry.instrumentation.auto.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.auto.jedis.v3_0.JedisClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jedis.v3_0.JedisClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.instrumentation.auto.jedis.v3_0.JedisClientTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
-import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoService(Instrumenter.class)
@@ -56,7 +50,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JedisClientDecorator",
+      packageName + ".JedisClientTracer",
     };
   }
 
@@ -73,43 +67,36 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This Connection connection, @Advice.Argument(0) ProtocolCommand command) {
+    public static void onEnter(
+        @Advice.This Connection connection,
+        @Advice.Argument(0) ProtocolCommand command,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
 
-      String query;
-      if (command instanceof Protocol.Command) {
-        query = ((Protocol.Command) command).name();
-      } else {
-        // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
-        // us if that changes
-        query = new String(command.getRaw(), StandardCharsets.UTF_8);
-      }
-
-      Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, connection);
-      DECORATE.onStatement(span, query);
-      NetPeerUtils.setNetPeer(span, connection.getHost(), connection.getPort());
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(connection, command);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
+      scope.close();
       CallDepthThreadLocalMap.reset(Connection.class);
 
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

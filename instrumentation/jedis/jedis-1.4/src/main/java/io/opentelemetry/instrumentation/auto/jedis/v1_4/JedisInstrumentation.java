@@ -16,11 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 
-import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.jedis.v1_4.JedisClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,9 +25,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -62,7 +58,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JedisClientDecorator",
+      packageName + ".JedisClientTracer",
     };
   }
 
@@ -79,34 +75,36 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This Connection connection, @Advice.Argument(0) Command command) {
+    public static void onEnter(
+        @Advice.This Connection connection,
+        @Advice.Argument(0) Command command,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
 
-      Span span = TRACER.spanBuilder(command.name()).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, connection);
-      DECORATE.onStatement(span, command.name());
-      NetPeerUtils.setNetPeer(span, connection.getHost(), connection.getPort());
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(connection, command);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
+      scope.close();
       CallDepthThreadLocalMap.reset(Connection.class);
 
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

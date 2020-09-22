@@ -16,19 +16,30 @@
 
 package io.opentelemetry.instrumentation.auto.jedis.v3_0;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Tracer;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.commands.ProtocolCommand;
 
-public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
-  public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
-
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jedis-1.4");
+public class JedisClientTracer extends DatabaseClientTracer<Connection, ProtocolCommand> {
+  public static final JedisClientTracer TRACER = new JedisClientTracer();
 
   @Override
-  protected String dbSystem() {
+  protected String normalizeQuery(ProtocolCommand command) {
+    if (command instanceof Protocol.Command) {
+      return ((Protocol.Command) command).name();
+    } else {
+      // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
+      // us if that changes
+      return new String(command.getRaw(), StandardCharsets.UTF_8);
+    }
+  }
+
+  @Override
+  protected String dbSystem(Connection connection) {
     return DbSystem.REDIS;
   }
 
@@ -45,5 +56,15 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   @Override
   protected String dbConnectionString(Connection connection) {
     return connection.getHost() + ":" + connection.getPort();
+  }
+
+  @Override
+  protected InetSocketAddress peerAddress(Connection connection) {
+    return new InetSocketAddress(connection.getHost(), connection.getPort());
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jedis-3.0";
   }
 }
