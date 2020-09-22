@@ -352,7 +352,7 @@ public class Reference {
     PACKAGE_OR_HIGHER {
       @Override
       public boolean matches(int asmFlags) {
-        return PUBLIC.matches(asmFlags) || PROTECTED.matches(asmFlags) || PACKAGE.matches(asmFlags);
+        return !PRIVATE.matches(asmFlags);
       }
     },
     PRIVATE_OR_HIGHER {
