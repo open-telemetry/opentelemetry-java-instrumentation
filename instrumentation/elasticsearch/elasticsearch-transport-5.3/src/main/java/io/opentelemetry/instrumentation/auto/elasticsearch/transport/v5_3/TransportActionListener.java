@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_3;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
@@ -122,20 +122,16 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     try {
       listener.onResponse(response);
     } finally {
-      DECORATE.beforeFinish(span);
-      span.end();
+      TRACER.end(span);
     }
   }
 
   @Override
   public void onFailure(Exception e) {
-    DECORATE.onError(span, e);
-
     try {
       listener.onFailure(e);
     } finally {
-      DECORATE.beforeFinish(span);
-      span.end();
+      TRACER.endExceptionally(span, e);
     }
   }
 }
