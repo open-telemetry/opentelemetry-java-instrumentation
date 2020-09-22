@@ -71,7 +71,7 @@ Maintainers:
 
 Approvers:
 
-- [John Watson](https://github.com/jkwatson), New Relic
+- [John Watson](https://github.com/jkwatson), Splunk
 
 Triagers:
 
