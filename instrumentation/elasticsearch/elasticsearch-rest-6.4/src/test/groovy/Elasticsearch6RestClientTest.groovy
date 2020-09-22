@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+
 import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -96,7 +96,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "GET _cluster/health"
-          spanKind INTERNAL
+          spanKind CLIENT
           parent()
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
@@ -104,6 +104,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "GET _cluster/health"
           }
         }
         span(1) {

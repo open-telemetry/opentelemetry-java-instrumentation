@@ -16,9 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,7 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -47,7 +45,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientDecorator",
+      "io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientTracer",
       packageName + ".RestResponseListener",
     };
   }
@@ -71,30 +69,27 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
   public static class ElasticsearchRestClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
+    public static void onEnter(
         @Advice.Argument(0) Request request,
-        @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener) {
+        @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
-      Span span = TRACER.spanBuilder(request.getMethod() + " " + request.getEndpoint()).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, request.getMethod(), request.getEndpoint());
+      span = TRACER.startSpan(null, request.getMethod() + " " + request.getEndpoint());
+      scope = TRACER.startScope(span);
 
+      TRACER.onRequest(span, request.getMethod(), request.getEndpoint());
       responseListener = new RestResponseListener(responseListener, span);
-
-      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
+    public static void stopSpan(@Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
       if (throwable != null) {
-        Span span = spanWithScope.getSpan();
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
-      // span finished by RestResponseListener
     }
   }
 }
