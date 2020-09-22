@@ -134,6 +134,7 @@ class PutGetTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
             "${SemanticAttributes.DB_NAME.key()}" "test-region"
+            "${SemanticAttributes.DB_OPERATION.key()}" "clear"
           }
         }
         span(2) {
@@ -143,6 +144,7 @@ class PutGetTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
             "${SemanticAttributes.DB_NAME.key()}" "test-region"
+            "${SemanticAttributes.DB_OPERATION.key()}" "put"
           }
         }
         span(3) {
@@ -152,6 +154,7 @@ class PutGetTest extends AgentTestRunner {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
             "${SemanticAttributes.DB_NAME.key()}" "test-region"
+            "${SemanticAttributes.DB_OPERATION.key()}" verb
             if (query != null) {
               "${SemanticAttributes.DB_STATEMENT.key()}" query
             }

@@ -16,22 +16,18 @@
 
 package io.opentelemetry.instrumentation.auto.geode;
 
-import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.geode.GeodeDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.geode.GeodeTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +51,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GeodeDecorator",
+        packageName + ".GeodeTracer",
     };
   }
 
@@ -88,70 +84,65 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.This Region thiz, @Advice.Origin Method method) {
+    public static void onEnter(
+        @Advice.This Region<?,?> thiz,
+        @Advice.Origin Method method,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope
+    ) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
-        return null;
+        return;
       }
-      Span span =
-          TRACER
-              .spanBuilder(method.getName())
-              .setSpanKind(CLIENT)
-              .setAttribute(SemanticAttributes.DB_NAME.key(), thiz.getName())
-              .startSpan();
-      DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(method.getName(), thiz, null);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+    public static void stopSpan(@Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      try {
-        Span span = spanWithScope.getSpan();
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-        spanWithScope.closeScope();
-      } finally {
-        CallDepthThreadLocalMap.reset(Region.class);
+      scope.close();
+
+      CallDepthThreadLocalMap.reset(Region.class);
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
     }
   }
 
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This Region thiz, @Advice.Origin Method method, @Advice.Argument(0) String query) {
+    public static void onEnter(
+        @Advice.This Region<?,?> thiz, @Advice.Origin Method method, @Advice.Argument(0) String query,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope
+    ) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
-        return null;
+        return;
       }
-      Span span =
-          TRACER
-              .spanBuilder(method.getName())
-              .setSpanKind(CLIENT)
-              .setAttribute(SemanticAttributes.DB_NAME.key(), thiz.getName())
-              .setAttribute(SemanticAttributes.DB_STATEMENT.key(), query)
-              .startSpan();
-      DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(method.getName(), thiz, query);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+    public static void stopSpan(@Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      try {
-        Span span = spanWithScope.getSpan();
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-        spanWithScope.closeScope();
-      } finally {
-        CallDepthThreadLocalMap.reset(Region.class);
+      scope.close();
+
+      CallDepthThreadLocalMap.reset(Region.class);
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
     }
   }
