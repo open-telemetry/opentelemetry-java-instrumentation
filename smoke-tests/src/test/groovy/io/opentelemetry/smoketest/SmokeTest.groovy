@@ -16,6 +16,8 @@
 
 package io.opentelemetry.smoketest
 
+import static java.util.stream.Collectors.toSet
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -23,6 +25,7 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -31,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.output.ToStringConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.MountableFile
 import spock.lang.Shared
@@ -38,6 +42,7 @@ import spock.lang.Specification
 
 abstract class SmokeTest extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(SmokeTest)
+  private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*traceId=(?<traceId>[a-zA-Z0-9]+).*")
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
@@ -86,9 +91,11 @@ abstract class SmokeTest extends Specification {
   }
 
   def startTarget(int jdk) {
+    def output = new ToStringConsumer()
     target = new GenericContainer<>(getTargetImage(jdk))
       .withExposedPorts(8080)
       .withNetwork(network)
+      .withLogConsumer(output)
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
       .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
@@ -97,6 +104,7 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_OTLP_ENDPOINT", "collector:55680")
       .withEnv(extraEnv)
     target.start()
+    output
   }
 
   def cleanup() {
@@ -171,5 +179,16 @@ abstract class SmokeTest extends Specification {
     }
 
     return content
+  }
+
+  protected static Set<String> getLoggedTraceIds(ToStringConsumer output) {
+    output.toUtf8String().lines()
+      .flatMap(SmokeTest.&findTraceId)
+      .collect(toSet())
+  }
+
+  private static Stream<String> findTraceId(String log) {
+    def m = TRACE_ID_PATTERN.matcher(log)
+    m.matches() ? Stream.of(m.group("traceId")) : Stream.empty() as Stream<String>
   }
 }
