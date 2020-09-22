@@ -25,10 +25,10 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
 
-public class GeodeTracer extends DatabaseClientTracer<Region<?,?>, String> {
+public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   public static GeodeTracer TRACER = new GeodeTracer();
 
-  public Span startSpan(String operation, Region<?,?> connection, String query) {
+  public Span startSpan(String operation, Region<?, ?> connection, String query) {
     String normalizedQuery = normalizeQuery(query);
 
     Span span =
@@ -52,22 +52,22 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?,?>, String> {
   }
 
   @Override
-  protected String dbSystem(Region<?,?> region) {
+  protected String dbSystem(Region<?, ?> region) {
     return DbSystem.GEODE;
   }
 
   @Override
-  protected String dbUser(Region<?,?> region) {
+  protected String dbUser(Region<?, ?> region) {
     return null;
   }
 
   @Override
-  protected String dbName(Region<?,?> region) {
+  protected String dbName(Region<?, ?> region) {
     return region.getName();
   }
 
   @Override
-  protected InetSocketAddress peerAddress(Region<?,?> region) {
+  protected InetSocketAddress peerAddress(Region<?, ?> region) {
     return null;
   }
 

@@ -16,9 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.spymemcached;
 
-import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
@@ -37,19 +35,11 @@ public abstract class CompletionListener<T> {
   private final Span span;
 
   public CompletionListener(MemcachedConnection connection, String methodName) {
-    span =
-        TRACER
-            .spanBuilder(DECORATE.spanNameOnOperation(methodName))
-            .setSpanKind(CLIENT)
-            .startSpan();
-    try (Scope scope = currentContextWith(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, connection);
-    }
+    span = TRACER.startSpan(connection, methodName);
   }
 
   protected void closeAsyncSpan(T future) {
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = currentContextWith(span)) {
       try {
         processResult(span, future);
       } catch (CancellationException e) {
@@ -60,28 +50,23 @@ public abstract class CompletionListener<T> {
           // ExecutionException
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         } else {
-          DECORATE.onError(span, e.getCause());
+          TRACER.endExceptionally(span, e);
         }
       } catch (InterruptedException e) {
         // Avoid swallowing InterruptedException
-        DECORATE.onError(span, e);
+        TRACER.endExceptionally(span, e);
         Thread.currentThread().interrupt();
       } catch (Exception e) {
         // This should never happen, just in case to make sure we cover all unexpected exceptions
-        DECORATE.onError(span, e);
+        TRACER.endExceptionally(span, e);
       } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(span);
       }
     }
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    try (Scope scope = currentContextWith(span)) {
-      DECORATE.onError(span, thrown);
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
+    TRACER.endExceptionally(span, thrown);
   }
 
   protected abstract void processResult(Span span, T future)

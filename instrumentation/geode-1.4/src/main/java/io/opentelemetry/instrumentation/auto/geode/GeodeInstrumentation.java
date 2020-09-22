@@ -51,7 +51,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".GeodeTracer",
+      packageName + ".GeodeTracer",
     };
   }
 
@@ -85,11 +85,10 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This Region<?,?> thiz,
+        @Advice.This Region<?, ?> thiz,
         @Advice.Origin Method method,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope
-    ) {
+        @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
@@ -98,7 +97,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Thrown Throwable throwable,
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -118,10 +118,11 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This Region<?,?> thiz, @Advice.Origin Method method, @Advice.Argument(0) String query,
+        @Advice.This Region<?, ?> thiz,
+        @Advice.Origin Method method,
+        @Advice.Argument(0) String query,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope
-    ) {
+        @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
@@ -130,7 +131,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Thrown Throwable throwable,
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {

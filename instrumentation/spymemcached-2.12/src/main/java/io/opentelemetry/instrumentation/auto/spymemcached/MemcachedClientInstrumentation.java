@@ -54,7 +54,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".MemcacheClientDecorator",
+      packageName + ".MemcacheClientTracer",
       packageName + ".CompletionListener",
       packageName + ".SyncCompletionListener",
       packageName + ".GetCompletionListener",

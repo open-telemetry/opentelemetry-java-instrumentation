@@ -16,19 +16,17 @@
 
 package io.opentelemetry.instrumentation.auto.spymemcached;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedConnection;
 
-public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedConnection> {
-  public static final MemcacheClientDecorator DECORATE = new MemcacheClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.spymemcached-2.12");
+public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnection, String> {
+  public static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
 
   @Override
-  protected String dbSystem() {
+  protected String dbSystem(MemcachedConnection memcachedConnection) {
     return "memcached";
   }
 
@@ -42,10 +40,20 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     return null;
   }
 
-  public String spanNameOnOperation(String methodName) {
+  @Override
+  protected InetSocketAddress peerAddress(MemcachedConnection memcachedConnection) {
+    return null;
+  }
 
+  @Override
+  protected void onStatement(Span span, String statement) {
+    SemanticAttributes.DB_OPERATION.set(span, statement);
+  }
+
+  @Override
+  protected String normalizeQuery(String query) {
     char[] chars =
-        methodName
+        query
             .replaceFirst("^async", "")
             // 'CAS' name is special, we have to lowercase whole name
             .replaceFirst("^CAS", "cas")
@@ -55,5 +63,10 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     chars[0] = Character.toLowerCase(chars[0]);
 
     return new String(chars);
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spymemcached-2.12";
   }
 }
