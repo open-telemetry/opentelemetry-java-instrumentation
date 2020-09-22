@@ -126,10 +126,6 @@ class ReferenceCreatorTest extends AgentTestRunner {
         Reference.Flag.PUBLIC,
         Reference.Flag.NON_STATIC,
         Reference.Flag.FINAL
-      assertMethod helperSuperClass, 'bar', '()I',
-        Reference.Flag.PACKAGE,
-        Reference.Flag.STATIC,
-        Reference.Flag.NON_FINAL
     }
 
     with(references[TestHelperClasses.HelperInterface.name]) { helperInterface ->
@@ -138,14 +134,9 @@ class ReferenceCreatorTest extends AgentTestRunner {
     }
 
     with(references[TestHelperClasses.Helper.name]) { helperClass ->
+      helperClass.flags.contains(Reference.Flag.NON_FINAL)
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
-      assertMethod helperClass, 'getStr', '()Ljava/lang/String;',
-        // this method has both PRIVATE flags: first because it's defined in the helper class, second because it's called in foo()
-        Reference.Flag.PRIVATE,
-        Reference.Flag.PRIVATE_OR_HIGHER,
-        Reference.Flag.NON_STATIC,
-        Reference.Flag.NON_FINAL
     }
   }
 

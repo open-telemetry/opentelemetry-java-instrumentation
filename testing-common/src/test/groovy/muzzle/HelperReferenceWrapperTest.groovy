@@ -94,8 +94,11 @@ class HelperReferenceWrapperTest extends Specification {
 
               abstractClasspathType.hasSuperTypes()
               with(abstractClasspathType.superTypes.toList()) {
-                it.size() == 1
-                with(it[0]) { interface1 ->
+                it.size() == 2
+                with(it[0]) { object ->
+                  !object.hasSuperTypes()
+                }
+                with(it[1]) { interface1 ->
                   interface1.abstract
 
                   with(interface1.methods.toList()) {

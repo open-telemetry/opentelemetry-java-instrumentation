@@ -233,9 +233,27 @@ class ReferenceMatcherTest extends AgentTestRunner {
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
   }
 
+  def "should fail helper classes that does not implement all abstract methods - even if emtpy abstract class reference exists"() {
+    given:
+    def emptySuperClassRef = new Reference.Builder(TestHelperClasses.HelperSuperClass.name)
+      .build()
+    def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+      .withSuperName(TestHelperClasses.HelperSuperClass.name)
+      .withMethod(new Source[0], [] as Reference.Flag[], "someMethod", Type.VOID_TYPE)
+      .build()
+
+    when:
+    def mismatches = new ReferenceMatcher([reference.className] as String[], [reference, emptySuperClassRef] as Reference[])
+      .getMismatchedReferenceSources(this.class.classLoader)
+
+    then:
+    getMismatchClassSet(mismatches) == [MissingMethod] as Set
+  }
+
   def "should check whether interface methods are implemented in the super class"() {
     given:
     def baseHelper = new Reference.Builder("io.opentelemetry.instrumentation.BaseHelper")
+      .withSuperName(Object.name)
       .withInterface(TestHelperClasses.HelperInterface.name)
       .withMethod(new Source[0], [] as Reference.Flag[], "foo", Type.VOID_TYPE)
       .build()

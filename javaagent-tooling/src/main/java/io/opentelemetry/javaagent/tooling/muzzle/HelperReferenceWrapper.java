@@ -68,6 +68,10 @@ public interface HelperReferenceWrapper {
       return isAbstract;
     }
 
+    public String getDeclaringClass() {
+      return declaringClass;
+    }
+
     public String getName() {
       return name;
     }
@@ -88,11 +92,6 @@ public interface HelperReferenceWrapper {
     public int hashCode() {
       return Objects.hashCode(name, descriptor);
     }
-
-    @Override
-    public String toString() {
-      return declaringClass + "#" + name + descriptor;
-    }
   }
 
   class Factory {
@@ -109,12 +108,12 @@ public interface HelperReferenceWrapper {
     }
 
     private HelperReferenceWrapper create(String className) {
-      if (helperReferences.containsKey(className)) {
-        return new ReferenceType(helperReferences.get(className));
-      }
       Resolution resolution = classpathPool.describe(className);
       if (resolution.isResolved()) {
         return new ClasspathType(resolution.resolve());
+      }
+      if (helperReferences.containsKey(className)) {
+        return new ReferenceType(helperReferences.get(className));
       }
       throw new IllegalStateException("Missing class " + className);
     }
@@ -151,8 +150,7 @@ public interface HelperReferenceWrapper {
       }
 
       private boolean hasActualSuperType() {
-        return reference.getSuperName() != null
-            && !reference.getSuperName().equals(Object.class.getName());
+        return reference.getSuperName() != null;
       }
 
       private Function<String, HelperReferenceWrapper> toWrapper() {
@@ -215,8 +213,7 @@ public interface HelperReferenceWrapper {
       }
 
       private boolean hasActualSuperType() {
-        return type.getSuperClass() != null
-            && !type.getSuperClass().asErasure().equals(TypeDescription.OBJECT);
+        return type.getSuperClass() != null;
       }
 
       // Uses guava iterables to avoid unnecessary collection copying

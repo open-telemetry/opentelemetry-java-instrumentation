@@ -182,8 +182,9 @@ public final class ReferenceMatcher {
               mismatches,
               new Reference.Mismatch.MissingMethod(
                   helperClass.getSources().toArray(new Reference.Source[0]),
-                  helperClass.getClassName(),
-                  unimplementedMethod.toString()));
+                  unimplementedMethod.getDeclaringClass(),
+                  unimplementedMethod.getName(),
+                  unimplementedMethod.getDescriptor()));
     }
 
     return mismatches;
@@ -193,28 +194,12 @@ public final class ReferenceMatcher {
       HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
 
     for (HelperReferenceWrapper.Method method : type.getMethods()) {
-      if (shouldIgnore(method)) {
-        continue;
-      }
       (method.isAbstract() ? abstractMethods : plainMethods).add(method);
     }
 
     for (HelperReferenceWrapper superType : type.getSuperTypes()) {
       collectMethodsFromTypeHierarchy(superType, abstractMethods, plainMethods);
     }
-  }
-
-  // ignore Object methods - sometimes defined by interfaces which causes them to be treated as
-  // abstract
-  private static boolean shouldIgnore(HelperReferenceWrapper.Method superMethod) {
-    return "hashCode".equals(superMethod.getName()) && "()I".equals(superMethod.getDescriptor())
-        || "equals".equals(superMethod.getName())
-            && "(Ljava/lang/Object;)Z".equals(superMethod.getDescriptor())
-        || "toString".equals(superMethod.getName())
-            && "()Ljava/lang/String;".equals(superMethod.getDescriptor())
-        || "clone".equals(superMethod.getName())
-            && "()Ljava/lang/Object;".equals(superMethod.getDescriptor())
-        || "finalize".equals(superMethod.getName()) && "()V".equals(superMethod.getDescriptor());
   }
 
   private static List<Reference.Mismatch> checkMatch(
@@ -276,7 +261,8 @@ public final class ReferenceMatcher {
                 new Reference.Mismatch.MissingMethod(
                     methodRef.getSources().toArray(new Reference.Source[0]),
                     reference.getClassName(),
-                    methodRef.getName() + methodRef.getDescriptor()));
+                    methodRef.getName(),
+                    methodRef.getDescriptor()));
       } else {
         for (Reference.Flag flag : methodRef.getFlags()) {
           if (!flag.matches(methodDescription.getModifiers())) {

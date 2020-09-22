@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
@@ -258,22 +259,25 @@ public class ReferenceCreator extends ClassVisitor {
     if (!skipClassReferenceGeneration) {
       Type methodType = Type.getMethodType(descriptor);
 
-      Reference.Flag[] methodFlags =
-          new Reference.Flag[] {
-            computeVisibilityFlag(access),
-            computeOwnershipFlag(access),
-            computeTypeManifestationFlag(access)
-          };
+      Flag visibilityFlag = computeVisibilityFlag(access);
+      Flag ownershipFlag = computeOwnershipFlag(access);
+      Flag manifestationFlag = computeTypeManifestationFlag(access);
 
-      addReference(
-          new Reference.Builder(refSourceClassName)
-              .withMethod(
-                  new Source[0],
-                  methodFlags,
-                  name,
-                  methodType.getReturnType(),
-                  methodType.getArgumentTypes())
-              .build());
+      // as an optimization skip constructors, private and static methods
+      if (!(visibilityFlag == Flag.PRIVATE
+          || ownershipFlag == Flag.STATIC
+          || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
+        addReference(
+            new Reference.Builder(refSourceClassName)
+                .withSource(refSourceClassName)
+                .withMethod(
+                    new Source[0],
+                    new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
+                    name,
+                    methodType.getReturnType(),
+                    methodType.getArgumentTypes())
+                .build());
+      }
     }
 
     // Additional references we could check
