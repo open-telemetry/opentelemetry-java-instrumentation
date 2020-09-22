@@ -24,8 +24,7 @@ import java.net.InetSocketAddress;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientTracer extends DatabaseClientTracer<String, String> {
-  public static final ElasticsearchRestClientTracer TRACER =
-      new ElasticsearchRestClientTracer();
+  public static final ElasticsearchRestClientTracer TRACER = new ElasticsearchRestClientTracer();
 
   public Span onRequest(Span span, String method, String endpoint) {
     span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method);

@@ -78,7 +78,6 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
       Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);
-      DECORATE.onConnection(span, session);
 
       if (session instanceof Session) {
         ContextStore<Session, Span> contextStore =

@@ -85,7 +85,8 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Thrown Throwable throwable,
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();

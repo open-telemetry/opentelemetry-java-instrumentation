@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 

@@ -17,35 +17,29 @@
 package io.opentelemetry.instrumentation.auto.hibernate;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.OrmClientDecorator;
+import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HibernateDecorator extends OrmClientDecorator {
+public class HibernateDecorator extends ClientDecorator {
   public static final HibernateDecorator DECORATE = new HibernateDecorator();
   // TODO use tracer names *.hibernate-3.3, *.hibernate-4.0, *.hibernate-4.3 respectively in each
   // module
   public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.hibernate");
 
-  @Override
-  protected String dbSystem() {
-    return null;
+  public String spanNameForOperation(String operationName, Object entity) {
+    if (entity != null) {
+      String entityName = entityName(entity);
+      if (entityName != null) {
+        return operationName + " " + entityName;
+      }
+    }
+    return operationName;
   }
 
-  @Override
-  protected String dbUser(Object o) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Object o) {
-    return null;
-  }
-
-  @Override
   public String entityName(Object entity) {
     if (entity == null) {
       return null;
