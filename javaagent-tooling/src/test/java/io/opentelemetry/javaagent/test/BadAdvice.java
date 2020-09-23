@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.test;
+package io.opentelemetry.javaagent.test;
 
 import net.bytebuddy.asm.Advice;
 
