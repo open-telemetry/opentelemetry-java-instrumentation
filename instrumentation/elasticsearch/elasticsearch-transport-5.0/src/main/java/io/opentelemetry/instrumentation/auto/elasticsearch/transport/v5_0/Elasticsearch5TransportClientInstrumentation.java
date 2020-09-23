@@ -16,17 +16,14 @@
 
 package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_0;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -61,7 +58,7 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.D
       "com.google.common.base.Joiner$1",
       "com.google.common.base.Joiner$2",
       "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientDecorator",
+      "io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer",
       packageName + ".TransportActionListener",
     };
   }
@@ -81,33 +78,31 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.D
   public static class ElasticsearchTransportClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
+    public static void onEnter(
         @Advice.Argument(0) Action action,
         @Advice.Argument(1) ActionRequest actionRequest,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      Span span =
-          TRACER.spanBuilder(action.getClass().getSimpleName()).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, action.getClass(), actionRequest.getClass());
+      span = TRACER.startSpan(null, action);
+      scope = TRACER.startScope(span);
 
+      TRACER.onRequest(span, action.getClass(), actionRequest.getClass());
       actionListener = new TransportActionListener<>(actionRequest, actionListener, span);
-
-      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
+
       if (throwable != null) {
-        Span span = spanWithScope.getSpan();
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
-      // span finished by TransportActionListener
     }
   }
 }

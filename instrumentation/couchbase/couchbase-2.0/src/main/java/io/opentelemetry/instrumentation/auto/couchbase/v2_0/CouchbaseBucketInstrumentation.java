@@ -57,7 +57,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
       "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
       "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
-      packageName + ".CouchbaseClientDecorator",
+      packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
     };
   }

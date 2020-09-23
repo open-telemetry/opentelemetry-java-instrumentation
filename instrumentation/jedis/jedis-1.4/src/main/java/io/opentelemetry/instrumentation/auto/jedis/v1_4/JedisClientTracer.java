@@ -16,19 +16,22 @@
 
 package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.DatabaseClientDecorator;
+import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Tracer;
+import java.net.InetSocketAddress;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Protocol.Command;
 
-public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
-  public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
-
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.jedis-1.4");
+public class JedisClientTracer extends DatabaseClientTracer<Connection, Command> {
+  public static final JedisClientTracer TRACER = new JedisClientTracer();
 
   @Override
-  protected String dbSystem() {
+  protected String normalizeQuery(Command command) {
+    return command.name();
+  }
+
+  @Override
+  protected String dbSystem(Connection connection) {
     return DbSystem.REDIS;
   }
 
@@ -45,5 +48,15 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   @Override
   protected String dbConnectionString(Connection connection) {
     return connection.getHost() + ":" + connection.getPort();
+  }
+
+  @Override
+  protected InetSocketAddress peerAddress(Connection connection) {
+    return new InetSocketAddress(connection.getHost(), connection.getPort());
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jedis-1.4";
   }
 }

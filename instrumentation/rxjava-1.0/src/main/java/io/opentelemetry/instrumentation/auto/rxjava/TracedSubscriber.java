@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.rxjava;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
@@ -28,13 +28,14 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   private final AtomicReference<Span> spanRef;
   private final Subscriber<T> delegate;
-  private final BaseDecorator decorator;
+  private final BaseTracer tracer;
 
-  public TracedSubscriber(Span span, Subscriber<T> delegate, BaseDecorator decorator) {
+  // TODO pass the whole context here, not just span
+  public TracedSubscriber(Span span, Subscriber<T> delegate, BaseTracer tracer) {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
-    this.decorator = decorator;
-    SpanFinishingSubscription subscription = new SpanFinishingSubscription(decorator, spanRef);
+    this.tracer = tracer;
+    SpanFinishingSubscription subscription = new SpanFinishingSubscription(tracer, spanRef);
     delegate.add(subscription);
   }
 
@@ -42,7 +43,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onStart() {
     Span span = spanRef.get();
     if (span != null) {
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate.onStart();
       }
     } else {
@@ -54,7 +55,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onNext(T value) {
     Span span = spanRef.get();
     if (span != null) {
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate.onNext(value);
       } catch (Throwable e) {
         onError(e);
@@ -69,7 +70,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
     Span span = spanRef.getAndSet(null);
     if (span != null) {
       boolean errored = false;
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate.onCompleted();
       } catch (Throwable e) {
         // Repopulate the spanRef for onError
@@ -79,8 +80,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
       } finally {
         // finish called by onError, so don't finish again.
         if (!errored) {
-          decorator.beforeFinish(span);
-          span.end();
+          tracer.end(span);
         }
       }
     } else {
@@ -92,18 +92,8 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(Throwable e) {
     Span span = spanRef.getAndSet(null);
     if (span != null) {
-      try (Scope scope = currentContextWith(span)) {
-        decorator.onError(span, e);
-        delegate.onError(e);
-      } catch (Throwable e2) {
-        decorator.onError(span, e2);
-        throw e2;
-      } finally {
-        decorator.beforeFinish(span);
-        span.end();
-      }
-    } else {
-      delegate.onError(e);
+      tracer.endExceptionally(span, e);
     }
+    delegate.onError(e);
   }
 }

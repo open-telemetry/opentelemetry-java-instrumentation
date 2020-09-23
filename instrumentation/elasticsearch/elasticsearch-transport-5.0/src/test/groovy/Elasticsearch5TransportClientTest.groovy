@@ -109,6 +109,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" tcpPublishAddress.port
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -134,6 +135,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           errorEvent RemoteTransportException, String
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -204,6 +206,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" tcpPublishAddress.port
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -219,6 +222,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" tcpPublishAddress.port
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -234,6 +238,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           spanKind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "PutMappingAction"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -248,6 +253,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" tcpPublishAddress.port
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -268,6 +274,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" tcpPublishAddress.port
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

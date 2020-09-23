@@ -18,16 +18,21 @@ package io.opentelemetry.instrumentation.auto.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 
-public class HystrixDecorator extends BaseDecorator {
-  public static final HystrixDecorator DECORATE = new HystrixDecorator();
+public class HystrixTracer extends BaseTracer {
+  public static final HystrixTracer TRACER = new HystrixTracer();
 
   private final boolean extraTags;
 
-  private HystrixDecorator() {
+  private HystrixTracer() {
     extraTags = Config.get().isHystrixTagsEnabled();
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.hystrix";
   }
 
   public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {

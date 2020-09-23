@@ -16,56 +16,46 @@
 
 package io.opentelemetry.instrumentation.auto.rxjava;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
-import io.opentelemetry.OpenTelemetry;
+import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import rx.Observable;
 import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rxjava-1.0");
-
   private final Observable.OnSubscribe<?> delegate;
   private final String operationName;
-  private final Span parentSpan;
-  private final BaseDecorator decorator;
+  private final Context parentContext;
+  private final BaseTracer tracer;
   private final Span.Kind spanKind;
 
   public TracedOnSubscribe(
-      Observable originalObservable,
-      String operationName,
-      BaseDecorator decorator,
-      Span.Kind spanKind) {
+      Observable originalObservable, String operationName, BaseTracer tracer, Span.Kind spanKind) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
-    this.decorator = decorator;
+    this.tracer = tracer;
     this.spanKind = spanKind;
 
-    parentSpan = TRACER.getCurrentSpan();
+    parentContext = Context.current();
   }
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
-    // span finished by TracedSubscriber
-    Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(spanKind);
-    if (parentSpan != null) {
-      spanBuilder.setParent(parentSpan);
-    }
-    Span span = spanBuilder.startSpan();
-
-    afterStart(span);
-
-    try (Scope scope = currentContextWith(span)) {
-      delegate.call(new TracedSubscriber(span, subscriber, decorator));
+    // TODO too many contexts here
+    // Review if we can pass parentContext to startSpan
+    try (Scope ignored = ContextUtils.withScopedContext(parentContext)) {
+      Span span = tracer.startSpan(operationName, spanKind);
+      decorateSpan(span);
+      try (Scope ignored1 = tracer.startScope(span)) {
+        delegate.call(new TracedSubscriber(span, subscriber, tracer));
+      }
     }
   }
 
-  protected void afterStart(Span span) {
-    decorator.afterStart(span);
+  protected void decorateSpan(Span span) {
+    // Subclasses can use it to provide addition attributes to the span
   }
 }

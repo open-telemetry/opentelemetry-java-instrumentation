@@ -18,6 +18,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
@@ -59,6 +60,10 @@ public abstract class BaseTracer {
 
   public Span startSpan(String spanName, Kind kind) {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
+  }
+
+  public Scope startScope(Span span) {
+    return tracer.withSpan(span);
   }
 
   public Span getCurrentSpan() {

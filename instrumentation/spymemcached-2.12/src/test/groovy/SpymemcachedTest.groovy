@@ -37,11 +37,8 @@ import net.spy.memcached.internal.CheckedOperationTimeoutException
 import net.spy.memcached.ops.Operation
 import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
-import spock.lang.Requires
 import spock.lang.Shared
 
-// Do not run tests on Java7 since testcontainers are not compatible with Java7
-@Requires({ jvm.java8Compatible })
 class SpymemcachedTest extends AgentTestRunner {
 
   @Shared
@@ -651,6 +648,7 @@ class SpymemcachedTest extends AgentTestRunner {
 
       attributes {
         "${SemanticAttributes.DB_SYSTEM.key()}" "memcached"
+        "${SemanticAttributes.DB_OPERATION.key()}" operation
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

@@ -16,9 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
-import static io.opentelemetry.instrumentation.auto.couchbase.v2_0.CouchbaseClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.couchbase.v2_0.CouchbaseClientTracer.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -43,17 +44,16 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   }
 
   private CouchbaseOnSubscribe(Observable originalObservable, String bucket, String query) {
-    super(originalObservable, query, DECORATE, CLIENT);
+    super(originalObservable, query, TRACER, CLIENT);
 
     this.bucket = bucket;
     this.query = query;
   }
 
   @Override
-  protected void afterStart(Span span) {
-    super.afterStart(span);
-
-    span.setAttribute(SemanticAttributes.DB_NAME.key(), bucket);
-    span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), query);
+  protected void decorateSpan(Span span) {
+    SemanticAttributes.DB_SYSTEM.set(span, DbSystem.COUCHBASE);
+    SemanticAttributes.DB_NAME.set(span, bucket);
+    SemanticAttributes.DB_STATEMENT.set(span, query);
   }
 }

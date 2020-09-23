@@ -82,12 +82,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return CONTEXT_CLIENT_SPAN_KEY.get(context);
   }
 
-  // TODO make abstract when implemented in all subclasses
-  @Override
-  protected String getInstrumentationName() {
-    return null;
-  }
-
   @Override
   public void end(Span span) {
     span.end();
