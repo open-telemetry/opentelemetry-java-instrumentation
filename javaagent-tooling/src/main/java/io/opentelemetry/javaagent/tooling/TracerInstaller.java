@@ -62,22 +62,25 @@ public class TracerInstaller {
     PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
   }
 
-  private static synchronized void installExporters(String exporterName) {
-    SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
-    if (spanExporterFactory != null) {
-      DefaultExporterConfig config = new DefaultExporterConfig("exporter");
-      installExporter(spanExporterFactory, config);
-    } else {
-      log.warn("No {} span exporter found", exporterName);
-      log.warn("No valid span exporter found. Tracing will run but spans are dropped");
-    }
+  private static synchronized void installExporters(String exportersName) {
+    String[] exporters = exportersName.split(",");
+    for (String exporterName: exporters) {
+      SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
+      if (spanExporterFactory != null) {
+        DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+        installExporter(spanExporterFactory, config);
+      } else {
+        log.warn("No {} span exporter found", exporterName);
+        log.warn("No valid span exporter found. Tracing will run but spans are dropped");
+      }
 
-    MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
-    if (metricExporterFactory != null) {
-      DefaultExporterConfig config = new DefaultExporterConfig("exporter");
-      installExporter(metricExporterFactory, config);
-    } else {
-      log.debug("No {} metric exporter found", exporterName);
+      MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
+      if (metricExporterFactory != null) {
+        DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+        installExporter(metricExporterFactory, config);
+      } else {
+        log.debug("No {} metric exporter found", exporterName);
+      }
     }
   }
 
