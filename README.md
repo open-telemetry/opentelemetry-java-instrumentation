@@ -60,9 +60,9 @@ behavior you may find.
 
 The following configuration properties are common to all exporters: 
 
-| System property          | Environment variable     | Purpose                                                                                               |
-|--------------------------|--------------------------|-------------------------------------------------------------------------------------------------------|
-| otel.exporter=           | OTEL_EXPORTER=           | To select exporter e.g. `otlp,jaeger`. Available exporters are `otlp`, `jaeger`, `zipkin`, `logging`. |
+| System property          | Environment variable     | Purpose                                                                                            |
+|--------------------------|--------------------------|----------------------------------------------------------------------------------------------------|
+| otel.exporter=           | OTEL_EXPORTER=           | To select exporter e.g. `otlp,jaeger`. Defaults to `otlp`                                          |
 
 ##### Jaeger exporter
 
