@@ -33,9 +33,7 @@ public class LoggingExporter implements SpanExporter {
   @Override
   public CompletableResultCode export(Collection<SpanData> list) {
     for (SpanData span : list) {
-      System.out.printf(
-          String.format(
-              "%s %s %s %s", prefix, span.getName(), span.getTraceId(), span.getSpanId()));
+      System.out.printf("%s %s %s %s", prefix, span.getName(), span.getTraceId(), span.getSpanId());
       span.getAttributes()
           .forEach(
               new KeyValueConsumer<String, AttributeValue>() {
