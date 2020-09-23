@@ -58,7 +58,7 @@ behavior you may find.
 
 #### Exporters
 
-The following configuration properties are common to all exporters: 
+The following configuration properties are common to all exporters:
 
 | System property          | Environment variable     | Purpose                                                                                            |
 |--------------------------|--------------------------|----------------------------------------------------------------------------------------------------|
