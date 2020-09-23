@@ -125,19 +125,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
     }
 
-    try {
-      listener.onResponse(response);
-    } finally {
-      TRACER.end(span);
-    }
+    TRACER.end(span);
+    listener.onResponse(response);
   }
 
   @Override
   public void onFailure(Exception e) {
-    try {
-      listener.onFailure(e);
-    } finally {
-      TRACER.endExceptionally(span, e);
-    }
+    TRACER.endExceptionally(span, e);
+    listener.onFailure(e);
   }
 }

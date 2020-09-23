@@ -37,20 +37,14 @@ public class RestResponseListener implements ResponseListener {
     if (response.getHost() != null) {
       TRACER.onResponse(span, response);
     }
+    TRACER.end(span);
 
-    try {
-      listener.onSuccess(response);
-    } finally {
-      TRACER.end(span);
-    }
+    listener.onSuccess(response);
   }
 
   @Override
   public void onFailure(Exception e) {
-    try {
-      listener.onFailure(e);
-    } finally {
-      TRACER.endExceptionally(span, e);
-    }
+    TRACER.endExceptionally(span, e);
+    listener.onFailure(e);
   }
 }

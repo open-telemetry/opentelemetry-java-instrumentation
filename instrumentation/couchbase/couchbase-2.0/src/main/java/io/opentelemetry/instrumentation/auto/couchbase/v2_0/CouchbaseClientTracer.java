@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
-public class CouchbaseClientTracer extends DatabaseClientTracer<String, Method> {
+public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
   public static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
 
   @Override
@@ -33,28 +33,27 @@ public class CouchbaseClientTracer extends DatabaseClientTracer<String, Method> 
   }
 
   @Override
-  protected String dbSystem(String o) {
+  protected String dbSystem(Void connection) {
     return DbSystem.COUCHBASE;
   }
 
   @Override
-  protected String dbUser(String o) {
+  protected String dbUser(Void connection) {
     return null;
   }
 
   @Override
-  protected String dbName(String o) {
+  protected String dbName(Void connection) {
     return null;
   }
 
   @Override
-  protected InetSocketAddress peerAddress(String o) {
+  protected InetSocketAddress peerAddress(Void connection) {
     return null;
   }
 
   @Override
   protected String getInstrumentationName() {
-    // TODO this preserves old behaviour, but is confusing
-    return "io.opentelemetry.auto.rxjava-1.0";
+    return "io.opentelemetry.auto.couchbase";
   }
 }

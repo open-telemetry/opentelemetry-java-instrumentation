@@ -26,11 +26,11 @@ import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
-  protected final Observable.OnSubscribe<?> delegate;
-  protected final String operationName;
-  protected final Context parentContext;
-  protected final BaseTracer tracer;
-  protected final Span.Kind spanKind;
+  private final Observable.OnSubscribe<?> delegate;
+  private final String operationName;
+  private final Context parentContext;
+  private final BaseTracer tracer;
+  private final Span.Kind spanKind;
 
   public TracedOnSubscribe(
       Observable originalObservable, String operationName, BaseTracer tracer, Span.Kind spanKind) {
@@ -44,6 +44,8 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
+    // TODO too many contexts here
+    // Review if we can pass parentContext to startSpan
     try (Scope ignored = ContextUtils.withScopedContext(parentContext)) {
       Span span = tracer.startSpan(operationName, spanKind);
       decorateSpan(span);

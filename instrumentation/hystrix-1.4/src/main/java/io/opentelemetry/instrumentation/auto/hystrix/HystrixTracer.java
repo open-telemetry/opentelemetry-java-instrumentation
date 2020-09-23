@@ -32,8 +32,7 @@ public class HystrixTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    // TODO this preserves old behaviour, but is confusing
-    return "io.opentelemetry.auto.rxjava-1.0";
+    return "io.opentelemetry.auto.hystrix";
   }
 
   public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {

@@ -92,15 +92,8 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(Throwable e) {
     Span span = spanRef.getAndSet(null);
     if (span != null) {
-      try (Scope ignored = currentContextWith(span)) {
-        delegate.onError(e);
-        tracer.endExceptionally(span, e);
-      } catch (Throwable e2) {
-        tracer.endExceptionally(span, e2);
-        throw e2;
-      }
-    } else {
-      delegate.onError(e);
+      tracer.endExceptionally(span, e);
     }
+    delegate.onError(e);
   }
 }

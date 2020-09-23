@@ -23,7 +23,7 @@ import java.net.InetSocketAddress;
 import org.elasticsearch.action.Action;
 
 public class ElasticsearchTransportClientTracer
-    extends DatabaseClientTracer<String, Action<?, ?, ?>> {
+    extends DatabaseClientTracer<Void, Action<?, ?, ?>> {
   public static final ElasticsearchTransportClientTracer TRACER =
       new ElasticsearchTransportClientTracer();
 
@@ -39,22 +39,22 @@ public class ElasticsearchTransportClientTracer
   }
 
   @Override
-  protected String dbSystem(String s) {
+  protected String dbSystem(Void connection) {
     return "elasticsearch";
   }
 
   @Override
-  protected String dbUser(String s) {
+  protected String dbUser(Void connection) {
     return null;
   }
 
   @Override
-  protected String dbName(String s) {
+  protected String dbName(Void connection) {
     return null;
   }
 
   @Override
-  protected InetSocketAddress peerAddress(String s) {
+  protected InetSocketAddress peerAddress(Void connection) {
     return null;
   }
 

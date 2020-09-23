@@ -9,14 +9,22 @@ muzzle {
   pass {
     group = "org.elasticsearch.client"
     module = "transport"
-    versions = "[6.0.0,]"
-    assertInverse = true
+    versions = "[6.0.0,7.0.0)"
   }
   pass {
     group = "org.elasticsearch"
     module = "elasticsearch"
-    versions = "[6.0.0,]"
-    assertInverse = true
+    versions = "[6.0.0,7.0.0)"
+  }
+  fail {
+    group = "org.elasticsearch.client"
+    module = "transport"
+    versions = "[,6.0.0)"
+  }
+  fail {
+    group = "org.elasticsearch"
+    module = "elasticsearch"
+    versions = "[,6.0.0)"
   }
 }
 
