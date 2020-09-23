@@ -19,9 +19,9 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -101,7 +101,8 @@ public class AwsLambdaMessageTracer extends BaseTracer {
   }
 
   private static Context extractParent(String parentHeader) {
-    return AwsXRayPropagator.getInstance()
+    return OpenTelemetry.getPropagators()
+        .getTextMapPropagator()
         .extract(
             Context.current(),
             Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),

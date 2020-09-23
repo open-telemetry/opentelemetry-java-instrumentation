@@ -33,12 +33,13 @@ import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -56,79 +57,55 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    // Order of transformation matters. A bit fragile, but our unit tests will catch breakage
-    // easily.
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new LinkedHashMap<>();
-
-    // First instrument the function invocation itself.
-    transformers.put(
+    return Collections.singletonMap(
         isMethod()
             .and(isPublic())
             .and(named("handleRequest"))
             .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
         AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
-
-    // Then instrument message handling if appropriate.
-    transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(named("handleRequest"))
-            .and(takesArgument(0, named("com.amazonaws.services.lambda.runtime.events.SQSEvent")))
-            .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
-        AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleSQSEventAdvice");
-
-    return transformers;
   }
 
   public static class HandleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      span = FUNCTION_TRACER.startSpan(context, Kind.SERVER);
-      scope = FUNCTION_TRACER.startScope(span);
+        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionScope") Scope functionScope,
+        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageScope") Scope messageScope) {
+      functionSpan = FUNCTION_TRACER.startSpan(context, Kind.SERVER);
+      functionScope = FUNCTION_TRACER.startScope(functionSpan);
+      if (arg instanceof SQSEvent) {
+        messageSpan = MESSAGE_TRACER.startSpan(context, (SQSEvent) arg);
+        messageScope = MESSAGE_TRACER.startScope(messageSpan);
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionScope") Scope functionScope,
+        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageScope") Scope messageScope) {
 
+      if (messageScope != null) {
+        messageScope.close();
+        if (throwable != null) {
+          MESSAGE_TRACER.endExceptionally(messageSpan, throwable);
+        } else {
+          MESSAGE_TRACER.end(messageSpan);
+        }
+      }
+
+      functionScope.close();
       if (throwable != null) {
-        FUNCTION_TRACER.endExceptionally(span, throwable);
+        FUNCTION_TRACER.endExceptionally(functionSpan, throwable);
       } else {
-        FUNCTION_TRACER.end(span);
+        FUNCTION_TRACER.end(functionSpan);
       }
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
-    }
-  }
-
-  public static class HandleSQSEventAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) SQSEvent event,
-        @Advice.Argument(1) Context context,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      span = MESSAGE_TRACER.startSpan(context, event);
-      scope = MESSAGE_TRACER.startScope(span);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-
-      if (throwable != null) {
-        MESSAGE_TRACER.endExceptionally(span, throwable);
-      } else {
-        MESSAGE_TRACER.end(span);
-      }
     }
   }
 }

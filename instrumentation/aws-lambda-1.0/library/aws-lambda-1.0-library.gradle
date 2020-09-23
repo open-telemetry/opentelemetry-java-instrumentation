@@ -29,9 +29,7 @@ dependencies {
   // NB: 2.2.0 includes a class called SQSEvent but isn't usable due to it returning private classes
   // in public API.
   library group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
-
-  compileOnly deps.opentelemetrySdk
-  compileOnly deps.opentelemetryTraceProps
+  testImplementation deps.opentelemetryTraceProps
 
   testImplementation project(':instrumentation:aws-lambda-1.0:testing')
 }
