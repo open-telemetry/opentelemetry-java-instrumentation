@@ -63,7 +63,7 @@ public class TracerInstaller {
   }
 
   private static synchronized void installExporters(String exportersName) {
-    String[] exporters = exportersName.split(",");
+    String[] exporters = exportersName.split(",", -1);
     for (String exporterName: exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {
