@@ -20,17 +20,10 @@ auto-instrumentations using that java version which runs the Gradle build
 itself. These tests usually use the minimal supported version of the
 instrumented library.
 
-In addition to that each instrumentation has a separate test set called
-`latestDepTest`. It was created by [Gradle test sets
-plugin](https://github.com/unbroken-dome/gradle-testsets-plugin). It uses the
-very same tests as before, but declares a dynamic dependency on the latest
-available version of this library. You can run them all by executing
-`./gradlew latestDepTest`.
-
 #### Executing tests with specific java version
 
 In order to run tests on a specific java version, just execute `./gradlew
-testJava7` (or `testJava11` or `latestDepTestJava14` etc). Then Gradle task
+testJava7` (or `testJava11` etc). Then Gradle task
 rule will kick in and do the following:
 
 - check, if Gradle already runs on a java with required version
@@ -38,9 +31,12 @@ rule will kick in and do the following:
 - if Gradle could not found requested java version, then build will fail
 - Gradle will now find all corresponding test tasks and configure them to use java executable of the requested version.
 
-This works both for tasks named `test` and `latestDepTest`. But currently
-does not work for other custom test tasks, such as those created by test sets
-plugin.
+#### Executing tests against the latest versions of libraries under instrumentation
+
+This is done as part of the nightly build in order to catch when a new version of a library is
+released that breaks our instrumentation tests.
+
+To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradlew` command line.
 
 #### Executing single test
 
