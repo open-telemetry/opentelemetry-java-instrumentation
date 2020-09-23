@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -295,62 +296,66 @@ public class Reference {
 
     public static class MissingMethod extends Mismatch {
       private final String className;
-      private final String method;
+      private final String methodName;
+      private final String methodDescriptor;
 
-      public MissingMethod(Source[] sources, String className, String method) {
+      public MissingMethod(
+          Source[] sources, String className, String methodName, String methodDescriptor) {
         super(sources);
         this.className = className;
-        this.method = method;
+        this.methodName = methodName;
+        this.methodDescriptor = methodDescriptor;
       }
 
       @Override
       String getMismatchDetails() {
-        return "Missing method " + className + "#" + method;
+        return "Missing method " + className + "#" + methodName + methodDescriptor;
       }
     }
   }
 
   /** Expected flag (or lack of flag) on a class, method, or field reference. */
   public enum Flag {
+    // The following constants represent the exact visibility of a referenced class/method
     PUBLIC {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        switch (anotherFlag) {
-          case PRIVATE_OR_HIGHER:
-          case PROTECTED_OR_HIGHER:
-          case PACKAGE_OR_HIGHER:
-            return true;
-          default:
-            return false;
-        }
-      }
-
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_PUBLIC & asmFlags) != 0;
       }
     },
-    PACKAGE_OR_HIGHER {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        return anotherFlag == PRIVATE_OR_HIGHER;
-      }
-
+    PROTECTED {
       @Override
       public boolean matches(int asmFlags) {
-        return (Opcodes.ACC_PUBLIC & asmFlags) != 0
-            || ((Opcodes.ACC_PRIVATE & asmFlags) == 0 && (Opcodes.ACC_PROTECTED & asmFlags) == 0);
+        return (Opcodes.ACC_PROTECTED & asmFlags) != 0;
       }
     },
-    PROTECTED_OR_HIGHER {
-      @Override
-      public boolean supersedes(Flag anotherFlag) {
-        return anotherFlag == PRIVATE_OR_HIGHER;
-      }
-
+    PACKAGE {
       @Override
       public boolean matches(int asmFlags) {
-        return PUBLIC.matches(asmFlags) || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
+        return !(PUBLIC.matches(asmFlags)
+            || PROTECTED.matches(asmFlags)
+            || PRIVATE.matches(asmFlags));
+      }
+    },
+    PRIVATE {
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_PRIVATE & asmFlags) != 0;
+      }
+    },
+
+    // The following constants represent a minimum access level required by a method call or field
+    // access
+    PROTECTED_OR_HIGHER {
+      @Override
+      public boolean matches(int asmFlags) {
+        return PUBLIC.matches(asmFlags) || PROTECTED.matches(asmFlags);
+      }
+    },
+    PACKAGE_OR_HIGHER {
+      @Override
+      public boolean matches(int asmFlags) {
+        return !PRIVATE.matches(asmFlags);
       }
     },
     PRIVATE_OR_HIGHER {
@@ -360,34 +365,29 @@ public class Reference {
         return true;
       }
     },
-    NON_FINAL {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == FINAL;
-      }
 
-      @Override
-      public boolean matches(int asmFlags) {
-        return (Opcodes.ACC_FINAL & asmFlags) == 0;
-      }
-    },
+    // The following constants describe whether classes and methods are abstract or final
     FINAL {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_FINAL;
-      }
-
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_FINAL & asmFlags) != 0;
       }
     },
-    STATIC {
+    NON_FINAL {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_STATIC;
+      public boolean matches(int asmFlags) {
+        return ((Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL) & asmFlags) == 0;
       }
+    },
+    ABSTRACT {
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_ABSTRACT & asmFlags) != 0;
+      }
+    },
 
+    // The following constants describe whether a method/field is static or not
+    STATIC {
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) != 0;
@@ -395,21 +395,13 @@ public class Reference {
     },
     NON_STATIC {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == STATIC;
-      }
-
-      @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) == 0;
       }
     },
-    INTERFACE {
-      @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == NON_INTERFACE;
-      }
 
+    // The following constants describe whether a class is an interface
+    INTERFACE {
       @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) != 0;
@@ -417,24 +409,16 @@ public class Reference {
     },
     NON_INTERFACE {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
-        return anotherFlag == INTERFACE;
-      }
-
-      @Override
       public boolean matches(int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) == 0;
       }
     };
 
-    public boolean contradicts(Flag anotherFlag) {
-      return false;
-    }
-
-    public boolean supersedes(Flag anotherFlag) {
-      return false;
-    }
-
+    /**
+     * Predicate method that determines whether this flag is present in the passed bitmask.
+     *
+     * @see Opcodes
+     */
     public abstract boolean matches(int asmFlags);
   }
 
@@ -615,13 +599,27 @@ public class Reference {
       return this;
     }
 
+    public Builder withInterfaces(Collection<String> interfaceNames) {
+      interfaces.addAll(interfaceNames);
+      return this;
+    }
+
     public Builder withInterface(String interfaceName) {
       interfaces.add(interfaceName);
       return this;
     }
 
+    public Builder withSource(String sourceName) {
+      return withSource(sourceName, 0);
+    }
+
     public Builder withSource(String sourceName, int line) {
       sources.add(new Source(sourceName, line));
+      return this;
+    }
+
+    public Builder withFlags(Collection<Flag> flags) {
+      this.flags.addAll(flags);
       return this;
     }
 
