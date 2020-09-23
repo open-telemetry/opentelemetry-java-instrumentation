@@ -17,11 +17,14 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.spi.config.PropertySource;
+import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +36,19 @@ public final class ConfigInitializer {
 
   public static void initialize() {
     Config.internalInitializeConfig(
-        new ConfigBuilder().readPropertiesFromAllSources(loadConfigurationFile()).build());
+        new ConfigBuilder()
+            .readPropertiesFromAllSources(loadSpiConfiguration(), loadConfigurationFile())
+            .build());
+  }
+
+  /** Retrieves all default configuration overloads using SPI and initializes Config. */
+  private static Properties loadSpiConfiguration() {
+    Properties propertiesFromSpi = new Properties();
+    for (PropertySource propertySource :
+        ServiceLoader.load(PropertySource.class, AgentInstaller.class.getClassLoader())) {
+      propertiesFromSpi.putAll(propertySource.getProperties());
+    }
+    return propertiesFromSpi;
   }
 
   /**

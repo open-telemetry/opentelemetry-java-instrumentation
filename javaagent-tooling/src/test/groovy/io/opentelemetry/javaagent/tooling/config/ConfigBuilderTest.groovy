@@ -31,7 +31,7 @@ class ConfigBuilderTest extends AgentSpecification {
   def "should use defaults"() {
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties())
+      .readPropertiesFromAllSources(new Properties(), new Properties())
       .build()
 
     then:
@@ -53,66 +53,105 @@ class ConfigBuilderTest extends AgentSpecification {
     config.endpointPeerServiceMapping.isEmpty()
   }
 
-  def "should use configuration file properties (takes precedence over defaults)"() {
+  def "should use configuration from SPI (takes precedence over defaults)"() {
     given:
-    def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "zipkin")
-    configurationFile.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    configurationFile.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    def spiConfiguration = new Properties()
+    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
+    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
+    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
 
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(configurationFile)
+      .readPropertiesFromAllSources(spiConfiguration, new Properties())
       .build()
 
     then:
     config.exporter == "zipkin"
     config.hystrixTagsEnabled
     config.endpointPeerServiceMapping == ["1.2.3.4": "cats", "dogs.com": "dogs"]
+    config.traceMethods == "mypackage.MyClass[myMethod]"
   }
 
-  def "should use environment variables (takes precedence over configuration file)"() {
+  def "should use configuration file properties (takes precedence over SPI)"() {
     given:
-    def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "zipkin")
-    configurationFile.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    configurationFile.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    def spiConfiguration = new Properties()
+    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
+    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
+    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
 
-    environmentVariables.set("OTEL_EXPORTER", "logging")
-    environmentVariables.set("OTEL_ENDPOINT_PEER_SERVICE_MAPPING", "4.2.4.2=elephants.com")
+    def configurationFile = new Properties()
+    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
+    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(configurationFile)
+      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
     then:
     config.exporter == "logging"
     config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping == ["4.2.4.2": "elephants.com"]
+    config.endpointPeerServiceMapping == ["1.2.3.4": "cats", "dogs.com": "dogs"]
+    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
   }
 
-  def "should use system properties (takes precedence over environment variables)"() {
+  def "should use environment variables (takes precedence over configuration file)"() {
     given:
+    def spiConfiguration = new Properties()
+    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
+    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
+    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+
     def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "zipkin")
-    configurationFile.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    configurationFile.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
+    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
 
-    environmentVariables.set("OTEL_EXPORTER", "logging")
+    environmentVariables.set("OTEL_EXPORTER", "jaeger")
     environmentVariables.set("OTEL_ENDPOINT_PEER_SERVICE_MAPPING", "4.2.4.2=elephants.com")
-
-    System.setProperty(ConfigBuilder.EXPORTER, "jaeger")
 
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(configurationFile)
+      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
     then:
     config.exporter == "jaeger"
     config.hystrixTagsEnabled
     config.endpointPeerServiceMapping == ["4.2.4.2": "elephants.com"]
+    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
+  }
+
+  def "should use system properties (takes precedence over environment variables)"() {
+    given:
+    def spiConfiguration = new Properties()
+    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
+    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
+    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
+    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+
+    def configurationFile = new Properties()
+    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
+    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
+
+    environmentVariables.set("OTEL_EXPORTER", "jaeger")
+    environmentVariables.set("OTEL_ENDPOINT_PEER_SERVICE_MAPPING", "4.2.4.2=elephants.com")
+
+    System.setProperty(ConfigBuilder.EXPORTER, "otlp")
+    System.setProperty(ConfigBuilder.TRACE_METHODS, "mypackage3.MyClass3[myMethod3]")
+
+    when:
+    def config = new ConfigBuilder()
+      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
+      .build()
+
+    then:
+    config.exporter == "otlp"
+    config.hystrixTagsEnabled
+    config.endpointPeerServiceMapping == ["4.2.4.2": "elephants.com"]
+    config.traceMethods == "mypackage3.MyClass3[myMethod3]"
   }
 
   def "should use defaults in case of parsing failure"() {
@@ -121,7 +160,7 @@ class ConfigBuilderTest extends AgentSpecification {
 
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties())
+      .readPropertiesFromAllSources(new Properties(), new Properties())
       .build()
 
     then:
@@ -139,7 +178,7 @@ class ConfigBuilderTest extends AgentSpecification {
     System.setProperty("otel.integration.disabled-prop.enabled", "false")
 
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties())
+      .readPropertiesFromAllSources(new Properties(), new Properties())
       .build()
 
     expect:
