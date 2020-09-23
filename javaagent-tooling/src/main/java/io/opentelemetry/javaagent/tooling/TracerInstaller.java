@@ -71,7 +71,6 @@ public class TracerInstaller {
         installExporter(spanExporterFactory, config);
       } else {
         log.warn("No {} span exporter found", exporterName);
-        log.warn("No valid span exporter found. Tracing will run but spans are dropped");
       }
 
       MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
