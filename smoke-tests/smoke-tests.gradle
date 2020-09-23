@@ -1,3 +1,8 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+  maxJavaVersionForTests = JavaVersion.VERSION_11
+}
+
 apply from: "$rootDir/gradle/java.gradle"
 
 description = 'smoke-tests'
