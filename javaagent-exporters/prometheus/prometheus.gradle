@@ -1,0 +1,28 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = 'javaagent-exporters-prometheus'
+
+dependencies {
+  compileOnly(project(':javaagent-spi'))
+  compileOnly(deps.opentelemetrySdk)
+
+  implementation deps.slf4j
+  implementation(deps.prometheus)
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  implementation(deps.opentelemetryPrometheus) {
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+  }
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+}
