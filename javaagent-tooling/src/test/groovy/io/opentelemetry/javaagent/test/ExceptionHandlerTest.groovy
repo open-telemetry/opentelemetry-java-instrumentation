@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.test
+package io.opentelemetry.javaagent.test
 
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf
 import static net.bytebuddy.matcher.ElementMatchers.isMethod

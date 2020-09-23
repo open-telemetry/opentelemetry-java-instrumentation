@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.test
+package io.opentelemetry.javaagent.test
 
 import static io.opentelemetry.auto.test.utils.ClasspathUtils.isClassLoaded
 import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC

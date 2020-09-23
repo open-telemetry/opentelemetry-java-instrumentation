@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.test;
+package io.opentelemetry.javaagent.test;
 
 /** Used by {@link HelperInjectionTest} */
 class HelperClass {}
