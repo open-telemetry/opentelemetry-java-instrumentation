@@ -16,10 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.client;
 
-import static io.opentelemetry.instrumentation.auto.rmi.client.RmiClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rmi.client.RmiClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.rmi.client.RmiClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -51,7 +49,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".RmiClientDecorator"};
+    return new String[] {packageName + ".RmiClientTracer"};
   }
 
   @Override
@@ -66,26 +64,33 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   public static class RmiClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(value = 1) Method method) {
+    public static void onEnter(
+        @Advice.Argument(value = 1) Method method,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+
+      // TODO replace with client span check
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
-        return null;
+        return;
       }
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(method);
+      scope = currentContextWith(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      span.end();
-      spanWithScope.closeScope();
+      scope.close();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

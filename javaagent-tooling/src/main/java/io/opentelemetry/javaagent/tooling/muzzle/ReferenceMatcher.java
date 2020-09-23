@@ -16,18 +16,25 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreationPredicate.shouldCreateReferenceFor;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
+import com.google.common.collect.Sets;
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper.Factory;
+import io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper.Method;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import net.bytebuddy.description.field.FieldDescription;
@@ -39,7 +46,7 @@ import net.bytebuddy.pool.TypePool;
 public final class ReferenceMatcher {
 
   private final WeakCache<ClassLoader, Boolean> mismatchCache = AgentTooling.newWeakCache();
-  private final Reference[] references;
+  private final Map<String, Reference> references;
   private final Set<String> helperClassNames;
 
   public ReferenceMatcher(Reference... references) {
@@ -47,12 +54,15 @@ public final class ReferenceMatcher {
   }
 
   public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
-    this.references = references;
+    this.references = new HashMap<>(references.length);
+    for (Reference reference : references) {
+      this.references.put(reference.getClassName(), reference);
+    }
     this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
   }
 
-  public Reference[] getReferences() {
-    return references;
+  public Collection<Reference> getReferences() {
+    return references.values();
   }
 
   /**
@@ -77,13 +87,9 @@ public final class ReferenceMatcher {
   }
 
   private boolean doesMatch(ClassLoader loader) {
-    for (Reference reference : references) {
-      // Don't reference-check helper classes.
-      // They will be injected by the instrumentation's HelperInjector.
-      if (!helperClassNames.contains(reference.getClassName())) {
-        if (!checkMatch(reference, loader).isEmpty()) {
-          return false;
-        }
+    for (Reference reference : references.values()) {
+      if (!checkMatch(reference, loader).isEmpty()) {
+        return false;
       }
     }
 
@@ -103,12 +109,8 @@ public final class ReferenceMatcher {
 
     List<Mismatch> mismatches = Collections.emptyList();
 
-    for (Reference reference : references) {
-      // Don't reference-check helper classes.
-      // They will be injected by the instrumentation's HelperInjector.
-      if (!helperClassNames.contains(reference.getClassName())) {
-        mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
-      }
+    for (Reference reference : references.values()) {
+      mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
     }
 
     return mismatches;
@@ -117,21 +119,29 @@ public final class ReferenceMatcher {
   /**
    * Check a reference against a classloader's classpath.
    *
-   * @param loader
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
+  private List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
     TypePool typePool =
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
     try {
-      TypePool.Resolution resolution = typePool.describe(reference.getClassName());
-      if (!resolution.isResolved()) {
-        return Collections.<Mismatch>singletonList(
-            new Mismatch.MissingClass(
-                reference.getSources().toArray(new Source[0]), reference.getClassName()));
+      // helper classes get their own check: whether they implement all abstract methods
+      if (shouldCreateReferenceFor(reference.getClassName())) {
+        return checkHelperClassMatch(reference, typePool);
+      } else if (helperClassNames.contains(reference.getClassName())) {
+        // skip muzzle check for those helper classes that are not in instrumentation packages; e.g.
+        // some instrumentations inject guava types as helper classes
+        return Collections.emptyList();
+      } else {
+        TypePool.Resolution resolution = typePool.describe(reference.getClassName());
+        if (!resolution.isResolved()) {
+          return Collections.<Mismatch>singletonList(
+              new Mismatch.MissingClass(
+                  reference.getSources().toArray(new Source[0]), reference.getClassName()));
+        }
+        return checkMatch(reference, resolution.resolve());
       }
-      return checkMatch(reference, resolution.resolve());
     } catch (Exception e) {
       if (e.getMessage().startsWith("Cannot resolve type description for ")) {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
@@ -147,7 +157,52 @@ public final class ReferenceMatcher {
     }
   }
 
-  public static List<Reference.Mismatch> checkMatch(
+  // for helper classes we make sure that all abstract methods from super classes and interfaces are
+  // implemented
+  private List<Reference.Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
+    List<Mismatch> mismatches = Collections.emptyList();
+
+    HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
+
+    if (!helperWrapper.hasSuperTypes() || helperWrapper.isAbstract()) {
+      return mismatches;
+    }
+
+    // treat the helper type as a bag of methods: collect all methods defined in the helper class,
+    // all superclasses and interfaces and check if all abstract methods are implemented somewhere
+    Set<HelperReferenceWrapper.Method> abstractMethods = new HashSet<>();
+    Set<HelperReferenceWrapper.Method> plainMethods = new HashSet<>();
+    collectMethodsFromTypeHierarchy(helperWrapper, abstractMethods, plainMethods);
+
+    Set<HelperReferenceWrapper.Method> unimplementedMethods =
+        Sets.difference(abstractMethods, plainMethods);
+    for (HelperReferenceWrapper.Method unimplementedMethod : unimplementedMethods) {
+      mismatches =
+          lazyAdd(
+              mismatches,
+              new Reference.Mismatch.MissingMethod(
+                  helperClass.getSources().toArray(new Reference.Source[0]),
+                  unimplementedMethod.getDeclaringClass(),
+                  unimplementedMethod.getName(),
+                  unimplementedMethod.getDescriptor()));
+    }
+
+    return mismatches;
+  }
+
+  private static void collectMethodsFromTypeHierarchy(
+      HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
+
+    for (HelperReferenceWrapper.Method method : type.getMethods()) {
+      (method.isAbstract() ? abstractMethods : plainMethods).add(method);
+    }
+
+    for (HelperReferenceWrapper superType : type.getSuperTypes()) {
+      collectMethodsFromTypeHierarchy(superType, abstractMethods, plainMethods);
+    }
+  }
+
+  private static List<Reference.Mismatch> checkMatch(
       Reference reference, TypeDescription typeOnClasspath) {
     List<Mismatch> mismatches = Collections.emptyList();
 
@@ -205,6 +260,7 @@ public final class ReferenceMatcher {
                 mismatches,
                 new Reference.Mismatch.MissingMethod(
                     methodRef.getSources().toArray(new Reference.Source[0]),
+                    reference.getClassName(),
                     methodRef.getName(),
                     methodRef.getDescriptor()));
       } else {

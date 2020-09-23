@@ -16,11 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.grpc.server;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.auto.grpc.server.GrpcExtractAdapter.GETTER;
-import static io.opentelemetry.instrumentation.auto.grpc.server.GrpcServerDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.grpc.server.GrpcServerDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.instrumentation.auto.grpc.server.GrpcServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.ForwardingServerCall;
@@ -51,17 +47,14 @@ public class TracingServerInterceptor implements ServerInterceptor {
       ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
     String methodName = call.getMethodDescriptor().getFullMethodName();
-    Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
-    spanBuilder.setParent(extract(headers, GETTER));
-    Span span = spanBuilder.startSpan();
+    Span span = TRACER.startSpan(methodName, headers);
+
     SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     InetSocketAddress iAddr = addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
     GrpcHelper.prepareSpan(span, methodName, iAddr, true);
 
-    DECORATE.afterStart(span);
-
     ServerCall.Listener<ReqT> result;
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = currentContextWith(span)) {
 
       try {
         // Wrap the server call so that we can decorate the span
@@ -71,13 +64,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
         // call other interceptors
         result = next.startCall(tracingServerCall, headers);
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, e);
         throw e;
       }
     }
-    // span finished by TracingServerCall
 
     // This ensures the server implementation can see the span in scope
     return new TracingServerCallListener<>(span, result);
@@ -94,11 +84,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void close(Status status, Metadata trailers) {
-      DECORATE.onClose(span, status);
-      try (Scope scope = currentContextWith(span)) {
+      TRACER.setStatus(span, status);
+      try (Scope ignored = currentContextWith(span)) {
         delegate().close(status, trailers);
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
+        TRACER.endExceptionally(span, e);
         throw e;
       }
     }
@@ -121,60 +111,50 @@ public class TracingServerInterceptor implements ServerInterceptor {
               "message.type", AttributeValue.stringAttributeValue("RECEIVED"),
               "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onMessage(message);
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onHalfClose();
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, e);
         throw e;
       }
     }
 
     @Override
     public void onCancel() {
-      // Finishes span.
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onCancel();
         span.setAttribute("canceled", true);
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
+        TRACER.endExceptionally(span, e);
         throw e;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
       }
+      TRACER.end(span);
     }
 
     @Override
     public void onComplete() {
-      // Finishes span.
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onComplete();
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
+        TRACER.endExceptionally(span, e);
         throw e;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
       }
+      TRACER.end(span);
     }
 
     @Override
     public void onReady() {
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onReady();
       } catch (Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(span, e);
         throw e;
       }
     }

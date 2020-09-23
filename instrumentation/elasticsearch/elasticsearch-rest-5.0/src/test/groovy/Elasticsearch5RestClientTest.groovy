@@ -115,9 +115,11 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }

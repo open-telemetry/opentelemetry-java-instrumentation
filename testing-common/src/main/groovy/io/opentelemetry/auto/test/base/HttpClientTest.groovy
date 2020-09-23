@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.test.base
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -27,8 +26,6 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.api.MoreAttributes
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -106,29 +103,21 @@ abstract class HttpClientTest extends AgentTestRunner {
     return null
   }
 
-  def "basic #method request #url - tagQueryString=#tagQueryString"() {
+  def "basic #method request #url"() {
     when:
-    def status = withConfigOverride(Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
-      doRequest(method, url)
-    }
+    def status = doRequest(method, url)
 
     then:
     status == 200
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, tagQueryString, url)
+        clientSpan(it, 0, null, method, url)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
     where:
-    path                                | tagQueryString
-    "/success"                          | false
-    "/success"                          | true
-    "/success?with=params"              | false
-    "/success?with=params"              | true
-    "/success#with+fragment"            | true
-    "/success?with=params#and=fragment" | true
+    path << ["/success", "/success?with=params"]
 
     method = "GET"
     url = server.address.resolve(path)
@@ -240,7 +229,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, uri)
+        clientSpan(it, 0, null, method, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
@@ -262,7 +251,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 4 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, uri)
+        clientSpan(it, 0, null, method, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 3 + extraClientSpans(), span(extraClientSpans()))
@@ -288,7 +277,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, uri, statusOnRedirectError(), thrownException)
+        clientSpan(it, 0, null, method, uri, statusOnRedirectError(), thrownException)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
@@ -311,7 +300,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, uri)
+        clientSpan(it, 0, null, method, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
@@ -339,7 +328,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
     }
 
@@ -364,7 +353,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
     }
 
@@ -388,7 +377,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
     }
 
@@ -410,7 +399,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, uri)
+        clientSpan(it, 0, null, method, uri)
       }
     }
 
@@ -419,7 +408,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
@@ -434,21 +423,18 @@ abstract class HttpClientTest extends AgentTestRunner {
         errorEvent(exception.class, exception.message)
       }
       attributes {
+        "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_FLAVOR.key()}" httpFlavor
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
         }
         if (status) {
           "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
-        }
-        if (tagQueryString) {
-          "$MoreAttributes.HTTP_QUERY" uri.query
-          "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
         }
       }
     }

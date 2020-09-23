@@ -83,16 +83,15 @@ class ReactorNettyTest extends AgentTestRunner {
       spanKind CLIENT
       errored false
       attributes {
+        "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
         "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        // Optional
         "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key()}" uri.toString()
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
-        if (status) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
-        }
+        "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
       }
     }
   }

@@ -26,6 +26,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 class ApacheHttpClientTracer
     extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
@@ -35,6 +36,11 @@ class ApacheHttpClientTracer
   @Override
   protected String method(HttpUriRequest httpRequest) {
     return httpRequest.getMethod();
+  }
+
+  @Override
+  protected @Nullable String flavor(HttpUriRequest httpUriRequest) {
+    return httpUriRequest.getProtocolVersion().toString();
   }
 
   @Override

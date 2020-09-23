@@ -22,13 +22,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -49,28 +47,6 @@ public class GrpcClientBuilderForAddressInstrumentation extends AbstractGrpcClie
     return singletonMap(
         isMethod().and(named("forAddress").and(ElementMatchers.takesArguments(2))),
         GrpcClientBuilderForAddressInstrumentation.class.getName() + "$ForAddressAdvice");
-  }
-
-  public static class AddInterceptorAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addInterceptor(
-        @Advice.This ManagedChannelBuilder thiz,
-        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
-      boolean shouldRegister = true;
-      for (ClientInterceptor interceptor : interceptors) {
-        if (interceptor instanceof TracingClientInterceptor) {
-          shouldRegister = false;
-          break;
-        }
-      }
-      if (shouldRegister) {
-        ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
-            InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
-        InetSocketAddress sockAddr = contextStore.get(thiz);
-        interceptors.add(0, new TracingClientInterceptor(sockAddr));
-      }
-    }
   }
 
   public static class ForAddressAdvice {

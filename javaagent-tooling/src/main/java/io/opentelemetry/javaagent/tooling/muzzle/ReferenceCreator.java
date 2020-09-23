@@ -16,7 +16,12 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreationPredicate.shouldCreateReferenceFor;
+
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -27,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
@@ -44,18 +50,6 @@ import net.bytebuddy.jar.asm.Type;
 // - cast opcodes in method bodies
 public class ReferenceCreator extends ClassVisitor {
   /**
-   * Classes in this namespace will be scanned and used to create references.
-   *
-   * <p>For now we're hardcoding this to the instrumentation package so we only create references
-   * from the method advice and helper classes.
-   */
-  private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.instrumentation.";
-
-  private static final String[] REFERENCE_CREATION_PACKAGE_EXCLUDES = {
-    "io.opentelemetry.instrumentation.api.", "io.opentelemetry.instrumentation.auto.api."
-  };
-
-  /**
    * Generate all references reachable from a given class.
    *
    * @param entryPointClassName Starting point for generating references.
@@ -71,13 +65,20 @@ public class ReferenceCreator extends ClassVisitor {
     Queue<String> instrumentationQueue = new ArrayDeque<>();
     instrumentationQueue.add(entryPointClassName);
 
+    boolean isEntryPoint = true;
+
     while (!instrumentationQueue.isEmpty()) {
       String className = instrumentationQueue.remove();
       visitedSources.add(className);
-      InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
-      try {
-        ReferenceCreator cv = new ReferenceCreator();
-        // only start from method bodies on the first pass
+
+      try (InputStream in =
+          checkNotNull(
+              loader.getResourceAsStream(Utils.getResourceName(className)),
+              "Couldn't find class file %s",
+              className)) {
+
+        // only start from method bodies for entry point class (skips class/method references)
+        ReferenceCreator cv = new ReferenceCreator(isEntryPoint);
         ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -85,7 +86,7 @@ public class ReferenceCreator extends ClassVisitor {
         for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
           String key = entry.getKey();
           // Don't generate references created outside of the instrumentation package.
-          if (!visitedSources.contains(entry.getKey()) && isInReferenceCreationPackage(key)) {
+          if (!visitedSources.contains(entry.getKey()) && shouldCreateReferenceFor(key)) {
             instrumentationQueue.add(key);
           }
           if (references.containsKey(key)) {
@@ -97,29 +98,13 @@ public class ReferenceCreator extends ClassVisitor {
 
       } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + className, e);
-      } finally {
-        if (in != null) {
-          try {
-            in.close();
-          } catch (IOException e) {
-            throw new IllegalStateException("Error closing class " + className, e);
-          }
-        }
+      }
+
+      if (isEntryPoint) {
+        isEntryPoint = false;
       }
     }
     return references;
-  }
-
-  private static boolean isInReferenceCreationPackage(String className) {
-    if (!className.startsWith(REFERENCE_CREATION_PACKAGE)) {
-      return false;
-    }
-    for (String exclude : REFERENCE_CREATION_PACKAGE_EXCLUDES) {
-      if (className.startsWith(exclude)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   /**
@@ -191,12 +176,14 @@ public class ReferenceCreator extends ClassVisitor {
     return type;
   }
 
+  private final boolean skipClassReferenceGeneration;
   private final Map<String, Reference> references = new HashMap<>();
   private String refSourceClassName;
   private Type refSourceType;
 
-  private ReferenceCreator() {
+  private ReferenceCreator(boolean skipClassReferenceGeneration) {
     super(Opcodes.ASM7);
+    this.skipClassReferenceGeneration = skipClassReferenceGeneration;
   }
 
   public Map<String, Reference> getReferences() {
@@ -224,9 +211,32 @@ public class ReferenceCreator extends ClassVisitor {
       String[] interfaces) {
     refSourceClassName = Utils.getClassName(name);
     refSourceType = Type.getType("L" + name + ";");
-    // Additional references we could check
-    // - supertype of class and visible from this package
-    // - interfaces of class and visible from this package
+
+    // class references are not generated for advice classes, only for helper classes
+    if (!skipClassReferenceGeneration) {
+      String fixedSuperClassName = Utils.getClassName(superName);
+
+      addReference(
+          new Reference.Builder(fixedSuperClassName).withSource(refSourceClassName).build());
+
+      List<String> fixedInterfaceNames = new ArrayList<>(interfaces.length);
+      for (String interfaceName : interfaces) {
+        String fixedInterfaceName = Utils.getClassName(interfaceName);
+        fixedInterfaceNames.add(fixedInterfaceName);
+
+        addReference(
+            new Reference.Builder(fixedInterfaceName).withSource(refSourceClassName).build());
+      }
+
+      addReference(
+          new Reference.Builder(refSourceClassName)
+              .withSource(refSourceClassName)
+              .withSuperName(fixedSuperClassName)
+              .withInterfaces(fixedInterfaceNames)
+              .withFlag(computeTypeManifestationFlag(access))
+              .build());
+    }
+
     super.visit(version, access, name, signature, superName, interfaces);
   }
 
@@ -244,10 +254,69 @@ public class ReferenceCreator extends ClassVisitor {
   @Override
   public MethodVisitor visitMethod(
       int access, String name, String descriptor, String signature, String[] exceptions) {
+
+    // declared method references are not generated for advice classes, only for helper classes
+    if (!skipClassReferenceGeneration) {
+      Type methodType = Type.getMethodType(descriptor);
+
+      Flag visibilityFlag = computeVisibilityFlag(access);
+      Flag ownershipFlag = computeOwnershipFlag(access);
+      Flag manifestationFlag = computeTypeManifestationFlag(access);
+
+      // as an optimization skip constructors, private and static methods
+      if (!(visibilityFlag == Flag.PRIVATE
+          || ownershipFlag == Flag.STATIC
+          || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
+        addReference(
+            new Reference.Builder(refSourceClassName)
+                .withSource(refSourceClassName)
+                .withMethod(
+                    new Source[0],
+                    new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
+                    name,
+                    methodType.getReturnType(),
+                    methodType.getArgumentTypes())
+                .build());
+      }
+    }
+
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
         super.visitMethod(access, name, descriptor, signature, exceptions));
+  }
+
+  /** @see net.bytebuddy.description.modifier.Visibility */
+  private static Flag computeVisibilityFlag(int access) {
+    if (Flag.PUBLIC.matches(access)) {
+      return Flag.PUBLIC;
+    } else if (Flag.PROTECTED.matches(access)) {
+      return Flag.PROTECTED;
+    } else if (Flag.PACKAGE.matches(access)) {
+      return Flag.PACKAGE;
+    } else {
+      return Flag.PRIVATE;
+    }
+  }
+
+  /** @see net.bytebuddy.description.modifier.Ownership */
+  private static Flag computeOwnershipFlag(int access) {
+    if (Flag.STATIC.matches(access)) {
+      return Flag.STATIC;
+    } else {
+      return Flag.NON_STATIC;
+    }
+  }
+
+  /** @see net.bytebuddy.description.modifier.TypeManifestation */
+  private static Flag computeTypeManifestationFlag(int access) {
+    if (Flag.ABSTRACT.matches(access)) {
+      return Flag.ABSTRACT;
+    } else if (Flag.FINAL.matches(access)) {
+      return Flag.FINAL;
+    } else {
+      return Flag.NON_FINAL;
+    }
   }
 
   private class AdviceReferenceMethodVisitor extends MethodVisitor {

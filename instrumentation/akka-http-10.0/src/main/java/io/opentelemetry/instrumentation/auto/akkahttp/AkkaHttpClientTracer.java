@@ -49,6 +49,11 @@ public class AkkaHttpClientTracer
   }
 
   @Override
+  protected String flavor(HttpRequest httpRequest) {
+    return httpRequest.protocol().value();
+  }
+
+  @Override
   protected Integer status(HttpResponse httpResponse) {
     return httpResponse.status().intValue();
   }

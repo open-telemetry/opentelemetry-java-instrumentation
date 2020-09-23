@@ -133,28 +133,18 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
     }
 
     public Reference[] generateReferences() {
-      // track sources we've generated references from to avoid recursion
-      Set<String> referenceSources = new HashSet<>();
       Map<String, Reference> references = new HashMap<>();
-      Set<String> adviceClassNames = new HashSet<>();
-
-      for (String adviceClassName : instrumenter.transformers().values()) {
-        adviceClassNames.add(adviceClassName);
-      }
+      Set<String> adviceClassNames = new HashSet<>(instrumenter.transformers().values());
 
       for (String adviceClass : adviceClassNames) {
-        if (!referenceSources.contains(adviceClass)) {
-          referenceSources.add(adviceClass);
-          for (Map.Entry<String, Reference> entry :
-              ReferenceCreator.createReferencesFrom(
-                      adviceClass, ReferenceMatcher.class.getClassLoader())
-                  .entrySet()) {
-            if (references.containsKey(entry.getKey())) {
-              references.put(
-                  entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
-            } else {
-              references.put(entry.getKey(), entry.getValue());
-            }
+        for (Map.Entry<String, Reference> entry :
+            ReferenceCreator.createReferencesFrom(
+                    adviceClass, ReferenceMatcher.class.getClassLoader())
+                .entrySet()) {
+          if (references.containsKey(entry.getKey())) {
+            references.put(entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
+          } else {
+            references.put(entry.getKey(), entry.getValue());
           }
         }
       }

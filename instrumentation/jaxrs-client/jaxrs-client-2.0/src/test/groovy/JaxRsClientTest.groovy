@@ -72,12 +72,14 @@ abstract class JaxRsClientTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
             "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
             "${SemanticAttributes.HTTP_METHOD.key()}" method
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" statusCode
+            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
         serverSpan(it, 1, span(0))
