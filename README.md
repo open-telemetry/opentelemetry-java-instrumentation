@@ -56,7 +56,15 @@ Note: These parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please report any bugs or unexpected
 behavior you may find.
 
-#### Jaeger exporter
+#### Exporters
+
+The following configuration properties are common to all exporters:
+
+| System property          | Environment variable     | Purpose                                                                                            |
+|--------------------------|--------------------------|----------------------------------------------------------------------------------------------------|
+| otel.exporter            | OTEL_EXPORTER            | To select exporter e.g. `otlp,jaeger`. Defaults to `otlp`                                          |
+
+##### Jaeger exporter
 
 A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
 only supports gRPC as its communications protocol.
@@ -67,7 +75,7 @@ only supports gRPC as its communications protocol.
 | otel.jaeger.endpoint     | OTEL_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
 | otel.jaeger.service.name | OTEL_JAEGER_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                       |
 
-#### Zipkin exporter
+##### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
 | System property          | Environment variable     | Purpose                                                                                                               |
@@ -76,7 +84,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 | otel.zipkin.endpoint     | OTEL_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to, default is "http://localhost:9411/api/v2/spans". Currently only HTTP is supported. |
 | otel.zipkin.service.name | OTEL_ZIPKIN_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                                          |
 
-#### OTLP exporter
+##### OTLP exporter
 
 A simple wrapper for the OTLP exporter of opentelemetry-java.
 
@@ -91,7 +99,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 In order to configure the service name for the OTLP exporter, you must add `service.name` key
 to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
-#### Logging exporter
+##### Logging exporter
 
 The logging exporter simply prints the name of the span along with its
 attributes to stdout. It is used mainly for testing and debugging.
