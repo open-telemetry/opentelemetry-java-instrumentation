@@ -1,9 +1,3 @@
-// Set properties before any plugins get loaded
-ext {
-  // Since we're using CompletableFutures in the test...
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {

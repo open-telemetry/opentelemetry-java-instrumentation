@@ -33,7 +33,7 @@ if (applyCodeCoverage) {
 if (project.hasProperty("minJavaVersionForTests")) {
   project.ext.release = project.getProperty("minJavaVersionForTests")
 } else {
-  project.ext.release = JavaVersion.VERSION_1_7
+  project.ext.release = JavaVersion.VERSION_1_8
 }
 
 java {
@@ -173,13 +173,6 @@ project.afterEvaluate {
   }
 }
 
-if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
-  tasks.withType(AbstractArchiveTask).configureEach {
-    version = null
-  }
-}
-
-
 if (!rootProject.ext.has("javaExecutableVersionCache")) {
   rootProject.ext.javaExecutableVersionCache = [:]
 }
@@ -261,10 +254,6 @@ def addTestRule(String testTaskName) {
           tasks.withType(Test).all {
             executable = toExecutable(javaHomeForTests)
             enabled = isJavaVersionAllowed(requestedJavaVersion)
-            if (requestedJavaVersion.isJava7()) {
-              // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
-              jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
-            }
           }
         } else {
           throw new BuildCancelledException("Requested java version $requestedJavaVersion not found")
