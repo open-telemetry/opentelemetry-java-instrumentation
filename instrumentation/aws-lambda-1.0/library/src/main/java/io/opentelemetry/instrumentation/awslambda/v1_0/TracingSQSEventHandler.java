@@ -17,48 +17,44 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
 
-/**
- * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
- * #doHandleRequest(Object, Context)}.
- */
-public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O> {
+public abstract class TracingSQSEventHandler extends TracingRequestHandler<SQSEvent, Void> {
 
-  private final AwsLambdaTracer tracer;
+  private final AwsLambdaMessageTracer tracer;
 
   /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
-  protected TracingRequestHandler() {
-    this.tracer = new AwsLambdaTracer();
+  protected TracingSQSEventHandler() {
+    this.tracer = new AwsLambdaMessageTracer();
   }
 
   /**
    * Creates a new {@link TracingRequestHandler} which traces using the specified {@link Tracer}.
    */
-  protected TracingRequestHandler(Tracer tracer) {
-    this.tracer = new AwsLambdaTracer(tracer);
+  protected TracingSQSEventHandler(Tracer tracer) {
+    super(tracer);
+    this.tracer = new AwsLambdaMessageTracer(tracer);
   }
 
   /**
    * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * AwsLambdaTracer}.
+   * AwsLambdaMessageTracer}.
    */
-  protected TracingRequestHandler(AwsLambdaTracer tracer) {
+  protected TracingSQSEventHandler(AwsLambdaMessageTracer tracer) {
     this.tracer = tracer;
   }
 
   @Override
-  public final O handleRequest(I input, Context context) {
-    Span span = tracer.startSpan(context, Kind.SERVER);
+  public Void doHandleRequest(SQSEvent event, Context context) {
+    Span span = tracer.startSpan(context, event);
     Throwable error = null;
     try (Scope ignored = tracer.startScope(span)) {
-      return doHandleRequest(input, context);
+      handleEvent(event, context);
     } catch (Throwable t) {
       error = t;
       throw t;
@@ -70,7 +66,17 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       }
       OpenTelemetrySdk.getTracerProvider().forceFlush().join(1, TimeUnit.SECONDS);
     }
+    return null;
   }
 
-  protected abstract O doHandleRequest(I input, Context context);
+  /**
+   * Handles a {@linkplain SQSEvent batch of messages}. Implement this class to do the actual
+   * processing of incoming SQS messages.
+   */
+  protected abstract void handleEvent(SQSEvent event, Context context);
+
+  // We use in SQS message handler too.
+  AwsLambdaMessageTracer getTracer() {
+    return tracer;
+  }
 }

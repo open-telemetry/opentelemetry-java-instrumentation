@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.awslambda.v1_0
+package io.opentelemetry.instrumentation.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import io.opentelemetry.auto.test.AgentTestTrait
-import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestHandlerTest
+import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import io.opentelemetry.auto.test.InstrumentationTestTrait
 
-class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {
+class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements InstrumentationTestTrait {
 
-  def cleanup() {
-    assert testWriter.forceFlushCalled()
-  }
-
-  class TestRequestHandler implements RequestHandler<String, String> {
+  class TestHandler extends TracingSQSEventHandler {
     @Override
-    String handleRequest(String input, Context context) {
-      return doHandleRequest(input, context)
+    protected void handleEvent(SQSEvent event, Context context) {
     }
   }
 
   @Override
-  RequestHandler<String, String> handler() {
-    return new TestRequestHandler()
+  RequestHandler<SQSEvent, Void> handler() {
+    return new TestHandler()
   }
 }

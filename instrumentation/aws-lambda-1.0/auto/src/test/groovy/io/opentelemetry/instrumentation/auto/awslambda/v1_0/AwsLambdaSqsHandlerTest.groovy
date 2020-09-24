@@ -18,24 +18,21 @@ package io.opentelemetry.instrumentation.auto.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
+import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import io.opentelemetry.auto.test.AgentTestTrait
-import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestHandlerTest
+import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaSqsHandlerTest
 
-class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {
+class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements AgentTestTrait {
 
-  def cleanup() {
-    assert testWriter.forceFlushCalled()
-  }
-
-  class TestRequestHandler implements RequestHandler<String, String> {
+  class TestRequestHandler implements RequestHandler<SQSEvent, Void> {
     @Override
-    String handleRequest(String input, Context context) {
-      return doHandleRequest(input, context)
+    Void handleRequest(SQSEvent input, Context context) {
+      return null
     }
   }
 
   @Override
-  RequestHandler<String, String> handler() {
+  RequestHandler<SQSEvent, Void> handler() {
     return new TestRequestHandler()
   }
 }

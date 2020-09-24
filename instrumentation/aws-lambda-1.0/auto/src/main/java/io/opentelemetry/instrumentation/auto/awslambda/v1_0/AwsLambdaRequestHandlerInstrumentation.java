@@ -16,7 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.awslambda.v1_0;
 
-import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.TRACER;
+import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.FUNCTION_TRACER;
+import static io.opentelemetry.instrumentation.auto.awslambda.v1_0.AwsLambdaInstrumentationHelper.MESSAGE_TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -25,17 +26,20 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -64,24 +68,42 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
   public static class HandleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(context);
-      scope = TRACER.startScope(span);
+        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionScope") Scope functionScope,
+        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageScope") Scope messageScope) {
+      functionSpan = FUNCTION_TRACER.startSpan(context, Kind.SERVER);
+      functionScope = FUNCTION_TRACER.startScope(functionSpan);
+      if (arg instanceof SQSEvent) {
+        messageSpan = MESSAGE_TRACER.startSpan(context, (SQSEvent) arg);
+        messageScope = MESSAGE_TRACER.startScope(messageSpan);
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
+        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionScope") Scope functionScope,
+        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageScope") Scope messageScope) {
 
+      if (messageScope != null) {
+        messageScope.close();
+        if (throwable != null) {
+          MESSAGE_TRACER.endExceptionally(messageSpan, throwable);
+        } else {
+          MESSAGE_TRACER.end(messageSpan);
+        }
+      }
+
+      functionScope.close();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        FUNCTION_TRACER.endExceptionally(functionSpan, throwable);
       } else {
-        TRACER.end(span);
+        FUNCTION_TRACER.end(functionSpan);
       }
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
     }

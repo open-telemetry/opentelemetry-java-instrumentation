@@ -21,8 +21,9 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import io.opentelemetry.auto.test.InstrumentationSpecification
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
-abstract class AbstractAwsLambdaTest extends InstrumentationSpecification {
+abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
 
   protected static String doHandleRequest(String input, Context context) {
     if (input == "hello") {
@@ -49,7 +50,7 @@ abstract class AbstractAwsLambdaTest extends InstrumentationSpecification {
           operationName("my_function")
           spanKind SERVER
           attributes {
-            "faas.execution" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
           }
         }
       }
@@ -79,7 +80,7 @@ abstract class AbstractAwsLambdaTest extends InstrumentationSpecification {
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
-            "faas.execution" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
           }
         }
       }
