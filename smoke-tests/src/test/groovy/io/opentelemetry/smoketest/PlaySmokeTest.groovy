@@ -45,7 +45,7 @@ class PlaySmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 14]
+    jdk << [8, 11, 15]
   }
 
 }

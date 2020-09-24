@@ -5,7 +5,7 @@
 Open Telemetry Auto Instrumentation's minimal supported version is java 7.
 All jar files that we produce, unless noted otherwise, have bytecode
 compatible with java 7 runtime. In addition to that we test our code with all
-later java versions as well: from 8 to 14.
+later java versions as well: from 8 to 15.
 
 Some libraries that we auto-instrument may have higher minimal requirements.
 In this case we compile and test corresponding auto-instrumentation with
