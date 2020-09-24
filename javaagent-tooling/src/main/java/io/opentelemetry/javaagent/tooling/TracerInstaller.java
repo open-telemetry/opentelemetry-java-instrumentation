@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.TracerCustomizer;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
-import io.opentelemetry.javaagent.tooling.exporter.DefaultExporterConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -33,6 +32,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +49,9 @@ public class TracerInstaller {
 
       configure();
       // Try to create an exporter from external jar file
-      String exporterJar = Config.get().getExporterJar();
-      if (exporterJar != null) {
-        installExportersFromJar(exporterJar);
+      Optional<String> exporterJar = Config.get().getExporterJar();
+      if (exporterJar.isPresent()) {
+        installExportersFromJar(exporterJar.get());
       } else {
         // Try to create embedded exporter
         installExporters(Config.get().getExporter());
@@ -63,11 +64,12 @@ public class TracerInstaller {
   }
 
   private static synchronized void installExporters(String exportersName) {
+    Properties config = Config.get().asJavaProperties();
+
     String[] exporters = exportersName.split(",", -1);
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {
-        DefaultExporterConfig config = new DefaultExporterConfig("exporter");
         installExporter(spanExporterFactory, config);
       } else {
         log.warn("No {} span exporter found", exporterName);
@@ -75,7 +77,6 @@ public class TracerInstaller {
 
       MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
       if (metricExporterFactory != null) {
-        DefaultExporterConfig config = new DefaultExporterConfig("exporter");
         installExporter(metricExporterFactory, config);
       } else {
         log.debug("No {} metric exporter found", exporterName);
@@ -124,7 +125,7 @@ public class TracerInstaller {
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
     }
-    DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+    Properties config = Config.get().asJavaProperties();
     ExporterClassLoader exporterLoader =
         new ExporterClassLoader(url, TracerInstaller.class.getClassLoader());
 
@@ -146,11 +147,10 @@ public class TracerInstaller {
   }
 
   private static void installExporter(
-      MetricExporterFactory metricExporterFactory, DefaultExporterConfig config) {
+      MetricExporterFactory metricExporterFactory, Properties config) {
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
-        .readEnvironmentVariables()
-        .readSystemProperties()
+        .readProperties(config)
         .setMetricExporter(metricExporter)
         .setMetricProducers(
             Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
@@ -158,14 +158,10 @@ public class TracerInstaller {
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
 
-  private static void installExporter(
-      SpanExporterFactory spanExporterFactory, DefaultExporterConfig config) {
+  private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     BatchSpanProcessor spanProcessor =
-        BatchSpanProcessor.newBuilder(spanExporter)
-            .readEnvironmentVariables()
-            .readSystemProperties()
-            .build();
+        BatchSpanProcessor.newBuilder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
@@ -201,7 +197,7 @@ public class TracerInstaller {
     /* Update trace config from env vars or sys props */
     TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
     tracerSdkProvider.updateActiveTraceConfig(
-        activeTraceConfig.toBuilder().readEnvironmentVariables().readSystemProperties().build());
+        activeTraceConfig.toBuilder().readProperties(Config.get().asJavaProperties()).build());
   }
 
   @SuppressWarnings("unused")

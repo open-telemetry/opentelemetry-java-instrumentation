@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess.ForceFlusher;
 import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
@@ -61,6 +62,8 @@ public class AgentInstaller {
   static {
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
+    // this needs to be done as early as possible - before the first Config.get() call
+    ConfigInitializer.initialize();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {

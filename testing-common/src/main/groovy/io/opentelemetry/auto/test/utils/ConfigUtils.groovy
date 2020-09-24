@@ -18,6 +18,8 @@ package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
+import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 
@@ -36,12 +38,15 @@ class ConfigUtils {
       def existingConfig = Config.get()
       Properties properties = new Properties()
       properties.put(name, value)
-      CONFIG_INSTANCE_FIELD.set(null, new Config(properties, existingConfig))
+      setConfig(new ConfigBuilder()
+        .readProperties(existingConfig.asJavaProperties())
+        .readProperties(properties)
+        .build())
       assert Config.get() != existingConfig
       try {
         return r.call()
       } finally {
-        CONFIG_INSTANCE_FIELD.set(null, existingConfig)
+        setConfig(existingConfig)
       }
     } catch (Throwable t) {
       throw ExceptionUtils.sneakyThrow(t)
@@ -70,7 +75,11 @@ class ConfigUtils {
     assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
     assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
 
-    def newConfig = new Config()
-    CONFIG_INSTANCE_FIELD.set(null, newConfig)
+    setConfig(Config.DEFAULT)
+    ConfigInitializer.initialize()
+  }
+
+  private static setConfig(Config config) {
+    CONFIG_INSTANCE_FIELD.set(null, config)
   }
 }

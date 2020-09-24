@@ -30,6 +30,7 @@ import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -159,6 +160,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
    */
   @BeforeClass
   public void setupBeforeTests() {
+    ConfigInitializer.initialize();
+
     if (activeTransformer == null) {
       activeTransformer =
           AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);

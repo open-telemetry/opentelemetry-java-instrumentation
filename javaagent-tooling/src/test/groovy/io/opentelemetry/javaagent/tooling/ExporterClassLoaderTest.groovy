@@ -16,7 +16,6 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.javaagent.spi.exporter.ExporterConfig
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
@@ -56,7 +55,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryParent implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(ExporterConfig config) {
+    MetricExporter fromConfig(Properties config) {
       return null
     }
   }
@@ -64,7 +63,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryChild implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(ExporterConfig config) {
+    MetricExporter fromConfig(Properties config) {
       return null
     }
   }
@@ -72,7 +71,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryParent implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(ExporterConfig config) {
+    SpanExporter fromConfig(Properties config) {
       return null
     }
   }
@@ -80,7 +79,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryChild implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(ExporterConfig config) {
+    SpanExporter fromConfig(Properties config) {
       return null
     }
   }

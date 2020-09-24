@@ -17,14 +17,14 @@
 package io.opentelemetry.javaagent.exporters.logging;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.spi.exporter.ExporterConfig;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.util.Properties;
 
 @AutoService(SpanExporterFactory.class)
 public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
-  public SpanExporter fromConfig(ExporterConfig config) {
-    return new LoggingExporter(config.getString("logging.prefix", "Logging Exporter:"));
+  public SpanExporter fromConfig(Properties config) {
+    return new LoggingExporter(config.getProperty("otel.logging.prefix", "Logging Exporter:"));
   }
 }
