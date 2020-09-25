@@ -28,11 +28,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.rmi.server.RemoteServer;
 import java.util.Map;
@@ -76,7 +76,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       }
 
       // TODO review and unify with all other SERVER instrumentation
-      SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
+      Context context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
       span = TRACER.startSpan(method, context);
       scope = currentContextWith(span);

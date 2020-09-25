@@ -28,6 +28,7 @@ import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
@@ -144,7 +145,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         spanBuilder.setSpanKind(CLIENT);
       }
       Span span = spanBuilder.startSpan();
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
@@ -193,7 +194,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         // We need to copy the BasicProperties and provide a header map we can modify
         Map<String, Object> headers = props.getHeaders();
-        headers = (headers == null) ? new HashMap<String, Object>() : new HashMap<>(headers);
+        headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
         Context context = withSpan(span, Context.current());
 
@@ -253,9 +254,10 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          SpanContext extractedContext = extract(headers, GETTER);
-          if (extractedContext.isValid()) {
-            spanBuilder.addLink(extractedContext);
+          Context context = extract(headers, GETTER);
+          SpanContext spanContext = getSpan(context).getContext();
+          if (spanContext.isValid()) {
+            spanBuilder.addLink(spanContext);
           }
         }
       }
@@ -266,7 +268,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (response != null) {
         span.setAttribute("message.size", response.getBody().length);
       }
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) connection.getPort());
       try (Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onGet(span, queue);

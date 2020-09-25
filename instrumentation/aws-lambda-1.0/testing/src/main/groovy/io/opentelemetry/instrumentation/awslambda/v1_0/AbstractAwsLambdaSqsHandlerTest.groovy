@@ -72,7 +72,7 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           operationName("my_function")
           spanKind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
         span(1) {
@@ -80,8 +80,8 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           spanKind CONSUMER
           parentId(span(0).spanId)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM}" "AmazonSQS"
-            "${SemanticAttributes.MESSAGING_OPERATION}" "process"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad8")
         }
@@ -117,7 +117,7 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           operationName("my_function")
           spanKind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
         span(1) {
@@ -125,8 +125,8 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
           spanKind CONSUMER
           parentId(span(0).spanId)
           attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM}" "AmazonSQS"
-            "${SemanticAttributes.MESSAGING_OPERATION}" "process"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
           }
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad8")
         }

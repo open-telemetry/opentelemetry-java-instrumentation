@@ -16,10 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.hibernate;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
@@ -36,14 +38,14 @@ public class SessionMethodUtils {
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
   public static <TARGET, ENTITY> SpanWithScope startScopeFrom(
-      ContextStore<TARGET, Span> contextStore,
+      ContextStore<TARGET, Context> contextStore,
       TARGET spanKey,
       String operationName,
       ENTITY entity,
       boolean createSpan) {
 
-    Span sessionSpan = contextStore.get(spanKey);
-    if (sessionSpan == null) {
+    Context sessionContext = contextStore.get(spanKey);
+    if (sessionContext == null) {
       return null; // No state found. We aren't in a Session.
     }
 
@@ -56,12 +58,12 @@ public class SessionMethodUtils {
       Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForOperation(operationName, entity))
-              .setParent(sessionSpan)
+              .setParent(sessionContext)
               .startSpan();
       DECORATE.afterStart(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, withScopedContext(withSpan(span, sessionContext)));
     } else {
-      return new SpanWithScope(null, currentContextWith(sessionSpan));
+      return new SpanWithScope(null, withScopedContext(sessionContext));
     }
   }
 
@@ -94,16 +96,16 @@ public class SessionMethodUtils {
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <S, T> void attachSpanFromStore(
-      ContextStore<S, Span> sourceContextStore,
+      ContextStore<S, Context> sourceContextStore,
       S source,
-      ContextStore<T, Span> targetContextStore,
+      ContextStore<T, Context> targetContextStore,
       T target) {
 
-    Span sessionSpan = sourceContextStore.get(source);
-    if (sessionSpan == null) {
+    Context sessionContext = sourceContextStore.get(source);
+    if (sessionContext == null) {
       return;
     }
 
-    targetContextStore.putIfAbsent(target, sessionSpan);
+    targetContextStore.putIfAbsent(target, sessionContext);
   }
 }

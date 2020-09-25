@@ -48,7 +48,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
         tracer
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
-            .setAttribute(SemanticAttributes.DB_SYSTEM.key(), dbSystem(connection))
+            .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .startSpan();
 
     if (connection != null) {
@@ -65,6 +65,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
    *
    * <p>Attaches new context to the request to avoid creating duplicate client spans.
    */
+  @Override
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     Context clientSpanContext = Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, span);
@@ -95,10 +96,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   /** This should be called when the connection is being used, not when it's created. */
   protected Span onConnection(Span span, CONNECTION connection) {
-    span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
-    span.setAttribute(SemanticAttributes.DB_NAME.key(), dbName(connection));
-    span.setAttribute(
-        SemanticAttributes.DB_CONNECTION_STRING.key(), dbConnectionString(connection));
+    span.setAttribute(SemanticAttributes.DB_USER, dbUser(connection));
+    span.setAttribute(SemanticAttributes.DB_NAME, dbName(connection));
+    span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, dbConnectionString(connection));
     return span;
   }
 
@@ -116,7 +116,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   protected void onStatement(Span span, String statement) {
-    span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement);
+    span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
   }
 
   // TODO: "When it's impossible to get any meaningful representation of the span name, it can be

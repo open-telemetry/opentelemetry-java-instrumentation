@@ -75,10 +75,8 @@ public class TracerAutoConfiguration {
 
   private void setSampler(TracerProperties tracerProperties) {
     TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getTracerProvider()
-            .getActiveTraceConfig()
-            .toBuilder()
-            .setSampler(Samplers.probability(tracerProperties.getSamplerProbability()))
+        OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig().toBuilder()
+            .setSampler(Samplers.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
 
     OpenTelemetrySdk.getTracerProvider().updateActiveTraceConfig(updatedTraceConfig);

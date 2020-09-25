@@ -85,23 +85,25 @@ public class JMSDecorator extends ClientDecorator {
   public void afterStart(Span span, String spanName, Message message) {
     super.afterStart(span);
     if (spanName.startsWith("queue/")) {
-      SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "queue");
-      SemanticAttributes.MESSAGING_DESTINATION.set(
-          span, spanName.replaceFirst("^queue/", "").replaceFirst(" (send|receive)$", ""));
+      span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
+      span.setAttribute(
+          SemanticAttributes.MESSAGING_DESTINATION,
+          spanName.replaceFirst("^queue/", "").replaceFirst(" (send|receive)$", ""));
     } else if (spanName.startsWith("topic/")) {
-      SemanticAttributes.MESSAGING_DESTINATION_KIND.set(span, "topic");
-      SemanticAttributes.MESSAGING_DESTINATION.set(
-          span, spanName.replaceFirst("^topic/", "").replaceFirst(" (send|receive)$", ""));
+      span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
+      span.setAttribute(
+          SemanticAttributes.MESSAGING_DESTINATION,
+          spanName.replaceFirst("^topic/", "").replaceFirst(" (send|receive)$", ""));
     }
     if (spanName.startsWith("queue/<temporary>") || spanName.startsWith("topic/<temporary>")) {
-      SemanticAttributes.MESSAGING_TEMP_DESTINATION.set(span, true);
+      span.setAttribute(SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
     }
 
     if (message != null) {
       try {
         String messageID = message.getJMSMessageID();
         if (messageID != null) {
-          SemanticAttributes.MESSAGING_MESSAGE_ID.set(span, messageID);
+          span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, messageID);
         }
       } catch (Exception e) {
         log.debug("Failure getting JMS message id", e);
@@ -110,7 +112,7 @@ public class JMSDecorator extends ClientDecorator {
       try {
         String correlationID = message.getJMSCorrelationID();
         if (correlationID != null) {
-          SemanticAttributes.MESSAGING_CONVERSATION_ID.set(span, correlationID);
+          span.setAttribute(SemanticAttributes.MESSAGING_CONVERSATION_ID, correlationID);
         }
       } catch (Exception e) {
         log.debug("Failure getting JMS correlation id", e);

@@ -33,11 +33,11 @@ import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -123,8 +123,10 @@ public class TracingClientInterceptor implements ClientInterceptor {
       Span span = getSpan(context);
       Attributes attributes =
           Attributes.of(
-              "message.type", AttributeValue.stringAttributeValue("SENT"),
-              "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+              SemanticAttributes.GRPC_MESSAGE_TYPE,
+              "SENT",
+              SemanticAttributes.GRPC_MESSAGE_ID,
+              (long) messageId.incrementAndGet());
       span.addEvent("message", attributes);
       try (Scope ignored = withScopedContext(context)) {
         delegate().onMessage(message);

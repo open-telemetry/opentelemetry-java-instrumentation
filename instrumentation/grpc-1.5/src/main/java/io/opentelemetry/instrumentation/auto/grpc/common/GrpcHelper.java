@@ -59,21 +59,21 @@ public final class GrpcHelper {
     String serviceName = slash == -1 ? fullMethodName : fullMethodName.substring(0, slash);
     String methodName = slash == -1 ? null : fullMethodName.substring(slash + 1);
 
-    SemanticAttributes.RPC_SERVICE.set(span, serviceName);
-    SemanticAttributes.RPC_METHOD.set(span, methodName);
+    span.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
+    span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
 
     if (peerAddress != null) {
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), peerAddress.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) peerAddress.getPort());
       if (server) {
         span.setAttribute(
-            SemanticAttributes.NET_PEER_IP.key(), peerAddress.getAddress().getHostAddress());
+            SemanticAttributes.NET_PEER_IP, peerAddress.getAddress().getHostAddress());
       } else {
         NetPeerUtils.setNetPeer(span, peerAddress.getHostName(), null);
       }
     } else {
       // The spec says these fields must be populated, so put some values in even if we don't have
       // an address recorded.
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), 0);
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, 0L);
       NetPeerUtils.setNetPeer(span, "(unknown)", null);
     }
   }
