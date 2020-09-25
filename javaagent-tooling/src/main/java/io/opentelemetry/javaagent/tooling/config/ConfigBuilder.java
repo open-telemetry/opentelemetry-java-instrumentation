@@ -108,7 +108,7 @@ public final class ConfigBuilder
                 RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION))
         .setTraceAnnotations(getProperty(TRACE_ANNOTATIONS))
         .setTraceMethods(getProperty(TRACE_METHODS))
-        .setTraceAnnotatedMethodsExclude(getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE, ""))
+        .setTraceAnnotatedMethodsExclude(getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE))
         .setTraceExecutorsAll(getBooleanProperty(TRACE_EXECUTORS_ALL, DEFAULT_TRACE_EXECUTORS_ALL))
         .setTraceExecutors(getListProperty(TRACE_EXECUTORS))
         .setSqlNormalizerEnabled(
