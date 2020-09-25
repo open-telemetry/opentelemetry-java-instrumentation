@@ -35,16 +35,16 @@ class ConfigBuilderTest extends AgentSpecification {
       .build()
 
     then:
-    !config.exporterJar.present
+    config.exporterJar == null
     config.exporter == Config.DEFAULT_EXPORTER
     config.propagators.empty
     config.traceEnabled
     config.integrationsEnabled
     config.excludedClasses.empty
     config.runtimeContextFieldInjection
-    !config.traceAnnotations.present
-    config.traceMethods == ""
-    config.traceAnnotatedMethodsExclude == ""
+    config.traceAnnotations == null
+    config.traceMethods == null
+    config.traceAnnotatedMethodsExclude == null
     !config.traceExecutorsAll
     config.traceExecutors.empty
     config.sqlNormalizerEnabled

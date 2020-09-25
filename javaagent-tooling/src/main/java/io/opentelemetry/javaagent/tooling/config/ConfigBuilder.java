@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -97,7 +96,7 @@ public final class ConfigBuilder
   Config build() {
     return Config.newBuilder()
         .setAllProperties(allProperties)
-        .setExporterJar(Optional.ofNullable(getProperty(EXPORTER_JAR)))
+        .setExporterJar(getProperty(EXPORTER_JAR))
         .setExporter(getProperty(EXPORTER, DEFAULT_EXPORTER))
         .setPropagators(getListProperty(PROPAGATORS))
         .setTraceEnabled(getBooleanProperty(TRACE_ENABLED, DEFAULT_TRACE_ENABLED))
@@ -107,8 +106,8 @@ public final class ConfigBuilder
         .setRuntimeContextFieldInjection(
             getBooleanProperty(
                 RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION))
-        .setTraceAnnotations(Optional.ofNullable(getProperty(TRACE_ANNOTATIONS)))
-        .setTraceMethods(getProperty(TRACE_METHODS, ""))
+        .setTraceAnnotations(getProperty(TRACE_ANNOTATIONS))
+        .setTraceMethods(getProperty(TRACE_METHODS))
         .setTraceAnnotatedMethodsExclude(getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE, ""))
         .setTraceExecutorsAll(getBooleanProperty(TRACE_EXECUTORS_ALL, DEFAULT_TRACE_EXECUTORS_ALL))
         .setTraceExecutors(getListProperty(TRACE_EXECUTORS))

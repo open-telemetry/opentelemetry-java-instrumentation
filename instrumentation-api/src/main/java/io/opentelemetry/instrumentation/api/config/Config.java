@@ -23,7 +23,6 @@ import io.grpc.Context;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
@@ -52,26 +51,7 @@ public abstract class Config {
   public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
   public static final boolean DEFAULT_HYSTRIX_TAGS_ENABLED = false;
 
-  private static final Config DEFAULT =
-      Config.newBuilder()
-          .setAllProperties(Collections.emptyMap())
-          .setExporterJar(Optional.empty())
-          .setExporter(DEFAULT_EXPORTER)
-          .setPropagators(Collections.emptyList())
-          .setTraceEnabled(DEFAULT_TRACE_ENABLED)
-          .setIntegrationsEnabled(DEFAULT_INTEGRATIONS_ENABLED)
-          .setExcludedClasses(Collections.emptyList())
-          .setRuntimeContextFieldInjection(DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION)
-          .setTraceAnnotations(Optional.empty())
-          .setTraceMethods("")
-          .setTraceAnnotatedMethodsExclude("")
-          .setTraceExecutorsAll(DEFAULT_TRACE_EXECUTORS_ALL)
-          .setTraceExecutors(Collections.emptyList())
-          .setSqlNormalizerEnabled(DEFAULT_SQL_NORMALIZER_ENABLED)
-          .setKafkaClientPropagationEnabled(DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED)
-          .setHystrixTagsEnabled(DEFAULT_HYSTRIX_TAGS_ENABLED)
-          .setEndpointPeerServiceMapping(Collections.emptyMap())
-          .build();
+  private static final Config DEFAULT = Config.newBuilder().build();
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
   // getInstrumentationMuzzle() and the Instrumenter.Default constructor uses Config
@@ -134,7 +114,8 @@ public abstract class Config {
     return properties;
   }
 
-  public abstract Optional<String> getExporterJar();
+  @Nullable
+  public abstract String getExporterJar();
 
   public abstract String getExporter();
 
@@ -160,10 +141,13 @@ public abstract class Config {
     return getRuntimeContextFieldInjection();
   }
 
-  public abstract Optional<String> getTraceAnnotations();
+  @Nullable
+  public abstract String getTraceAnnotations();
 
+  @Nullable
   public abstract String getTraceMethods();
 
+  @Nullable
   public abstract String getTraceAnnotatedMethodsExclude();
 
   abstract boolean getTraceExecutorsAll();
@@ -195,14 +179,31 @@ public abstract class Config {
   public abstract Map<String, String> getEndpointPeerServiceMapping();
 
   public static Config.Builder newBuilder() {
-    return new AutoValue_Config.Builder();
+    return new AutoValue_Config.Builder()
+        .setAllProperties(Collections.emptyMap())
+        .setExporterJar(null)
+        .setExporter(DEFAULT_EXPORTER)
+        .setPropagators(Collections.emptyList())
+        .setTraceEnabled(DEFAULT_TRACE_ENABLED)
+        .setIntegrationsEnabled(DEFAULT_INTEGRATIONS_ENABLED)
+        .setExcludedClasses(Collections.emptyList())
+        .setRuntimeContextFieldInjection(DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION)
+        .setTraceAnnotations(null)
+        .setTraceMethods(null)
+        .setTraceAnnotatedMethodsExclude(null)
+        .setTraceExecutorsAll(DEFAULT_TRACE_EXECUTORS_ALL)
+        .setTraceExecutors(Collections.emptyList())
+        .setSqlNormalizerEnabled(DEFAULT_SQL_NORMALIZER_ENABLED)
+        .setKafkaClientPropagationEnabled(DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED)
+        .setHystrixTagsEnabled(DEFAULT_HYSTRIX_TAGS_ENABLED)
+        .setEndpointPeerServiceMapping(Collections.emptyMap());
   }
 
   @AutoValue.Builder
   public abstract static class Builder {
     public abstract Builder setAllProperties(Map<String, String> allProperties);
 
-    public abstract Builder setExporterJar(Optional<String> exporterJar);
+    public abstract Builder setExporterJar(@Nullable String exporterJar);
 
     public abstract Builder setExporter(String exporter);
 
@@ -216,11 +217,12 @@ public abstract class Config {
 
     public abstract Builder setRuntimeContextFieldInjection(boolean runtimeContextFieldInjection);
 
-    public abstract Builder setTraceAnnotations(Optional<String> traceAnnotations);
+    public abstract Builder setTraceAnnotations(@Nullable String traceAnnotations);
 
-    public abstract Builder setTraceMethods(String traceMethods);
+    public abstract Builder setTraceMethods(@Nullable String traceMethods);
 
-    public abstract Builder setTraceAnnotatedMethodsExclude(String traceAnnotatedMethodsExclude);
+    public abstract Builder setTraceAnnotatedMethodsExclude(
+        @Nullable String traceAnnotatedMethodsExclude);
 
     public abstract Builder setTraceExecutorsAll(boolean traceExecutorsAll);
 

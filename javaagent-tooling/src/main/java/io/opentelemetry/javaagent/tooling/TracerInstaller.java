@@ -32,7 +32,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
@@ -49,9 +48,9 @@ public class TracerInstaller {
 
       configure();
       // Try to create an exporter from external jar file
-      Optional<String> exporterJar = Config.get().getExporterJar();
-      if (exporterJar.isPresent()) {
-        installExportersFromJar(exporterJar.get());
+      String exporterJar = Config.get().getExporterJar();
+      if (exporterJar != null) {
+        installExportersFromJar(exporterJar);
       } else {
         // Try to create embedded exporter
         installExporters(Config.get().getExporter());

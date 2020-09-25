@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
@@ -77,20 +76,20 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
   public TraceAnnotationsInstrumentation() {
     super("trace", "trace-annotation");
 
-    Optional<String> configString = Config.get().getTraceAnnotations();
-    if (!configString.isPresent()) {
+    String configString = Config.get().getTraceAnnotations();
+    if (configString == null) {
       additionalTraceAnnotations =
           Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
-    } else if (configString.get().isEmpty()) {
+    } else if (configString.isEmpty()) {
       additionalTraceAnnotations = Collections.emptySet();
-    } else if (!configString.get().matches(CONFIG_FORMAT)) {
+    } else if (!configString.matches(CONFIG_FORMAT)) {
       log.warn(
           "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
           configString);
       additionalTraceAnnotations = Collections.emptySet();
     } else {
       Set<String> annotations = Sets.newHashSet();
-      String[] annotationClasses = configString.get().split(";", -1);
+      String[] annotationClasses = configString.split(";", -1);
       for (String annotationClass : annotationClasses) {
         if (!annotationClass.trim().isEmpty()) {
           annotations.add(annotationClass.trim());
