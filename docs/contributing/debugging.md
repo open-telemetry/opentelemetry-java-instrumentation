@@ -8,7 +8,8 @@ in agent initialization code (`premain`/`agentmain`, `agent-tooling` artifact et
 #### Template methods and agent initialization
 
 Breakpoints do not work in template methods, because their code is directly inlined
-by ByteBuddy into the target class. The template methods are annotated with:
+by ByteBuddy into the target class. It is good to keep these methods as small as possible.
+The template methods are annotated with:
 
 ```java
 @net.bytebuddy.asm.Advice.OnMethodEnter
