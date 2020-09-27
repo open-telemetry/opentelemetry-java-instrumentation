@@ -39,7 +39,7 @@ import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TracingClientInterceptor implements ClientInterceptor {
   private final InetSocketAddress peerAddress;
@@ -111,7 +111,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
   static final class TracingClientCallListener<RespT>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
     private final Context context;
-    private final AtomicInteger messageId = new AtomicInteger();
+    private final AtomicLong messageId = new AtomicLong();
 
     TracingClientCallListener(Context context, ClientCall.Listener<RespT> delegate) {
       super(delegate);
@@ -126,7 +126,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
               SemanticAttributes.GRPC_MESSAGE_TYPE,
               "SENT",
               SemanticAttributes.GRPC_MESSAGE_ID,
-              (long) messageId.incrementAndGet());
+              messageId.incrementAndGet());
       span.addEvent("message", attributes);
       try (Scope ignored = withScopedContext(context)) {
         delegate().onMessage(message);
