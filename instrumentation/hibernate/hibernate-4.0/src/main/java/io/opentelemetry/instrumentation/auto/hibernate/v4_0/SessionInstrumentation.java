@@ -21,6 +21,7 @@ import static io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -28,6 +29,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
@@ -53,10 +55,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   @Override
   public Map<String, String> contextStore() {
     Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.SharedSessionContract", Span.class.getName());
-    map.put("org.hibernate.Query", Span.class.getName());
-    map.put("org.hibernate.Transaction", Span.class.getName());
-    map.put("org.hibernate.Criteria", Span.class.getName());
+    map.put("org.hibernate.SharedSessionContract", Context.class.getName());
+    map.put("org.hibernate.Query", Context.class.getName());
+    map.put("org.hibernate.Transaction", Context.class.getName());
+    map.put("org.hibernate.Criteria", Context.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -124,12 +126,13 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void closeSession(
         @Advice.This SharedSessionContract session, @Advice.Thrown Throwable throwable) {
 
-      ContextStore<SharedSessionContract, Span> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      Span sessionSpan = contextStore.get(session);
-      if (sessionSpan == null) {
+      ContextStore<SharedSessionContract, Context> contextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      Context sessionContext = contextStore.get(session);
+      if (sessionContext == null) {
         return;
       }
+      Span sessionSpan = getSpan(sessionContext);
 
       DECORATE.onError(sessionSpan, throwable);
       DECORATE.beforeFinish(sessionSpan);
@@ -146,8 +149,8 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.Argument(0) Object entity) {
 
       boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
-      ContextStore<SharedSessionContract, Span> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
+      ContextStore<SharedSessionContract, Context> contextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
       return SessionMethodUtils.startScopeFrom(
           contextStore, session, "Session." + name, entity, startSpan);
     }
@@ -169,10 +172,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
-      ContextStore<SharedSessionContract, Span> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      ContextStore<Query, Span> queryContextStore =
-          InstrumentationContext.get(Query.class, Span.class);
+      ContextStore<SharedSessionContract, Context> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      ContextStore<Query, Context> queryContextStore =
+          InstrumentationContext.get(Query.class, Context.class);
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, queryContextStore, query);
@@ -185,10 +188,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      ContextStore<SharedSessionContract, Span> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      ContextStore<Transaction, Span> transactionContextStore =
-          InstrumentationContext.get(Transaction.class, Span.class);
+      ContextStore<SharedSessionContract, Context> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      ContextStore<Transaction, Context> transactionContextStore =
+          InstrumentationContext.get(Transaction.class, Context.class);
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, transactionContextStore, transaction);
@@ -201,10 +204,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
-      ContextStore<SharedSessionContract, Span> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      ContextStore<Criteria, Span> criteriaContextStore =
-          InstrumentationContext.get(Criteria.class, Span.class);
+      ContextStore<SharedSessionContract, Context> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      ContextStore<Criteria, Context> criteriaContextStore =
+          InstrumentationContext.get(Criteria.class, Context.class);
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, criteriaContextStore, criteria);

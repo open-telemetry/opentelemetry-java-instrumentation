@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.opentelemetryapi;
 
-import application.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import application.io.opentelemetry.common.LabelConsumer;
 import io.opentelemetry.common.Labels;
 import io.opentelemetry.common.Labels.Builder;
 
@@ -34,7 +34,7 @@ public class LabelBridging {
     return builder.build();
   }
 
-  static class Consumer implements KeyValueConsumer<String, String> {
+  static class Consumer implements LabelConsumer {
 
     private final Builder builder;
 

@@ -23,7 +23,6 @@ import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
@@ -37,7 +36,7 @@ final class AwsSdkHttpClientTracer
 
   // Certain headers in the request like User-Agent are only available after execution.
   Span afterExecution(Span span, SdkHttpRequest request) {
-    SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
+    span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
     return span;
   }
 
@@ -95,7 +94,6 @@ final class AwsSdkHttpClientTracer
       return DefaultSpan.getInvalid();
     }
 
-    Span current = TracingContextUtils.getSpan(context);
-    return tracer.spanBuilder(name).setSpanKind(kind).setParent(current).startSpan();
+    return tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();
   }
 }

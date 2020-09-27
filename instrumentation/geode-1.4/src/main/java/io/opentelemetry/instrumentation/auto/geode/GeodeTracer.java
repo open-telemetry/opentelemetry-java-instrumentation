@@ -35,8 +35,8 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
         tracer
             .spanBuilder(operation)
             .setSpanKind(CLIENT)
-            .setAttribute(SemanticAttributes.DB_SYSTEM.key(), dbSystem(connection))
-            .setAttribute(SemanticAttributes.DB_OPERATION.key(), operation)
+            .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
+            .setAttribute(SemanticAttributes.DB_OPERATION, operation)
             .startSpan();
 
     onConnection(span, connection);

@@ -16,7 +16,7 @@
 
 package io.opentelemetry.javaagent.typed.base;
 
-import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Event;
@@ -53,7 +53,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setAttribute(String key, AttributeValue value) {
+  public <T> void setAttribute(AttributeKey<T> key, T value) {
     delegate.setAttribute(key, value);
   }
 

@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator
 import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,6 +28,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -43,7 +45,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.SharedSessionContract", Span.class.getName());
+    return singletonMap("org.hibernate.SharedSessionContract", Context.class.getName());
   }
 
   @Override
@@ -66,12 +68,13 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return SharedSessionContract session) {
 
-      Span span = TRACER.spanBuilder("Session").startSpan();
+      Context context = Context.current();
+      Span span = TRACER.spanBuilder("Session").setParent(context).startSpan();
       DECORATE.afterStart(span);
 
-      ContextStore<SharedSessionContract, Span> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      contextStore.putIfAbsent(session, span);
+      ContextStore<SharedSessionContract, Context> contextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      contextStore.putIfAbsent(session, withSpan(span, context));
     }
   }
 }

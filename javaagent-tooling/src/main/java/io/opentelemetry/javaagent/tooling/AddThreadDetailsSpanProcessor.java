@@ -26,8 +26,8 @@ public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   @Override
   public void onStart(ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
-    SemanticAttributes.THREAD_ID.set(span, currentThread.getId());
-    SemanticAttributes.THREAD_NAME.set(span, currentThread.getName());
+    span.setAttribute(SemanticAttributes.THREAD_ID, currentThread.getId());
+    span.setAttribute(SemanticAttributes.THREAD_NAME, currentThread.getName());
   }
 
   @Override

@@ -16,22 +16,22 @@
 
 package io.opentelemetry.instrumentation.auto.api.rmi;
 
-import io.opentelemetry.trace.SpanContext;
+import io.grpc.Context;
 
 public class ThreadLocalContext {
   public static final ThreadLocalContext THREAD_LOCAL_CONTEXT = new ThreadLocalContext();
-  private final ThreadLocal<SpanContext> local;
+  private final ThreadLocal<Context> local;
 
   public ThreadLocalContext() {
     local = new ThreadLocal<>();
   }
 
-  public void set(SpanContext context) {
+  public void set(Context context) {
     local.set(context);
   }
 
-  public SpanContext getAndResetContext() {
-    SpanContext context = local.get();
+  public Context getAndResetContext() {
+    Context context = local.get();
     if (context != null) {
       local.remove();
     }

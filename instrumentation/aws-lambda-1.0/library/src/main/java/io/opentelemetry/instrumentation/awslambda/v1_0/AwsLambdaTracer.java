@@ -37,7 +37,7 @@ public class AwsLambdaTracer extends BaseTracer {
 
   Span.Builder createSpan(Context context) {
     Span.Builder span = tracer.spanBuilder(context.getFunctionName());
-    SemanticAttributes.FAAS_EXECUTION.set(span, context.getAwsRequestId());
+    span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
     return span;
   }
 

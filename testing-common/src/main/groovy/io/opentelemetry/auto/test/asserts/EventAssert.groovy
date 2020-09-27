@@ -20,6 +20,9 @@ import static AttributesAssert.assertAttributes
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.common.AttributeConsumer
+import io.opentelemetry.common.AttributeKey
+import io.opentelemetry.common.Attributes
 import io.opentelemetry.trace.Event
 
 class EventAssert {
@@ -53,6 +56,18 @@ class EventAssert {
 
   void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
                   @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    assertAttributes(event.attributes, spec)
+    assertAttributes(toMap(event.attributes), spec)
+  }
+
+
+  private Map<String, Object> toMap(Attributes attributes) {
+    def map = new HashMap()
+    attributes.forEach(new AttributeConsumer() {
+      @Override
+      <T> void consume(AttributeKey<T> key, T value) {
+        map.put(key.key, value)
+      }
+    })
+    return map
   }
 }

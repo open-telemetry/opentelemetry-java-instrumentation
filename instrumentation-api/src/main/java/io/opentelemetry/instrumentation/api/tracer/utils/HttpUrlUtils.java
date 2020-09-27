@@ -53,7 +53,7 @@ public final class HttpUrlUtils {
         urlBuilder.append("#").append(fragment);
       }
 
-      span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
+      span.setAttribute(SemanticAttributes.HTTP_URL, urlBuilder.toString());
     }
   }
 }
