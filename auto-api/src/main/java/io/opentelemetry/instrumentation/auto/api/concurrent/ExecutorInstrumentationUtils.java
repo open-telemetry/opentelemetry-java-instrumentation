@@ -74,7 +74,7 @@ public class ExecutorInstrumentationUtils {
       }
       location.add(0, new Exception().getStackTrace());
     }
-    state.setParentSpan(context);
+    state.setParentContext(context);
     return state;
   }
 

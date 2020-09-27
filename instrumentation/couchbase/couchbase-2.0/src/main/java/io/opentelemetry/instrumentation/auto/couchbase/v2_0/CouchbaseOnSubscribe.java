@@ -52,8 +52,8 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
 
   @Override
   protected void decorateSpan(Span span) {
-    SemanticAttributes.DB_SYSTEM.set(span, DbSystem.COUCHBASE);
-    SemanticAttributes.DB_NAME.set(span, bucket);
-    SemanticAttributes.DB_STATEMENT.set(span, query);
+    span.setAttribute(SemanticAttributes.DB_SYSTEM, DbSystem.COUCHBASE);
+    span.setAttribute(SemanticAttributes.DB_NAME, bucket);
+    span.setAttribute(SemanticAttributes.DB_STATEMENT, query);
   }
 }

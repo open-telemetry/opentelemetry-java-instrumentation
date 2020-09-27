@@ -91,6 +91,7 @@ public class TracerInstaller {
       if (metricExporterFactory
           .getClass()
           .getSimpleName()
+          .replace("_", "")
           .toLowerCase()
           .startsWith(exporterName.toLowerCase())) {
         return metricExporterFactory;
@@ -107,6 +108,7 @@ public class TracerInstaller {
       if (spanExporterFactory
           .getClass()
           .getSimpleName()
+          .replace("_", "")
           .toLowerCase()
           .startsWith(exporterName.toLowerCase())) {
         return spanExporterFactory;

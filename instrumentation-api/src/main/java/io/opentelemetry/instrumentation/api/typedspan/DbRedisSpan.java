@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConvention {
@@ -226,14 +226,8 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
     }
 
     /** sets the {@link Span} parent. */
-    public DbRedisSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public DbRedisSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public DbRedisSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

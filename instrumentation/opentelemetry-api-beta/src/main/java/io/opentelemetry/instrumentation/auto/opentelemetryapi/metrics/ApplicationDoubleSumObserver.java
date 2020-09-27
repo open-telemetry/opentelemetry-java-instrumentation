@@ -88,12 +88,6 @@ class ApplicationDoubleSumObserver implements DoubleSumObserver {
     }
 
     @Override
-    public DoubleSumObserver.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public DoubleSumObserver build() {
       return new ApplicationDoubleSumObserver(agentBuilder.build());
     }

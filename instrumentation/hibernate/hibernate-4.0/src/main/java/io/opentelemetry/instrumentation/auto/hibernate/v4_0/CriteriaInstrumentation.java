@@ -23,12 +23,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -42,7 +42,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Criteria", Span.class.getName());
+    return singletonMap("org.hibernate.Criteria", Context.class.getName());
   }
 
   @Override
@@ -63,8 +63,8 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
     public static SpanWithScope startMethod(
         @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
 
-      ContextStore<Criteria, Span> contextStore =
-          InstrumentationContext.get(Criteria.class, Span.class);
+      ContextStore<Criteria, Context> contextStore =
+          InstrumentationContext.get(Criteria.class, Context.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, criteria, "Criteria." + name, null, true);

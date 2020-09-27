@@ -16,8 +16,8 @@
 
 package io.opentelemetry.javaagent.exporters.logging;
 
-import io.opentelemetry.common.AttributeValue;
-import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import io.opentelemetry.common.AttributeConsumer;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -37,22 +37,16 @@ public class LoggingExporter implements SpanExporter {
           prefix + " " + span.getName() + " " + span.getTraceId() + " " + span.getSpanId() + " ");
       span.getAttributes()
           .forEach(
-              new KeyValueConsumer<String, AttributeValue>() {
+              new AttributeConsumer() {
                 @Override
-                public void consume(String key, AttributeValue value) {
+                public <T> void consume(AttributeKey<T> key, T value) {
                   System.out.print(key + "=");
-                  switch (value.getType()) {
+                  switch (key.getType()) {
                     case STRING:
-                      System.out.print('"' + value.getStringValue() + '"');
+                      System.out.print('"' + String.valueOf(value) + '"');
                       break;
-                    case BOOLEAN:
-                      System.out.print(value.getBooleanValue());
-                      break;
-                    case LONG:
-                      System.out.print(value.getLongValue());
-                      break;
-                    case DOUBLE:
-                      System.out.print(value.getDoubleValue());
+                    default:
+                      System.out.print(value);
                       break;
                   }
                   System.out.print(" ");

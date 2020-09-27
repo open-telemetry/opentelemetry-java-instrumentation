@@ -18,10 +18,10 @@ package io.opentelemetry.javaagent.typed.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
@@ -40,12 +40,8 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
     return startSpan(instance, tracer.spanBuilder(getSpanName(instance)));
   }
 
-  public final T startSpan(INSTANCE instance, Span parent) {
-    return startSpan(instance, tracer.spanBuilder(getSpanName(instance)).setParent(parent));
-  }
-
-  public final T startSpan(INSTANCE instance, SpanContext parent) {
-    return startSpan(instance, tracer.spanBuilder(getSpanName(instance)).setParent(parent));
+  public final T startSpan(INSTANCE instance, Context context) {
+    return startSpan(instance, tracer.spanBuilder(getSpanName(instance)).setParent(context));
   }
 
   private T startSpan(INSTANCE instance, Span.Builder builder) {

@@ -91,12 +91,6 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public DoubleUpDownCounter build() {
       return new ApplicationDoubleUpDownCounter(agentBuilder.build());
     }

@@ -41,13 +41,13 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
-      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
-      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
-      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
-      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
+      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, req.method)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL, "$req.url")
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, req.url.host)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
+      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
     0 * _
 
@@ -72,14 +72,14 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
-      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
-      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
-      1 * span.setAttribute("peer.service", "reservation-service")
-      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
-      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
+      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, req.method)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL, "$req.url")
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, req.url.host)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.PEER_SERVICE, "reservation-service")
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
+      1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
     0 * _
   }
@@ -92,18 +92,18 @@ class HttpClientTracerTest extends BaseTracerTest {
     tracer.onRequest(span, req)
 
     then:
-    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP")
+    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
     if (expectedUrl != null) {
-      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), expectedUrl)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL, expectedUrl)
     }
-    1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), null)
-    1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR.key(), "1.1")
-    1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), null)
+    1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, null)
+    1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
+    1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, null)
     if (hostname) {
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostname)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, hostname)
     }
     if (port) {
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, port)
     }
     0 * _
 
@@ -128,7 +128,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (status) {
-      1 * span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status)
+      1 * span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, status)
       1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
     0 * _

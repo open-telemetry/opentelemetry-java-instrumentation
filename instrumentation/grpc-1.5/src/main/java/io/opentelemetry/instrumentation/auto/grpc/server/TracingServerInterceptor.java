@@ -27,14 +27,14 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.grpc.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 
@@ -97,7 +97,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
   static final class TracingServerCallListener<ReqT>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT> {
     private final Span span;
-    private final AtomicInteger messageId = new AtomicInteger();
+    private final AtomicLong messageId = new AtomicLong();
 
     TracingServerCallListener(Span span, ServerCall.Listener<ReqT> delegate) {
       super(delegate);
@@ -108,8 +108,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onMessage(ReqT message) {
       Attributes attributes =
           Attributes.of(
-              "message.type", AttributeValue.stringAttributeValue("RECEIVED"),
-              "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+              SemanticAttributes.GRPC_MESSAGE_TYPE,
+              "RECEIVED",
+              SemanticAttributes.GRPC_MESSAGE_ID,
+              messageId.incrementAndGet());
       span.addEvent("message", attributes);
       try (Scope ignored = currentContextWith(span)) {
         delegate().onMessage(message);

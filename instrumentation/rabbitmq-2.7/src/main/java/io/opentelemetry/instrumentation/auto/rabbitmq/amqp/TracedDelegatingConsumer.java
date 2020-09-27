@@ -85,17 +85,12 @@ public class TracedDelegatingConsumer implements Consumer {
     Scope scope = null;
     try {
       Map<String, Object> headers = properties.getHeaders();
-      Span.Builder spanBuilder =
-          TRACER.spanBuilder(DECORATE.spanNameOnDeliver(queue)).setSpanKind(CONSUMER);
-      if (headers != null) {
-        spanBuilder.setParent(extract(headers, GETTER));
-      } else {
-        spanBuilder.setNoParent();
-      }
-
       long startTimeMillis = System.currentTimeMillis();
       span =
-          spanBuilder
+          TRACER
+              .spanBuilder(DECORATE.spanNameOnDeliver(queue))
+              .setSpanKind(CONSUMER)
+              .setParent(extract(headers, GETTER))
               .setAttribute("message.size", body == null ? 0 : body.length)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis))
               .startSpan();

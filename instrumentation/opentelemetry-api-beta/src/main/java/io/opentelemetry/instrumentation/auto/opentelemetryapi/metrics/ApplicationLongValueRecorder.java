@@ -91,12 +91,6 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
     }
 
     @Override
-    public LongValueRecorder.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public LongValueRecorder build() {
       return new ApplicationLongValueRecorder(agentBuilder.build());
     }

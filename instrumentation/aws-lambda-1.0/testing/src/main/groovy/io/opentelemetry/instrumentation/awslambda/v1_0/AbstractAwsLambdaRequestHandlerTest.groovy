@@ -50,7 +50,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
           operationName("my_function")
           spanKind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
       }
@@ -80,7 +80,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION}" "1-22-333"
+            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
       }
