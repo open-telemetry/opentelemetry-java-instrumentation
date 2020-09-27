@@ -21,7 +21,9 @@ import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.
 import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -79,10 +81,11 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
           spanBuilder.setSpanKind(CONSUMER);
         }
         if (Config.get().isKafkaClientPropagationEnabled()) {
-          SpanContext spanContext = extract(next.headers(), GETTER);
+          Context context = extract(next.headers(), GETTER);
+          SpanContext spanContext = getSpan(context).getContext();
           if (spanContext.isValid()) {
             if (consumer) {
-              spanBuilder.setParent(spanContext);
+              spanBuilder.setParent(context);
             } else {
               spanBuilder.addLink(spanContext);
             }

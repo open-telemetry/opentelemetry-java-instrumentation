@@ -97,8 +97,8 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
           int splitIndex = remoteSocket.lastIndexOf(":");
           if (splitIndex != -1) {
             span.setAttribute(
-                SemanticAttributes.NET_PEER_PORT.key(),
-                Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
+                SemanticAttributes.NET_PEER_PORT,
+                (long) Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
           }
         }
 

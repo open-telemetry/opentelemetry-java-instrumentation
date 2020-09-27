@@ -79,8 +79,9 @@ public class JdkHttpClientTracer
     span = super.onResponse(span, httpResponse);
 
     if (httpResponse != null) {
-      SemanticAttributes.HTTP_FLAVOR.set(
-          span, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
+      span.setAttribute(
+          SemanticAttributes.HTTP_FLAVOR,
+          httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
     }
 
     return span;

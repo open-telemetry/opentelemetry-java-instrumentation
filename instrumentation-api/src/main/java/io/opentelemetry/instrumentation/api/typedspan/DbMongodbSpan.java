@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticConvention {
@@ -225,14 +225,8 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
     }
 
     /** sets the {@link Span} parent. */
-    public DbMongodbSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public DbMongodbSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public DbMongodbSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

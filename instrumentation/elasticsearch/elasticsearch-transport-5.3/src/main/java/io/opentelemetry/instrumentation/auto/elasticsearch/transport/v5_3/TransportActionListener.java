@@ -75,7 +75,8 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     if (response.remoteAddress() != null) {
       BaseDecorator.setPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.remoteAddress().getPort());
+      span.setAttribute(
+          SemanticAttributes.NET_PEER_PORT, (long) response.remoteAddress().getPort());
     }
 
     if (response instanceof GetResponse) {

@@ -88,12 +88,6 @@ class ApplicationDoubleCounter implements DoubleCounter {
     }
 
     @Override
-    public DoubleCounter.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public DoubleCounter build() {
       return new ApplicationDoubleCounter(agentBuilder.build());
     }

@@ -20,7 +20,7 @@ import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridg
 import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
 import application.io.grpc.Context;
-import application.io.opentelemetry.common.AttributeValue;
+import application.io.opentelemetry.common.AttributeKey;
 import application.io.opentelemetry.common.Attributes;
 import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Event;
@@ -65,10 +65,10 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void setAttribute(String key, AttributeValue applicationValue) {
-    io.opentelemetry.common.AttributeValue agentValue = Bridging.toAgentOrNull(applicationValue);
-    if (agentValue != null) {
-      agentSpan.setAttribute(key, agentValue);
+  public <T> void setAttribute(AttributeKey<T> applicationKey, T value) {
+    io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+    if (agentKey != null) {
+      agentSpan.setAttribute(agentKey, value);
     }
   }
 
@@ -168,22 +168,6 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setParent(Span applicationParent) {
-      if (applicationParent instanceof ApplicationSpan) {
-        agentBuilder.setParent(((ApplicationSpan) applicationParent).getAgentSpan());
-      } else {
-        log.debug("unexpected parent span: {}", applicationParent);
-      }
-      return this;
-    }
-
-    @Override
-    public Span.Builder setParent(SpanContext applicationRemoteParent) {
-      agentBuilder.setParent(Bridging.toAgent(applicationRemoteParent));
-      return this;
-    }
-
-    @Override
     public Span.Builder setParent(Context applicationContext) {
       agentBuilder.setParent(contextStore.get(applicationContext));
       return this;
@@ -241,10 +225,10 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setAttribute(String key, AttributeValue applicationValue) {
-      io.opentelemetry.common.AttributeValue agentValue = Bridging.toAgentOrNull(applicationValue);
-      if (agentValue != null) {
-        agentBuilder.setAttribute(key, agentValue);
+    public <T> Span.Builder setAttribute(AttributeKey<T> applicationKey, T value) {
+      io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+      if (agentKey != null) {
+        agentBuilder.setAttribute(agentKey, value);
       }
       return this;
     }
