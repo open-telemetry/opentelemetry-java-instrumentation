@@ -88,12 +88,6 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
     }
 
     @Override
-    public DoubleValueObserver.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public DoubleValueObserver build() {
       return new ApplicationDoubleValueObserver(agentBuilder.build());
     }

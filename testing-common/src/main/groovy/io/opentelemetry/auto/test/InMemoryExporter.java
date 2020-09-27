@@ -23,8 +23,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import io.opentelemetry.common.AttributeValue;
-import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
+import io.opentelemetry.common.AttributeConsumer;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -129,26 +129,10 @@ public class InMemoryExporter implements SpanProcessor {
     final StringBuilder attributes = new StringBuilder();
     sd.getAttributes()
         .forEach(
-            new KeyValueConsumer<String, AttributeValue>() {
+            new AttributeConsumer() {
               @Override
-              public void consume(String key, AttributeValue value) {
-                String sValue = null;
-                switch (value.getType()) {
-                  case STRING:
-                    sValue = value.getStringValue();
-                    break;
-                  case BOOLEAN:
-                    sValue = String.valueOf(value.getBooleanValue());
-                    break;
-                  case LONG:
-                    sValue = String.valueOf(value.getLongValue());
-                    break;
-                  case DOUBLE:
-                    sValue = String.valueOf(value.getDoubleValue());
-                    break;
-                }
-
-                attributes.append(String.format("Attribute %s=%s", key, sValue));
+              public <T> void consume(AttributeKey<T> key, T value) {
+                attributes.append(String.format("Attribute %s=%s", key, value));
               }
             });
     return attributes.toString();

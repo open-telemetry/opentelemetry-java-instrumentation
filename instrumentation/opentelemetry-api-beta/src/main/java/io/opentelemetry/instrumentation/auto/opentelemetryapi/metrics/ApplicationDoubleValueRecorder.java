@@ -91,12 +91,6 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
     }
 
     @Override
-    public DoubleValueRecorder.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public DoubleValueRecorder build() {
       return new ApplicationDoubleValueRecorder(agentBuilder.build());
     }

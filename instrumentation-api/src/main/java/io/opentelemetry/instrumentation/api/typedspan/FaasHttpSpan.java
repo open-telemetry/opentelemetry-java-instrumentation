@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConvention {
@@ -384,14 +384,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     }
 
     /** sets the {@link Span} parent. */
-    public FaasHttpSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public FaasHttpSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public FaasHttpSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

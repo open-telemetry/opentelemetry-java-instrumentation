@@ -87,12 +87,6 @@ class ApplicationLongSumObserver implements LongSumObserver {
     }
 
     @Override
-    public LongSumObserver.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public LongSumObserver build() {
       return new ApplicationLongSumObserver(agentBuilder.build());
     }

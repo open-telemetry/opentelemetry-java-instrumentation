@@ -56,8 +56,7 @@ public abstract class ClientDecorator extends BaseDecorator {
       return DefaultSpan.getInvalid();
     }
 
-    Span current = TracingContextUtils.getSpan(context);
-    return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
+    return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context).startSpan();
   }
 
   @Override

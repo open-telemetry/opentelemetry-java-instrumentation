@@ -60,7 +60,7 @@ public class ElasticsearchTransportClientTracer
 
   @Override
   protected void onStatement(Span span, String statement) {
-    SemanticAttributes.DB_OPERATION.set(span, statement);
+    span.setAttribute(SemanticAttributes.DB_OPERATION, statement);
   }
 
   @Override

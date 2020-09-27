@@ -30,7 +30,7 @@ public class GrpcClientTracer extends RpcClientTracer {
 
   public Span startSpan(String name) {
     Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
-    SemanticAttributes.RPC_SYSTEM.set(spanBuilder, "grpc");
+    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
     return spanBuilder.startSpan();
   }
 

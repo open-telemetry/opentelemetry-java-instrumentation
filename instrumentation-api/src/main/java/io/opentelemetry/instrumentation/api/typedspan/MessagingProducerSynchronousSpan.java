@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class MessagingProducerSynchronousSpan extends DelegatingSpan
@@ -298,14 +298,8 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan
     }
 
     /** sets the {@link Span} parent. */
-    public MessagingProducerSynchronousSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public MessagingProducerSynchronousSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public MessagingProducerSynchronousSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

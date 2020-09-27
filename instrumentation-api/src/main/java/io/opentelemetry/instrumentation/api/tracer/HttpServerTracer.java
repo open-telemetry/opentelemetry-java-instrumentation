@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.api.tracer;
 import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -29,7 +28,6 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -157,17 +155,17 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public abstract Context getServerContext(STORAGE storage);
 
   protected void onConnection(Span span, CONNECTION connection) {
-    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(connection));
+    span.setAttribute(SemanticAttributes.NET_PEER_IP, peerHostIP(connection));
     Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
     if (port != null && port > 0) {
-      SemanticAttributes.NET_PEER_PORT.set(span, port);
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) port);
     }
   }
 
   protected void onRequest(Span span, REQUEST request) {
-    SemanticAttributes.HTTP_METHOD.set(span, method(request));
-    SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
+    span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+    span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
 
     setUrl(span, request);
 
@@ -186,15 +184,15 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   recommended combinations of attributes and are forced to use http.url.
    */
   private void setUrl(Span span, REQUEST request) {
-    SemanticAttributes.HTTP_URL.set(span, url(request));
+    span.setAttribute(SemanticAttributes.HTTP_URL, url(request));
   }
 
   protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
     String flavor = flavor(connection, request);
     if (flavor != null) {
-      SemanticAttributes.HTTP_FLAVOR.set(span, flavor);
+      span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
     }
-    SemanticAttributes.HTTP_CLIENT_IP.set(span, clientIP(connection, request));
+    span.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIP(connection, request));
   }
 
   private String clientIP(CONNECTION connection, REQUEST request) {
@@ -246,17 +244,14 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     return forwarded.substring(start);
   }
 
-  private <C> SpanContext extract(C carrier, TextMapPropagator.Getter<C> getter) {
+  private <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
     if (Config.THREAD_PROPAGATION_DEBUGGER) {
       debugContextLeak();
     }
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    Context context =
-        getPropagators().getTextMapPropagator().extract(Context.ROOT, carrier, getter);
-    Span span = getSpan(context);
-    return span.getContext();
+    return getPropagators().getTextMapPropagator().extract(Context.ROOT, carrier, getter);
   }
 
   private void debugContextLeak() {
@@ -290,7 +285,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   private static void setStatus(Span span, int status) {
-    SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
+    span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
     // TODO status_message
     // See https://github.com/open-telemetry/opentelemetry-specification/issues/950
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));

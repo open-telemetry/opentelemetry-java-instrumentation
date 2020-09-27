@@ -38,7 +38,7 @@ public class State {
 
   private State() {}
 
-  public void setParentSpan(Context parentContext) {
+  public void setParentContext(Context parentContext) {
     boolean result = parentContextRef.compareAndSet(null, parentContext);
     if (!result && parentContextRef.get() != parentContext) {
       if (log.isDebugEnabled()) {

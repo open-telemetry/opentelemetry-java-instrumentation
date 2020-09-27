@@ -161,34 +161,7 @@ class TracerTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def testSpan = tracer.spanBuilder("test").setParent(parentSpan).startSpan()
-    testSpan.end()
-    parentSpan.end()
-
-    then:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-          attributes {
-          }
-        }
-        span(1) {
-          operationName "test"
-          childOf span(0)
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "capture span with explicit parent from context"() {
-    when:
-    def tracer = OpenTelemetry.getTracer("test")
-    def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def context = withSpan(parentSpan, Context.current())
+    def context = withSpan(parentSpan, Context.ROOT)
     def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
     testSpan.end()
     parentSpan.end()
@@ -243,33 +216,6 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "capture span with remote parent"() {
-    when:
-    def tracer = OpenTelemetry.getTracer("test")
-    def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def testSpan = tracer.spanBuilder("test").setParent(parentSpan.getContext()).startSpan()
-    testSpan.end()
-    parentSpan.end()
-
-    then:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-          attributes {
-          }
-        }
-        span(1) {
-          operationName "test"
-          childOf span(0)
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
   def "capture name update"() {
     when:
     def tracer = OpenTelemetry.getTracer("test")
@@ -315,6 +261,7 @@ class TracerTest extends AgentTestRunner {
       }
     }
   }
+
   def "capture exception with Attributes()"() {
     when:
     def tracer = OpenTelemetry.getTracer("test")
