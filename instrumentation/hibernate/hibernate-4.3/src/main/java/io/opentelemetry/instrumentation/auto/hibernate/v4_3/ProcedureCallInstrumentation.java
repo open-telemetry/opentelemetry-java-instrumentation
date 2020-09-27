@@ -23,12 +23,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -45,7 +45,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.procedure.ProcedureCall", Span.class.getName());
+    return singletonMap("org.hibernate.procedure.ProcedureCall", Context.class.getName());
   }
 
   @Override
@@ -80,8 +80,8 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
     public static SpanWithScope startMethod(
         @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
 
-      ContextStore<ProcedureCall, Span> contextStore =
-          InstrumentationContext.get(ProcedureCall.class, Span.class);
+      ContextStore<ProcedureCall, Context> contextStore =
+          InstrumentationContext.get(ProcedureCall.class, Context.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, call, "ProcedureCall." + name, call.getProcedureName(), true);

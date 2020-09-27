@@ -39,7 +39,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (bind) {
       instrument = instrument.bind(Labels.empty())
@@ -58,7 +57,6 @@ class MeterTest extends AgentTestRunner {
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == expectedType
-    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -92,7 +90,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (bind) {
       instrument = instrument.bind(Labels.empty())
@@ -111,7 +108,6 @@ class MeterTest extends AgentTestRunner {
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == SUMMARY
-    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -142,7 +138,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (builderMethod == "longSumObserverBuilder") {
       instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
@@ -194,7 +189,6 @@ class MeterTest extends AgentTestRunner {
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == expectedType
-    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -226,12 +220,10 @@ class MeterTest extends AgentTestRunner {
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     def doubleMeasure = meter.doubleValueRecorderBuilder("test2")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
 
     meter.newBatchRecorder("q", "r")
@@ -249,7 +241,6 @@ class MeterTest extends AgentTestRunner {
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == MONOTONIC_LONG
-    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -262,7 +253,6 @@ class MeterTest extends AgentTestRunner {
     metricData2.descriptor.description == "d"
     metricData2.descriptor.unit == "u"
     metricData2.descriptor.type == SUMMARY
-    metricData2.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData2.instrumentationLibraryInfo.name == instrumentationName
     metricData2.instrumentationLibraryInfo.version == "1.2.3"
     metricData2.points.size() == 1

@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -129,7 +128,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public OpenTelemetrySpan nextSpan() {
-      return new OpenTelemetrySpan(TRACER.getCurrentSpan());
+      return new OpenTelemetrySpan(Context.current());
     }
 
     @Override
@@ -140,9 +139,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
       Context context = ((OpenTelemetryTraceContext) traceContext).getContext();
 
-      io.opentelemetry.trace.Span parent = TracingContextUtils.getSpan(context);
-
-      return new OpenTelemetrySpan(parent);
+      return new OpenTelemetrySpan(context);
     }
   }
 
@@ -163,7 +160,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private String args;
 
-    OpenTelemetrySpan(Span parent) {
+    OpenTelemetrySpan(Context parent) {
       // Name will be updated later, we create with an arbitrary one here to store other data before
       // the span starts.
       spanBuilder =
@@ -171,7 +168,7 @@ public enum OpenTelemetryTracing implements Tracing {
               .spanBuilder("redis")
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
-              .setAttribute(SemanticAttributes.DB_SYSTEM.key(), DbSystem.REDIS);
+              .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystem.REDIS);
     }
 
     @Override
@@ -267,52 +264,52 @@ public enum OpenTelemetryTracing implements Tracing {
         if (name != null) {
           String statement =
               (args != null && !args.isEmpty()) && !name.equals("AUTH") ? name + " " + args : name;
-          SemanticAttributes.DB_STATEMENT.set(span, statement);
+          span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
         }
         span.end();
       }
     }
 
     private static void fillEndpoint(Span.Builder span, OpenTelemetryEndpoint endpoint) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), endpoint.ip);
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.NET_PEER_IP, endpoint.ip);
 
       StringBuilder redisUrl = new StringBuilder("redis://");
 
       if (endpoint.name != null) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), endpoint.name);
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME, endpoint.name);
         redisUrl.append(endpoint.name);
       } else {
         redisUrl.append(endpoint.ip);
       }
 
       if (endpoint.port != 0) {
-        span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), endpoint.port);
+        span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) endpoint.port);
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING.key(), redisUrl.toString());
+      span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, redisUrl.toString());
     }
 
     private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), endpoint.ip);
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.NET_PEER_IP, endpoint.ip);
 
       StringBuilder redisUrl = new StringBuilder("redis://");
 
       if (endpoint.name != null) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), endpoint.name);
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME, endpoint.name);
         redisUrl.append(endpoint.name);
       } else {
         redisUrl.append(endpoint.ip);
       }
 
       if (endpoint.port != 0) {
-        span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), endpoint.port);
+        span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) endpoint.port);
         redisUrl.append(":").append(endpoint.port);
       }
 
-      span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING.key(), redisUrl.toString());
+      span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, redisUrl.toString());
     }
   }
 }

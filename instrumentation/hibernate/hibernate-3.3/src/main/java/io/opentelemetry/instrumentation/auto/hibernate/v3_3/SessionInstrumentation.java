@@ -21,6 +21,7 @@ import static io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -28,6 +29,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
@@ -54,11 +56,11 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   @Override
   public Map<String, String> contextStore() {
     Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Session", Span.class.getName());
-    map.put("org.hibernate.StatelessSession", Span.class.getName());
-    map.put("org.hibernate.Query", Span.class.getName());
-    map.put("org.hibernate.Transaction", Span.class.getName());
-    map.put("org.hibernate.Criteria", Span.class.getName());
+    map.put("org.hibernate.Session", Context.class.getName());
+    map.put("org.hibernate.StatelessSession", Context.class.getName());
+    map.put("org.hibernate.Query", Context.class.getName());
+    map.put("org.hibernate.Transaction", Context.class.getName());
+    map.put("org.hibernate.Criteria", Context.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -128,20 +130,21 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void closeSession(
         @Advice.This Object session, @Advice.Thrown Throwable throwable) {
 
-      Span sessionSpan = null;
+      Context sessionContext = null;
       if (session instanceof Session) {
-        ContextStore<Session, Span> contextStore =
-            InstrumentationContext.get(Session.class, Span.class);
-        sessionSpan = contextStore.get((Session) session);
+        ContextStore<Session, Context> contextStore =
+            InstrumentationContext.get(Session.class, Context.class);
+        sessionContext = contextStore.get((Session) session);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Span> contextStore =
-            InstrumentationContext.get(StatelessSession.class, Span.class);
-        sessionSpan = contextStore.get((StatelessSession) session);
+        ContextStore<StatelessSession, Context> contextStore =
+            InstrumentationContext.get(StatelessSession.class, Context.class);
+        sessionContext = contextStore.get((StatelessSession) session);
       }
 
-      if (sessionSpan == null) {
+      if (sessionContext == null) {
         return;
       }
+      Span sessionSpan = getSpan(sessionContext);
 
       DECORATE.onError(sessionSpan, throwable);
       DECORATE.beforeFinish(sessionSpan);
@@ -159,13 +162,13 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
       boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
       if (session instanceof Session) {
-        ContextStore<Session, Span> contextStore =
-            InstrumentationContext.get(Session.class, Span.class);
+        ContextStore<Session, Context> contextStore =
+            InstrumentationContext.get(Session.class, Context.class);
         return SessionMethodUtils.startScopeFrom(
             contextStore, (Session) session, "Session." + name, entity, startSpan);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Span> contextStore =
-            InstrumentationContext.get(StatelessSession.class, Span.class);
+        ContextStore<StatelessSession, Context> contextStore =
+            InstrumentationContext.get(StatelessSession.class, Context.class);
         return SessionMethodUtils.startScopeFrom(
             contextStore, (StatelessSession) session, "Session." + name, entity, startSpan);
       }
@@ -188,16 +191,16 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(@Advice.This Object session, @Advice.Return Query query) {
 
-      ContextStore<Query, Span> queryContextStore =
-          InstrumentationContext.get(Query.class, Span.class);
+      ContextStore<Query, Context> queryContextStore =
+          InstrumentationContext.get(Query.class, Context.class);
       if (session instanceof Session) {
-        ContextStore<Session, Span> sessionContextStore =
-            InstrumentationContext.get(Session.class, Span.class);
+        ContextStore<Session, Context> sessionContextStore =
+            InstrumentationContext.get(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (Session) session, queryContextStore, query);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Span> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Span.class);
+        ContextStore<StatelessSession, Context> sessionContextStore =
+            InstrumentationContext.get(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (StatelessSession) session, queryContextStore, query);
       }
@@ -210,17 +213,17 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getTransaction(
         @Advice.This Object session, @Advice.Return Transaction transaction) {
 
-      ContextStore<Transaction, Span> transactionContextStore =
-          InstrumentationContext.get(Transaction.class, Span.class);
+      ContextStore<Transaction, Context> transactionContextStore =
+          InstrumentationContext.get(Transaction.class, Context.class);
 
       if (session instanceof Session) {
-        ContextStore<Session, Span> sessionContextStore =
-            InstrumentationContext.get(Session.class, Span.class);
+        ContextStore<Session, Context> sessionContextStore =
+            InstrumentationContext.get(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (Session) session, transactionContextStore, transaction);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Span> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Span.class);
+        ContextStore<StatelessSession, Context> sessionContextStore =
+            InstrumentationContext.get(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (StatelessSession) session, transactionContextStore, transaction);
       }
@@ -232,16 +235,16 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(@Advice.This Object session, @Advice.Return Criteria criteria) {
 
-      ContextStore<Criteria, Span> criteriaContextStore =
-          InstrumentationContext.get(Criteria.class, Span.class);
+      ContextStore<Criteria, Context> criteriaContextStore =
+          InstrumentationContext.get(Criteria.class, Context.class);
       if (session instanceof Session) {
-        ContextStore<Session, Span> sessionContextStore =
-            InstrumentationContext.get(Session.class, Span.class);
+        ContextStore<Session, Context> sessionContextStore =
+            InstrumentationContext.get(Session.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (Session) session, criteriaContextStore, criteria);
       } else if (session instanceof StatelessSession) {
-        ContextStore<StatelessSession, Span> sessionContextStore =
-            InstrumentationContext.get(StatelessSession.class, Span.class);
+        ContextStore<StatelessSession, Context> sessionContextStore =
+            InstrumentationContext.get(StatelessSession.class, Context.class);
         SessionMethodUtils.attachSpanFromStore(
             sessionContextStore, (StatelessSession) session, criteriaContextStore, criteria);
       }

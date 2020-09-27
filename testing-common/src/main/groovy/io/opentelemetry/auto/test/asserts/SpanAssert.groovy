@@ -21,6 +21,9 @@ import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.common.AttributeConsumer
+import io.opentelemetry.common.AttributeKey
+import io.opentelemetry.common.ReadableAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.SpanId
@@ -173,10 +176,21 @@ class SpanAssert {
 
   void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
                   @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    assertAttributes(span.attributes, spec)
+    assertAttributes(toMap(span.attributes), spec)
   }
 
   void assertEventsAllVerified() {
     assert assertedEventIndexes.size() == span.events.size()
+  }
+
+  private Map<String, Object> toMap(ReadableAttributes attributes) {
+    def map = new HashMap()
+    attributes.forEach(new AttributeConsumer() {
+      @Override
+      <T> void consume(AttributeKey<T> key, T value) {
+        map.put(key.key, value)
+      }
+    })
+    return map
   }
 }

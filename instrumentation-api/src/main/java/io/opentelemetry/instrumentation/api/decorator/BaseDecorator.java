@@ -17,13 +17,11 @@
 package io.opentelemetry.instrumentation.api.decorator;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
@@ -83,7 +81,7 @@ public abstract class BaseDecorator {
         // Failed DNS lookup, the host string is the name.
         setPeer(span, remoteConnection.getHostString(), null);
       }
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) remoteConnection.getPort());
     }
     return span;
   }
@@ -97,17 +95,17 @@ public abstract class BaseDecorator {
   public static void setPeer(Span span, String peerName, String peerIp) {
     assert span != null;
     if (peerName != null && !peerName.equals(peerIp)) {
-      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }
     if (peerIp != null) {
-      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
+      span.setAttribute(SemanticAttributes.NET_PEER_IP, peerIp);
     }
     String peerService = mapToPeer(peerName);
     if (peerService == null) {
       peerService = mapToPeer(peerIp);
     }
     if (peerService != null) {
-      SemanticAttributes.PEER_SERVICE.set(span, peerService);
+      span.setAttribute(SemanticAttributes.PEER_SERVICE, peerService);
     }
   }
 
@@ -187,11 +185,13 @@ public abstract class BaseDecorator {
     return simpleName;
   }
 
-  public static <C> SpanContext extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    Context context =
-        getPropagators().getTextMapPropagator().extract(Context.current(), carrier, getter);
-    Span span = getSpan(context);
-    return span.getContext();
+  public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+    // TODO add context leak debug
+
+    // Using Context.ROOT here may be quite unexpected, but the reason is simple.
+    // We want either span context extracted from the carrier or invalid one.
+    // We DO NOT want any span context potentially lingering in the current context.
+    return getPropagators().getTextMapPropagator().extract(Context.ROOT, carrier, getter);
   }
 
   protected static String mapToPeer(String endpoint) {

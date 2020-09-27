@@ -30,7 +30,6 @@ import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -128,8 +127,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       return DefaultSpan.getInvalid();
     }
 
-    Span current = TracingContextUtils.getSpan(context);
-    Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current);
+    Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos);
     }
@@ -141,9 +139,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   protected Span onRequest(Span span, REQUEST request) {
     assert span != null;
     if (request != null) {
-      SemanticAttributes.NET_TRANSPORT.set(span, "IP.TCP");
-      SemanticAttributes.HTTP_METHOD.set(span, method(request));
-      SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
 
       setFlavor(span, request);
       setUrl(span, request);
@@ -162,7 +160,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       flavor = flavor.substring(httpProtocolPrefix.length());
     }
 
-    SemanticAttributes.HTTP_FLAVOR.set(span, flavor);
+    span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
   private void setUrl(Span span, REQUEST request) {
@@ -170,7 +168,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       URI url = url(request);
       if (url != null) {
         NetPeerUtils.setNetPeer(span, url.getHost(), null, url.getPort());
-        SemanticAttributes.HTTP_URL.set(span, url.toString());
+        span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {
       log.debug("Error tagging url", e);
@@ -182,7 +180,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     if (response != null) {
       Integer status = status(response);
       if (status != null) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
       }
     }

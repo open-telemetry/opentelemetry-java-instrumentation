@@ -87,12 +87,6 @@ class ApplicationLongCounter implements LongCounter {
     }
 
     @Override
-    public LongCounter.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public LongCounter build() {
       return new ApplicationLongCounter(agentBuilder.build());
     }

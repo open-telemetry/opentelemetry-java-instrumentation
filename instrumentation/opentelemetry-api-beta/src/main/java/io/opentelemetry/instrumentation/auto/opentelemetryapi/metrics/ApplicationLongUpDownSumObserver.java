@@ -89,12 +89,6 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public LongUpDownSumObserver build() {
       return new ApplicationLongUpDownSumObserver(agentBuilder.build());
     }

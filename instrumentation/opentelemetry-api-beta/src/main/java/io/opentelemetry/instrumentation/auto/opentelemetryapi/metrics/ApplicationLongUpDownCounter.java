@@ -90,12 +90,6 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
     }
 
     @Override
-    public LongUpDownCounter.Builder setConstantLabels(Labels constantLabels) {
-      agentBuilder.setConstantLabels(LabelBridging.toAgent(constantLabels));
-      return this;
-    }
-
-    @Override
     public LongUpDownCounter build() {
       return new ApplicationLongUpDownCounter(agentBuilder.build());
     }
