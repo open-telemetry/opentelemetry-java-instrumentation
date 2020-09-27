@@ -60,6 +60,10 @@ See [Writing instrumentation](docs/contributing/writing-instrumentation.md)
 
 See [Understanding the javaagent components](docs/contributing/javaagent-jar-components.md)
 
+### Debugging
+
+See [Debugging](docs/contributing/debugging.md)
+
 ### Maintainers, Approvers and Triagers
 
 Maintainers:
