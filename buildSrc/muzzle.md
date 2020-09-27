@@ -10,7 +10,7 @@ if the APIs do not match.
 ## How does it work
 
 At build time the Muzzle gradle plugin generates matcher for 3rd party APIs used by the agent.
-The matcher is created in the instrumentation class in `ReferenceMatcher getInstrumentationMuzzle()`.
+The matcher is stored in the instrumentation class in method `ReferenceMatcher getInstrumentationMuzzle()`.
 
 At runtime the Muzzle checks API compatibility between symbols used by the Agent
 and symbols at the application classpath. Before inspecting the classpath
