@@ -121,7 +121,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       Span span = TRACER.startSpan(invokedMethod);
 
       Object result;
-      try(Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = currentContextWith(span)) {
         result = methodInvocation.proceed();
         TRACER.end(span);
       } catch (Throwable t) {

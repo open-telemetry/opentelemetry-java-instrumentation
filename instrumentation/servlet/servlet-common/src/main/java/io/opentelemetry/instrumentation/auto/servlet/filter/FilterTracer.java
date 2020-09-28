@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.servlet.http;
+package io.opentelemetry.instrumentation.auto.servlet.filter;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public class HttpServletResponseDecorator extends BaseDecorator {
-  public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.servlet");
+public class FilterTracer extends BaseTracer {
+  public static final FilterTracer TRACER = new FilterTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.servlet";
+  }
 }

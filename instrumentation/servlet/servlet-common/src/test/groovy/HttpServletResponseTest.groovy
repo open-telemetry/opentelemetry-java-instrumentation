@@ -69,19 +69,19 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "HttpServletResponse.sendError"
+          operationName "TestResponse.sendError"
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName "HttpServletResponse.sendError"
+          operationName "TestResponse.sendError"
           childOf span(0)
           attributes {
           }
         }
         span(3) {
-          operationName "HttpServletResponse.sendRedirect"
+          operationName "TestResponse.sendRedirect"
           childOf span(0)
           attributes {
           }
@@ -117,7 +117,7 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent", null, ex)
         span(1) {
-          operationName "HttpServletResponse.sendRedirect"
+          operationName 'HttpServletResponseTest$2.sendRedirect'
           childOf span(0)
           errored true
           errorEvent(ex.class, ex.message)

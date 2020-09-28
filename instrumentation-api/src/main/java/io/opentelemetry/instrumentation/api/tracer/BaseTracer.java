@@ -82,7 +82,7 @@ public abstract class BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForMethod(Method method) {
+  public String spanNameForMethod(Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
@@ -105,7 +105,7 @@ public abstract class BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForClass(Class<?> clazz) {
+  public String spanNameForClass(Class<?> clazz) {
     if (!clazz.isAnonymousClass()) {
       return clazz.getSimpleName();
     }

@@ -16,20 +16,19 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.filter;
 
-import static io.opentelemetry.instrumentation.auto.servlet.filter.FilterDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.servlet.filter.FilterDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.filter.FilterTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import javax.servlet.Filter;
 import net.bytebuddy.asm.Advice;
@@ -68,7 +67,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".FilterDecorator",
+      packageName + ".FilterTracer",
     };
   }
 
@@ -85,30 +84,33 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   public static class FilterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope start(@Advice.This Filter filter) {
+    public static void start(
+        @Advice.This Filter filter,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
-        return null;
+        return;
       }
 
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
-      Span span = TRACER.spanBuilder(filter.getClass().getSimpleName() + ".doFilter").startSpan();
-      DECORATE.afterStart(span);
-
-      return new SpanWithScope(span, currentContextWith(span));
+      span = TRACER.startSpan(filter.getClass().getSimpleName() + ".doFilter", Kind.INTERNAL);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

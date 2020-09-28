@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.http;
 
-import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -31,6 +30,7 @@ import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +58,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".HttpServletResponseDecorator",
+      packageName + ".HttpServletResponseTracer",
     };
   }
 
@@ -71,16 +71,14 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(
-        @Advice.Origin("#m") String method,
-        @Advice.This HttpServletResponse resp,
+        @Advice.Origin Method method,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
       // Don't want to generate a new top-level span
       if (callDepth.getAndIncrement() == 0 && TRACER.getCurrentSpan().getContext().isValid()) {
-        span = TRACER.spanBuilder("HttpServletResponse." + method).startSpan();
-        DECORATE.afterStart(span);
+        span = TRACER.startSpan(method);
         scope = currentContextWith(span);
       }
     }
@@ -93,10 +91,14 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         @Advice.Local("otelCallDepth") Depth callDepth) {
       if (callDepth.decrementAndGet() == 0 && span != null) {
         CallDepthThreadLocalMap.reset(HttpServletResponse.class);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+
         scope.close();
+
+        if (throwable != null) {
+          TRACER.endExceptionally(span, throwable);
+        } else {
+          TRACER.end(span);
+        }
       }
     }
   }

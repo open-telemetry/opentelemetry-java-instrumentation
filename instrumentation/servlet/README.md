@@ -92,11 +92,6 @@ Of course, still adhering to OpenTelemetry
 `javax.servlet.RequestDispatcher.include` methods to create new `INTERNAL` spans around their
 invocations.
 
-`ServletContextInstrumentation` instruments `javax.servlet.ServletContext.getRequestDispatcher` and
-`javax.servlet.ServletContext.getNamedDispatcher`. The only job of this instrumentation is to
-preserve the input parameter of those methods and to make that available for `RequestDispatcherInstrumentation`
-described above. The latter uses that name for `dispatcher.target` span attribute.
-
 `HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.
