@@ -21,7 +21,6 @@ import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDi
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
@@ -32,12 +31,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.lang.reflect.Method;
 import io.opentelemetry.trace.SpanContext;
+import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
@@ -126,7 +126,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletContext;
       }
 
-      try (Scope ignored = currentContextWith(parent)) {
+      try (Scope ignored = ContextUtils.withScopedContext(parent)) {
         span = TRACER.startSpan(method);
 
         // save the original servlet span before overwriting the request attribute, so that it can
