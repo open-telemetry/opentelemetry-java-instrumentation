@@ -64,6 +64,10 @@ See [Understanding the javaagent components](docs/contributing/javaagent-jar-com
 
 See [Debugging](docs/contributing/debugging.md)
 
+### Understanding Muzzle
+
+See [Understanding Muzzle](docs/contributing/muzzle.md)
+
 ### Maintainers, Approvers and Triagers
 
 Maintainers:
