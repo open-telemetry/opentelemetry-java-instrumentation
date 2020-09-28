@@ -29,7 +29,6 @@ import static io.opentelemetry.instrumentation.api.config.Config.normalizeProper
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,10 +72,9 @@ public final class ConfigBuilder
 
   private static Map<String, String> normalizedProperties(Properties properties) {
     Map<String, String> configMap = new HashMap<>(properties.size());
-    for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); ) {
-      String propertyName = (String) e.nextElement();
-      configMap.put(normalizePropertyName(propertyName), properties.getProperty(propertyName));
-    }
+    properties.forEach(
+        (propertyName, propertyValue) ->
+            configMap.put(normalizePropertyName((String) propertyName), (String) propertyValue));
     return configMap;
   }
 

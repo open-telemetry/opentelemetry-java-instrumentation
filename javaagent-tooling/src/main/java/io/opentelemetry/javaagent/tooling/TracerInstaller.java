@@ -45,15 +45,16 @@ public class TracerInstaller {
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
+      Properties config = Config.get().asJavaProperties();
 
-      configure();
+      configure(config);
       // Try to create an exporter from external jar file
       String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
-        installExportersFromJar(exporterJar);
+        installExportersFromJar(exporterJar, config);
       } else {
         // Try to create embedded exporter
-        installExporters(Config.get().getExporter());
+        installExporters(Config.get().getExporter(), config);
       }
     } else {
       log.info("Tracing is disabled.");
@@ -62,9 +63,7 @@ public class TracerInstaller {
     PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
   }
 
-  private static synchronized void installExporters(String exportersName) {
-    Properties config = Config.get().asJavaProperties();
-
+  private static synchronized void installExporters(String exportersName, Properties config) {
     String[] exporters = exportersName.split(",", -1);
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
@@ -115,7 +114,7 @@ public class TracerInstaller {
     return null;
   }
 
-  private static synchronized void installExportersFromJar(String exporterJar) {
+  private static synchronized void installExportersFromJar(String exporterJar, Properties config) {
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
@@ -124,7 +123,6 @@ public class TracerInstaller {
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
     }
-    Properties config = Config.get().asJavaProperties();
     ExporterClassLoader exporterLoader =
         new ExporterClassLoader(url, TracerInstaller.class.getClassLoader());
 
@@ -180,7 +178,7 @@ public class TracerInstaller {
     return null;
   }
 
-  private static void configure() {
+  private static void configure(Properties config) {
     TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
 
     // Register additional thread details logging span processor
@@ -196,7 +194,7 @@ public class TracerInstaller {
     /* Update trace config from env vars or sys props */
     TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
     tracerSdkProvider.updateActiveTraceConfig(
-        activeTraceConfig.toBuilder().readProperties(Config.get().asJavaProperties()).build());
+        activeTraceConfig.toBuilder().readProperties(config).build());
   }
 
   @SuppressWarnings("unused")
