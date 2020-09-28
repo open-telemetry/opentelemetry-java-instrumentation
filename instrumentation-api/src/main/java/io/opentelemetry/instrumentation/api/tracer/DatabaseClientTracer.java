@@ -116,7 +116,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   protected void onStatement(Span span, String statement) {
-    span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+    SemanticAttributes.DB_STATEMENT.set(span, statement);
   }
 
   // TODO: "When it's impossible to get any meaningful representation of the span name, it can be

@@ -16,15 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.spring.data;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public final class SpringDataDecorator extends ClientDecorator {
-  public static final SpringDataDecorator DECORATE = new SpringDataDecorator();
+public final class SpringDataTracer extends BaseTracer {
+  public static final SpringDataTracer TRACER = new SpringDataTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.spring-data-1.8");
+  private SpringDataTracer() {}
 
-  private SpringDataDecorator() {}
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-data-1.8";
+  }
 }
