@@ -67,7 +67,7 @@ class BaseDecoratorTest extends AgentSpecification {
   def "test onPeerConnection with mapped peer"() {
     when:
     ConfigUtils.withConfigOverride(
-      "endpoint.peer.service.mapping",
+      "otel.endpoint.peer.service.mapping",
       "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice") {
       decorator.onPeerConnection(span, connection)
     }

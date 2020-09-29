@@ -22,7 +22,7 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -396,7 +396,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when:
     String message = "Testing without headers"
-    withConfigOverride(Config.KAFKA_CLIENT_PROPAGATION_ENABLED, value) {
+    withConfigOverride(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, value) {
       kafkaTemplate.send(SHARED_TOPIC, message)
     }
 
@@ -424,7 +424,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "send message"
     String message = "Testing without headers"
-    withConfigOverride(Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "true") {
+    withConfigOverride(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, "true") {
       kafkaTemplate.send(SHARED_TOPIC, message)
     }
 
@@ -478,7 +478,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "read message without context propagation"
     ConfigUtils.updateConfig {
-      System.setProperty("otel." + Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
+      System.setProperty(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
     }
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
@@ -529,7 +529,7 @@ class KafkaClientTest extends AgentTestRunner {
     producerFactory.stop()
     container?.stop()
     ConfigUtils.updateConfig {
-      System.clearProperty("otel." + Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
+      System.clearProperty(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED)
     }
   }
 

@@ -31,6 +31,7 @@ ext {
     checkerFramework    : "3.6.1",
     errorprone          : "2.4.0",
     nullaway            : "0.8.0",
+    autoValue           : "1.7.4"
   ]
 
   deps = [
@@ -57,6 +58,9 @@ ext {
       // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
       dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
     ],
+    autoValueAnnotations        : "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
+    // annotation processor
+    autoValue                   : "com.google.auto.value:auto-value:${versions.autoValue}",
 
     // Testing
 

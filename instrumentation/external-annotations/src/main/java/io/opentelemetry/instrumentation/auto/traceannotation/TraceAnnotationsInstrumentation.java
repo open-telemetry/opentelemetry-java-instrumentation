@@ -80,7 +80,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
     if (configString == null) {
       additionalTraceAnnotations =
           Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
-    } else if (configString.trim().isEmpty()) {
+    } else if (configString.isEmpty()) {
       additionalTraceAnnotations = Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
       log.warn(

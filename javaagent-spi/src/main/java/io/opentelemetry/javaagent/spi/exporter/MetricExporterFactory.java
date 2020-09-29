@@ -17,6 +17,7 @@
 package io.opentelemetry.javaagent.spi.exporter;
 
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import java.util.Properties;
 
 /**
  * A {@link MetricExporterFactory} acts as the bootstrap for a {@link MetricExporter}
@@ -30,5 +31,5 @@ public interface MetricExporterFactory {
    * @param config The configuration
    * @return An implementation of a {@link MetricExporter}
    */
-  MetricExporter fromConfig(ExporterConfig config);
+  MetricExporter fromConfig(Properties config);
 }

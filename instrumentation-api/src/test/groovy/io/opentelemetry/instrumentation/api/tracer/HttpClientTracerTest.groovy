@@ -65,7 +65,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     when:
     withConfigOverride(
-      "endpoint.peer.service.mapping",
+      "otel.endpoint.peer.service.mapping",
       "myhost=reservation-service") {
       tracer.onRequest(span, req)
     }
