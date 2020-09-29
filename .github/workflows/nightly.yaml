@@ -29,7 +29,7 @@ jobs:
           java-version: 11
 
       - name: Test
-        uses: burrunan/gradle-cache-action@v1.4
+        uses: burrunan/gradle-cache-action@v1.5
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -58,7 +58,7 @@ jobs:
           java-version: 11
 
       - name: Test
-        uses: burrunan/gradle-cache-action@v1.4
+        uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: latestDepTest
           arguments: test -PtestLatestDeps=true --stacktrace
