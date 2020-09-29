@@ -17,13 +17,14 @@
 package io.opentelemetry.instrumentation.auto.lettuce.v5_0;
 
 import io.lettuce.core.protocol.RedisCommand;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
   public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
 
   @Override
-  protected String normalizeQuery(RedisCommand<?, ?, ?> command) {
+  protected @NonNull String normalizeQuery(RedisCommand<?, ?, ?> command) {
     return LettuceInstrumentationUtil.getCommandName(command);
   }
 }

@@ -16,6 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.lettuce.v4_0;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 public class LettuceConnectionDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<String> {
 
@@ -23,7 +25,7 @@ public class LettuceConnectionDatabaseClientTracer
       new LettuceConnectionDatabaseClientTracer();
 
   @Override
-  protected String normalizeQuery(String command) {
+  protected @NonNull String normalizeQuery(String command) {
     return command;
   }
 }

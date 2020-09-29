@@ -72,3 +72,20 @@ not values defined by spec.
 | `rpc.system`   | Y | + |
 | `rpc.service`  | N | + |
 | `rpc.method`   | N | + |
+
+## Database
+
+| Attribute | Required | Implemented? |
+| -------------- | :---: | :---: |
+| `db.system`   | Y | + |
+| `db.connection_string`  | N | only set for Redis, JDBC and MongoDB |
+| `db.user`   | N | only set for JDBC|
+| `db.jdbc.driver_classname`   | N | - |
+| `db.mssql.instance_name`   | N | - |
+| `db.name`   | N | only set of JDBC, Mongo, Geode and MongoDB |
+| `db.statement`   | N | +, except for ElasticSearch and Memcached, see `db.operation` |
+| `db.operation`   | N | only set of ElasticSearch and Memcached |
+| `db.cassandra.keyspace`   | Y | + |
+| `db.hbase`   | Y | -, HBase is not supported |
+| `db.redis.database_index`   | N | only set for Lettuce driver, not for Jedis |
+| `db.mongodb.collection`   | Y | - |

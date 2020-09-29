@@ -119,7 +119,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
-            "db.redis.dbIndex" 0
           }
         }
       }
@@ -152,7 +151,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
-            "db.redis.dbIndex" 0
           }
         }
       }

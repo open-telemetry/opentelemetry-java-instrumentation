@@ -20,7 +20,9 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
     extends DatabaseClientTracer<RedisURI, QUERY> {
@@ -30,18 +32,8 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected String dbSystem(RedisURI connection) {
+  protected @NonNull String dbSystem(RedisURI connection) {
     return DbSystem.REDIS;
-  }
-
-  @Override
-  protected String dbUser(RedisURI connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(RedisURI connection) {
-    return null;
   }
 
   @Override
@@ -51,8 +43,9 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
 
   @Override
   public Span onConnection(Span span, RedisURI connection) {
-    if (connection != null) {
-      span.setAttribute("db.redis.dbIndex", connection.getDatabase());
+    if (connection != null && connection.getDatabase() != 0) {
+      span.setAttribute(
+          SemanticAttributes.REDIS_DATABASE_INDEX, String.valueOf(connection.getDatabase()));
     }
     return super.onConnection(span, connection);
   }

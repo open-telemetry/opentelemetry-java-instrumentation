@@ -30,6 +30,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   public static final JdbcTracer TRACER = new JdbcTracer();
@@ -40,7 +41,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbSystem(DBInfo info) {
+  protected @NonNull String dbSystem(DBInfo info) {
     return info.getSystem();
   }
 
@@ -89,7 +90,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String normalizeQuery(String query) {
+  protected @NonNull String normalizeQuery(String query) {
     return JDBCUtils.normalizeSql(query);
   }
 

@@ -16,13 +16,15 @@
 
 package io.opentelemetry.instrumentation.auto.lettuce.v5_0;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 public class LettuceConnectionDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<String> {
   public static final LettuceConnectionDatabaseClientTracer TRACER =
       new LettuceConnectionDatabaseClientTracer();
 
   @Override
-  protected String normalizeQuery(String query) {
+  protected @NonNull String normalizeQuery(String query) {
     return query;
   }
 }

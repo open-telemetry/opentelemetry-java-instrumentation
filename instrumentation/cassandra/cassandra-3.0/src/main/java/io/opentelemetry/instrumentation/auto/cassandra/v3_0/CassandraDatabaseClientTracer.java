@@ -23,7 +23,9 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session, String> {
   public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
@@ -34,23 +36,24 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
   }
 
   @Override
-  protected String normalizeQuery(String query) {
+  protected @NonNull String normalizeQuery(String query) {
     return query;
   }
 
   @Override
-  protected String dbSystem(Session session) {
+  protected @NonNull String dbSystem(Session session) {
     return DbSystem.CASSANDRA;
   }
 
   @Override
-  protected String dbUser(Session session) {
+  protected String dbName(Session session) {
     return null;
   }
 
   @Override
-  protected String dbName(Session session) {
-    return session.getLoggedKeyspace();
+  protected Span onConnection(Span span, Session session) {
+    span.setAttribute(SemanticAttributes.CASSANDRA_KEYSPACE, session.getLoggedKeyspace());
+    return super.onConnection(span, session);
   }
 
   @Override

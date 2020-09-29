@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
   public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
@@ -36,18 +37,13 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String normalizeQuery(String query) {
+  protected @NonNull String normalizeQuery(String query) {
     return query;
   }
 
   @Override
-  protected String dbSystem(CqlSession session) {
+  protected @NonNull String dbSystem(CqlSession session) {
     return DbSystem.CASSANDRA;
-  }
-
-  @Override
-  protected String dbUser(CqlSession session) {
-    return null;
   }
 
   @Override

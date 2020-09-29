@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
@@ -28,7 +29,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, Protocol
   public static final JedisClientTracer TRACER = new JedisClientTracer();
 
   @Override
-  protected String normalizeQuery(ProtocolCommand command) {
+  protected @NonNull String normalizeQuery(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {
       return ((Protocol.Command) command).name();
     } else {
@@ -39,18 +40,8 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, Protocol
   }
 
   @Override
-  protected String dbSystem(Connection connection) {
+  protected @NonNull String dbSystem(Connection connection) {
     return DbSystem.REDIS;
-  }
-
-  @Override
-  protected String dbUser(Connection connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Connection connection) {
-    return null;
   }
 
   @Override

@@ -30,6 +30,7 @@ import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
 
@@ -46,14 +47,14 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
     Span span =
         tracer
-            .spanBuilder(spanName(normalizedQuery))
+            .spanBuilder(spanName(normalizedQuery, connection))
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .startSpan();
 
     if (connection != null) {
       onConnection(span, connection);
-      onPeerConnection(span, connection);
+      setNetSemanticConvention(span, connection);
     }
     onStatement(span, normalizedQuery);
 
@@ -111,7 +112,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
   }
 
-  protected void onPeerConnection(Span span, CONNECTION connection) {
+  protected void setNetSemanticConvention(Span span, CONNECTION connection) {
     NetPeerUtils.setNetPeer(span, peerAddress(connection));
   }
 
@@ -119,24 +120,35 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
   }
 
-  // TODO: "When it's impossible to get any meaningful representation of the span name, it can be
-  // populated using the same value as db.name" (c) spec
-  protected String spanName(String query) {
-    return query == null ? DB_QUERY : query;
+  protected abstract @NonNull String normalizeQuery(QUERY query);
+
+  protected abstract @NonNull String dbSystem(CONNECTION connection);
+
+  protected String dbUser(CONNECTION connection) {
+    return null;
   }
 
-  protected abstract String normalizeQuery(QUERY query);
+  protected String dbName(CONNECTION connection) {
+    return null;
+  }
 
-  protected abstract String dbSystem(CONNECTION connection);
-
-  protected abstract String dbUser(CONNECTION connection);
-
-  protected abstract String dbName(CONNECTION connection);
-
-  // TODO make abstract after implementing in all subclasses
   protected String dbConnectionString(CONNECTION connection) {
     return null;
   }
 
   protected abstract InetSocketAddress peerAddress(CONNECTION connection);
+
+  // TODO: "When it's impossible to get any meaningful representation of the span name, it can be
+  // populated using the same value as db.name" (c) spec
+  private String spanName(String query, CONNECTION connection) {
+    if (query != null) {
+      return query;
+    }
+
+    String result = null;
+    if (connection != null) {
+      result = dbName(connection);
+    }
+    return result == null ? DB_QUERY : result;
+  }
 }

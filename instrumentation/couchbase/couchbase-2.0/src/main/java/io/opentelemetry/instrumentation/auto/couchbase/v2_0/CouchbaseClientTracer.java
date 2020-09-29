@@ -20,12 +20,13 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
   public static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
 
   @Override
-  protected String normalizeQuery(Method method) {
+  protected @NonNull String normalizeQuery(Method method) {
     Class<?> declaringClass = method.getDeclaringClass();
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
@@ -33,18 +34,8 @@ public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
   }
 
   @Override
-  protected String dbSystem(Void connection) {
+  protected @NonNull String dbSystem(Void connection) {
     return DbSystem.COUCHBASE;
-  }
-
-  @Override
-  protected String dbUser(Void connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Void connection) {
-    return null;
   }
 
   @Override

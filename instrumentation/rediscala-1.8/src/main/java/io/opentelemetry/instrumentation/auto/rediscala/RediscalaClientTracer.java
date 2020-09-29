@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.auto.rediscala;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import redis.RedisCommand;
 
 public class RediscalaClientTracer
@@ -27,22 +28,12 @@ public class RediscalaClientTracer
   public static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
 
   @Override
-  protected String dbUser(RedisCommand<?, ?> command) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(RedisCommand<?, ?> command) {
-    return null;
-  }
-
-  @Override
-  protected String normalizeQuery(RedisCommand redisCommand) {
+  protected @NonNull String normalizeQuery(RedisCommand redisCommand) {
     return spanNameForClass(redisCommand.getClass());
   }
 
   @Override
-  protected String dbSystem(RedisCommand redisCommand) {
+  protected @NonNull String dbSystem(RedisCommand redisCommand) {
     return DbSystem.REDIS;
   }
 

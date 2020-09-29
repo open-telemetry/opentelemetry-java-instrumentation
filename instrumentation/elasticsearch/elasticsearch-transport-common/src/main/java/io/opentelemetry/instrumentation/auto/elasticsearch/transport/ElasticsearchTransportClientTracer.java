@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.elasticsearch.action.Action;
 
 public class ElasticsearchTransportClientTracer
@@ -34,23 +35,13 @@ public class ElasticsearchTransportClientTracer
   }
 
   @Override
-  protected String normalizeQuery(Action<?, ?, ?> query) {
+  protected @NonNull String normalizeQuery(Action<?, ?, ?> query) {
     return query.getClass().getSimpleName();
   }
 
   @Override
-  protected String dbSystem(Void connection) {
+  protected @NonNull String dbSystem(Void connection) {
     return "elasticsearch";
-  }
-
-  @Override
-  protected String dbUser(Void connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Void connection) {
-    return null;
   }
 
   @Override
