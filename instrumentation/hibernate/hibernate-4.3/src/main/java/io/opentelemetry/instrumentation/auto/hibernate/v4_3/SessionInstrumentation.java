@@ -25,11 +25,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,8 +50,8 @@ public class SessionInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.SharedSessionContract", Span.class.getName());
-    map.put("org.hibernate.procedure.ProcedureCall", Span.class.getName());
+    map.put("org.hibernate.SharedSessionContract", Context.class.getName());
+    map.put("org.hibernate.procedure.ProcedureCall", Context.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -87,10 +87,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
     public static void getProcedureCall(
         @Advice.This SharedSessionContract session, @Advice.Return ProcedureCall returned) {
 
-      ContextStore<SharedSessionContract, Span> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      ContextStore<ProcedureCall, Span> returnedContextStore =
-          InstrumentationContext.get(ProcedureCall.class, Span.class);
+      ContextStore<SharedSessionContract, Context> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Context.class);
+      ContextStore<ProcedureCall, Context> returnedContextStore =
+          InstrumentationContext.get(ProcedureCall.class, Context.class);
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, returnedContextStore, returned);

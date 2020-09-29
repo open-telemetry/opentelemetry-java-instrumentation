@@ -30,6 +30,7 @@ import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.common.AttributesKeys
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.time.Duration
@@ -342,7 +343,7 @@ class RabbitMQTest extends AgentTestRunner {
     trace.span(index) {
       operationName resource
 
-      switch (trace.span(index).attributes.get("amqp.command")?.stringValue) {
+      switch (trace.span(index).attributes.get(AttributesKeys.stringKey("amqp.command"))) {
         case "basic.publish":
           spanKind PRODUCER
           break
@@ -379,7 +380,7 @@ class RabbitMQTest extends AgentTestRunner {
           "record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
 
-        switch (attribute("amqp.command")?.stringValue) {
+        switch (attribute("amqp.command")) {
           case "basic.publish":
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }

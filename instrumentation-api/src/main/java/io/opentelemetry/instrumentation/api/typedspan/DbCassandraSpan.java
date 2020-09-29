@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemanticConvention {
@@ -225,14 +225,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     }
 
     /** sets the {@link Span} parent. */
-    public DbCassandraSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public DbCassandraSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public DbCassandraSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

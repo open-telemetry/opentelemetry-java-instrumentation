@@ -30,7 +30,7 @@ loader but are not used directly by auto-instrumentation
 
 #### `instrumentation-api` and `auto-api` modules
 
-These modules contains support classes for actual instrumentations to be loaded
+These modules contain support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
 classloaders in the running application. For this reason the `javaagent` module puts
 all these classes into JVM's bootstrap classloader. For the same reason this

@@ -16,8 +16,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 public class GrpcServerSpan extends DelegatingSpan implements GrpcServerSemanticConvention {
@@ -167,14 +167,8 @@ public class GrpcServerSpan extends DelegatingSpan implements GrpcServerSemantic
     }
 
     /** sets the {@link Span} parent. */
-    public GrpcServerSpanBuilder setParent(Span parent) {
-      this.internalBuilder.setParent(parent);
-      return this;
-    }
-
-    /** sets the {@link Span} parent. */
-    public GrpcServerSpanBuilder setParent(SpanContext remoteParent) {
-      this.internalBuilder.setParent(remoteParent);
+    public GrpcServerSpanBuilder setParent(Context context) {
+      this.internalBuilder.setParent(context);
       return this;
     }
 

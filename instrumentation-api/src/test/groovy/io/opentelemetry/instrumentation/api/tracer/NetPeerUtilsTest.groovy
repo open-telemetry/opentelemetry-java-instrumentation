@@ -28,12 +28,12 @@ class NetPeerUtilsTest extends BaseTracerTest {
 
     then:
     if (expectedPeerName) {
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), expectedPeerName)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, expectedPeerName)
     }
     if (expectedPeerIp) {
-      1 * span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), expectedPeerIp)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_IP, expectedPeerIp)
     }
-    1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.port)
+    1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, connection.port)
     0 * _
 
     where:
@@ -54,9 +54,9 @@ class NetPeerUtilsTest extends BaseTracerTest {
 
     then:
     if (expectedPeerService) {
-      1 * span.setAttribute("peer.service", expectedPeerService)
+      1 * span.setAttribute(SemanticAttributes.PEER_SERVICE, expectedPeerService)
     } else {
-      0 * span.setAttribute("peer.service", _)
+      0 * span.setAttribute(SemanticAttributes.PEER_SERVICE, _)
     }
 
     where:

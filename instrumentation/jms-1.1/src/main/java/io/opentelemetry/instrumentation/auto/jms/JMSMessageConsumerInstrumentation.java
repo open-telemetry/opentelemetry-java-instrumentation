@@ -24,12 +24,14 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -117,7 +119,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
-        SpanContext spanContext = extract(message, GETTER);
+        Context context = extract(message, GETTER);
+        SpanContext spanContext = getSpan(context).getContext();
         if (spanContext.isValid()) {
           spanBuilder.addLink(spanContext);
         }

@@ -60,20 +60,21 @@ public final class NetPeerUtils {
   public static void setNetPeer(Span span, String peerName, String peerIp, int port) {
 
     if (peerName != null && !peerName.equals(peerIp)) {
-      SemanticAttributes.NET_PEER_NAME.set(span, peerName);
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }
     if (peerIp != null) {
-      SemanticAttributes.NET_PEER_IP.set(span, peerIp);
+      span.setAttribute(SemanticAttributes.NET_PEER_IP, peerIp);
     }
+
     String peerService = mapToPeer(peerName);
     if (peerService == null) {
       peerService = mapToPeer(peerIp);
     }
     if (peerService != null) {
-      SemanticAttributes.PEER_SERVICE.set(span, peerService);
+      span.setAttribute(SemanticAttributes.PEER_SERVICE, peerService);
     }
     if (port > 0) {
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port);
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) port);
     }
   }
 

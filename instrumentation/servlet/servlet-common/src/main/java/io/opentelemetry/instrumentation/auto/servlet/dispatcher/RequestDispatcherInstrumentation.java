@@ -37,6 +37,7 @@ import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
@@ -93,29 +94,32 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.This RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
         @Advice.Argument(0) ServletRequest request) {
-      Span parentSpan = TRACER.getCurrentSpan();
+      Context parentContext = Context.current();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
-      Span servletSpan =
-          servletContextObject instanceof Context ? getSpan((Context) servletContextObject) : null;
+      Context servletContext =
+          servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      if (!parentSpan.getContext().isValid() && servletSpan == null) {
+      Span parentSpan = getSpan(parentContext);
+      SpanContext parentSpanContext = parentSpan.getContext();
+      if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
         return null;
       }
-      Span parent;
-      if (servletSpan == null
-          || (parentSpan.getContext().isValid()
+      Span servletSpan = servletContext != null ? getSpan(servletContext) : null;
+      Context parent;
+      if (servletContext == null
+          || (parentSpanContext.isValid()
               && servletSpan
                   .getContext()
                   .getTraceIdAsHexString()
-                  .equals(parentSpan.getContext().getTraceIdAsHexString()))) {
+                  .equals(parentSpanContext.getTraceIdAsHexString()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.
-        parent = parentSpan;
+        parent = parentContext;
       } else {
         // parentSpan is part of a different trace, so lets ignore it.
         // This can happen with the way Tomcat does error handling.
-        parent = servletSpan;
+        parent = servletContext;
       }
 
       String target =

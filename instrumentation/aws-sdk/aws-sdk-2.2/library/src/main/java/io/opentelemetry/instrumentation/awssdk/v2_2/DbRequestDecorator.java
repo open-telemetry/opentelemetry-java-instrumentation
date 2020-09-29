@@ -27,15 +27,15 @@ final class DbRequestDecorator implements SdkRequestDecorator {
   @Override
   public void decorate(Span span, SdkRequest sdkRequest, ExecutionAttributes attributes) {
 
-    span.setAttribute(SemanticAttributes.DB_SYSTEM.key(), "dynamodb");
+    span.setAttribute(SemanticAttributes.DB_SYSTEM, "dynamodb");
     // decorate with TableName as db.name (DynamoDB equivalent - not for batch)
     sdkRequest
         .getValueForField("TableName", String.class)
-        .ifPresent(val -> span.setAttribute(SemanticAttributes.DB_NAME.key(), val));
+        .ifPresent(val -> span.setAttribute(SemanticAttributes.DB_NAME, val));
 
     String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     if (operation != null) {
-      span.setAttribute(SemanticAttributes.DB_OPERATION.key(), operation);
+      span.setAttribute(SemanticAttributes.DB_OPERATION, operation);
     }
   }
 }

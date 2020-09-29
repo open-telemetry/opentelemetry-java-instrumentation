@@ -39,7 +39,7 @@ class AddThreadDetailsSpanProcessorTest extends Specification {
     processor.onStart(span)
 
     then:
-    1 * span.setAttribute(SemanticAttributes.THREAD_ID.key(), currentThreadId)
-    1 * span.setAttribute(SemanticAttributes.THREAD_NAME.key(), currentThreadName)
+    1 * span.setAttribute(SemanticAttributes.THREAD_ID, currentThreadId)
+    1 * span.setAttribute(SemanticAttributes.THREAD_NAME, currentThreadName)
   }
 }
