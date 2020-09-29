@@ -232,7 +232,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |
 | [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
-| [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+                           |
+| [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
 | [Vert.x](https://vertx.io)                                                                                                            | 3.0+                           |
 | [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                               | 3.5+                           |
 
