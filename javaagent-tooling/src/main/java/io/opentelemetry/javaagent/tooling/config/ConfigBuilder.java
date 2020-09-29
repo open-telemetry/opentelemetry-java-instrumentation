@@ -78,9 +78,13 @@ public final class ConfigBuilder
     return configMap;
   }
 
-  ConfigBuilder readPropertiesFromAllSources(Properties configurationFile) {
+  ConfigBuilder readPropertiesFromAllSources(
+      Properties spiConfiguration, Properties configurationFile) {
     // ordering from least to most important
-    return readProperties(configurationFile).readEnvironmentVariables().readSystemProperties();
+    return readProperties(spiConfiguration)
+        .readProperties(configurationFile)
+        .readEnvironmentVariables()
+        .readSystemProperties();
   }
 
   @Override
