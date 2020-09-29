@@ -66,11 +66,8 @@ class RequestDispatcherTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "servlet.$operation"
+          operationName "TestDispatcher.$operation"
           childOf span(0)
-          attributes {
-            "dispatcher.target" target
-          }
         }
         basicSpan(it, 2, "$operation-child", span(1))
       }
@@ -79,7 +76,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     then:
     1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "servlet.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
     then:
     1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _
@@ -113,13 +110,10 @@ class RequestDispatcherTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)
         span(1) {
-          operationName "servlet.$operation"
+          operationName "TestDispatcher.$operation"
           childOf span(0)
           errored true
           errorEvent(ex.class, ex.message)
-          attributes {
-            "dispatcher.target" target
-          }
         }
         basicSpan(it, 2, "$operation-child", span(1))
       }
@@ -128,7 +122,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     then:
     1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "servlet.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
     then:
     1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _

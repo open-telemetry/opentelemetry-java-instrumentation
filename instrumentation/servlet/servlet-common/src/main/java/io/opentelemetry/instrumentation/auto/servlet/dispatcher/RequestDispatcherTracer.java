@@ -14,30 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.decorator
+package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
 
-class ServerDecoratorTest extends BaseDecoratorTest {
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-  def "test afterStart"() {
-    def decorator = newDecorator()
-    when:
-    decorator.afterStart(span)
-
-    then:
-    0 * _
-  }
-
-  def "test beforeFinish"() {
-    when:
-    newDecorator().beforeFinish(span)
-
-    then:
-    0 * _
-  }
+public class RequestDispatcherTracer extends BaseTracer {
+  public static final RequestDispatcherTracer TRACER = new RequestDispatcherTracer();
 
   @Override
-  def newDecorator() {
-    return new ServerDecorator() {
-    }
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.servlet";
   }
 }

@@ -27,7 +27,7 @@ public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringWebfluxHttpServerDecorator",
+      packageName + ".SpringWebfluxHttpServerTracer",
       packageName + ".AdviceUtils",
       packageName + ".AdviceUtils$SpanFinishingSubscriber",
       packageName + ".RouteOnSuccessOrError"

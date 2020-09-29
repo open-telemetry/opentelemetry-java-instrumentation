@@ -16,10 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.servlet.dispatcher.RequestDispatcherTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -33,11 +31,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
@@ -66,7 +66,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RequestDispatcherDecorator",
+      packageName + ".RequestDispatcherTracer",
     };
   }
 
@@ -89,11 +89,14 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   public static class RequestDispatcherAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope start(
-        @Advice.Origin("#m") String method,
+    public static void start(
+        @Advice.Origin Method method,
         @Advice.This RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(0) ServletRequest request) {
+
       Context parentContext = Context.current();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
@@ -104,8 +107,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       SpanContext parentSpanContext = parentSpan.getContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
-        return null;
+        return;
       }
+
       Span servletSpan = servletContext != null ? getSpan(servletContext) : null;
       Context parent;
       if (servletContext == null
@@ -122,36 +126,33 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletContext;
       }
 
-      String target =
-          InstrumentationContext.get(RequestDispatcher.class, String.class).get(dispatcher);
-      Span span =
-          TRACER
-              .spanBuilder("servlet." + method)
-              .setParent(parent)
-              .setAttribute("dispatcher.target", target)
-              .startSpan();
-      DECORATE.afterStart(span);
+      try (Scope ignored = ContextUtils.withScopedContext(parent)) {
+        span = TRACER.startSpan(method);
 
-      // save the original servlet span before overwriting the request attribute, so that it can be
-      // restored on method exit
-      originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+        // save the original servlet span before overwriting the request attribute, so that it can
+        // be
+        // restored on method exit
+        originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
-      // this tells the dispatched servlet to use the current span as the parent for its work
-      Context newContext = withSpan(span, Context.current());
-      request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
-
-      return new SpanWithScope(span, withScopedContext(newContext));
+        // this tells the dispatched servlet to use the current span as the parent for its work
+        Context newContext = withSpan(span, Context.current());
+        request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
+      }
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Local("_originalContext") Object originalContext,
         @Advice.Argument(0) ServletRequest request,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+      if (scope == null) {
         return;
       }
+
+      scope.close();
 
       // restore the original servlet span
       // since spanWithScope is non-null here, originalContext must have been set with the
@@ -160,12 +161,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       // TODO review this logic. Seems like manual context management
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        HttpServletResponseTracer.TRACER.endExceptionally(span, throwable);
+      } else {
+        HttpServletResponseTracer.TRACER.end(span);
+      }
     }
   }
 }

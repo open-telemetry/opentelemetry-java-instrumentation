@@ -17,13 +17,13 @@
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -40,8 +40,7 @@ public class DispatcherHandlerAdvice {
       @Advice.Local("otelScope") Scope otelScope,
       @Advice.Local("otelContext") Context otelContext) {
 
-    Span span = TRACER.spanBuilder("DispatcherHandler.handle").startSpan();
-    DECORATE.afterStart(span);
+    Span span = TRACER.startSpan("DispatcherHandler.handle", Kind.INTERNAL);
 
     otelContext = withSpan(span, Context.current());
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the

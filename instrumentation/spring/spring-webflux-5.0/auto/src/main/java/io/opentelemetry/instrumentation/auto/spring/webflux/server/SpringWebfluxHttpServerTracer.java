@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.auto.servlet.dispatcher;
+package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public class RequestDispatcherDecorator extends BaseDecorator {
-  public static final RequestDispatcherDecorator DECORATE = new RequestDispatcherDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.servlet");
+public class SpringWebfluxHttpServerTracer extends BaseTracer {
+  public static final SpringWebfluxHttpServerTracer TRACER = new SpringWebfluxHttpServerTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-webflux-5.0";
+  }
 }

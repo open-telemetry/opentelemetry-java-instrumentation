@@ -16,8 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.spring.data;
 
-import static io.opentelemetry.instrumentation.auto.spring.data.SpringDataDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.spring.data.SpringDataDecorator.TRACER;
+import static io.opentelemetry.instrumentation.auto.spring.data.SpringDataTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -56,7 +55,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringDataDecorator",
+      packageName + ".SpringDataTracer",
       getClass().getName() + "$RepositoryInterceptor",
       getClass().getName() + "$InterceptingRepositoryProxyPostProcessor",
     };
@@ -119,21 +118,15 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(invokedMethod)).startSpan();
-      DECORATE.afterStart(span);
+      Span span = TRACER.startSpan(invokedMethod);
 
-      Scope scope = currentContextWith(span);
-
-      Object result = null;
-      try {
+      Object result;
+      try (Scope ignored = currentContextWith(span)) {
         result = methodInvocation.proceed();
+        TRACER.end(span);
       } catch (Throwable t) {
-        DECORATE.onError(span, t);
+        TRACER.endExceptionally(span, t);
         throw t;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
-        scope.close();
       }
       return result;
     }

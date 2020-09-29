@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.decorator;
+package io.opentelemetry.instrumentation.auto.servlet.filter;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-@Deprecated
-public abstract class ServerDecorator extends BaseDecorator {
+public class FilterTracer extends BaseTracer {
+  public static final FilterTracer TRACER = new FilterTracer();
 
   @Override
-  public Span afterStart(Span span) {
-    assert span != null;
-    return super.afterStart(span);
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.servlet";
   }
 }

@@ -17,7 +17,7 @@
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
@@ -41,7 +41,7 @@ public class AdviceUtils {
       "io.opentelemetry.instrumentation.auto.springwebflux.Context";
 
   public static String parseOperationName(Object handler) {
-    String className = DECORATE.spanNameForClass(handler.getClass());
+    String className = TRACER.spanNameForClass(handler.getClass());
     String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
 

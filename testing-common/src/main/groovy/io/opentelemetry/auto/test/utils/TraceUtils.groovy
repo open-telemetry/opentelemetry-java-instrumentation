@@ -21,40 +21,38 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 import io.grpc.Context
-import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.context.Scope
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Tracer
 import java.util.concurrent.Callable
 
 class TraceUtils {
 
-  private static final BaseDecorator DECORATE = new BaseDecorator() {
+  private static final BaseTracer TRACER = new BaseTracer() {
+    @Override
+    protected String getInstrumentationName() {
+      return "io.opentelemetry.auto"
+    }
   }
-
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     try {
       //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
-      def span = TRACER.spanBuilder(rootOperationName).setSpanKind(Span.Kind.SERVER).startSpan()
+      def span = TRACER.startSpan(rootOperationName, Span.Kind.SERVER)
       Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))
 
-      Scope scope = withScopedContext(newContext)
 
       try {
-        return r.call()
+        def result = withScopedContext(newContext).withCloseable {
+          r.call()
+        }
+        TRACER.end(span)
+        return result
       } catch (final Exception e) {
-        DECORATE.onError(span, e)
+        TRACER.endExceptionally(span, e)
         throw e
-      } finally {
-        scope.close()
-        span.end()
       }
     } catch (Throwable t) {
       throw ExceptionUtils.sneakyThrow(t)
@@ -63,20 +61,17 @@ class TraceUtils {
 
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
-      DECORATE.afterStart(span)
-
-      Scope scope = currentContextWith(span)
+      final Span span = TRACER.startSpan(rootOperationName, Span.Kind.INTERNAL)
 
       try {
-        return r.call()
+        def result = currentContextWith(span).withCloseable {
+          r.call()
+        }
+        TRACER.end(span)
+        return result
       } catch (final Exception e) {
-        DECORATE.onError(span, e)
+        TRACER.endExceptionally(span, e)
         throw e
-      } finally {
-        DECORATE.beforeFinish(span)
-        span.end()
-        scope.close()
       }
     } catch (Throwable t) {
       throw ExceptionUtils.sneakyThrow(t)

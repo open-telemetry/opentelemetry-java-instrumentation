@@ -16,18 +16,16 @@
 
 package io.opentelemetry.instrumentation.auto.spring.scheduling;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
-public class SpringSchedulingDecorator extends BaseDecorator {
-  public static final SpringSchedulingDecorator DECORATE = new SpringSchedulingDecorator();
+public class SpringSchedulingTracer extends BaseTracer {
+  public static final SpringSchedulingTracer TRACER = new SpringSchedulingTracer();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.spring-scheduling-3.1");
-
-  private SpringSchedulingDecorator() {}
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.spring-scheduling-3.1";
+  }
 
   public String spanNameOnRun(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {

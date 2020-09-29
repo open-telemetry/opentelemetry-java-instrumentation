@@ -16,11 +16,13 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.http;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
-public class HttpServletResponseDecorator extends BaseDecorator {
-  public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.servlet");
+public class HttpServletTracer extends BaseTracer {
+  public static final HttpServletTracer TRACER = new HttpServletTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.servlet";
+  }
 }

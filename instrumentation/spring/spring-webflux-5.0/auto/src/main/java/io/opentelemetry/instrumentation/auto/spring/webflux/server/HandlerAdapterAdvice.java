@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
-import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
@@ -46,7 +46,7 @@ public class HandlerAdapterAdvice {
       if (handler instanceof HandlerMethod) {
         // Special case for requests mapped with annotations
         HandlerMethod handlerMethod = (HandlerMethod) handler;
-        operationName = DECORATE.spanNameForMethod(handlerMethod.getMethod());
+        operationName = TRACER.spanNameForMethod(handlerMethod.getMethod());
         handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
       } else {
         operationName = AdviceUtils.parseOperationName(handler);
