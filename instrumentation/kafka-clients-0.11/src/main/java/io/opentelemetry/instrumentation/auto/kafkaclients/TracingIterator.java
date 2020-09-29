@@ -16,29 +16,22 @@
 
 package io.opentelemetry.instrumentation.auto.kafkaclients;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.TRACER;
-import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TracingIterator implements Iterator<ConsumerRecord> {
+public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
 
   private static final Logger log = LoggerFactory.getLogger(TracingIterator.class);
 
-  private final Iterator<ConsumerRecord> delegateIterator;
-  private final KafkaDecorator decorator;
+  private final Iterator<ConsumerRecord<?, ?>> delegateIterator;
+  private final KafkaConsumerTracer tracer;
   private final boolean propagationEnabled;
 
   /**
@@ -47,16 +40,17 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
    */
   private SpanWithScope currentSpanWithScope;
 
-  public TracingIterator(Iterator<ConsumerRecord> delegateIterator, KafkaDecorator decorator) {
+  public TracingIterator(Iterator<ConsumerRecord<?, ?>> delegateIterator,
+      KafkaConsumerTracer tracer) {
     this.delegateIterator = delegateIterator;
-    this.decorator = decorator;
+    this.tracer = tracer;
     this.propagationEnabled = KafkaClientConfiguration.isPropagationEnabled();
   }
 
   @Override
   public boolean hasNext() {
     if (currentSpanWithScope != null) {
-      currentSpanWithScope.getSpan().end();
+      tracer.end(currentSpanWithScope.getSpan());
       currentSpanWithScope.closeScope();
       currentSpanWithScope = null;
     }
@@ -64,42 +58,20 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
   }
 
   @Override
-  public ConsumerRecord next() {
+  public ConsumerRecord<?, ?> next() {
     if (currentSpanWithScope != null) {
       // in case they didn't call hasNext()...
-      currentSpanWithScope.getSpan().end();
+      tracer.end(currentSpanWithScope.getSpan());
       currentSpanWithScope.closeScope();
       currentSpanWithScope = null;
     }
 
-    ConsumerRecord next = delegateIterator.next();
+    ConsumerRecord<?, ?> next = delegateIterator.next();
 
     try {
       if (next != null) {
-        boolean consumer = !TRACER.getCurrentSpan().getContext().isValid();
-        Span.Builder spanBuilder = TRACER.spanBuilder(decorator.spanNameOnConsume(next));
-        if (consumer) {
-          spanBuilder.setSpanKind(CONSUMER);
-        }
-        if (propagationEnabled) {
-          Context context = extract(next.headers(), GETTER);
-          SpanContext spanContext = getSpan(context).getContext();
-          if (spanContext.isValid()) {
-            if (consumer) {
-              spanBuilder.setParent(context);
-            } else {
-              spanBuilder.addLink(spanContext);
-            }
-          }
-        }
-        long startTimeMillis = System.currentTimeMillis();
-        spanBuilder.setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis));
-        Span span = spanBuilder.startSpan();
-        if (next.value() == null) {
-          span.setAttribute("tombstone", true);
-        }
-        decorator.afterStart(span);
-        decorator.onConsume(span, startTimeMillis, next);
+        Span span = tracer.startSpan(next);
+
         currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));
       }
     } catch (Exception e) {

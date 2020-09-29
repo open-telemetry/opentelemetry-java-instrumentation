@@ -21,6 +21,9 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -105,19 +108,27 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           childOf span(0)
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(2) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(1)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -187,19 +198,27 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           childOf span(0)
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(2) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(1)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -262,21 +281,29 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 2) {
         // PRODUCER span 0
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           parent()
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "tombstone" true
           }
         }
         // CONSUMER span 0
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -329,20 +356,28 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           parent()
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "partition" { it >= 0 }
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -426,11 +461,14 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           parent()
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
       }
@@ -448,19 +486,27 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           parent()
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -482,19 +528,27 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " send"
           spanKind PRODUCER
           errored false
           parent()
           attributes {
+              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -503,11 +557,16 @@ class KafkaClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName SHARED_TOPIC
+          operationName SHARED_TOPIC + " process"
           spanKind CONSUMER
           errored false
           parent()
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
