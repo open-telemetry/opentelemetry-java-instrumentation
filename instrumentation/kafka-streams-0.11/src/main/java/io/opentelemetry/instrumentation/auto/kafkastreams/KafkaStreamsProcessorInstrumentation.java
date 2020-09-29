@@ -16,12 +16,8 @@
 
 package io.opentelemetry.instrumentation.auto.kafkastreams;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.auto.kafkastreams.KafkaStreamsDecorator.CONSUMER_DECORATE;
-import static io.opentelemetry.instrumentation.auto.kafkastreams.KafkaStreamsDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
-import static io.opentelemetry.instrumentation.auto.kafkastreams.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.instrumentation.auto.kafkastreams.KafkaStreamsTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -75,9 +71,9 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter",
-        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
+          packageName + ".KafkaStreamsTracer",
+          packageName + ".TextMapExtractAdapter",
+          KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 
@@ -105,12 +101,7 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        Span.Builder spanBuilder =
-            TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
-        spanBuilder.setParent(extract(record.value.headers(), GETTER));
-        Span span = spanBuilder.startSpan();
-        CONSUMER_DECORATE.afterStart(span);
-        CONSUMER_DECORATE.onConsume(span, record);
+        Span span = TRACER.startSpan(record);
 
         holder.setSpanWithScope(new SpanWithScope(span, currentContextWith(span)));
       }
@@ -132,9 +123,9 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter",
-        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
+          packageName + ".KafkaStreamsTracer",
+          packageName + ".TextMapExtractAdapter",
+          KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 
@@ -160,11 +151,15 @@ public class KafkaStreamsProcessorInstrumentation {
         HOLDER.remove();
         SpanWithScope spanWithScope = holder.getSpanWithScope();
         if (spanWithScope != null) {
-          Span span = spanWithScope.getSpan();
-          CONSUMER_DECORATE.onError(span, throwable);
-          CONSUMER_DECORATE.beforeFinish(span);
-          span.end();
           spanWithScope.closeScope();
+
+          Span span = spanWithScope.getSpan();
+
+          if (throwable != null) {
+            TRACER.endExceptionally(span, throwable);
+          } else {
+            TRACER.end(span);
+          }
         }
       }
     }
