@@ -9,21 +9,31 @@ if the APIs do not match.
 
 ## How does it work
 
-At build time the Muzzle gradle plugin generates a matcher for 3rd party APIs used by the agent.
+At build time, for each instrumentation the Muzzle ByteBuddy plugin collects symbols referring to both internal
+and 3rd party APIs used by the currently processed instrumentation. The reference collection process starts
+from advice classes - values of the map returned by the `Instrumenter.Default#transformers()` method.
+
+All those references are then used to create a `ReferenceMatcher` instance.
 The matcher is stored in the instrumentation class in method `ReferenceMatcher getInstrumentationMuzzle()`.
 
 At runtime the Muzzle checks API compatibility between symbols used by the Agent
-and symbols in the application class loader. Before inspecting the class loader
-the Muzzle plugin checks symbols defined in `SomeInstrumentation.typeMatcher()`
-as a performance optimization. If the symbols do not match the instrumentation
-is not loaded.
+and symbols in the application class loader. If the symbols do not match the instrumentation is not loaded.
+Because the muzzle matcher is expensive, it is only performed after a match has been made by the 
+`SomeInstrumentation.classLoaderMatcher()` and `SomeInstrumentation.typeMatcher()` matchers. 
 
 ## Muzzle gradle plugin
 
-The `printReferences` task prints 3rd party API references in a given module.
+The `printReferences` task prints all API references in a given module.
 
 ```bash
 ./gradlew :instrumentation:google-http-client-1.19:printReferences
+```
+
+The `muzzle` task downloads 3rd party libraries from maven central and checks API compatibility.
+If a new incompatible version is published it fails the build.
+
+```bash
+./gradlew :instrumentation:google-http-client-1.19:muzzle 
 ```
 
 ## Muzzle location
