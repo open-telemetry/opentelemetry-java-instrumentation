@@ -18,8 +18,8 @@ The matcher is stored in the instrumentation class in method `ReferenceMatcher g
 
 At runtime the Muzzle checks API compatibility between symbols used by the Agent
 and symbols in the application class loader. If the symbols do not match the instrumentation is not loaded.
-Because the muzzle matcher is expensive, it is only performed after a match has been made by the 
-`SomeInstrumentation.classLoaderMatcher()` and `SomeInstrumentation.typeMatcher()` matchers. 
+Because the muzzle matcher is expensive, it is only performed after a match has been made by the
+`SomeInstrumentation.classLoaderMatcher()` and `SomeInstrumentation.typeMatcher()` matchers.
 
 ## Muzzle gradle plugin
 
@@ -33,7 +33,7 @@ The `muzzle` task downloads 3rd party libraries from maven central and checks AP
 If a new incompatible version is published it fails the build.
 
 ```bash
-./gradlew :instrumentation:google-http-client-1.19:muzzle 
+./gradlew :instrumentation:google-http-client-1.19:muzzle
 ```
 
 ## Muzzle location
