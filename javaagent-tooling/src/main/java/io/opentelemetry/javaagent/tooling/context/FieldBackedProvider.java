@@ -115,6 +115,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     }
   }
 
+  private static final boolean FIELD_INJECTION_ENABLED =
+      Config.get().getBooleanProperty("otel.trace.runtime.context.field.injection", true);
+
   private final Instrumenter.Default instrumenter;
   private final ByteBuddy byteBuddy;
   private final Map<String, String> contextStore;
@@ -129,8 +132,6 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final AgentBuilder.Transformer contextStoreImplementationsInjector;
 
-  private final boolean fieldInjectionEnabled;
-
   public FieldBackedProvider(Instrumenter.Default instrumenter, Map<String, String> contextStore) {
     this.instrumenter = instrumenter;
     this.contextStore = contextStore;
@@ -140,7 +141,6 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     contextStoreImplementations = generateContextStoreImplementationClasses();
     contextStoreImplementationsInjector =
         bootstrapHelperInjector(contextStoreImplementations.values());
-    fieldInjectionEnabled = Config.get().isRuntimeContextFieldInjection();
   }
 
   @Override
@@ -374,7 +374,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
       AgentBuilder.Identified.Extendable builder) {
 
-    if (fieldInjectionEnabled) {
+    if (FIELD_INJECTION_ENABLED) {
       for (Map.Entry<String, String> entry : contextStore.entrySet()) {
         /*
          * For each context store defined in a current instrumentation we create an agent builder

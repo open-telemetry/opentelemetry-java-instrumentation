@@ -21,9 +21,16 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class NetPeerUtils {
+
+  // TODO: make it private once BaseDecorator is no more
+  public static final Map<String, String> ENDPOINT_PEER_SERVICE_MAPPING =
+      Collections.unmodifiableMap(
+          Config.get().getMapProperty("otel.endpoint.peer.service.mapping"));
 
   private NetPeerUtils() {}
 
@@ -83,6 +90,6 @@ public final class NetPeerUtils {
       return null;
     }
 
-    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
+    return ENDPOINT_PEER_SERVICE_MAPPING.get(endpoint);
   }
 }

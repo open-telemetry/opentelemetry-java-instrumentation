@@ -16,7 +16,6 @@
 
 package io.opentelemetry.javaagent.tooling.config
 
-import io.opentelemetry.instrumentation.api.config.Config
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -28,38 +27,13 @@ class ConfigBuilderTest extends Specification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  def "should use defaults"() {
-    when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties(), new Properties())
-      .build()
-
-    then:
-    config.exporterJar == null
-    config.exporter == Config.DEFAULT_EXPORTER
-    config.propagators.empty
-    config.traceEnabled
-    config.integrationsEnabled
-    config.excludedClasses.empty
-    config.runtimeContextFieldInjection
-    config.traceAnnotations == null
-    config.traceMethods == null
-    config.traceAnnotatedMethodsExclude == null
-    !config.traceExecutorsAll
-    config.traceExecutors.empty
-    config.sqlNormalizerEnabled
-    config.kafkaClientPropagationEnabled
-    !config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping.isEmpty()
-  }
-
-  def "should use configuration from SPI (takes precedence over defaults)"() {
+  def "should use SPI properties"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
-    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
-    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+    spiConfiguration.put("property1", "spi-1")
+    spiConfiguration.put("property2", "spi-2")
+    spiConfiguration.put("property3", "spi-3")
+    spiConfiguration.put("property4", "spi-4")
 
     when:
     def config = new ConfigBuilder()
@@ -67,23 +41,24 @@ class ConfigBuilderTest extends Specification {
       .build()
 
     then:
-    config.exporter == "zipkin"
-    config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping == ["1.2.3.4": "cats", "dogs.com": "dogs"]
-    config.traceMethods == "mypackage.MyClass[myMethod]"
+    config.getProperty("property1") == "spi-1"
+    config.getProperty("property2") == "spi-2"
+    config.getProperty("property3") == "spi-3"
+    config.getProperty("property4") == "spi-4"
   }
 
   def "should use configuration file properties (takes precedence over SPI)"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
-    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
-    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+    spiConfiguration.put("property1", "spi-1")
+    spiConfiguration.put("property2", "spi-2")
+    spiConfiguration.put("property3", "spi-3")
+    spiConfiguration.put("property4", "spi-4")
 
     def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
-    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
+    configurationFile.put("property1", "cf-1")
+    configurationFile.put("property2", "cf-2")
+    configurationFile.put("property3", "cf-3")
 
     when:
     def config = new ConfigBuilder()
@@ -91,26 +66,27 @@ class ConfigBuilderTest extends Specification {
       .build()
 
     then:
-    config.exporter == "logging"
-    config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping == ["1.2.3.4": "cats", "dogs.com": "dogs"]
-    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
+    config.getProperty("property1") == "cf-1"
+    config.getProperty("property2") == "cf-2"
+    config.getProperty("property3") == "cf-3"
+    config.getProperty("property4") == "spi-4"
   }
 
   def "should use environment variables (takes precedence over configuration file)"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
-    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
-    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+    spiConfiguration.put("property1", "spi-1")
+    spiConfiguration.put("property2", "spi-2")
+    spiConfiguration.put("property3", "spi-3")
+    spiConfiguration.put("property4", "spi-4")
 
     def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
-    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
+    configurationFile.put("property1", "cf-1")
+    configurationFile.put("property2", "cf-2")
+    configurationFile.put("property3", "cf-3")
 
-    environmentVariables.set("OTEL_EXPORTER", "jaeger")
-    environmentVariables.set("OTEL_ENDPOINT_PEER_SERVICE_MAPPING", "4.2.4.2=elephants.com")
+    environmentVariables.set("property1", "env-1")
+    environmentVariables.set("property2", "env-2")
 
     when:
     def config = new ConfigBuilder()
@@ -118,29 +94,29 @@ class ConfigBuilderTest extends Specification {
       .build()
 
     then:
-    config.exporter == "jaeger"
-    config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping == ["4.2.4.2": "elephants.com"]
-    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
+    config.getProperty("property1") == "env-1"
+    config.getProperty("property2") == "env-2"
+    config.getProperty("property3") == "cf-3"
+    config.getProperty("property4") == "spi-4"
   }
 
   def "should use system properties (takes precedence over environment variables)"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put(ConfigBuilder.EXPORTER, "zipkin")
-    spiConfiguration.put(ConfigBuilder.HYSTRIX_TAGS_ENABLED, "true")
-    spiConfiguration.put(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
-    spiConfiguration.put(ConfigBuilder.TRACE_METHODS, "mypackage.MyClass[myMethod]")
+    spiConfiguration.put("property1", "spi-1")
+    spiConfiguration.put("property2", "spi-2")
+    spiConfiguration.put("property3", "spi-3")
+    spiConfiguration.put("property4", "spi-4")
 
     def configurationFile = new Properties()
-    configurationFile.put(ConfigBuilder.EXPORTER, "logging")
-    configurationFile.put(ConfigBuilder.TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
+    configurationFile.put("property1", "cf-1")
+    configurationFile.put("property2", "cf-2")
+    configurationFile.put("property3", "cf-3")
 
-    environmentVariables.set("OTEL_EXPORTER", "jaeger")
-    environmentVariables.set("OTEL_ENDPOINT_PEER_SERVICE_MAPPING", "4.2.4.2=elephants.com")
+    environmentVariables.set("property1", "env-1")
+    environmentVariables.set("property2", "env-2")
 
-    System.setProperty(ConfigBuilder.EXPORTER, "otlp")
-    System.setProperty(ConfigBuilder.TRACE_METHODS, "mypackage3.MyClass3[myMethod3]")
+    System.setProperty("property1", "sp-1")
 
     when:
     def config = new ConfigBuilder()
@@ -148,60 +124,33 @@ class ConfigBuilderTest extends Specification {
       .build()
 
     then:
-    config.exporter == "otlp"
-    config.hystrixTagsEnabled
-    config.endpointPeerServiceMapping == ["4.2.4.2": "elephants.com"]
-    config.traceMethods == "mypackage3.MyClass3[myMethod3]"
+    config.getProperty("property1") == "sp-1"
+    config.getProperty("property2") == "env-2"
+    config.getProperty("property3") == "cf-3"
+    config.getProperty("property4") == "spi-4"
   }
 
-  def "should use defaults in case of parsing failure"() {
+  def "should normalize property names"() {
     given:
-    System.setProperty(ConfigBuilder.ENDPOINT_PEER_SERVICE_MAPPING, "not a map")
+    def spiConfiguration = new Properties()
+    spiConfiguration.put("otel_some-property.from-spi", "value")
+
+    def configurationFile = new Properties()
+    configurationFile.put("otel.some-property_from.file", "value")
+
+    environmentVariables.set("OTEL_SOME_ENV_VAR", "value")
+
+    System.setProperty("otel.some-system_property", "value")
 
     when:
     def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties(), new Properties())
+      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
     then:
-    config.endpointPeerServiceMapping.isEmpty()
-  }
-
-  def "verify integration config"() {
-    setup:
-    environmentVariables.set("OTEL_INTEGRATION_ORDER_ENABLED", "false")
-    environmentVariables.set("OTEL_INTEGRATION_TEST_ENV_ENABLED", "true")
-    environmentVariables.set("OTEL_INTEGRATION_DISABLED_ENV_ENABLED", "false")
-
-    System.setProperty("otel.integration.order.enabled", "true")
-    System.setProperty("otel.integration.test-prop.enabled", "true")
-    System.setProperty("otel.integration.disabled-prop.enabled", "false")
-
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(new Properties(), new Properties())
-      .build()
-
-    expect:
-    config.isIntegrationEnabled(integrationNames, defaultEnabled) == expected
-
-    where:
-    names                          | defaultEnabled | expected
-    []                             | true           | true
-    []                             | false          | false
-    ["invalid"]                    | true           | true
-    ["invalid"]                    | false          | false
-    ["test-prop"]                  | false          | true
-    ["test-env"]                   | false          | true
-    ["disabled-prop"]              | true           | false
-    ["disabled-env"]               | true           | false
-    ["other", "test-prop"]         | false          | true
-    ["other", "test-env"]          | false          | true
-    ["order"]                      | false          | true
-    ["test-prop", "disabled-prop"] | false          | true
-    ["disabled-env", "test-env"]   | false          | true
-    ["test-prop", "disabled-prop"] | true           | false
-    ["disabled-env", "test-env"]   | true           | false
-
-    integrationNames = new TreeSet<String>(names)
+    config.getProperty("otel.some.property.from.spi") == "value"
+    config.getProperty("otel.some.property.from.file") == "value"
+    config.getProperty("otel.some.env.var") == "value"
+    config.getProperty("otel.some.system.property") == "value"
   }
 }

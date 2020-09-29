@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -396,24 +394,22 @@ class KafkaClientTest extends AgentTestRunner {
 
     when:
     String message = "Testing without headers"
-    withConfigOverride(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, value) {
-      kafkaTemplate.send(SHARED_TOPIC, message)
-    }
+    setPropagation(propagationEnabled)
+    kafkaTemplate.send(SHARED_TOPIC, message)
+    setPropagation(true)
 
     then:
     // check that the message was received
     def received = records.poll(5, TimeUnit.SECONDS)
 
-    received.headers().iterator().hasNext() == expected
+    received.headers().iterator().hasNext() == propagationEnabled
 
     cleanup:
     producerFactory.stop()
     container?.stop()
 
     where:
-    value   | expected
-    "false" | false
-    "true"  | true
+    propagationEnabled << [false, true]
   }
 
   def "should not read remote context when consuming messages if propagation is disabled"() {
@@ -424,9 +420,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "send message"
     String message = "Testing without headers"
-    withConfigOverride(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, "true") {
-      kafkaTemplate.send(SHARED_TOPIC, message)
-    }
+    kafkaTemplate.send(SHARED_TOPIC, message)
 
     then: "producer span is created"
     assertTraces(1) {
@@ -477,9 +471,7 @@ class KafkaClientTest extends AgentTestRunner {
     container.stop()
 
     when: "read message without context propagation"
-    ConfigUtils.updateConfig {
-      System.setProperty(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
-    }
+    setPropagation(false)
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
 
@@ -528,9 +520,7 @@ class KafkaClientTest extends AgentTestRunner {
     cleanup:
     producerFactory.stop()
     container?.stop()
-    ConfigUtils.updateConfig {
-      System.clearProperty(ConfigBuilder.KAFKA_CLIENT_PROPAGATION_ENABLED)
-    }
+    setPropagation(true)
   }
 
   protected KafkaMessageListenerContainer<Object, Object> startConsumer(String groupId, records) {
@@ -573,4 +563,9 @@ class KafkaClientTest extends AgentTestRunner {
     }
   }
 
+  private static setPropagation(boolean propagationEnabled) {
+    updateConfig {
+      System.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
+    }
+  }
 }

@@ -24,7 +24,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
@@ -245,7 +245,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   private <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (Config.THREAD_PROPAGATION_DEBUGGER) {
+    if (ContextPropagationDebug.THREAD_PROPAGATION_DEBUGGER) {
       debugContextLeak();
     }
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
@@ -262,7 +262,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       if (currentSpan != null) {
         log.error("It contains this span: {}", currentSpan);
       }
-      List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(current);
+      List<StackTraceElement[]> location =
+          ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS.get(current);
       if (location != null) {
         StringBuilder sb = new StringBuilder();
         Iterator<StackTraceElement[]> i = location.iterator();

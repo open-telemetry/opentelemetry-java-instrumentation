@@ -32,39 +32,44 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TracerInstaller {
-
   private static final Logger log = LoggerFactory.getLogger(TracerInstaller.class);
+
+  private static final String EXPORTER_JAR_CONFIG = "otel.exporter.jar";
+  private static final String EXPORTERS_CONFIG = "otel.exporter";
+  private static final String PROPAGATORS_CONFIG = "otel.propagators";
+  private static final String TRACE_ENABLED_CONFIG = "otel.trace.enabled";
+  private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
   /** Register agent tracer if no agent tracer is already registered. */
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {
-    if (Config.get().isTraceEnabled()) {
+    if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
       Properties config = Config.get().asJavaProperties();
 
       configure(config);
       // Try to create an exporter from external jar file
-      String exporterJar = Config.get().getExporterJar();
+      String exporterJar = Config.get().getProperty(EXPORTER_JAR_CONFIG);
       if (exporterJar != null) {
         installExportersFromJar(exporterJar, config);
       } else {
         // Try to create embedded exporter
-        installExporters(Config.get().getExporter(), config);
+        installExporters(Config.get().getListProperty(EXPORTERS_CONFIG, DEFAULT_EXPORTERS), config);
       }
     } else {
       log.info("Tracing is disabled.");
     }
 
-    PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
+    PropagatorsInitializer.initializePropagators(Config.get().getListProperty(PROPAGATORS_CONFIG));
   }
 
-  private static synchronized void installExporters(String exportersName, Properties config) {
-    String[] exporters = exportersName.split(",", -1);
+  private static synchronized void installExporters(List<String> exporters, Properties config) {
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {

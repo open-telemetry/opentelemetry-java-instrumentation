@@ -24,11 +24,6 @@ import java.util.concurrent.Callable
 
 class ConfigUtils {
 
-  static final CONFIG_INSTANCE_FIELD = Config.getDeclaredField("INSTANCE")
-  static {
-    CONFIG_INSTANCE_FIELD.accessible = true
-  }
-
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
     try {
       def existingConfig = Config.get()
@@ -51,9 +46,6 @@ class ConfigUtils {
 
   /**
    * Provides an callback to set up the testing environment and reset the global configuration after system properties and envs are set.
-   *
-   * @param r
-   * @return
    */
   static updateConfig(final Callable r) {
     r.call()
@@ -70,6 +62,6 @@ class ConfigUtils {
   }
 
   private static setConfig(Config config) {
-    CONFIG_INSTANCE_FIELD.set(null, config)
+    Config.INSTANCE = config
   }
 }

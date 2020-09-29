@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.auto.api.concurrent;
 import static io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils.TRACER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.util.List;
@@ -66,11 +66,12 @@ public class ExecutorInstrumentationUtils {
    */
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
-    if (Config.THREAD_PROPAGATION_DEBUGGER) {
-      List<StackTraceElement[]> location = Config.THREAD_PROPAGATION_LOCATIONS.get(context);
+    if (ContextPropagationDebug.THREAD_PROPAGATION_DEBUGGER) {
+      List<StackTraceElement[]> location =
+          ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS.get(context);
       if (location == null) {
         location = new CopyOnWriteArrayList<>();
-        context = context.withValue(Config.THREAD_PROPAGATION_LOCATIONS, location);
+        context = context.withValue(ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS, location);
       }
       location.add(0, new Exception().getStackTrace());
     }

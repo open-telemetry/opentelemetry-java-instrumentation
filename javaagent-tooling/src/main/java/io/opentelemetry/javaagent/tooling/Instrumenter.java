@@ -237,7 +237,7 @@ public interface Instrumenter {
     }
 
     protected boolean defaultEnabled() {
-      return Config.get().isIntegrationsEnabled();
+      return Config.get().getBooleanProperty("otel.integrations.enabled", true);
     }
   }
 }

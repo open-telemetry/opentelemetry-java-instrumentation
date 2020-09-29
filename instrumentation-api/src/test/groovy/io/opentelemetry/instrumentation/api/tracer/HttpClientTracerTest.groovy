@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
 
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
@@ -25,9 +25,19 @@ import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
+  static {
+    updateConfig {
+      System.setProperty(
+        "otel.endpoint.peer.service.mapping",
+        "myhost-mapped=reservation-service")
+    }
+  }
 
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
+
+  @Shared
+  def testUrlMapped = new URI("http://myhost-mapped:123/somepath")
 
   @Shared
   def testUserAgent = "Apache HttpClient"
@@ -61,14 +71,10 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onRequest with mapped peer"() {
     setup:
     def tracer = newTracer()
-    def req = [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
+    def req = [method: "test-method", url: testUrlMapped, "User-Agent": testUserAgent]
 
     when:
-    withConfigOverride(
-      "otel.endpoint.peer.service.mapping",
-      "myhost=reservation-service") {
-      tracer.onRequest(span, req)
-    }
+    tracer.onRequest(span, req)
 
     then:
     if (req) {

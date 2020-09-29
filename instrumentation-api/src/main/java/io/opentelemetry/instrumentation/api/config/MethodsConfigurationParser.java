@@ -46,8 +46,7 @@ public class MethodsConfigurationParser {
    * "io.package.ClassName[method1,method2];my.example[someMethodName];"} and returns a map where
    * keys are class names and corresponding value is a set of methods for that class.
    *
-   * <p>Strings of such format are used e.g. to configure {@link Config#getTraceMethods()} and
-   * {@link Config#getTraceAnnotatedMethodsExclude()}
+   * <p>Strings of such format are used e.g. to configure {@code TraceConfigInstrumentation}
    */
   public static Map<String, Set<String>> parse(String configString) {
     if (configString == null || configString.trim().isEmpty()) {

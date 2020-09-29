@@ -31,6 +31,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
 public abstract class AbstractTraceAnnotationInstrumentation extends Instrumenter.Default {
+  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
+      "otel.trace.annotated.methods.exclude";
+
   public AbstractTraceAnnotationInstrumentation(
       String instrumentationName, String... additionalNames) {
     super(instrumentationName, additionalNames);
@@ -44,7 +47,8 @@ public abstract class AbstractTraceAnnotationInstrumentation extends Instrumente
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getTraceAnnotatedMethodsExclude());
+        MethodsConfigurationParser.parse(
+            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =
