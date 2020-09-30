@@ -80,6 +80,7 @@ Maintainers:
 Approvers:
 
 - [John Watson](https://github.com/jkwatson), Splunk
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 
 Triagers:
 
