@@ -27,7 +27,7 @@ public class HystrixTracer extends BaseTracer {
   private final boolean extraTags;
 
   private HystrixTracer() {
-    extraTags = Config.get().isHystrixTagsEnabled();
+    extraTags = Config.get().getBooleanProperty("otel.hystrix.tags.enabled", false);
   }
 
   @Override

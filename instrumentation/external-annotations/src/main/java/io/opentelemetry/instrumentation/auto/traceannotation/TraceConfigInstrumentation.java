@@ -31,8 +31,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * TraceConfig Instrumentation does not extend Default.
@@ -46,15 +44,19 @@ import org.slf4j.LoggerFactory;
 @AutoService(Instrumenter.class)
 public class TraceConfigInstrumentation implements Instrumenter {
 
-  private static final Logger log = LoggerFactory.getLogger(TraceConfigInstrumentation.class);
+  private static final String TRACE_METHODS_CONFIG = "otel.trace.methods";
+  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
+      "otel.trace.annotated.methods.exclude";
 
   private final Map<String, Set<String>> classMethodsToTrace;
 
   public TraceConfigInstrumentation() {
-    classMethodsToTrace = MethodsConfigurationParser.parse(Config.get().getTraceMethods());
+    classMethodsToTrace =
+        MethodsConfigurationParser.parse(Config.get().getProperty(TRACE_METHODS_CONFIG));
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getTraceAnnotatedMethodsExclude());
+        MethodsConfigurationParser.parse(
+            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       Set<String> tracedMethods = classMethodsToTrace.get(entry.getKey());
       if (tracedMethods != null) {

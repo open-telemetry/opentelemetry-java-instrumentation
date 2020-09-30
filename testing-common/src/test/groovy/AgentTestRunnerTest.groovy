@@ -21,7 +21,6 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.javaagent.tooling.Constants
-import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
 
@@ -31,7 +30,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty(ConfigBuilder.TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+      System.setProperty(
+        "otel.trace.classes.exclude",
+        "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
     }
 
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null

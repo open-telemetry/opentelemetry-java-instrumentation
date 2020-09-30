@@ -51,6 +51,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".KafkaClientConfiguration",
       packageName + ".KafkaDecorator",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracingIterable",

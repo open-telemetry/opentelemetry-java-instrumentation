@@ -28,6 +28,9 @@ public abstract class JDBCUtils {
 
   private static final Logger log = LoggerFactory.getLogger(JDBCUtils.class);
 
+  private static final boolean SQL_NORMALIZER_ENABLED =
+      Config.get().getBooleanProperty("sql.normalizer.enabled", true);
+
   private static Field c3poField = null;
 
   /**
@@ -79,7 +82,7 @@ public abstract class JDBCUtils {
 
   /** @return null if the sql could not be normalized for any reason */
   public static String normalizeSql(String sql) {
-    if (!Config.get().isSqlNormalizerEnabled()) {
+    if (!SQL_NORMALIZER_ENABLED) {
       return sql;
     }
     try {

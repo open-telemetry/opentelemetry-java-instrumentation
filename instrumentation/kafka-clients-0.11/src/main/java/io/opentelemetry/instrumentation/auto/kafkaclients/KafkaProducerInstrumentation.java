@@ -33,7 +33,6 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -63,6 +62,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".KafkaClientConfiguration",
       packageName + ".KafkaDecorator",
       packageName + ".TextMapInjectAdapter",
       KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
@@ -107,7 +107,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // headers attempt to read messages that were produced by clients > 0.11 and the magic
       // value of the broker(s) is >= 2
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-          && Config.get().isKafkaClientPropagationEnabled()) {
+          && KafkaClientConfiguration.isPropagationEnabled()) {
         Context context = withSpan(span, Context.current());
         try {
           OpenTelemetry.getPropagators()

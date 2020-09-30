@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
 import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
-import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import spock.lang.Specification
 import spock.lang.Timeout
 
@@ -137,21 +135,6 @@ class SqlNormalizerTest extends Specification {
         sb.append((char) r.nextInt((int) Character.MAX_VALUE))
       }
       JDBCUtils.normalizeSql(sb.toString())
-    }
-  }
-
-  def "config can disable sql normalizer"() {
-    setup:
-    ConfigUtils.updateConfig {
-      System.setProperty(ConfigBuilder.SQL_NORMALIZER_ENABLED, "false")
-    }
-    try {
-      String s = "SELECT * FROM TABLE WHERE FIELD = 1234"
-      assert s == JDBCUtils.normalizeSql(s)
-    } finally {
-      ConfigUtils.updateConfig {
-        System.setProperty(ConfigBuilder.SQL_NORMALIZER_ENABLED, "true")
-      }
     }
   }
 }

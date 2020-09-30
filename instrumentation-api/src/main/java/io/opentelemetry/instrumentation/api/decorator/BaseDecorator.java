@@ -17,10 +17,10 @@
 package io.opentelemetry.instrumentation.api.decorator;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.ENDPOINT_PEER_SERVICE_MAPPING;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -199,6 +199,6 @@ public abstract class BaseDecorator {
       return null;
     }
 
-    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
+    return ENDPOINT_PEER_SERVICE_MAPPING.get(endpoint);
   }
 }

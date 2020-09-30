@@ -49,8 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AgentInstaller {
-
   private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
+
+  private static final String TRACE_ENABLED_CONFIG = "otel.trace.enabled";
+  private static final String EXCLUDED_CLASSES_CONFIG = "otel.trace.classes.exclude";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
@@ -67,7 +69,7 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
-    if (Config.get().isTraceEnabled()) {
+    if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
       installBytebuddyAgent(inst, false, new AgentBuilder.Listener[0]);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
@@ -182,7 +184,7 @@ public class AgentInstaller {
   }
 
   private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
-    List<String> excludedClasses = Config.get().getExcludedClasses();
+    List<String> excludedClasses = Config.get().getListProperty(EXCLUDED_CLASSES_CONFIG);
     ElementMatcher.Junction matcher = none();
     List<String> literals = new ArrayList<>();
     List<String> prefixes = new ArrayList<>();

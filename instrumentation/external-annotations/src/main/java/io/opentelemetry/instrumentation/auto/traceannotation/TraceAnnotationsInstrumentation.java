@@ -44,6 +44,8 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
 
   private static final Logger log = LoggerFactory.getLogger(TraceAnnotationsInstrumentation.class);
 
+  private static final String TRACE_ANNOTATIONS_CONFIG = "otel.trace.annotations";
+
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
   static final String CONFIG_FORMAT =
@@ -76,7 +78,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
   public TraceAnnotationsInstrumentation() {
     super("trace", "trace-annotation");
 
-    String configString = Config.get().getTraceAnnotations();
+    String configString = Config.get().getProperty(TRACE_ANNOTATIONS_CONFIG);
     if (configString == null) {
       additionalTraceAnnotations =
           Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));

@@ -19,12 +19,12 @@ package io.opentelemetry.instrumentation.api.config;
 import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoValue;
-import io.grpc.Context;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
@@ -35,23 +35,7 @@ public abstract class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
   private static final Pattern PROPERTY_NAME_REPLACEMENTS = Pattern.compile("[^a-zA-Z0-9.]");
 
-  // locations where the context was propagated to another thread (tracking multiple steps is
-  // helpful in akka where there is so much recursive async spawning of new work)
-  public static final Context.Key<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
-      Context.key("thread-propagation-locations");
-  public static final boolean THREAD_PROPAGATION_DEBUGGER =
-      Boolean.getBoolean("otel.threadPropagationDebugger");
-
-  public static final String DEFAULT_EXPORTER = "otlp";
-  public static final boolean DEFAULT_TRACE_ENABLED = true;
-  public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
-  public static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
-  public static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
-  public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
-  public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
-  public static final boolean DEFAULT_HYSTRIX_TAGS_ENABLED = false;
-
-  private static final Config DEFAULT = Config.newBuilder().build();
+  private static final Config DEFAULT = Config.create(Collections.emptyMap());
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
   // getInstrumentationMuzzle() and the Instrumenter.Default constructor uses Config
@@ -74,11 +58,86 @@ public abstract class Config {
     return INSTANCE;
   }
 
-  public abstract Map<String, String> getAllProperties();
+  public static Config create(Map<String, String> allProperties) {
+    return new AutoValue_Config(allProperties);
+  }
 
+  abstract Map<String, String> getAllProperties();
+
+  /**
+   * @return A string property value or null if a property with name {@code name} did not exist.
+   * @see #getProperty(String, String)
+   */
   @Nullable
-  public String getProperty(String propertyName) {
-    return getAllProperties().get(normalizePropertyName(propertyName));
+  public String getProperty(String name) {
+    return getProperty(name, null);
+  }
+
+  /**
+   * Retrieves a property value from the agent configuration consisting of system properties,
+   * environment variables and contents of the agent configuration file (see {@code
+   * ConfigInitializer} and {@code ConfigBuilder}).
+   *
+   * <p>In case any {@code get*Property()} method variant gets called for the same property more
+   * than once (e.g. each time an advice executes) it is suggested to cache the result instead of
+   * repeatedly calling {@link Config}. Agent configuration does not change during the runtime so
+   * retrieving the property once and storing its result in e.g. static final field allows JIT to do
+   * its magic and remove some code branches.
+   *
+   * @return A string property value or {@code defaultValue} if a property with name {@code name}
+   *     did not exist.
+   */
+  public String getProperty(String name, String defaultValue) {
+    return getAllProperties().getOrDefault(normalizePropertyName(name), defaultValue);
+  }
+
+  /**
+   * @return A boolean property value or {@code defaultValue} if a property with name {@code name}
+   *     did not exist.
+   * @see #getProperty(String, String)
+   */
+  public boolean getBooleanProperty(String name, boolean defaultValue) {
+    return getTypedProperty(name, Boolean::parseBoolean, defaultValue);
+  }
+
+  /**
+   * @return A list-of-strings property value or empty list if a property with name {@code name} did
+   *     not exist.
+   * @see #getProperty(String, String)
+   */
+  public List<String> getListProperty(String name) {
+    return getListProperty(name, Collections.emptyList());
+  }
+
+  /**
+   * @return A list-of-strings property value or {@code defaultValue} if a property with name {@code
+   *     name} did not exist.
+   * @see #getProperty(String, String)
+   */
+  public List<String> getListProperty(String name, List<String> defaultValue) {
+    return getTypedProperty(name, CollectionParsers::parseList, defaultValue);
+  }
+
+  /**
+   * @return A map-of-strings property value or empty map if a property with name {@code name} did
+   *     not exist.
+   * @see #getProperty(String, String)
+   */
+  public Map<String, String> getMapProperty(String name) {
+    return getTypedProperty(name, CollectionParsers::parseMap, Collections.emptyMap());
+  }
+
+  private <T> T getTypedProperty(String name, Function<String, T> parser, T defaultValue) {
+    String value = getProperty(name);
+    if (value == null || value.trim().isEmpty()) {
+      return defaultValue;
+    }
+    try {
+      return parser.apply(value);
+    } catch (Throwable t) {
+      log.debug("Cannot parse {}", value, t);
+      return defaultValue;
+    }
   }
 
   // some integrations have '-' or '_' character in their names -- this does not work well with
@@ -93,11 +152,8 @@ public abstract class Config {
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
     for (String name : integrationNames) {
-      String enabledPropertyValue = getProperty("otel.integration." + name + ".enabled");
       boolean configEnabled =
-          enabledPropertyValue == null
-              ? defaultEnabled
-              : Boolean.parseBoolean(enabledPropertyValue);
+          getBooleanProperty("otel.integration." + name + ".enabled", defaultEnabled);
 
       if (defaultEnabled) {
         anyEnabled &= configEnabled;
@@ -112,131 +168,5 @@ public abstract class Config {
     Properties properties = new Properties();
     properties.putAll(getAllProperties());
     return properties;
-  }
-
-  @Nullable
-  public abstract String getExporterJar();
-
-  public abstract String getExporter();
-
-  public abstract List<String> getPropagators();
-
-  abstract boolean getTraceEnabled();
-
-  public boolean isTraceEnabled() {
-    return getTraceEnabled();
-  }
-
-  abstract boolean getIntegrationsEnabled();
-
-  public boolean isIntegrationsEnabled() {
-    return getIntegrationsEnabled();
-  }
-
-  public abstract List<String> getExcludedClasses();
-
-  abstract boolean getRuntimeContextFieldInjection();
-
-  public boolean isRuntimeContextFieldInjection() {
-    return getRuntimeContextFieldInjection();
-  }
-
-  @Nullable
-  public abstract String getTraceAnnotations();
-
-  @Nullable
-  public abstract String getTraceMethods();
-
-  @Nullable
-  public abstract String getTraceAnnotatedMethodsExclude();
-
-  abstract boolean getTraceExecutorsAll();
-
-  public boolean isTraceExecutorsAll() {
-    return getTraceExecutorsAll();
-  }
-
-  public abstract List<String> getTraceExecutors();
-
-  abstract boolean getSqlNormalizerEnabled();
-
-  public boolean isSqlNormalizerEnabled() {
-    return getSqlNormalizerEnabled();
-  }
-
-  abstract boolean getKafkaClientPropagationEnabled();
-
-  public boolean isKafkaClientPropagationEnabled() {
-    return getKafkaClientPropagationEnabled();
-  }
-
-  abstract boolean getHystrixTagsEnabled();
-
-  public boolean isHystrixTagsEnabled() {
-    return getHystrixTagsEnabled();
-  }
-
-  public abstract Map<String, String> getEndpointPeerServiceMapping();
-
-  public static Config.Builder newBuilder() {
-    return new AutoValue_Config.Builder()
-        .setAllProperties(Collections.emptyMap())
-        .setExporterJar(null)
-        .setExporter(DEFAULT_EXPORTER)
-        .setPropagators(Collections.emptyList())
-        .setTraceEnabled(DEFAULT_TRACE_ENABLED)
-        .setIntegrationsEnabled(DEFAULT_INTEGRATIONS_ENABLED)
-        .setExcludedClasses(Collections.emptyList())
-        .setRuntimeContextFieldInjection(DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION)
-        .setTraceAnnotations(null)
-        .setTraceMethods(null)
-        .setTraceAnnotatedMethodsExclude(null)
-        .setTraceExecutorsAll(DEFAULT_TRACE_EXECUTORS_ALL)
-        .setTraceExecutors(Collections.emptyList())
-        .setSqlNormalizerEnabled(DEFAULT_SQL_NORMALIZER_ENABLED)
-        .setKafkaClientPropagationEnabled(DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED)
-        .setHystrixTagsEnabled(DEFAULT_HYSTRIX_TAGS_ENABLED)
-        .setEndpointPeerServiceMapping(Collections.emptyMap());
-  }
-
-  @AutoValue.Builder
-  public abstract static class Builder {
-    public abstract Builder setAllProperties(Map<String, String> allProperties);
-
-    public abstract Builder setExporterJar(@Nullable String exporterJar);
-
-    public abstract Builder setExporter(String exporter);
-
-    public abstract Builder setPropagators(List<String> propagators);
-
-    public abstract Builder setTraceEnabled(boolean traceEnabled);
-
-    public abstract Builder setIntegrationsEnabled(boolean integrationsEnabled);
-
-    public abstract Builder setExcludedClasses(List<String> excludedClasses);
-
-    public abstract Builder setRuntimeContextFieldInjection(boolean runtimeContextFieldInjection);
-
-    public abstract Builder setTraceAnnotations(@Nullable String traceAnnotations);
-
-    public abstract Builder setTraceMethods(@Nullable String traceMethods);
-
-    public abstract Builder setTraceAnnotatedMethodsExclude(
-        @Nullable String traceAnnotatedMethodsExclude);
-
-    public abstract Builder setTraceExecutorsAll(boolean traceExecutorsAll);
-
-    public abstract Builder setTraceExecutors(List<String> traceExecutors);
-
-    public abstract Builder setSqlNormalizerEnabled(boolean sqlNormalizerEnabled);
-
-    public abstract Builder setKafkaClientPropagationEnabled(boolean kafkaClientPropagationEnabled);
-
-    public abstract Builder setHystrixTagsEnabled(boolean hystrixTagsEnabled);
-
-    public abstract Builder setEndpointPeerServiceMapping(
-        Map<String, String> endpointPeerServiceMapping);
-
-    public abstract Config build();
   }
 }

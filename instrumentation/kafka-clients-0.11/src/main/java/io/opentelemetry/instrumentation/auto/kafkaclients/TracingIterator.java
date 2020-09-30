@@ -24,7 +24,6 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -40,6 +39,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
   private final Iterator<ConsumerRecord> delegateIterator;
   private final KafkaDecorator decorator;
+  private final boolean propagationEnabled;
 
   /**
    * Note: this may potentially create problems if this iterator is used from different threads. But
@@ -50,6 +50,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
   public TracingIterator(Iterator<ConsumerRecord> delegateIterator, KafkaDecorator decorator) {
     this.delegateIterator = delegateIterator;
     this.decorator = decorator;
+    this.propagationEnabled = KafkaClientConfiguration.isPropagationEnabled();
   }
 
   @Override
@@ -80,7 +81,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        if (Config.get().isKafkaClientPropagationEnabled()) {
+        if (propagationEnabled) {
           Context context = extract(next.headers(), GETTER);
           SpanContext spanContext = getSpan(context).getContext();
           if (spanContext.isValid()) {

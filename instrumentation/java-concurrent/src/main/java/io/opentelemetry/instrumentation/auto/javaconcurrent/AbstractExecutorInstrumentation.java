@@ -39,7 +39,9 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   public static final String EXEC_NAME = "java_concurrent";
 
-  private final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
+  private static final String TRACE_EXECUTORS_CONFIG = "otel.trace.executors";
+  private final boolean TRACE_ALL_EXECUTORS =
+      Config.get().getBooleanProperty("otel.trace.executors.all", false);
 
   /**
    * Only apply executor instrumentation to allowed executors. To apply to all executors, use
@@ -105,7 +107,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
         "scala.concurrent.impl.ExecutionContextImpl",
       };
 
-      Set<String> executors = new HashSet<>(Config.get().getTraceExecutors());
+      Set<String> executors = new HashSet<>(Config.get().getListProperty(TRACE_EXECUTORS_CONFIG));
       executors.addAll(Arrays.asList(allowed));
 
       ALLOWED_EXECUTORS = Collections.unmodifiableSet(executors);
