@@ -20,21 +20,17 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
-import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 
 class ConfigUtils {
 
   static final CONFIG_INSTANCE_FIELD = Config.getDeclaredField("INSTANCE")
+  static {
+    CONFIG_INSTANCE_FIELD.accessible = true
+  }
 
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
     try {
-      // Ensure the class was retransformed properly in AgentSpecification.makeConfigInstanceModifiable()
-      assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
-      assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
-      assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
-      assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
-
       def existingConfig = Config.get()
       Properties properties = new Properties()
       properties.put(name, value)
@@ -69,12 +65,6 @@ class ConfigUtils {
    * Reset the global configuration. Please note that Runtime ID is preserved to the pre-existing value.
    */
   static void resetConfig() {
-    // Ensure the class was re-transformed properly in AgentSpecification.makeConfigInstanceModifiable()
-    assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
-
     setConfig(Config.DEFAULT)
     ConfigInitializer.initialize()
   }

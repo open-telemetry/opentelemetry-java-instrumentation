@@ -27,7 +27,6 @@ import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
-import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -53,6 +52,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
+import spock.lang.Specification;
 
 /**
  * A spock test runner which automatically applies instrumentation and exposes a global trace
@@ -70,7 +70,7 @@ import org.spockframework.runtime.model.SpecMetadata;
  * </ul>
  */
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
-public abstract class AgentTestRunner extends AgentSpecification {
+public abstract class AgentTestRunner extends Specification {
 
   private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
 
@@ -102,7 +102,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
   private static volatile ClassFileTransformer activeTransformer = null;
 
   static {
-    INSTRUMENTATION = ByteBuddyAgent.getInstrumentation();
+    INSTRUMENTATION = ByteBuddyAgent.install();
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);

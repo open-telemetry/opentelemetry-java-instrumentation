@@ -16,12 +16,12 @@
 
 package io.opentelemetry.javaagent.test
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import io.opentelemetry.javaagent.tooling.ClassLoaderMatcher
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
+import spock.lang.Specification
 
-class ClassLoaderMatcherTest extends AgentSpecification {
+class ClassLoaderMatcherTest extends Specification {
 
   def "skips agent classloader"() {
     setup:

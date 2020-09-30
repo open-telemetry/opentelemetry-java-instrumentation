@@ -23,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers
 import net.bytebuddy.agent.ByteBuddyAgent
@@ -32,8 +31,9 @@ import net.bytebuddy.agent.builder.ResettableClassFileTransformer
 import net.bytebuddy.dynamic.ClassFileLocator
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
+import spock.lang.Specification
 
-class ExceptionHandlerTest extends AgentSpecification {
+class ExceptionHandlerTest extends Specification {
   @Shared
   ListAppender testAppender = new ListAppender()
   @Shared

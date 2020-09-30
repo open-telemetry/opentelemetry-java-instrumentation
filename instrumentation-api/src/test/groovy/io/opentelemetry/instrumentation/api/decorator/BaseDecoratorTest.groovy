@@ -17,13 +17,13 @@
 package io.opentelemetry.instrumentation.api.decorator
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+import spock.lang.Specification
 
-class BaseDecoratorTest extends AgentSpecification {
+class BaseDecoratorTest extends Specification {
 
   @Shared
   def decorator = newDecorator()
