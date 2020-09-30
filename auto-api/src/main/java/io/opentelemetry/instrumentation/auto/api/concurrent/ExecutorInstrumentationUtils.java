@@ -66,14 +66,14 @@ public class ExecutorInstrumentationUtils {
    */
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
-    if (ContextPropagationDebug.THREAD_PROPAGATION_DEBUGGER) {
-      List<StackTraceElement[]> location =
-          ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS.get(context);
-      if (location == null) {
-        location = new CopyOnWriteArrayList<>();
-        context = context.withValue(ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS, location);
+    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
+      List<StackTraceElement[]> locations =
+          ContextPropagationDebug.getLocations(context);
+      if (locations == null) {
+        locations = new CopyOnWriteArrayList<>();
+        context = ContextPropagationDebug.withLocations(locations, context);
       }
-      location.add(0, new Exception().getStackTrace());
+      locations.add(0, new Exception().getStackTrace());
     }
     state.setParentContext(context);
     return state;

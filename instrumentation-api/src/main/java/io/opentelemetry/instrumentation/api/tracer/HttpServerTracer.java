@@ -245,7 +245,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   private <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (ContextPropagationDebug.THREAD_PROPAGATION_DEBUGGER) {
+    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
       debugContextLeak();
     }
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
@@ -262,11 +262,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       if (currentSpan != null) {
         log.error("It contains this span: {}", currentSpan);
       }
-      List<StackTraceElement[]> location =
-          ContextPropagationDebug.THREAD_PROPAGATION_LOCATIONS.get(current);
-      if (location != null) {
+      List<StackTraceElement[]> locations =
+          ContextPropagationDebug.getLocations(current);
+      if (locations != null) {
         StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = location.iterator();
+        Iterator<StackTraceElement[]> i = locations.iterator();
         while (i.hasNext()) {
           for (StackTraceElement ste : i.next()) {
             sb.append("\n");
