@@ -16,9 +16,9 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.auto.util.test.AgentSpecification
+import spock.lang.Specification
 
-class UtilsTest extends AgentSpecification {
+class UtilsTest extends Specification {
 
   def "getStackTraceAsString() returns the stack trace as a single new line separated string"() {
     setup:

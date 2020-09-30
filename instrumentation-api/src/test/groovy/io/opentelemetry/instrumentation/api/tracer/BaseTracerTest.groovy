@@ -16,12 +16,12 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
 import spock.lang.Shared
+import spock.lang.Specification
 
 // TODO add tests for BaseTracer
-class BaseTracerTest extends AgentSpecification {
+class BaseTracerTest extends Specification {
   @Shared
   def tracer = newTracer()
 

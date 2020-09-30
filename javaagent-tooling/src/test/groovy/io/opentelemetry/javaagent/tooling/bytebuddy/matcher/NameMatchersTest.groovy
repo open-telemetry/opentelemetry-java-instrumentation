@@ -16,11 +16,11 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.matcher.NameMatchers
 import net.bytebuddy.description.NamedElement
+import spock.lang.Specification
 
-class NameMatchersTest extends AgentSpecification {
+class NameMatchersTest extends Specification {
 
   def "test namedOneOf"() {
     setup:

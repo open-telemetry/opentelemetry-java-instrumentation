@@ -16,13 +16,13 @@
 
 package io.opentelemetry.javaagent.test
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.bytebuddy.AgentLocationStrategy
 import java.util.concurrent.atomic.AtomicReference
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared
+import spock.lang.Specification
 
-class ResourceLocatingTest extends AgentSpecification {
+class ResourceLocatingTest extends Specification {
   @Shared
   def lastLookup = new AtomicReference<String>()
   @Shared

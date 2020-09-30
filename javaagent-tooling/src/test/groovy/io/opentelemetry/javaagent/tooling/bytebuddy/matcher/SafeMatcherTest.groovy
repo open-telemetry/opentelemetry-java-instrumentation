@@ -18,10 +18,10 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.matcher.ElementMatcher
+import spock.lang.Specification
 
-class SafeMatcherTest extends AgentSpecification {
+class SafeMatcherTest extends Specification {
 
   def mockMatcher = Mock(ElementMatcher)
 

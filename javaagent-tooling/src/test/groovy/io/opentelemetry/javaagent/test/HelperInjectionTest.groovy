@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.test.utils.ClasspathUtils.isClassLoaded
 import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -30,9 +29,10 @@ import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
+import spock.lang.Specification
 import spock.lang.Timeout
 
-class HelperInjectionTest extends AgentSpecification {
+class HelperInjectionTest extends Specification {
 
   @Timeout(10)
   def "helpers injected to non-delegating classloader"() {

@@ -16,11 +16,11 @@
 
 package io.opentelemetry.javaagent.bootstrap
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.bootstrap.InternalJarURLHandler
 import spock.lang.Shared
+import spock.lang.Specification
 
-class InternalJarURLHandlerTest extends AgentSpecification {
+class InternalJarURLHandlerTest extends Specification {
 
   @Shared
   URL testJarLocation = new File("src/test/resources/classloader-test-jar/testjar-jdk8").toURI().toURL()

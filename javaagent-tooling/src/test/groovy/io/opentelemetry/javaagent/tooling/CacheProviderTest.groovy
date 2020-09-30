@@ -16,16 +16,16 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy
 import java.lang.ref.WeakReference
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
+import spock.lang.Specification
 import spock.lang.Timeout
 
 @Timeout(5)
-class CacheProviderTest extends AgentSpecification {
+class CacheProviderTest extends Specification {
   def "key bootstrap equivalence"() {
     // def loader = null
     def loaderHash = AgentCachingPoolStrategy.BOOTSTRAP_HASH

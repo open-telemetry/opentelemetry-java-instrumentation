@@ -17,7 +17,6 @@
 package io.opentelemetry.javaagent.test
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.Instrumenter
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.description.type.TypeDescription
@@ -25,8 +24,9 @@ import net.bytebuddy.matcher.ElementMatcher
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
+import spock.lang.Specification
 
-class DefaultInstrumenterTest extends AgentSpecification {
+class DefaultInstrumenterTest extends Specification {
 
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()

@@ -20,7 +20,6 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementM
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.AgentTooling
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
@@ -31,8 +30,9 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.description.type.TypeList
 import net.bytebuddy.jar.asm.Opcodes
 import spock.lang.Shared
+import spock.lang.Specification
 
-class HasInterfaceMatcherTest extends AgentSpecification {
+class HasInterfaceMatcherTest extends Specification {
   @Shared
   def typePool =
     AgentTooling.poolStrategy()

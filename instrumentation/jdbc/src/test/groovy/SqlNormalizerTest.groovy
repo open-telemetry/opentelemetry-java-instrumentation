@@ -15,14 +15,14 @@
  */
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
 import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
 import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
+import spock.lang.Specification
 import spock.lang.Timeout
 
 @Timeout(20)
-class SqlNormalizerTest extends AgentSpecification {
+class SqlNormalizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:

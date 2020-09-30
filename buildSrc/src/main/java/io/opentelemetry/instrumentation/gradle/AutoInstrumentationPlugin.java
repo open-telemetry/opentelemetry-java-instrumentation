@@ -16,9 +16,10 @@
 
 package io.opentelemetry.instrumentation.gradle;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.Callable;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -31,8 +32,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * {@link Plugin} to initialize projects that implement auto instrumentation using bytecode
@@ -145,12 +144,12 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
                   });
 
               task.dependsOn(bootstrapJar);
-              task.getJvmArgumentProviders().add(new BootstrapClasspath(
+              task.getJvmArgumentProviders().add(new InstrumentationTestArgs(
                   new File(project.getBuildDir(), "libs/" + bootstrapJarName)));
             });
   }
 
-  private static class BootstrapClasspath implements CommandLineArgumentProvider {
+  private static class InstrumentationTestArgs implements CommandLineArgumentProvider {
     private final File bootstrapJar;
 
     @Internal
@@ -158,13 +157,13 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
       return bootstrapJar;
     }
 
-    public BootstrapClasspath(File bootstrapJar) {
+    public InstrumentationTestArgs(File bootstrapJar) {
       this.bootstrapJar = bootstrapJar;
     }
 
     @Override
     public Iterable<String> asArguments() {
-      return Collections.singleton("-Xbootclasspath/a:" + bootstrapJar.getAbsolutePath());
+      return Arrays.asList("-Xbootclasspath/a:" + bootstrapJar.getAbsolutePath(), "-Dnet.bytebuddy.raw=true");
     }
   }
 

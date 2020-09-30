@@ -17,13 +17,13 @@
 package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.auto.util.gc.GCUtils
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.instrumentation.auto.api.WeakMap
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
+import spock.lang.Specification
 
-class WeakConcurrentSupplierTest extends AgentSpecification {
+class WeakConcurrentSupplierTest extends Specification {
   @Shared
   def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent()
   @Shared

@@ -20,7 +20,6 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementM
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith
 import static net.bytebuddy.matcher.ElementMatchers.none
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C
@@ -30,8 +29,9 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass
 import net.bytebuddy.description.method.MethodDescription
+import spock.lang.Specification
 
-class HasSuperMethodMatcherTest extends AgentSpecification {
+class HasSuperMethodMatcherTest extends Specification {
 
   def "test matcher #type.simpleName #method"() {
     expect:
