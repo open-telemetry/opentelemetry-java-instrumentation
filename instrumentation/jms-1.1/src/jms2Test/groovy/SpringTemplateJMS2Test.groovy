@@ -20,6 +20,7 @@ import static JMS2Test.producerSpan
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.auto.jms.Operation
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -36,7 +37,6 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
-import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
@@ -109,12 +109,10 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
-      }
-      trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 1, destinationType, destinationName, receivedMessage.getJMSMessageID(), span(0), Operation.receive)
       }
     }
 
@@ -142,19 +140,14 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == "responded!"
-    assertTraces(4) {
-      trace(0, 1) {
+    assertTraces(2) {
+      trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
+        consumerSpan(it, 1, destinationType, destinationName, msgId.get(), span(0), Operation.receive)
       }
-      trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, HornetQMessageConsumer, traces[0][0])
-      }
-      trace(2, 1) {
-        // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", "<temporary>")
-      }
-      trace(3, 1) {
-        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[2][0])
+      trace(1, 2) {
+        producerSpan(it, 0, "queue", "(temporary)")
+        consumerSpan(it, 1, "queue", "(temporary)", receivedMessage.getJMSMessageID(), span(0), Operation.receive)
       }
     }
 

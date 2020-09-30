@@ -19,13 +19,14 @@ import static JMS1Test.producerSpan
 
 import com.google.common.base.Stopwatch
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.auto.jms.JMSTracer
+import io.opentelemetry.instrumentation.auto.jms.Operation
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection
 import javax.jms.Session
 import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
@@ -64,12 +65,10 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
-      }
-      trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 1, destinationType, destinationName, receivedMessage.getJMSMessageID(), span(0), Operation.receive)
       }
     }
 
@@ -101,19 +100,15 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == "responded!"
-    assertTraces(4) {
-      trace(0, 1) {
+    assertTraces(2) {
+      trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
+        consumerSpan(it, 1, destinationType, destinationName, msgId.get(), span(0), Operation.receive)
       }
-      trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, ActiveMQMessageConsumer, traces[0][0])
-      }
-      trace(2, 1) {
+      trace(1, 2) {
         // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", "<temporary>")
-      }
-      trace(3, 1) {
-        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[2][0])
+        producerSpan(it, 0, "queue", JMSTracer.TEMP_DESTINATION_NAME)
+        consumerSpan(it, 1, "queue", JMSTracer.TEMP_DESTINATION_NAME, receivedMessage.getJMSMessageID(), span(0), Operation.receive)
       }
     }
 

@@ -16,30 +16,20 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
-import static io.opentelemetry.instrumentation.auto.jms.MessageExtractAdapter.GETTER;
+import static io.opentelemetry.instrumentation.auto.jms.JMSTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import net.bytebuddy.asm.Advice;
@@ -68,7 +58,9 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JMSDecorator",
+      packageName + ".MessageDestination",
+      packageName + ".Operation",
+      packageName + ".JMSTracer",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"
     };
@@ -88,7 +80,9 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("javax.jms.MessageConsumer", "java.lang.String");
+    return singletonMap(
+        "javax.jms.MessageConsumer",
+        "io.opentelemetry.instrumentation.auto.jms.MessageDestination");
   }
 
   public static class ConsumerAdvice {
@@ -104,34 +98,24 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Enter long startTime,
         @Advice.Return Message message,
         @Advice.Thrown Throwable throwable) {
-      String spanName;
+      MessageDestination destination;
       if (message == null) {
-        spanName = InstrumentationContext.get(MessageConsumer.class, String.class).get(consumer);
-        if (spanName == null) {
-          spanName = "destination";
+        destination =
+            InstrumentationContext.get(MessageConsumer.class, MessageDestination.class)
+                .get(consumer);
+        if (destination == null) {
+          destination = MessageDestination.UNKNOWN;
         }
       } else {
-        spanName = DECORATE.spanNameForConsumer(message);
+        destination = TRACER.extractDestination(message, null);
       }
-      Span.Builder spanBuilder =
-          TRACER
-              .spanBuilder(spanName)
-              .setSpanKind(CLIENT)
-              .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
-      if (message != null) {
-        Context context = extract(message, GETTER);
-        SpanContext spanContext = getSpan(context).getContext();
-        if (spanContext.isValid()) {
-          spanBuilder.addLink(spanContext);
-        }
-      }
-      Span span = spanBuilder.startSpan();
 
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span, spanName, message);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+      Span span = TRACER.startConsumerSpan(destination, Operation.receive, message, startTime);
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
     }
   }

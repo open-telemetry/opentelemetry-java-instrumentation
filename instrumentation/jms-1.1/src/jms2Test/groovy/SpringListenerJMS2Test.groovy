@@ -19,12 +19,11 @@ import static JMS2Test.producerSpan
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.auto.jms.Operation
 import javax.jms.ConnectionFactory
 import listener.Config
-import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
-import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
 
 class SpringListenerJMS2Test extends AgentTestRunner {
 
@@ -49,12 +48,13 @@ class SpringListenerJMS2Test extends AgentTestRunner {
 
     expect:
     assertTraces(2) {
-      trace(0, 2) {
+      trace(0, 3) {
         producerSpan(it, 0, "queue", "SpringListenerJMS2")
-        consumerSpan(it, 1, "queue", "SpringListenerJMS2", null, true, MessagingMessageListenerAdapter, span(0))
+        consumerSpan(it, 1, "queue", "SpringListenerJMS2", "", span(0), Operation.receive)
+        consumerSpan(it, 2, "queue", "SpringListenerJMS2", "", span(0), Operation.process)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJMS2", null, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, "queue", "SpringListenerJMS2", null, null, Operation.receive)
       }
     }
 

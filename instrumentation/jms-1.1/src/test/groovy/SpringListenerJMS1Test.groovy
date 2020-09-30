@@ -18,13 +18,12 @@ import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.auto.jms.Operation
 import javax.jms.ConnectionFactory
 import listener.Config
-import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
-import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
 
 class SpringListenerJMS1Test extends AgentTestRunner {
 
@@ -37,12 +36,13 @@ class SpringListenerJMS1Test extends AgentTestRunner {
 
     expect:
     assertTraces(2) {
-      trace(0, 2) {
+      trace(0, 3) {
         producerSpan(it, 0, "queue", "SpringListenerJMS1")
-        consumerSpan(it, 1, "queue", "SpringListenerJMS1", null, true, MessagingMessageListenerAdapter, span(0))
+        consumerSpan(it, 1, "queue", "SpringListenerJMS1", "", span(0), Operation.receive)
+        consumerSpan(it, 2, "queue", "SpringListenerJMS1", "", span(0), Operation.process)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJMS1", null, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, "queue", "SpringListenerJMS1", null, null, Operation.receive)
       }
     }
 
