@@ -67,8 +67,7 @@ public class ExecutorInstrumentationUtils {
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      List<StackTraceElement[]> locations =
-          ContextPropagationDebug.getLocations(context);
+      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
       if (locations == null) {
         locations = new CopyOnWriteArrayList<>();
         context = ContextPropagationDebug.withLocations(locations, context);

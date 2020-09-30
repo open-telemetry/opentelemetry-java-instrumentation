@@ -262,8 +262,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       if (currentSpan != null) {
         log.error("It contains this span: {}", currentSpan);
       }
-      List<StackTraceElement[]> locations =
-          ContextPropagationDebug.getLocations(current);
+      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
       if (locations != null) {
         StringBuilder sb = new StringBuilder();
         Iterator<StackTraceElement[]> i = locations.iterator();
