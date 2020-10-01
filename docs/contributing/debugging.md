@@ -1,12 +1,9 @@
 ### Debugging
 
 Debugging java agent can be a challenging task since some instrumentation
-code is directly inlined into target classes and debugger is
-usually not attached early enough to activate breakpoints
-in agent initialization code (`OpenTelemetryAgent`, `AgentInitializer`, `AgentInstaller`,
-`TracerInstaller`, etc.).
+code is directly inlined into target classes.
 
-#### Advice methods and agent initialization
+#### Advice methods
 
 Breakpoints do not work in advice methods, because their code is directly inlined
 by ByteBuddy into the target class. It is good to keep these methods as small as possible.
@@ -24,11 +21,17 @@ System.out.println()
 Thread.dumpStack()
 ```
 
-#### Enable debugger
+#### Agent initialization code
+
+If you want to debug agent initialization code (e.g. `OpenTelemetryAgent`, `AgentInitializer`,
+`AgentInstaller`, `TracerInstaller`, etc.) then it's important to specify the `-agentlib:` JVM arg
+before the `-javaagent:` JVM arg and use `suspend=y` (see full example below).
+
+#### Enabling debugging
 
 The following example shows remote debugger configuration. The breakpoints
-should work in any code except ByteBuddy advice methods and agent initialization code.
+should work in any code except ByteBuddy advice methods.
 
 ```bash
-java -javaagent:opentelemetry-javaagent-<version>-all.jar -jar -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" app.jar
+java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>-all.jar -jar app.jar
 ```
