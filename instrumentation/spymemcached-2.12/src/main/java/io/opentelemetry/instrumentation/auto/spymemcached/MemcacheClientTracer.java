@@ -31,16 +31,6 @@ public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnecti
   }
 
   @Override
-  protected String dbUser(MemcachedConnection session) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(MemcachedConnection connection) {
-    return null;
-  }
-
-  @Override
   protected InetSocketAddress peerAddress(MemcachedConnection memcachedConnection) {
     return null;
   }

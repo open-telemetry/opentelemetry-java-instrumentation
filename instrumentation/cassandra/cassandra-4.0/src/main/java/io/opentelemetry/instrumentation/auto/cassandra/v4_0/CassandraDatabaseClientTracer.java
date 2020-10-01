@@ -46,11 +46,6 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   @Override
-  protected String dbUser(CqlSession session) {
-    return null;
-  }
-
-  @Override
   protected String dbName(CqlSession session) {
     return session.getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }

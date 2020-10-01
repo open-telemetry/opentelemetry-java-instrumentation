@@ -48,11 +48,6 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbUser(CommandStartedEvent event) {
-    return null;
-  }
-
-  @Override
   protected String dbName(CommandStartedEvent event) {
     // Use description if set.
     ConnectionDescription connectionDescription = event.getConnectionDescription();

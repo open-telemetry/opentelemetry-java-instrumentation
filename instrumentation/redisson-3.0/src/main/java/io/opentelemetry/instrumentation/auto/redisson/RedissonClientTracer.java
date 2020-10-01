@@ -59,16 +59,6 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   @Override
-  protected String dbUser(RedisConnection o) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(RedisConnection o) {
-    return null;
-  }
-
-  @Override
   protected InetSocketAddress peerAddress(RedisConnection connection) {
     Channel channel = connection.getChannel();
     return (InetSocketAddress) channel.remoteAddress();

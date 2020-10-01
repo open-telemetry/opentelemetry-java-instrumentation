@@ -56,16 +56,6 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
   }
 
   @Override
-  protected String dbUser(Void connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Void connection) {
-    return null;
-  }
-
-  @Override
   protected InetSocketAddress peerAddress(Void connection) {
     return null;
   }

@@ -40,7 +40,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
             .startSpan();
 
     onConnection(span, connection);
-    onPeerConnection(span, connection);
+    setNetSemanticConvention(span, connection);
     onStatement(span, normalizedQuery);
 
     return span;
@@ -54,11 +54,6 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   @Override
   protected String dbSystem(Region<?, ?> region) {
     return DbSystem.GEODE;
-  }
-
-  @Override
-  protected String dbUser(Region<?, ?> region) {
-    return null;
   }
 
   @Override
