@@ -21,7 +21,6 @@ import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapExtractA
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -55,7 +54,7 @@ public class KafkaConsumerTracer extends BaseTracer {
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
-    if (Config.get().isKafkaClientPropagationEnabled()) {
+    if (KafkaClientConfiguration.isPropagationEnabled()) {
       return extract(record.headers(), GETTER);
     } else {
       return Context.current();

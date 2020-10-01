@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.auto.kafkaclients;
 
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -44,7 +43,7 @@ public class KafkaProducerTracer extends BaseTracer {
   // value of the broker(s) is >= 2
   public boolean shouldPropagate(ApiVersions apiVersions) {
     return apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-        && Config.get().isKafkaClientPropagationEnabled();
+        && KafkaClientConfiguration.isPropagationEnabled();
   }
 
   public String spanNameOnProduce(ProducerRecord<?, ?> record) {

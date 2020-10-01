@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.auto.kafkaclients;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.grpc.Context;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Iterator;
