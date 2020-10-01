@@ -16,19 +16,12 @@
 
 package io.opentelemetry.instrumentation.auto.rabbitmq.amqp;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitDecorator.TRACER;
-import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.RabbitTracer.TRACER;
 import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.Span.Kind.PRODUCER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
@@ -44,7 +37,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
@@ -52,16 +44,13 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -88,7 +77,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RabbitDecorator",
+      packageName + ".RabbitTracer",
       packageName + ".TextMapInjectAdapter",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
@@ -127,45 +116,41 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
     return transformers;
   }
 
+  // TODO Why do we start span here and not in ChannelPublishAdvice below?
   public static class ChannelMethodAdvice {
     @Advice.OnMethodEnter
-    public static SpanWithScope onEnter(
-        @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
+    public static void onEnter(
+        @Advice.This Channel channel,
+        @Advice.Origin("Channel.#m") String method,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
 
-      Connection connection = channel.getConnection();
-
-      Span.Builder spanBuilder = TRACER.spanBuilder(method);
-      if (method.equals("Channel.basicPublish")) {
-        spanBuilder.setSpanKind(PRODUCER);
-      } else {
-        spanBuilder.setSpanKind(CLIENT);
-      }
-      Span span = spanBuilder.startSpan();
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) connection.getPort());
-      DECORATE.afterStart(span);
-      DECORATE.onPeerConnection(span, connection.getAddress());
+      span = TRACER.startSpan(method, channel.getConnection());
       CURRENT_RABBIT_SPAN.set(span);
-      return new SpanWithScope(span, currentContextWith(span));
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
+      scope.close();
       CallDepthThreadLocalMap.reset(Channel.class);
 
       CURRENT_RABBIT_SPAN.remove();
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 
@@ -179,9 +164,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       Span span = TRACER.getCurrentSpan();
 
       if (span.getContext().isValid()) {
-        DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
-        DECORATE.onPublish(span, exchange, routingKey);
-        span.setAttribute("message.size", body == null ? 0 : body.length);
+        TRACER.onPublish(span, exchange, routingKey);
+        if (body != null) {
+          span.setAttribute(
+              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
+        }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
         if (props == null) {
@@ -236,47 +223,18 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Local("callDepth") int callDepth,
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable) {
-
       if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(Channel.class);
 
-      // can't create span and put into scope in method enter above, because can't add links after
+      // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Span.Builder spanBuilder =
-          TRACER
-              .spanBuilder(DECORATE.spanNameOnGet(queue))
-              .setSpanKind(CLIENT)
-              .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
-
-      if (response != null && response.getProps() != null) {
-        Map<String, Object> headers = response.getProps().getHeaders();
-
-        if (headers != null) {
-          Context context = extract(headers, GETTER);
-          SpanContext spanContext = getSpan(context).getContext();
-          if (spanContext.isValid()) {
-            spanBuilder.addLink(spanContext);
-          }
-        }
-      }
-
-      Connection connection = channel.getConnection();
-
-      Span span = spanBuilder.startSpan();
-      if (response != null) {
-        span.setAttribute("message.size", response.getBody().length);
-      }
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) connection.getPort());
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span);
-        DECORATE.onGet(span, queue);
-        DECORATE.onPeerConnection(span, connection.getAddress());
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-      } finally {
-        span.end();
+      Span span = TRACER.startGetSpan(queue, startTime, response, channel.getConnection());
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
     }
   }
