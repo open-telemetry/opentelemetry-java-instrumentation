@@ -21,8 +21,6 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -113,9 +111,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(2) {
@@ -203,9 +201,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(2) {
@@ -286,9 +284,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "tombstone" true
           }
         }
@@ -361,9 +359,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "partition" { it >= 0 }
           }
         }
@@ -466,9 +464,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
       }
@@ -491,9 +489,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(1) {
@@ -533,9 +531,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           attributes {
-              "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
-              "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
-              "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         span(1) {
