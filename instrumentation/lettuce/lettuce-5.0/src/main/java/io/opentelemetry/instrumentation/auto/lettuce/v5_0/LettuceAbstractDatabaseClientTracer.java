@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
     extends DatabaseClientTracer<RedisURI, QUERY> {
@@ -32,7 +31,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected @NonNull String dbSystem(RedisURI connection) {
+  protected String dbSystem(RedisURI connection) {
     return DbSystem.REDIS;
   }
 

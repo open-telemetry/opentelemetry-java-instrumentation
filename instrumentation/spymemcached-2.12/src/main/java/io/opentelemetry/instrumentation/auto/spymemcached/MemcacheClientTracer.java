@@ -21,13 +21,12 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedConnection;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnection, String> {
   public static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
 
   @Override
-  protected @NonNull String dbSystem(MemcachedConnection memcachedConnection) {
+  protected String dbSystem(MemcachedConnection memcachedConnection) {
     return "memcached";
   }
 
@@ -42,7 +41,7 @@ public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnecti
   }
 
   @Override
-  protected @NonNull String normalizeQuery(String query) {
+  protected String normalizeQuery(String query) {
     char[] chars =
         query
             .replaceFirst("^async", "")

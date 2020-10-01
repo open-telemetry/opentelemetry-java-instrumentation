@@ -17,7 +17,6 @@
 package io.opentelemetry.instrumentation.auto.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
@@ -25,7 +24,7 @@ public class LettuceDatabaseClientTracer
   public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
 
   @Override
-  protected @NonNull String normalizeQuery(RedisCommand<?, ?, ?> command) {
+  protected String normalizeQuery(RedisCommand<?, ?, ?> command) {
     return command.getType().name();
   }
 }

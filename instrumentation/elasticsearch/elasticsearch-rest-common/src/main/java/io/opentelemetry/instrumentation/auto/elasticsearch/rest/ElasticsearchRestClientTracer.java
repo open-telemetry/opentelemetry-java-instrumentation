@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, String> {
@@ -47,12 +46,12 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
   }
 
   @Override
-  protected @NonNull String normalizeQuery(String query) {
+  protected String normalizeQuery(String query) {
     return query;
   }
 
   @Override
-  protected @NonNull String dbSystem(Void connection) {
+  protected String dbSystem(Void connection) {
     return "elasticsearch";
   }
 

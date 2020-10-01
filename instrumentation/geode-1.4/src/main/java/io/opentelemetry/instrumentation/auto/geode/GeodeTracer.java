@@ -24,7 +24,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   public static GeodeTracer TRACER = new GeodeTracer();
@@ -48,12 +47,12 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   }
 
   @Override
-  protected @NonNull String normalizeQuery(String query) {
+  protected String normalizeQuery(String query) {
     return query;
   }
 
   @Override
-  protected @NonNull String dbSystem(Region<?, ?> region) {
+  protected String dbSystem(Region<?, ?> region) {
     return DbSystem.GEODE;
   }
 

@@ -30,7 +30,6 @@ import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
 
@@ -120,9 +119,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
   }
 
-  protected abstract @NonNull String normalizeQuery(QUERY query);
+  protected abstract String normalizeQuery(QUERY query);
 
-  protected abstract @NonNull String dbSystem(CONNECTION connection);
+  protected abstract String dbSystem(CONNECTION connection);
 
   protected String dbUser(CONNECTION connection) {
     return null;
@@ -138,8 +137,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   protected abstract InetSocketAddress peerAddress(CONNECTION connection);
 
-  // TODO: "When it's impossible to get any meaningful representation of the span name, it can be
-  // populated using the same value as db.name" (c) spec
   private String spanName(String query, CONNECTION connection) {
     if (query != null) {
       return query;

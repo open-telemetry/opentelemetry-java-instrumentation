@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.auto.jedis.v1_4;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
@@ -27,12 +26,12 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, Command>
   public static final JedisClientTracer TRACER = new JedisClientTracer();
 
   @Override
-  protected @NonNull String normalizeQuery(Command command) {
+  protected String normalizeQuery(Command command) {
     return command.name();
   }
 
   @Override
-  protected @NonNull String dbSystem(Connection connection) {
+  protected String dbSystem(Connection connection) {
     return DbSystem.REDIS;
   }
 

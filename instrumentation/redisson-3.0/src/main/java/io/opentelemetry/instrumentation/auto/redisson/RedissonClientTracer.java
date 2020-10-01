@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
@@ -36,7 +35,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   @Override
-  protected @NonNull String normalizeQuery(Object args) {
+  protected String normalizeQuery(Object args) {
     // get command
     if (args instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) args).getCommands();
@@ -55,7 +54,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   @Override
-  protected @NonNull String dbSystem(RedisConnection connection) {
+  protected String dbSystem(RedisConnection connection) {
     return DbSystem.REDIS;
   }
 

@@ -32,7 +32,6 @@ import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
   public static final MongoClientTracer TRACER = new MongoClientTracer();
@@ -44,7 +43,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected @NonNull String dbSystem(CommandStartedEvent event) {
+  protected String dbSystem(CommandStartedEvent event) {
     return DbSystem.MONGODB;
   }
 
@@ -99,7 +98,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  public @NonNull String normalizeQuery(BsonDocument statement) {
+  public String normalizeQuery(BsonDocument statement) {
     // scrub the Mongo command so that parameters are removed from the string
     BsonDocument scrubbed = scrub(statement);
     return scrubbed.toString();
