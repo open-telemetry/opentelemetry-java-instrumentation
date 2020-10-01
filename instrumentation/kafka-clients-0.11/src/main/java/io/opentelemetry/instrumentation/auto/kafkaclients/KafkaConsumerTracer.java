@@ -35,18 +35,20 @@ public class KafkaConsumerTracer extends BaseTracer {
   public Span startSpan(ConsumerRecord<?, ?> record) {
     long now = System.currentTimeMillis();
 
-    Span span = tracer
-        .spanBuilder(spanNameOnConsume(record))
-        .setSpanKind(CONSUMER)
-        .setParent(extractParent(record))
-        .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(now))
-        .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
-        .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
-        .setAttribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-            (long) record.serializedValueSize())
-        .startSpan();
+    Span span =
+        tracer
+            .spanBuilder(spanNameOnConsume(record))
+            .setSpanKind(CONSUMER)
+            .setParent(extractParent(record))
+            .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(now))
+            .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
+            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+            .setAttribute(
+                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                (long) record.serializedValueSize())
+            .startSpan();
 
     onConsume(span, now, record);
     return span;
@@ -65,7 +67,7 @@ public class KafkaConsumerTracer extends BaseTracer {
   }
 
   public void onConsume(Span span, long startTimeMillis, ConsumerRecord<?, ?> record) {
-    //TODO should we set topic + offset as messaging.message_id?
+    // TODO should we set topic + offset as messaging.message_id?
     span.setAttribute("partition", record.partition());
     span.setAttribute("offset", record.offset());
 

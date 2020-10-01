@@ -94,16 +94,16 @@ not values defined by spec.
 
  Attribute name |  Required? | Implemented? |
 | -------------- |  :-----: | :---: |
-| `messaging.system` |  Y | + | 
+| `messaging.system` |  Y | + |
 | `messaging.destination` | Y | + |
 | `messaging.destination_kind` | Y | + |
 | `messaging.temp_destination` | N | - |
 | `messaging.protocol` | N | - |
 | `messaging.protocol_version` | N | - |
 | `messaging.url` | N | - |
-| `messaging.message_id` | N | - |
-| `messaging.conversation_id` | N | - |
-| `messaging.message_payload_size_bytes` | N | - [1] |
+| `messaging.message_id` | N | only for JMS |
+| `messaging.conversation_id` | N | only for JMS |
+| `messaging.message_payload_size_bytes` | N | only for RabbitMQ and Kafka [1] |
 | `messaging.message_payload_compressed_size_bytes` | N | - |
 | `messaging.operation` | for consumers only | +
 

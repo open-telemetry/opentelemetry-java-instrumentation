@@ -71,9 +71,9 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-          packageName + ".KafkaStreamsTracer",
-          packageName + ".TextMapExtractAdapter",
-          KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
+        packageName + ".KafkaStreamsTracer",
+        packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 
@@ -123,9 +123,9 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-          packageName + ".KafkaStreamsTracer",
-          packageName + ".TextMapExtractAdapter",
-          KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
+        packageName + ".KafkaStreamsTracer",
+        packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 

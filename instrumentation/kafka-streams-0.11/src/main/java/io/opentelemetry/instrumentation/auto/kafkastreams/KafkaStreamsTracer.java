@@ -29,14 +29,16 @@ public class KafkaStreamsTracer extends BaseTracer {
   public static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
 
   public Span startSpan(StampedRecord record) {
-    Span span = tracer
-        .spanBuilder(spanNameForConsume(record)).setSpanKind(Kind.CONSUMER)
-        .setParent(extract(record.value.headers(), GETTER))
-        .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
-        .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
-        .startSpan();
+    Span span =
+        tracer
+            .spanBuilder(spanNameForConsume(record))
+            .setSpanKind(Kind.CONSUMER)
+            .setParent(extract(record.value.headers(), GETTER))
+            .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
+            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+            .startSpan();
     onConsume(span, record);
     return span;
   }

@@ -40,8 +40,8 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
    */
   private SpanWithScope currentSpanWithScope;
 
-  public TracingIterator(Iterator<ConsumerRecord<?, ?>> delegateIterator,
-      KafkaConsumerTracer tracer) {
+  public TracingIterator(
+      Iterator<ConsumerRecord<?, ?>> delegateIterator, KafkaConsumerTracer tracer) {
     this.delegateIterator = delegateIterator;
     this.tracer = tracer;
     this.propagationEnabled = KafkaClientConfiguration.isPropagationEnabled();

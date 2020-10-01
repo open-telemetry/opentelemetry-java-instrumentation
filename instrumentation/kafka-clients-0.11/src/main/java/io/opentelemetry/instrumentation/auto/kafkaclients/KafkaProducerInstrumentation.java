@@ -57,10 +57,10 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".KafkaClientConfiguration",
+      packageName + ".KafkaClientConfiguration",
       packageName + ".KafkaProducerTracer",
-        packageName + ".TextMapInjectAdapter",
-        KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
+      packageName + ".TextMapInjectAdapter",
+      KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
     };
   }
 
@@ -118,7 +118,8 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Thrown Throwable throwable,
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
