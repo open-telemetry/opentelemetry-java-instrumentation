@@ -42,6 +42,7 @@ public class Servlet3Advice {
       // We are inside nested servlet/filter, don't create new span
       return;
     }
+    System.out.println("Servlet 3 advice start");
 
     span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
     scope = TRACER.startScope(span, httpServletRequest);
@@ -63,6 +64,7 @@ public class Servlet3Advice {
       // an existing span was found
       return;
     }
+    System.out.println("Servlet 3 advice stop");
 
     TRACER.setPrincipal(span, (HttpServletRequest) request);
     if (throwable != null) {
