@@ -36,7 +36,7 @@ abstract class InstrumentationTestRunner extends Specification {
 
   static {
     TEST_WRITER = new InMemoryExporter()
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER)
+    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER)
   }
 
   @Before

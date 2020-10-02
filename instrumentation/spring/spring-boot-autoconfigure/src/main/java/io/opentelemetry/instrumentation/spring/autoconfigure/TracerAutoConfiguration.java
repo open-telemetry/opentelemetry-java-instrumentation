@@ -36,8 +36,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Create {@link io.opentelemetry.trace.Tracer} bean if bean is missing.
  *
- * <p>Adds span exporter beans to the active tracer provider {@code
- * OpenTelemetrySdk.getTracerProvider()}
+ * <p>Adds span exporter beans to the active tracer provider.
  *
  * <p>Updates the sampler probability in the active {@link TraceConfig}
  */
