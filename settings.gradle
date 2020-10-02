@@ -41,6 +41,7 @@ include ':javaagent-spi'
 include ':javaagent-tooling'
 include ':javaagent'
 include ':load-generator'
+include ':system-metrics'
 
 include ':instrumentation-api'
 include ':auto-api'
