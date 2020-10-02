@@ -12,6 +12,10 @@ dependencies {
   annotationProcessor deps.autoValue
 
   testImplementation project(':testing-common')
+  testImplementation project(':javaagent-spi')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
+
+  testAnnotationProcessor deps.autoservice
+  testImplementation deps.autoservice
 }

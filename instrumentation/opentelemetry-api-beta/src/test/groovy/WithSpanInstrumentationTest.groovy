@@ -5,6 +5,7 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.test.annotation.TracedWithSpan
 import io.opentelemetry.trace.Span
 
@@ -12,19 +13,13 @@ import io.opentelemetry.trace.Span
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extensions.auto.annotations.WithSpan} contrib annotation.
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
-      System.setProperty("otel.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
-    }
+  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
+    it.setProperty("otel.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
   }
 
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.classes.exclude")
-      System.clearProperty("otel.trace.annotated.methods.exclude")
-    }
+    ConfigUtils.setConfig(previousConfig)
   }
 
   def "should derive automatic name"() {

@@ -9,22 +9,18 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 class HttpServletTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.servlet-service.enabled", "true")
-    }
+  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.servlet-service.enabled", "true")
   }
 
   def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.servlet-service.enabled")
-    }
+    ConfigUtils.setConfig(previousConfig)
   }
-
 
   def req = Mock(HttpServletRequest) {
     getMethod() >> "GET"

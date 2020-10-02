@@ -7,7 +7,6 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -28,12 +27,6 @@ import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
-    }
-  }
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }

@@ -9,6 +9,7 @@ import com.google.common.reflect.ClassPath
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.tooling.Constants
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
@@ -17,14 +18,17 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final boolean AGENT_INSTALLED_IN_CLINIT
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty(
-        "otel.trace.classes.exclude",
-        "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
-    }
+  static final Config previousConfig = ConfigUtils.updateConfig {
+    it.setProperty("otel.trace.classes.exclude",
+      "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+  }
 
+  static {
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(previousConfig)
   }
 
   def "classpath setup"() {

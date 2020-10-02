@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
-
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
@@ -15,18 +14,14 @@ import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
   static {
-    updateConfig {
-      System.setProperty(
-        "otel.endpoint.peer.service.mapping",
-        "myhost-mapped=reservation-service")
-    }
+    ConfigUtils.initializeConfig()
   }
 
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
 
   @Shared
-  def testUrlMapped = new URI("http://myhost-mapped:123/somepath")
+  def testUrlMapped = new URI("http://dogs.com:123/somepath")
 
   @Shared
   def testUserAgent = "Apache HttpClient"
@@ -66,13 +61,14 @@ class HttpClientTracerTest extends BaseTracerTest {
     tracer.onRequest(span, req)
 
     then:
+    // PEER_SERVICE configured in TestConfiguration.java
     if (req) {
       1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL, "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, req.url.host)
       1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, req.url.port)
-      1 * span.setAttribute(SemanticAttributes.PEER_SERVICE, "reservation-service")
+      1 * span.setAttribute(SemanticAttributes.PEER_SERVICE, "dogsservice")
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
       1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }

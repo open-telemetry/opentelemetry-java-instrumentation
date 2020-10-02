@@ -8,6 +8,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.FilterConfig
@@ -16,18 +17,13 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
 class FilterTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.servlet-filter.enabled", "true")
-    }
+  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.servlet-filter.enabled", "true")
   }
 
-  def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.servlet-filter.enabled")
-    }
+  def cleanupSpec() {
+    ConfigUtils.setConfig(previousConfig)
   }
-
 
   def "test doFilter no-parent"() {
     when:

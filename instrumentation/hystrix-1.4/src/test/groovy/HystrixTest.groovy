@@ -8,7 +8,6 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import spock.lang.Timeout
@@ -18,9 +17,6 @@ class HystrixTest extends AgentTestRunner {
   static {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.hystrix.tags.enabled", "true")
-    }
 
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")

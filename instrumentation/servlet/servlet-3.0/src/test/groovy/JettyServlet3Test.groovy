@@ -11,6 +11,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import javax.servlet.Servlet
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
@@ -19,18 +20,14 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
-  static {
-    ConfigUtils.updateConfig {
-      //We want to test spans produced by servlet instrumentation, not those of jetty
-      System.setProperty("otel.integration.jetty.enabled", "false")
-    }
+  //We want to test spans produced by servlet instrumentation, not those of jetty
+  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.jetty.enabled", "false")
   }
 
   @Override
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.jetty.enabled")
-    }
+    ConfigUtils.setConfig(previousConfig)
   }
 
   @Override

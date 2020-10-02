@@ -17,9 +17,9 @@ import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
+import io.opentelemetry.auto.test.utils.ConfigUtils;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -165,7 +165,7 @@ public abstract class AgentTestRunner extends Specification {
    */
   @BeforeClass
   public void setupBeforeTests() {
-    ConfigInitializer.initialize();
+    ConfigUtils.initializeConfig();
 
     if (activeTransformer == null) {
       activeTransformer =
