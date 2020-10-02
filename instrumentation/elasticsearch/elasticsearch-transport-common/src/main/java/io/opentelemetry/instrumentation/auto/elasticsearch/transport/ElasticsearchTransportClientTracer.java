@@ -44,16 +44,6 @@ public class ElasticsearchTransportClientTracer
   }
 
   @Override
-  protected String dbUser(Void connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbName(Void connection) {
-    return null;
-  }
-
-  @Override
   protected InetSocketAddress peerAddress(Void connection) {
     return null;
   }
