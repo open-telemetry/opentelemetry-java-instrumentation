@@ -17,9 +17,6 @@ dependencies {
   implementation project(':instrumentation:spring:spring-webmvc-3.1:library')
   implementation project(':instrumentation:spring:spring-webflux-5.0:library')
 
-  //This SDK dependency should not be here, but exporter deps below bring sdk-SNAPSHOT, not fixed-timed
-  //version that we expect, but any latest snapshot. And that may break things.
-  compileOnly deps.opentelemetrySdk
   compileOnly deps.opentelemetryAutoAnnotations
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
   compileOnly deps.opentelemetryLogging
