@@ -272,6 +272,9 @@ class JMS1Test extends AgentTestRunner {
     }
   }
 
+  // passing messageId = null will verify message.id is not captured,
+  // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
+  // any other value for messageId will verify that message.id is captured and has that same value
   static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, Operation operation) {
     trace.span(index) {
       operationName destinationName + " " + operation.name()
