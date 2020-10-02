@@ -21,7 +21,6 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,7 +63,6 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   public void onTimeout(Span span, long timeout) {
-    span.setStatus(Status.DEADLINE_EXCEEDED);
     span.setAttribute("timeout", timeout);
     span.end();
   }

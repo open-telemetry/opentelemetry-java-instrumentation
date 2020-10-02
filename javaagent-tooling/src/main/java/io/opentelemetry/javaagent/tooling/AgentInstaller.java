@@ -108,7 +108,7 @@ public class AgentInstaller {
         new ForceFlusher() {
           @Override
           public void run(int timeout, TimeUnit unit) {
-            OpenTelemetrySdk.getTracerProvider().forceFlush().join(timeout, unit);
+            OpenTelemetrySdk.getTracerManagement().forceFlush().join(timeout, unit);
           }
         });
 

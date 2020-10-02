@@ -17,6 +17,7 @@
 package io.opentelemetry.javaagent.spi;
 
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 
@@ -35,5 +36,5 @@ import io.opentelemetry.sdk.trace.config.TraceConfig;
 public interface TracerCustomizer {
 
   /** Callback executed after the initial {@link TracerSdkProvider} has been initialized. */
-  void configure(TracerSdkProvider tracerSdkProvider);
+  void configure(TracerSdkManagement tracerManagement);
 }

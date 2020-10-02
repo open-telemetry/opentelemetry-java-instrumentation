@@ -142,7 +142,7 @@ class SpanAssert {
     if (errored) {
       assert span.status != Status.OK
     } else {
-      assert span.status == Status.OK
+      assert span.status == Status.UNSET
     }
     checked.status = true
   }

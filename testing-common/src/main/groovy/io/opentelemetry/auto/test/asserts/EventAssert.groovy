@@ -17,13 +17,13 @@
 package io.opentelemetry.auto.test.asserts
 
 import static AttributesAssert.assertAttributes
+import static io.opentelemetry.sdk.trace.data.SpanData.Event
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.common.AttributeConsumer
 import io.opentelemetry.common.AttributeKey
 import io.opentelemetry.common.Attributes
-import io.opentelemetry.trace.Event
 
 class EventAssert {
   private final Event event

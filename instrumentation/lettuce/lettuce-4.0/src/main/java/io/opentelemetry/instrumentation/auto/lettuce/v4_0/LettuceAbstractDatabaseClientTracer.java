@@ -39,8 +39,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   @Override
   public Span onConnection(Span span, RedisURI connection) {
     if (connection != null && connection.getDatabase() != 0) {
-      span.setAttribute(
-          SemanticAttributes.REDIS_DATABASE_INDEX, String.valueOf(connection.getDatabase()));
+      span.setAttribute(SemanticAttributes.REDIS_DATABASE_INDEX, connection.getDatabase());
     }
     return super.onConnection(span, connection);
   }

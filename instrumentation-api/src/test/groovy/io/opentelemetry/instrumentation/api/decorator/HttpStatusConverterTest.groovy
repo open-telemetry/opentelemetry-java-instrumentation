@@ -57,49 +57,49 @@ class HttpStatusConverterTest extends Specification {
     307        | Status.OK
     308        | Status.OK
 
-    400        | Status.INVALID_ARGUMENT
-    401        | Status.UNAUTHENTICATED
-    403        | Status.PERMISSION_DENIED
-    404        | Status.NOT_FOUND
-    405        | Status.INVALID_ARGUMENT
-    406        | Status.INVALID_ARGUMENT
-    407        | Status.INVALID_ARGUMENT
-    408        | Status.INVALID_ARGUMENT
-    409        | Status.INVALID_ARGUMENT
-    410        | Status.INVALID_ARGUMENT
-    411        | Status.INVALID_ARGUMENT
-    412        | Status.INVALID_ARGUMENT
-    413        | Status.INVALID_ARGUMENT
-    414        | Status.INVALID_ARGUMENT
-    415        | Status.INVALID_ARGUMENT
-    416        | Status.INVALID_ARGUMENT
-    417        | Status.INVALID_ARGUMENT
-    418        | Status.INVALID_ARGUMENT
-    421        | Status.INVALID_ARGUMENT
-    422        | Status.INVALID_ARGUMENT
-    423        | Status.INVALID_ARGUMENT
-    424        | Status.INVALID_ARGUMENT
-    425        | Status.INVALID_ARGUMENT
-    426        | Status.INVALID_ARGUMENT
-    428        | Status.INVALID_ARGUMENT
-    429        | Status.RESOURCE_EXHAUSTED
-    431        | Status.INVALID_ARGUMENT
-    451        | Status.INVALID_ARGUMENT
+    400        | Status.ERROR
+    401        | Status.ERROR
+    403        | Status.ERROR
+    404        | Status.ERROR
+    405        | Status.ERROR
+    406        | Status.ERROR
+    407        | Status.ERROR
+    408        | Status.ERROR
+    409        | Status.ERROR
+    410        | Status.ERROR
+    411        | Status.ERROR
+    412        | Status.ERROR
+    413        | Status.ERROR
+    414        | Status.ERROR
+    415        | Status.ERROR
+    416        | Status.ERROR
+    417        | Status.ERROR
+    418        | Status.ERROR
+    421        | Status.ERROR
+    422        | Status.ERROR
+    423        | Status.ERROR
+    424        | Status.ERROR
+    425        | Status.ERROR
+    426        | Status.ERROR
+    428        | Status.ERROR
+    429        | Status.ERROR
+    431        | Status.ERROR
+    451        | Status.ERROR
 
-    500        | Status.INTERNAL
-    501        | Status.UNIMPLEMENTED
-    502        | Status.INTERNAL
-    503        | Status.UNAVAILABLE
-    504        | Status.DEADLINE_EXCEEDED
-    505        | Status.INTERNAL
-    506        | Status.INTERNAL
-    507        | Status.INTERNAL
-    508        | Status.INTERNAL
-    510        | Status.INTERNAL
-    511        | Status.INTERNAL
+    500        | Status.ERROR
+    501        | Status.ERROR
+    502        | Status.ERROR
+    503        | Status.ERROR
+    504        | Status.ERROR
+    505        | Status.ERROR
+    506        | Status.ERROR
+    507        | Status.ERROR
+    508        | Status.ERROR
+    510        | Status.ERROR
+    511        | Status.ERROR
 
     // Don't exist
-    99         | Status.UNKNOWN
-    600        | Status.UNKNOWN
+    99         | Status.ERROR
+    600        | Status.ERROR
   }
 }
