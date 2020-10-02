@@ -143,6 +143,53 @@ class Netty41ClientTest extends HttpClientTest {
   }
 
 
+  def "test connection interference"() {
+    setup:
+    //Create a simple Netty pipeline
+    EventLoopGroup group = new NioEventLoopGroup()
+    Bootstrap b = new Bootstrap()
+    b.group(group)
+      .channel(NioSocketChannel.class)
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        protected void initChannel(SocketChannel socketChannel) throws Exception {
+          ChannelPipeline pipeline = socketChannel.pipeline()
+          pipeline.addLast(new HttpClientCodec())
+        }
+      })
+
+    //Important! Separate connect, outside of any request
+    Channel ch = b.connect(server.address.host, server.address.port).sync().channel()
+
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, server.address.host)
+    request.headers().set(HttpHeaderNames.USER_AGENT, userAgent())
+
+    when:
+    runUnderTrace("parent1") {
+      ch.writeAndFlush(request).get()
+    }
+    runUnderTrace("parent2") {
+      ch.writeAndFlush(request).get()
+    }
+
+    then:
+    assertTraces(2) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent1")
+        clientSpan(it, 1, span(0))
+        serverSpan(it, 2, span(1))
+      }
+      trace(1, 3) {
+        basicSpan(it, 0, "parent2")
+        clientSpan(it, 1, span(0))
+        serverSpan(it, 2, span(1))
+      }
+    }
+    cleanup:
+    group.shutdownGracefully()
+  }
+
   def "connection error (unopened port)"() {
     given:
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
