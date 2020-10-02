@@ -57,10 +57,10 @@ class SparkJavaBasedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "/param/:param"
-          spanKind SERVER
+          name "/param/:param"
+          kind SERVER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long

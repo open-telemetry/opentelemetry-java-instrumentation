@@ -63,18 +63,18 @@ class GrpcTest extends AgentTestRunner {
 
     when:
     def response = runUnderTrace("parent") {
-      client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+      client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
     }
 
     then:
-    response.message == "Hello $name"
+    response.message == "Hello $paramName"
 
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
+          name "example.Greeter/SayHello"
+          kind CLIENT
           childOf span(0)
           errored false
           event(0) {
@@ -93,8 +93,8 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(1)
           errored false
           event(0) {
@@ -120,7 +120,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name << ["some name", "some other name"]
+    paramName << ["some name", "some other name"]
   }
 
   def "test error - #name"() {
@@ -147,7 +147,7 @@ class GrpcTest extends AgentTestRunner {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
     thrown StatusRuntimeException
@@ -155,9 +155,9 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
-          parent()
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          hasNoParent()
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           attributes {
@@ -169,8 +169,8 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(0)
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
@@ -200,7 +200,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | grpcStatus
+    paramName                      | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))
@@ -233,7 +233,7 @@ class GrpcTest extends AgentTestRunner {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
     thrown StatusRuntimeException
@@ -241,9 +241,9 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
-          parent()
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          hasNoParent()
           errored true
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
@@ -256,8 +256,8 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(0)
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
@@ -287,7 +287,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | grpcStatus
+    paramName                     | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))

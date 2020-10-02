@@ -30,8 +30,8 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SayTracedHello.sayHello"
-          parent()
+          name "SayTracedHello.sayHello"
+          hasNoParent()
           errored false
           attributes {
             "myattr" "test"
@@ -50,15 +50,15 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "SayTracedHello.sayHELLOsayHA"
-          parent()
+          name "SayTracedHello.sayHELLOsayHA"
+          hasNoParent()
           errored false
           attributes {
             "myattr" "test2"
           }
         }
         span(1) {
-          operationName "SayTracedHello.sayHello"
+          name "SayTracedHello.sayHello"
           childOf span(0)
           errored false
           attributes {
@@ -66,7 +66,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "SayTracedHello.sayHello"
+          name "SayTracedHello.sayHello"
           childOf span(0)
           errored false
           attributes {
@@ -90,7 +90,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SayTracedHello.sayERROR"
+          name "SayTracedHello.sayERROR"
           errored true
           errorEvent(error.class)
         }
@@ -107,7 +107,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SayTracedHello\$1.call"
+          name "SayTracedHello\$1.call"
           attributes {
           }
         }
@@ -128,13 +128,13 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "SayTracedHello\$1.call"
+          name "SayTracedHello\$1.call"
           attributes {
           }
         }
         trace(1, 1) {
           span(0) {
-            operationName "TraceAnnotationsTest\$1.call"
+            name "TraceAnnotationsTest\$1.call"
             attributes {
             }
           }

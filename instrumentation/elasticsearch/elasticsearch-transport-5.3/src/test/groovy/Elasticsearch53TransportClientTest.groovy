@@ -103,8 +103,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "ClusterHealthAction"
-          spanKind CLIENT
+          name "ClusterHealthAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
@@ -130,8 +130,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           errored true
           errorEvent RemoteTransportException, String
           attributes {
@@ -200,8 +200,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
       }
       trace(0, 1) {
         span(0) {
-          operationName "CreateIndexAction"
-          spanKind CLIENT
+          name "CreateIndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
@@ -216,8 +216,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
@@ -235,8 +235,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "PutMappingAction"
-          spanKind CLIENT
+          name "PutMappingAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "PutMappingAction"
@@ -247,8 +247,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
       }
       trace(3, 1) {
         span(0) {
-          operationName "IndexAction"
-          spanKind CLIENT
+          name "IndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address
@@ -269,8 +269,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
       }
       trace(4, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
             "${SemanticAttributes.NET_PEER_IP.key()}" tcpPublishAddress.address

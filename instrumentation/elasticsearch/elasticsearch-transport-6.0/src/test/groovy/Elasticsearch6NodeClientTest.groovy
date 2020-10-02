@@ -83,8 +83,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "ClusterHealthAction"
-          spanKind CLIENT
+          name "ClusterHealthAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "ClusterHealthAction"
@@ -107,8 +107,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           errored true
           errorEvent IndexNotFoundException, "no such index"
           attributes {
@@ -169,8 +169,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     assertTraces(4) {
       trace(0, 1) {
         span(0) {
-          operationName "CreateIndexAction"
-          spanKind CLIENT
+          name "CreateIndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "CreateIndexAction"
@@ -182,8 +182,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
@@ -198,8 +198,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       }
       trace(2, 2) {
         span(0) {
-          operationName "IndexAction"
-          spanKind CLIENT
+          name "IndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
@@ -215,8 +215,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "PutMappingAction"
-          spanKind CLIENT
+          name "PutMappingAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -228,8 +228,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       }
       trace(3, 1) {
         span(0) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"

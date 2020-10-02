@@ -74,16 +74,16 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
+          name("my_function")
+          kind SERVER
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
         span(1) {
-          operationName("queue1 process")
-          spanKind CONSUMER
-          parentId(span(0).spanId)
+          name("queue1 process")
+          kind CONSUMER
+          parentSpanId(span(0).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
@@ -92,9 +92,9 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad9")
         }
         span(2) {
-          operationName("queue1 process")
-          spanKind CONSUMER
-          parentId(span(1).spanId)
+          name("queue1 process")
+          kind CONSUMER
+          parentSpanId(span(1).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
@@ -104,9 +104,9 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
           hasLink("5759e988bd862e3fe1be46a994272793", "53995c3f42cd8ad8")
         }
         span(3) {
-          operationName("queue1 process")
-          spanKind CONSUMER
-          parentId(span(1).spanId)
+          name("queue1 process")
+          kind CONSUMER
+          parentSpanId(span(1).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"

@@ -120,8 +120,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
-      spanKind INTERNAL
+      name endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
+      kind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       if (endpoint == EXCEPTION) {

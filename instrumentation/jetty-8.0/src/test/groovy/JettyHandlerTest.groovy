@@ -123,17 +123,17 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "TestHandler.handle"
-      spanKind SERVER
+      name "TestHandler.handle"
+      kind SERVER
       errored endpoint.errored
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
       }
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"

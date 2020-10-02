@@ -40,7 +40,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 7) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -74,7 +74,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -101,7 +101,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -128,7 +128,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -170,7 +170,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -222,10 +222,10 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
             a = span.name.matches("a")
             iter = span.getAttributes().get(AttributesKeys.longKey("iter"))
             (a ? seenItersA : seenItersB).add(iter)
-            operationName(a ? "a" : "b")
+            name(a ? "a" : "b")
           }
           span(1) {
-            operationName(a ? "a2" : "b2")
+            name(a ? "a2" : "b2")
             childOf(span(0))
             assert span.getAttributes().get(AttributesKeys.longKey("iter")) == iter
 

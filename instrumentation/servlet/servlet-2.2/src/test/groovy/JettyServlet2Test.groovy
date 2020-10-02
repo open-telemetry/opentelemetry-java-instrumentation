@@ -86,8 +86,8 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName endpoint == REDIRECT ? "HttpServletResponse.sendRedirect" : "HttpServletResponse.sendError"
-      spanKind INTERNAL
+      name endpoint == REDIRECT ? "HttpServletResponse.sendRedirect" : "HttpServletResponse.sendError"
+      kind INTERNAL
       errored false
       childOf((SpanData) parent)
       attributes {
@@ -98,14 +98,14 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName 'HttpServlet.service'
-      spanKind SERVER
+      name 'HttpServlet.service'
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)

@@ -64,10 +64,10 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName("HTTP ${method}")
-          spanKind CLIENT
+          name("HTTP ${method}")
+          kind CLIENT
           errored code != 200
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -81,8 +81,8 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
           }
         }
         span(1) {
-          operationName(spanName)
-          spanKind SERVER
+          name(spanName)
+          kind SERVER
           childOf span(0)
           errored code != 200
           if (path == "/exception") {

@@ -61,8 +61,8 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
@@ -87,8 +87,8 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
@@ -101,8 +101,8 @@ class Jedis30ClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
@@ -127,8 +127,8 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
@@ -141,8 +141,8 @@ class Jedis30ClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "RANDOMKEY"
-          spanKind CLIENT
+          name "RANDOMKEY"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"

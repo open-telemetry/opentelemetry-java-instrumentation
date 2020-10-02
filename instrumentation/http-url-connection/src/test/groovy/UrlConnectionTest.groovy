@@ -41,14 +41,14 @@ class UrlConnectionTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored true
           errorEvent ConnectException, String
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored true
           errorEvent ConnectException, String

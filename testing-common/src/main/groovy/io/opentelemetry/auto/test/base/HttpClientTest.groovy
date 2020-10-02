@@ -412,12 +412,12 @@ abstract class HttpClientTest extends AgentTestRunner {
     def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName expectedOperationName(method)
-      spanKind CLIENT
+      name expectedOperationName(method)
+      kind CLIENT
       errored exception != null
       if (exception) {
         errorEvent(exception.class, exception.message)
@@ -442,11 +442,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
     traces.span(index) {
-      operationName "test-http-server"
-      spanKind SERVER
+      name "test-http-server"
+      kind SERVER
       errored false
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }

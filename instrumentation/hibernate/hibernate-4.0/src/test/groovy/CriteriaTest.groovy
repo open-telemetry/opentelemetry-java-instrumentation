@@ -40,22 +40,22 @@ class CriteriaTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "Criteria.$methodName"
-          spanKind INTERNAL
+          name "Criteria.$methodName"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -66,8 +66,8 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }

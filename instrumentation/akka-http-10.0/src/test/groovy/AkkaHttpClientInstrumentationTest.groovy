@@ -74,9 +74,9 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          parent()
-          operationName HttpClientTracer.DEFAULT_SPAN_NAME
-          spanKind CLIENT
+          hasNoParent()
+          name HttpClientTracer.DEFAULT_SPAN_NAME
+          kind CLIENT
           errored true
           errorEvent(NullPointerException)
         }

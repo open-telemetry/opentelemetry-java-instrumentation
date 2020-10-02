@@ -85,8 +85,8 @@ class RediscalaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "Set"
-          spanKind CLIENT
+          name "Set"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Set"
@@ -113,8 +113,8 @@ class RediscalaClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "Set"
-          spanKind CLIENT
+          name "Set"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Set"
@@ -123,8 +123,8 @@ class RediscalaClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "Get"
-          spanKind CLIENT
+          name "Get"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key()}" "Get"

@@ -77,8 +77,8 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "TestController.${endpoint.name().toLowerCase()}"
-      spanKind INTERNAL
+      name "TestController.${endpoint.name().toLowerCase()}"
+      kind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       if (endpoint == EXCEPTION) {
@@ -90,14 +90,14 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
-      spanKind SERVER
+      name endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
@@ -118,8 +118,8 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "BasicErrorController.error"
-      spanKind INTERNAL
+      name "BasicErrorController.error"
+      kind INTERNAL
       errored false
       childOf((SpanData) parent)
       attributes {

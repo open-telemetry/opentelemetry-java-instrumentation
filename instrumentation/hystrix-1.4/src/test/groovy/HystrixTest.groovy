@@ -60,14 +60,14 @@ class HystrixTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "ExampleGroup.HystrixTest\$1.execute"
+          name "ExampleGroup.HystrixTest\$1.execute"
           childOf span(0)
           errored false
           attributes {
@@ -77,7 +77,7 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "tracedMethod"
+          name "tracedMethod"
           childOf span(1)
           errored false
           attributes {
@@ -123,14 +123,14 @@ class HystrixTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "ExampleGroup.HystrixTest\$2.execute"
+          name "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
           errored true
           errorEvent(IllegalArgumentException)
@@ -141,7 +141,7 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "ExampleGroup.HystrixTest\$2.fallback"
+          name "ExampleGroup.HystrixTest\$2.fallback"
           childOf span(1)
           errored false
           attributes {

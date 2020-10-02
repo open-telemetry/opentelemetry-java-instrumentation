@@ -46,8 +46,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
-          spanKind CLIENT
+          name "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -72,8 +72,8 @@ class SpringJpaTest extends AgentTestRunner {
       if (extraTrace) {
         trace(0, 1) {
           span(0) {
-            operationName "call next value for hibernate_sequence"
-            spanKind CLIENT
+            name "call next value for hibernate_sequence"
+            kind CLIENT
             attributes {
               "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
               "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -86,8 +86,8 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(extraTrace ? 1 : 0, 1) {
         span(0) {
-          operationName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
-          spanKind CLIENT
+          name ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -109,8 +109,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-          spanKind CLIENT
+          name "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -122,8 +122,8 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "update Customer set firstName=?, lastName=? where id=?"
-          spanKind CLIENT
+          name "update Customer set firstName=?, lastName=? where id=?"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -145,8 +145,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
-          spanKind CLIENT
+          name "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -166,8 +166,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-          spanKind CLIENT
+          name "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"
@@ -179,8 +179,8 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "delete from Customer where id=?"
-          spanKind CLIENT
+          name "delete from Customer where id=?"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key()}" "test"

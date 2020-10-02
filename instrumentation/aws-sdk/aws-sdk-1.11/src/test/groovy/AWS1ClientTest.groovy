@@ -147,10 +147,10 @@ class AWS1ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address"
@@ -223,11 +223,11 @@ class AWS1ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored true
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:${UNUSABLE_PORT}"
@@ -271,11 +271,11 @@ class AWS1ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.HeadBucket"
-          spanKind CLIENT
+          name "S3.HeadBucket"
+          kind CLIENT
           errored true
           errorEvent RuntimeException, "bad handler"
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "https://s3.amazonaws.com"
@@ -316,15 +316,15 @@ class AWS1ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.GetObject"
-          spanKind CLIENT
+          name "S3.GetObject"
+          kind CLIENT
           errored true
           try {
             errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           } catch (AssertionError e) {
             errorEvent SdkClientException, "Unable to execute HTTP request: Request did not complete before the request timeout configuration."
           }
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address"

@@ -47,7 +47,7 @@ class TraceConfigTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "ConfigTracedCallable.call"
+          name "ConfigTracedCallable.call"
           attributes {
           }
         }

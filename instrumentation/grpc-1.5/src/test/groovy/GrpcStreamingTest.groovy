@@ -114,9 +114,9 @@ class GrpcStreamingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "example.Greeter/Conversation"
-          spanKind CLIENT
-          parent()
+          name "example.Greeter/Conversation"
+          kind CLIENT
+          hasNoParent()
           errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
@@ -137,8 +137,8 @@ class GrpcStreamingTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "example.Greeter/Conversation"
-          spanKind SERVER
+          name "example.Greeter/Conversation"
+          kind SERVER
           childOf span(0)
           errored false
           attributes {
@@ -167,12 +167,12 @@ class GrpcStreamingTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name | clientMessageCount | serverMessageCount
-    "A"  | 1                  | 1
-    "B"  | 2                  | 1
-    "C"  | 1                  | 2
-    "D"  | 2                  | 2
-    "E"  | 3                  | 3
+    paramName | clientMessageCount | serverMessageCount
+    "A"       | 1                  | 1
+    "B"       | 2                  | 1
+    "C"       | 1                  | 2
+    "D"       | 2                  | 2
+    "E"       | 3                  | 3
 
     clientRange = 1..clientMessageCount
     serverRange = 1..serverMessageCount

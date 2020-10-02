@@ -52,7 +52,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "AnnotationTracedCallable.call"
+          name "AnnotationTracedCallable.call"
           attributes {
           }
         }

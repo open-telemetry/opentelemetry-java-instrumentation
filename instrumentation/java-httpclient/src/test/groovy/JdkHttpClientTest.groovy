@@ -75,9 +75,9 @@ abstract class JdkHttpClientTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         span(0) {
-          parent()
-          operationName expectedOperationName(method)
-          spanKind CLIENT
+          hasNoParent()
+          name expectedOperationName(method)
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

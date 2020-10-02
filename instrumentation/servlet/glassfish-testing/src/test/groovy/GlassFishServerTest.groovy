@@ -83,14 +83,14 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName entryPointName()
-      spanKind SERVER
+      name entryPointName()
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)

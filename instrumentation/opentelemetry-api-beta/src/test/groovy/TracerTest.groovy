@@ -48,9 +48,9 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
-          spanKind io.opentelemetry.trace.Span.Kind.PRODUCER
-          parent()
+          name "test"
+          kind io.opentelemetry.trace.Span.Kind.PRODUCER
+          hasNoParent()
           status io.opentelemetry.trace.Status.ERROR
           attributes {
             "string" "1"
@@ -79,13 +79,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -110,13 +110,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -142,13 +142,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -170,13 +170,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -199,16 +199,16 @@ class TracerTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          operationName "test"
-          parent()
+          name "test"
+          hasNoParent()
           attributes {
           }
         }
@@ -227,8 +227,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }
@@ -247,7 +247,7 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           event(0) {
             eventName("exception")
             attributes {
@@ -275,7 +275,7 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           event(0) {
             eventName("exception")
             attributes {
@@ -304,8 +304,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }
@@ -326,8 +326,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }

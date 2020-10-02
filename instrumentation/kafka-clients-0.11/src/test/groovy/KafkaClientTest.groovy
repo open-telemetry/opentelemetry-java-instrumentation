@@ -105,16 +105,16 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(1)
           attributes {
@@ -187,16 +187,16 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(1)
           attributes {
@@ -262,18 +262,18 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 2) {
         // PRODUCER span 0
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "tombstone" true
           }
         }
         // CONSUMER span 0
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -329,17 +329,17 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "partition" { it >= 0 }
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -426,10 +426,10 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
@@ -448,16 +448,16 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -482,16 +482,16 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind PRODUCER
+          name SHARED_TOPIC
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -503,10 +503,10 @@ class KafkaClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName SHARED_TOPIC
-          spanKind CONSUMER
+          name SHARED_TOPIC
+          kind CONSUMER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "partition" { it >= 0 }
             "offset" 0

@@ -69,16 +69,16 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
+          name("my_function")
+          kind SERVER
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
         span(1) {
-          operationName("queue1 process")
-          spanKind CONSUMER
-          parentId(span(0).spanId)
+          name("queue1 process")
+          kind CONSUMER
+          parentSpanId(span(0).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
@@ -114,16 +114,16 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
+          name("my_function")
+          kind SERVER
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
         span(1) {
-          operationName("multiple_sources process")
-          spanKind CONSUMER
-          parentId(span(0).spanId)
+          name("multiple_sources process")
+          kind CONSUMER
+          parentSpanId(span(0).spanId)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "AmazonSQS"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"

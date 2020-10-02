@@ -81,14 +81,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CrudRepository.findAll"
-          spanKind INTERNAL
+          name "CrudRepository.findAll"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "SearchAction"
-          spanKind CLIENT
+          name "SearchAction"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -118,14 +118,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "ElasticsearchRepository.index"
-          spanKind INTERNAL
+          name "ElasticsearchRepository.index"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "IndexAction"
-          spanKind CLIENT
+          name "IndexAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -142,8 +142,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "PutMappingAction"
-          spanKind CLIENT
+          name "PutMappingAction"
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -153,8 +153,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName "RefreshAction"
-          spanKind CLIENT
+          name "RefreshAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -178,14 +178,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CrudRepository.findById"
-          spanKind INTERNAL
+          name "CrudRepository.findById"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -213,14 +213,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 3) {
         span(0) {
-          operationName "ElasticsearchRepository.index"
-          spanKind INTERNAL
+          name "ElasticsearchRepository.index"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "IndexAction"
-          spanKind CLIENT
+          name "IndexAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -237,8 +237,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "RefreshAction"
-          spanKind CLIENT
+          name "RefreshAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -254,14 +254,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 2) {
         span(0) {
-          operationName "CrudRepository.findById"
-          spanKind INTERNAL
+          name "CrudRepository.findById"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "GetAction"
-          spanKind CLIENT
+          name "GetAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -288,14 +288,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 3) {
         span(0) {
-          operationName "CrudRepository.deleteById"
-          spanKind INTERNAL
+          name "CrudRepository.deleteById"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "DeleteAction"
-          spanKind CLIENT
+          name "DeleteAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -311,8 +311,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "RefreshAction"
-          spanKind CLIENT
+          name "RefreshAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -329,14 +329,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
       trace(1, 2) {
         span(0) {
-          operationName "CrudRepository.findAll"
-          spanKind INTERNAL
+          name "CrudRepository.findAll"
+          kind INTERNAL
           attributes {
           }
         }
         span(1) {
-          operationName "SearchAction"
-          spanKind CLIENT
+          name "SearchAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"

@@ -56,13 +56,13 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, workSpans + 2) {
         span(0) {
-          operationName "trace-parent"
-          parent()
+          name "trace-parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "publisher-parent"
+          name "publisher-parent"
           childOf span(0)
           attributes {
           }
@@ -72,7 +72,7 @@ class ReactorCoreTest extends AgentTestRunner {
 
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
-            operationName "add one"
+            name "add one"
             childOf span(1)
             attributes {
             }
@@ -82,7 +82,7 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name                  | expected | workSpans | publisherSupplier
+    paramName             | expected | workSpans | publisherSupplier
     "basic mono"          | 2        | 1         | { -> Mono.just(1).map(addOne) }
     "two operations mono" | 4        | 2         | { -> Mono.just(2).map(addOne).map(addOne) }
     "delayed mono"        | 4        | 1         | { ->
@@ -118,10 +118,10 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace-parent"
+          name "trace-parent"
           errored true
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
-          parent()
+          hasNoParent()
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
@@ -133,9 +133,9 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name   | publisherSupplier
-    "mono" | { -> Mono.error(new RuntimeException(EXCEPTION_MESSAGE)) }
-    "flux" | { -> Flux.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    paramName   | publisherSupplier
+    "mono"      | { -> Mono.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "flux"      | { -> Flux.error(new RuntimeException(EXCEPTION_MESSAGE)) }
   }
 
   def "Publisher step '#name' test"() {
@@ -149,10 +149,10 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, workSpans + 2) {
         span(0) {
-          operationName "trace-parent"
+          name "trace-parent"
           errored true
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
-          parent()
+          hasNoParent()
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
@@ -163,7 +163,7 @@ class ReactorCoreTest extends AgentTestRunner {
 
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
-            operationName "add one"
+            name "add one"
             childOf span(1)
             attributes {
             }
@@ -173,7 +173,7 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name                 | workSpans | publisherSupplier
+    paramName            | workSpans | publisherSupplier
     "basic mono failure" | 1         | { -> Mono.just(1).map(addOne).map({ throwException() }) }
     "basic flux failure" | 1         | { ->
       Flux.fromIterable([5, 6]).map(addOne).map({ throwException() })
@@ -188,8 +188,8 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace-parent"
-          parent()
+          name "trace-parent"
+          hasNoParent()
           attributes {
           }
         }
@@ -199,7 +199,7 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name         | publisherSupplier
+    paramName    | publisherSupplier
     "basic mono" | { -> Mono.just(1) }
     "basic flux" | { -> Flux.fromIterable([5, 6]) }
   }
@@ -212,8 +212,8 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, workSpans + 2) {
         span(0) {
-          operationName "trace-parent"
-          parent()
+          name "trace-parent"
+          hasNoParent()
           attributes {
           }
         }
@@ -222,7 +222,7 @@ class ReactorCoreTest extends AgentTestRunner {
 
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
-            operationName "add one"
+            name "add one"
             childOf span(1)
             attributes {
             }
@@ -232,7 +232,7 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name         | workSpans | publisherSupplier
+    paramName    | workSpans | publisherSupplier
     "basic mono" | 3         | { ->
       Mono.just(1).map(addOne).map(addOne).then(Mono.just(1).map(addOne))
     }
@@ -299,7 +299,7 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    name         | workItems | publisherSupplier
+    paramName    | workItems | publisherSupplier
     "basic mono" | 1         | { -> Mono.just(1).map(addOne) }
     "basic flux" | 2         | { -> Flux.fromIterable([1, 2]).map(addOne) }
   }

@@ -67,9 +67,9 @@ abstract class JaxRsClientTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          parent()
-          operationName expectedOperationName(method)
-          spanKind CLIENT
+          hasNoParent()
+          name expectedOperationName(method)
+          kind CLIENT
           errored true
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

@@ -80,8 +80,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -94,8 +94,8 @@ class RedissonClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -119,8 +119,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET;SET"
-          spanKind CLIENT
+          name "SET;SET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -142,8 +142,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "RPUSH"
-          spanKind CLIENT
+          name "RPUSH"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -166,8 +166,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "EVAL"
-          spanKind CLIENT
+          name "EVAL"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -180,8 +180,8 @@ class RedissonClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "HGET"
-          spanKind CLIENT
+          name "HGET"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -203,8 +203,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SADD"
-          spanKind CLIENT
+          name "SADD"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -230,8 +230,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "ZADD"
-          spanKind CLIENT
+          name "ZADD"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -253,8 +253,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "INCR"
-          spanKind CLIENT
+          name "INCR"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -277,8 +277,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "EVAL"
-          spanKind CLIENT
+          name "EVAL"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -291,8 +291,8 @@ class RedissonClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "EVAL"
-          spanKind CLIENT
+          name "EVAL"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"

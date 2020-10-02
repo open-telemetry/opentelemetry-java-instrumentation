@@ -106,8 +106,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -130,8 +130,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -162,8 +162,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -192,8 +192,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "RANDOMKEY"
-          spanKind CLIENT
+          name "RANDOMKEY"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -212,8 +212,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "COMMAND"
-          spanKind CLIENT
+          name "COMMAND"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -233,8 +233,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "COMMAND"
-          spanKind CLIENT
+          name "COMMAND"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -267,8 +267,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "DEBUG"
-          spanKind CLIENT
+          name "DEBUG"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -287,8 +287,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SHUTDOWN"
-          spanKind CLIENT
+          name "SHUTDOWN"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -311,14 +311,14 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test-parent"
+          name "test-parent"
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -327,8 +327,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -352,14 +352,14 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test-parent"
+          name "test-parent"
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -368,8 +368,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -394,14 +394,14 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test-parent"
+          name "test-parent"
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {
@@ -410,8 +410,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           childOf span(0)
           attributes {

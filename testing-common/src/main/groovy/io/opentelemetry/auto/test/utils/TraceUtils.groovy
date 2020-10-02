@@ -81,11 +81,11 @@ class TraceUtils {
   static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName operation
+      name operation
       errored exception != null
       if (exception) {
         errorEvent(exception.class, exception.message)

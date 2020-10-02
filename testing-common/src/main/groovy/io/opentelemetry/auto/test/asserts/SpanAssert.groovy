@@ -67,44 +67,44 @@ class SpanAssert {
     assertEvent(span.events.get(index), spec)
   }
 
-  def assertSpanNameContains(String spanName, String... shouldContainArr) {
+  def assertNameContains(String spanName, String... shouldContainArr) {
     for (String shouldContain : shouldContainArr) {
       assert spanName.contains(shouldContain)
     }
   }
 
-  def operationName(String name) {
+  def name(String name) {
     assert span.name == name
     checked.name = true
   }
 
-  def operationName(Pattern pattern) {
+  def name(Pattern pattern) {
     assert span.name =~ pattern
     checked.name = true
   }
 
-  def operationName(Closure spec) {
+  def name(Closure spec) {
     assert ((Closure) spec).call(span.name)
     checked.name = true
   }
 
-  def operationNameContains(String... operationNameParts) {
-    assertSpanNameContains(span.name, operationNameParts)
+  def nameContains(String... nameParts) {
+    assertNameContains(span.name, nameParts)
     checked.name = true
   }
 
-  def spanKind(Span.Kind spanKind) {
-    assert span.kind == spanKind
+  def kind(Span.Kind kind) {
+    assert span.kind == kind
     checked.kind = true
   }
 
-  def parent() {
+  def hasNoParent() {
     assert !SpanId.isValid(span.parentSpanId)
     checked.parentSpanId = true
   }
 
-  def parentId(String parentId) {
-    assert span.parentSpanId == parentId
+  def parentSpanId(String parentSpanId) {
+    assert span.parentSpanId == parentSpanId
     checked.parentId = true
   }
 
@@ -114,7 +114,7 @@ class SpanAssert {
   }
 
   def childOf(SpanData parent) {
-    parentId(parent.spanId)
+    parentSpanId(parent.spanId)
     traceId(parent.traceId)
   }
 

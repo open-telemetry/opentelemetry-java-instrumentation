@@ -81,9 +81,9 @@ class RatpackOtherTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "/$route"
-          spanKind SERVER
-          parent()
+          name "/$route"
+          kind SERVER
+          hasNoParent()
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -97,8 +97,8 @@ class RatpackOtherTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "/$route"
-          spanKind INTERNAL
+          name "/$route"
+          kind INTERNAL
           childOf span(0)
           errored false
           attributes {

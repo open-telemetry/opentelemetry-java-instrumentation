@@ -126,8 +126,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
+          name "CONNECT"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
@@ -159,8 +159,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
+          name "CONNECT"
+          kind CLIENT
           errored true
           errorEvent RedisConnectionException, String
           attributes {
@@ -185,8 +185,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -218,8 +218,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -265,8 +265,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -298,8 +298,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "RANDOMKEY"
-          spanKind CLIENT
+          name "RANDOMKEY"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -350,8 +350,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "HMSET"
-          spanKind CLIENT
+          name "HMSET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -361,8 +361,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "HGETALL"
-          spanKind CLIENT
+          name "HGETALL"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -402,8 +402,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "DEL"
-          spanKind CLIENT
+          name "DEL"
+          kind CLIENT
           errored true
           errorEvent(IllegalStateException, "TestException")
           attributes {
@@ -438,8 +438,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SADD"
-          spanKind CLIENT
+          name "SADD"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -459,8 +459,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "DEBUG"
-          spanKind CLIENT
+          name "DEBUG"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
@@ -480,8 +480,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SHUTDOWN"
-          spanKind CLIENT
+          name "SHUTDOWN"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "redis"

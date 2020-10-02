@@ -54,8 +54,8 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.app.Greeter/hello"
-          spanKind CLIENT
+          name "rmi.app.Greeter/hello"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
@@ -64,8 +64,8 @@ class RmiTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "rmi.app.Server/hello"
-          spanKind SERVER
+          name "rmi.app.Server/hello"
+          kind SERVER
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
             "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Server"
@@ -115,8 +115,8 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, thrownException)
         span(1) {
-          operationName "rmi.app.Greeter/exceptional"
-          spanKind CLIENT
+          name "rmi.app.Greeter/exceptional"
+          kind CLIENT
           childOf span(0)
           errored true
           errorEvent(RuntimeException, String)
@@ -128,8 +128,8 @@ class RmiTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "rmi.app.Server/exceptional"
-          spanKind SERVER
+          name "rmi.app.Server/exceptional"
+          kind SERVER
           errored true
           errorEvent(RuntimeException, String)
           attributes {
@@ -162,8 +162,8 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.app.Greeter/hello"
-          spanKind CLIENT
+          name "rmi.app.Greeter/hello"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
@@ -173,8 +173,8 @@ class RmiTest extends AgentTestRunner {
         }
         span(2) {
           childOf span(1)
-          operationName "rmi.app.ServerLegacy/hello"
-          spanKind SERVER
+          name "rmi.app.ServerLegacy/hello"
+          kind SERVER
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
             "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.ServerLegacy"
