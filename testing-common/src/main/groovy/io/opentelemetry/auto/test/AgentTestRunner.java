@@ -27,6 +27,7 @@ import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
+import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -34,6 +35,7 @@ import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatche
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -108,6 +110,11 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new InMemoryExporter();
+    // TODO this is probably temporary until default propagators are supplied by SDK
+    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
+    OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+        .addTextMapPropagator(HttpTraceContext.getInstance())
+        .build());
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
   }
@@ -226,9 +233,9 @@ public abstract class AgentTestRunner extends Specification {
   public static void assertTraces(
       int size,
       @ClosureParams(
-              value = SimpleType.class,
-              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          value = SimpleType.class,
+          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
@@ -238,9 +245,9 @@ public abstract class AgentTestRunner extends Specification {
       int size,
       Predicate<List<SpanData>> excludes,
       @ClosureParams(
-              value = SimpleType.class,
-              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          value = SimpleType.class,
+          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }

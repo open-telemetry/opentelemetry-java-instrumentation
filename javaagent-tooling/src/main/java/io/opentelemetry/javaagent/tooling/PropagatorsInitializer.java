@@ -58,6 +58,11 @@ public class PropagatorsInitializer {
   public static void initializePropagators(List<String> propagators) {
     /* Only override the default propagators *if* the user specified any. */
     if (propagators.size() == 0) {
+      // TODO this is probably temporary until default propagators are supplied by SDK
+      //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
+      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+          .addTextMapPropagator(HttpTraceContext.getInstance())
+          .build());
       return;
     }
 
