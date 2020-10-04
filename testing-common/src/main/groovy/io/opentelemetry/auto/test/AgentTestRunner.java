@@ -114,10 +114,15 @@ public abstract class AgentTestRunner extends Specification {
     //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
     //  currently checking against no-op implementation so that it won't override aws-lambda
     //  propagator configuration
-    if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName().equals("NoopTextMapPropagator")) {
-      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
-          .addTextMapPropagator(HttpTraceContext.getInstance())
-          .build());
+    if (OpenTelemetry.getPropagators()
+        .getTextMapPropagator()
+        .getClass()
+        .getSimpleName()
+        .equals("NoopTextMapPropagator")) {
+      OpenTelemetry.setPropagators(
+          DefaultContextPropagators.builder()
+              .addTextMapPropagator(HttpTraceContext.getInstance())
+              .build());
     }
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
@@ -237,9 +242,9 @@ public abstract class AgentTestRunner extends Specification {
   public static void assertTraces(
       int size,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
@@ -249,9 +254,9 @@ public abstract class AgentTestRunner extends Specification {
       int size,
       Predicate<List<SpanData>> excludes,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
