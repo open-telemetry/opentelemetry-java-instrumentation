@@ -98,6 +98,7 @@ class BaseDecoratorTest extends Specification {
 
     then:
     if (error) {
+      1 * span.setStatus(Status.ERROR)
       1 * span.recordException(error)
     }
     0 * _
@@ -111,6 +112,7 @@ class BaseDecoratorTest extends Specification {
     decorator.onComplete(span, status, error)
 
     then:
+    1 * span.setStatus(status)
     if (error) {
       1 * span.recordException(error)
     }

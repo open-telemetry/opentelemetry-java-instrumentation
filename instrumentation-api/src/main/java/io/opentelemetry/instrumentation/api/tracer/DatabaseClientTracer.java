@@ -25,6 +25,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -104,6 +105,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   protected void onError(Span span, Throwable throwable) {
     if (throwable != null) {
+      span.setStatus(Status.ERROR);
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }

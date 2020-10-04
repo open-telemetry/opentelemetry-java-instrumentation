@@ -22,6 +22,7 @@ import static io.opentelemetry.instrumentation.auto.spring.webflux.server.Spring
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import java.util.function.Function;
@@ -90,6 +91,7 @@ public class AdviceUtils {
     if (context != null) {
       Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
+        span.setStatus(Status.ERROR);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();

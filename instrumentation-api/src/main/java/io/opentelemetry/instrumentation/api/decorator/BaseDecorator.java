@@ -56,7 +56,7 @@ public abstract class BaseDecorator {
   public Span onError(Span span, Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      onComplete(span, Status.UNSET, throwable);
+      onComplete(span, Status.ERROR, throwable);
     }
     return span;
   }

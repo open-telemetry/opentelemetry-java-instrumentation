@@ -140,7 +140,7 @@ class SpanAssert {
 
   def errored(boolean errored) {
     if (errored) {
-      assert span.status != Status.OK
+      assert span.status == Status.ERROR
     } else {
       assert span.status == Status.UNSET
     }

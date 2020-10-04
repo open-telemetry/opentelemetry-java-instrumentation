@@ -19,6 +19,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -56,6 +57,7 @@ public class WithSpanAspect {
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
+      span.setStatus(Status.ERROR);
       span.recordException(t);
       throw t;
     } finally {
