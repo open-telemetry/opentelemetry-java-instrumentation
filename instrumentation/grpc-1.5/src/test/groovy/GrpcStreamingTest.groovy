@@ -27,7 +27,6 @@ import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
