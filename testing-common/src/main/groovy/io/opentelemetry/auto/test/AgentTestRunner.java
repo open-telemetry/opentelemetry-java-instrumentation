@@ -112,9 +112,13 @@ public abstract class AgentTestRunner extends Specification {
     TEST_WRITER = new InMemoryExporter();
     // TODO this is probably temporary until default propagators are supplied by SDK
     //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-    OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
-        .addTextMapPropagator(HttpTraceContext.getInstance())
-        .build());
+    //  currently checking against no-op implementation so that it won't override aws-lambda
+    //  propagator configuration
+    if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName().equals("NoopTextMapPropagator")) {
+      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+          .addTextMapPropagator(HttpTraceContext.getInstance())
+          .build());
+    }
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
   }
