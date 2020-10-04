@@ -31,31 +31,31 @@ class HttpStatusConverterTest extends Specification {
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
     where:
     httpStatus | expectedStatus
-    100        | Status.OK
-    101        | Status.OK
-    102        | Status.OK
-    103        | Status.OK
+    100        | Status.UNSET
+    101        | Status.UNSET
+    102        | Status.UNSET
+    103        | Status.UNSET
 
-    200        | Status.OK
-    201        | Status.OK
-    202        | Status.OK
-    203        | Status.OK
-    204        | Status.OK
-    205        | Status.OK
-    206        | Status.OK
-    207        | Status.OK
-    208        | Status.OK
-    226        | Status.OK
+    200        | Status.UNSET
+    201        | Status.UNSET
+    202        | Status.UNSET
+    203        | Status.UNSET
+    204        | Status.UNSET
+    205        | Status.UNSET
+    206        | Status.UNSET
+    207        | Status.UNSET
+    208        | Status.UNSET
+    226        | Status.UNSET
 
-    300        | Status.OK
-    301        | Status.OK
-    302        | Status.OK
-    303        | Status.OK
-    304        | Status.OK
-    305        | Status.OK
-    306        | Status.OK
-    307        | Status.OK
-    308        | Status.OK
+    300        | Status.UNSET
+    301        | Status.UNSET
+    302        | Status.UNSET
+    303        | Status.UNSET
+    304        | Status.UNSET
+    305        | Status.UNSET
+    306        | Status.UNSET
+    307        | Status.UNSET
+    308        | Status.UNSET
 
     400        | Status.ERROR
     401        | Status.ERROR
