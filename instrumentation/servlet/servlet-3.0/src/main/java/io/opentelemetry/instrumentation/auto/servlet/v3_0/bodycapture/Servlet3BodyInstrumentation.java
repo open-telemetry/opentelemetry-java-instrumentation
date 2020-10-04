@@ -39,6 +39,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * This instrumentation adds request, response headers and bodies to the current active span. Hence
+ * the Servlet3Instrumentation has to run before to set the current active span.
+ */
 @AutoService(Instrumenter.class)
 public class Servlet3BodyInstrumentation extends Instrumenter.Default {
 
