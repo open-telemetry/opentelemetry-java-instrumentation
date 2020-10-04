@@ -32,7 +32,6 @@ public final class GrpcHelper {
 
   static {
     EnumMap<Code, CanonicalCode> codeMap = new EnumMap<>(Code.class);
-    codeMap.put(Code.OK, CanonicalCode.OK);
     codeMap.put(Code.CANCELLED, CanonicalCode.ERROR);
     codeMap.put(Code.INVALID_ARGUMENT, CanonicalCode.ERROR);
     codeMap.put(Code.DEADLINE_EXCEEDED, CanonicalCode.ERROR);
@@ -48,7 +47,7 @@ public final class GrpcHelper {
     codeMap.put(Code.UNAVAILABLE, CanonicalCode.ERROR);
     codeMap.put(Code.DATA_LOSS, CanonicalCode.ERROR);
     codeMap.put(Code.UNAUTHENTICATED, CanonicalCode.ERROR);
-    codeMap.put(Code.UNKNOWN, CanonicalCode.UNSET);
+    codeMap.put(Code.UNKNOWN, CanonicalCode.ERROR);
     CODE_MAP = Collections.unmodifiableMap(codeMap);
   }
 

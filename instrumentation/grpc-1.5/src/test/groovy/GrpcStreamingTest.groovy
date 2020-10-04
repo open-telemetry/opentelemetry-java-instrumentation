@@ -119,7 +119,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored false
-          status(Status.OK)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -143,7 +142,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored false
-          status(Status.OK)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"

@@ -77,7 +77,6 @@ class GrpcTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -98,7 +97,6 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(1)
           errored false
-          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -249,7 +247,6 @@ class GrpcTest extends AgentTestRunner {
           errored true
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
-          status(io.opentelemetry.trace.Status.UNKNOWN)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"

@@ -26,7 +26,11 @@ class GrpcHelperTest extends Specification {
     def status = GrpcHelper.statusFromGrpcStatus(grpcStatus)
 
     then:
-    status.canonicalCode.name() == grpcStatus.code.name()
+    if (grpcStatus == Status.OK) {
+      status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.UNSET
+    } else {
+      status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.ERROR
+    }
     status.description == null
 
     // Considering history of status, if we compare all values of the gRPC status by name, we will
@@ -40,7 +44,7 @@ class GrpcHelperTest extends Specification {
     def status = GrpcHelper.statusFromGrpcStatus(Status.INVALID_ARGUMENT.withDescription("bad argument"))
 
     then:
-    status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.INVALID_ARGUMENT
+    status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.ERROR
     status.description == "bad argument"
   }
 }
