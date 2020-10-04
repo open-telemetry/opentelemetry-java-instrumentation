@@ -46,7 +46,7 @@ abstract class InstrumentationTestRunner extends Specification {
     if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
       OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
         .addTextMapPropagator(HttpTraceContext.getInstance())
-        .build());
+        .build())
     }
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER)
   }
