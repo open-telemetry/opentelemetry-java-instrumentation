@@ -31,11 +31,11 @@ import spock.lang.Shared
 @Requires({"true" != System.getenv("CIRCLECI")})
 class JMS1Test extends AgentTestRunner {
 
-  private static final Logger log = LoggerFactory.getLogger(JMS1Test.class)
+  private static final Logger logger = LoggerFactory.getLogger(JMS1Test)
 
   public static GenericContainer activemq = new GenericContainer("rmohr/activemq")
     .withExposedPorts(61616, 8161)
-    .withLogConsumer(new Slf4jLogConsumer(log))
+    .withLogConsumer(new Slf4jLogConsumer(logger))
 
   @Shared
   String messageText = "a message"
