@@ -64,7 +64,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          spanKind CLIENT
+          kind CLIENT
           errored true
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

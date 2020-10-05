@@ -51,13 +51,13 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName parentSpanName != null ? parentSpanName : "test.span"
+          name parentSpanName != null ? parentSpanName : "test.span"
           attributes {
           }
         }
         span(1) {
           childOf span(0)
-          operationName controllerName
+          name controllerName
           attributes {
           }
         }
@@ -100,14 +100,14 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName parentResourceName
+          name parentResourceName
           attributes {
           }
         }
         span(1) {
           childOf span(0)
-          operationName controller1Name
-          spanKind INTERNAL
+          name controller1Name
+          kind INTERNAL
           attributes {
           }
         }

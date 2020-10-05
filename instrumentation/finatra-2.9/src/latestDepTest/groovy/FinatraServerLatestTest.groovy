@@ -84,8 +84,8 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "FinatraController"
-      spanKind INTERNAL
+      name "FinatraController"
+      kind INTERNAL
       childOf(parent as SpanData)
       // Finatra doesn't propagate the stack trace or exception to the instrumentation
       // so the normal errorAttributes() method can't be used

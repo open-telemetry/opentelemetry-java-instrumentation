@@ -93,9 +93,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -110,7 +110,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /$jspFileName"
+          name "Compile /$jspFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -120,7 +120,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /$jspFileName"
+          name "Render /$jspFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -154,9 +154,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -171,7 +171,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /getQuery.jsp"
+          name "Compile /getQuery.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -181,7 +181,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /getQuery.jsp"
+          name "Render /getQuery.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -212,9 +212,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -229,7 +229,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /post.jsp"
+          name "Compile /post.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -239,7 +239,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /post.jsp"
+          name "Render /post.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -267,9 +267,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored true
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
@@ -296,7 +296,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /$jspFileName"
+          name "Compile /$jspFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -306,7 +306,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /$jspFileName"
+          name "Render /$jspFileName"
           errored true
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
@@ -351,9 +351,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -368,7 +368,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /includes/includeHtml.jsp"
+          name "Compile /includes/includeHtml.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -378,7 +378,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /includes/includeHtml.jsp"
+          name "Render /includes/includeHtml.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -405,9 +405,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 7) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -422,7 +422,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /includes/includeMulti.jsp"
+          name "Compile /includes/includeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -432,7 +432,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /includes/includeMulti.jsp"
+          name "Render /includes/includeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -441,7 +441,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "Compile /common/javaLoopH2.jsp"
+          name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -451,7 +451,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(2)
-          operationName "Render /common/javaLoopH2.jsp"
+          name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -460,7 +460,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(5) {
           childOf span(2)
-          operationName "Compile /common/javaLoopH2.jsp"
+          name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -470,7 +470,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(2)
-          operationName "Render /common/javaLoopH2.jsp"
+          name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -497,9 +497,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored true
           errorEvent(JasperException, String)
           attributes {
@@ -515,7 +515,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /$jspFileName"
+          name "Compile /$jspFileName"
           errored true
           errorEvent(JasperException, String)
           attributes {
@@ -550,10 +550,10 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          parent()
+          hasNoParent()
           // serviceName jspWebappContext
-          operationName expectedOperationName()
-          spanKind SERVER
+          name expectedOperationName()
+          kind SERVER
           // FIXME: this is not a great span name for serving static content.
           // spanName "GET /$jspWebappContext/$staticFile"
           errored false

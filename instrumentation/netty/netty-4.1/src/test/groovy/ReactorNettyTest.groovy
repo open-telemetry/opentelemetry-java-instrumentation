@@ -64,12 +64,12 @@ class ReactorNettyTest extends AgentTestRunner {
     def userAgent = "ReactorNetty/"
     trace.span(index) {
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName "HTTP GET"
-      spanKind CLIENT
+      name "HTTP GET"
+      kind CLIENT
       errored false
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

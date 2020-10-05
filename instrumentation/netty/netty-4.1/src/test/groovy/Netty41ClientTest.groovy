@@ -94,7 +94,7 @@ class Netty41ClientTest extends HttpClientTest {
         // for up to a total of 10 seconds (default connection time limit)
         for (def i = 1; i < size; i++) {
           span(i) {
-            operationName "CONNECT"
+            name "CONNECT"
             childOf span(0)
             errored true
             errorEvent(AbstractChannel.AnnotatedConnectException, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
@@ -195,7 +195,7 @@ class Netty41ClientTest extends HttpClientTest {
         basicSpan(it, 0, "parent")
         span(1) {
           childOf span(0)
-          operationName "tracedMethod"
+          name "tracedMethod"
           errored false
           attributes {
           }

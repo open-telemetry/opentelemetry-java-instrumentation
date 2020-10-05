@@ -148,8 +148,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SET"
-          spanKind CLIENT
+          name "SET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
@@ -191,8 +191,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
@@ -248,8 +248,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET"
-          spanKind CLIENT
+          name "GET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
@@ -291,8 +291,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "RANDOMKEY"
-          spanKind CLIENT
+          name "RANDOMKEY"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
@@ -352,8 +352,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "HMSET"
-          spanKind CLIENT
+          name "HMSET"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
@@ -373,8 +373,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "HGETALL"
-          spanKind CLIENT
+          name "HGETALL"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

@@ -12,13 +12,13 @@ import io.opentelemetry.trace.attributes.SemanticAttributes
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
   // Of the class hierarchy of these tests
-  static void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
+  static void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      operationName name
-      spanKind CLIENT
+      name spanName
+      kind CLIENT
       errored false
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
@@ -41,7 +41,7 @@ class CouchbaseSpanUtil {
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
 
-        "${SemanticAttributes.DB_STATEMENT.key()}" name
+        "${SemanticAttributes.DB_STATEMENT.key()}" spanName
       }
     }
   }

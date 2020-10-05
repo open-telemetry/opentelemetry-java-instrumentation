@@ -46,22 +46,22 @@ class SessionTest extends AbstractHibernateTest {
       for (int i = 0; i < sessionImplementations.size(); i++) {
         trace(i, 4) {
           span(0) {
-            operationName "Session"
-            spanKind INTERNAL
-            parent()
+            name "Session"
+            kind INTERNAL
+            hasNoParent()
             attributes {
             }
           }
           span(1) {
-            operationName "Session.$methodName $resource"
-            spanKind INTERNAL
+            name "Session.$methodName $resource"
+            kind INTERNAL
             childOf span(0)
             attributes {
             }
           }
           span(2) {
             childOf span(1)
-            spanKind CLIENT
+            kind CLIENT
             attributes {
               "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
               "${SemanticAttributes.DB_NAME.key()}" "db1"
@@ -71,8 +71,8 @@ class SessionTest extends AbstractHibernateTest {
             }
           }
           span(3) {
-            operationName "Transaction.commit"
-            spanKind INTERNAL
+            name "Transaction.commit"
+            kind INTERNAL
             childOf span(0)
             attributes {
             }
@@ -128,22 +128,22 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "Session.$methodName $resource"
-          spanKind INTERNAL
+          name "Session.$methodName $resource"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -154,14 +154,14 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(4) {
-          spanKind CLIENT
+          kind CLIENT
           childOf span(3)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -209,22 +209,22 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "Session.replicate"
-          spanKind INTERNAL
+          name "Session.replicate"
+          kind INTERNAL
           childOf span(0)
           errored(true)
           errorEvent(MappingException, "Unknown entity: java.lang.Long")
         }
         span(2) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
@@ -254,28 +254,28 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "Session.$methodName $resource"
-          spanKind INTERNAL
+          name "Session.$methodName $resource"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(3) {
-          spanKind CLIENT
+          kind CLIENT
           childOf span(2)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -333,21 +333,21 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName resource
-          spanKind INTERNAL
+          name resource
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          spanKind CLIENT
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -358,8 +358,8 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
@@ -400,41 +400,41 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 12) {
         span(0) {
-          operationName "overlapping Sessions"
+          name "overlapping Sessions"
           attributes {
           }
         }
         span(1) {
-          operationName "Session"
-          spanKind INTERNAL
+          name "Session"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName "Session.save Value"
-          spanKind INTERNAL
+          name "Session.save Value"
+          kind INTERNAL
           childOf span(1)
           attributes {
           }
         }
         span(3) {
-          operationName "Session.delete Value"
-          spanKind INTERNAL
+          name "Session.delete Value"
+          kind INTERNAL
           childOf span(1)
           attributes {
           }
         }
         span(4) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(1)
           attributes {
           }
         }
         span(5) {
-          operationName ~/^insert /
-          spanKind CLIENT
+          name ~/^insert /
+          kind CLIENT
           childOf span(4)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -445,8 +445,8 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(6) {
-          operationName ~/^delete /
-          spanKind CLIENT
+          name ~/^delete /
+          kind CLIENT
           childOf span(4)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -457,22 +457,22 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(7) {
-          operationName "Session"
-          spanKind INTERNAL
+          name "Session"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(8) {
-          operationName "Session.insert Value"
-          spanKind INTERNAL
+          name "Session.insert Value"
+          kind INTERNAL
           childOf span(7)
           attributes {
           }
         }
         span(9) {
-          operationName ~/^insert /
-          spanKind CLIENT
+          name ~/^insert /
+          kind CLIENT
           childOf span(8)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -483,15 +483,15 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(10) {
-          operationName "Session"
-          spanKind INTERNAL
+          name "Session"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(11) {
-          operationName "Session.save Value"
-          spanKind INTERNAL
+          name "Session.save Value"
+          kind INTERNAL
           childOf span(10)
           attributes {
           }

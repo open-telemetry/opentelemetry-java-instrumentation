@@ -71,14 +71,14 @@ class HystrixObservableChainTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName "ExampleGroup.HystrixObservableChainTest\$1.execute"
+          name "ExampleGroup.HystrixObservableChainTest\$1.execute"
           childOf span(0)
           errored false
           attributes {
@@ -88,14 +88,14 @@ class HystrixObservableChainTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "tracedMethod"
+          name "tracedMethod"
           childOf span(1)
           errored false
           attributes {
           }
         }
         span(3) {
-          operationName "OtherGroup.HystrixObservableChainTest\$2.execute"
+          name "OtherGroup.HystrixObservableChainTest\$2.execute"
           childOf span(1)
           errored false
           attributes {
@@ -105,7 +105,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
           }
         }
         span(4) {
-          operationName "anotherTracedMethod"
+          name "anotherTracedMethod"
           childOf span(3)
           errored false
           attributes {

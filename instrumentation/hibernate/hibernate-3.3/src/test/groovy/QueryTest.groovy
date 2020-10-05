@@ -34,21 +34,21 @@ class QueryTest extends AbstractHibernateTest {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName expectedSpanName
-          spanKind INTERNAL
+          name expectedSpanName
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          spanKind CLIENT
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -59,8 +59,8 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
@@ -70,22 +70,22 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            operationName "Session"
-            spanKind INTERNAL
-            parent()
+            name "Session"
+            kind INTERNAL
+            hasNoParent()
             attributes {
             }
           }
           span(1) {
-            operationName expectedSpanName
-            spanKind INTERNAL
+            name expectedSpanName
+            kind INTERNAL
             childOf span(0)
             attributes {
             }
           }
           span(2) {
-            operationName ~/^select /
-            spanKind CLIENT
+            name ~/^select /
+            kind CLIENT
             childOf span(1)
             attributes {
               "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -142,22 +142,22 @@ class QueryTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "from Value"
-          spanKind INTERNAL
+          name "from Value"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -168,8 +168,8 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }

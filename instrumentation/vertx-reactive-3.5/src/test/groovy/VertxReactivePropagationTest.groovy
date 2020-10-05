@@ -51,10 +51,10 @@ class VertxReactivePropagationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "/listProducts"
-          spanKind SERVER
+          name "/listProducts"
+          kind SERVER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -69,8 +69,8 @@ class VertxReactivePropagationTest extends AgentTestRunner {
         basicSpan(it, 1, "handleListProducts", span(0))
         basicSpan(it, 2, "listProducts", span(1))
         span(3) {
-          operationName "SELECT id, name, price, weight FROM products"
-          spanKind CLIENT
+          name "SELECT id, name, price, weight FROM products"
+          kind CLIENT
           childOf span(2)
           errored false
           attributes {

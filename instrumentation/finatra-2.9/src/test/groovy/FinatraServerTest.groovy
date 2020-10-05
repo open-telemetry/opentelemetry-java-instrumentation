@@ -73,8 +73,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "FinatraController"
-      spanKind INTERNAL
+      name "FinatraController"
+      kind INTERNAL
       childOf(parent as SpanData)
       // Finatra doesn't propagate the stack trace or exception to the instrumentation
       // so the normal errorAttributes() method can't be used
@@ -87,14 +87,14 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
-      spanKind SERVER
+      name endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key()}" Long

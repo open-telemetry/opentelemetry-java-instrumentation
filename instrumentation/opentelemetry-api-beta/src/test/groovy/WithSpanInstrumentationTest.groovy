@@ -35,9 +35,9 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "TracedWithSpan.otel"
-          spanKind Span.Kind.INTERNAL
-          parent()
+          name "TracedWithSpan.otel"
+          kind Span.Kind.INTERNAL
+          hasNoParent()
           errored false
           attributes {
             "providerAttr" "Otel"
@@ -55,8 +55,8 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "manualName"
-          parent()
+          name "manualName"
+          hasNoParent()
           errored false
           attributes {
             "providerAttr" "Otel"
@@ -74,9 +74,9 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "TracedWithSpan.oneOfAKind"
-          spanKind Span.Kind.PRODUCER
-          parent()
+          name "TracedWithSpan.oneOfAKind"
+          kind Span.Kind.PRODUCER
+          hasNoParent()
           errored false
           attributes {
             "providerAttr" "Otel"

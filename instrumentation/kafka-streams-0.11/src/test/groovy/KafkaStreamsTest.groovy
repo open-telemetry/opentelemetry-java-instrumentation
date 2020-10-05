@@ -126,17 +126,17 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(0, 5) {
         // PRODUCER span 0
         span(0) {
-          operationName STREAM_PENDING
-          spanKind PRODUCER
+          name STREAM_PENDING
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         // CONSUMER span 0
         span(1) {
-          operationName STREAM_PENDING
-          spanKind CONSUMER
+          name STREAM_PENDING
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -147,8 +147,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 1
         span(2) {
-          operationName STREAM_PENDING
-          spanKind CONSUMER
+          name STREAM_PENDING
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -159,8 +159,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 0
         span(3) {
-          operationName STREAM_PROCESSED
-          spanKind PRODUCER
+          name STREAM_PROCESSED
+          kind PRODUCER
           errored false
           childOf span(2)
           attributes {
@@ -168,8 +168,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // CONSUMER span 0
         span(4) {
-          operationName STREAM_PROCESSED
-          spanKind CONSUMER
+          name STREAM_PROCESSED
+          kind CONSUMER
           errored false
           childOf span(3)
           attributes {

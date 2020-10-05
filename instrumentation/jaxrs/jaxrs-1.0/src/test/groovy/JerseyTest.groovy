@@ -34,14 +34,14 @@ class JerseyTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedSpanName
+          name expectedSpanName
           attributes {
           }
         }
 
         span(1) {
           childOf span(0)
-          operationName controllerName
+          name controllerName
           attributes {
           }
         }
@@ -69,14 +69,14 @@ class JerseyTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedSpanName
+          name expectedSpanName
           attributes {
           }
         }
         span(1) {
           childOf span(0)
-          operationName controller1Name
-          spanKind INTERNAL
+          name controller1Name
+          kind INTERNAL
           attributes {
           }
         }

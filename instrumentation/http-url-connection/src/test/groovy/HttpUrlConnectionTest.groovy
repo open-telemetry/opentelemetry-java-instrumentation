@@ -78,15 +78,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
       server.distributedRequestTrace(it, 1, traces[2][1])
       trace(2, 3) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -99,8 +99,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
           }
         }
         span(2) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -152,15 +152,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -173,8 +173,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
           }
         }
         span(2) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -210,15 +210,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -269,15 +269,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
       server.distributedRequestTrace(it, 0, traces[1][1])
       trace(1, 2) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {

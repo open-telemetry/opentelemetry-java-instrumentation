@@ -70,8 +70,8 @@ class LettuceSyncClientAuthTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "AUTH"
-          spanKind CLIENT
+          name "AUTH"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

@@ -86,7 +86,7 @@ class Netty40ClientTest extends HttpClientTest {
         // for up to a total of 10 seconds (default connection time limit)
         for (def i = 1; i < size; i++) {
           span(i) {
-            operationName "CONNECT"
+            name "CONNECT"
             childOf span(0)
             errored true
             Class errorClass = ConnectException

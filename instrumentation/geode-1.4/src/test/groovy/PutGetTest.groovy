@@ -112,13 +112,13 @@ class PutGetTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "someTrace"
-          spanKind INTERNAL
+          name "someTrace"
+          kind INTERNAL
           errored false
         }
         span(1) {
-          operationName "clear"
-          spanKind CLIENT
+          name "clear"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
@@ -127,8 +127,8 @@ class PutGetTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "put"
-          spanKind CLIENT
+          name "put"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
@@ -137,8 +137,8 @@ class PutGetTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName verb
-          spanKind CLIENT
+          name verb
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "geode"

@@ -103,13 +103,13 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .socketConnectTimeout(timeout.intValue())
   }
 
-  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
+  void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      operationName name
-      spanKind CLIENT
+      name spanName
+      kind CLIENT
       errored false
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
@@ -118,7 +118,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         if (bucketName != null) {
           "${SemanticAttributes.DB_NAME.key()}" bucketName
         }
-        "${SemanticAttributes.DB_STATEMENT.key()}" name
+        "${SemanticAttributes.DB_STATEMENT.key()}" spanName
       }
     }
   }

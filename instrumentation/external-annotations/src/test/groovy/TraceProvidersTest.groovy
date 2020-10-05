@@ -33,8 +33,8 @@ class TraceProvidersTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SayTracedHello.${provider.toLowerCase()}"
-          parent()
+          name "SayTracedHello.${provider.toLowerCase()}"
+          hasNoParent()
           errored false
           attributes {
             "providerAttr" provider

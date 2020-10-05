@@ -131,9 +131,9 @@ class JMS1Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
-          parent()
-          operationName destinationType + "/" + destinationName + " receive"
-          spanKind CLIENT
+          hasNoParent()
+          name destinationType + "/" + destinationName + " receive"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
@@ -164,9 +164,9 @@ class JMS1Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
-          parent()
-          operationName destinationType + "/" + destinationName + " receive"
-          spanKind CLIENT
+          hasNoParent()
+          name destinationType + "/" + destinationName + " receive"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
@@ -212,9 +212,9 @@ class JMS1Test extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          parent()
-          operationName destinationType + "/" + destinationName + " receive"
-          spanKind CLIENT
+          hasNoParent()
+          name destinationType + "/" + destinationName + " receive"
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
@@ -242,10 +242,10 @@ class JMS1Test extends AgentTestRunner {
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
     trace.span(index) {
-      operationName destinationType + "/" + destinationName + " send"
-      spanKind PRODUCER
+      name destinationType + "/" + destinationName + " send"
+      kind PRODUCER
       errored false
-      parent()
+      hasNoParent()
       attributes {
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
         "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
@@ -258,13 +258,13 @@ class JMS1Test extends AgentTestRunner {
 
   static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
     trace.span(index) {
-      operationName destinationType + "/" + destinationName + " receive"
+      name destinationType + "/" + destinationName + " receive"
       if (messageListener) {
-        spanKind CONSUMER
+        kind CONSUMER
         childOf((SpanData) parentOrLinkedSpan)
       } else {
-        spanKind CLIENT
-        parent()
+        kind CLIENT
+        hasNoParent()
         hasLink((SpanData) parentOrLinkedSpan)
       }
       errored false
