@@ -31,7 +31,7 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
     when:
     for (int i = 1; i <= NUM_TRIES; i++) {
-      client.newCall(request).execute()
+      CLIENT.newCall(request).execute()
     }
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
