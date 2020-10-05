@@ -21,12 +21,22 @@ import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.command.ActiveMQTextMessage
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Requires
 import spock.lang.Shared
 
+@Requires({"true" != System.getenv("CIRCLECI")})
 class JMS1Test extends AgentTestRunner {
-  @Shared
-  EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
+
+  private static final Logger log = LoggerFactory.getLogger(JMS1Test.class)
+
+  public static GenericContainer activemq = new GenericContainer("rmohr/activemq")
+    .withExposedPorts(61616, 8161)
+    .withLogConsumer(new Slf4jLogConsumer(log))
+
   @Shared
   String messageText = "a message"
   @Shared
@@ -35,8 +45,8 @@ class JMS1Test extends AgentTestRunner {
   ActiveMQTextMessage message = session.createTextMessage(messageText)
 
   def setupSpec() {
-    broker.start()
-    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    activemq.start()
+    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + activemq.getMappedPort(61616))
 
     Connection connection = connectionFactory.createConnection()
     connection.start()
@@ -44,10 +54,10 @@ class JMS1Test extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    broker.stop()
+    activemq.stop()
   }
 
-  def "sending a message to #expectedSpanName generates spans"() {
+  def "sending a message to #destinationName #destinationType generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -80,7 +90,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | "<temporary>"
   }
 
-  def "sending to a MessageListener on #expectedSpanName generates a span"() {
+  def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -119,7 +129,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | "<temporary>"
   }
 
-  def "failing to receive message with receiveNoWait on #expectedSpanName works"() {
+  def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -152,7 +162,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTopic("someTopic") | "topic"         | "someTopic"
   }
 
-  def "failing to receive message with wait(timeout) on #expectedSpanName works"() {
+  def "failing to receive message with wait(timeout) on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -185,7 +195,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTopic("someTopic") | "topic"         | "someTopic"
   }
 
-  def "sending a read-only message to #expectedSpanName fails"() {
+  def "sending a read-only message to #destinationName #destinationType fails"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)

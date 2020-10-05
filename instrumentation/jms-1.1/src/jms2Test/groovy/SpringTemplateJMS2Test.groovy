@@ -22,7 +22,6 @@ import org.hornetq.core.config.CoreQueueConfiguration
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
-import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
@@ -58,8 +57,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     config.securityEnabled = false
     config.persistenceEnabled = false
     config.setQueueConfigurations([new CoreQueueConfiguration("someQueue", "someQueue", null, true)])
-    config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
-                                      new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
+    config.setAcceptorConfigurations([new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
     server = HornetQServers.newHornetQServer(config)
     server.start()

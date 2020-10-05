@@ -28,7 +28,6 @@ import org.hornetq.core.config.CoreQueueConfiguration
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
-import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
@@ -65,8 +64,7 @@ class JMS2Test extends AgentTestRunner {
     config.securityEnabled = false
     config.persistenceEnabled = false
     config.setQueueConfigurations([new CoreQueueConfiguration("someQueue", "someQueue", null, true)])
-    config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
-                                      new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
+    config.setAcceptorConfigurations([new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
     server = HornetQServers.newHornetQServer(config)
     server.start()
@@ -96,7 +94,7 @@ class JMS2Test extends AgentTestRunner {
     }
   }
 
-  def "sending a message to #destinationName generates spans"() {
+  def "sending a message to #destinationName #destinationType generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -129,7 +127,7 @@ class JMS2Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | "<temporary>"
   }
 
-  def "sending to a MessageListener on #destinationName generates a span"() {
+  def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -168,7 +166,7 @@ class JMS2Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | "<temporary>"
   }
 
-  def "failing to receive message with receiveNoWait on #destinationName works"() {
+  def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -201,7 +199,7 @@ class JMS2Test extends AgentTestRunner {
     session.createTopic("someTopic") | "topic"         | "someTopic"
   }
 
-  def "failing to receive message with wait(timeout) on #destinationName works"() {
+  def "failing to receive message with wait(timeout) on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
