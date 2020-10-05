@@ -9,6 +9,7 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -44,6 +45,12 @@ class JMS1Test extends AgentTestRunner {
 
   ActiveMQTextMessage message = session.createTextMessage(messageText)
 
+  static {
+    ConfigUtils.updateConfig {
+      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
+    }
+  }
+
   def setupSpec() {
     activemq.start()
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + activemq.getMappedPort(61616))
@@ -55,6 +62,9 @@ class JMS1Test extends AgentTestRunner {
 
   def cleanupSpec() {
     activemq.stop()
+    ConfigUtils.updateConfig {
+      System.clearProperty("otel.trace.classes.exclude")
+    }
   }
 
   def "sending a message to #destinationName #destinationType generates spans"() {
