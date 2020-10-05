@@ -48,7 +48,9 @@ public final class GrpcHelper {
     String methodName = slash == -1 ? null : fullMethodName.substring(slash + 1);
 
     span.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
-    span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
+    if (methodName != null) {
+      span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
+    }
 
     if (peerAddress != null) {
       span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) peerAddress.getPort());

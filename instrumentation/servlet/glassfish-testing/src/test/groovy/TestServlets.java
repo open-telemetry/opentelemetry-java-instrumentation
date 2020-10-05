@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.lang.Closure;
 import io.opentelemetry.auto.test.base.HttpServerTest;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -20,13 +19,11 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
-              resp.setContentType("text/plain");
-              resp.setStatus(endpoint.getStatus());
-              resp.getWriter().print(endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.setStatus(endpoint.getStatus());
+            resp.getWriter().print(endpoint.getBody());
+            return null;
           });
     }
   }
@@ -39,13 +36,11 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
-              resp.setContentType("text/plain");
-              resp.setStatus(endpoint.getStatus());
-              resp.getWriter().print(req.getQueryString());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.setStatus(endpoint.getStatus());
+            resp.getWriter().print(req.getQueryString());
+            return null;
           });
     }
   }
@@ -58,11 +53,9 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
-              resp.sendRedirect(endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.sendRedirect(endpoint.getBody());
+            return null;
           });
     }
   }
@@ -75,12 +68,10 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
-              resp.setContentType("text/plain");
-              resp.sendError(endpoint.getStatus(), endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.sendError(endpoint.getStatus(), endpoint.getBody());
+            return null;
           });
     }
   }
@@ -93,10 +84,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
-              throw new Exception(endpoint.getBody());
-            }
+          () -> {
+            throw new Exception(endpoint.getBody());
           });
     }
   }

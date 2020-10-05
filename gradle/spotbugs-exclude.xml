@@ -42,11 +42,4 @@
     </Not>
   </Match>
 
-  <Match>
-    <Class name="~TestServlets.*"/>
-    <Not>
-      <Bug code="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS"/> <!-- can be ignored for servlet doCall() methods in testing -->
-    </Not>
-  </Match>
-
 </FindBugsFilter>
