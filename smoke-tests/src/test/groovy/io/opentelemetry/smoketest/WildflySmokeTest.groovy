@@ -23,7 +23,7 @@ class WildflySmokeTest extends SmokeTest {
     def request = new Request.Builder().url(url).get().build()
 
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client.newCall(request).execute()
 
     then:
     def responseBodyStr = response.body().string()

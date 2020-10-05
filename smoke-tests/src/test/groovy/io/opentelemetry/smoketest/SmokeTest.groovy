@@ -35,7 +35,7 @@ abstract class SmokeTest extends Specification {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
-  protected static final OkHttpClient CLIENT = OkHttpUtils.client()
+  protected static final OkHttpClient client = OkHttpUtils.client()
 
   @Shared
   private Network network = Network.newNetwork()
@@ -97,7 +97,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanup() {
-    CLIENT.newCall(new Request.Builder()
+    client.newCall(new Request.Builder()
       .url("http://localhost:${backend.getMappedPort(8080)}/clear-requests")
       .build())
       .execute()
@@ -149,7 +149,7 @@ abstract class SmokeTest extends Specification {
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
     String content = "[]"
     while (System.currentTimeMillis() < deadline) {
-      def body = content = CLIENT.newCall(new Request.Builder()
+      def body = content = client.newCall(new Request.Builder()
         .url("http://localhost:${backend.getMappedPort(8080)}/get-requests")
         .build())
         .execute()

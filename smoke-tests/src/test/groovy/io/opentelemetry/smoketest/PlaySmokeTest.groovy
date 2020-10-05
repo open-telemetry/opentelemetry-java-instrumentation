@@ -21,7 +21,7 @@ class PlaySmokeTest extends SmokeTest {
     def request = new Request.Builder().url(url).get().build()
 
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:
