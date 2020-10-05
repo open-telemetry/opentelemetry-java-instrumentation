@@ -28,4 +28,5 @@ dependencies {
   implementation deps.opentelemetryApi
   implementation deps.opentelemetryTraceProps
   implementation deps.spock
+  implementation deps.systemLambda
 }

@@ -18,6 +18,8 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaTracer extends BaseTracer {
 
+  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
+
   public AwsLambdaTracer() {}
 
   public AwsLambdaTracer(Tracer tracer) {
@@ -27,6 +29,12 @@ public class AwsLambdaTracer extends BaseTracer {
   Span.Builder createSpan(Context context) {
     Span.Builder span = tracer.spanBuilder(context.getFunctionName());
     span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
+
+    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+    if (parentTraceHeader != null) {
+      span.setParent(AwsLambdaUtil.extractParent(parentTraceHeader));
+    }
+
     return span;
   }
 

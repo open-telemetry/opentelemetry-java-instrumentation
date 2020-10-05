@@ -7,10 +7,7 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -18,12 +15,9 @@ import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import java.util.Collections;
-import java.util.Map;
 
 public class AwsLambdaMessageTracer extends BaseTracer {
 
-  private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "X-Amzn-Trace-Id";
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
 
   public AwsLambdaMessageTracer() {}
@@ -82,29 +76,11 @@ public class AwsLambdaMessageTracer extends BaseTracer {
   private void addLinkToMessageParent(SQSMessage message, Span.Builder span) {
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
     if (parentHeader != null) {
-      SpanContext parentCtx = TracingContextUtils.getSpan(extractParent(parentHeader)).getContext();
+      SpanContext parentCtx =
+          TracingContextUtils.getSpan(AwsLambdaUtil.extractParent(parentHeader)).getContext();
       if (parentCtx.isValid()) {
         span.addLink(parentCtx);
       }
-    }
-  }
-
-  private static Context extractParent(String parentHeader) {
-    return OpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .extract(
-            Context.current(),
-            Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-            MapGetter.INSTANCE);
-  }
-
-  private static class MapGetter implements Getter<Map<String, String>> {
-
-    private static final MapGetter INSTANCE = new MapGetter();
-
-    @Override
-    public String get(Map<String, String> map, String s) {
-      return map.get(s);
     }
   }
 
