@@ -17,14 +17,15 @@
 package io.opentelemetry.instrumentation.auto.servlet.v3_0.bodycapture;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class ByteBuffer {
+public class ByteBufferData {
 
   private static final int MIN_BUFFER_SIZE = 128;
   private static final int MAX_BUFFER_SIZE = 1048576; // 1MB
   private static final int GROW_FACTOR = 4;
-  private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+  private static final Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
   private Charset charset;
   private byte[] buffer;
   private int bufferLen;

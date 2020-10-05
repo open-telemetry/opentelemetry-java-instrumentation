@@ -25,34 +25,55 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
 
-  private static final Logger logger = LoggerFactory.getLogger(HttpServletRequestWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(BufferingHttpServletRequest.class);
 
-  private CharBuffer charBuffer;
-  private ByteBuffer byteBuffer;
-  private Map<String, List<String>> params = new LinkedHashMap<>();
+  // to pass the wrapped response explicitly in case user invokes the inherent async method..
+  protected HttpServletResponse response;
+  private CharBufferData charBufferData;
+  private ByteBufferData byteBufferData;
 
-  public BufferingHttpServletRequest(HttpServletRequest httpServletRequest) {
+  private ServletInputStream inputStream = null;
+  private BufferedReader reader = null;
+  private final Map<String, List<String>> params = new LinkedHashMap<>();
+
+  public BufferingHttpServletRequest(
+      HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
     super(httpServletRequest);
+    this.response = httpServletResponse;
+  }
+
+  @Override
+  public AsyncContext startAsync() {
+    return getRequest().startAsync(this, response);
   }
 
   @Override
   public ServletInputStream getInputStream() throws IOException {
-    ServletInputStream is = super.getInputStream();
-    return safeGetInputStream(is);
+    if (inputStream == null) {
+      inputStream = super.getInputStream();
+      if (shouldReadContent()) {
+        inputStream = safeGetInputStream(inputStream);
+      }
+    }
+    return inputStream;
   }
 
   @Override
   public String getParameter(String name) {
     String queryStringValue = super.getParameter(name);
-    safelyCacheGetParameterCall(name, queryStringValue);
+    if (shouldReadContent()) {
+      safelyCacheGetParameterCall(name, queryStringValue);
+    }
     return queryStringValue;
   }
 
@@ -73,7 +94,9 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
   @Override
   public Map<String, String[]> getParameterMap() {
     Map<String, String[]> result = super.getParameterMap();
-    safelyCacheGetParameterMapCall(result);
+    if (shouldReadContent()) {
+      safelyCacheGetParameterMapCall(result);
+    }
     return result;
   }
 
@@ -103,7 +126,9 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
   @Override
   public String[] getParameterValues(String name) {
     String[] parameterValues = super.getParameterValues(name);
-    safelyCacheGetParameterValues(name, parameterValues);
+    if (shouldReadContent()) {
+      safelyCacheGetParameterValues(name, parameterValues);
+    }
     return parameterValues;
   }
 
@@ -127,23 +152,20 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
 
   private ServletInputStream safeGetInputStream(ServletInputStream is) {
     try {
-      String encoding = this.getCharacterEncoding();
       ServletInputStreamWrapper servletInputStreamWrapper = new ServletInputStreamWrapper(is, this);
 
+      Charset charset = Charset.forName(StandardCharsets.ISO_8859_1.name());
+      String encoding = this.getCharacterEncoding();
       try {
         if (encoding != null) {
-          Charset charset = Charset.forName(encoding);
-          servletInputStreamWrapper.setCharset(charset);
+          charset = Charset.forName(encoding);
         } else {
           logger.debug("Encoding is not specified in servlet request will default to [ISO-8859-1]");
-          Charset charset = Charset.forName(StandardCharsets.ISO_8859_1.name());
-          servletInputStreamWrapper.setCharset(charset);
         }
       } catch (IllegalArgumentException var5) {
         logger.warn("Encoding [{}] not recognized. Will default to [ISO-8859-1]", encoding);
-        Charset charset = Charset.forName(StandardCharsets.ISO_8859_1.name());
-        servletInputStreamWrapper.setCharset(charset);
       }
+      getByteBuffer().setCharset(charset);
       return servletInputStreamWrapper;
     } catch (Exception e) {
       logger.error("Error in getInputStream - ", e);
@@ -153,13 +175,13 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
 
   @Override
   public BufferedReader getReader() throws IOException {
-    BufferedReader reader = super.getReader();
-    try {
-      return new BufferedReaderWrapper(reader, this);
-    } catch (Exception e) {
-      logger.error("Error in getReader - ", e);
-      return reader;
+    if (reader == null) {
+      reader = super.getReader();
+      if (shouldReadContent()) {
+        reader = new BufferedReaderWrapper(reader, this);
+      }
     }
+    return reader;
   }
 
   private boolean isFormContentType() {
@@ -168,49 +190,64 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
     return contentType != null && contentType.contains("application/x-www-form-urlencoded");
   }
 
+  private boolean shouldReadContent() {
+    String contentType = getContentType();
+    if (contentType == null || contentType.isEmpty()) {
+      return false;
+    }
+    if (contentType.contains("json")
+        || contentType.contains("x-www-form-urlencoded")
+        || contentType.contains("text/plain")) {
+      return true;
+    }
+    return false;
+  }
+
   public Map<String, List<String>> getBufferedParams() {
     return params;
   }
 
   public synchronized String getBufferedBodyAsString() {
     try {
-      try {
-        // read the remaining bytes in the input stream..
-        ServletInputStream is = getInputStream();
-        if (is != null) {
-          while (is.read() != -1) ;
-        }
-      } catch (IllegalStateException e) {
-        // read the remaining bytes in the reader..
-        BufferedReader br = getReader();
-        if (br != null) {
-          while (br.read() != -1) ;
+      if (shouldReadContent()) {
+        try {
+          // read the remaining bytes in the input stream..
+          ServletInputStream is = getInputStream();
+          if (is != null) {
+            while (is.read() != -1) ;
+          }
+        } catch (IllegalStateException e) {
+          // read the remaining bytes in the reader..
+          BufferedReader br = getReader();
+          if (br != null) {
+            while (br.read() != -1) ;
+          }
         }
       }
     } catch (Exception e) {
-      logger.error("Error in reading request body: ", e);
+      logger.debug("Error in reading request body: ", e);
     }
-    if (byteBuffer != null) {
-      return byteBuffer.getBufferAsString();
+    if (byteBufferData != null) {
+      return byteBufferData.getBufferAsString();
     }
-    if (charBuffer != null) {
-      return charBuffer.getBufferAsString();
+    if (charBufferData != null) {
+      return charBufferData.getBufferAsString();
     }
     return null;
   }
 
-  public synchronized ByteBuffer getByteBuffer() {
-    if (null == byteBuffer) {
-      byteBuffer = new ByteBuffer();
+  public synchronized ByteBufferData getByteBuffer() {
+    if (null == byteBufferData) {
+      byteBufferData = new ByteBufferData();
     }
-    return byteBuffer;
+    return byteBufferData;
   }
 
-  public synchronized CharBuffer getCharBuffer() {
-    if (charBuffer == null) {
-      charBuffer = new CharBuffer();
+  public synchronized CharBufferData getCharBuffer() {
+    if (charBufferData == null) {
+      charBufferData = new CharBufferData();
     }
-    return charBuffer;
+    return charBufferData;
   }
 
   public static class ServletInputStreamWrapper extends ServletInputStream {
@@ -224,10 +261,6 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
         ServletInputStream is, BufferingHttpServletRequest bufferingHttpServletRequest) {
       this.is = is;
       this.bufferingHttpServletRequest = bufferingHttpServletRequest;
-    }
-
-    void setCharset(Charset charset) {
-      bufferingHttpServletRequest.getByteBuffer().setCharset(charset);
     }
 
     public int read(byte[] b) throws IOException {
@@ -346,8 +379,8 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
         return null;
       } else {
         try {
-          CharBuffer charBuffer = bufferingHttpServletRequest.getCharBuffer();
-          charBuffer.appendData(read);
+          CharBufferData charBufferData = bufferingHttpServletRequest.getCharBuffer();
+          charBufferData.appendData(read);
         } catch (Exception e) {
           logger.error("Error in readLine() - ", e);
         }
@@ -384,10 +417,10 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
       int read = this.reader.read(target);
       try {
         if (read > 0) {
-          CharBuffer charBuffer = bufferingHttpServletRequest.getCharBuffer();
+          CharBufferData charBufferData = bufferingHttpServletRequest.getCharBuffer();
 
           for (int i = initPos; i < initPos + read; ++i) {
-            charBuffer.appendData(target.get(i));
+            charBufferData.appendData(target.get(i));
           }
         }
       } catch (Exception e) {

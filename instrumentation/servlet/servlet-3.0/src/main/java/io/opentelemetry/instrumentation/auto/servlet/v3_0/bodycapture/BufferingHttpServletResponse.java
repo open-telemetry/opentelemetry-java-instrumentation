@@ -16,9 +16,10 @@
 
 package io.opentelemetry.instrumentation.auto.servlet.v3_0.bodycapture;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.HttpCookie;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,13 +28,19 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BufferingHttpServletResponse extends HttpServletResponseWrapper {
 
-  private ServletOutputStream outputStream;
-  private PrintWriter writer;
-  private BufferingServletOutputStream bufferingServletOutputStream;
-  private Map<String, List<String>> headers = new LinkedHashMap<>();
+  private static final Logger logger = LoggerFactory.getLogger(BufferingHttpServletResponse.class);
+
+  private CharBufferData charBufferData;
+  private ByteBufferData byteBufferData;
+
+  private ServletOutputStream outputStream = null;
+  private PrintWriter writer = null;
+  private final Map<String, List<String>> headers = new LinkedHashMap<>();
 
   public BufferingHttpServletResponse(HttpServletResponse httpServletResponse) {
     super(httpServletResponse);
@@ -41,45 +48,38 @@ public class BufferingHttpServletResponse extends HttpServletResponseWrapper {
 
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
-    if (writer != null) {
-      throw new IllegalStateException("getWriter() has already been called on this response.");
-    }
-
     if (outputStream == null) {
-      outputStream = getResponse().getOutputStream();
-      bufferingServletOutputStream = new BufferingServletOutputStream(outputStream);
-    }
+      outputStream = super.getOutputStream();
+      if (shouldReadContent()) {
+        Charset charset = Charset.forName(StandardCharsets.ISO_8859_1.name());
+        String encoding = this.getCharacterEncoding();
+        try {
+          if (encoding != null) {
+            charset = Charset.forName(encoding);
+          } else {
+            logger.debug(
+                "Encoding is not specified in servlet request will default to [ISO-8859-1]");
+          }
+        } catch (IllegalArgumentException var5) {
+          logger.warn("Encoding [{}] not recognized. Will default to [ISO-8859-1]", encoding);
+        }
+        getByteBuffer().setCharset(charset);
 
-    return bufferingServletOutputStream;
+        outputStream = new BufferingServletOutputStream(outputStream, getByteBuffer());
+      }
+    }
+    return outputStream;
   }
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    if (outputStream != null) {
-      throw new IllegalStateException(
-          "getOutputStream() has already been called on this response.");
-    }
-
     if (writer == null) {
-      bufferingServletOutputStream =
-          new BufferingServletOutputStream(getResponse().getOutputStream());
-      writer =
-          new PrintWriter(
-              new FlushingOutputStreamWriter(
-                  bufferingServletOutputStream, getResponse().getCharacterEncoding()),
-              false);
+      writer = super.getWriter();
+      if (shouldReadContent()) {
+        writer = new PrintWriter(new BufferedWriterWrapper(writer, getCharBuffer()));
+      }
     }
-
     return writer;
-  }
-
-  @Override
-  public void flushBuffer() throws IOException {
-    if (writer != null) {
-      writer.flush();
-    } else if (outputStream != null) {
-      bufferingServletOutputStream.flush();
-    }
   }
 
   public void setDateHeader(String name, long date) {
@@ -132,7 +132,7 @@ public class BufferingHttpServletResponse extends HttpServletResponseWrapper {
       values.add(headerValue);
       headers.put("Set-Cookie", values);
     } catch (Exception e) {
-      System.out.printf("Error capturing cookie - ", e);
+      logger.error("Error capturing cookie - ", e);
     }
   }
 
@@ -142,7 +142,7 @@ public class BufferingHttpServletResponse extends HttpServletResponseWrapper {
       values.add(String.valueOf(value));
       headers.put(name, values);
     } catch (Exception e) {
-      System.out.printf("Error capturing header - ", e);
+      logger.error("Error capturing header - ", e);
     }
   }
 
@@ -150,11 +150,125 @@ public class BufferingHttpServletResponse extends HttpServletResponseWrapper {
     return headers;
   }
 
+  public synchronized ByteBufferData getByteBuffer() {
+    if (null == byteBufferData) {
+      byteBufferData = new ByteBufferData();
+    }
+    return byteBufferData;
+  }
+
+  public synchronized CharBufferData getCharBuffer() {
+    if (charBufferData == null) {
+      charBufferData = new CharBufferData();
+    }
+    return charBufferData;
+  }
+
   public String getBufferAsString() {
-    if (bufferingServletOutputStream != null) {
-      return bufferingServletOutputStream.getBufferAsString();
-    } else {
-      return null;
+    if (byteBufferData != null) {
+      return byteBufferData.getBufferAsString();
+    }
+    if (charBufferData != null) {
+      return charBufferData.getBufferAsString();
+    }
+    return null;
+  }
+
+  private boolean shouldReadContent() {
+    String contentType = getContentType();
+    if (contentType == null || contentType.isEmpty()) {
+      return false;
+    }
+    if (contentType.contains("json")
+        || contentType.contains("x-www-form-urlencoded")
+        || contentType.contains("text/plain")) {
+      return true;
+    }
+    return false;
+  }
+
+  public static class BufferingServletOutputStream extends ServletOutputStream {
+
+    private static final Logger logger =
+        LoggerFactory.getLogger(BufferingServletOutputStream.class);
+
+    private final OutputStream outputStream;
+    private final ByteBufferData byteBufferData;
+
+    public BufferingServletOutputStream(OutputStream outputStream, ByteBufferData byteBufferData) {
+      this.outputStream = outputStream;
+      this.byteBufferData = byteBufferData;
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      outputStream.write(b);
+      try {
+        byteBufferData.appendData(b);
+      } catch (Exception e) {
+        logger.error("Error in write(int b) ", e);
+      }
+    }
+
+    public void write(byte[] b) throws IOException {
+      write(b, 0, b.length);
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      outputStream.write(b, off, len);
+      try {
+        byteBufferData.appendData(b, off, len);
+      } catch (Exception e) {
+        logger.error("Error in write(byte[] b, int off, int len) ", e);
+      }
+    }
+
+    @Override
+    public void flush() throws IOException {
+      outputStream.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+      outputStream.close();
+    }
+  }
+
+  public static class BufferedWriterWrapper extends BufferedWriter {
+
+    private static final Logger logger = LoggerFactory.getLogger(BufferedWriterWrapper.class);
+
+    private final PrintWriter writer;
+    private final CharBufferData charBufferData;
+
+    public BufferedWriterWrapper(PrintWriter writer, CharBufferData charBufferData) {
+      super(writer);
+      this.writer = writer;
+      this.charBufferData = charBufferData;
+    }
+
+    public void write(char buf[]) throws IOException {
+      write(buf, 0, buf.length);
+    }
+
+    public void write(char buf[], int off, int len) throws IOException {
+      writer.write(buf, off, len);
+      charBufferData.appendData(buf, off, len);
+    }
+
+    public void write(int c) throws IOException {
+      writer.write(c);
+      charBufferData.appendData(c);
+    }
+
+    public void write(String s) throws IOException {
+      write(s, 0, s.length());
+    }
+
+    public void write(String s, int off, int len) throws IOException {
+      writer.write(s, off, len);
+      charBufferData.appendData(s, off, len);
     }
   }
 }

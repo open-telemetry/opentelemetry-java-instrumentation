@@ -18,7 +18,7 @@ package io.opentelemetry.instrumentation.auto.servlet.v3_0.bodycapture;
 
 import java.util.Arrays;
 
-public class CharBuffer {
+public class CharBufferData {
 
   private static final int MIN_BUFFER_SIZE = 128;
   private static final int MAX_BUFFER_SIZE = 1048576; // 1MB
@@ -65,6 +65,17 @@ public class CharBuffer {
       int lenToCopy = Math.min(newDataLen, this.capacityLeft());
       s.getChars(0, lenToCopy, this.buffer, this.bufferLen);
       this.bufferLen += s.length();
+    }
+  }
+
+  public synchronized void appendData(String s, int start, int end) {
+    int newDataLen = end - start;
+    if (newDataLen > 0) {
+      if (resizeIfNeeded(newDataLen)) {
+        int lenToCopy = Math.min(newDataLen, capacityLeft());
+        s.getChars(0, lenToCopy, this.buffer, this.bufferLen);
+        this.bufferLen += lenToCopy;
+      }
     }
   }
 

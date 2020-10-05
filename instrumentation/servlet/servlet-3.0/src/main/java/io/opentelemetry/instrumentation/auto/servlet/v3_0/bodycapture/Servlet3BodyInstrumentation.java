@@ -71,10 +71,10 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       "io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer",
       packageName + ".BufferingHttpServletResponse",
-      packageName + ".BufferingServletOutputStream",
-      packageName + ".ByteBuffer",
-      packageName + ".FlushingOutputStreamWriter",
-      packageName + ".CharBuffer",
+      packageName + ".BufferingHttpServletResponse$BufferingServletOutputStream",
+      packageName + ".BufferingHttpServletResponse$BufferedWriterWrapper",
+      packageName + ".ByteBufferData",
+      packageName + ".CharBufferData",
       packageName + ".BufferingHttpServletRequest",
       packageName + ".BufferingHttpServletRequest$ServletInputStreamWrapper",
       packageName + ".BufferingHttpServletRequest$BufferedReaderWrapper",
@@ -125,7 +125,8 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
 
       rootStart = true;
       response = new BufferingHttpServletResponse(httpResponse);
-      BufferingHttpServletRequest bufferingRequest = new BufferingHttpServletRequest(httpRequest);
+      BufferingHttpServletRequest bufferingRequest =
+          new BufferingHttpServletRequest(httpRequest, (HttpServletResponse) response);
       request = bufferingRequest;
       currentSpan.setAttribute("request.body", bufferingRequest.getBufferedBodyAsString());
     }
