@@ -69,26 +69,4 @@ jobs:
         with:
           java-version: 11
       - name: Run  muzzle
-        uses: burrunan/gradle-cache-action@v1.4
-        with:
-          job-id: muzzle${{ matrix.module }}
-          arguments: ${{ matrix.module }}:muzzle --no-daemon
-
-#  muzzle:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Set up JDK 11 for running Gradle
-#        uses: actions/setup-java@v1
-#        with:
-#          java-version: 11
-#
-#      - id: set-matrix
-#        run: echo "::set-output name=matrix::{\"module\":[\"$(ls instrumentation | grep -v instrumentation.gradle | xargs echo | sed 's/ /","/g')\"]}"
-#
-#      - name: Test
-#        uses: burrunan/gradle-cache-action@v1.4
-#        with:
-#          job-id: muzzle
-#          arguments: muzzle
+        run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
