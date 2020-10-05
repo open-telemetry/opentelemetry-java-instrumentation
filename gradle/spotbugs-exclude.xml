@@ -2,44 +2,43 @@
 <FindBugsFilter>
   <Match>
     <Class name="io.opentelemetry.instrumentation.auto.jdbc.normalizer.SimpleCharStream"/>
-    <Not>
-      <Bug code="DM_DEFAULT_ENCODING"/> <!-- ignore default encoding for auto-genned class -->
-    </Not>
+    <Bug pattern="DM_DEFAULT_ENCODING"/> <!-- ignore default encoding for auto-genned class -->
   </Match>
 
   <Match>
     <Class name="io.opentelemetry.auto.util.gc.GCUtils"/>
-    <Not>
-      <Bug code="DM_GC"/> <!-- forced GC only used in testing -->
-    </Not>
+    <Bug pattern="DM_GC"/> <!-- forced GC only used in testing -->
   </Match>
 
   <Match>
     <Class name="~muzzle\.TestClasses.*"/>
-    <Not>
-      <Bug code="MS_SHOULD_BE_FINAL"/> <!-- final field warnings can be ignored for this test class -->
-    </Not>
+    <Bug
+      pattern="MS_SHOULD_BE_FINAL"/> <!-- final field warnings can be ignored for this test class -->
   </Match>
 
   <Match>
     <Class name="~HttpServletResponseTest\$.*"/>
-    <Not>
-      <Bug code="SE_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
-    </Not>
+    <Bug
+      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
   </Match>
 
   <Match>
     <Class name="~HttpServletTest\$.*"/>
-    <Not>
-      <Bug code="SE_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
-    </Not>
+    <Bug
+      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
   </Match>
 
   <Match>
     <Class name="~SpymemcachedTest\$.*"/>
-    <Not>
-      <Bug code="SE_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
-    </Not>
+    <Bug
+      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
+  </Match>
+
+  <Match>
+    <Class name="io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils"/>
+    <Method name="setNetPeer"
+      params="io.opentelemetry.trace.Span,java.lang.String,java.lang.String,int" returns="void"/>
+    <Bug pattern="UC_USELESS_VOID_METHOD"/>
   </Match>
 
 </FindBugsFilter>
