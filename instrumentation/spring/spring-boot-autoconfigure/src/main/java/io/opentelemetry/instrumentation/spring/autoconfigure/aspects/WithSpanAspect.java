@@ -57,7 +57,7 @@ public class WithSpanAspect {
     try (Scope scope = tracer.withSpan(span)) {
       return pjp.proceed();
     } catch (Throwable t) {
-      span.setStatus(Status.INTERNAL);
+      span.setStatus(Status.ERROR);
       span.recordException(t);
       throw t;
     } finally {

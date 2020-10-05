@@ -31,7 +31,7 @@ public class ErrorHandlerAdvice {
     Optional<Span> span = ctx.maybeGet(Span.class);
     if (span.isPresent()) {
       // TODO this emulates old behaviour of BaseDecorator. Has to review
-      span.get().setStatus(Status.UNKNOWN);
+      span.get().setStatus(Status.ERROR);
       TRACER.addThrowable(span.get(), throwable);
     }
   }

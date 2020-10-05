@@ -27,7 +27,6 @@ import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -119,7 +118,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored false
-          status(Status.OK)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -143,7 +141,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored false
-          status(Status.OK)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"

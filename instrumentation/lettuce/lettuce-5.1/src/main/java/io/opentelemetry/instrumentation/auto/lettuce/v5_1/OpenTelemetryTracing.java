@@ -154,7 +154,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
 
-    @Nullable private Status status;
+    @Nullable private Throwable error;
 
     @Nullable private Span span;
 
@@ -208,9 +208,10 @@ public enum OpenTelemetryTracing implements Tracing {
         events = null;
       }
 
-      if (status != null) {
-        span.setStatus(status);
-        status = null;
+      if (error != null) {
+        span.setStatus(Status.ERROR);
+        span.recordException(error);
+        error = null;
       }
 
       return this;
@@ -247,13 +248,10 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized Tracer.Span error(Throwable throwable) {
-      // TODO(anuraaga): Check if any lettuce exceptions map well to a Status and try mapping.
-      Status status =
-          Status.UNKNOWN.withDescription(throwable.getClass() + ": " + throwable.getMessage());
       if (span != null) {
-        span.setStatus(status);
+        span.recordException(throwable);
       } else {
-        this.status = status;
+        this.error = throwable;
       }
       return this;
     }

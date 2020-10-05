@@ -60,8 +60,8 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
         "io.opentelemetry.instrumentation.api",
         "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
         "io.opentelemetry.common", // OpenTelemetry API
+        "io.opentelemetry.baggage", // OpenTelemetry API
         "io.opentelemetry.context", // OpenTelemetry API (context prop)
-        "io.opentelemetry.correlationcontext", // OpenTelemetry API
         "io.opentelemetry.internal", // OpenTelemetry API
         "io.opentelemetry.metrics", // OpenTelemetry API
         "io.opentelemetry.trace", // OpenTelemetry API

@@ -136,7 +136,7 @@ public abstract class BaseTracer {
   }
 
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
-    span.setStatus(Status.INTERNAL);
+    span.setStatus(Status.ERROR);
     onError(span, unwrapThrowable(throwable));
     end(span, endTimeNanos);
   }

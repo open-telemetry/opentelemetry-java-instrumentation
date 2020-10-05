@@ -23,37 +23,10 @@ public final class HttpStatusConverter {
   // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
   public static Status statusFromHttpStatus(int httpStatus) {
     if (httpStatus >= 100 && httpStatus < 400) {
-      return Status.OK;
+      return Status.UNSET;
     }
 
-    switch (httpStatus) {
-      case 401:
-        return Status.UNAUTHENTICATED;
-      case 403:
-        return Status.PERMISSION_DENIED;
-      case 404:
-        return Status.NOT_FOUND;
-      case 429:
-        return Status.RESOURCE_EXHAUSTED;
-      case 501:
-        return Status.UNIMPLEMENTED;
-      case 503:
-        return Status.UNAVAILABLE;
-      case 504:
-        return Status.DEADLINE_EXCEEDED;
-      default:
-        // fall through
-    }
-
-    if (httpStatus >= 400 && httpStatus < 500) {
-      return Status.INVALID_ARGUMENT;
-    }
-
-    if (httpStatus >= 500 && httpStatus < 600) {
-      return Status.INTERNAL;
-    }
-
-    return Status.UNKNOWN;
+    return Status.ERROR;
   }
 
   private HttpStatusConverter() {}

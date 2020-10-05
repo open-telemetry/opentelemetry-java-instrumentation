@@ -41,7 +41,7 @@ class TracerTest extends AgentTestRunner {
     testSpan.setAttribute("long", 2)
     testSpan.setAttribute("double", 3.0)
     testSpan.setAttribute("boolean", true)
-    testSpan.setStatus(Status.UNKNOWN)
+    testSpan.setStatus(Status.ERROR)
     testSpan.end()
 
     then:
@@ -51,7 +51,7 @@ class TracerTest extends AgentTestRunner {
           operationName "test"
           spanKind io.opentelemetry.trace.Span.Kind.PRODUCER
           parent()
-          status io.opentelemetry.trace.Status.UNKNOWN
+          status io.opentelemetry.trace.Status.ERROR
           attributes {
             "string" "1"
             "long" 2

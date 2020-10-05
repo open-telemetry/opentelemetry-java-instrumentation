@@ -91,7 +91,7 @@ public class AdviceUtils {
     if (context != null) {
       Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
-        span.setStatus(Status.UNKNOWN);
+        span.setStatus(Status.ERROR);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();

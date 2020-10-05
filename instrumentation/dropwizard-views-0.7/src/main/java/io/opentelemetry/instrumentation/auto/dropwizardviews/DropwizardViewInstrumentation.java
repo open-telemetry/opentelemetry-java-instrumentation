@@ -94,7 +94,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       }
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        span.setStatus(Status.UNKNOWN);
+        span.setStatus(Status.ERROR);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();

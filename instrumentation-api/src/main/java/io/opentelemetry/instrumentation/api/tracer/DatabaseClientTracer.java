@@ -105,7 +105,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   protected void onError(Span span, Throwable throwable) {
     if (throwable != null) {
-      span.setStatus(Status.UNKNOWN);
+      span.setStatus(Status.ERROR);
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }

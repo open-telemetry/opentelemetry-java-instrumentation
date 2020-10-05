@@ -23,7 +23,7 @@ import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -166,7 +166,7 @@ public class TracerInstaller {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.newBuilder(spanExporter).readProperties(config).build();
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
+    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
@@ -186,21 +186,21 @@ public class TracerInstaller {
   }
 
   private static void configure(Properties config) {
-    TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
+    TracerSdkManagement tracerManagement = OpenTelemetrySdk.getTracerManagement();
 
     // Register additional thread details logging span processor
-    tracerSdkProvider.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+    tracerManagement.addSpanProcessor(new AddThreadDetailsSpanProcessor());
 
     // Execute any user-provided (usually vendor-provided) configuration logic.
     ServiceLoader<TracerCustomizer> serviceLoader =
         ServiceLoader.load(TracerCustomizer.class, TracerInstaller.class.getClassLoader());
     for (TracerCustomizer customizer : serviceLoader) {
-      customizer.configure(tracerSdkProvider);
+      customizer.configure(tracerManagement);
     }
 
     /* Update trace config from env vars or sys props */
-    TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
-    tracerSdkProvider.updateActiveTraceConfig(
+    TraceConfig activeTraceConfig = tracerManagement.getActiveTraceConfig();
+    tracerManagement.updateActiveTraceConfig(
         activeTraceConfig.toBuilder().readProperties(config).build());
   }
 

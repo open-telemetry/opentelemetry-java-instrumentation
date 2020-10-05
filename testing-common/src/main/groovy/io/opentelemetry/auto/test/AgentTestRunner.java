@@ -27,6 +27,7 @@ import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
+import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -34,6 +35,7 @@ import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatche
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -108,7 +110,21 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new InMemoryExporter();
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
+    // TODO this is probably temporary until default propagators are supplied by SDK
+    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
+    //  currently checking against no-op implementation so that it won't override aws-lambda
+    //  propagator configuration
+    if (OpenTelemetry.getPropagators()
+        .getTextMapPropagator()
+        .getClass()
+        .getSimpleName()
+        .equals("NoopTextMapPropagator")) {
+      OpenTelemetry.setPropagators(
+          DefaultContextPropagators.builder()
+              .addTextMapPropagator(HttpTraceContext.getInstance())
+              .build());
+    }
+    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
   }
 

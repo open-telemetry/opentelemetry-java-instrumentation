@@ -20,9 +20,12 @@ import com.google.common.base.Predicate
 import com.google.common.base.Predicates
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.propagation.HttpTraceContext
 import org.junit.Before
 import spock.lang.Specification
 
@@ -36,7 +39,16 @@ abstract class InstrumentationTestRunner extends Specification {
 
   static {
     TEST_WRITER = new InMemoryExporter()
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER)
+    // TODO this is probably temporary until default propagators are supplied by SDK
+    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
+    //  currently checking against no-op implementation so that it won't override aws-lambda
+    //  propagator configuration
+    if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
+      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+        .addTextMapPropagator(HttpTraceContext.getInstance())
+        .build())
+    }
+    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER)
   }
 
   @Before

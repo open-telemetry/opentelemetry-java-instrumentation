@@ -98,7 +98,7 @@ class BaseDecoratorTest extends Specification {
 
     then:
     if (error) {
-      1 * span.setStatus(Status.UNKNOWN)
+      1 * span.setStatus(Status.ERROR)
       1 * span.recordException(error)
     }
     0 * _
@@ -120,7 +120,7 @@ class BaseDecoratorTest extends Specification {
 
     where:
     error           | status
-    new Exception() | Status.INTERNAL
+    new Exception() | Status.ERROR
     null            | Status.OK
   }
 

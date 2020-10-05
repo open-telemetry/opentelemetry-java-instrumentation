@@ -47,11 +47,11 @@ public class ExporterClassLoader extends URLClassLoader {
               "#io.opentelemetry.common",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.common"),
           rule(
+              "#io.opentelemetry.baggage",
+              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.baggage"),
+          rule(
               "#io.opentelemetry.context",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.context"),
-          rule(
-              "#io.opentelemetry.correlationcontext",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.correlationcontext"),
           rule(
               "#io.opentelemetry.internal",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"),

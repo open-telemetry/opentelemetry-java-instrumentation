@@ -118,12 +118,15 @@ dependencies {
     // need to pin the opentelemetry-sdk transitive dependency versions explicitly, otherwise the
     // latest snapshots are used, because the opentelemetry-sdk snapshot pom references these
     // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetryAnother
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-correlation-context', version: versions.opentelemetryAnother
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAnother
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-tracing', version: versions.opentelemetryAnother
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-baggage', version: versions.opentelemetryBaggage
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetry
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-otproto', version: versions.opentelemetryOther
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryOther
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-tracing', version: versions.opentelemetry
   }
 }
 
@@ -291,6 +294,10 @@ tasks.withType(Test).configureEach {
 
   reports {
     junitXml.outputPerTestCase = true
+  }
+
+  testLogging {
+    exceptionFormat = 'full'
   }
 }
 

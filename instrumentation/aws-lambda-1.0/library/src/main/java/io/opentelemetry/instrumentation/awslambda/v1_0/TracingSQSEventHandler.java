@@ -64,7 +64,7 @@ public abstract class TracingSQSEventHandler extends TracingRequestHandler<SQSEv
       } else {
         tracer.end(span);
       }
-      OpenTelemetrySdk.getTracerProvider().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
     return null;
   }

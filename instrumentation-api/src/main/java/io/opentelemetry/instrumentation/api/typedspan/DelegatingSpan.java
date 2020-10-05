@@ -19,7 +19,6 @@ package io.opentelemetry.instrumentation.api.typedspan;
 import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
@@ -74,16 +73,6 @@ public class DelegatingSpan implements Span {
   @Override
   public void addEvent(String name, Attributes attributes, long timestamp) {
     delegate.addEvent(name, attributes, timestamp);
-  }
-
-  @Override
-  public void addEvent(Event event) {
-    delegate.addEvent(event);
-  }
-
-  @Override
-  public void addEvent(Event event, long timestamp) {
-    delegate.addEvent(event, timestamp);
   }
 
   @Override

@@ -23,8 +23,6 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.common.AttributeKey;
 import application.io.opentelemetry.common.Attributes;
 import application.io.opentelemetry.trace.EndSpanOptions;
-import application.io.opentelemetry.trace.Event;
-import application.io.opentelemetry.trace.Link;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
 import application.io.opentelemetry.trace.Status;
@@ -90,16 +88,6 @@ class ApplicationSpan implements Span {
   @Override
   public void addEvent(String name, Attributes applicationAttributes, long timestamp) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
-  }
-
-  @Override
-  public void addEvent(Event applicationEvent) {
-    addEvent(applicationEvent.getName(), applicationEvent.getAttributes());
-  }
-
-  @Override
-  public void addEvent(Event applicationEvent, long timestamp) {
-    addEvent(applicationEvent.getName(), applicationEvent.getAttributes(), timestamp);
   }
 
   @Override
@@ -189,14 +177,6 @@ class ApplicationSpan implements Span {
     public Span.Builder addLink(
         SpanContext applicationSpanContext, Attributes applicationAttributes) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
-      return this;
-    }
-
-    @Override
-    public Span.Builder addLink(Link applicationLink) {
-      agentBuilder.addLink(
-          Bridging.toAgent(applicationLink.getContext()),
-          Bridging.toAgent(applicationLink.getAttributes()));
       return this;
     }
 

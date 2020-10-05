@@ -68,7 +68,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(span);
       }
-      OpenTelemetrySdk.getTracerProvider().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
   }
 

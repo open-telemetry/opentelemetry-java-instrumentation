@@ -36,8 +36,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Create {@link io.opentelemetry.trace.Tracer} bean if bean is missing.
  *
- * <p>Adds span exporter beans to the active tracer provider {@code
- * OpenTelemetrySdk.getTracerProvider()}
+ * <p>Adds span exporter beans to the active tracer provider.
  *
  * <p>Updates the sampler probability in the active {@link TraceConfig}
  */
@@ -69,18 +68,18 @@ public class TracerAutoConfiguration {
             .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())
             .collect(Collectors.toList());
 
-    OpenTelemetrySdk.getTracerProvider()
+    OpenTelemetrySdk.getTracerManagement()
         .addSpanProcessor(MultiSpanProcessor.create(spanProcessors));
   }
 
   private void setSampler(TracerProperties tracerProperties) {
     TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getTracerProvider()
+        OpenTelemetrySdk.getTracerManagement()
             .getActiveTraceConfig()
             .toBuilder()
             .setSampler(Samplers.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
 
-    OpenTelemetrySdk.getTracerProvider().updateActiveTraceConfig(updatedTraceConfig);
+    OpenTelemetrySdk.getTracerManagement().updateActiveTraceConfig(updatedTraceConfig);
   }
 }
