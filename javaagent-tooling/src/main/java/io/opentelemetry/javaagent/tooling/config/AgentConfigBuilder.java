@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.instrumentation.api.config.Config.normalizePropertyName;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.sdk.common.export.ConfigBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public final class AgentConfigBuilder
-    extends io.opentelemetry.sdk.common.export.ConfigBuilder<AgentConfigBuilder> {
+public final class AgentConfigBuilder extends ConfigBuilder<AgentConfigBuilder> {
   private final Map<String, String> allProperties = new HashMap<>();
 
   @Override
