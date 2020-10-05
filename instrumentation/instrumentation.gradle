@@ -98,7 +98,6 @@ tasks.register("listInstrumentations") {
     subprojects
       .findAll {it.plugins.hasPlugin("muzzle")}
       .collect {it.path}
-//      .findAll {!(it.endsWith('library') || it.endsWith('testing')) }
       .each { println it}
   }
 }

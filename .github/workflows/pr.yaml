@@ -1,6 +1,6 @@
 name: PR build
 
-on: push
+on: pull_request
 
 jobs:
   test:
