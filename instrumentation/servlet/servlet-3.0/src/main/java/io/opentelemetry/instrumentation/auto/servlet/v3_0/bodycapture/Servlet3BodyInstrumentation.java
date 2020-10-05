@@ -125,10 +125,7 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
 
       rootStart = true;
       response = new BufferingHttpServletResponse(httpResponse);
-      BufferingHttpServletRequest bufferingRequest =
-          new BufferingHttpServletRequest(httpRequest, (HttpServletResponse) response);
-      request = bufferingRequest;
-      currentSpan.setAttribute("request.body", bufferingRequest.getBufferedBodyAsString());
+      request = new BufferingHttpServletRequest(httpRequest, (HttpServletResponse) response);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -137,13 +134,20 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) ServletResponse response,
         @Advice.Local("rootStart") Boolean rootStart) {
       if (rootStart != null) {
+        if (!(request instanceof BufferingHttpServletRequest)
+            || !(response instanceof BufferingHttpServletResponse)) {
+          System.err.println("Should get buffering request/response");
+          return;
+        }
+
         request.removeAttribute(ALREADY_LOADED);
         Span currentSpan = TRACER.getCurrentSpan();
         System.out.println("---> BodyAdvice stop");
         System.out.println(response.getClass().getName());
         System.out.println(currentSpan);
+
         BufferingHttpServletResponse bufferingResponse = (BufferingHttpServletResponse) response;
-        currentSpan.setAttribute("response.body", bufferingResponse.getBufferAsString());
+        BufferingHttpServletRequest bufferingRequest = (BufferingHttpServletRequest) request;
 
         // set response headers
         bufferingResponse.getHeaderNames();
@@ -151,6 +155,11 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
           String headerValue = bufferingResponse.getHeader(headerName);
           currentSpan.setAttribute("response.header." + headerName, headerValue);
         }
+
+        // Bodies are set at the end of processing once frameworks finished reading/writing.
+        currentSpan.setAttribute("response.body", bufferingResponse.getBufferAsString());
+        currentSpan.setAttribute(
+            "request.body", bufferingRequest.getByteBuffer().getBufferAsString());
       }
     }
   }

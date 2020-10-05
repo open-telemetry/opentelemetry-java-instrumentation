@@ -176,6 +176,7 @@ public class BufferingHttpServletRequest extends HttpServletRequestWrapper {
   @Override
   public BufferedReader getReader() throws IOException {
     if (reader == null) {
+      System.out.println("---> \n\n Reader is null calling super");
       reader = super.getReader();
       if (shouldReadContent()) {
         reader = new BufferedReaderWrapper(reader, this);
