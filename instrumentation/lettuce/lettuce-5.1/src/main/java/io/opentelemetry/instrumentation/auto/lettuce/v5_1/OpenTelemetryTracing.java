@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.lettuce.v5_1;
@@ -154,7 +143,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
 
-    @Nullable private Status status;
+    @Nullable private Throwable error;
 
     @Nullable private Span span;
 
@@ -208,9 +197,10 @@ public enum OpenTelemetryTracing implements Tracing {
         events = null;
       }
 
-      if (status != null) {
-        span.setStatus(status);
-        status = null;
+      if (error != null) {
+        span.setStatus(Status.ERROR);
+        span.recordException(error);
+        error = null;
       }
 
       return this;
@@ -247,13 +237,10 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized Tracer.Span error(Throwable throwable) {
-      // TODO(anuraaga): Check if any lettuce exceptions map well to a Status and try mapping.
-      Status status =
-          Status.UNKNOWN.withDescription(throwable.getClass() + ": " + throwable.getMessage());
       if (span != null) {
-        span.setStatus(status);
+        span.recordException(throwable);
       } else {
-        this.status = status;
+        this.error = throwable;
       }
       return this;
     }

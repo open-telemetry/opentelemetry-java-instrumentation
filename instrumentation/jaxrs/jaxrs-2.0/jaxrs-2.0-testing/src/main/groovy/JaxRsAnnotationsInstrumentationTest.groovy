@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
@@ -43,7 +32,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "POST /a"
+          name "POST /a"
           attributes {
           }
         }
@@ -62,13 +51,13 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName name
-          parent()
+          name paramName
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "${className}.call"
+          name "${className}.call"
           childOf span(0)
           attributes {
           }
@@ -89,7 +78,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     spanNames.get(obj.class).size() == 1
 
     where:
-    name                 | obj
+    paramName            | obj
     "/a"                 | new Jax() {
       @Path("/a")
       void call() {
@@ -156,7 +145,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           attributes {
           }
         }

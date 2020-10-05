@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
@@ -63,21 +52,20 @@ class GrpcTest extends AgentTestRunner {
 
     when:
     def response = runUnderTrace("parent") {
-      client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+      client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
     }
 
     then:
-    response.message == "Hello $name"
+    response.message == "Hello $paramName"
 
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
+          name "example.Greeter/SayHello"
+          kind CLIENT
           childOf span(0)
           errored false
-          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -94,11 +82,10 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(1)
           errored false
-          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -122,7 +109,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name << ["some name", "some other name"]
+    paramName << ["some name", "some other name"]
   }
 
   def "test error - #name"() {
@@ -149,7 +136,7 @@ class GrpcTest extends AgentTestRunner {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
     thrown StatusRuntimeException
@@ -157,9 +144,9 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
-          parent()
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          hasNoParent()
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           attributes {
@@ -171,8 +158,8 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(0)
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
@@ -202,7 +189,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | grpcStatus
+    paramName                      | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))
@@ -235,7 +222,7 @@ class GrpcTest extends AgentTestRunner {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
     thrown StatusRuntimeException
@@ -243,13 +230,12 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "example.Greeter/SayHello"
-          spanKind CLIENT
-          parent()
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          hasNoParent()
           errored true
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
-          status(io.opentelemetry.trace.Status.UNKNOWN)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -259,8 +245,8 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "example.Greeter/SayHello"
-          spanKind SERVER
+          name "example.Greeter/SayHello"
+          kind SERVER
           childOf span(0)
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
@@ -290,7 +276,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | grpcStatus
+    paramName                     | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))

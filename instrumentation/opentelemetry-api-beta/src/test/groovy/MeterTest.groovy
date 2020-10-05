@@ -1,24 +1,13 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.NON_MONOTONIC_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.SUMMARY
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_LONG
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_LONG
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.SUMMARY
 
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.common.Labels
@@ -54,9 +43,9 @@ class MeterTest extends AgentTestRunner {
     then:
     def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
-    metricData.descriptor.description == "d"
-    metricData.descriptor.unit == "u"
-    metricData.descriptor.type == expectedType
+    metricData.description == "d"
+    metricData.unit == "u"
+    metricData.type == expectedType
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -105,9 +94,9 @@ class MeterTest extends AgentTestRunner {
     then:
     def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
-    metricData.descriptor.description == "d"
-    metricData.descriptor.unit == "u"
-    metricData.descriptor.type == SUMMARY
+    metricData.description == "d"
+    metricData.unit == "u"
+    metricData.type == SUMMARY
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -186,9 +175,9 @@ class MeterTest extends AgentTestRunner {
     then:
     def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
-    metricData.descriptor.description == "d"
-    metricData.descriptor.unit == "u"
-    metricData.descriptor.type == expectedType
+    metricData.description == "d"
+    metricData.unit == "u"
+    metricData.type == expectedType
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -238,9 +227,9 @@ class MeterTest extends AgentTestRunner {
     then:
     def metricData = findMetric(allMetrics, instrumentationName, "test")
     metricData != null
-    metricData.descriptor.description == "d"
-    metricData.descriptor.unit == "u"
-    metricData.descriptor.type == MONOTONIC_LONG
+    metricData.description == "d"
+    metricData.unit == "u"
+    metricData.type == MONOTONIC_LONG
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
@@ -250,9 +239,9 @@ class MeterTest extends AgentTestRunner {
 
     def metricData2 = findMetric(allMetrics, instrumentationName, "test2")
     metricData2 != null
-    metricData2.descriptor.description == "d"
-    metricData2.descriptor.unit == "u"
-    metricData2.descriptor.type == SUMMARY
+    metricData2.description == "d"
+    metricData2.unit == "u"
+    metricData2.type == SUMMARY
     metricData2.instrumentationLibraryInfo.name == instrumentationName
     metricData2.instrumentationLibraryInfo.version == "1.2.3"
     metricData2.points.size() == 1
@@ -264,7 +253,7 @@ class MeterTest extends AgentTestRunner {
 
   def findMetric(Collection<MetricData> allMetrics, instrumentationName, metricName) {
     for (def metric : allMetrics) {
-      if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.descriptor.name == metricName) {
+      if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
         return metric
       }
     }

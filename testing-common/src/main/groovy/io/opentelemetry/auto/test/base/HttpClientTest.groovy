@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.auto.test.base
@@ -412,12 +401,12 @@ abstract class HttpClientTest extends AgentTestRunner {
     def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName expectedOperationName(method)
-      spanKind CLIENT
+      name expectedOperationName(method)
+      kind CLIENT
       errored exception != null
       if (exception) {
         errorEvent(exception.class, exception.message)
@@ -442,11 +431,11 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
     traces.span(index) {
-      operationName "test-http-server"
-      spanKind SERVER
+      name "test-http-server"
+      kind SERVER
       errored false
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }

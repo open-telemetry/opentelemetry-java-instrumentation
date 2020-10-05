@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.auto.test.asserts
@@ -67,44 +56,44 @@ class SpanAssert {
     assertEvent(span.events.get(index), spec)
   }
 
-  def assertSpanNameContains(String spanName, String... shouldContainArr) {
+  def assertNameContains(String spanName, String... shouldContainArr) {
     for (String shouldContain : shouldContainArr) {
       assert spanName.contains(shouldContain)
     }
   }
 
-  def operationName(String name) {
+  def name(String name) {
     assert span.name == name
     checked.name = true
   }
 
-  def operationName(Pattern pattern) {
+  def name(Pattern pattern) {
     assert span.name =~ pattern
     checked.name = true
   }
 
-  def operationName(Closure spec) {
+  def name(Closure spec) {
     assert ((Closure) spec).call(span.name)
     checked.name = true
   }
 
-  def operationNameContains(String... operationNameParts) {
-    assertSpanNameContains(span.name, operationNameParts)
+  def nameContains(String... nameParts) {
+    assertNameContains(span.name, nameParts)
     checked.name = true
   }
 
-  def spanKind(Span.Kind spanKind) {
-    assert span.kind == spanKind
+  def kind(Span.Kind kind) {
+    assert span.kind == kind
     checked.kind = true
   }
 
-  def parent() {
+  def hasNoParent() {
     assert !SpanId.isValid(span.parentSpanId)
     checked.parentSpanId = true
   }
 
-  def parentId(String parentId) {
-    assert span.parentSpanId == parentId
+  def parentSpanId(String parentSpanId) {
+    assert span.parentSpanId == parentSpanId
     checked.parentId = true
   }
 
@@ -114,7 +103,7 @@ class SpanAssert {
   }
 
   def childOf(SpanData parent) {
-    parentId(parent.spanId)
+    parentSpanId(parent.spanId)
     traceId(parent.traceId)
   }
 
@@ -140,9 +129,10 @@ class SpanAssert {
 
   def errored(boolean errored) {
     if (errored) {
-      assert span.status != Status.OK
+      // comparing only canonical code, since description may be different
+      assert span.status.canonicalCode == Status.CanonicalCode.ERROR
     } else {
-      assert span.status == Status.OK
+      assert span.status == Status.UNSET
     }
     checked.status = true
   }

@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -82,22 +71,22 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "ProcedureCall.getOutputs TEST_PROC"
-          spanKind INTERNAL
+          name "ProcedureCall.getOutputs TEST_PROC"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName "{call TEST_PROC()}"
-          spanKind CLIENT
+          name "{call TEST_PROC()}"
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -108,8 +97,8 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(3) {
-          spanKind INTERNAL
-          operationName "Transaction.commit"
+          kind INTERNAL
+          name "Transaction.commit"
           childOf span(0)
           attributes {
           }
@@ -140,22 +129,22 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "ProcedureCall.getOutputs TEST_PROC"
-          spanKind INTERNAL
+          name "ProcedureCall.getOutputs TEST_PROC"
+          kind INTERNAL
           childOf span(0)
           errored(true)
           errorEvent(SQLGrammarException, "could not prepare statement")
         }
         span(2) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }

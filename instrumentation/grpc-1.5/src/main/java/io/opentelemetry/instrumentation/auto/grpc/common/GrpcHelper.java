@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.grpc.common;
@@ -32,23 +21,22 @@ public final class GrpcHelper {
 
   static {
     EnumMap<Code, CanonicalCode> codeMap = new EnumMap<>(Code.class);
-    codeMap.put(Code.OK, CanonicalCode.OK);
-    codeMap.put(Code.CANCELLED, CanonicalCode.CANCELLED);
-    codeMap.put(Code.INVALID_ARGUMENT, CanonicalCode.INVALID_ARGUMENT);
-    codeMap.put(Code.DEADLINE_EXCEEDED, CanonicalCode.DEADLINE_EXCEEDED);
-    codeMap.put(Code.NOT_FOUND, CanonicalCode.NOT_FOUND);
-    codeMap.put(Code.ALREADY_EXISTS, CanonicalCode.ALREADY_EXISTS);
-    codeMap.put(Code.PERMISSION_DENIED, CanonicalCode.PERMISSION_DENIED);
-    codeMap.put(Code.RESOURCE_EXHAUSTED, CanonicalCode.RESOURCE_EXHAUSTED);
-    codeMap.put(Code.FAILED_PRECONDITION, CanonicalCode.FAILED_PRECONDITION);
-    codeMap.put(Code.ABORTED, CanonicalCode.ABORTED);
-    codeMap.put(Code.OUT_OF_RANGE, CanonicalCode.OUT_OF_RANGE);
-    codeMap.put(Code.UNIMPLEMENTED, CanonicalCode.UNIMPLEMENTED);
-    codeMap.put(Code.INTERNAL, CanonicalCode.INTERNAL);
-    codeMap.put(Code.UNAVAILABLE, CanonicalCode.UNAVAILABLE);
-    codeMap.put(Code.DATA_LOSS, CanonicalCode.DATA_LOSS);
-    codeMap.put(Code.UNAUTHENTICATED, CanonicalCode.UNAUTHENTICATED);
-    codeMap.put(Code.UNKNOWN, CanonicalCode.UNKNOWN);
+    codeMap.put(Code.CANCELLED, CanonicalCode.ERROR);
+    codeMap.put(Code.INVALID_ARGUMENT, CanonicalCode.ERROR);
+    codeMap.put(Code.DEADLINE_EXCEEDED, CanonicalCode.ERROR);
+    codeMap.put(Code.NOT_FOUND, CanonicalCode.ERROR);
+    codeMap.put(Code.ALREADY_EXISTS, CanonicalCode.ERROR);
+    codeMap.put(Code.PERMISSION_DENIED, CanonicalCode.ERROR);
+    codeMap.put(Code.RESOURCE_EXHAUSTED, CanonicalCode.ERROR);
+    codeMap.put(Code.FAILED_PRECONDITION, CanonicalCode.ERROR);
+    codeMap.put(Code.ABORTED, CanonicalCode.ERROR);
+    codeMap.put(Code.OUT_OF_RANGE, CanonicalCode.ERROR);
+    codeMap.put(Code.UNIMPLEMENTED, CanonicalCode.ERROR);
+    codeMap.put(Code.INTERNAL, CanonicalCode.ERROR);
+    codeMap.put(Code.UNAVAILABLE, CanonicalCode.ERROR);
+    codeMap.put(Code.DATA_LOSS, CanonicalCode.ERROR);
+    codeMap.put(Code.UNAUTHENTICATED, CanonicalCode.ERROR);
+    codeMap.put(Code.UNKNOWN, CanonicalCode.ERROR);
     CODE_MAP = Collections.unmodifiableMap(codeMap);
   }
 
@@ -88,7 +76,7 @@ public final class GrpcHelper {
 
   private static CanonicalCode codeFromGrpcCode(Code grpcCode) {
     CanonicalCode code = CODE_MAP.get(grpcCode);
-    return code != null ? code : CanonicalCode.UNKNOWN;
+    return code != null ? code : CanonicalCode.UNSET;
   }
 
   private GrpcHelper() {}

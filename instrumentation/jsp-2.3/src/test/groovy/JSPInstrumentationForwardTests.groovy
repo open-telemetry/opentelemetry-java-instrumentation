@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.trace.Span.Kind.SERVER
@@ -102,9 +91,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -119,7 +108,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /$forwardFromFileName"
+          name "Compile /$forwardFromFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -129,7 +118,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /$forwardFromFileName"
+          name "Render /$forwardFromFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -138,7 +127,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "Compile /$forwardDestFileName"
+          name "Compile /$forwardDestFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -148,7 +137,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(2)
-          operationName "Render /$forwardDestFileName"
+          name "Render /$forwardDestFileName"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -181,9 +170,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -198,7 +187,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /forwards/forwardToHtml.jsp"
+          name "Compile /forwards/forwardToHtml.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -208,7 +197,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /forwards/forwardToHtml.jsp"
+          name "Render /forwards/forwardToHtml.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -235,9 +224,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 9) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -252,7 +241,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /forwards/forwardToIncludeMulti.jsp"
+          name "Compile /forwards/forwardToIncludeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -262,7 +251,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /forwards/forwardToIncludeMulti.jsp"
+          name "Render /forwards/forwardToIncludeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -271,7 +260,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "Compile /includes/includeMulti.jsp"
+          name "Compile /includes/includeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -281,7 +270,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(2)
-          operationName "Render /includes/includeMulti.jsp"
+          name "Render /includes/includeMulti.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -291,7 +280,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(5) {
           childOf span(4)
-          operationName "Compile /common/javaLoopH2.jsp"
+          name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -301,7 +290,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(4)
-          operationName "Render /common/javaLoopH2.jsp"
+          name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -311,7 +300,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(7) {
           childOf span(4)
-          operationName "Compile /common/javaLoopH2.jsp"
+          name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -321,7 +310,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(8) {
           childOf span(4)
-          operationName "Render /common/javaLoopH2.jsp"
+          name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -349,9 +338,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 7) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -366,7 +355,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /forwards/forwardToJspForward.jsp"
+          name "Compile /forwards/forwardToJspForward.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -376,7 +365,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /forwards/forwardToJspForward.jsp"
+          name "Render /forwards/forwardToJspForward.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -385,7 +374,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "Compile /forwards/forwardToSimpleJava.jsp"
+          name "Compile /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -395,7 +384,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(2)
-          operationName "Render /forwards/forwardToSimpleJava.jsp"
+          name "Render /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -405,7 +394,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(5) {
           childOf span(4)
-          operationName "Compile /common/loop.jsp"
+          name "Compile /common/loop.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -415,7 +404,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(4)
-          operationName "Render /common/loop.jsp"
+          name "Render /common/loop.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -443,9 +432,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored true
           errorEvent(JasperException, String)
           attributes {
@@ -461,7 +450,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /forwards/forwardToCompileError.jsp"
+          name "Compile /forwards/forwardToCompileError.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -471,7 +460,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /forwards/forwardToCompileError.jsp"
+          name "Render /forwards/forwardToCompileError.jsp"
           errored true
           errorEvent(JasperException, String)
           attributes {
@@ -481,7 +470,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "Compile /compileError.jsp"
+          name "Compile /compileError.jsp"
           errored true
           errorEvent(JasperException, String)
           attributes {
@@ -510,9 +499,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          parent()
-          operationName expectedOperationName()
-          spanKind SERVER
+          hasNoParent()
+          name expectedOperationName()
+          kind SERVER
           errored true
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -527,7 +516,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "Compile /forwards/forwardToNonExistent.jsp"
+          name "Compile /forwards/forwardToNonExistent.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"
@@ -537,7 +526,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "Render /forwards/forwardToNonExistent.jsp"
+          name "Render /forwards/forwardToNonExistent.jsp"
           errored false
           attributes {
             "servlet.context" "/$jspWebappContext"

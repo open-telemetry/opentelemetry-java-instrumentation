@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.auto.test
@@ -20,9 +9,12 @@ import com.google.common.base.Predicate
 import com.google.common.base.Predicates
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.propagation.HttpTraceContext
 import org.junit.Before
 import spock.lang.Specification
 
@@ -36,7 +28,16 @@ abstract class InstrumentationTestRunner extends Specification {
 
   static {
     TEST_WRITER = new InMemoryExporter()
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER)
+    // TODO this is probably temporary until default propagators are supplied by SDK
+    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
+    //  currently checking against no-op implementation so that it won't override aws-lambda
+    //  propagator configuration
+    if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
+      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+        .addTextMapPropagator(HttpTraceContext.getInstance())
+        .build())
+    }
+    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER)
   }
 
   @Before

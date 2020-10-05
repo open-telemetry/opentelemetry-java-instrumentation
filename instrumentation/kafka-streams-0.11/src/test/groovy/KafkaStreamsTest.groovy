@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
@@ -137,17 +126,17 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(0, 5) {
         // PRODUCER span 0
         span(0) {
-          operationName STREAM_PENDING
-          spanKind PRODUCER
+          name STREAM_PENDING
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         // CONSUMER span 0
         span(1) {
-          operationName STREAM_PENDING
-          spanKind CONSUMER
+          name STREAM_PENDING
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -158,8 +147,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 1
         span(2) {
-          operationName STREAM_PENDING
-          spanKind CONSUMER
+          name STREAM_PENDING
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -170,8 +159,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 0
         span(3) {
-          operationName STREAM_PROCESSED
-          spanKind PRODUCER
+          name STREAM_PROCESSED
+          kind PRODUCER
           errored false
           childOf span(2)
           attributes {
@@ -179,8 +168,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // CONSUMER span 0
         span(4) {
-          operationName STREAM_PROCESSED
-          spanKind CONSUMER
+          name STREAM_PROCESSED
+          kind CONSUMER
           errored false
           childOf span(3)
           attributes {

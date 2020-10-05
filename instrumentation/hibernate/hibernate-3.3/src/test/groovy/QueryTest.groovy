@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -45,21 +34,21 @@ class QueryTest extends AbstractHibernateTest {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName expectedSpanName
-          spanKind INTERNAL
+          name expectedSpanName
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          spanKind CLIENT
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -70,8 +59,8 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
@@ -81,22 +70,22 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            operationName "Session"
-            spanKind INTERNAL
-            parent()
+            name "Session"
+            kind INTERNAL
+            hasNoParent()
             attributes {
             }
           }
           span(1) {
-            operationName expectedSpanName
-            spanKind INTERNAL
+            name expectedSpanName
+            kind INTERNAL
             childOf span(0)
             attributes {
             }
           }
           span(2) {
-            operationName ~/^select /
-            spanKind CLIENT
+            name ~/^select /
+            kind CLIENT
             childOf span(1)
             attributes {
               "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -153,22 +142,22 @@ class QueryTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "from Value"
-          spanKind INTERNAL
+          name "from Value"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
@@ -179,8 +168,8 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }

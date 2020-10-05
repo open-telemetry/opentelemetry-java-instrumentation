@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package test
@@ -147,15 +136,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -191,15 +180,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "CallCreator.create"
-          spanKind CLIENT
+          name "CallCreator.create"
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
@@ -257,15 +246,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           childOf(span(0))
           errored false
           attributes {
@@ -276,8 +265,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf(span(1))
           errored false
           attributes {
@@ -353,15 +342,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           childOf(span(0))
           errored false
           attributes {
@@ -372,8 +361,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf(span(1))
           errored true
           attributes {
@@ -386,8 +375,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf(span(1))
           errored false
           attributes {
@@ -470,15 +459,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "MessageCreator.createAsync"
-          spanKind CLIENT
+          name "MessageCreator.createAsync"
+          kind CLIENT
           childOf(span(0))
           errored false
           attributes {
@@ -489,8 +478,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           childOf(span(1))
           errored false
           attributes {
@@ -501,8 +490,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf(span(2))
           errored true
           attributes {
@@ -515,8 +504,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(4) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf(span(2))
           errored false
           attributes {
@@ -560,14 +549,14 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test"
+          name "test"
           errored true
           errorEvent(ApiException, "Testing Failure")
-          parent()
+          hasNoParent()
         }
         span(1) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
@@ -594,9 +583,9 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
-          parent()
+          name "MessageCreator.create"
+          kind CLIENT
+          hasNoParent()
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -641,15 +630,15 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test"
+          name "test"
           errored false
-          parent()
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "MessageCreator.createAsync"
-          spanKind CLIENT
+          name "MessageCreator.createAsync"
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -659,8 +648,8 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -712,20 +701,20 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "test"
+          name "test"
           errored true
           errorEvent(ApiException, "Testing Failure")
-          parent()
+          hasNoParent()
         }
         span(1) {
-          operationName "MessageCreator.createAsync"
-          spanKind CLIENT
+          name "MessageCreator.createAsync"
+          kind CLIENT
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
         span(2) {
-          operationName "MessageCreator.create"
-          spanKind CLIENT
+          name "MessageCreator.create"
+          kind CLIENT
           errored true
           errorEvent(ApiException, "Testing Failure")
         }

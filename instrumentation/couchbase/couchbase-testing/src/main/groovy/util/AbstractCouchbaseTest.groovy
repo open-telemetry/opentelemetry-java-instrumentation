@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package util
@@ -114,13 +103,13 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .socketConnectTimeout(timeout.intValue())
   }
 
-  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
+  void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      operationName name
-      spanKind CLIENT
+      name spanName
+      kind CLIENT
       errored false
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }
@@ -129,7 +118,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         if (bucketName != null) {
           "${SemanticAttributes.DB_NAME.key()}" bucketName
         }
-        "${SemanticAttributes.DB_STATEMENT.key()}" name
+        "${SemanticAttributes.DB_STATEMENT.key()}" spanName
       }
     }
   }

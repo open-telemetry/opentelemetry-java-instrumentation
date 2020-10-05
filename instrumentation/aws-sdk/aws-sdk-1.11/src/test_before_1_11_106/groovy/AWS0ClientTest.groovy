@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
@@ -110,10 +99,10 @@ class AWS0ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address"
@@ -168,11 +157,11 @@ class AWS0ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored true
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:${UNUSABLE_PORT}"
@@ -216,11 +205,11 @@ class AWS0ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.GetObject"
-          spanKind CLIENT
+          name "S3.GetObject"
+          kind CLIENT
           errored true
           errorEvent RuntimeException, "bad handler"
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "https://s3.amazonaws.com"
@@ -262,11 +251,11 @@ class AWS0ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.GetObject"
-          spanKind CLIENT
+          name "S3.GetObject"
+          kind CLIENT
           errored true
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.HTTP_URL.key()}" "$server.address"

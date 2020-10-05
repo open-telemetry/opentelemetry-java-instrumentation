@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package springdata
@@ -104,8 +93,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "RefreshAction"
-          spanKind CLIENT
+          name "RefreshAction"
+          kind CLIENT
           errored true
           errorEvent IndexNotFoundException, "no such index"
           attributes {
@@ -155,8 +144,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     assertTraces(6) {
       trace(0, 1) {
         span(0) {
-          operationName "CreateIndexAction"
-          spanKind CLIENT
+          name "CreateIndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "CreateIndexAction"
@@ -168,8 +157,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "ClusterHealthAction"
-          spanKind CLIENT
+          name "ClusterHealthAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "ClusterHealthAction"
@@ -180,8 +169,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "SearchAction"
-          spanKind CLIENT
+          name "SearchAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
@@ -194,8 +183,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
       trace(3, 2) {
         span(0) {
-          operationName "IndexAction"
-          spanKind CLIENT
+          name "IndexAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
@@ -211,8 +200,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "PutMappingAction"
-          spanKind CLIENT
+          name "PutMappingAction"
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
@@ -224,8 +213,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
       trace(4, 1) {
         span(0) {
-          operationName "RefreshAction"
-          spanKind CLIENT
+          name "RefreshAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
@@ -240,8 +229,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
       trace(5, 1) {
         span(0) {
-          operationName "SearchAction"
-          spanKind CLIENT
+          name "SearchAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
@@ -318,8 +307,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "SearchAction"
-          spanKind CLIENT
+          name "SearchAction"
+          kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
