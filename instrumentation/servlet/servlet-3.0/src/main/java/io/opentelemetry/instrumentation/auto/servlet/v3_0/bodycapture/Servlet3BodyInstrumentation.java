@@ -157,6 +157,8 @@ public class Servlet3BodyInstrumentation extends Instrumenter.Default {
         }
 
         // Bodies are set at the end of processing once frameworks finished reading/writing.
+        // The bodies cannot be read at the start because we don't know whether framework will call
+        // gerReader or getInputStream.
         currentSpan.setAttribute("response.body", bufferingResponse.getBufferAsString());
         currentSpan.setAttribute(
             "request.body", bufferingRequest.getByteBuffer().getBufferAsString());
