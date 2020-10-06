@@ -29,7 +29,7 @@ class ViewRenderTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "Render $template"
+          name "Render $template"
           childOf span(0)
         }
       }

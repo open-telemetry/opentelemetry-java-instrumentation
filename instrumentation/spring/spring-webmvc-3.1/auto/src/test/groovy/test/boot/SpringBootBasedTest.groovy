@@ -115,8 +115,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "BasicErrorController.error"
-      spanKind INTERNAL
+      name "BasicErrorController.error"
+      kind INTERNAL
       errored false
       attributes {
       }
@@ -126,8 +126,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "HttpServletResponse.sendRedirect"
-      spanKind INTERNAL
+      name "HttpServletResponse.sendRedirect"
+      kind INTERNAL
       errored false
       attributes {
       }
@@ -137,8 +137,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "Render RedirectView"
-      spanKind INTERNAL
+      name "Render RedirectView"
+      kind INTERNAL
       errored false
       attributes {
         "view.type" RedirectView.simpleName
@@ -149,8 +149,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "TestController.${endpoint.name().toLowerCase()}"
-      spanKind INTERNAL
+      name "TestController.${endpoint.name().toLowerCase()}"
+      kind INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
@@ -163,14 +163,14 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
 
     trace.span(index) {
-      operationName endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
-      spanKind SERVER
+      name endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)

@@ -16,12 +16,12 @@ class AkkaActorTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
         span(1) {
-          operationName "$expectedGreeting, Akka"
+          name "$expectedGreeting, Akka"
           childOf span(0)
           attributes {
           }

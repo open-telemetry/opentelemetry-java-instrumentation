@@ -417,7 +417,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
     trace.span(index) {
-      operationName "controller"
+      name "controller"
       errored errorMessage != null
       if (errorMessage) {
         errorEvent(Exception, errorMessage)
@@ -445,14 +445,14 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedServerSpanName(method, endpoint)
-      spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
+      name expectedServerSpanName(method, endpoint)
+      kind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       if (endpoint == EXCEPTION && !hasHandlerSpan()) {
         event(0) {

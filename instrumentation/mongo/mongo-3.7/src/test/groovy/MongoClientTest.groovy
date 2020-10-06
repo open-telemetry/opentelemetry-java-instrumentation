@@ -268,10 +268,10 @@ class MongoClientTest extends MongoBaseTest {
 
   def mongoSpan(TraceAssert trace, int index, String statement, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      operationName { it.replace(" ", "") == statement }
-      spanKind CLIENT
+      name { it.replace(" ", "") == statement }
+      kind CLIENT
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }

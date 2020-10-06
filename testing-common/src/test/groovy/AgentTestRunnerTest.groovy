@@ -84,7 +84,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "parent"
+          name "parent"
         }
       }
     }
@@ -107,11 +107,11 @@ class AgentTestRunnerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
         }
         span(1) {
-          operationName "child"
+          name "child"
           childOf span(0)
         }
       }

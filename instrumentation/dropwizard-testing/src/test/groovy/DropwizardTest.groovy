@@ -77,8 +77,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
-      spanKind INTERNAL
+      name "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
+      kind INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
@@ -90,14 +90,14 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
-      spanKind SERVER
+      name "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
+      kind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       attributes {
         // dropwizard reports peer ip as the client ip

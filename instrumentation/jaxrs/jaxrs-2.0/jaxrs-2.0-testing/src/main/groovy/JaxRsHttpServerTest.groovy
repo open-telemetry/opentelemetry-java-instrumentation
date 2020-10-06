@@ -161,14 +161,14 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   int statusCode,
                   String query) {
     trace.span(index) {
-      operationName method + " /" + path
-      spanKind SERVER
+      name method + " /" + path
+      kind SERVER
       errored isError
       if (parentID != null) {
         traceId traceID
-        parentId parentID
+        parentSpanId parentID
       } else {
-        parent()
+        hasNoParent()
       }
       attributes {
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
@@ -204,8 +204,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                    boolean isError,
                    String exceptionMessage = null) {
     trace.span(index) {
-      operationName "JaxRsTestResource.${methodName}"
-      spanKind INTERNAL
+      name "JaxRsTestResource.${methodName}"
+      kind INTERNAL
       errored isError
       if (isError) {
         errorEvent(Exception, exceptionMessage)

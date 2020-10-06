@@ -605,8 +605,8 @@ class SpymemcachedTest extends AgentTestRunner {
 
   def getParentSpan(TraceAssert trace, int index) {
     return trace.span(index) {
-      operationName parentOperation
-      parent()
+      name parentOperation
+      hasNoParent()
       errored false
       attributes {
       }
@@ -619,8 +619,8 @@ class SpymemcachedTest extends AgentTestRunner {
         childOf(trace.span(0))
       }
 
-      operationName operation
-      spanKind CLIENT
+      name operation
+      kind CLIENT
       errored(error != null && error != "canceled")
 
       if (error == "timeout") {

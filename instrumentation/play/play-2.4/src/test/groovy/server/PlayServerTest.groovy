@@ -72,8 +72,8 @@ class PlayServerTest extends HttpServerTest<Server> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "play.request"
-      spanKind INTERNAL
+      name "play.request"
+      kind INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)

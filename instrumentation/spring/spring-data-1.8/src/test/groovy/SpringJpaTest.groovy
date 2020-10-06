@@ -33,7 +33,7 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "toString test"
+          name "toString test"
           attributes {
           }
         }
@@ -59,15 +59,15 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "JpaRepository.findAll"
-          spanKind INTERNAL
+          name "JpaRepository.findAll"
+          kind INTERNAL
           errored false
           attributes {
           }
         }
         span(1) { // select
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -90,15 +90,15 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CrudRepository.save"
-          spanKind INTERNAL
+          name "CrudRepository.save"
+          kind INTERNAL
           errored false
           attributes {
           }
         }
         span(1) { // insert
-          operationName ~/^insert /
-          spanKind CLIENT
+          name ~/^insert /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -121,15 +121,15 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "CrudRepository.save"
-          spanKind INTERNAL
+          name "CrudRepository.save"
+          kind INTERNAL
           errored false
           attributes {
           }
         }
         span(1) { // select
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -140,8 +140,8 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // update
-          operationName ~/^update /
-          spanKind CLIENT
+          name ~/^update /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -162,15 +162,15 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "JpaCustomerRepository.findByLastName"
-          spanKind INTERNAL
+          name "JpaCustomerRepository.findByLastName"
+          kind INTERNAL
           errored false
           attributes {
           }
         }
         span(1) { // select
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -191,15 +191,15 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "CrudRepository.delete"
-          spanKind INTERNAL
+          name "CrudRepository.delete"
+          kind INTERNAL
           errored false
           attributes {
           }
         }
         span(1) { // select
-          operationName ~/^select /
-          spanKind CLIENT
+          name ~/^select /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -210,8 +210,8 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // delete
-          operationName ~/^delete /
-          spanKind CLIENT
+          name ~/^delete /
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"

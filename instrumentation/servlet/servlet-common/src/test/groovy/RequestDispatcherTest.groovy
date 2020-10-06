@@ -55,7 +55,7 @@ class RequestDispatcherTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "TestDispatcher.$operation"
+          name "TestDispatcher.$operation"
           childOf span(0)
         }
         basicSpan(it, 2, "$operation-child", span(1))
@@ -99,7 +99,7 @@ class RequestDispatcherTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)
         span(1) {
-          operationName "TestDispatcher.$operation"
+          name "TestDispatcher.$operation"
           childOf span(0)
           errored true
           errorEvent(ex.class, ex.message)

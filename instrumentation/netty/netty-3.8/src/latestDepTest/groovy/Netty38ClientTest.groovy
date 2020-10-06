@@ -82,7 +82,7 @@ class Netty38ClientTest extends HttpClientTest {
         basicSpan(it, 0, "parent", null, thrownException)
 
         span(1) {
-          operationName "CONNECT"
+          name "CONNECT"
           childOf span(0)
           errored true
           Class errorClass = ConnectException

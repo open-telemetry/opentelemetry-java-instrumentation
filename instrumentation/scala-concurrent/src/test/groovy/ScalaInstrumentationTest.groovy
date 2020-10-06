@@ -18,7 +18,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -57,7 +57,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -81,7 +81,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }
@@ -120,7 +120,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "parent"
+          name "parent"
           attributes {
           }
         }

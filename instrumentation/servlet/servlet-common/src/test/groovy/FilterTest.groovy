@@ -51,7 +51,7 @@ class FilterTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${filter.class.simpleName}.doFilter"
+          name "${filter.class.simpleName}.doFilter"
           childOf span(0)
           attributes {
           }
@@ -86,7 +86,7 @@ class FilterTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent", null, ex)
         span(1) {
-          operationName "${filter.class.simpleName}.doFilter"
+          name "${filter.class.simpleName}.doFilter"
           childOf span(0)
           errored true
           errorEvent(ex.class, ex.message)

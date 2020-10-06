@@ -305,10 +305,10 @@ class MongoAsyncClientTest extends MongoBaseTest {
 
   def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      operationName statementEval
-      spanKind CLIENT
+      name statementEval
+      kind CLIENT
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }

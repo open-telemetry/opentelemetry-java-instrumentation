@@ -87,9 +87,9 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "GET _cluster/health"
-          spanKind CLIENT
-          parent()
+          name "GET _cluster/health"
+          kind CLIENT
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
             "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
@@ -100,8 +100,8 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"

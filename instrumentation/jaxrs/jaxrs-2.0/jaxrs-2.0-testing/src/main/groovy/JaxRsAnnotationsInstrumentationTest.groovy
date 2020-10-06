@@ -32,7 +32,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "POST /a"
+          name "POST /a"
           attributes {
           }
         }
@@ -51,13 +51,13 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName name
-          parent()
+          name paramName
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "${className}.call"
+          name "${className}.call"
           childOf span(0)
           attributes {
           }
@@ -78,7 +78,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     spanNames.get(obj.class).size() == 1
 
     where:
-    name                 | obj
+    paramName            | obj
     "/a"                 | new Jax() {
       @Path("/a")
       void call() {
@@ -145,7 +145,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           attributes {
           }
         }

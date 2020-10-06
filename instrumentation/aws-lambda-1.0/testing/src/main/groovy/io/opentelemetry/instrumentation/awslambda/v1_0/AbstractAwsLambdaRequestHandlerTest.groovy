@@ -37,8 +37,8 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
+          name("my_function")
+          kind SERVER
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
@@ -65,8 +65,8 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
+          name("my_function")
+          kind SERVER
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {

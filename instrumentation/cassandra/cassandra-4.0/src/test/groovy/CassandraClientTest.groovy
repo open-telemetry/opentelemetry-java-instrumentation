@@ -89,10 +89,10 @@ class CassandraClientTest extends AgentTestRunner {
 
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      operationName statement
-      spanKind CLIENT
+      name statement
+      kind CLIENT
       if (parentSpan == null) {
-        parent()
+        hasNoParent()
       } else {
         childOf((SpanData) parentSpan)
       }

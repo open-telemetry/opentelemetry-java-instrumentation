@@ -123,10 +123,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
@@ -196,10 +196,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
@@ -284,10 +284,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "$service.$operation"
-          spanKind CLIENT
+          name "$service.$operation"
+          kind CLIENT
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
@@ -383,11 +383,11 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.GetObject"
-          spanKind CLIENT
+          name "S3.GetObject"
+          kind CLIENT
           errored true
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"

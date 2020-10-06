@@ -56,9 +56,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName urlPathWithVariables
-          spanKind SERVER
-          parent()
+          name urlPathWithVariables
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -73,12 +73,12 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            nameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            name TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind INTERNAL
+          kind INTERNAL
           childOf span(0)
           attributes {
             if (annotatedMethod == null) {
@@ -122,9 +122,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName urlPathWithVariables
-          spanKind SERVER
-          parent()
+          name urlPathWithVariables
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -139,12 +139,12 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            nameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            name TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind INTERNAL
+          kind INTERNAL
           childOf span(0)
           attributes {
             if (annotatedMethod == null) {
@@ -160,7 +160,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "tracedMethod"
+          name "tracedMethod"
           childOf span(0)
           errored false
           attributes {
@@ -210,9 +210,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName urlPathWithVariables
-          spanKind SERVER
-          parent()
+          name urlPathWithVariables
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -227,12 +227,12 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            nameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            name TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind INTERNAL
+          kind INTERNAL
           childOf span(0)
           attributes {
             if (annotatedMethod == null) {
@@ -248,7 +248,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "tracedMethod"
+          name "tracedMethod"
           childOf span(annotatedMethod ? 0 : 1)
           errored false
           attributes {
@@ -276,9 +276,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "/**"
-          spanKind SERVER
-          parent()
+          name "/**"
+          kind SERVER
+          hasNoParent()
           errored true
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -292,8 +292,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "ResourceWebHandler.handle"
-          spanKind INTERNAL
+          name "ResourceWebHandler.handle"
+          kind INTERNAL
           childOf span(0)
           errored true
           errorEvent(ResponseStatusException, String)
@@ -321,9 +321,9 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "/echo"
-          spanKind SERVER
-          parent()
+          name "/echo"
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -336,8 +336,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName EchoHandlerFunction.getSimpleName() + ".handle"
-          spanKind INTERNAL
+          name EchoHandlerFunction.getSimpleName() + ".handle"
+          kind INTERNAL
           childOf span(0)
           attributes {
             "request.predicate" "(POST && /echo)"
@@ -347,7 +347,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "echo"
+          name "echo"
           childOf span(1)
           attributes {
           }
@@ -369,10 +369,10 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName urlPathWithVariables
-          spanKind SERVER
+          name urlPathWithVariables
+          kind SERVER
           errored true
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -387,12 +387,12 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            nameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            name TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind INTERNAL
+          kind INTERNAL
           childOf span(0)
           errored true
           errorEvent(RuntimeException, "bad things happen")
@@ -436,9 +436,9 @@ class SpringWebfluxTest extends AgentTestRunner {
       // TODO: why order of spans is different in these traces?
       trace(0, 2) {
         span(0) {
-          operationName "/double-greet-redirect"
-          spanKind SERVER
-          parent()
+          name "/double-greet-redirect"
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -451,8 +451,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "RedirectComponent.lambda"
-          spanKind INTERNAL
+          name "RedirectComponent.lambda"
+          kind INTERNAL
           childOf span(0)
           attributes {
             "request.predicate" "(GET && /double-greet-redirect)"
@@ -465,9 +465,9 @@ class SpringWebfluxTest extends AgentTestRunner {
       }
       trace(1, 2) {
         span(0) {
-          operationName "/double-greet"
-          spanKind SERVER
-          parent()
+          name "/double-greet"
+          kind SERVER
+          hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -480,8 +480,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
-          spanKind INTERNAL
+          nameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
+          kind INTERNAL
           childOf span(0)
           attributes {
             "request.predicate" "(GET && /double-greet)"
@@ -509,9 +509,9 @@ class SpringWebfluxTest extends AgentTestRunner {
       responses.eachWithIndex { def response, int i ->
         trace(i, 2) {
           span(0) {
-            operationName urlPathWithVariables
-            spanKind SERVER
-            parent()
+            name urlPathWithVariables
+            kind SERVER
+            hasNoParent()
             attributes {
               "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
               "${SemanticAttributes.NET_PEER_PORT.key()}" Long
@@ -526,12 +526,12 @@ class SpringWebfluxTest extends AgentTestRunner {
           span(1) {
             if (annotatedMethod == null) {
               // Functional API
-              operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+              nameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
             } else {
               // Annotation API
-              operationName TestController.getSimpleName() + "." + annotatedMethod
+              name TestController.getSimpleName() + "." + annotatedMethod
             }
-            spanKind INTERNAL
+            kind INTERNAL
             childOf span(0)
             attributes {
               if (annotatedMethod == null) {

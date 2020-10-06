@@ -71,22 +71,22 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "ProcedureCall.getOutputs TEST_PROC"
-          spanKind INTERNAL
+          name "ProcedureCall.getOutputs TEST_PROC"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }
         }
         span(2) {
-          operationName "{call TEST_PROC()}"
-          spanKind CLIENT
+          name "{call TEST_PROC()}"
+          kind CLIENT
           childOf span(1)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -97,8 +97,8 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(3) {
-          spanKind INTERNAL
-          operationName "Transaction.commit"
+          kind INTERNAL
+          name "Transaction.commit"
           childOf span(0)
           attributes {
           }
@@ -129,22 +129,22 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "Session"
-          spanKind INTERNAL
-          parent()
+          name "Session"
+          kind INTERNAL
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "ProcedureCall.getOutputs TEST_PROC"
-          spanKind INTERNAL
+          name "ProcedureCall.getOutputs TEST_PROC"
+          kind INTERNAL
           childOf span(0)
           errored(true)
           errorEvent(SQLGrammarException, "could not prepare statement")
         }
         span(2) {
-          operationName "Transaction.commit"
-          spanKind INTERNAL
+          name "Transaction.commit"
+          kind INTERNAL
           childOf span(0)
           attributes {
           }

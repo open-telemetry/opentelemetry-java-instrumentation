@@ -21,8 +21,8 @@ class SpringSchedulingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "TriggerTask.run"
-          parent()
+          name "TriggerTask.run"
+          hasNoParent()
           errored false
           attributes {
           }
@@ -43,8 +43,8 @@ class SpringSchedulingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "IntervalTask.run"
-          parent()
+          name "IntervalTask.run"
+          hasNoParent()
           errored false
           attributes {
           }
@@ -65,8 +65,8 @@ class SpringSchedulingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationNameContains "LambdaTaskConfigurer\$\$Lambda\$"
-          parent()
+          nameContains "LambdaTaskConfigurer\$\$Lambda\$"
+          hasNoParent()
           errored false
           attributes {
           }

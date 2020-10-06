@@ -25,15 +25,15 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "run query"
-          parent()
+          name "run query"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName JDBCUtils.normalizeSql(SlickUtils.TestQuery())
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(SlickUtils.TestQuery())
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -64,11 +64,11 @@ class SlickTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2, {
         span(0) {}
-        span(1) { spanKind CLIENT }
+        span(1) { kind CLIENT }
       })
       trace(1, 2, {
         span(0) {}
-        span(1) { spanKind CLIENT }
+        span(1) { kind CLIENT }
       })
     }
   }
