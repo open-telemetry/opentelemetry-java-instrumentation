@@ -8,7 +8,6 @@ import static JMS2Test.producerSpan
 
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -22,7 +21,6 @@ import org.hornetq.core.config.CoreQueueConfiguration
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
-import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
@@ -30,12 +28,6 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
-    }
-  }
 
   @Shared
   HornetQServer server
@@ -58,8 +50,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     config.securityEnabled = false
     config.persistenceEnabled = false
     config.setQueueConfigurations([new CoreQueueConfiguration("someQueue", "someQueue", null, true)])
-    config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
-                                      new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
+    config.setAcceptorConfigurations([new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
     server = HornetQServers.newHornetQServer(config)
     server.start()
@@ -86,9 +77,6 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.classes.exclude")
-    }
   }
 
   def "sending a message to #destinationName generates spans"() {
