@@ -5,17 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 
 public final class HttpStatusConverter {
 
   // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
-  public static Status statusFromHttpStatus(int httpStatus) {
+  public static StatusCanonicalCode statusFromHttpStatus(int httpStatus) {
     if (httpStatus >= 100 && httpStatus < 400) {
-      return Status.UNSET;
+      return StatusCanonicalCode.UNSET;
     }
 
-    return Status.ERROR;
+    return StatusCanonicalCode.ERROR;
   }
 
   private HttpStatusConverter() {}

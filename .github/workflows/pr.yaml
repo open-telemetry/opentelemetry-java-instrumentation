@@ -16,7 +16,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Set JDK ${{ matrix.java }} home
-        run: echo "::set-env name=JAVA_${{ matrix.java }}_HOME::${{ env.JAVA_HOME }}"
+        run: echo JAVA_${{ matrix.java }}_HOME=${{ env.JAVA_HOME }} >> $GITHUB_ENV
 
       - name: Set up JDK 11 for running Gradle
         if: matrix.java != 11
@@ -40,3 +40,33 @@ jobs:
           wget -q https://get.cimate.io/release/linux/cimate
           chmod +x cimate
           ./cimate -v "**/TEST-*.xml"
+
+  setup-muzzle-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - id: set-matrix
+        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
+
+  muzzle:
+    needs: setup-muzzle-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.setup-muzzle-matrix.outputs.matrix)}}
+      fail-fast: false
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Run  muzzle
+        run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon

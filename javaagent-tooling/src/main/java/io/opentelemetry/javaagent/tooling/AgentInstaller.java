@@ -23,6 +23,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,9 +140,10 @@ public class AgentInstaller {
     for (AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
+    Iterable<Instrumenter> instrumenters =
+        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader());
     int numInstrumenters = 0;
-    for (Instrumenter instrumenter :
-        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
+    for (Instrumenter instrumenter : orderInstrumenters(instrumenters)) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
@@ -153,6 +155,13 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static Iterable<Instrumenter> orderInstrumenters(Iterable<Instrumenter> instrumenters) {
+    List<Instrumenter> orderedInstrumenters = new ArrayList<>();
+    instrumenters.forEach(orderedInstrumenters::add);
+    Collections.sort(orderedInstrumenters, Comparator.comparingInt(Instrumenter::getOrder));
+    return orderedInstrumenters;
   }
 
   private static void addByteBuddyRawSetting() {

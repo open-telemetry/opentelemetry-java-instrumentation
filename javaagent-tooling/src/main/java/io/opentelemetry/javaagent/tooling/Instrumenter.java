@@ -51,6 +51,14 @@ public interface Instrumenter {
    */
   AgentBuilder instrument(AgentBuilder agentBuilder);
 
+  /**
+   * Order of adding instrumentation to ByteBuddy. For example instrumentation with order 1 runs
+   * after an instrumentation with order 0 (default) matched on the same API.
+   *
+   * @return the order of adding an instrumentation to ByteBuddy. Default value is 0 - no order.
+   */
+  int getOrder();
+
   abstract class Default implements Instrumenter {
 
     private static final Logger log = LoggerFactory.getLogger(Default.class);
@@ -137,6 +145,12 @@ public interface Instrumenter {
                     .advice(entry.getKey(), entry.getValue()));
       }
       return agentBuilder;
+    }
+
+    /** @return 0 - default order. */
+    @Override
+    public int getOrder() {
+      return 0;
     }
 
     /** Matches classes for which instrumentation is not muzzled. */

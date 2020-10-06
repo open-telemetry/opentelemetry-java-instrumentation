@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.typed.server;
 
 import io.opentelemetry.javaagent.typed.server.http.HttpServerTypedSpan;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 
 public class SampleHttpServerTypedSpan
     extends HttpServerTypedSpan<SampleHttpServerTypedSpan, String, String> {
@@ -23,7 +23,7 @@ public class SampleHttpServerTypedSpan
 
   @Override
   protected SampleHttpServerTypedSpan onResponse(String o) {
-    delegate.setStatus(Status.OK);
+    delegate.setStatus(StatusCanonicalCode.OK);
     return this;
   }
 

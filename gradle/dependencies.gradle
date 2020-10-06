@@ -11,10 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.9.0-20201002.015754-70',
-    opentelemetryOther  : '0.9.0-20201002.015754-71',
-    opentelemetryAnother: '0.9.0-20201002.015754-69',
-    opentelemetryBaggage: '0.9.0-20201002.015754-19',
+    opentelemetry       : '0.9.0-20201005.194248-83',
+    opentelemetryOther  : '0.9.0-20201005.194248-84',
+    opentelemetryAnother: '0.9.0-20201005.194248-82',
+    opentelemetryBaggage: '0.9.0-20201005.194248-32',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7
@@ -75,7 +75,7 @@ ext {
     ],
     groovy                      : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     systemLambda                : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",
-    testcontainers              : "org.testcontainers:testcontainers:1.12.2",
+    testcontainers              : "org.testcontainers:testcontainers:1.15.0-rc2",
     testLogging                 : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

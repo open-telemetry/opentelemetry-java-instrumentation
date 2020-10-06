@@ -7,29 +7,30 @@ package listener
 
 import javax.annotation.PreDestroy
 import javax.jms.ConnectionFactory
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import org.apache.activemq.ActiveMQConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.jms.annotation.EnableJms
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
+import org.testcontainers.containers.GenericContainer
 
 @Configuration
 @ComponentScan
 @EnableJms
 class Config {
 
-  @Bean
-  EmbeddedActiveMQBroker broker() {
-    def broker = new EmbeddedActiveMQBroker()
+  private static GenericContainer broker = new GenericContainer("rmohr/activemq")
+    .withExposedPorts(61616, 8161)
+
+  static {
     broker.start()
-    return broker
   }
 
   @Bean
-  ConnectionFactory connectionFactory(EmbeddedActiveMQBroker broker) {
-    return broker.createConnectionFactory()
+  ConnectionFactory connectionFactory() {
+    return new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
   }
 
   @Bean
@@ -41,6 +42,6 @@ class Config {
 
   @PreDestroy
   void destroy() {
-    broker().stop()
+    broker.stop()
   }
 }

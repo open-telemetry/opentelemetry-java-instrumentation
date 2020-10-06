@@ -12,7 +12,7 @@ import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
-import application.io.opentelemetry.trace.Status;
+import application.io.opentelemetry.trace.StatusCanonicalCode;
 import application.io.opentelemetry.trace.TraceState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,46 +113,45 @@ public class Bridging {
     switch (applicationKey.getType()) {
       case STRING:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.stringKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.stringKey(applicationKey.getKey());
       case BOOLEAN:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.booleanKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.booleanKey(applicationKey.getKey());
       case LONG:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.longKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.longKey(applicationKey.getKey());
       case DOUBLE:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.doubleKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.doubleKey(applicationKey.getKey());
       case STRING_ARRAY:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.stringArrayKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.stringArrayKey(applicationKey.getKey());
       case BOOLEAN_ARRAY:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.booleanArrayKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.booleanArrayKey(applicationKey.getKey());
       case LONG_ARRAY:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.longArrayKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
         return (io.opentelemetry.common.AttributeKey<T>)
-            io.opentelemetry.common.AttributesKeys.doubleArrayKey(applicationKey.getKey());
+            io.opentelemetry.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
       default:
         log.debug("unexpected attribute key type: {}", applicationKey.getType());
         return null;
     }
   }
 
-  public static io.opentelemetry.trace.Status toAgentOrNull(Status applicationStatus) {
-    io.opentelemetry.trace.Status.CanonicalCode agentCanonicalCode;
+  public static io.opentelemetry.trace.StatusCanonicalCode toAgent(
+      StatusCanonicalCode applicationStatus) {
+    io.opentelemetry.trace.StatusCanonicalCode agentCanonicalCode;
     try {
       agentCanonicalCode =
-          io.opentelemetry.trace.Status.CanonicalCode.valueOf(
-              applicationStatus.getCanonicalCode().name());
+          io.opentelemetry.trace.StatusCanonicalCode.valueOf(applicationStatus.name());
     } catch (IllegalArgumentException e) {
-      log.debug(
-          "unexpected status canonical code: {}", applicationStatus.getCanonicalCode().name());
-      return null;
+      log.debug("unexpected status canonical code: {}", applicationStatus.name());
+      return io.opentelemetry.trace.StatusCanonicalCode.UNSET;
     }
-    return agentCanonicalCode.toStatus().withDescription(applicationStatus.getDescription());
+    return agentCanonicalCode;
   }
 
   public static io.opentelemetry.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
