@@ -8,7 +8,6 @@ import static JMS2Test.producerSpan
 
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session

@@ -7,7 +7,6 @@ import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import javax.jms.ConnectionFactory
 import listener.Config
 import org.apache.activemq.ActiveMQMessageConsumer
