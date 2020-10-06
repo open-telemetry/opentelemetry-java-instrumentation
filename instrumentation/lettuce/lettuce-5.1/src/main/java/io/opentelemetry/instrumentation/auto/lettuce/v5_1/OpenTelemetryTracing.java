@@ -15,7 +15,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -198,7 +198,7 @@ public enum OpenTelemetryTracing implements Tracing {
       }
 
       if (error != null) {
-        span.setStatus(Status.ERROR);
+        span.setStatus(StatusCanonicalCode.ERROR);
         span.recordException(error);
         error = null;
       }
