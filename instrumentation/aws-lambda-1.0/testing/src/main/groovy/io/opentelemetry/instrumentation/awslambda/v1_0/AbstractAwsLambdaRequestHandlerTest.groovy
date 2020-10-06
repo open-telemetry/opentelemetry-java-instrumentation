@@ -10,10 +10,23 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.InstrumentationSpecification
+import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.trace.propagation.HttpTraceContext
 
 abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
+
+  // Lambda instrumentation requires XRay propagator to be enabled.
+  static {
+    def propagators = DefaultContextPropagators.builder()
+      .addTextMapPropagator(HttpTraceContext.instance)
+      .addTextMapPropagator(AwsXRayPropagator.instance)
+      .build()
+    OpenTelemetry.setPropagators(propagators)
+  }
 
   protected static String doHandleRequest(String input, Context context) {
     if (input == "hello") {
