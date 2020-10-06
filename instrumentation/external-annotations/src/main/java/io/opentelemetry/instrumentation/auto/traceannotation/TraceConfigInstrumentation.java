@@ -68,6 +68,11 @@ public class TraceConfigInstrumentation implements Instrumenter {
     return agentBuilder;
   }
 
+  @Override
+  public int getOrder() {
+    return 0;
+  }
+
   // Not Using AutoService to hook up this instrumentation
   public static class TracerClassInstrumentation extends Default {
     private final String className;
