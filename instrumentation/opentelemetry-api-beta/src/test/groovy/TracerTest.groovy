@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static application.io.opentelemetry.context.ContextUtils.withScopedContext
 import static application.io.opentelemetry.trace.Span.Kind.PRODUCER
 import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
