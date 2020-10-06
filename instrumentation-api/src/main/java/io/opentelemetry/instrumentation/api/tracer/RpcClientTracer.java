@@ -5,4 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-public abstract class RpcClientTracer extends BaseTracer {}
+import io.opentelemetry.trace.Tracer;
+
+public abstract class RpcClientTracer extends BaseTracer {
+  protected RpcClientTracer() {}
+
+  protected RpcClientTracer(Tracer tracer) {
+    super(tracer);
+  }
+}
