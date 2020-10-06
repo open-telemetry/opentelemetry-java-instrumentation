@@ -41,6 +41,7 @@ jobs:
           chmod +x cimate
           ./cimate -v "**/TEST-*.xml"
 
+
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -70,3 +71,10 @@ jobs:
           java-version: 11
       - name: Run  muzzle
         run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
+
+  accept-pr:
+    needs: [test, muzzle]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Success
+        run: echo Build successful
