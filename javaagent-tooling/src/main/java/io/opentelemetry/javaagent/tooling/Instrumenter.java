@@ -52,7 +52,8 @@ public interface Instrumenter {
   AgentBuilder instrument(AgentBuilder agentBuilder);
 
   /**
-   * Order of adding instrumentation to ByteBuddy.
+   * Order of adding instrumentation to ByteBuddy. For example instrumentation with order 1 runs
+   * after an instrumentation with order 0 (default) matched on the same API.
    *
    * @return the order of adding an instrumentation to ByteBuddy. Default value is 0 - no order.
    */
@@ -146,7 +147,7 @@ public interface Instrumenter {
       return agentBuilder;
     }
 
-    /** @return 0 - no default order. */
+    /** @return 0 - default order. */
     @Override
     public int getOrder() {
       return 0;
