@@ -152,7 +152,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.jms.")) {
         if (name.startsWith("org.springframework.jms.listener.")
             || name.equals(
-            "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback")) {
+                "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback")) {
           return false;
         }
         return true;
