@@ -45,12 +45,6 @@ class JMS1Test extends AgentTestRunner {
 
   ActiveMQTextMessage message = session.createTextMessage(messageText)
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
-    }
-  }
-
   def setupSpec() {
     activemq.start()
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + activemq.getMappedPort(61616))
@@ -62,9 +56,6 @@ class JMS1Test extends AgentTestRunner {
 
   def cleanupSpec() {
     activemq.stop()
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.classes.exclude")
-    }
   }
 
   def "sending a message to #destinationName #destinationType generates spans"() {

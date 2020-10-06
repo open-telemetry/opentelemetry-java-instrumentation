@@ -19,18 +19,6 @@ import spock.lang.Requires
 @Requires({"true" != System.getenv("CIRCLECI")})
 class SpringListenerJMS1Test extends AgentTestRunner {
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
-    }
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.classes.exclude")
-    }
-  }
-
   def "receiving message in spring listener generates spans"() {
     setup:
     def context = new AnnotationConfigApplicationContext(Config)

@@ -36,13 +36,6 @@ import spock.lang.Shared
 
 class JMS2Test extends AgentTestRunner {
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
-    }
-  }
-
-
   @Shared
   HornetQServer server
   @Shared
@@ -89,9 +82,6 @@ class JMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.classes.exclude")
-    }
   }
 
   def "sending a message to #destinationName #destinationType generates spans"() {
