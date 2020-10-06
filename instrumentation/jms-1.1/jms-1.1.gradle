@@ -31,15 +31,15 @@ test.dependsOn jms2Test
 dependencies {
   compileOnly group: 'javax.jms', name: 'jms-api', version: '1.1-rev-1'
 
-  testImplementation group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
-  testImplementation group: 'org.apache.activemq', name: 'activemq-pool', version: '5.14.5'
-  testImplementation group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'
-
   // required for Java 11+ .  Latest version that runs on Java 7
   testImplementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
-  // 4.x required for Java 7
-  testImplementation group: 'org.springframework', name: 'spring-jms', version: '4.3.21.RELEASE'
+  testImplementation("org.springframework.boot:spring-boot-starter-activemq:${versions.springboot}")
 
   jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
   jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
+
+  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
+
 }
