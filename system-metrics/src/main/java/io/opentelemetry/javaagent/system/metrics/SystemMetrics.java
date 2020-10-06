@@ -15,6 +15,7 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
+import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OSProcess;
@@ -131,6 +132,50 @@ public class SystemMetrics {
 
                 r.observe(recv, Labels.of(TYPE_LABEL_KEY, "receive"));
                 r.observe(sent, Labels.of(TYPE_LABEL_KEY, "transmit"));
+              }
+            });
+
+    meter
+        .longValueObserverBuilder("system.disk.io")
+        .setDescription("System disk IO")
+        .setUnit("bytes")
+        .build()
+        .setCallback(
+            new Callback<LongResult>() {
+              @Override
+              public void update(LongResult r) {
+                long read = 0;
+                long write = 0;
+
+                for (HWDiskStore diskStore : hal.getDiskStores()) {
+                  read += diskStore.getReadBytes();
+                  write += diskStore.getWriteBytes();
+                }
+
+                r.observe(read, Labels.of(TYPE_LABEL_KEY, "read"));
+                r.observe(write, Labels.of(TYPE_LABEL_KEY, "write"));
+              }
+            });
+
+    meter
+        .longValueObserverBuilder("system.disk.operations")
+        .setDescription("System disk operations")
+        .setUnit("operations")
+        .build()
+        .setCallback(
+            new Callback<LongResult>() {
+              @Override
+              public void update(LongResult r) {
+                long read = 0;
+                long write = 0;
+
+                for (HWDiskStore diskStore : hal.getDiskStores()) {
+                  read += diskStore.getReads();
+                  write += diskStore.getWrites();
+                }
+
+                r.observe(read, Labels.of(TYPE_LABEL_KEY, "read"));
+                r.observe(write, Labels.of(TYPE_LABEL_KEY, "write"));
               }
             });
 
