@@ -13,9 +13,7 @@ import io.opentelemetry.trace.Tracer;
 
 public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
 
-  protected RpcServerTracer() {
-
-  }
+  protected RpcServerTracer() {}
 
   protected RpcServerTracer(Tracer tracer) {
     super(tracer);

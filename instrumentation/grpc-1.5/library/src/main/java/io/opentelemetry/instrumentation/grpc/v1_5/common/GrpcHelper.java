@@ -7,8 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_5.common;
 
 import io.grpc.Status.Code;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
-import io.opentelemetry.trace.Status.CanonicalCode;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public final class GrpcHelper {
@@ -22,16 +21,12 @@ public final class GrpcHelper {
     span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
   }
 
-  public static Status statusFromGrpcStatus(io.grpc.Status grpcStatus) {
-    Status status = codeFromGrpcCode(grpcStatus.getCode()).toStatus();
-    if (grpcStatus.getDescription() != null) {
-      status = status.withDescription(grpcStatus.getDescription());
-    }
-    return status;
+  public static StatusCanonicalCode statusFromGrpcStatus(io.grpc.Status grpcStatus) {
+    return codeFromGrpcCode(grpcStatus.getCode());
   }
 
-  private static CanonicalCode codeFromGrpcCode(Code grpcCode) {
-    return grpcCode.equals(Code.OK) ? CanonicalCode.UNSET : CanonicalCode.ERROR;
+  private static StatusCanonicalCode codeFromGrpcCode(Code grpcCode) {
+    return grpcCode.equals(Code.OK) ? StatusCanonicalCode.UNSET : StatusCanonicalCode.ERROR;
   }
 
   private GrpcHelper() {}

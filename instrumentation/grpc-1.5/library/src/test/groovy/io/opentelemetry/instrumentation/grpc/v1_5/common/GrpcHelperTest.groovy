@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.common
 
 import io.grpc.Status
+import io.opentelemetry.trace.StatusCanonicalCode
 import spock.lang.Specification
 
 class GrpcHelperTest extends Specification {
@@ -16,11 +17,10 @@ class GrpcHelperTest extends Specification {
 
     then:
     if (grpcStatus == Status.OK) {
-      status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.UNSET
+      status == StatusCanonicalCode.UNSET
     } else {
-      status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.ERROR
+      status == StatusCanonicalCode.ERROR
     }
-    status.description == null
 
     // Considering history of status, if we compare all values of the gRPC status by name, we will
     // probably find any new mismatches with the OpenTelemetry spec.
@@ -33,7 +33,6 @@ class GrpcHelperTest extends Specification {
     def status = GrpcHelper.statusFromGrpcStatus(Status.INVALID_ARGUMENT.withDescription("bad argument"))
 
     then:
-    status.canonicalCode == io.opentelemetry.trace.Status.CanonicalCode.ERROR
-    status.description == "bad argument"
+    status == StatusCanonicalCode.ERROR
   }
 }

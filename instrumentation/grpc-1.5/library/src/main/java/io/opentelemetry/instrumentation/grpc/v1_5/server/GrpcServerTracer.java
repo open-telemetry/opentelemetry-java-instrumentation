@@ -33,7 +33,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   }
 
   public void setStatus(Span span, Status status) {
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(status));
+    span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
     if (status.getCause() != null) {
       addThrowable(span, status.getCause());
     }
@@ -43,7 +43,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   protected void onError(Span span, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
     super.onError(span, grpcStatus.getCause());
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus));
+    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
   }
 
   @Override

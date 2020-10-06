@@ -23,7 +23,7 @@ import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,7 +116,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
       // for a failed request.  Thus, check the response code
       if (response != null && !response.isSuccessStatusCode()) {
-        span.setStatus(Status.ERROR);
+        span.setStatus(StatusCanonicalCode.ERROR);
       }
     }
   }

@@ -30,7 +30,7 @@ public class GrpcClientTracer extends RpcClientTracer {
   }
 
   public void endSpan(Span span, Status status) {
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(status));
+    span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
     end(span);
   }
 
@@ -38,7 +38,7 @@ public class GrpcClientTracer extends RpcClientTracer {
   protected void onError(Span span, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
     super.onError(span, grpcStatus.getCause());
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus));
+    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
   }
 
   @Override
