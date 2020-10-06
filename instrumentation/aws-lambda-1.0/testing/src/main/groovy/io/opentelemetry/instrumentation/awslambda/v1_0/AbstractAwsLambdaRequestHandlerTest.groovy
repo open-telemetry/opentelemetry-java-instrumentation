@@ -94,9 +94,9 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName("my_function")
-          spanKind SERVER
-          parentId("0000000000000456")
+          name("my_function")
+          kind SERVER
+          parentSpanId("0000000000000456")
           traceId("8a3c60f7d188f8fa79d48a391a778fa6")
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
