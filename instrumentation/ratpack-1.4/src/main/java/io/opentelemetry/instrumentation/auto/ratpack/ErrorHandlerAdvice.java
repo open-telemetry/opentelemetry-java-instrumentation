@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.auto.ratpack;
 import static io.opentelemetry.instrumentation.auto.ratpack.RatpackTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import java.util.Optional;
 import net.bytebuddy.asm.Advice;
 import ratpack.handling.Context;
@@ -20,7 +20,7 @@ public class ErrorHandlerAdvice {
     Optional<Span> span = ctx.maybeGet(Span.class);
     if (span.isPresent()) {
       // TODO this emulates old behaviour of BaseDecorator. Has to review
-      span.get().setStatus(Status.ERROR);
+      span.get().setStatus(StatusCanonicalCode.ERROR);
       TRACER.addThrowable(span.get(), throwable);
     }
   }

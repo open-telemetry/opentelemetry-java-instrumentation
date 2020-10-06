@@ -16,7 +16,7 @@ import io.opentelemetry.common.ReadableAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.SpanId
-import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.regex.Pattern
 
@@ -122,17 +122,17 @@ class SpanAssert {
     assert found
   }
 
-  def status(Status status) {
-    assert span.status == status
+  def status(StatusCanonicalCode status) {
+    assert span.status.canonicalCode == status
     checked.status = true
   }
 
   def errored(boolean errored) {
     if (errored) {
       // comparing only canonical code, since description may be different
-      assert span.status.canonicalCode == Status.CanonicalCode.ERROR
+      assert span.status.canonicalCode == StatusCanonicalCode.ERROR
     } else {
-      assert span.status == Status.UNSET
+      assert span.status.canonicalCode == StatusCanonicalCode.UNSET
     }
     checked.status = true
   }

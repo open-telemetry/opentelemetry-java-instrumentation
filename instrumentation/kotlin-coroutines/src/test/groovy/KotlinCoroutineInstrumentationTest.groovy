@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.common.AttributesKeys
+import io.opentelemetry.common.AttributeKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
 
@@ -209,14 +209,14 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
           long iter = -1
           span(0) {
             a = span.name.matches("a")
-            iter = span.getAttributes().get(AttributesKeys.longKey("iter"))
+            iter = span.getAttributes().get(AttributeKey.longKey("iter"))
             (a ? seenItersA : seenItersB).add(iter)
             name(a ? "a" : "b")
           }
           span(1) {
             name(a ? "a2" : "b2")
             childOf(span(0))
-            assert span.getAttributes().get(AttributesKeys.longKey("iter")) == iter
+            assert span.getAttributes().get(AttributeKey.longKey("iter")) == iter
 
           }
         }
