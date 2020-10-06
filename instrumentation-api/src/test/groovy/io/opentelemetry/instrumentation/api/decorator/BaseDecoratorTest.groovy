@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.decorator
 import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
 
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Specification
@@ -87,7 +87,7 @@ class BaseDecoratorTest extends Specification {
 
     then:
     if (error) {
-      1 * span.setStatus(Status.ERROR)
+      1 * span.setStatus(StatusCanonicalCode.ERROR)
       1 * span.recordException(error)
     }
     0 * _
@@ -109,8 +109,8 @@ class BaseDecoratorTest extends Specification {
 
     where:
     error           | status
-    new Exception() | Status.ERROR
-    null            | Status.OK
+    new Exception() | StatusCanonicalCode.ERROR
+    null            | StatusCanonicalCode.OK
   }
 
   def "test beforeFinish"() {
