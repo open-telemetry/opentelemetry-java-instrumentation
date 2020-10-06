@@ -28,7 +28,10 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk${{ matrix.java }}
-          arguments: testJava${{ matrix.java }} --stacktrace
+          arguments: testJava${{ matrix.java }} --stacktrace -x :smoke-tests:test
+
+      - name: Debug space
+        run: df -h
 
       - name: Aggregate test reports with ciMate
         if: always()
