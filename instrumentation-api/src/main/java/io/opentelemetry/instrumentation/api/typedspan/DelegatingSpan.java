@@ -10,7 +10,8 @@ import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
@@ -65,8 +66,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setStatus(Status status) {
-    delegate.setStatus(status);
+  public void setStatus(StatusCanonicalCode code, @Nullable String description) {
+    delegate.setStatus(code, description);
   }
 
   @Override

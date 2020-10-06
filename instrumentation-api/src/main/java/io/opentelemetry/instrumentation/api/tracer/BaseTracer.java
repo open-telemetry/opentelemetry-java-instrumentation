@@ -13,6 +13,7 @@ import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
@@ -125,7 +126,7 @@ public abstract class BaseTracer {
   }
 
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
-    span.setStatus(Status.ERROR);
+    span.setStatus(StatusCanonicalCode.ERROR);
     onError(span, unwrapThrowable(throwable));
     end(span, endTimeNanos);
   }
