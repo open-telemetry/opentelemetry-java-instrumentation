@@ -60,7 +60,7 @@ jobs:
       - name: Test
         uses: burrunan/gradle-cache-action@v1.5
         with:
-          job-id: jdk${{ matrix.java }}
+          job-id: jdk11
           arguments: :smoke-tests:test
 
       - name: Debug space
