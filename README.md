@@ -241,6 +241,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+ (not including 6.x yet)   |
+| [Log4j 1](https://logging.apache.org/log4j/1.2/)                                                                                      | 1.2+                           |
 | [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                      | 2.7+                           |
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
@@ -289,6 +290,10 @@ you can enable it by add the following system property:
 ### Suppressing specific auto-instrumentation
 
 See [Suppressing specific auto-instrumentation](docs/suppressing-instrumentation.md)
+
+### Logger MDC auto-instrumentation
+
+See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
 
 ## Manually instrumenting
 
