@@ -3,7 +3,7 @@ name: PR build
 on: pull_request
 
 jobs:
-  smoke-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
