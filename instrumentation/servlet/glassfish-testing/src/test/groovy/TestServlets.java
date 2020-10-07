@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.lang.Closure;
 import io.opentelemetry.auto.test.base.HttpServerTest;
+import java.util.concurrent.Callable;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,8 +20,9 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
+          new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
               resp.setContentType("text/plain");
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(endpoint.getBody());
@@ -39,8 +40,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
+          new Callable<Object>() {
+            public Object call() throws Exception {
               resp.setContentType("text/plain");
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(req.getQueryString());
@@ -58,8 +59,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
+          new Callable<Object>() {
+            public Object call() throws Exception {
               resp.sendRedirect(endpoint.getBody());
               return null;
             }
@@ -75,8 +76,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
+          new Callable<Object>() {
+            public Object call() throws Exception {
               resp.setContentType("text/plain");
               resp.sendError(endpoint.getStatus(), endpoint.getBody());
               return null;
@@ -93,8 +94,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Closure(null) {
-            public Object doCall() throws Exception {
+          new Callable<Object>() {
+            public Object call() throws Exception {
               throw new Exception(endpoint.getBody());
             }
           });

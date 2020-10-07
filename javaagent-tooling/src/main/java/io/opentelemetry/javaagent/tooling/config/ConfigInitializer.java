@@ -9,9 +9,11 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.config.PropertySource;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ public final class ConfigInitializer {
 
   public static void initialize() {
     Config.internalInitializeConfig(
-        new ConfigBuilder()
+        new AgentConfigBuilder()
             .readPropertiesFromAllSources(loadSpiConfiguration(), loadConfigurationFile())
             .build());
   }
@@ -69,8 +71,9 @@ public final class ConfigInitializer {
       return properties;
     }
 
-    try (FileReader fileReader = new FileReader(configurationFile)) {
-      properties.load(fileReader);
+    try (InputStreamReader reader =
+        new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
+      properties.load(reader);
     } catch (FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
     } catch (IOException ioe) {
