@@ -37,7 +37,7 @@
 
 # <img src="https://opentelemetry.io/img/logos/opentelemetry-logo-nav.png" alt="OpenTelemetry Icon" width="45" height=""> OpenTelemetry Instrumentation for Java
 
-This project provides a Java agent JAR that can be attached to any Java 7+
+This project provides a Java agent JAR that can be attached to any Java 8+
 application and dynamically injects bytecode to capture telemetry from a
 number of popular libraries and frameworks.
 The telemetry data can be exported in a variety of formats.
