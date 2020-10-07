@@ -16,6 +16,7 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -255,7 +256,8 @@ public class IntegrationTestUtils {
     @Override
     public void run() {
       try {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
         String line = null;
         while ((line = reader.readLine()) != null) {
           if (print) {

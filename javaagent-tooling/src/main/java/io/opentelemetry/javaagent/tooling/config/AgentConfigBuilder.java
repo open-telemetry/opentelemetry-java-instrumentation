@@ -8,16 +8,16 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.instrumentation.api.config.Config.normalizePropertyName;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.sdk.common.export.ConfigBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public final class ConfigBuilder
-    extends io.opentelemetry.sdk.common.export.ConfigBuilder<ConfigBuilder> {
+public final class AgentConfigBuilder extends ConfigBuilder<AgentConfigBuilder> {
   private final Map<String, String> allProperties = new HashMap<>();
 
   @Override
-  public ConfigBuilder readProperties(Properties properties) {
+  public AgentConfigBuilder readProperties(Properties properties) {
     return this.fromConfigMap(normalizedProperties(properties), NamingConvention.DOT);
   }
 
@@ -29,7 +29,7 @@ public final class ConfigBuilder
     return configMap;
   }
 
-  ConfigBuilder readPropertiesFromAllSources(
+  AgentConfigBuilder readPropertiesFromAllSources(
       Properties spiConfiguration, Properties configurationFile) {
     // ordering from least to most important
     return readProperties(spiConfiguration)
@@ -39,7 +39,7 @@ public final class ConfigBuilder
   }
 
   @Override
-  protected ConfigBuilder fromConfigMap(
+  protected AgentConfigBuilder fromConfigMap(
       Map<String, String> configMap, NamingConvention namingConvention) {
     configMap = namingConvention.normalize(configMap);
     allProperties.putAll(configMap);

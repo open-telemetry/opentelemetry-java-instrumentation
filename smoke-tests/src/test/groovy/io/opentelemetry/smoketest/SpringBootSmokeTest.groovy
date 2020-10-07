@@ -30,7 +30,7 @@ class SpringBootSmokeTest extends SmokeTest {
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
-    def response = client.newCall(request).execute()
+    def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:

@@ -10,7 +10,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-class ConfigBuilderTest extends Specification {
+class AgentConfigBuilderTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
@@ -25,7 +25,7 @@ class ConfigBuilderTest extends Specification {
     spiConfiguration.put("property4", "spi-4")
 
     when:
-    def config = new ConfigBuilder()
+    def config = new AgentConfigBuilder()
       .readPropertiesFromAllSources(spiConfiguration, new Properties())
       .build()
 
@@ -50,7 +50,7 @@ class ConfigBuilderTest extends Specification {
     configurationFile.put("property3", "cf-3")
 
     when:
-    def config = new ConfigBuilder()
+    def config = new AgentConfigBuilder()
       .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
@@ -78,7 +78,7 @@ class ConfigBuilderTest extends Specification {
     environmentVariables.set("property2", "env-2")
 
     when:
-    def config = new ConfigBuilder()
+    def config = new AgentConfigBuilder()
       .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
@@ -108,7 +108,7 @@ class ConfigBuilderTest extends Specification {
     System.setProperty("property1", "sp-1")
 
     when:
-    def config = new ConfigBuilder()
+    def config = new AgentConfigBuilder()
       .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
@@ -132,7 +132,7 @@ class ConfigBuilderTest extends Specification {
     System.setProperty("otel.some-system_property", "value")
 
     when:
-    def config = new ConfigBuilder()
+    def config = new AgentConfigBuilder()
       .readPropertiesFromAllSources(spiConfiguration, configurationFile)
       .build()
 
