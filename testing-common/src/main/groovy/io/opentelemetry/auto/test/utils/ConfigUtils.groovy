@@ -12,14 +12,7 @@ import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
 import java.util.function.Consumer
 
 /**
- * There are two main patterns of customizing agent configuration in tests:
- * <ol>
- *   <li>1. Creating a {@code PropertySource} SPI implementation that gets loaded automatically by
- *   {@link io.opentelemetry.javaagent.tooling.config.ConfigInitializer}. This is recommended
- *   for tests that do not need to change the configuration during execution.</li>
- *   <li>2. Using methods provided by this class. This is the only way to change the agent
- *   configuration during tests execution.<li>
- * <ol>
+ * This class provides utility methods for changing {@link Config} values during tests.
  */
 class ConfigUtils {
 

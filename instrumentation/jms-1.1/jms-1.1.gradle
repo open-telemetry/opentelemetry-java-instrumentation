@@ -40,7 +40,4 @@ dependencies {
 
   jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
   jms2TestImplementation group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
-  jms2TestImplementation project(':javaagent-spi')
-  jms2TestAnnotationProcessor deps.autoservice
-  jms2TestImplementation deps.autoservice
 }

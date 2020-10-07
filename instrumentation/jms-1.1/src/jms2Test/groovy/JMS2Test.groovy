@@ -10,6 +10,7 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -34,6 +35,11 @@ import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
 class JMS2Test extends AgentTestRunner {
+  static final previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.classes.exclude",
+      "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,"
+        + "org.springframework.context.support.DefaultLifecycleProcessor\$1")
+  }
 
   @Shared
   HornetQServer server
@@ -81,6 +87,7 @@ class JMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
+    ConfigUtils.setConfig(previousConfig)
   }
 
   def "sending a message to #destinationName #destinationType generates spans"() {

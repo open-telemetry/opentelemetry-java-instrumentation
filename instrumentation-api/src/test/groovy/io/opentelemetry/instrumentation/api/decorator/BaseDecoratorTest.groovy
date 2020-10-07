@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.decorator
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -13,8 +14,14 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class BaseDecoratorTest extends Specification {
-  static {
-    ConfigUtils.initializeConfig()
+  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty(
+      "otel.endpoint.peer.service.mapping",
+      "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice")
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(previousConfig)
   }
 
   @Shared
@@ -68,7 +75,6 @@ class BaseDecoratorTest extends Specification {
     }
 
     where:
-    // configured in TestConfiguration.java
     connection                               | expectedPeerService
     new InetSocketAddress("1.2.3.4", 888)    | "catservice"
     new InetSocketAddress("2.3.4.5", 888)    | null

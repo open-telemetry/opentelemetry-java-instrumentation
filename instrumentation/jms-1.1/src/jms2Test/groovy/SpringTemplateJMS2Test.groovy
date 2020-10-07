@@ -8,6 +8,7 @@ import static JMS2Test.producerSpan
 
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -28,6 +29,11 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
+  static final previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.classes.exclude",
+      "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,"
+        + "org.springframework.context.support.DefaultLifecycleProcessor\$1")
+  }
 
   @Shared
   HornetQServer server
@@ -77,6 +83,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
+    ConfigUtils.setConfig(previousConfig)
   }
 
   def "sending a message to #destinationName generates spans"() {

@@ -5,8 +5,3 @@ muzzle {
     coreJdk()
   }
 }
-dependencies {
-  testImplementation project(':javaagent-spi')
-  testAnnotationProcessor deps.autoservice
-  testImplementation deps.autoservice
-}

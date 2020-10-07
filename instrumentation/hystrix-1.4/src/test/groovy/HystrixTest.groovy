@@ -8,6 +8,8 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import spock.lang.Timeout
@@ -20,6 +22,14 @@ class HystrixTest extends AgentTestRunner {
 
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
+  }
+
+  static final Config previousConfig = ConfigUtils.updateConfig {
+    it.setProperty("otel.hystrix.tags.enabled", "true")
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(previousConfig)
   }
 
   def "test command #action"() {
