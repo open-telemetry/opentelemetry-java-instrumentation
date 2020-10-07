@@ -21,8 +21,6 @@ protobuf {
 }
 
 dependencies {
-  compileOnly(project(':instrumentation:grpc-1.5:library'))
-
   api project(':testing-common')
 
   api group: 'io.grpc', name: 'grpc-core', version: grpcVersion

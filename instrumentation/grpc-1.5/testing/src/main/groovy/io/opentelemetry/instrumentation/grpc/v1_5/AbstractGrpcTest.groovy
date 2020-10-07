@@ -22,7 +22,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper
+import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
@@ -154,7 +154,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           errored true
-          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
+          status(StatusCanonicalCode.ERROR)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -166,7 +166,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
+          status(StatusCanonicalCode.ERROR)
           event(0) {
             eventName "message"
             attributes {
@@ -251,7 +251,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
+          status(StatusCanonicalCode.ERROR)
           event(0) {
             eventName "message"
             attributes {
