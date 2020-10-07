@@ -11,26 +11,23 @@ import io.opentelemetry.metrics.AsynchronousInstrument.Callback;
 import io.opentelemetry.metrics.AsynchronousInstrument.DoubleResult;
 import io.opentelemetry.metrics.AsynchronousInstrument.LongResult;
 import io.opentelemetry.metrics.Meter;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
-import oshi.software.os.OSProcess;
-import oshi.software.os.OperatingSystem;
 
+/** System Metrics Utility */
 public class SystemMetrics {
-  private static final String TYPE_LABEL_KEY = "type";
+  static final String TYPE_LABEL_KEY = "type";
 
+  private SystemMetrics() {}
+
+  /** Register observers for system metrics */
   public static void registerObservers() {
     Meter meter = OpenTelemetry.getMeterProvider().get(SystemMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();
-    OperatingSystem osInfo = systemInfo.getOperatingSystem();
-
     HardwareAbstractionLayer hal = systemInfo.getHardware();
-    OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
 
     meter
         .longValueObserverBuilder("system.memory.usage")
@@ -176,55 +173,6 @@ public class SystemMetrics {
 
                 r.observe(read, Labels.of(TYPE_LABEL_KEY, "read"));
                 r.observe(write, Labels.of(TYPE_LABEL_KEY, "write"));
-              }
-            });
-
-    meter
-        .longValueObserverBuilder("runtime.java.memory")
-        .setDescription("Runtime Java memory")
-        .setUnit("bytes")
-        .build()
-        .setCallback(
-            new Callback<LongResult>() {
-              @Override
-              public void update(LongResult r) {
-                processInfo.updateAttributes();
-                r.observe(processInfo.getResidentSetSize(), Labels.of(TYPE_LABEL_KEY, "rss"));
-                r.observe(processInfo.getVirtualSize(), Labels.of(TYPE_LABEL_KEY, "vms"));
-              }
-            });
-
-    meter
-        .doubleValueObserverBuilder("runtime.java.cpu_time")
-        .setDescription("Runtime Java CPU time")
-        .setUnit("seconds")
-        .build()
-        .setCallback(
-            new Callback<DoubleResult>() {
-              @Override
-              public void update(DoubleResult r) {
-                processInfo.updateAttributes();
-                r.observe(processInfo.getUserTime() * 1000, Labels.of(TYPE_LABEL_KEY, "user"));
-                r.observe(processInfo.getKernelTime() * 1000, Labels.of(TYPE_LABEL_KEY, "system"));
-              }
-            });
-
-    meter
-        .longValueObserverBuilder("runtime.java.gc_count")
-        .setDescription("Runtime Java GC count")
-        .setUnit("counts")
-        .build()
-        .setCallback(
-            new Callback<LongResult>() {
-              @Override
-              public void update(LongResult r) {
-                long gcCount = 0;
-                for (final GarbageCollectorMXBean gcBean :
-                    ManagementFactory.getGarbageCollectorMXBeans()) {
-                  gcCount += gcBean.getCollectionCount();
-                }
-
-                r.observe(gcCount, Labels.of(TYPE_LABEL_KEY, "count"));
               }
             });
   }
