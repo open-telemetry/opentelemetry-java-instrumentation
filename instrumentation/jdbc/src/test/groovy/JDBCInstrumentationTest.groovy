@@ -12,7 +12,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.sql.CallableStatement
@@ -31,12 +30,12 @@ import spock.lang.Unroll
 import test.TestConnection
 
 class JDBCInstrumentationTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.integration.jdbc-datasource.enabled", "true")
   }
 
   def specCleanup() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Shared

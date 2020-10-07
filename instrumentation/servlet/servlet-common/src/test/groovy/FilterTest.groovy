@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.FilterConfig
@@ -17,12 +17,12 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
 class FilterTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.integration.servlet-filter.enabled", "true")
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "test doFilter no-parent"() {

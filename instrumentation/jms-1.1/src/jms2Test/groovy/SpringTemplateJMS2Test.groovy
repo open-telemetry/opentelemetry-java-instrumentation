@@ -29,7 +29,7 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
-  static final previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.trace.classes.exclude",
       "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,"
         + "org.springframework.context.support.DefaultLifecycleProcessor\$1")
@@ -83,7 +83,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
   def cleanupSpec() {
     server.stop()
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "sending a message to #destinationName generates spans"() {

@@ -5,16 +5,15 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import java.util.concurrent.Callable
 
 class TraceConfigTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   class ConfigTracedCallable implements Callable<String> {

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.decorator
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -14,14 +13,14 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class BaseDecoratorTest extends Specification {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
     it.setProperty(
       "otel.endpoint.peer.service.mapping",
       "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice")
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Shared

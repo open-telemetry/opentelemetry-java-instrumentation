@@ -5,11 +5,10 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     // remove trace annotations in case previous tests have set it
     it.remove("otel.trace.annotations")
     it.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
@@ -17,7 +16,7 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   static class TestClass {

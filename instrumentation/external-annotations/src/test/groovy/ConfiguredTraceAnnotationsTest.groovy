@@ -7,18 +7,17 @@ import static io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotat
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationsInstrumentation
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
   def specCleanup() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "method with disabled NewRelic annotation should be ignored"() {

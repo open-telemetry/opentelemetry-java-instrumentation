@@ -8,7 +8,6 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -29,12 +28,12 @@ import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Shared

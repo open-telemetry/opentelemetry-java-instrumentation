@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -11,7 +12,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.api.config.Config
 import javax.servlet.Servlet
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
@@ -21,13 +21,13 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
   //We want to test spans produced by servlet instrumentation, not those of jetty
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.integration.jetty.enabled", "false")
   }
 
   @Override
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Override

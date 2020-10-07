@@ -7,21 +7,20 @@ package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
-  static final Config previousConfig = ConfigUtils.updateConfigAndResetInstrumentation {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
     it.setProperty(
       "otel.endpoint.peer.service.mapping",
       "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice")
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(previousConfig)
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Shared
