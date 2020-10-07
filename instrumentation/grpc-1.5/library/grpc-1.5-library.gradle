@@ -1,0 +1,13 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+def grpcVersion = '1.5.0'
+
+dependencies {
+  library group: 'io.grpc', name: 'grpc-core', version: grpcVersion
+
+  testLibrary group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
+  testLibrary group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
+  testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
+
+  testImplementation project(':instrumentation:grpc-1.5:testing')
+}
