@@ -43,28 +43,6 @@ Maven:
 </dependencies>
 ```
 
-And in your code as early as possible, configure the `AwsXrayPropagator` along with any other
-propagators you use. If in doubt, you can configure X-Ray along with the default W3C propagator like
-this in a static block of your handler.
-
-```java
-class MyRequestHandler extends TracingRequestHandler<String, String> {
-
-  static {
-    OpenTelemetry.setPropagators(
-      DefaultContextPropagators.builder()
-        .addTextMapPropagator(HttpTraceContext.getInstance())
-        .addTextMapPropagator(AwsXrayPropagator.getInstance())
-        .build());
-  }
-
-  @Override
-  protected String doHandleRequest(String input, Context context) {
-    // logic
-  }
-}
-```
-
 ## SQS Handler
 
 This package provides a special handler for SQS-triggered functions to include messaging data.
@@ -94,3 +72,35 @@ public class MyBatchHandler extends TracingSQSEventHandler {
   }
 }
 ```
+
+## Trace propagation
+
+This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
+requests and SQS requests. To enable this propagation, in your code as early as possible,
+configure the `AwsXrayPropagator` along with any other propagators you use. If in doubt, you can
+configure X-Ray along with the default W3C propagator like this in a static block of your handler.
+
+```java
+class MyRequestHandler extends TracingRequestHandler<String, String> {
+
+  static {
+    OpenTelemetry.setPropagators(
+      DefaultContextPropagators.builder()
+        .addTextMapPropagator(HttpTraceContext.getInstance())
+        .addTextMapPropagator(AwsXrayPropagator.getInstance())
+        .build());
+  }
+
+  @Override
+  protected String doHandleRequest(String input, Context context) {
+    // logic
+  }
+}
+```
+
+If you are using this instrumentation with SQS, you should always enable the `AwsXrayPropagator` to
+allow linking between messages in a backend-agnostic way.
+
+Otherwise, only enable the above if you are using AWS X-Ray as your tracing backend. You should not
+enable the X-Ray propagator if you are not using X-Ray as it will cause the spans in Lambda to not
+have the correct parent/child connection between client and server spans.

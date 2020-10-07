@@ -19,7 +19,8 @@ public abstract class AbstractAwsLambdaInstrumentation extends Instrumenter.Defa
       packageName + ".AwsLambdaInstrumentationHelper",
       "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer",
       "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer$MapGetter"
+      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaUtil",
+      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaUtil$MapGetter"
     };
   }
 }
