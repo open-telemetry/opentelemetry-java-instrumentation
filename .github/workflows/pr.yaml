@@ -69,11 +69,11 @@ jobs:
 
       - name: Debug space
         if: always()
-        run: du -hs /
+        run: du -hs ~/.gradle/*
 
       - name: Debug docker space
         if: always()
-        run: docker system df
+        run: docker system df -v
 
       - name: Aggregate test reports with ciMate
         if: always()
