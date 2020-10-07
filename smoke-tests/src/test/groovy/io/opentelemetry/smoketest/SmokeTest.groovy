@@ -69,7 +69,7 @@ abstract class SmokeTest extends Specification {
       .withLogConsumer(new Slf4jLogConsumer(logger))
     backend.start()
 
-    collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
+    collector = new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
       .dependsOn(backend)
       .withNetwork(network)
       .withNetworkAliases("collector")
