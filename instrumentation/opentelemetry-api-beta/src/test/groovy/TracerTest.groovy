@@ -16,7 +16,7 @@ import application.io.opentelemetry.common.Attributes
 import application.io.opentelemetry.context.Scope
 import application.io.opentelemetry.trace.DefaultSpan
 import application.io.opentelemetry.trace.Span
-import application.io.opentelemetry.trace.Status
+import application.io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
@@ -30,7 +30,7 @@ class TracerTest extends AgentTestRunner {
     testSpan.setAttribute("long", 2)
     testSpan.setAttribute("double", 3.0)
     testSpan.setAttribute("boolean", true)
-    testSpan.setStatus(Status.ERROR)
+    testSpan.setStatus(StatusCanonicalCode.ERROR)
     testSpan.end()
 
     then:
@@ -40,7 +40,7 @@ class TracerTest extends AgentTestRunner {
           name "test"
           kind io.opentelemetry.trace.Span.Kind.PRODUCER
           hasNoParent()
-          status io.opentelemetry.trace.Status.ERROR
+          status io.opentelemetry.trace.StatusCanonicalCode.ERROR
           attributes {
             "string" "1"
             "long" 2

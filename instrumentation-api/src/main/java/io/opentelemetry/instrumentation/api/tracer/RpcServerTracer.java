@@ -9,8 +9,15 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.trace.Tracer;
 
 public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
+
+  protected RpcServerTracer() {}
+
+  protected RpcServerTracer(Tracer tracer) {
+    super(tracer);
+  }
 
   protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
 

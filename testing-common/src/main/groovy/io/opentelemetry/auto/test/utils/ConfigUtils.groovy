@@ -7,7 +7,7 @@ package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.javaagent.tooling.config.ConfigBuilder
+import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
 import java.util.concurrent.Callable
 
@@ -18,7 +18,7 @@ class ConfigUtils {
       def existingConfig = Config.get()
       Properties properties = new Properties()
       properties.put(name, value)
-      setConfig(new ConfigBuilder()
+      setConfig(new AgentConfigBuilder()
         .readProperties(existingConfig.asJavaProperties())
         .readProperties(properties)
         .build())

@@ -18,7 +18,7 @@ import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
 public final class TracingHandler implements Handler {
-  public static Handler INSTANCE = new TracingHandler();
+  public static final Handler INSTANCE = new TracingHandler();
 
   /**
    * This constant is copied over from

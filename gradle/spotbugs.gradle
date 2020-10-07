@@ -6,6 +6,7 @@ allprojects {
     reportLevel = "high"
     omitVisitors = ["FindDeadLocalStores"]
     effort = "max"
+    excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
   }
 
 }

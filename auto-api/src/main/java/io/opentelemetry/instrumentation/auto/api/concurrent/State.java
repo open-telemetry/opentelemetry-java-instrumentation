@@ -15,13 +15,7 @@ public class State {
 
   private static final Logger log = LoggerFactory.getLogger(State.class);
 
-  public static ContextStore.Factory<State> FACTORY =
-      new ContextStore.Factory<State>() {
-        @Override
-        public State create() {
-          return new State();
-        }
-      };
+  public static final ContextStore.Factory<State> FACTORY = State::new;
 
   private final AtomicReference<Context> parentContextRef = new AtomicReference<>(null);
 

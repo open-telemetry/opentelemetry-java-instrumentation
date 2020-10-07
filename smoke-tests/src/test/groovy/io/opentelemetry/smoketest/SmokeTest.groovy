@@ -35,7 +35,7 @@ abstract class SmokeTest extends Specification {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
-  protected static OkHttpClient client = OkHttpUtils.client()
+  protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   @Shared
   private Network network = Network.newNetwork()
@@ -69,7 +69,7 @@ abstract class SmokeTest extends Specification {
       .withLogConsumer(new Slf4jLogConsumer(logger))
     backend.start()
 
-    collector = new GenericContainer<>("otel/opentelemetry-collector-dev")
+    collector = new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
       .dependsOn(backend)
       .withNetwork(network)
       .withNetworkAliases("collector")
@@ -97,7 +97,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanup() {
-    client.newCall(new Request.Builder()
+    CLIENT.newCall(new Request.Builder()
       .url("http://localhost:${backend.getMappedPort(8080)}/clear-requests")
       .build())
       .execute()
@@ -149,7 +149,7 @@ abstract class SmokeTest extends Specification {
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
     String content = "[]"
     while (System.currentTimeMillis() < deadline) {
-      def body = content = client.newCall(new Request.Builder()
+      def body = content = CLIENT.newCall(new Request.Builder()
         .url("http://localhost:${backend.getMappedPort(8080)}/get-requests")
         .build())
         .execute()
