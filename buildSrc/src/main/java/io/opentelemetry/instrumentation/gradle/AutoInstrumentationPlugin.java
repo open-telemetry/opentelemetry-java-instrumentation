@@ -20,7 +20,10 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -41,51 +44,51 @@ import org.gradle.process.CommandLineArgumentProvider;
 public class AutoInstrumentationPlugin implements Plugin<Project> {
 
   /**
-   * An exact copy of {@code io.opentelemetry.javaagent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. We
-   * can't reference it directly since this file needs to be compiled before the other packages.
+   * An exact copy of {@code
+   * io.opentelemetry.javaagent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}. We can't reference it
+   * directly since this file needs to be compiled before the other packages.
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
-      "io.opentelemetry.javaagent.common.exec",
-      "io.opentelemetry.javaagent.slf4j",
-      "io.opentelemetry.javaagent.bootstrap",
-      "io.opentelemetry.javaagent.shaded",
-      "io.opentelemetry.instrumentation.auto.api",
+    "io.opentelemetry.javaagent.common.exec",
+    "io.opentelemetry.javaagent.slf4j",
+    "io.opentelemetry.javaagent.bootstrap",
+    "io.opentelemetry.javaagent.shaded",
+    "io.opentelemetry.instrumentation.auto.api",
   };
 
   // Aditional classes we need only for tests and aren't shared with the agent business logic.
-  private static final String[] TEST_BOOTSTRAP_PREFIXES;
+  private static final List<String> TEST_BOOTSTRAP_PREFIXES =
+      Stream.concat(
+              Arrays.stream(BOOTSTRAP_PACKAGE_PREFIXES_COPY),
+              Stream.of(
+                  "io.opentelemetry.instrumentation.api",
+                  "io.opentelemetry.common", // OpenTelemetry API
+                  "io.opentelemetry.baggage", // OpenTelemetry API
+                  "io.opentelemetry.context", // OpenTelemetry API (context prop)
+                  "io.opentelemetry.internal", // OpenTelemetry API
+                  "io.opentelemetry.metrics", // OpenTelemetry API
+                  "io.opentelemetry.trace", // OpenTelemetry API
+                  "io.opentelemetry.OpenTelemetry$", // OpenTelemetry API
+                  "io.grpc.Context$", // OpenTelemetry API dependency
+                  "io.grpc.PersistentHashArrayMappedTrie$", // OpenTelemetry API dependency
+                  "org.slf4j",
+                  "ch.qos.logback"))
+          .map(pkg -> pkg.replace('.', '/'))
+          .collect(Collectors.toUnmodifiableList());
 
-  static {
-    String[] testBS = {
-        "io.opentelemetry.instrumentation.api",
-        "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
-        "io.opentelemetry.common", // OpenTelemetry API
-        "io.opentelemetry.baggage", // OpenTelemetry API
-        "io.opentelemetry.context", // OpenTelemetry API (context prop)
-        "io.opentelemetry.internal", // OpenTelemetry API
-        "io.opentelemetry.metrics", // OpenTelemetry API
-        "io.opentelemetry.trace", // OpenTelemetry API
-        "io.grpc.Context", // OpenTelemetry API dependency
-        "io.grpc.Deadline", // OpenTelemetry API dependency
-        "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency
-        "io.grpc.ThreadLocalContextStorage", // OpenTelemetry API dependency
-        "org.slf4j",
-        "ch.qos.logback",
-        // Tomcat's servlet classes must be on boostrap
-        // when running tomcat test
-        "javax.servlet.ServletContainerInitializer",
-        "javax.servlet.ServletContext"
-    };
-    TEST_BOOTSTRAP_PREFIXES =
-        Arrays.copyOf(
-            BOOTSTRAP_PACKAGE_PREFIXES_COPY,
-            BOOTSTRAP_PACKAGE_PREFIXES_COPY.length + testBS.length);
-    System.arraycopy(testBS, 0, TEST_BOOTSTRAP_PREFIXES, BOOTSTRAP_PACKAGE_PREFIXES_COPY.length,
-        testBS.length);
-    for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; i++) {
-      TEST_BOOTSTRAP_PREFIXES[i] = TEST_BOOTSTRAP_PREFIXES[i].replace('.', '/');
-    }
-  }
+  private static final List<String> TEST_BOOTSTRAP_CLASSES =
+      Stream.of(
+              "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
+              "io.grpc.Context", // OpenTelemetry API dependency
+              "io.grpc.Deadline", // OpenTelemetry API dependency
+              "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency
+              "io.grpc.ThreadLocalContextStorage", // OpenTelemetry API dependency
+              // Tomcat's servlet classes must be on boostrap
+              // when running tomcat test
+              "javax.servlet.ServletContainerInitializer",
+              "javax.servlet.ServletContext")
+          .map(clz -> clz.replace('.', '/') + ".class")
+          .collect(Collectors.toUnmodifiableList());
 
   @Override
   public void apply(Project project) {
@@ -144,8 +147,10 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
                   });
 
               task.dependsOn(bootstrapJar);
-              task.getJvmArgumentProviders().add(new InstrumentationTestArgs(
-                  new File(project.getBuildDir(), "libs/" + bootstrapJarName)));
+              task.getJvmArgumentProviders()
+                  .add(
+                      new InstrumentationTestArgs(
+                          new File(project.getBuildDir(), "libs/" + bootstrapJarName)));
             });
   }
 
@@ -163,13 +168,19 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
 
     @Override
     public Iterable<String> asArguments() {
-      return Arrays.asList("-Xbootclasspath/a:" + bootstrapJar.getAbsolutePath(), "-Dnet.bytebuddy.raw=true");
+      return Arrays.asList(
+          "-Xbootclasspath/a:" + bootstrapJar.getAbsolutePath(), "-Dnet.bytebuddy.raw=true");
     }
   }
 
   private static boolean isBootstrapClass(String filePath) {
     for (String testBootstrapPrefix : TEST_BOOTSTRAP_PREFIXES) {
       if (filePath.startsWith(testBootstrapPrefix)) {
+        return true;
+      }
+    }
+    for (String testBootstrapName : TEST_BOOTSTRAP_CLASSES) {
+      if (filePath.equals(testBootstrapName)) {
         return true;
       }
     }
