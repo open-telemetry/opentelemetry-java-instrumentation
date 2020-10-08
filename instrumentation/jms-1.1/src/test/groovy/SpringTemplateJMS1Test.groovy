@@ -27,7 +27,7 @@ import spock.lang.Shared
 class SpringTemplateJMS1Test extends AgentTestRunner {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
 
-  private static final GenericContainer BROKER = new GenericContainer("rmohr/activemq")
+  private static final GenericContainer broker = new GenericContainer("rmohr/activemq")
     .withExposedPorts(61616, 8161)
     .withLogConsumer(new Slf4jLogConsumer(logger))
 
@@ -39,8 +39,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
   Session session
 
   def setupSpec() {
-    BROKER.start()
-    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + BROKER.getMappedPort(61616))
+    broker.start()
+    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
     Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -52,7 +52,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    BROKER.stop()
+    broker.stop()
   }
 
   def "sending a message to #destinationName generates spans"() {
