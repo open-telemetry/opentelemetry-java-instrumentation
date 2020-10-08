@@ -16,7 +16,7 @@ class HttpClientTracerTest extends BaseTracerTest {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
     it.setProperty(
       "otel.endpoint.peer.service.mapping",
-      "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice")
+      "1.2.3.4=catservice,dogs.com=dogsservice")
   }
 
   def cleanupSpec() {
