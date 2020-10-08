@@ -14,7 +14,6 @@ allprojects {
       html.enabled = !isCI
       xml.enabled = isCI
       html {
-        destination = file("$buildDir/reports/spotbugs/main.html")
         stylesheet = 'fancy-hist.xsl'
       }
     }
@@ -24,7 +23,6 @@ allprojects {
       html.enabled = !isCI
       xml.enabled = isCI
       html {
-        destination = file("$buildDir/reports/spotbugs/main.html")
         stylesheet = 'fancy-hist.xsl'
       }
     }
