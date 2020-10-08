@@ -10,27 +10,24 @@ allprojects {
     toolVersion = '4.1.3'
   }
 
-  if (!isCI) {
-    spotbugsTest {
-      reports {
-        html.enabled = true
-        xml.enabled = false
-        html {
-          destination = file("$buildDir/reports/spotbugs/main.html")
-          stylesheet = 'fancy-hist.xsl'
-        }
-      }
-    }
-    spotbugsMain {
-      reports {
-        html.enabled = true
-        xml.enabled = false
-        html {
-          destination = file("$buildDir/reports/spotbugs/main.html")
-          stylesheet = 'fancy-hist.xsl'
-        }
+  spotbugsTest {
+    reports {
+      html.enabled = !isCI
+      xml.enabled = isCI
+      html {
+        destination = file("$buildDir/reports/spotbugs/main.html")
+        stylesheet = 'fancy-hist.xsl'
       }
     }
   }
-
+  spotbugsMain {
+    reports {
+      html.enabled = !isCI
+      xml.enabled = isCI
+      html {
+        destination = file("$buildDir/reports/spotbugs/main.html")
+        stylesheet = 'fancy-hist.xsl'
+      }
+    }
+  }
 }
