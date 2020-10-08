@@ -99,8 +99,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void start(Listener<RespT> responseListener, Metadata headers) {
       OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
       try {
-        super.start(
-            new TracingClientCallListener<>(responseListener, span, context, tracer), headers);
+        super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
         throw e;
@@ -121,16 +120,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
   static final class TracingClientCallListener<RespT>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
     private final Span span;
-    private final Context context;
     private final GrpcClientTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(
-        Listener<RespT> delegate, Span span, Context context, GrpcClientTracer tracer) {
+    TracingClientCallListener(Listener<RespT> delegate, Span span, GrpcClientTracer tracer) {
       super(delegate);
       this.span = span;
-      this.context = context;
       this.tracer = tracer;
     }
 
