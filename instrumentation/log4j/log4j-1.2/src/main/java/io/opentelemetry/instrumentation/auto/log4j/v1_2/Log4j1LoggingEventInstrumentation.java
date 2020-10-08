@@ -91,9 +91,7 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
             value = spanContext.getSpanIdAsHexString();
             break;
           case SAMPLED:
-            if (spanContext.isSampled()) {
-              value = "true";
-            }
+            value = Boolean.toString(spanContext.isSampled());
             break;
         }
       }
@@ -126,9 +124,7 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
             SpanContext spanContext = span.getContext();
             mdc.put(TRACE_ID, spanContext.getTraceIdAsHexString());
             mdc.put(SPAN_ID, spanContext.getSpanIdAsHexString());
-            if (spanContext.isSampled()) {
-              mdc.put(SAMPLED, "true");
-            }
+            mdc.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
           }
         }
 

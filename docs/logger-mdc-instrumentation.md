@@ -17,8 +17,6 @@ event's MDC copy:
   (same as `TracingContextUtils.getCurrentSpan().getContext().getSpanIdAsHexString()`);
 - `sampled` - a boolean flag marking whether the current span is sampled or not
   (same as `TracingContextUtils.getCurrentSpan().getContext().isSampled()`).
-  This flag is only added when `sampled` is `true`, for non-sampled spans MDC does not contain it at
-  all.
 
 Those three pieces of information can be included in log statements produced by the logging library
 by specifying them in the pattern/format. Example for Spring Boot configuration (which uses logback):
