@@ -21,6 +21,7 @@ import kotlinx.coroutines.channels.toChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
@@ -104,17 +105,27 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
    */
   fun tracedWithDeferredFirstCompletions() = runTest {
 
+    val children = listOf(
+      async {
+        tracedChild("timeout1")
+        false
+      },
+      async {
+        tracedChild("timeout2")
+        false
+      },
+      async {
+        tracedChild("timeout3")
+        true
+      }
+    )
+
     withTimeout(TimeUnit.SECONDS.toMillis(30)) {
-      tracedChild("timeout1")
-      false
-    }
-    withTimeout(TimeUnit.SECONDS.toMillis(30)) {
-      tracedChild("timeout2")
-      false
-    }
-    withTimeout(TimeUnit.SECONDS.toMillis(30)) {
-      tracedChild("timeout3")
-      true
+      select<Boolean> {
+        children.forEach { child ->
+          child.onAwait { it }
+        }
+      }
     }
   }
 
