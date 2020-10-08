@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.auto.test.utils.ConfigUtils.setConfig
 import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -10,6 +11,7 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.api.config.Config
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -383,9 +385,9 @@ class KafkaClientTest extends AgentTestRunner {
 
     when:
     String message = "Testing without headers"
-    setPropagation(propagationEnabled)
+    def previousConfig = setPropagation(propagationEnabled)
     kafkaTemplate.send(SHARED_TOPIC, message)
-    setPropagation(true)
+    setConfig(previousConfig)
 
     then:
     // check that the message was received
@@ -460,7 +462,7 @@ class KafkaClientTest extends AgentTestRunner {
     container.stop()
 
     when: "read message without context propagation"
-    setPropagation(false)
+    def previousConfig = setPropagation(false)
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
 
@@ -509,7 +511,7 @@ class KafkaClientTest extends AgentTestRunner {
     cleanup:
     producerFactory.stop()
     container?.stop()
-    setPropagation(true)
+    setConfig(previousConfig)
   }
 
   protected KafkaMessageListenerContainer<Object, Object> startConsumer(String groupId, records) {
@@ -552,9 +554,9 @@ class KafkaClientTest extends AgentTestRunner {
     }
   }
 
-  private static setPropagation(boolean propagationEnabled) {
-    updateConfig {
-      System.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
+  private static Config setPropagation(boolean propagationEnabled) {
+    return updateConfig {
+      it.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
     }
   }
 }

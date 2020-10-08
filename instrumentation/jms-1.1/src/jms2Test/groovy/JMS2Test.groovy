@@ -34,7 +34,6 @@ import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
 class JMS2Test extends AgentTestRunner {
-
   @Shared
   HornetQServer server
   @Shared

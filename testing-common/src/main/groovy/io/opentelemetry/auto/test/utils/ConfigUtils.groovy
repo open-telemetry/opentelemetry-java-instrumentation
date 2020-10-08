@@ -9,48 +9,57 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
-import java.util.concurrent.Callable
+import java.util.function.Consumer
 
+/**
+ * This class provides utility methods for changing {@link Config} values during tests.
+ */
 class ConfigUtils {
 
-  synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
-    try {
-      def existingConfig = Config.get()
-      Properties properties = new Properties()
-      properties.put(name, value)
-      setConfig(new AgentConfigBuilder()
-        .readProperties(existingConfig.asJavaProperties())
-        .readProperties(properties)
-        .build())
-      assert Config.get() != existingConfig
-      try {
-        return r.call()
-      } finally {
-        setConfig(existingConfig)
-      }
-    } catch (Throwable t) {
-      throw ExceptionUtils.sneakyThrow(t)
-    }
-  }
-
   /**
-   * Provides an callback to set up the testing environment and reset the global configuration after system properties and envs are set.
+   * Same as {@link #updateConfig(java.util.function.Consumer)}, but resets the instrumentation
+   * afterwards. {@link AgentTestRunner#setupBeforeTests()} will re-apply the instrumentation once
+   * again, but this time it'll use the modified config.
+   *
+   * It is suggested to call this method in a {@code static} block so that it evaluates before
+   * {@code @BeforeClass}-annotated methods.
+   *
+   * @return Previous configuration.
    */
-  static updateConfig(final Callable r) {
-    r.call()
-    resetConfig()
+  synchronized static Config updateConfigAndResetInstrumentation(Consumer<Properties> configModifications) {
+    def previousConfig = updateConfig(configModifications)
     AgentTestRunner.resetInstrumentation()
+    return previousConfig
   }
 
   /**
-   * Reset the global configuration. Please note that Runtime ID is preserved to the pre-existing value.
+   * Allows the caller to modify (add property, remove property, etc) currently used configuration
+   * and then sets the current {@link Config#INSTANCE} singleton value to the modified config.
+   *
+   * @return Previous configuration.
    */
-  static void resetConfig() {
-    setConfig(Config.DEFAULT)
-    ConfigInitializer.initialize()
+  synchronized static Config updateConfig(Consumer<Properties> configModifications) {
+    def properties = Config.get().asJavaProperties()
+    configModifications.accept(properties)
+
+    def newConfig = new AgentConfigBuilder()
+      .readProperties(properties)
+      .build()
+    return setConfig(newConfig)
   }
 
-  private static setConfig(Config config) {
+  /**
+   * Sets {@link Config#INSTANCE} singleton value.
+   *
+   * @return Previous configuration.
+   */
+  synchronized static Config setConfig(Config config) {
+    def previous = Config.get()
     Config.INSTANCE = config
+    return previous
+  }
+
+  synchronized static initializeConfig() {
+    ConfigInitializer.initialize()
   }
 }

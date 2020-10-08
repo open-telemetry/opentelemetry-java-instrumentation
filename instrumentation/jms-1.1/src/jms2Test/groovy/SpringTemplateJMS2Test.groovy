@@ -28,7 +28,6 @@ import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
-
   @Shared
   HornetQServer server
   @Shared

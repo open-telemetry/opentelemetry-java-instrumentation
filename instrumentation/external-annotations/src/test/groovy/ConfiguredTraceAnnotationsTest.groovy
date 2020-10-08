@@ -12,17 +12,12 @@ import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
-  def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.annotations")
-    }
+  def specCleanup() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "method with disabled NewRelic annotation should be ignored"() {
@@ -51,11 +46,11 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
   def "test configuration #value"() {
     setup:
-    ConfigUtils.updateConfig {
+    def previousConfig = ConfigUtils.updateConfig {
       if (value) {
-        System.properties.setProperty("otel.trace.annotations", value)
+        it.setProperty("otel.trace.annotations", value)
       } else {
-        System.clearProperty("otel.trace.annotations")
+        it.remove("otel.trace.annotations")
       }
     }
 
@@ -63,7 +58,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     new TraceAnnotationsInstrumentation().additionalTraceAnnotations == expected.toSet()
 
     cleanup:
-    System.clearProperty("otel.trace.annotations")
+    ConfigUtils.setConfig(previousConfig)
 
     where:
     value                               | expected

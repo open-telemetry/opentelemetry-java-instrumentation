@@ -13,18 +13,13 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 class HttpServletTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.servlet-service.enabled", "true")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.servlet-service.enabled", "true")
   }
 
   def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.servlet-service.enabled")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
-
 
   def req = Mock(HttpServletRequest) {
     getMethod() >> "GET"

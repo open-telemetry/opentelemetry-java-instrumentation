@@ -15,7 +15,6 @@ import org.springframework.jms.core.JmsTemplate
 import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
 
 class SpringListenerJMS2Test extends AgentTestRunner {
-
   def "receiving message in spring listener generates spans"() {
     setup:
     def context = new AnnotationConfigApplicationContext(Config)

@@ -5,19 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
-
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class NetPeerUtilsTest extends BaseTracerTest {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
+    it.setProperty(
+      "otel.endpoint.peer.service.mapping",
+      "1.2.3.4=catservice,dogs.com=dogsservice")
+  }
 
-  static {
-    updateConfig {
-      System.setProperty(
-        "otel.endpoint.peer.service.mapping",
-        "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice")
-    }
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "test setAttributes"() {
@@ -61,4 +61,3 @@ class NetPeerUtilsTest extends BaseTracerTest {
     new InetSocketAddress("github.com", 999) | null
   }
 }
-	

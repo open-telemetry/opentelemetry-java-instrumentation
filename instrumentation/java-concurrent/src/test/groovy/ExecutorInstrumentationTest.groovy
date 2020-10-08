@@ -28,11 +28,12 @@ import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+  }
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
-    }
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Shared

@@ -17,14 +17,17 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final boolean AGENT_INSTALLED_IN_CLINIT
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty(
-        "otel.trace.classes.exclude",
-        "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
+    it.setProperty("otel.trace.classes.exclude",
+      "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+  }
 
+  static {
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "classpath setup"() {
