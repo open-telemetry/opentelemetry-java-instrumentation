@@ -11,6 +11,10 @@
   </Match>
 
   <Match>
+    <Source name="~.*\.kt" /> <!-- https://github.com/spotbugs/spotbugs/issues/573 kotlin is not well supported (yet) -->
+  </Match>
+
+  <Match>
     <Class name="~muzzle\.TestClasses.*"/>
     <Bug
       pattern="MS_SHOULD_BE_FINAL"/> <!-- final field warnings can be ignored for this test class -->
