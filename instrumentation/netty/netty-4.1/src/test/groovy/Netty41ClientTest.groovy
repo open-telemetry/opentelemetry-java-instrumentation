@@ -26,7 +26,6 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
-import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.ExecutionException
@@ -88,7 +87,7 @@ class Netty41ClientTest extends HttpClientTest {
     EventLoopGroup group = new NioEventLoopGroup()
     Bootstrap b = new Bootstrap()
     b.group(group)
-      .channel(NioSocketChannel.class)
+      .channel(NioSocketChannel)
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
