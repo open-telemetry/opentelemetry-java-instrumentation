@@ -10,8 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.MetricData.DoublePoint;
+import io.opentelemetry.sdk.metrics.data.MetricData.LongPoint;
 import io.opentelemetry.sdk.metrics.data.MetricData.Point;
 import io.opentelemetry.sdk.metrics.data.MetricData.SummaryPoint;
+import io.opentelemetry.sdk.metrics.data.MetricData.Type;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Collection;
@@ -40,17 +43,29 @@ public class AbstractMetricsTest {
         .build();
   }
 
-  public void verify(String metricName, boolean checkValue) {
+  public void verify(
+      String metricName, String unit, MetricData.Type type, boolean checkNonZeroValue) {
     List<MetricData> metricDataList = testMetricExporter.metricDataList;
     for (MetricData metricData : metricDataList) {
       if (metricData.getName().equals(metricName)) {
         assertThat(metricData.getDescription()).isNotEmpty();
-        assertThat(metricData.getUnit()).isNotEmpty();
+        assertThat(metricData.getUnit()).isEqualTo(unit);
         assertThat(metricData.getPoints()).isNotEmpty();
-        if (checkValue) {
+        assertThat(metricData.getType()).isEqualTo(type);
+        if (checkNonZeroValue) {
           for (Point point : metricData.getPoints()) {
-            SummaryPoint summaryPoint = (SummaryPoint) point;
-            assertThat(summaryPoint.getSum()).isGreaterThan(0.0);
+            if (metricData.getType() == Type.NON_MONOTONIC_LONG) {
+              LongPoint longPoint = (LongPoint) point;
+              assertThat(longPoint.getValue()).isGreaterThan(0);
+            } else if (metricData.getType() == Type.NON_MONOTONIC_DOUBLE) {
+              DoublePoint doublePoint = (DoublePoint) point;
+              assertThat(doublePoint.getValue()).isGreaterThan(0.0);
+            } else if (metricData.getType() == Type.SUMMARY) {
+              SummaryPoint summaryPoint = (SummaryPoint) point;
+              assertThat(summaryPoint.getSum()).isGreaterThan(0.0);
+            } else {
+              Assertions.fail("unexpected type " + metricData.getType());
+            }
           }
         }
         return;

@@ -32,7 +32,7 @@ public class JavaMetrics {
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
 
     meter
-        .longValueObserverBuilder("runtime.java.memory")
+        .longUpDownSumObserverBuilder("runtime.java.memory")
         .setDescription("Runtime Java memory")
         .setUnit("bytes")
         .build()

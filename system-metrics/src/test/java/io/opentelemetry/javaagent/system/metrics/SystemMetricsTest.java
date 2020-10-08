@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.system.metrics;
 
+import io.opentelemetry.sdk.metrics.data.MetricData.Type;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import org.junit.jupiter.api.Test;
 
@@ -18,14 +19,14 @@ public class SystemMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("system.memory.usage", true);
-    verify("system.memory.utilization", true);
+    verify("system.memory.usage", "bytes", Type.NON_MONOTONIC_LONG, true);
+    verify("system.memory.utilization", "1", Type.NON_MONOTONIC_DOUBLE, true);
 
-    verify("system.network.io", false);
-    verify("system.network.packets", false);
-    verify("system.network.errors", false);
+    verify("system.network.io", "bytes", Type.MONOTONIC_LONG, false);
+    verify("system.network.packets", "packets", Type.MONOTONIC_LONG, false);
+    verify("system.network.errors", "errors", Type.MONOTONIC_LONG, false);
 
-    verify("system.disk.io", false);
-    verify("system.disk.operations", false);
+    verify("system.disk.io", "bytes", Type.MONOTONIC_LONG, false);
+    verify("system.disk.operations", "operations", Type.MONOTONIC_LONG, false);
   }
 }

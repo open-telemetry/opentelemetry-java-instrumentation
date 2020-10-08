@@ -30,7 +30,7 @@ public class SystemMetrics {
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
     meter
-        .longValueObserverBuilder("system.memory.usage")
+        .longUpDownSumObserverBuilder("system.memory.usage")
         .setDescription("System memory usage")
         .setUnit("bytes")
         .build()
@@ -45,7 +45,7 @@ public class SystemMetrics {
             });
 
     meter
-        .doubleValueObserverBuilder("system.memory.utilization")
+        .doubleUpDownSumObserverBuilder("system.memory.utilization")
         .setDescription("System memory utilization")
         .setUnit("1")
         .build()
@@ -64,7 +64,7 @@ public class SystemMetrics {
             });
 
     meter
-        .longValueObserverBuilder("system.network.io")
+        .longSumObserverBuilder("system.network.io")
         .setDescription("System network IO")
         .setUnit("bytes")
         .build()
@@ -87,7 +87,7 @@ public class SystemMetrics {
             });
 
     meter
-        .longValueObserverBuilder("system.network.packets")
+        .longSumObserverBuilder("system.network.packets")
         .setDescription("System network packets")
         .setUnit("packets")
         .build()
@@ -110,7 +110,7 @@ public class SystemMetrics {
             });
 
     meter
-        .longValueObserverBuilder("system.network.errors")
+        .longSumObserverBuilder("system.network.errors")
         .setDescription("System network errors")
         .setUnit("errors")
         .build()
@@ -133,7 +133,7 @@ public class SystemMetrics {
             });
 
     meter
-        .longValueObserverBuilder("system.disk.io")
+        .longSumObserverBuilder("system.disk.io")
         .setDescription("System disk IO")
         .setUnit("bytes")
         .build()
@@ -155,7 +155,7 @@ public class SystemMetrics {
             });
 
     meter
-        .longValueObserverBuilder("system.disk.operations")
+        .longSumObserverBuilder("system.disk.operations")
         .setDescription("System disk operations")
         .setUnit("operations")
         .build()
