@@ -26,11 +26,10 @@ release {
   defaultVersionStrategy = Strategies.SNAPSHOT
 }
 
-def isCI = System.getenv("CI") != null
-
 allprojects {
   group = 'io.opentelemetry.instrumentation.auto'
 
+  ext.isCI = System.getenv("CI") != null
   if (isCI) {
     buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
   }
