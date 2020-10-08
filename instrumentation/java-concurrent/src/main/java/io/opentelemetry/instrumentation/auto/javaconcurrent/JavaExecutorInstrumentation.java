@@ -50,8 +50,8 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
-    // Netty uses addTask as the acutal core of their submission; there are non-standard variations like
-    // execute(Runnable,boolean) that aren't caught by standard instrumentation
+    // Netty uses addTask as the acutal core of their submission; there are non-standard variations
+    // like execute(Runnable,boolean) that aren't caught by standard instrumentation
     transformers.put(
         named("addTask").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
