@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.playws;
+package io.opentelemetry.javaagent.instrumentation.playws;
 
-import static io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;

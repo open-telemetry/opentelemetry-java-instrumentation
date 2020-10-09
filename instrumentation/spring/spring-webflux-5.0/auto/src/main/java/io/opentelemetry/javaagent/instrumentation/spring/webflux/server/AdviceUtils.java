@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spring.webflux.server;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
@@ -27,7 +27,7 @@ import reactor.util.context.Context;
 public class AdviceUtils {
 
   public static final String CONTEXT_ATTRIBUTE =
-      "io.opentelemetry.instrumentation.auto.springwebflux.Context";
+      "io.opentelemetry.javaagent.instrumentation.springwebflux.Context";
 
   public static String parseOperationName(Object handler) {
     String className = TRACER.spanNameForClass(handler.getClass());

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_1;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.grpc.Context;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,11 +27,11 @@ public class AttributeKeys {
           };
 
   public static final AttributeKey<Context> PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_1.parent.connect.context");
+      attributeKey("io.opentelemetry.javaagent.instrumentation.netty.v4_1.parent.connect.context");
 
   /**
    * This constant is copied over to
-   * io.opentelemetry.instrumentation.auto.ratpack.server.TracingHandler, so if this changes, that
+   * io.opentelemetry.javaagent.instrumentation.ratpack.server.TracingHandler, so if this changes, that
    * must also change.
    */
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =

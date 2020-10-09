@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.playws.v1_0;
+package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.playws.BasePlayWSClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;

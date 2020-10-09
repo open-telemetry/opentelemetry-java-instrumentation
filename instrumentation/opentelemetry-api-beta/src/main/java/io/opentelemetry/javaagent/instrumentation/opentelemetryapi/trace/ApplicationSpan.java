@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toAgent;
-import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toAgentOrNull;
+import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgent;
+import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.common.AttributeKey;

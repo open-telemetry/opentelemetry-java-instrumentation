@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.khttp;
+package io.opentelemetry.javaagent.instrumentation.khttp;
 
-import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdapter.asWritable;
-import static io.opentelemetry.instrumentation.auto.khttp.KHttpTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
+import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;

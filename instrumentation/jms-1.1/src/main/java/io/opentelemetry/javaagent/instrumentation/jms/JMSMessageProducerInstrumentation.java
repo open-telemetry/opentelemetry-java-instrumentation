@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jms;
+package io.opentelemetry.javaagent.instrumentation.jms;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
-import static io.opentelemetry.instrumentation.auto.jms.MessageInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;

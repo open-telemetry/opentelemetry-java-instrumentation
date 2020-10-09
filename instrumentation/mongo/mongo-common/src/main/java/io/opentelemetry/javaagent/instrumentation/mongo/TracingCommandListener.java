@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.mongo;
+package io.opentelemetry.javaagent.instrumentation.mongo;
 
-import static io.opentelemetry.instrumentation.auto.mongo.MongoClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.mongo.MongoClientTracer.TRACER;
 
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;

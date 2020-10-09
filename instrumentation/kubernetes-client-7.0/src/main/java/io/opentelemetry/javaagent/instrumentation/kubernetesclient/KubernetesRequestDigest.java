@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kubernetesclient;
+package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import com.google.common.base.Strings;
 import java.util.regex.Pattern;

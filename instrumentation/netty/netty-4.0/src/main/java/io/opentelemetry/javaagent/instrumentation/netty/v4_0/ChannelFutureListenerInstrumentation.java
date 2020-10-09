@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_0;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -17,7 +17,7 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.netty.channel.ChannelFuture;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.client.NettyHttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;

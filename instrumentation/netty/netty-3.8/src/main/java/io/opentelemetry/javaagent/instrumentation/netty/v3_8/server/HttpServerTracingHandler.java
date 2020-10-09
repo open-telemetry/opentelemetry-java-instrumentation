@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v3_8.server;
+package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.instrumentation.auto.netty.v3_8.ChannelTraceContext;
-import io.opentelemetry.instrumentation.auto.netty.v3_8.util.CombinedSimpleChannelHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.CombinedSimpleChannelHandler;
 import org.jboss.netty.channel.Channel;
 
 public class HttpServerTracingHandler

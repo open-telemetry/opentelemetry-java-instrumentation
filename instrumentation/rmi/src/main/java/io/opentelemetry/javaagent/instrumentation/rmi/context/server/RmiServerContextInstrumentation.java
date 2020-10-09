@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.rmi.context.server;
+package io.opentelemetry.javaagent.instrumentation.rmi.context.server;
 
-import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -37,10 +37,10 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload$InjectAdapter",
-      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload$ExtractAdapter",
-      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload",
-      "io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator",
+      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$InjectAdapter",
+      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$ExtractAdapter",
+      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload",
+      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator",
       packageName + ".ContextDispatcher",
       packageName + ".ContextDispatcher$NoopRemote"
     };

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.play.v2_6;
+package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
-import static io.opentelemetry.instrumentation.auto.play.v2_6.PlayTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import org.slf4j.Logger;

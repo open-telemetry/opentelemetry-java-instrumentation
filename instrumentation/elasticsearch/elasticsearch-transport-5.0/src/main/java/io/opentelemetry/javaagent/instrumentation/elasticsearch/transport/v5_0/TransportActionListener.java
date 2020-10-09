@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v5_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;

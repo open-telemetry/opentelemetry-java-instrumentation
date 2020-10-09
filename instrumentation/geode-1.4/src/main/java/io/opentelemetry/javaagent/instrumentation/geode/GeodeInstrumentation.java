@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.geode;
+package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.instrumentation.auto.geode.GeodeTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;

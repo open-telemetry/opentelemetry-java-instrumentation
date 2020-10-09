@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.hibernate.v4_0;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
@@ -26,8 +26,8 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils",
-      "io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator",
+      "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
+      "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
       packageName + ".AbstractHibernateInstrumentation$V4Advice",
     };
   }

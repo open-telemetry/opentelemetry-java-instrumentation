@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.rediscala;
+package io.opentelemetry.javaagent.instrumentation.rediscala;
 
-import static io.opentelemetry.instrumentation.auto.rediscala.RediscalaClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;

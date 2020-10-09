@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.awssdk.v1_11;
+package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.handlers.HandlerContextKey;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;

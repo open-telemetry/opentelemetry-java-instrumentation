@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_0.server;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.instrumentation.auto.netty.v4_0.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;

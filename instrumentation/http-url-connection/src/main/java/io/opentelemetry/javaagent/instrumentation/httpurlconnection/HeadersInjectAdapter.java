@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.httpurlconnection;
+package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.net.HttpURLConnection;

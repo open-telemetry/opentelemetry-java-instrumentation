@@ -12,7 +12,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
+import io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.sql.CallableStatement
 import java.sql.Connection

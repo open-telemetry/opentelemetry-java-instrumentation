@@ -3,6 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kubernetesclient;
+package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 class ParseKubernetesResourceException extends Exception {}

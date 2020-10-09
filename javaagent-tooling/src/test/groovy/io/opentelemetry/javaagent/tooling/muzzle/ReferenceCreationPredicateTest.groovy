@@ -16,7 +16,7 @@ class ReferenceCreationPredicateTest extends Specification {
 
     where:
     desc                            | className
-    "auto instrumentation class"    | "io.opentelemetry.instrumentation.auto.some_instrumentation.Advice"
+    "auto instrumentation class"    | "io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice"
     "javaagent-tooling class"       | "io.opentelemetry.javaagent.tooling.Constants"
     "library instrumentation class" | "io.opentelemetry.instrumentation.LibraryClass"
   }

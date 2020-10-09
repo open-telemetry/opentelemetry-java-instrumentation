@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spring.webflux.client;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.client;
 
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import net.bytebuddy.asm.Advice;

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.traceannotation;
 
-import static io.opentelemetry.instrumentation.auto.traceannotation.TraceAnnotationTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;

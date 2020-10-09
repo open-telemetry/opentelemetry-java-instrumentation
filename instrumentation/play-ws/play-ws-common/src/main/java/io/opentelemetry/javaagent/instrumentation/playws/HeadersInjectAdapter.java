@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.playws;
+package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;

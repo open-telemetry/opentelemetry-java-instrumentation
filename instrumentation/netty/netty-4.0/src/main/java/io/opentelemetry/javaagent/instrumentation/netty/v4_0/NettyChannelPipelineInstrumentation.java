@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_0;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -25,12 +25,12 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientRequestTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientResponseTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerRequestTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerResponseTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerRequestTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerResponseTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;

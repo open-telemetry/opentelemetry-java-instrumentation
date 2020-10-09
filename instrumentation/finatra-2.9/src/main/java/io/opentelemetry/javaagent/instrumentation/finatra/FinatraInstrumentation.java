@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.finatra;
+package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static io.opentelemetry.instrumentation.auto.finatra.FinatraTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

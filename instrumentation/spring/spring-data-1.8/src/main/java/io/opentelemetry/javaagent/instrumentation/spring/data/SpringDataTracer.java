@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spring.data;
+package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 

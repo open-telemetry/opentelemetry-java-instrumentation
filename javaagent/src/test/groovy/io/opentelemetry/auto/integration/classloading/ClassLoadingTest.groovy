@@ -25,7 +25,7 @@ class ClassLoadingTest extends Specification {
     URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
 
     when:
-    loader.loadClass("io.opentelemetry.instrumentation.auto.trace_annotation.TraceAdvice")
+    loader.loadClass("io.opentelemetry.javaagent.instrumentation.trace_annotation.TraceAdvice")
     then:
     thrown ClassNotFoundException
 

@@ -7,7 +7,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap
-import io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer
 import java.lang.reflect.Method
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET

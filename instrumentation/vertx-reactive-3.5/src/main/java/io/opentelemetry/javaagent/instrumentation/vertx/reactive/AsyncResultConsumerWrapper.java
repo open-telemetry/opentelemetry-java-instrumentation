@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.vertx.reactive;
+package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 
 import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;

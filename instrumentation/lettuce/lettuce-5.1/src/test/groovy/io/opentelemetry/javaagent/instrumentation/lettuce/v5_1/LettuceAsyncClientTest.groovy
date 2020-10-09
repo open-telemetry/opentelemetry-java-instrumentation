@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.lettuce.v5_1
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 

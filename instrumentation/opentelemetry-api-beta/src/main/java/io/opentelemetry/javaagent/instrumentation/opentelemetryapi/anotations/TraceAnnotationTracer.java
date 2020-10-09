@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.opentelemetryapi.anotations;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import application.io.opentelemetry.trace.Span;

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.hibernate.v3_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
-import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;

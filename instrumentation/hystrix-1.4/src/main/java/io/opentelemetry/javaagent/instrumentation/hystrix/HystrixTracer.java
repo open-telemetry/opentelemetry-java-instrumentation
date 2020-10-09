@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.hystrix;
+package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.api.config.Config;

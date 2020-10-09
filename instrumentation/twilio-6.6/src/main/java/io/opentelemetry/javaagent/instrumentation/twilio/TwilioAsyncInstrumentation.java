@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.twilio;
+package io.opentelemetry.javaagent.instrumentation.twilio;
 
-import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.twilio.TwilioClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.ratpack;
+package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import net.bytebuddy.asm.Advice;
 import ratpack.handling.HandlerDecorator;

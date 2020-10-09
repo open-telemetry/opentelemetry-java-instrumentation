@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_1.client;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import io.opentelemetry.context.propagation.TextMapPropagator;

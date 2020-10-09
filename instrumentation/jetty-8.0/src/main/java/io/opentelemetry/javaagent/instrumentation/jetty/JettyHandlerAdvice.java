@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jetty;
+package io.opentelemetry.javaagent.instrumentation.jetty;
 
-import static io.opentelemetry.instrumentation.auto.jetty.JettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.servlet.v3_0.TagSettingAsyncListener;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;

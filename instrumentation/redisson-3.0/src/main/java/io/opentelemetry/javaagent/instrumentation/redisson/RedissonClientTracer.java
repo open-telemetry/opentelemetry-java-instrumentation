@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.redisson;
+package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;

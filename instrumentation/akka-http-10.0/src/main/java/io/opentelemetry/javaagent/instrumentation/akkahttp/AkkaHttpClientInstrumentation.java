@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.akkahttp;
+package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.instrumentation.auto.akkahttp.AkkaHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientTracer.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 

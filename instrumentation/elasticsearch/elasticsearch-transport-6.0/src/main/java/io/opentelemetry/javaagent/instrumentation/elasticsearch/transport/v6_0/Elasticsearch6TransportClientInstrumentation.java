@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.elasticsearch.transport.v6_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -51,7 +51,7 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.D
       "com.google.common.base.Joiner$1",
       "com.google.common.base.Joiner$2",
       "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.instrumentation.auto.elasticsearch.transport.ElasticsearchTransportClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer",
       packageName + ".TransportActionListener",
     };
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.rmi.server;
+package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 

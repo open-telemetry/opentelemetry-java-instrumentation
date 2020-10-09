@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.geode;
+package io.opentelemetry.javaagent.instrumentation.geode;
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 

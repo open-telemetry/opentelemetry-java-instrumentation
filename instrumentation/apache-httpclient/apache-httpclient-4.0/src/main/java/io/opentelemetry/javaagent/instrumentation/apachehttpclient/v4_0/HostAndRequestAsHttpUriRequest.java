@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import java.net.URI;
 import java.net.URISyntaxException;

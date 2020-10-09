@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.playws;
+package io.opentelemetry.javaagent.instrumentation.playws;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -56,8 +56,8 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer",
-      "io.opentelemetry.instrumentation.auto.playws.HeadersInjectAdapter",
+      "io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
       packageName + ".StreamedAsyncHandlerWrapper"
     };

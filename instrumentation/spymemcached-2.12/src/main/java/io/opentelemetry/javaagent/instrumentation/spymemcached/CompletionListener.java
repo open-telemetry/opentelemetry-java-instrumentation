@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spymemcached;
+package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheClientTracer.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;

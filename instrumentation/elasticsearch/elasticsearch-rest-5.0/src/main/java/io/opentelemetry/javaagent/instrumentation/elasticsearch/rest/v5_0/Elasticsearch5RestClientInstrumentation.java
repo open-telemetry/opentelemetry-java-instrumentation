@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.elasticsearch.rest.v5_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
-import static io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -34,7 +34,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.elasticsearch.rest.ElasticsearchRestClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer",
       packageName + ".RestResponseListener",
     };
   }

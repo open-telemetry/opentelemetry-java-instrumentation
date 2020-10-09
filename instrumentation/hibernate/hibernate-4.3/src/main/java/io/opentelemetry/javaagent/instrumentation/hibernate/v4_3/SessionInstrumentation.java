@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.hibernate.v4_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
@@ -17,7 +17,7 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils;
+import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,8 +47,8 @@ public class SessionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.hibernate.SessionMethodUtils",
-      "io.opentelemetry.instrumentation.auto.hibernate.HibernateDecorator",
+      "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
+      "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
     };
   }
 

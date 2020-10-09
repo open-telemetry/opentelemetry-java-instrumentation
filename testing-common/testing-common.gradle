@@ -1,4 +1,4 @@
-apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
+apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply from: "$rootDir/gradle/java.gradle"
 
 minimumBranchCoverage = 0.5

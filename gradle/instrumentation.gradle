@@ -1,12 +1,12 @@
 // common gradle file for instrumentation
 
-apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
+apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
 ext {
   packageInAgentBundle = true
-  mavenGroupId = 'io.opentelemetry.instrumentation.auto'
+  mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
 }
 
 byteBuddy {

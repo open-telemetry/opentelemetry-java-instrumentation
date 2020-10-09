@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -52,11 +52,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientTracer",
-      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
-      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
-      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientHelper",
-      "io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
+      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
+      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
+      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",
+      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
     };
   }
 

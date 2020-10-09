@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.opentelemetryapi.context.propagation;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;

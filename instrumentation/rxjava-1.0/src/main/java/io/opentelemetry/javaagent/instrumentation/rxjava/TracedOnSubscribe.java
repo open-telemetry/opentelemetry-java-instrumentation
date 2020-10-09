@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.rxjava;
+package io.opentelemetry.javaagent.instrumentation.rxjava;
 
 import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;

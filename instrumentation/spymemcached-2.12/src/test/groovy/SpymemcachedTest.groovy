@@ -10,7 +10,7 @@ import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.auto.spymemcached.CompletionListener
+import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue

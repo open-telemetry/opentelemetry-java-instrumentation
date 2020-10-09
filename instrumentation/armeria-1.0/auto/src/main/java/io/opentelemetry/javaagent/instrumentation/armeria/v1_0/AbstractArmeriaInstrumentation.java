@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.armeria.v1_0;
+package io.opentelemetry.javaagent.instrumentation.armeria.v1_0;
 
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 
@@ -18,7 +18,7 @@ public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.armeria.v1_0.ArmeriaDecorators",
+      "io.opentelemetry.javaagent.instrumentation.armeria.v1_0.ArmeriaDecorators",
       "io.opentelemetry.instrumentation.armeria.v1_0.client.ArmeriaClientTracer",
       "io.opentelemetry.instrumentation.armeria.v1_0.client.ArmeriaClientTracer$ArmeriaSetter",
       "io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient",

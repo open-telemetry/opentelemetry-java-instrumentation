@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kotlincoroutines;
+package io.opentelemetry.javaagent.instrumentation.kotlincoroutines;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -75,9 +75,9 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$CoroutineWrapper",
-      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$TraceScopeKey",
-      "io.opentelemetry.instrumentation.auto.kotlincoroutines.KotlinProbeInstrumentation$CoroutineContextWrapper",
+      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$CoroutineWrapper",
+      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$TraceScopeKey",
+      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$CoroutineContextWrapper",
     };
   }
 

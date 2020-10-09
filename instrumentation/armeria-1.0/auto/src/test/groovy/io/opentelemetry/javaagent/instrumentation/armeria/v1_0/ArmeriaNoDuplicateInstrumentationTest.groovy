@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.armeria.v1_0
+package io.opentelemetry.javaagent.instrumentation.armeria.v1_0
 
 import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.server.ServerBuilder

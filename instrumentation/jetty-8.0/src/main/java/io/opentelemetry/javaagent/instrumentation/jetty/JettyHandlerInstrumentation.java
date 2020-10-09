@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jetty;
+package io.opentelemetry.javaagent.instrumentation.jetty;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -46,8 +46,8 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
     return new String[] {
       "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer",
-      "io.opentelemetry.instrumentation.auto.servlet.v3_0.TagSettingAsyncListener",
+      "io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
+      "io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener",
       packageName + ".JettyHttpServerTracer",
     };
   }

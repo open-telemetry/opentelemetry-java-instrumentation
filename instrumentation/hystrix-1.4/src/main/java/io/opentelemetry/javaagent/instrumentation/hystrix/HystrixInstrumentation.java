@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.hystrix;
+package io.opentelemetry.javaagent.instrumentation.hystrix;
 
-import static io.opentelemetry.instrumentation.auto.hystrix.HystrixTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
+import io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -52,9 +52,9 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
-      "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".HystrixTracer",
       packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
     };

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jetty;
+package io.opentelemetry.javaagent.instrumentation.jetty;
 
-import io.opentelemetry.instrumentation.auto.servlet.v3_0.Servlet3HttpServerTracer;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 
 public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
   public static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();

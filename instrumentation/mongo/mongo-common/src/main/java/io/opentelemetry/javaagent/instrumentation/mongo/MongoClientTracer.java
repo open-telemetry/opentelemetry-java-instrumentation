@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.mongo;
+package io.opentelemetry.javaagent.instrumentation.mongo;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;

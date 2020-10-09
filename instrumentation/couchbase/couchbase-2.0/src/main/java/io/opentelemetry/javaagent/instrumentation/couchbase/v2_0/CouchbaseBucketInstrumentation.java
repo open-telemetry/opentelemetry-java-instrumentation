@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -43,9 +43,9 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.instrumentation.auto.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.instrumentation.auto.rxjava.TracedSubscriber",
-      "io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
+      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
     };

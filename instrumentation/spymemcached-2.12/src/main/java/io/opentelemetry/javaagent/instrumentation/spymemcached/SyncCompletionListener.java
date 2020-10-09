@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spymemcached;
+package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.trace.Span;
 import net.spy.memcached.MemcachedConnection;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.khttp;
+package io.opentelemetry.javaagent.instrumentation.khttp;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.HashMap;

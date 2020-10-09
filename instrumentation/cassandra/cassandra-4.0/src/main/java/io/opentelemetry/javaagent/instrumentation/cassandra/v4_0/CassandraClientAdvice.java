@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.cassandra.v4_0;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import java.util.concurrent.CompletionStage;
 import net.bytebuddy.asm.Advice;

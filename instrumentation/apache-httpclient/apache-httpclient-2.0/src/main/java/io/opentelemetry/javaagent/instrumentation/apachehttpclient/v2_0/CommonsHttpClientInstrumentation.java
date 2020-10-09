@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import static io.opentelemetry.instrumentation.auto.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;

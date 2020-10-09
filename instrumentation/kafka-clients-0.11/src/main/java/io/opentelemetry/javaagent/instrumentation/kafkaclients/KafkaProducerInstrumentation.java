@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kafkaclients;
+package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.DECORATE;
-import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.TRACER;
-import static io.opentelemetry.instrumentation.auto.kafkaclients.TextMapInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;

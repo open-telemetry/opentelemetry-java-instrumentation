@@ -27,7 +27,7 @@ import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.auto.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException

@@ -14,7 +14,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 final class ReferenceCreationPredicate {
   // non-shaded packages
   private static final String AUTO_INSTRUMENTATION_PACKAGE =
-      "io.opentelemetry.instrumentation.auto.";
+      "io.opentelemetry.javaagent.instrumentation.";
   private static final String JAVA_AGENT_TOOLING_PACKAGE = "io.opentelemetry.javaagent.tooling.";
   private static final String AUTO_INSTRUMENTATION_API_PACKAGE =
       "io.opentelemetry.javaagent.instrumentation.api.";

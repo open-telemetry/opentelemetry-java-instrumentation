@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.redisson;
+package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import static io.opentelemetry.instrumentation.auto.redisson.RedissonClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonClientTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;

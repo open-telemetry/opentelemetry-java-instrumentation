@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jsp;
+package io.opentelemetry.javaagent.instrumentation.jsp;
 
-import static io.opentelemetry.instrumentation.auto.jsp.JSPTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

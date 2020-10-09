@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.awslambda.v1_0;
+package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer;

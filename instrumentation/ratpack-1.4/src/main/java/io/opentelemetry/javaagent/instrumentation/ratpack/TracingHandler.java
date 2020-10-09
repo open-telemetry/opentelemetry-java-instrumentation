@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.ratpack;
+package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static io.opentelemetry.instrumentation.auto.ratpack.RatpackTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
@@ -22,12 +22,12 @@ public final class TracingHandler implements Handler {
 
   /**
    * This constant is copied over from
-   * io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys. The key string must be kept
+   * io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys. The key string must be kept
    * consistent.
    */
   public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.instrumentation.auto.netty.v4_1.server.HttpServerTracingHandler.context");
+          "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
   public void handle(Context ctx) {

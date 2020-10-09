@@ -19,7 +19,7 @@ import org.glassfish.embeddable.archive.ScatteredArchive
 
 /**
  * Unfortunately because we're using an embedded GlassFish instance, we aren't exercising the standard
- * OSGi setup that requires {@link io.opentelemetry.instrumentation.auto.javaclassloader.ClassloadingInstrumentation}.
+ * OSGi setup that requires {@link io.opentelemetry.javaagent.instrumentation.javaclassloader.ClassloadingInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
 class GlassFishServerTest extends HttpServerTest<GlassFish> {

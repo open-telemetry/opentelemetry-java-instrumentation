@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.rmi.context.server;
+package io.opentelemetry.javaagent.instrumentation.rmi.context.server;
 
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload.GETTER;
-import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
-import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload.GETTER;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload;
+import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.io.ObjectInput;

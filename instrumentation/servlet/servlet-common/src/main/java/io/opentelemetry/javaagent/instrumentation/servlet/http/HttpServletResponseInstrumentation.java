@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.servlet.http;
+package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import static io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;

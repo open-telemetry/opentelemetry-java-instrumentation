@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.log4j.v2_7;
+package io.opentelemetry.javaagent.instrumentation.log4j.v2_7;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -33,7 +33,7 @@ public class Log4j27MdcInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.auto.log4j.v2_7.SpanDecoratingContextDataInjector"
+      "io.opentelemetry.javaagent.instrumentation.log4j.v2_7.SpanDecoratingContextDataInjector"
     };
   }
 

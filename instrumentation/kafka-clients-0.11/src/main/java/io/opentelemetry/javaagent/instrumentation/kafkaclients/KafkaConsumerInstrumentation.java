@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kafkaclients;
+package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.instrumentation.auto.kafkaclients.KafkaDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

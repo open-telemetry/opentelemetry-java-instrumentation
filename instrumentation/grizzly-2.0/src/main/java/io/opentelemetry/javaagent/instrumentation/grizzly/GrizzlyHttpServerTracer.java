@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.grizzly;
+package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;

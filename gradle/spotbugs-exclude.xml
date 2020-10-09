@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
   <Match>
-    <Class name="io.opentelemetry.instrumentation.auto.jdbc.normalizer.SimpleCharStream"/>
+    <Class name="io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SimpleCharStream"/>
     <Bug pattern="DM_DEFAULT_ENCODING"/> <!-- ignore default encoding for auto-genned class -->
   </Match>
 

@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.instrumentation.auto.opentelemetryapi.trace.Bridging.toApplication;
+import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toApplication;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.ApplicationScope;
-import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.NoopScope;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.ApplicationScope;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.NoopScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

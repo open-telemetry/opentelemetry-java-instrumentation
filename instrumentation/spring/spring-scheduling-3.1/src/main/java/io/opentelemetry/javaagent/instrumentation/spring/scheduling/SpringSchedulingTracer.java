@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.spring.scheduling;
+package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;

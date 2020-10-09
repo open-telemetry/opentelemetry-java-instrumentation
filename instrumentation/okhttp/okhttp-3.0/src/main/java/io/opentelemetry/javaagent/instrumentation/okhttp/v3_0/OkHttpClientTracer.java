@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.okhttp.v3_0;
+package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.instrumentation.auto.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;

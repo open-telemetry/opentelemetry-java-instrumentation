@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.okhttp.v2_2;
+package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
-import static io.opentelemetry.instrumentation.auto.okhttp.v2_2.RequestBuilderInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.RequestBuilderInjectAdapter.SETTER;
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;

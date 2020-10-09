@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.grizzly;
+package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.instrumentation.auto.grizzly.GrizzlyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;

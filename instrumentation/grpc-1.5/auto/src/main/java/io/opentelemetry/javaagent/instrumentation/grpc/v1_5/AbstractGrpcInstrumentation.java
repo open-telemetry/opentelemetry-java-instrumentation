@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.grpc.v1_5;
+package io.opentelemetry.javaagent.instrumentation.grpc.v1_5;
 
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.kafkaclients;
+package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

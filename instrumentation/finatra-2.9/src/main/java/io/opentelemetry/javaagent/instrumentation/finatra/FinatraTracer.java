@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.finatra;
+package io.opentelemetry.javaagent.instrumentation.finatra;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 

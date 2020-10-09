@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
@@ -20,9 +20,9 @@ import javax.ws.rs.Path;
 
 public class JaxRsAnnotationsTracer extends BaseTracer {
   public static final String ABORT_FILTER_CLASS =
-      "io.opentelemetry.instrumentation.auto.jaxrs2.filter.abort.class";
+      "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.class";
   public static final String ABORT_HANDLED =
-      "io.opentelemetry.instrumentation.auto.jaxrs2.filter.abort.handled";
+      "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.handled";
 
   public static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
 

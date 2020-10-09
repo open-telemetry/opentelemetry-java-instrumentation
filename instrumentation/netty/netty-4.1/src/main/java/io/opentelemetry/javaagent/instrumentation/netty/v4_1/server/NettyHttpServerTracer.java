@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.netty.v4_1.server;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_1.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.jdbc;
+package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer;
+import io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SqlNormalizer;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
