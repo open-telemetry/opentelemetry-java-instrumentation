@@ -98,9 +98,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(Listener<RespT> responseListener, Metadata headers) {
       OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
-      try (Scope ignored = withScopedContext(context)) {
-        super.start(
-            new TracingClientCallListener<>(responseListener, span, context, tracer), headers);
+      try {
+        super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
         throw e;
@@ -109,7 +108,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(ReqT message) {
-      try (Scope ignored = withScopedContext(context)) {
+      try {
         super.sendMessage(message);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -121,16 +120,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
   static final class TracingClientCallListener<RespT>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
     private final Span span;
-    private final Context context;
     private final GrpcClientTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(
-        Listener<RespT> delegate, Span span, Context context, GrpcClientTracer tracer) {
+    TracingClientCallListener(Listener<RespT> delegate, Span span, GrpcClientTracer tracer) {
       super(delegate);
       this.span = span;
-      this.context = context;
       this.tracer = tracer;
     }
 
@@ -143,7 +139,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
               SemanticAttributes.GRPC_MESSAGE_ID,
               messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try (Scope ignored = withScopedContext(context)) {
+      try {
         delegate().onMessage(message);
       } catch (Throwable e) {
         tracer.addThrowable(span, e);
@@ -152,7 +148,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onClose(Status status, Metadata trailers) {
-      try (Scope ignored = withScopedContext(context)) {
+      try {
         delegate().onClose(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -163,7 +159,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try (Scope ignored = withScopedContext(context)) {
+      try {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
