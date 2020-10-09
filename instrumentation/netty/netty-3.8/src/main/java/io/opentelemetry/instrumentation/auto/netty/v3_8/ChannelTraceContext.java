@@ -20,26 +20,17 @@ public class ChannelTraceContext {
     }
   }
 
-  private Span connectionContinuation;
-  private Span serverSpan;
+  private Context connectionContext;
   private Span clientSpan;
-  private Span clientParentSpan;
+  private Context clientParentContext;
   private Context context;
 
-  public Span getConnectionContinuation() {
-    return connectionContinuation;
+  public Context getConnectionContext() {
+    return connectionContext;
   }
 
-  public void setConnectionContinuation(Span connectionContinuation) {
-    this.connectionContinuation = connectionContinuation;
-  }
-
-  public Span getServerSpan() {
-    return serverSpan;
-  }
-
-  public void setServerSpan(Span serverSpan) {
-    this.serverSpan = serverSpan;
+  public void setConnectionContext(Context connectionContinuation) {
+    this.connectionContext = connectionContinuation;
   }
 
   public Span getClientSpan() {
@@ -50,12 +41,12 @@ public class ChannelTraceContext {
     this.clientSpan = clientSpan;
   }
 
-  public Span getClientParentSpan() {
-    return clientParentSpan;
+  public Context getClientParentContext() {
+    return clientParentContext;
   }
 
-  public void setClientParentSpan(Span clientParentSpan) {
-    this.clientParentSpan = clientParentSpan;
+  public void setClientParentContext(Context clientParentContext) {
+    this.clientParentContext = clientParentContext;
   }
 
   public Context getContext() {
@@ -75,15 +66,14 @@ public class ChannelTraceContext {
       return false;
     }
     ChannelTraceContext that = (ChannelTraceContext) o;
-    return Objects.equals(connectionContinuation, that.connectionContinuation)
-        && Objects.equals(serverSpan, that.serverSpan)
+    return Objects.equals(connectionContext, that.connectionContext)
         && Objects.equals(clientSpan, that.clientSpan)
-        && Objects.equals(clientParentSpan, that.clientParentSpan)
+        && Objects.equals(clientParentContext, that.clientParentContext)
         && Objects.equals(context, that.context);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionContinuation, serverSpan, clientSpan, clientParentSpan, context);
+    return Objects.hash(connectionContext, clientSpan, clientParentContext, context);
   }
 }

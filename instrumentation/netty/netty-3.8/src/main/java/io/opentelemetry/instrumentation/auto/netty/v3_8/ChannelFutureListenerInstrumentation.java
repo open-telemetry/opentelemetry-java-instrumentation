@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v3_8;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
@@ -94,15 +95,16 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
-      Span continuation =
+      Context parentContext =
           contextStore
               .putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE)
-              .getConnectionContinuation();
-      contextStore.get(future.getChannel()).setConnectionContinuation(null);
-      if (continuation == null) {
+              .getConnectionContext();
+      contextStore.get(future.getChannel()).setConnectionContext(null);
+      if (parentContext == null) {
         return null;
       }
-      Scope parentScope = currentContextWith(continuation);
+      // TODO pass Context into Tracer.startSpan() and then don't need this scoping
+      Scope parentScope = withScopedContext(parentContext);
       Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT", Kind.CLIENT);
       NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
       return parentScope;

@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.auto.awssdk.v2_2;
 
+import io.grpc.Context;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
-import io.opentelemetry.trace.Span;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -100,12 +99,11 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeTransmission(
       BeforeTransmission context, ExecutionAttributes executionAttributes) {
     delegate.beforeTransmission(context, executionAttributes);
-    Span span = AwsSdk.getSpanFromAttributes(executionAttributes);
-    if (span != null) {
+    Context parentContext = AwsSdk.getContextFromAttributes(executionAttributes);
+    if (parentContext != null) {
       // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
       // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-      ScopeHolder.CURRENT.set(
-          ContextUtils.withScopedContext(ClientDecorator.currentContextWith(span)));
+      ScopeHolder.CURRENT.set(ContextUtils.withScopedContext(parentContext));
     }
   }
 

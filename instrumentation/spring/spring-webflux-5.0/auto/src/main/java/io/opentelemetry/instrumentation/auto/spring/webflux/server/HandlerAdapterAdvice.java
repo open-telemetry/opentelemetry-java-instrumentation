@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.auto.spring.webflux.server;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -45,7 +45,7 @@ public class HandlerAdapterAdvice {
       span.updateName(operationName);
       span.setAttribute("handler.type", handlerType);
 
-      spanWithScope = new SpanWithScope(span, currentContextWith(span));
+      spanWithScope = new SpanWithScope(span, withScopedContext(context));
     }
 
     if (context != null) {
