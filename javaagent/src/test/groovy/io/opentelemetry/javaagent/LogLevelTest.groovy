@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto
+package io.opentelemetry.javaagent
 
-import io.opentelemetry.instrumentation.test.IntegrationTestUtils
+import io.opentelemetry.javaagent.IntegrationTestUtils
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
 import spock.lang.Timeout

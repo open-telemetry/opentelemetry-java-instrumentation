@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.integration.classloading
+package io.opentelemetry.javaagent.classloading
 
 import com.google.common.collect.MapMaker
 import com.google.common.reflect.ClassPath
-import io.opentelemetry.instrumentation.test.IntegrationTestUtils
+import io.opentelemetry.javaagent.IntegrationTestUtils
 import spock.lang.Specification
 
 class ShadowPackageRenamingTest extends Specification {

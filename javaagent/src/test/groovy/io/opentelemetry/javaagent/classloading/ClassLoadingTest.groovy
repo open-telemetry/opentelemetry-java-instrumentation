@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.integration.classloading
+package io.opentelemetry.javaagent.classloading
 
-import static io.opentelemetry.instrumentation.test.IntegrationTestUtils.createJarWithClasses
+import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
 
 import io.opentelemetry.instrumentation.util.gc.GCUtils
-import io.opentelemetry.test.ClassToInstrument
-import io.opentelemetry.test.ClassToInstrumentChild
+import io.opentelemetry.javaagent.ClassToInstrument
+import io.opentelemetry.javaagent.ClassToInstrumentChild
 import java.lang.ref.WeakReference
 import spock.lang.Specification
 import spock.lang.Timeout

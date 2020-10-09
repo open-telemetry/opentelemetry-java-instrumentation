@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto
+package io.opentelemetry.javaagent
 
-import io.opentelemetry.instrumentation.test.IntegrationTestUtils
+import io.opentelemetry.javaagent.IntegrationTestUtils
 import io.opentelemetry.javaagent.OpenTelemetryAgent
 import jvmbootstraptest.AgentLoadedChecker
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap

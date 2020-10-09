@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.integration.muzzle
+package io.opentelemetry.javaagent.muzzle
 
-import io.opentelemetry.instrumentation.test.IntegrationTestUtils
+import io.opentelemetry.javaagent.IntegrationTestUtils
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader
 import java.lang.reflect.Field
 import java.lang.reflect.Method

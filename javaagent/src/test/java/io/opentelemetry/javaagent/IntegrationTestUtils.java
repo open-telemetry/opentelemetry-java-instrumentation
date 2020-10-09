@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.test;
+package io.opentelemetry.javaagent;
 
 import java.io.BufferedReader;
 import java.io.File;
