@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.auto.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GCUtils
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit

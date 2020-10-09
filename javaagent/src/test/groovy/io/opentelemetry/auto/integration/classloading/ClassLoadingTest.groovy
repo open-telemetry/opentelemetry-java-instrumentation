@@ -7,7 +7,7 @@ package io.opentelemetry.auto.integration.classloading
 
 import static io.opentelemetry.instrumentation.test.IntegrationTestUtils.createJarWithClasses
 
-import io.opentelemetry.auto.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GCUtils
 import io.opentelemetry.test.ClassToInstrument
 import io.opentelemetry.test.ClassToInstrumentChild
 import java.lang.ref.WeakReference

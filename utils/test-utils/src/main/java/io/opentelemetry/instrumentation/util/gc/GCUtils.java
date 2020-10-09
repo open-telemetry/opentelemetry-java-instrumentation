@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.util.gc;
+package io.opentelemetry.instrumentation.util.gc;
 
 import java.lang.ref.WeakReference;
 

@@ -6,7 +6,7 @@
   </Match>
 
   <Match>
-    <Class name="io.opentelemetry.auto.util.gc.GCUtils"/>
+    <Class name="io.opentelemetry.instrumentation.util.gc.GCUtils"/>
     <Bug pattern="DM_GC"/> <!-- forced GC only used in testing -->
   </Match>
 

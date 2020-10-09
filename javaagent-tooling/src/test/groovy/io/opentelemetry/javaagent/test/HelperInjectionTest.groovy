@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.test
 
 import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
-import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
+import static io.opentelemetry.instrumentation.util.gc.GCUtils.awaitGC
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 import io.opentelemetry.javaagent.tooling.AgentInstaller

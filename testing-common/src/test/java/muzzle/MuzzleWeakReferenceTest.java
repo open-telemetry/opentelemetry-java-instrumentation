@@ -5,7 +5,7 @@
 
 package muzzle;
 
-import io.opentelemetry.auto.util.gc.GCUtils;
+import io.opentelemetry.instrumentation.util.gc.GCUtils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
