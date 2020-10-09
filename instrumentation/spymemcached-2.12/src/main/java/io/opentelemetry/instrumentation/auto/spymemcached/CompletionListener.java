@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.auto.spymemcached;
 
 import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -28,29 +26,27 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeAsyncSpan(T future) {
-    try (Scope ignored = currentContextWith(span)) {
-      try {
-        processResult(span, future);
-      } catch (CancellationException e) {
+    try {
+      processResult(span, future);
+    } catch (CancellationException e) {
+      span.setAttribute(DB_COMMAND_CANCELLED, true);
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof CancellationException) {
+        // Looks like underlying OperationFuture wraps CancellationException into
+        // ExecutionException
         span.setAttribute(DB_COMMAND_CANCELLED, true);
-      } catch (ExecutionException e) {
-        if (e.getCause() instanceof CancellationException) {
-          // Looks like underlying OperationFuture wraps CancellationException into
-          // ExecutionException
-          span.setAttribute(DB_COMMAND_CANCELLED, true);
-        } else {
-          TRACER.endExceptionally(span, e);
-        }
-      } catch (InterruptedException e) {
-        // Avoid swallowing InterruptedException
+      } else {
         TRACER.endExceptionally(span, e);
-        Thread.currentThread().interrupt();
-      } catch (Exception e) {
-        // This should never happen, just in case to make sure we cover all unexpected exceptions
-        TRACER.endExceptionally(span, e);
-      } finally {
-        TRACER.end(span);
       }
+    } catch (InterruptedException e) {
+      // Avoid swallowing InterruptedException
+      TRACER.endExceptionally(span, e);
+      Thread.currentThread().interrupt();
+    } catch (Exception e) {
+      // This should never happen, just in case to make sure we cover all unexpected exceptions
+      TRACER.endExceptionally(span, e);
+    } finally {
+      TRACER.end(span);
     }
   }
 

@@ -39,7 +39,6 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -258,15 +257,12 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         span.setAttribute("message.size", response.getBody().length);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) connection.getPort());
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span);
-        DECORATE.onGet(span, queue);
-        DECORATE.onPeerConnection(span, connection.getAddress());
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-      } finally {
-        span.end();
-      }
+      DECORATE.afterStart(span);
+      DECORATE.onGet(span, queue);
+      DECORATE.onPeerConnection(span, connection.getAddress());
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.end();
     }
   }
 

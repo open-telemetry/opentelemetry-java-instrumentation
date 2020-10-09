@@ -29,9 +29,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     boolean finishSpan = msg instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      try (Scope scope = currentContextWith(span)) {
-        TRACER.end(span, (HttpResponse) msg);
-      }
+      TRACER.end(span, (HttpResponse) msg);
     }
 
     // We want the callback in the scope of the parent, not the client span
