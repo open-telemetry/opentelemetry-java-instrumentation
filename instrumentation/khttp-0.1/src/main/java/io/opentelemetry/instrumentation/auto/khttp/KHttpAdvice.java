@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.auto.khttp.KHttpHeadersInjectAdap
 import static io.opentelemetry.instrumentation.auto.khttp.KHttpTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import khttp.responses.Response;

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.auto.redisson;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.List;
 import org.redisson.client.RedisConnection;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.api.concurrent;
+package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;

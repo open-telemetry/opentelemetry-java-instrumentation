@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.api.concurrent;
+package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import static io.opentelemetry.instrumentation.auto.api.concurrent.AdviceUtils.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils.TRACER;
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

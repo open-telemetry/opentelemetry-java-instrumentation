@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.api.concurrent;
+package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.grpc.Context;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

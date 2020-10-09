@@ -9,7 +9,7 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.internal.Obfuscated;
 import application.io.opentelemetry.trace.Tracer;
 import application.io.opentelemetry.trace.TracerProvider;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 

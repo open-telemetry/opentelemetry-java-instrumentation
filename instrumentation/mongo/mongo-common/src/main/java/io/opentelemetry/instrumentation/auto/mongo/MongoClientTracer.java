@@ -12,7 +12,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;

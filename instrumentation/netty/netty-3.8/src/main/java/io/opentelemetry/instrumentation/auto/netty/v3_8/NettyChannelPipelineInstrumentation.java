@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
-import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v3_8.client.HttpClientTracingHandler;

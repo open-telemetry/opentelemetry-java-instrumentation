@@ -39,7 +39,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
     "io.opentelemetry.javaagent.slf4j",
     "io.opentelemetry.javaagent.bootstrap",
     "io.opentelemetry.javaagent.shaded",
-    "io.opentelemetry.instrumentation.auto.api",
+    "io.opentelemetry.javaagent.instrumentation.api",
   };
 
   // Aditional classes we need only for tests and aren't shared with the agent business logic.

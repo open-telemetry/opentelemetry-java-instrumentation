@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0;
 import static io.opentelemetry.instrumentation.auto.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

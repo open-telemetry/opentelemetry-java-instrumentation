@@ -9,7 +9,7 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
 import application.io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 public class ApplicationContextPropagators implements ContextPropagators {
 

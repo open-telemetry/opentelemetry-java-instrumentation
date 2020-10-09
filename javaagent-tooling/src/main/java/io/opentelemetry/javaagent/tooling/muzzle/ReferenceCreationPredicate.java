@@ -17,7 +17,7 @@ final class ReferenceCreationPredicate {
       "io.opentelemetry.instrumentation.auto.";
   private static final String JAVA_AGENT_TOOLING_PACKAGE = "io.opentelemetry.javaagent.tooling.";
   private static final String AUTO_INSTRUMENTATION_API_PACKAGE =
-      "io.opentelemetry.instrumentation.auto.api.";
+      "io.opentelemetry.javaagent.instrumentation.api.";
 
   // shaded packages
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.auto.rmi.context.server;
 
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.instrumentation.auto.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPayload.GETTER;
 import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.instrumentation.auto.rmi.context.ContextPropagator.PROPAGATOR;

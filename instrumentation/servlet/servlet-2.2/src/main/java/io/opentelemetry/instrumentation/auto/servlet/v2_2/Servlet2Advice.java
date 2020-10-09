@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.auto.servlet.v2_2;
 import static io.opentelemetry.instrumentation.auto.servlet.v2_2.Servlet2HttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.servlet.ServletRequest;

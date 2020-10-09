@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.auto.rmi.context;
 
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.io.ObjectOutput;

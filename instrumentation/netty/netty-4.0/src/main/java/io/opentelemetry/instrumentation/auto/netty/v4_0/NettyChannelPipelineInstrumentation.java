@@ -24,7 +24,7 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
-import io.opentelemetry.instrumentation.auto.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientTracingHandler;

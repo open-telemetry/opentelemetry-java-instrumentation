@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.auto.couchbase.v2_0;
 import static io.opentelemetry.instrumentation.auto.couchbase.v2_0.CouchbaseClientTracer.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import io.opentelemetry.instrumentation.auto.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;

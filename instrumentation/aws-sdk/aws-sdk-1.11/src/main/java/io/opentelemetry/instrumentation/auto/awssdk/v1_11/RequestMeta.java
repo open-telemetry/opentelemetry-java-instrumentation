@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.auto.awssdk.v1_11;
 
 import com.amazonaws.handlers.HandlerContextKey;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import java.util.Objects;
 
 public class RequestMeta {

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.auto.opentelemetryapi.context;
 
 import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

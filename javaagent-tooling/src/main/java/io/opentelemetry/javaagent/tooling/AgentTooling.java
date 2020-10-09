@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.bootstrap.WeakCache.Provider;
 import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy;

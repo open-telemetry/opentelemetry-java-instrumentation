@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.auto.spring.webflux.server.Spring
 
 import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.auto.api.SpanWithScope;
+import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TracingContextUtils;
 import net.bytebuddy.asm.Advice;

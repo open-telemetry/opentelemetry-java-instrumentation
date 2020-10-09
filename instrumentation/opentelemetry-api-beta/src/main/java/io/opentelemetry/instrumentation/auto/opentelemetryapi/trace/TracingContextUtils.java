@@ -11,7 +11,7 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.Span;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.ApplicationScope;
 import io.opentelemetry.instrumentation.auto.opentelemetryapi.context.NoopScope;
 import org.slf4j.Logger;

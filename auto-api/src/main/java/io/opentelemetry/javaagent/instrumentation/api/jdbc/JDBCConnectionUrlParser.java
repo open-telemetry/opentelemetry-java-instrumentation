@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.api.jdbc;
+package io.opentelemetry.javaagent.instrumentation.api.jdbc;
 
-import static io.opentelemetry.instrumentation.auto.api.jdbc.DBInfo.DEFAULT;
+import static io.opentelemetry.javaagent.instrumentation.api.jdbc.DBInfo.DEFAULT;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;

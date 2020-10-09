@@ -15,7 +15,7 @@ import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
 import application.io.opentelemetry.trace.StatusCanonicalCode;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

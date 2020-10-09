@@ -17,9 +17,9 @@ class OSGIClassloadingTest extends AgentTestRunner {
     when:
     def clazz
     if (args == 1) {
-      clazz = loader.loadClass("io.opentelemetry.instrumentation.auto.api.concurrent.State")
+      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.State")
     } else {
-      clazz = loader.loadClass("io.opentelemetry.instrumentation.auto.api.concurrent.State", false)
+      clazz = loader.loadClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.State", false)
     }
 
     then:

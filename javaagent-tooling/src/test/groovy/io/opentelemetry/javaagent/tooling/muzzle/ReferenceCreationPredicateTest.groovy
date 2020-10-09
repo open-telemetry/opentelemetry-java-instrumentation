@@ -30,6 +30,6 @@ class ReferenceCreationPredicateTest extends Specification {
     desc                        | className
     "Java SDK class"            | "java.util.ArrayList"
     "instrumentation-api class" | "io.opentelemetry.instrumentation.api.InstrumentationVersion"
-    "auto-api class"            | "io.opentelemetry.instrumentation.auto.api.ContextStore"
+    "auto-api class"            | "io.opentelemetry.javaagent.instrumentation.api.ContextStore"
   }
 }
