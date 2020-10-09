@@ -17,10 +17,10 @@ import java.util.Properties;
 public interface MetricServer {
 
   /**
-   * Initialize the metric server that pull metric from the {@link MetricProducer}.
+   * Start the metric server that pulls metric from the {@link MetricProducer}.
    *
    * @param producer The metric producer
    * @param config The configuration
    */
-  void configure(MetricProducer producer, Properties config);
+  void start(MetricProducer producer, Properties config);
 }

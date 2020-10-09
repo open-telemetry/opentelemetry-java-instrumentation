@@ -187,7 +187,7 @@ public class TracerInstaller {
 
   private static void installMetricServer(MetricServer metricServer, Properties config) {
     MetricProducer metricProducer = OpenTelemetrySdk.getMeterProvider().getMetricProducer();
-    metricServer.configure(metricProducer, config);
+    metricServer.start(metricProducer, config);
     log.info("Installed metric server: " + metricServer.getClass().getName());
   }
 

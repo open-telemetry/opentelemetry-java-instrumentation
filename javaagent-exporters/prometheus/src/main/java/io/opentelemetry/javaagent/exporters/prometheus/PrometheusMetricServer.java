@@ -32,7 +32,7 @@ public class PrometheusMetricServer implements MetricServer {
   private static final String DEFAULT_HOST = "0.0.0.0";
 
   @Override
-  public void configure(MetricProducer producer, Properties config) {
+  public void start(MetricProducer producer, Properties config) {
     PrometheusCollector.newBuilder().setMetricProducer(producer).buildAndRegister();
     try {
       String portStr = config.getProperty(PORT_CONF_PROP_NAME, DEFAULT_PORT);
