@@ -15,9 +15,10 @@ class ReferenceCreationPredicateTest extends Specification {
     ReferenceCreationPredicate.shouldCreateReferenceFor(className)
 
     where:
-    desc                      | className
-    "Instrumentation class"   | "io.opentelemetry.instrumentation.some_instrumentation.Advice"
-    "javaagent-tooling class" | "io.opentelemetry.javaagent.tooling.Constants"
+    desc                            | className
+    "auto instrumentation class"    | "io.opentelemetry.instrumentation.auto.some_instrumentation.Advice"
+    "javaagent-tooling class"       | "io.opentelemetry.javaagent.tooling.Constants"
+    "library instrumentation class" | "io.opentelemetry.instrumentation.LibraryClass"
   }
 
   @Unroll

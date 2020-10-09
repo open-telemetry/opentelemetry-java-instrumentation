@@ -12,24 +12,25 @@ package io.opentelemetry.javaagent.tooling.muzzle;
  * create references from the method advice and helper classes.
  */
 final class ReferenceCreationPredicate {
-  private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.instrumentation.";
+  // non-shaded packages
+  private static final String AUTO_INSTRUMENTATION_PACKAGE =
+      "io.opentelemetry.instrumentation.auto.";
+  private static final String JAVA_AGENT_TOOLING_PACKAGE = "io.opentelemetry.javaagent.tooling.";
+  private static final String AUTO_INSTRUMENTATION_API_PACKAGE =
+      "io.opentelemetry.instrumentation.auto.api.";
 
-  private static final String JAVA_AGENT_PACKAGE = "io.opentelemetry.javaagent.tooling.";
-
-  private static final String[] REFERENCE_CREATION_PACKAGE_EXCLUDES = {
-    "io.opentelemetry.instrumentation.api.", "io.opentelemetry.instrumentation.auto.api."
-  };
+  // shaded packages
+  private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
+  private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
   static boolean shouldCreateReferenceFor(String className) {
-    if (!className.startsWith(REFERENCE_CREATION_PACKAGE)) {
-      return className.startsWith(JAVA_AGENT_PACKAGE);
+    if (className.startsWith(INSTRUMENTATION_API_PACKAGE)
+        || className.startsWith(AUTO_INSTRUMENTATION_API_PACKAGE)) {
+      return false;
     }
-    for (String exclude : REFERENCE_CREATION_PACKAGE_EXCLUDES) {
-      if (className.startsWith(exclude)) {
-        return false;
-      }
-    }
-    return true;
+    return className.startsWith(AUTO_INSTRUMENTATION_PACKAGE)
+        || className.startsWith(JAVA_AGENT_TOOLING_PACKAGE)
+        || className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE);
   }
 
   private ReferenceCreationPredicate() {}
