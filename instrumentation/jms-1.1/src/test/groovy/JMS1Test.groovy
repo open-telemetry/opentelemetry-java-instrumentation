@@ -33,7 +33,7 @@ class JMS1Test extends AgentTestRunner {
 
   private static final Logger logger = LoggerFactory.getLogger(JMS1Test)
 
-  public static GenericContainer activemq = new GenericContainer("rmohr/activemq")
+  private static final GenericContainer broker = new GenericContainer("rmohr/activemq")
     .withExposedPorts(61616, 8161)
     .withLogConsumer(new Slf4jLogConsumer(logger))
 
@@ -45,8 +45,8 @@ class JMS1Test extends AgentTestRunner {
   ActiveMQTextMessage message = session.createTextMessage(messageText)
 
   def setupSpec() {
-    activemq.start()
-    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + activemq.getMappedPort(61616))
+    broker.start()
+    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
 
     Connection connection = connectionFactory.createConnection()
     connection.start()
@@ -54,7 +54,7 @@ class JMS1Test extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    activemq.stop()
+    broker.stop()
   }
 
   def "sending a message to #destinationName #destinationType generates spans"() {
