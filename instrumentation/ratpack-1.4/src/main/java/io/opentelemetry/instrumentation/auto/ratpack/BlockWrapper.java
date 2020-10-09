@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.auto.ratpack;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -22,27 +24,26 @@ public class BlockWrapper implements Block {
   private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
-  private final Span span;
+  private final Context parentContext;
 
-  private BlockWrapper(Block delegate, Span span) {
-    assert span != null;
+  private BlockWrapper(Block delegate, Context parentContext) {
+    assert parentContext != null;
     this.delegate = delegate;
-    this.span = span;
+    this.parentContext = parentContext;
   }
 
   @Override
   public void execute() throws Exception {
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = withScopedContext(parentContext)) {
       delegate.execute();
     }
   }
 
   public static Block wrapIfNeeded(Block delegate) {
-    Span span = TRACER.getCurrentSpan();
-    if (delegate instanceof BlockWrapper || !span.getContext().isValid()) {
+    if (delegate instanceof BlockWrapper) {
       return delegate;
     }
     log.debug("Wrapping block {}", delegate);
-    return new BlockWrapper(delegate, span);
+    return new BlockWrapper(delegate, Context.current());
   }
 }

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v4_1.client;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyHttpClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
@@ -21,9 +23,8 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    Attribute<Span> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY);
-    parentAttr.setIfAbsent(DefaultSpan.getInvalid());
-    Span parent = parentAttr.get();
+    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY);
+    Context parentContext = parentAttr.get();
     Span span = ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).get();
 
     boolean finishSpan = msg instanceof HttpResponse;
@@ -35,7 +36,11 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     }
 
     // We want the callback in the scope of the parent, not the client span
-    try (Scope scope = currentContextWith(parent)) {
+    if (parentContext != null) {
+      try (Scope ignored = withScopedContext(parentContext)) {
+        ctx.fireChannelRead(msg);
+      }
+    } else {
       ctx.fireChannelRead(msg);
     }
   }

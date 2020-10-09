@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.auto.netty.v3_8.client;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.netty.v3_8.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
@@ -38,13 +39,14 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
+    // TODO pass Context into Tracer.startSpan() and then don't need this scoping
     Scope parentScope = null;
-    Span continuation = channelTraceContext.getConnectionContinuation();
-    if (continuation != null) {
-      parentScope = currentContextWith(continuation);
-      channelTraceContext.setConnectionContinuation(null);
+    Context parentContext = channelTraceContext.getConnectionContext();
+    if (parentContext != null) {
+      parentScope = withScopedContext(parentContext);
+      channelTraceContext.setConnectionContext(null);
     }
-    channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
+    channelTraceContext.setClientParentContext(Context.current());
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 

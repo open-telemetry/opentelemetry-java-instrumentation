@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.auto.spymemcached;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
@@ -21,14 +23,16 @@ public abstract class CompletionListener<T> {
   static final String HIT = "hit";
   static final String MISS = "miss";
 
+  private final Context context;
   private final Span span;
 
   public CompletionListener(MemcachedConnection connection, String methodName) {
+    context = Context.current();
     span = TRACER.startSpan(connection, methodName);
   }
 
   protected void closeAsyncSpan(T future) {
-    try (Scope ignored = currentContextWith(span)) {
+    try (Scope ignored = withScopedContext(context)) {
       try {
         processResult(span, future);
       } catch (CancellationException e) {

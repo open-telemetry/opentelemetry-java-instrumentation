@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.auto.jms;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.auto.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.instrumentation.auto.jms.MessageInjectAdapter.SETTER;
@@ -101,7 +102,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, withScopedContext(context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -139,7 +140,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, withScopedContext(context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

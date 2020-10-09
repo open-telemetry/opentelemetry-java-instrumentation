@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.auto.ratpack;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -19,30 +21,27 @@ public class ActionWrapper<T> implements Action<T> {
 
   private static final Logger log = LoggerFactory.getLogger(ActionWrapper.class);
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
-
   private final Action<T> delegate;
-  private final Span span;
+  private final Context parentContext;
 
-  private ActionWrapper(Action<T> delegate, Span span) {
-    assert span != null;
+  private ActionWrapper(Action<T> delegate, Context parentContext) {
+    assert parentContext != null;
     this.delegate = delegate;
-    this.span = span;
+    this.parentContext = parentContext;
   }
 
   @Override
   public void execute(T t) throws Exception {
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = withScopedContext(parentContext)) {
       delegate.execute(t);
     }
   }
 
   public static <T> Action<T> wrapIfNeeded(Action<T> delegate) {
-    Span span = TRACER.getCurrentSpan();
-    if (delegate instanceof ActionWrapper || !span.getContext().isValid()) {
+    if (delegate instanceof ActionWrapper) {
       return delegate;
     }
     log.debug("Wrapping action task {}", delegate);
-    return new ActionWrapper(delegate, span);
+    return new ActionWrapper(delegate, Context.current());
   }
 }
