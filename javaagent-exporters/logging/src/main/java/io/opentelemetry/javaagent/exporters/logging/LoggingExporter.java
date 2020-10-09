@@ -11,9 +11,12 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoggingExporter implements SpanExporter {
   private final String prefix;
+  private static final Logger log = LoggerFactory.getLogger(LoggingExporter.class);
 
   public LoggingExporter(String prefix) {
     this.prefix = prefix;
@@ -22,27 +25,27 @@ public class LoggingExporter implements SpanExporter {
   @Override
   public CompletableResultCode export(Collection<SpanData> list) {
     for (SpanData span : list) {
-      System.out.print(
+      logger.logMethod(
           prefix + " " + span.getName() + " " + span.getTraceId() + " " + span.getSpanId() + " ");
       span.getAttributes()
           .forEach(
               new AttributeConsumer() {
                 @Override
                 public <T> void consume(AttributeKey<T> key, T value) {
-                  System.out.print(key + "=");
+                 logger.logMethod(key + "=");
                   switch (key.getType()) {
                     case STRING:
-                      System.out.print('"' + String.valueOf(value) + '"');
+                      logger.logMethod('"' + String.valueOf(value) + '"');
                       break;
                     default:
-                      System.out.print(value);
+                     logger.logMethod(value);
                       break;
                   }
-                  System.out.print(" ");
+                  logger.logMethod(" ");
                 }
               });
     }
-    System.out.println();
+    logger.logMethod();
     return CompletableResultCode.ofSuccess();
   }
 
