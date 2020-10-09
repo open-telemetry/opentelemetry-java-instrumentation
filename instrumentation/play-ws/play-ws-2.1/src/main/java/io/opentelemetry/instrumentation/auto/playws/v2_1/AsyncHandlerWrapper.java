@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.auto.playws.v2_1;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;

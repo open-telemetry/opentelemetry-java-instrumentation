@@ -16,7 +16,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.netty.v4_1.AttributeKeys;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {

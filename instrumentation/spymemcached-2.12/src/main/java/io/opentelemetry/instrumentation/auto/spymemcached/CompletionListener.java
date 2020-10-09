@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.auto.spymemcached;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.spymemcached.MemcacheClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
