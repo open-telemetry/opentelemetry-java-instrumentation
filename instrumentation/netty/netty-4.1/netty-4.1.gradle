@@ -27,7 +27,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'io.netty', name: 'netty-codec-http', version: '4.1.52.Final'
+  library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
   testImplementation project(':instrumentation:reactor-3.1')
 
@@ -45,7 +45,7 @@ configurations.testImplementation {
     eachDependency { DependencyResolveDetails details ->
       //specifying a fixed version for all libraries with io.netty' group
       if (details.requested.group == 'io.netty') {
-        details.useVersion "4.1.52.Final"
+        details.useVersion "4.1.0.Final"
       }
     }
   }
