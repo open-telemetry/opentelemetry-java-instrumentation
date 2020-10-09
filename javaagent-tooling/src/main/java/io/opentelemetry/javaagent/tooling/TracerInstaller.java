@@ -80,7 +80,7 @@ public class TracerInstaller {
       if (metricServer != null) {
         installMetricServer(metricServer, config);
       } else {
-        log.debug("No {} metric producer customer found", exporterName);
+        log.debug("No {} metric server found", exporterName);
       }
     }
   }
