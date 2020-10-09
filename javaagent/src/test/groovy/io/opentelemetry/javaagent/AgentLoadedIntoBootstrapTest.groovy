@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent
 
-import io.opentelemetry.javaagent.IntegrationTestUtils
-import io.opentelemetry.javaagent.OpenTelemetryAgent
 import jvmbootstraptest.AgentLoadedChecker
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap
 import spock.lang.Specification

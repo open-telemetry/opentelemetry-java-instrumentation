@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent
 
-import io.opentelemetry.javaagent.IntegrationTestUtils
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
 import spock.lang.Timeout
