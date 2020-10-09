@@ -20,5 +20,5 @@ public class CompletionStageFunction implements Function<Object, Object> {
       return session;
     }
     return new TracingCqlSession((CqlSession) session);
-  };
+  }
 }
