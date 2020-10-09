@@ -20,6 +20,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.auto.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -114,16 +115,18 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletContext;
       }
 
-      span = TRACER.startSpan(method);
+      try (Scope ignored = ContextUtils.withScopedContext(parent)) {
+        span = TRACER.startSpan(method);
 
-      // save the original servlet span before overwriting the request attribute, so that it can
-      // be restored on method exit
-      originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+        // save the original servlet span before overwriting the request attribute, so that it can
+        // be
+        // restored on method exit
+        originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
-      // this tells the dispatched servlet to use the current span as the parent for its work
-      Context newContext = withSpan(span, Context.current());
-      request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
-
+        // this tells the dispatched servlet to use the current span as the parent for its work
+        Context newContext = withSpan(span, Context.current());
+        request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
+      }
       scope = TRACER.startScope(span);
     }
 
