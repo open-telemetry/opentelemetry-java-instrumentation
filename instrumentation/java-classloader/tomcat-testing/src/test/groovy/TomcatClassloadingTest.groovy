@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot

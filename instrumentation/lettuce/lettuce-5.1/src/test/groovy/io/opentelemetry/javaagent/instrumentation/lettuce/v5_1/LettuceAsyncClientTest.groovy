@@ -16,8 +16,8 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit

@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.embedded.RedisServer
 import spock.lang.Shared

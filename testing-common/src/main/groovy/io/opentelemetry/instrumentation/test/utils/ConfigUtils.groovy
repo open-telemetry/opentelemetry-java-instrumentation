@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.utils
+package io.opentelemetry.instrumentation.test.utils
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer

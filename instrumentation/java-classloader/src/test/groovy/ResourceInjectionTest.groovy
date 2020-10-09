@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.auto.util.gc.GCUtils.awaitGC
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference

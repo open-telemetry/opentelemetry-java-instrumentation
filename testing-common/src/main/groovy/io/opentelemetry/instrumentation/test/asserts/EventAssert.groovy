@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.asserts
+package io.opentelemetry.instrumentation.test.asserts
 
 import static AttributesAssert.assertAttributes
 import static io.opentelemetry.sdk.trace.data.SpanData.Event
@@ -23,14 +23,14 @@ class EventAssert {
   }
 
   static void assertEvent(Event event,
-                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.EventAssert'])
+                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert'])
                           @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new EventAssert(event)
     asserter.assertEvent spec
   }
 
   void assertEvent(
-    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.EventAssert'])
+    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert'])
     @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def clone = (Closure) spec.clone()
     clone.delegate = this
@@ -43,7 +43,7 @@ class EventAssert {
     checked.name = true
   }
 
-  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
                   @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assertAttributes(toMap(event.attributes), spec)
   }

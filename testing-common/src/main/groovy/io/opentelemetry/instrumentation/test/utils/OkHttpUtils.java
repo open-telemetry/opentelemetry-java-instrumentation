@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.utils;
+package io.opentelemetry.instrumentation.test.utils;
 
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;

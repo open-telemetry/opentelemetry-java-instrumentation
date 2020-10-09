@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test;
+package io.opentelemetry.instrumentation.test;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

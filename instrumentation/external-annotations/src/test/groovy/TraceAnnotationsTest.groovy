@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
 import java.util.concurrent.Callable

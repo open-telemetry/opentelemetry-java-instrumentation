@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import io.opentelemetry.auto.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaSqsHandlerTest
 
 class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements AgentTestTrait {

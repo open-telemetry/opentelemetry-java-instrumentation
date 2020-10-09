@@ -6,8 +6,8 @@
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.OkHttpUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.OkHttpClient
 import okhttp3.Request

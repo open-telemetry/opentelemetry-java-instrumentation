@@ -5,8 +5,8 @@
 
 import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentation
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable

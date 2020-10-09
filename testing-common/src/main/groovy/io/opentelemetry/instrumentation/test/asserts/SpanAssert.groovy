@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.asserts
+package io.opentelemetry.instrumentation.test.asserts
 
 import static AttributesAssert.assertAttributes
-import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
+import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEvent
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -31,7 +31,7 @@ class SpanAssert {
   }
 
   static void assertSpan(SpanData span,
-                         @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.SpanAssert'])
+                         @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert'])
                          @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new SpanAssert(span)
     asserter.assertSpan spec
@@ -39,7 +39,7 @@ class SpanAssert {
   }
 
   void assertSpan(
-    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.SpanAssert'])
+    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert'])
     @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def clone = (Closure) spec.clone()
     clone.delegate = this
@@ -48,7 +48,7 @@ class SpanAssert {
     assertDefaults()
   }
 
-  void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= span.events.size()) {
       throw new ArrayIndexOutOfBoundsException(index)
     }
@@ -164,7 +164,7 @@ class SpanAssert {
     }
   }
 
-  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
                   @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assertAttributes(toMap(span.attributes), spec)
   }

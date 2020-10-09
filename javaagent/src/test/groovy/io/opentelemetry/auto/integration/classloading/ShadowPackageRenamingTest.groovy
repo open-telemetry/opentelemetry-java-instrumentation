@@ -7,7 +7,7 @@ package io.opentelemetry.auto.integration.classloading
 
 import com.google.common.collect.MapMaker
 import com.google.common.reflect.ClassPath
-import io.opentelemetry.auto.test.IntegrationTestUtils
+import io.opentelemetry.instrumentation.test.IntegrationTestUtils
 import spock.lang.Specification
 
 class ShadowPackageRenamingTest extends Specification {

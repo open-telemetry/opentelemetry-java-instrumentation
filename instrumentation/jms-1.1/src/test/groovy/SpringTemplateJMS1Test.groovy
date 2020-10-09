@@ -7,7 +7,7 @@ import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection

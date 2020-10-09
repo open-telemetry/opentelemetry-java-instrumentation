@@ -17,7 +17,7 @@ import application.io.opentelemetry.context.Scope
 import application.io.opentelemetry.trace.DefaultSpan
 import application.io.opentelemetry.trace.Span
 import application.io.opentelemetry.trace.StatusCanonicalCode
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class TracerTest extends AgentTestRunner {

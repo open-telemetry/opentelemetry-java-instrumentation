@@ -5,7 +5,7 @@
 
 package io.opentelemetry.auto.integration.classloading
 
-import static io.opentelemetry.auto.test.IntegrationTestUtils.createJarWithClasses
+import static io.opentelemetry.instrumentation.test.IntegrationTestUtils.createJarWithClasses
 
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.test.ClassToInstrument

@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.asserts
+package io.opentelemetry.instrumentation.test.asserts
 
 import static TraceAssert.assertTrace
 
 import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.auto.test.InMemoryExporter
+import io.opentelemetry.instrumentation.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
@@ -30,7 +30,7 @@ class InMemoryExporterAssert {
 
   static void assertTraces(InMemoryExporter writer, int expectedSize,
                            final Predicate<List<SpanData>> excludes,
-                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.ListWriterAssert'])
+                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
       def traces = writer.waitForTraces(expectedSize, excludes)
@@ -46,7 +46,7 @@ class InMemoryExporterAssert {
       for (int i = 0; i < e.stackTrace.length; i++) {
         def className = e.stackTrace[i].className
         def skip = className.startsWith("org.codehaus.groovy.") ||
-          className.startsWith("io.opentelemetry.auto.test.") ||
+          className.startsWith("io.opentelemetry.instrumentation.test.") ||
           className.startsWith("sun.reflect.") ||
           className.startsWith("groovy.lang.") ||
           className.startsWith("java.lang.")
@@ -66,7 +66,7 @@ class InMemoryExporterAssert {
   }
 
   void trace(int index, int expectedSize,
-             @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TraceAssert'])
+             @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
              @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= traces.size()) {
       throw new ArrayIndexOutOfBoundsException(index)

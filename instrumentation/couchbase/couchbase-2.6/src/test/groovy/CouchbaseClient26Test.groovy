@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 
 class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
   @Override

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
-import io.opentelemetry.auto.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 

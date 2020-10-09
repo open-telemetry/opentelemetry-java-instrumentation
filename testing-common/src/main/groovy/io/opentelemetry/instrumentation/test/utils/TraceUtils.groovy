@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.utils
+package io.opentelemetry.instrumentation.test.utils
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 import io.grpc.Context
-import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test;
+package io.opentelemetry.instrumentation.test;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -15,8 +15,8 @@ import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
-import io.opentelemetry.auto.test.utils.ConfigUtils;
+import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -232,7 +232,7 @@ public abstract class AgentTestRunner extends Specification {
       int size,
       @ClosureParams(
               value = SimpleType.class,
-              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+              options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(
@@ -244,7 +244,7 @@ public abstract class AgentTestRunner extends Specification {
       Predicate<List<SpanData>> excludes,
       @ClosureParams(
               value = SimpleType.class,
-              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+              options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);

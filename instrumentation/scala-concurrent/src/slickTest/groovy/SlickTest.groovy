@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 

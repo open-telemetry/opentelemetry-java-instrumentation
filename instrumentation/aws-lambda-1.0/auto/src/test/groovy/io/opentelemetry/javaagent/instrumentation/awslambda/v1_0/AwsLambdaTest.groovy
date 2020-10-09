@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import io.opentelemetry.auto.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestHandlerTest
 
 class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {

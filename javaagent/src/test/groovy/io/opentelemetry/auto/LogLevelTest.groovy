@@ -5,7 +5,7 @@
 
 package io.opentelemetry.auto
 
-import io.opentelemetry.auto.test.IntegrationTestUtils
+import io.opentelemetry.instrumentation.test.IntegrationTestUtils
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
 import spock.lang.Timeout

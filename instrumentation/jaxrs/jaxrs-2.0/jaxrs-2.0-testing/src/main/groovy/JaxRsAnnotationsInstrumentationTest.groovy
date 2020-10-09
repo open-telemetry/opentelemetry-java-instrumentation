@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer
 import java.lang.reflect.Method

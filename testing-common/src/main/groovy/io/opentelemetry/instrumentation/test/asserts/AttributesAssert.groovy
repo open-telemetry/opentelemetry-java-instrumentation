@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.asserts
+package io.opentelemetry.instrumentation.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -18,7 +18,7 @@ class AttributesAssert {
   }
 
   static void assertAttributes(Map<String, Object> attributes,
-                               @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+                               @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
                                @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new AttributesAssert(attributes)
     def clone = (Closure) spec.clone()

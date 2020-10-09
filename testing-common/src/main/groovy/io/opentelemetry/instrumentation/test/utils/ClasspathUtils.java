@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.utils;
+package io.opentelemetry.instrumentation.test.utils;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
@@ -11,7 +11,7 @@ import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
-import io.opentelemetry.auto.test.AgentTestRunner;
+import io.opentelemetry.instrumentation.test.AgentTestRunner;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;

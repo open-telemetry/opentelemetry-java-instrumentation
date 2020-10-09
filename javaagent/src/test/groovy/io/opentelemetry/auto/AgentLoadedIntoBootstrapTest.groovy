@@ -5,7 +5,7 @@
 
 package io.opentelemetry.auto
 
-import io.opentelemetry.auto.test.IntegrationTestUtils
+import io.opentelemetry.instrumentation.test.IntegrationTestUtils
 import io.opentelemetry.javaagent.OpenTelemetryAgent
 import jvmbootstraptest.AgentLoadedChecker
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap

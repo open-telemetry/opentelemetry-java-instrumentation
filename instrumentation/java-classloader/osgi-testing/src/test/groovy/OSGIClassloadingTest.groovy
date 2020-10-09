@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.felix.framework.BundleWiringImpl
 import org.eclipse.osgi.internal.debug.Debug
 import org.eclipse.osgi.internal.framework.EquinoxConfiguration

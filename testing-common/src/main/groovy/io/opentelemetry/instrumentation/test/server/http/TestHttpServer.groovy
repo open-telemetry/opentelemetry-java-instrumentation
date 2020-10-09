@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.server.http
+package io.opentelemetry.instrumentation.test.server.http
 
-import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
+import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span

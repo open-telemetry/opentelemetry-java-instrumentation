@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test.asserts
+package io.opentelemetry.instrumentation.test.asserts
 
 import static SpanAssert.assertSpan
 
 import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.auto.test.InMemoryExporter
+import io.opentelemetry.instrumentation.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.TimeUnit
 
@@ -24,7 +24,7 @@ class TraceAssert {
   }
 
   static void assertTrace(InMemoryExporter writer, String traceId, int expectedSize,
-                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TraceAssert'])
+                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(writer, traceId)
     Stopwatch stopwatch = Stopwatch.createStarted()
@@ -49,7 +49,7 @@ class TraceAssert {
     spans.get(index)
   }
 
-  void span(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.SpanAssert']) @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  void span(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert']) @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= spans.size()) {
       throw new ArrayIndexOutOfBoundsException(index)
     }
@@ -57,7 +57,7 @@ class TraceAssert {
     assertSpan(spans.get(index), spec)
   }
 
-  void span(String name, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.SpanAssert']) @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  void span(String name, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.SpanAssert']) @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     int index = -1
     for (int i = 0; i < spans.size(); i++) {
       if (spans[i].name == name) {

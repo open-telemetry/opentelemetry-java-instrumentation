@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.auto.test
+package io.opentelemetry.instrumentation.test
 
 import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Specification
 
@@ -22,7 +22,7 @@ abstract class InstrumentationSpecification extends Specification {
     final int size,
     @ClosureParams(
       value = SimpleType,
-      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec)
 
@@ -31,7 +31,7 @@ abstract class InstrumentationSpecification extends Specification {
     final Predicate<List<SpanData>> excludes,
     @ClosureParams(
       value = SimpleType,
-      options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec)
 }
