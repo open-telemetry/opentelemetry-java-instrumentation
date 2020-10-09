@@ -33,11 +33,11 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      Context serverSpanContext = TRACER.getServerContext(channelTraceContext);
-      if (serverSpanContext == null) {
+      Context serverContext = TRACER.getServerContext(channelTraceContext);
+      if (serverContext == null) {
         ctx.sendUpstream(msg);
       } else {
-        try (Scope ignored = ContextUtils.withScopedContext(serverSpanContext)) {
+        try (Scope ignored = ContextUtils.withScopedContext(serverContext)) {
           ctx.sendUpstream(msg);
         }
       }

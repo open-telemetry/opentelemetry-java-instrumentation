@@ -26,8 +26,8 @@ public class AttributeKeys {
             }
           };
 
-  public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_0.parent.connect.span");
+  public static final AttributeKey<Context> PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY =
+      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_0.parent.connect.context");
 
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".context");
@@ -35,7 +35,7 @@ public class AttributeKeys {
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".span");
 
-  public static final AttributeKey<Span> CLIENT_PARENT_ATTRIBUTE_KEY =
+  public static final AttributeKey<Context> CLIENT_PARENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".parent");
 
   /**

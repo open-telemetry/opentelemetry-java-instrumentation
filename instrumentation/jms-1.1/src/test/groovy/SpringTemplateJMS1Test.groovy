@@ -27,7 +27,7 @@ import spock.lang.Shared
 class SpringTemplateJMS1Test extends AgentTestRunner {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
 
-  public static GenericContainer broker = new GenericContainer("rmohr/activemq")
+  private static final GenericContainer broker = new GenericContainer("rmohr/activemq")
     .withExposedPorts(61616, 8161)
     .withLogConsumer(new Slf4jLogConsumer(logger))
 
