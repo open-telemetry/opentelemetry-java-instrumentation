@@ -91,7 +91,8 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       // FIXME: We should remove this once
       // https://github.com/raphw/byte-buddy/issues/558 is fixed
       if (name.equals("io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper")
-          || name.equals("io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper")) {
+          || name.equals(
+              "io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper")) {
         return false;
       }
       return true;

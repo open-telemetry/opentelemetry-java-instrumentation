@@ -31,8 +31,8 @@ public class AttributeKeys {
 
   /**
    * This constant is copied over to
-   * io.opentelemetry.javaagent.instrumentation.ratpack.server.TracingHandler, so if this changes, that
-   * must also change.
+   * io.opentelemetry.javaagent.instrumentation.ratpack.server.TracingHandler, so if this changes,
+   * that must also change.
    */
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".context");

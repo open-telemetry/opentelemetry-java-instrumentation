@@ -22,8 +22,8 @@ public final class TracingHandler implements Handler {
 
   /**
    * This constant is copied over from
-   * io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys. The key string must be kept
-   * consistent.
+   * io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys. The key string must be
+   * kept consistent.
    */
   public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
