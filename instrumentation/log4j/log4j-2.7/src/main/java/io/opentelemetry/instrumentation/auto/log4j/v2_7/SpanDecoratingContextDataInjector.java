@@ -42,9 +42,7 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
     StringMap newContextData = new SortedArrayStringMap(contextData);
     newContextData.putValue(TRACE_ID, currentContext.getTraceIdAsHexString());
     newContextData.putValue(SPAN_ID, currentContext.getSpanIdAsHexString());
-    if (currentContext.isSampled()) {
-      newContextData.putValue(SAMPLED, "true");
-    }
+    newContextData.putValue(SAMPLED, Boolean.toString(currentContext.isSampled()));
     return newContextData;
   }
 

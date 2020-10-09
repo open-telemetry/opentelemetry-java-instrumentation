@@ -63,8 +63,8 @@ class DefaultInstrumenterTest extends Specification {
 
   def "default disabled can override to enabled"() {
     setup:
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.test.enabled", "$enabled")
+    def previousConfig = ConfigUtils.updateConfig {
+      it.setProperty("otel.integration.test.enabled", "$enabled")
     }
     def target = new TestDefaultInstrumenter("test") {
       @Override
@@ -78,14 +78,17 @@ class DefaultInstrumenterTest extends Specification {
     target.enabled == enabled
     target.applyCalled == enabled
 
+    cleanup:
+    ConfigUtils.setConfig(previousConfig)
+
     where:
     enabled << [true, false]
   }
 
   def "configure default sys prop as #value"() {
     setup:
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integrations.enabled", value)
+    def previousConfig = ConfigUtils.updateConfig {
+      it.setProperty("otel.integrations.enabled", value)
     }
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
@@ -94,23 +97,8 @@ class DefaultInstrumenterTest extends Specification {
     target.enabled == enabled
     target.applyCalled == enabled
 
-    where:
-    value   | enabled
-    "true"  | true
-    "false" | false
-    "asdf"  | false
-  }
-
-  def "configure default env var as #value"() {
-    setup:
-    environmentVariables.set("OTEL_INTEGRATIONS_ENABLED", value)
-    ConfigUtils.resetConfig()
-    def target = new TestDefaultInstrumenter("test")
-    target.instrument(new AgentBuilder.Default())
-
-    expect:
-    target.enabled == enabled
-    target.applyCalled == enabled
+    cleanup:
+    ConfigUtils.setConfig(previousConfig)
 
     where:
     value   | enabled
@@ -121,9 +109,9 @@ class DefaultInstrumenterTest extends Specification {
 
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integrations.enabled", "false")
-      System.setProperty("otel.integration.${value}.enabled", "true")
+    def previousConfig = ConfigUtils.updateConfig {
+      it.setProperty("otel.integrations.enabled", "false")
+      it.setProperty("otel.integration.${value}.enabled", "true")
     }
     def target = new TestDefaultInstrumenter(name, altName)
     target.instrument(new AgentBuilder.Default())
@@ -131,6 +119,9 @@ class DefaultInstrumenterTest extends Specification {
     expect:
     target.enabled == enabled
     target.applyCalled == enabled
+
+    cleanup:
+    ConfigUtils.setConfig(previousConfig)
 
     where:
     value             | enabled | name          | altName
@@ -141,31 +132,6 @@ class DefaultInstrumenterTest extends Specification {
     "dash-test"       | true    | "dash-test"   | "asdf"
     "underscore_test" | true    | "asdf"        | "underscore_test"
     "period.test"     | true    | "period.test" | "asdf"
-  }
-
-  def "configure env var enabled for #value when default is disabled"() {
-    setup:
-    ConfigUtils.updateConfig {
-      environmentVariables.set("OTEL_INTEGRATIONS_ENABLED", "false")
-      environmentVariables.set("OTEL_INTEGRATION_${value}_ENABLED", "true")
-    }
-    def target = new TestDefaultInstrumenter(name, altName)
-    target.instrument(new AgentBuilder.Default())
-
-    expect:
-    System.getenv("OTEL_INTEGRATION_${value}_ENABLED") == "true"
-    target.enabled == enabled
-    target.applyCalled == enabled
-
-    where:
-    value             | enabled | name          | altName
-    "TEST"            | true    | "test"        | "asdf"
-    "DUPLICATE"       | true    | "duplicate"   | "duplicate"
-    "BAD"             | false   | "not"         | "valid"
-    "ALTTEST"         | true    | "asdf"        | "altTest"
-    "DASH_TEST"       | true    | "dash-test"   | "asdf"
-    "UNDERSCORE_TEST" | true    | "asdf"        | "underscore_test"
-    "PERIOD_TEST"     | true    | "period.test" | "asdf"
   }
 
   class TestDefaultInstrumenter extends Instrumenter.Default {

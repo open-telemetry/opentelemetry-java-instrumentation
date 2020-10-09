@@ -30,18 +30,13 @@ import spock.lang.Unroll
 import test.TestConnection
 
 class JDBCInstrumentationTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.jdbc-datasource.enabled", "true")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.jdbc-datasource.enabled", "true")
   }
 
   def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.jdbc-datasource.enabled")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
-
 
   @Shared
   def dbName = "jdbcUnitTest"

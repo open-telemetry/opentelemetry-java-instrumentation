@@ -12,7 +12,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -258,9 +257,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   def "test tag query string for #endpoint"() {
     setup:
     def request = request(endpoint, method, body).build()
-    Response response = withConfigOverride("http.server.tag.query-string", "true") {
-      client.newCall(request).execute()
-    }
+    Response response = client.newCall(request).execute()
 
     expect:
     response.code() == endpoint.status

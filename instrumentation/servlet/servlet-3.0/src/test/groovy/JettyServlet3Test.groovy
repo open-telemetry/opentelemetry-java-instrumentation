@@ -19,18 +19,14 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
-  static {
-    ConfigUtils.updateConfig {
-      //We want to test spans produced by servlet instrumentation, not those of jetty
-      System.setProperty("otel.integration.jetty.enabled", "false")
-    }
+  //We want to test spans produced by servlet instrumentation, not those of jetty
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.jetty.enabled", "false")
   }
 
   @Override
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.jetty.enabled")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   @Override

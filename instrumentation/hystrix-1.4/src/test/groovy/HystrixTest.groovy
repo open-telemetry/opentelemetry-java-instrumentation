@@ -18,12 +18,17 @@ class HystrixTest extends AgentTestRunner {
   static {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.hystrix.tags.enabled", "true")
-    }
 
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
+  }
+
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
+    it.setProperty("otel.hystrix.tags.enabled", "true")
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "test command #action"() {

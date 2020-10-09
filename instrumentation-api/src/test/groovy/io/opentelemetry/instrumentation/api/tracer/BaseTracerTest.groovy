@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+
 import io.opentelemetry.trace.Span
 import spock.lang.Shared
 import spock.lang.Specification
@@ -38,4 +39,3 @@ class BaseTracerTest extends Specification {
     }
   }
 }
-	

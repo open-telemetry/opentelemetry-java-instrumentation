@@ -16,18 +16,13 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
 class FilterTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.servlet-filter.enabled", "true")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.servlet-filter.enabled", "true")
   }
 
-  def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.servlet-filter.enabled")
-    }
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
-
 
   def "test doFilter no-parent"() {
     when:

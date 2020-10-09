@@ -84,9 +84,7 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
       SpanContext spanContext = currentSpan.getContext();
       spanContextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
       spanContextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
-      if (spanContext.isSampled()) {
-        spanContextData.put(SAMPLED, "true");
-      }
+      spanContextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
 
       if (contextData == null) {
         contextData = spanContextData;
