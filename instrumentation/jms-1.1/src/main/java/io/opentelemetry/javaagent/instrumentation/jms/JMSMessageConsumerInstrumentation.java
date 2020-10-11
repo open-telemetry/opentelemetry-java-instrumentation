@@ -12,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapt
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -21,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -116,12 +114,10 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       }
       Span span = spanBuilder.startSpan();
 
-      try (Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span, spanName, message);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
-      }
+      DECORATE.afterStart(span, spanName, message);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.end();
     }
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -152,11 +151,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(Throwable throwable) {
-      try (Scope scope = currentContextWith(span)) {
-        TRACER.endExceptionally(span, throwable);
-        span = null;
-        finished = true;
-      }
+      TRACER.endExceptionally(span, throwable);
+      span = null;
+      finished = true;
     }
 
     public void finishSpan(int responseCode) {
@@ -166,13 +163,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (Scope scope = currentContextWith(span)) {
-          // Need to explicitly cast to boxed type to make sure correct method is called.
-          // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
-          TRACER.end(span, (Integer) responseCode);
-          span = null;
-          finished = true;
-        }
+        // Need to explicitly cast to boxed type to make sure correct method is called.
+        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
+        TRACER.end(span, (Integer) responseCode);
+        span = null;
+        finished = true;
       }
     }
   }

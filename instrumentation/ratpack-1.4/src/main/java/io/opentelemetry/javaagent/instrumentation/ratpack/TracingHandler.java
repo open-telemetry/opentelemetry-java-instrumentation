@@ -42,14 +42,12 @@ public final class TracingHandler implements Handler {
     ctx.getResponse()
         .beforeSend(
             response -> {
-              try (Scope ignored = currentContextWith(ratpackSpan)) {
-                if (serverSpanContext != null) {
-                  // Rename the netty span name with the ratpack route.
-                  TRACER.onContext(getSpan(serverSpanContext), ctx);
-                }
-                TRACER.onContext(ratpackSpan, ctx);
-                TRACER.end(ratpackSpan);
+              if (serverSpanContext != null) {
+                // Rename the netty span name with the ratpack route.
+                TRACER.onContext(getSpan(serverSpanContext), ctx);
               }
+              TRACER.onContext(ratpackSpan, ctx);
+              TRACER.end(ratpackSpan);
             });
 
     try (Scope ignored = currentContextWith(ratpackSpan)) {
