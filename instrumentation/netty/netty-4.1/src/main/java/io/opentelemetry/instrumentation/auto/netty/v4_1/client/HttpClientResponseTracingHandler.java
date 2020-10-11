@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.auto.netty.v4_1.client;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.netty.v4_1.client.NettyHttpClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
