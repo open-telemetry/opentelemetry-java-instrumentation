@@ -6,8 +6,8 @@
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import akka.actor.ActorSystem
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority

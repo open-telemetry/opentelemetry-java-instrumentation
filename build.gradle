@@ -27,7 +27,7 @@ release {
 }
 
 allprojects {
-  group = 'io.opentelemetry.instrumentation.auto'
+  group = 'io.opentelemetry.javaagent.instrumentation'
 
   ext.isCI = System.getenv("CI") != null
   if (isCI) {

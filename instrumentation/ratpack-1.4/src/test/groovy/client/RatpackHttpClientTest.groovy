@@ -5,7 +5,7 @@
 
 package client
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
 import ratpack.exec.ExecResult
 import ratpack.http.client.HttpClient

@@ -10,8 +10,8 @@ import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import groovy.lang.Closure
-import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
 
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 

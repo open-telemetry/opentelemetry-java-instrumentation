@@ -6,7 +6,7 @@
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import io.opentelemetry.auto.test.base.AbstractPromiseTest
+import io.opentelemetry.instrumentation.test.base.AbstractPromiseTest
 import java.util.concurrent.Executors
 import spock.lang.Shared
 

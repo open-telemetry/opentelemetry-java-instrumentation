@@ -7,8 +7,8 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.S
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.TraceUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.trace.TracingContextUtils
 import org.apache.log4j.LogManager
 

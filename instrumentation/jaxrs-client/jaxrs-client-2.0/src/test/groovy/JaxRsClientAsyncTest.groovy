@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.client.AsyncInvoker

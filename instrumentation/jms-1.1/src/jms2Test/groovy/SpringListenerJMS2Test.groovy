@@ -6,7 +6,7 @@
 import static JMS2Test.consumerSpan
 import static JMS2Test.producerSpan
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.jms.ConnectionFactory
 import listener.Config
 import org.hornetq.jms.client.HornetQMessageConsumer

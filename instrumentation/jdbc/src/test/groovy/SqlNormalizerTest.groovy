@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.auto.jdbc.JDBCUtils
-import io.opentelemetry.instrumentation.auto.jdbc.normalizer.SqlNormalizer
+import io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils
+import io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SqlNormalizer
 import spock.lang.Specification
 import spock.lang.Timeout
 

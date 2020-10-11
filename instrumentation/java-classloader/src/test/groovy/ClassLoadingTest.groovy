@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class ClassLoadingTest extends AgentTestRunner {
   def "delegates to bootstrap class loader for agent classes"() {
@@ -13,7 +13,7 @@ class ClassLoadingTest extends AgentTestRunner {
     when:
     Class<?> clazz
     try {
-      clazz = Class.forName("io.opentelemetry.instrumentation.auto.api.concurrent.State", false, classLoader)
+      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.concurrent.State", false, classLoader)
     } catch (ClassNotFoundException e) {
     }
 

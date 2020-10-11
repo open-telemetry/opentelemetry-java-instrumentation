@@ -5,7 +5,7 @@
 
 package client
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import play.GlobalSettings
 import play.libs.ws.WS

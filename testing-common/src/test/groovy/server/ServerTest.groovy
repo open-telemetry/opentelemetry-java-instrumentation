@@ -5,10 +5,10 @@
 
 package server
 
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.OkHttpUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
