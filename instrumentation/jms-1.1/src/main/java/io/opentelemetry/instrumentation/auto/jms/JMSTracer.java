@@ -49,7 +49,7 @@ public class JMSTracer extends BaseTracer {
             .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime))
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, operation.name());
 
-    if (message != null) {
+    if (message != null && operation == Operation.process) {
       Context context = extract(message, GETTER);
       SpanContext spanContext = getSpan(context).getContext();
       if (spanContext.isValid()) {

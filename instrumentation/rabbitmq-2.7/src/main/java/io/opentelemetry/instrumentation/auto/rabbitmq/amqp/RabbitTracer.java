@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.auto.rabbitmq.amqp.TextMapExtract
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.rabbitmq.client.AMQP;
@@ -18,11 +17,9 @@ import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
-import io.grpc.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -52,18 +49,6 @@ public class RabbitTracer extends BaseTracer {
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
             .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
-
-    if (response != null && response.getProps() != null) {
-      Map<String, Object> headers = response.getProps().getHeaders();
-
-      if (headers != null) {
-        Context context = extract(headers, GETTER);
-        SpanContext spanContext = getSpan(context).getContext();
-        if (spanContext.isValid()) {
-          spanBuilder.setParent(context);
-        }
-      }
-    }
 
     Span span = spanBuilder.startSpan();
     if (response != null) {

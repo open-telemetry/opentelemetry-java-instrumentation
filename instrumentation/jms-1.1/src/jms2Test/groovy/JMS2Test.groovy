@@ -94,10 +94,12 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(1) {
-      trace(0, 2) {
+    assertTraces(2) {
+      trace(0, 1) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, messageId, span(0), Operation.receive)
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, destinationType, destinationName, messageId, null, Operation.receive)
       }
     }
 

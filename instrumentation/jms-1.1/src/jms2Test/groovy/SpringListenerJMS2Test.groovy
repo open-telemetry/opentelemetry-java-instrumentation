@@ -23,13 +23,12 @@ class SpringListenerJMS2Test extends AgentTestRunner {
 
     expect:
     assertTraces(2) {
-      trace(0, 3) {
+      trace(0, 2) {
         producerSpan(it, 0, "queue", "SpringListenerJMS2")
-        consumerSpan(it, 1, "queue", "SpringListenerJMS2", "", span(0), Operation.receive)
-        consumerSpan(it, 2, "queue", "SpringListenerJMS2", "", span(0), Operation.process)
+        consumerSpan(it, 1, "queue", "SpringListenerJMS2", "", span(0), Operation.process)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJMS2", null, null, Operation.receive)
+        consumerSpan(it, 0, "queue", "SpringListenerJMS2", "", null, Operation.receive)
       }
     }
 

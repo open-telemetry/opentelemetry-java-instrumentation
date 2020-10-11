@@ -108,7 +108,7 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, 2, null, null, null, "queue.declare", span(0))
         rabbitSpan(it, 3, null, null, null, "queue.bind", span(0))
         rabbitSpan(it, 4, exchangeName, routingKey, "send", "$exchangeName -> $routingKey", span(0))
-        rabbitSpan(it, 5, exchangeName, routingKey, "receive", "<generated>", span(4))
+        rabbitSpan(it, 5, exchangeName, routingKey, "receive", "<generated>", span(0))
       }
     }
 
@@ -127,13 +127,15 @@ class RabbitMQTest extends AgentTestRunner {
     new String(response.getBody()) == "Hello, world!"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, 0, null, null, null, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "<default>", null, "send", "<default> -> <generated>")
-        rabbitSpan(it, 1, "<default>", null, "receive", "<generated>", span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "<default>", null, "receive", "<generated>", null)
       }
     }
   }
@@ -289,13 +291,15 @@ class RabbitMQTest extends AgentTestRunner {
     message == "foo"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, null, null, null, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "<default>", "some-routing-queue", "send", "<default> -> some-routing-queue")
-        rabbitSpan(it, 1, "<default>", "some-routing-queue", "receive", queue.name, span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "<default>", "some-routing-queue", "receive", queue.name, null)
       }
     }
   }

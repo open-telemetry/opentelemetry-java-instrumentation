@@ -63,10 +63,12 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(1) {
-      trace(0, 2) {
+    assertTraces(2) {
+      trace(0, 1) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, receivedMessage.getJMSMessageID(), span(0), Operation.receive)
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, Operation.receive)
       }
     }
 
@@ -98,15 +100,19 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == "responded!"
-    assertTraces(2) {
-      trace(0, 2) {
+    assertTraces(4) {
+      trace(0, 1) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, msgId.get(), span(0), Operation.receive)
       }
-      trace(1, 2) {
+      trace(1, 1) {
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, Operation.receive)
+      }
+      trace(2, 1) {
         // receive doesn't propagate the trace, so this is a root
         producerSpan(it, 0, "queue", JMSTracer.TEMP_DESTINATION_NAME)
-        consumerSpan(it, 1, "queue", JMSTracer.TEMP_DESTINATION_NAME, receivedMessage.getJMSMessageID(), span(0), Operation.receive)
+      }
+      trace(3, 1) {
+        consumerSpan(it, 0, "queue", JMSTracer.TEMP_DESTINATION_NAME, receivedMessage.getJMSMessageID(), null, Operation.receive)
       }
     }
 
