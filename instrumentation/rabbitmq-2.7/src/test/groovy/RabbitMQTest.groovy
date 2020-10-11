@@ -380,8 +380,6 @@ class RabbitMQTest extends AgentTestRunner {
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
         //TODO add to SemanticAttributes
         "messaging.rabbitmq.routing_key" { it == null || it == routingKey || it.startsWith("amq.gen-") }
-//        if(routingKey != null){
-//        }
         if (operation != null && operation != "send") {
           "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         }
@@ -392,7 +390,6 @@ class RabbitMQTest extends AgentTestRunner {
         switch (attribute("amqp.command")) {
           case "basic.publish":
             "amqp.command" "basic.publish"
-//            "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
               it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
             }
@@ -407,7 +404,6 @@ class RabbitMQTest extends AgentTestRunner {
             break
           case "basic.deliver":
             "amqp.command" "basic.deliver"
-//            "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             break
           default:
