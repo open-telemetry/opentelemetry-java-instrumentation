@@ -39,7 +39,7 @@ afterEvaluate {
 
   dependencies {
     implementation project(':instrumentation-api')
-    implementation project(':auto-api')
+    implementation project(':javaagent-api')
     // Apply common dependencies for instrumentation.
     implementation(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing

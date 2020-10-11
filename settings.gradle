@@ -43,7 +43,7 @@ include ':javaagent'
 include ':load-generator'
 
 include ':instrumentation-api'
-include ':auto-api'
+include ':javaagent-api'
 
 // misc
 include ':testing-common'

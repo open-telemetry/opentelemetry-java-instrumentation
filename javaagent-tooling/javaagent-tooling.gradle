@@ -13,7 +13,7 @@ configurations {
 dependencies {
   implementation project(':javaagent-bootstrap')
   implementation project(':javaagent-spi')
-  implementation project(':auto-api')
+  implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
 
   implementation deps.opentelemetryApi
