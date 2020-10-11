@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
@@ -19,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAttributes;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.TRACER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -38,8 +28,8 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 /** AWS request execution interceptor */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  static final ExecutionAttribute<Span> SPAN_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.Span");
+  static final ExecutionAttribute<io.grpc.Context> CONTEXT_ATTRIBUTE =
+      new ExecutionAttribute<>("io.opentelemetry.auto.Context");
 
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
       new ExecutionAttribute<>("io.opentelemetry.auto.aws.RequestType");
@@ -85,7 +75,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer(), kind);
-    executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
+    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, withSpan(span, io.grpc.Context.current()));
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
@@ -96,7 +86,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span != null) {
+    if (span.getContext().isValid()) {
       TRACER.onRequest(span, context.httpRequest());
       SdkRequestDecorator decorator = decorator(executionAttributes);
       if (decorator != null) {
@@ -133,7 +123,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span != null) {
+    if (span.getContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.afterExecution(span, context.httpRequest());
       onSdkResponse(span, context.response());
@@ -151,14 +141,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span != null) {
+    if (span.getContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.endExceptionally(span, context.exception());
     }
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
-    executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, null);
   }
 

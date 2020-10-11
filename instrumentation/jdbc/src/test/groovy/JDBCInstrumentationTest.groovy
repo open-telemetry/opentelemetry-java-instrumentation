@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
@@ -41,18 +30,13 @@ import spock.lang.Unroll
 import test.TestConnection
 
 class JDBCInstrumentationTest extends AgentTestRunner {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.integration.jdbc-datasource.enabled", "true")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.integration.jdbc-datasource.enabled", "true")
   }
 
   def specCleanup() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.integration.jdbc-datasource.enabled")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
-
 
   @Shared
   def dbName = "jdbcUnitTest"
@@ -197,8 +181,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -253,8 +237,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -301,8 +285,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -350,8 +334,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -399,8 +383,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -451,8 +435,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -515,8 +499,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -575,14 +559,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
 
         span(1) {
-          operationName "${datasource.class.simpleName}.getConnection"
+          name "${datasource.class.simpleName}.getConnection"
           childOf span(0)
           attributes {
           }
         }
         if (recursive) {
           span(2) {
-            operationName "${datasource.class.simpleName}.getConnection"
+            name "${datasource.class.simpleName}.getConnection"
             childOf span(1)
             attributes {
             }
@@ -622,8 +606,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -683,8 +667,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     assertTraces(5) {
       trace(0, 1) {
         span(0) {
-          operationName JDBCUtils.normalizeSql(query)
-          spanKind CLIENT
+          name JDBCUtils.normalizeSql(query)
+          kind CLIENT
           errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
@@ -699,8 +683,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       for (int i = 1; i < numQueries; ++i) {
         trace(i, 1) {
           span(0) {
-            operationName JDBCUtils.normalizeSql(query)
-            spanKind CLIENT
+            name JDBCUtils.normalizeSql(query)
+            kind CLIENT
             errored false
             attributes {
               "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"

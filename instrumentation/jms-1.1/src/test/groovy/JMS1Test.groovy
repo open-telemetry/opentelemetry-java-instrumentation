@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
@@ -32,12 +21,22 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.command.ActiveMQTextMessage
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Requires
 import spock.lang.Shared
 
+@Requires({"true" != System.getenv("CIRCLECI")})
 class JMS1Test extends AgentTestRunner {
-  @Shared
-  EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
+
+  private static final Logger logger = LoggerFactory.getLogger(JMS1Test)
+
+  private static final GenericContainer broker = new GenericContainer("rmohr/activemq")
+    .withExposedPorts(61616, 8161)
+    .withLogConsumer(new Slf4jLogConsumer(logger))
+
   @Shared
   String messageText = "a message"
   @Shared
@@ -47,7 +46,7 @@ class JMS1Test extends AgentTestRunner {
 
   def setupSpec() {
     broker.start()
-    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
 
     Connection connection = connectionFactory.createConnection()
     connection.start()
@@ -58,7 +57,7 @@ class JMS1Test extends AgentTestRunner {
     broker.stop()
   }
 
-  def "sending a message to #expectedSpanName generates spans"() {
+  def "sending a message to #destinationName #destinationType generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -89,7 +88,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | JMSTracer.TEMP_DESTINATION_NAME
   }
 
-  def "sending to a MessageListener on #expectedSpanName generates a span"() {
+  def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -128,7 +127,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "topic"         | JMSTracer.TEMP_DESTINATION_NAME
   }
 
-  def "failing to receive message with receiveNoWait on #expectedSpanName works"() {
+  def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -140,9 +139,9 @@ class JMS1Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
-          parent()
-          operationName destinationName + " receive"
-          spanKind CONSUMER
+          hasNoParent()
+          name destinationName + " receive"
+          kind CONSUMER
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
@@ -163,7 +162,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTopic("someTopic") | "topic"         | "someTopic"
   }
 
-  def "failing to receive message with wait(timeout) on #expectedSpanName works"() {
+  def "failing to receive message with wait(timeout) on #destinationName #destinationType works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -175,9 +174,9 @@ class JMS1Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
-          parent()
-          operationName destinationName + " receive"
-          spanKind CONSUMER
+          hasNoParent()
+          name destinationName + " receive"
+          kind CONSUMER
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
@@ -198,7 +197,7 @@ class JMS1Test extends AgentTestRunner {
     session.createTopic("someTopic") | "topic"         | "someTopic"
   }
 
-  def "sending a read-only message to #expectedSpanName fails"() {
+  def "sending a read-only message to #destinationName #destinationType fails"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -225,9 +224,9 @@ class JMS1Test extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          parent()
-          operationName destinationName + " receive"
-          spanKind CONSUMER
+          hasNoParent()
+          name destinationName + " receive"
+          kind CONSUMER
           errored false
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
@@ -257,10 +256,10 @@ class JMS1Test extends AgentTestRunner {
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
     trace.span(index) {
-      operationName destinationName + " send"
-      spanKind PRODUCER
+      name destinationName + " send"
+      kind PRODUCER
       errored false
-      parent()
+      hasNoParent()
       attributes {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
@@ -277,12 +276,12 @@ class JMS1Test extends AgentTestRunner {
   // any other value for messageId will verify that message.id is captured and has that same value
   static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, Operation operation) {
     trace.span(index) {
-      operationName destinationName + " " + operation.name()
-      spanKind CONSUMER
+      name destinationName + " " + operation.name()
+      kind CONSUMER
       if (parentOrLinkedSpan != null) {
         childOf((SpanData) parentOrLinkedSpan)
       } else {
-        parent()
+        hasNoParent()
       }
       errored false
       attributes {

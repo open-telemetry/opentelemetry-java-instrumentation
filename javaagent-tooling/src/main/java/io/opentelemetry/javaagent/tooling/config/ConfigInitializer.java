@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.javaagent.tooling.config;
@@ -20,9 +9,11 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.config.PropertySource;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
@@ -36,7 +27,7 @@ public final class ConfigInitializer {
 
   public static void initialize() {
     Config.internalInitializeConfig(
-        new ConfigBuilder()
+        new AgentConfigBuilder()
             .readPropertiesFromAllSources(loadSpiConfiguration(), loadConfigurationFile())
             .build());
   }
@@ -80,8 +71,9 @@ public final class ConfigInitializer {
       return properties;
     }
 
-    try (FileReader fileReader = new FileReader(configurationFile)) {
-      properties.load(fileReader);
+    try (InputStreamReader reader =
+        new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
+      properties.load(reader);
     } catch (FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
     } catch (IOException ioe) {

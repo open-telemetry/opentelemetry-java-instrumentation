@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.javaagent.tooling;
@@ -34,6 +23,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +98,7 @@ public class AgentInstaller {
         new ForceFlusher() {
           @Override
           public void run(int timeout, TimeUnit unit) {
-            OpenTelemetrySdk.getTracerProvider().forceFlush().join(timeout, unit);
+            OpenTelemetrySdk.getTracerManagement().forceFlush().join(timeout, unit);
           }
         });
 
@@ -150,9 +140,10 @@ public class AgentInstaller {
     for (AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
+    Iterable<Instrumenter> instrumenters =
+        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader());
     int numInstrumenters = 0;
-    for (Instrumenter instrumenter :
-        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
+    for (Instrumenter instrumenter : orderInstrumenters(instrumenters)) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
@@ -164,6 +155,13 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static Iterable<Instrumenter> orderInstrumenters(Iterable<Instrumenter> instrumenters) {
+    List<Instrumenter> orderedInstrumenters = new ArrayList<>();
+    instrumenters.forEach(orderedInstrumenters::add);
+    Collections.sort(orderedInstrumenters, Comparator.comparingInt(Instrumenter::getOrder));
+    return orderedInstrumenters;
   }
 
   private static void addByteBuddyRawSetting() {

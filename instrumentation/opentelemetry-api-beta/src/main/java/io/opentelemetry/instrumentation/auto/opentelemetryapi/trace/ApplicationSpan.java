@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.opentelemetryapi.trace;
@@ -23,11 +12,9 @@ import application.io.grpc.Context;
 import application.io.opentelemetry.common.AttributeKey;
 import application.io.opentelemetry.common.Attributes;
 import application.io.opentelemetry.trace.EndSpanOptions;
-import application.io.opentelemetry.trace.Event;
-import application.io.opentelemetry.trace.Link;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
-import application.io.opentelemetry.trace.Status;
+import application.io.opentelemetry.trace.StatusCanonicalCode;
 import io.opentelemetry.instrumentation.auto.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,21 +80,13 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void addEvent(Event applicationEvent) {
-    addEvent(applicationEvent.getName(), applicationEvent.getAttributes());
+  public void setStatus(StatusCanonicalCode status) {
+    agentSpan.setStatus(Bridging.toAgent(status));
   }
 
   @Override
-  public void addEvent(Event applicationEvent, long timestamp) {
-    addEvent(applicationEvent.getName(), applicationEvent.getAttributes(), timestamp);
-  }
-
-  @Override
-  public void setStatus(Status applicationStatus) {
-    io.opentelemetry.trace.Status agentStatus = Bridging.toAgentOrNull(applicationStatus);
-    if (agentStatus != null) {
-      agentSpan.setStatus(agentStatus);
-    }
+  public void setStatus(StatusCanonicalCode status, String description) {
+    agentSpan.setStatus(Bridging.toAgent(status), description);
   }
 
   @Override
@@ -189,14 +168,6 @@ class ApplicationSpan implements Span {
     public Span.Builder addLink(
         SpanContext applicationSpanContext, Attributes applicationAttributes) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
-      return this;
-    }
-
-    @Override
-    public Span.Builder addLink(Link applicationLink) {
-      agentBuilder.addLink(
-          Bridging.toAgent(applicationLink.getContext()),
-          Bridging.toAgent(applicationLink.getAttributes()));
       return this;
     }
 

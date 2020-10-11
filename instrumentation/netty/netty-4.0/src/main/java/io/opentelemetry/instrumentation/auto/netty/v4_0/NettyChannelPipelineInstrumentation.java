@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.netty.v4_0;
@@ -25,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -41,9 +31,7 @@ import io.opentelemetry.instrumentation.auto.netty.v4_0.client.HttpClientTracing
 import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.instrumentation.auto.netty.v4_0.server.HttpServerTracingHandler;
-import io.opentelemetry.instrumentation.auto.netty.v4_0.server.NettyHttpServerTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -163,12 +151,10 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
-      if (span.getContext().isValid()) {
-        Attribute<Span> attribute =
-            pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);
-        attribute.compareAndSet(null, span);
-      }
+      Context context = Context.current();
+      Attribute<Context> attribute =
+          pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
+      attribute.compareAndSet(null, context);
     }
   }
 }

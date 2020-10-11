@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -19,19 +8,15 @@ import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
-      System.setProperty("otel.trace.annotated.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    // remove trace annotations in case previous tests have set it
+    it.remove("otel.trace.annotations")
+    it.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
+    it.setProperty("otel.trace.annotated.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
   }
 
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.methods")
-      System.clearProperty("otel.trace.annotated.methods.exclude")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   static class TestClass {
@@ -75,14 +60,14 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "TestClass.included"
+          name "TestClass.included"
           attributes {
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          operationName "TestClass.annotated"
+          name "TestClass.annotated"
           attributes {
           }
         }

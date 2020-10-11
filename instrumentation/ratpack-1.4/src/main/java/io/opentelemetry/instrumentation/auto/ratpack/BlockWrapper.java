@@ -1,26 +1,15 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.ratpack;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,27 +22,26 @@ public class BlockWrapper implements Block {
   private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
-  private final Span span;
+  private final Context parentContext;
 
-  private BlockWrapper(Block delegate, Span span) {
-    assert span != null;
+  private BlockWrapper(Block delegate, Context parentContext) {
+    assert parentContext != null;
     this.delegate = delegate;
-    this.span = span;
+    this.parentContext = parentContext;
   }
 
   @Override
   public void execute() throws Exception {
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope ignored = withScopedContext(parentContext)) {
       delegate.execute();
     }
   }
 
   public static Block wrapIfNeeded(Block delegate) {
-    Span span = TRACER.getCurrentSpan();
-    if (delegate instanceof BlockWrapper || !span.getContext().isValid()) {
+    if (delegate instanceof BlockWrapper) {
       return delegate;
     }
     log.debug("Wrapping block {}", delegate);
-    return new BlockWrapper(delegate, span);
+    return new BlockWrapper(delegate, Context.current());
   }
 }

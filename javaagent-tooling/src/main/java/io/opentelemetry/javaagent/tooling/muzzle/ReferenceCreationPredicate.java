@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.javaagent.tooling.muzzle;
@@ -23,24 +12,25 @@ package io.opentelemetry.javaagent.tooling.muzzle;
  * create references from the method advice and helper classes.
  */
 final class ReferenceCreationPredicate {
-  private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.instrumentation.";
+  // non-shaded packages
+  private static final String AUTO_INSTRUMENTATION_PACKAGE =
+      "io.opentelemetry.instrumentation.auto.";
+  private static final String JAVA_AGENT_TOOLING_PACKAGE = "io.opentelemetry.javaagent.tooling.";
+  private static final String AUTO_INSTRUMENTATION_API_PACKAGE =
+      "io.opentelemetry.instrumentation.auto.api.";
 
-  private static final String JAVA_AGENT_PACKAGE = "io.opentelemetry.javaagent.tooling.";
-
-  private static final String[] REFERENCE_CREATION_PACKAGE_EXCLUDES = {
-    "io.opentelemetry.instrumentation.api.", "io.opentelemetry.instrumentation.auto.api."
-  };
+  // shaded packages
+  private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
+  private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
   static boolean shouldCreateReferenceFor(String className) {
-    if (!className.startsWith(REFERENCE_CREATION_PACKAGE)) {
-      return className.startsWith(JAVA_AGENT_PACKAGE);
+    if (className.startsWith(INSTRUMENTATION_API_PACKAGE)
+        || className.startsWith(AUTO_INSTRUMENTATION_API_PACKAGE)) {
+      return false;
     }
-    for (String exclude : REFERENCE_CREATION_PACKAGE_EXCLUDES) {
-      if (className.startsWith(exclude)) {
-        return false;
-      }
-    }
-    return true;
+    return className.startsWith(AUTO_INSTRUMENTATION_PACKAGE)
+        || className.startsWith(JAVA_AGENT_TOOLING_PACKAGE)
+        || className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE);
   }
 
   private ReferenceCreationPredicate() {}

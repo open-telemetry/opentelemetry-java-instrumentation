@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
@@ -29,6 +18,8 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaTracer extends BaseTracer {
 
+  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
+
   public AwsLambdaTracer() {}
 
   public AwsLambdaTracer(Tracer tracer) {
@@ -38,6 +29,12 @@ public class AwsLambdaTracer extends BaseTracer {
   Span.Builder createSpan(Context context) {
     Span.Builder span = tracer.spanBuilder(context.getFunctionName());
     span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
+
+    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
+    if (parentTraceHeader != null) {
+      span.setParent(AwsLambdaUtil.extractParent(parentTraceHeader));
+    }
+
     return span;
   }
 

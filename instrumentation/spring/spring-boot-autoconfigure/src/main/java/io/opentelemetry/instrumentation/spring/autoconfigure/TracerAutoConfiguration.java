@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
@@ -36,8 +25,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Create {@link io.opentelemetry.trace.Tracer} bean if bean is missing.
  *
- * <p>Adds span exporter beans to the active tracer provider {@code
- * OpenTelemetrySdk.getTracerProvider()}
+ * <p>Adds span exporter beans to the active tracer provider.
  *
  * <p>Updates the sampler probability in the active {@link TraceConfig}
  */
@@ -69,18 +57,16 @@ public class TracerAutoConfiguration {
             .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())
             .collect(Collectors.toList());
 
-    OpenTelemetrySdk.getTracerProvider()
+    OpenTelemetrySdk.getTracerManagement()
         .addSpanProcessor(MultiSpanProcessor.create(spanProcessors));
   }
 
   private void setSampler(TracerProperties tracerProperties) {
     TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getTracerProvider()
-            .getActiveTraceConfig()
-            .toBuilder()
+        OpenTelemetrySdk.getTracerManagement().getActiveTraceConfig().toBuilder()
             .setSampler(Samplers.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
 
-    OpenTelemetrySdk.getTracerProvider().updateActiveTraceConfig(updatedTraceConfig);
+    OpenTelemetrySdk.getTracerManagement().updateActiveTraceConfig(updatedTraceConfig);
   }
 }

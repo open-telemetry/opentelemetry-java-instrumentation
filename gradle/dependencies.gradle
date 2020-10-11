@@ -11,9 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.9.0-20200925.025016-49',
-    opentelemetryOther  : '0.9.0-20200925.025016-49',
-    opentelemetryAnother: '0.9.0-20200925.025016-49',
+    opentelemetry       : '0.9.1',
+    opentelemetryOther  : '0.9.1',
+    opentelemetryAnother: '0.9.1',
+    opentelemetryBaggage: '0.9.1',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7
@@ -31,21 +32,24 @@ ext {
     checkerFramework    : "3.6.1",
     errorprone          : "2.4.0",
     nullaway            : "0.8.0",
-    autoValue           : "1.7.4"
+    autoValue           : "1.7.4",
+    systemLambda        : "1.1.0",
+    prometheus          : "0.9.0"
   ]
 
   deps = [
     // OpenTelemetry
     opentelemetryApi            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
-    opentelemetryContextProp    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryOther),
+    opentelemetryContextProp    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryAnother),
     opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
-    opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetryOther),
-    opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryOther),
+    opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
+    opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
     opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
-    opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetry),
-    opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetryOther),
+    opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryAnother),
+    opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
+    opentelemetryPrometheus     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-prometheus', version: versions.opentelemetry),
     opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetry),
-    opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther),
+    opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
 
     // General
     slf4j                       : "org.slf4j:slf4j-api:${versions.slf4j}",
@@ -61,6 +65,10 @@ ext {
     autoValueAnnotations        : "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
     // annotation processor
     autoValue                   : "com.google.auto.value:auto-value:${versions.autoValue}",
+    prometheus                  : [
+      dependencies.create(group: 'io.prometheus', name: 'simpleclient', version: "${versions.prometheus}"),
+      dependencies.create(group: 'io.prometheus', name: 'simpleclient_httpserver', version: "${versions.prometheus}"),
+    ],
 
     // Testing
 
@@ -72,7 +80,8 @@ ext {
       dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '2.6') // Last version to support Java7
     ],
     groovy                      : "org.codehaus.groovy:groovy-all:${versions.groovy}",
-    testcontainers              : "org.testcontainers:testcontainers:1.12.2",
+    systemLambda                : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",
+    testcontainers              : "org.testcontainers:testcontainers:1.15.0-rc2",
     testLogging                 : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

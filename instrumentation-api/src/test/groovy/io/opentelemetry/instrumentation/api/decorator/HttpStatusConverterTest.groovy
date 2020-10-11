@@ -1,22 +1,11 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.StatusCanonicalCode
 import spock.lang.Specification
 
 class HttpStatusConverterTest extends Specification {
@@ -31,75 +20,75 @@ class HttpStatusConverterTest extends Specification {
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
     where:
     httpStatus | expectedStatus
-    100        | Status.OK
-    101        | Status.OK
-    102        | Status.OK
-    103        | Status.OK
+    100        | StatusCanonicalCode.UNSET
+    101        | StatusCanonicalCode.UNSET
+    102        | StatusCanonicalCode.UNSET
+    103        | StatusCanonicalCode.UNSET
 
-    200        | Status.OK
-    201        | Status.OK
-    202        | Status.OK
-    203        | Status.OK
-    204        | Status.OK
-    205        | Status.OK
-    206        | Status.OK
-    207        | Status.OK
-    208        | Status.OK
-    226        | Status.OK
+    200        | StatusCanonicalCode.UNSET
+    201        | StatusCanonicalCode.UNSET
+    202        | StatusCanonicalCode.UNSET
+    203        | StatusCanonicalCode.UNSET
+    204        | StatusCanonicalCode.UNSET
+    205        | StatusCanonicalCode.UNSET
+    206        | StatusCanonicalCode.UNSET
+    207        | StatusCanonicalCode.UNSET
+    208        | StatusCanonicalCode.UNSET
+    226        | StatusCanonicalCode.UNSET
 
-    300        | Status.OK
-    301        | Status.OK
-    302        | Status.OK
-    303        | Status.OK
-    304        | Status.OK
-    305        | Status.OK
-    306        | Status.OK
-    307        | Status.OK
-    308        | Status.OK
+    300        | StatusCanonicalCode.UNSET
+    301        | StatusCanonicalCode.UNSET
+    302        | StatusCanonicalCode.UNSET
+    303        | StatusCanonicalCode.UNSET
+    304        | StatusCanonicalCode.UNSET
+    305        | StatusCanonicalCode.UNSET
+    306        | StatusCanonicalCode.UNSET
+    307        | StatusCanonicalCode.UNSET
+    308        | StatusCanonicalCode.UNSET
 
-    400        | Status.INVALID_ARGUMENT
-    401        | Status.UNAUTHENTICATED
-    403        | Status.PERMISSION_DENIED
-    404        | Status.NOT_FOUND
-    405        | Status.INVALID_ARGUMENT
-    406        | Status.INVALID_ARGUMENT
-    407        | Status.INVALID_ARGUMENT
-    408        | Status.INVALID_ARGUMENT
-    409        | Status.INVALID_ARGUMENT
-    410        | Status.INVALID_ARGUMENT
-    411        | Status.INVALID_ARGUMENT
-    412        | Status.INVALID_ARGUMENT
-    413        | Status.INVALID_ARGUMENT
-    414        | Status.INVALID_ARGUMENT
-    415        | Status.INVALID_ARGUMENT
-    416        | Status.INVALID_ARGUMENT
-    417        | Status.INVALID_ARGUMENT
-    418        | Status.INVALID_ARGUMENT
-    421        | Status.INVALID_ARGUMENT
-    422        | Status.INVALID_ARGUMENT
-    423        | Status.INVALID_ARGUMENT
-    424        | Status.INVALID_ARGUMENT
-    425        | Status.INVALID_ARGUMENT
-    426        | Status.INVALID_ARGUMENT
-    428        | Status.INVALID_ARGUMENT
-    429        | Status.RESOURCE_EXHAUSTED
-    431        | Status.INVALID_ARGUMENT
-    451        | Status.INVALID_ARGUMENT
+    400        | StatusCanonicalCode.ERROR
+    401        | StatusCanonicalCode.ERROR
+    403        | StatusCanonicalCode.ERROR
+    404        | StatusCanonicalCode.ERROR
+    405        | StatusCanonicalCode.ERROR
+    406        | StatusCanonicalCode.ERROR
+    407        | StatusCanonicalCode.ERROR
+    408        | StatusCanonicalCode.ERROR
+    409        | StatusCanonicalCode.ERROR
+    410        | StatusCanonicalCode.ERROR
+    411        | StatusCanonicalCode.ERROR
+    412        | StatusCanonicalCode.ERROR
+    413        | StatusCanonicalCode.ERROR
+    414        | StatusCanonicalCode.ERROR
+    415        | StatusCanonicalCode.ERROR
+    416        | StatusCanonicalCode.ERROR
+    417        | StatusCanonicalCode.ERROR
+    418        | StatusCanonicalCode.ERROR
+    421        | StatusCanonicalCode.ERROR
+    422        | StatusCanonicalCode.ERROR
+    423        | StatusCanonicalCode.ERROR
+    424        | StatusCanonicalCode.ERROR
+    425        | StatusCanonicalCode.ERROR
+    426        | StatusCanonicalCode.ERROR
+    428        | StatusCanonicalCode.ERROR
+    429        | StatusCanonicalCode.ERROR
+    431        | StatusCanonicalCode.ERROR
+    451        | StatusCanonicalCode.ERROR
 
-    500        | Status.INTERNAL
-    501        | Status.UNIMPLEMENTED
-    502        | Status.INTERNAL
-    503        | Status.UNAVAILABLE
-    504        | Status.DEADLINE_EXCEEDED
-    505        | Status.INTERNAL
-    506        | Status.INTERNAL
-    507        | Status.INTERNAL
-    508        | Status.INTERNAL
-    510        | Status.INTERNAL
-    511        | Status.INTERNAL
+    500        | StatusCanonicalCode.ERROR
+    501        | StatusCanonicalCode.ERROR
+    502        | StatusCanonicalCode.ERROR
+    503        | StatusCanonicalCode.ERROR
+    504        | StatusCanonicalCode.ERROR
+    505        | StatusCanonicalCode.ERROR
+    506        | StatusCanonicalCode.ERROR
+    507        | StatusCanonicalCode.ERROR
+    508        | StatusCanonicalCode.ERROR
+    510        | StatusCanonicalCode.ERROR
+    511        | StatusCanonicalCode.ERROR
 
     // Don't exist
-    99         | Status.UNKNOWN
-    600        | Status.UNKNOWN
+    99         | StatusCanonicalCode.ERROR
+    600        | StatusCanonicalCode.ERROR
   }
 }

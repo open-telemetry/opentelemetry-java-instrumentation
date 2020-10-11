@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static application.io.opentelemetry.context.ContextUtils.withScopedContext
@@ -27,7 +16,7 @@ import application.io.opentelemetry.common.Attributes
 import application.io.opentelemetry.context.Scope
 import application.io.opentelemetry.trace.DefaultSpan
 import application.io.opentelemetry.trace.Span
-import application.io.opentelemetry.trace.Status
+import application.io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
@@ -41,17 +30,17 @@ class TracerTest extends AgentTestRunner {
     testSpan.setAttribute("long", 2)
     testSpan.setAttribute("double", 3.0)
     testSpan.setAttribute("boolean", true)
-    testSpan.setStatus(Status.UNKNOWN)
+    testSpan.setStatus(StatusCanonicalCode.ERROR)
     testSpan.end()
 
     then:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
-          spanKind io.opentelemetry.trace.Span.Kind.PRODUCER
-          parent()
-          status io.opentelemetry.trace.Status.UNKNOWN
+          name "test"
+          kind io.opentelemetry.trace.Span.Kind.PRODUCER
+          hasNoParent()
+          status io.opentelemetry.trace.StatusCanonicalCode.ERROR
           attributes {
             "string" "1"
             "long" 2
@@ -79,13 +68,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -110,13 +99,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -142,13 +131,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -170,13 +159,13 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
         span(1) {
-          operationName "test"
+          name "test"
           childOf span(0)
           attributes {
           }
@@ -199,16 +188,16 @@ class TracerTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "parent"
-          parent()
+          name "parent"
+          hasNoParent()
           attributes {
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          operationName "test"
-          parent()
+          name "test"
+          hasNoParent()
           attributes {
           }
         }
@@ -227,8 +216,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }
@@ -247,7 +236,7 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           event(0) {
             eventName("exception")
             attributes {
@@ -275,7 +264,7 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test"
+          name "test"
           event(0) {
             eventName("exception")
             attributes {
@@ -304,8 +293,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }
@@ -326,8 +315,8 @@ class TracerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "test2"
-          parent()
+          name "test2"
+          hasNoParent()
           attributes {
           }
         }

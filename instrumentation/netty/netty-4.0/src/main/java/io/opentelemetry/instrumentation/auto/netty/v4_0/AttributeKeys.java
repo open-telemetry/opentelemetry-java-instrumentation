@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.netty.v4_0;
@@ -37,8 +26,8 @@ public class AttributeKeys {
             }
           };
 
-  public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_0.parent.connect.span");
+  public static final AttributeKey<Context> PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY =
+      attributeKey("io.opentelemetry.instrumentation.auto.netty.v4_0.parent.connect.context");
 
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".context");
@@ -46,7 +35,7 @@ public class AttributeKeys {
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".span");
 
-  public static final AttributeKey<Span> CLIENT_PARENT_ATTRIBUTE_KEY =
+  public static final AttributeKey<Context> CLIENT_PARENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".parent");
 
   /**

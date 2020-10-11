@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static JMS1Test.consumerSpan
@@ -27,13 +16,22 @@ import javax.jms.Connection
 import javax.jms.Session
 import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.jms.core.JmsTemplate
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Requires
 import spock.lang.Shared
 
+@Requires({"true" != System.getenv("CIRCLECI")})
 class SpringTemplateJMS1Test extends AgentTestRunner {
-  @Shared
-  EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
+  private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
+
+  private static final GenericContainer broker = new GenericContainer("rmohr/activemq")
+    .withExposedPorts(61616, 8161)
+    .withLogConsumer(new Slf4jLogConsumer(logger))
+
   @Shared
   String messageText = "a message"
   @Shared
@@ -43,7 +41,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
   def setupSpec() {
     broker.start()
-    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
     Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)

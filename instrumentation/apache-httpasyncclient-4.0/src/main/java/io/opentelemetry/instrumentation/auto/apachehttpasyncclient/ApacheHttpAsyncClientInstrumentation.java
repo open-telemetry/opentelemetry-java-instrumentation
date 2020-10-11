@@ -1,26 +1,15 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.apachehttpasyncclient;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.instrumentation.auto.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -98,12 +88,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      Span parentSpan = TRACER.getCurrentSpan();
+      Context parentContext = Context.current();
       Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
-          new TraceContinuedFutureCallback(parentSpan, clientSpan, context, futureCallback);
+          new TraceContinuedFutureCallback(parentContext, clientSpan, context, futureCallback);
 
       return clientSpan;
     }
@@ -176,14 +166,14 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final Span parentSpan;
+    private final Context parentContext;
     private final Span clientSpan;
     private final HttpContext context;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        Span parentSpan, Span clientSpan, HttpContext context, FutureCallback<T> delegate) {
-      this.parentSpan = parentSpan;
+        Context parentContext, Span clientSpan, HttpContext context, FutureCallback<T> delegate) {
+      this.parentContext = parentContext;
       this.clientSpan = clientSpan;
       this.context = context;
       // Note: this can be null in real life, so we have to handle this carefully
@@ -194,10 +184,10 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     public void completed(T result) {
       TRACER.end(clientSpan, getResponse(context));
 
-      if (parentSpan == null) {
+      if (parentContext == null) {
         completeDelegate(result);
       } else {
-        try (Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = withScopedContext(parentContext)) {
           completeDelegate(result);
         }
       }
@@ -208,10 +198,10 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       // end span before calling delegate
       TRACER.endExceptionally(clientSpan, getResponse(context), ex);
 
-      if (parentSpan == null) {
+      if (parentContext == null) {
         failDelegate(ex);
       } else {
-        try (Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = withScopedContext(parentContext)) {
           failDelegate(ex);
         }
       }
@@ -222,10 +212,10 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       // end span before calling delegate
       TRACER.end(clientSpan, getResponse(context));
 
-      if (parentSpan == null) {
+      if (parentContext == null) {
         cancelDelegate();
       } else {
-        try (Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = withScopedContext(parentContext)) {
           cancelDelegate();
         }
       }

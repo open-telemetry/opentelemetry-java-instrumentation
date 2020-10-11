@@ -12,6 +12,7 @@ dependencies {
   testImplementation project(':javaagent-exporters:jaeger')
   testImplementation project(':javaagent-exporters:logging')
   testImplementation project(':javaagent-exporters:zipkin')
+  testImplementation project(':javaagent-exporters:prometheus')
 }
 
 tasks.withType(Test).configureEach() {
@@ -19,6 +20,7 @@ tasks.withType(Test).configureEach() {
   dependsOn ':javaagent-exporters:jaeger:shadowJar'
   dependsOn ':javaagent-exporters:logging:shadowJar'
   dependsOn ':javaagent-exporters:zipkin:shadowJar'
+  dependsOn ':javaagent-exporters:prometheus:shadowJar'
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
     systemProperty 'adapterRoot', "$rootDir/javaagent-exporters"
@@ -26,6 +28,7 @@ tasks.withType(Test).configureEach() {
     systemProperty 'jaegerExporterJar', project(':javaagent-exporters:jaeger').tasks.shadowJar.archivePath
     systemProperty 'loggingExporterJar', project(':javaagent-exporters:logging').tasks.shadowJar.archivePath
     systemProperty 'zipkinExporterJar', project(':javaagent-exporters:zipkin').tasks.shadowJar.archivePath
+    systemProperty 'prometheusExporterJar', project(':javaagent-exporters:prometheus').tasks.shadowJar.archivePath
   }
 }
 
@@ -38,6 +41,7 @@ dependencies {
   shadowInclude project(path: ':javaagent-exporters:otlp', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:jaeger', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:zipkin', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:prometheus', configuration: 'shadow')
 }
 
 jar.enabled = false
@@ -58,8 +62,8 @@ shadowJar {
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"
   relocate "io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common"
+  relocate "io.opentelemetry.baggage", "io.opentelemetry.javaagent.shaded.io.opentelemetry.baggage"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
-  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.javaagent.shaded.io.opentelemetry.correlationcontext"
   relocate "io.opentelemetry.internal", "io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"
   relocate "io.opentelemetry.metrics", "io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"
   relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"

@@ -1,19 +1,9 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.auto.test.utils.ConfigUtils.setConfig
 import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -22,6 +12,7 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.api.config.Config
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -106,8 +97,8 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
           childOf span(0)
           attributes {
@@ -117,8 +108,8 @@ class KafkaClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(1)
           attributes {
@@ -196,8 +187,8 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
           childOf span(0)
           attributes {
@@ -207,8 +198,8 @@ class KafkaClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(1)
           attributes {
@@ -279,10 +270,10 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 2) {
         // PRODUCER span 0
         span(0) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -292,8 +283,8 @@ class KafkaClientTest extends AgentTestRunner {
         }
         // CONSUMER span 0
         span(1) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -354,10 +345,10 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -366,8 +357,8 @@ class KafkaClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -427,9 +418,9 @@ class KafkaClientTest extends AgentTestRunner {
 
     when:
     String message = "Testing without headers"
-    setPropagation(propagationEnabled)
+    def previousConfig = setPropagation(propagationEnabled)
     kafkaTemplate.send(SHARED_TOPIC, message)
-    setPropagation(true)
+    setConfig(previousConfig)
 
     then:
     // check that the message was received
@@ -459,10 +450,10 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -484,10 +475,10 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -495,8 +486,8 @@ class KafkaClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -515,7 +506,7 @@ class KafkaClientTest extends AgentTestRunner {
     container.stop()
 
     when: "read message without context propagation"
-    setPropagation(false)
+    def previousConfig = setPropagation(false)
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
 
@@ -526,10 +517,10 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          operationName SHARED_TOPIC + " send"
-          spanKind PRODUCER
+          name SHARED_TOPIC + " send"
+          kind PRODUCER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -537,8 +528,8 @@ class KafkaClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
           childOf span(0)
           attributes {
@@ -555,10 +546,10 @@ class KafkaClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName SHARED_TOPIC + " process"
-          spanKind CONSUMER
+          name SHARED_TOPIC + " process"
+          kind CONSUMER
           errored false
-          parent()
+          hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
@@ -577,7 +568,7 @@ class KafkaClientTest extends AgentTestRunner {
     cleanup:
     producerFactory.stop()
     container?.stop()
-    setPropagation(true)
+    setConfig(previousConfig)
   }
 
   protected KafkaMessageListenerContainer<Object, Object> startConsumer(String groupId, records) {
@@ -620,9 +611,9 @@ class KafkaClientTest extends AgentTestRunner {
     }
   }
 
-  private static setPropagation(boolean propagationEnabled) {
-    updateConfig {
-      System.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
+  private static Config setPropagation(boolean propagationEnabled) {
+    return updateConfig {
+      it.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
     }
   }
 }

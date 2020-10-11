@@ -1,24 +1,14 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package io.opentelemetry.instrumentation.auto.playws.v2_0;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.auto.playws.PlayWSClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -34,14 +24,14 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final Span span;
-  private final Span parentSpan;
+  private final Context parentContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
   public AsyncHandlerWrapper(AsyncHandler delegate, Span span) {
     this.delegate = delegate;
     this.span = span;
-    parentSpan = TRACER.getCurrentSpan();
+    parentContext = Context.current();
   }
 
   @Override
@@ -68,11 +58,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     Response response = builder.build();
     TRACER.end(span, response);
 
-    if (parentSpan.getContext().isValid()) {
-      try (Scope scope = currentContextWith(parentSpan)) {
-        return delegate.onCompleted();
-      }
-    } else {
+    try (Scope ignored = withScopedContext(parentContext)) {
       return delegate.onCompleted();
     }
   }
@@ -81,11 +67,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public void onThrowable(Throwable throwable) {
     TRACER.endExceptionally(span, throwable);
 
-    if (parentSpan.getContext().isValid()) {
-      try (Scope scope = currentContextWith(parentSpan)) {
-        delegate.onThrowable(throwable);
-      }
-    } else {
+    try (Scope ignored = withScopedContext(parentContext)) {
       delegate.onThrowable(throwable);
     }
   }

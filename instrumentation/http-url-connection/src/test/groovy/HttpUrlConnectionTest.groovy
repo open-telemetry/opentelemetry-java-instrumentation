@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -89,15 +78,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
       server.distributedRequestTrace(it, 1, traces[2][1])
       trace(2, 3) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -110,8 +99,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
           }
         }
         span(2) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -163,15 +152,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -184,8 +173,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
           }
         }
         span(2) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -221,15 +210,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("GET")
-          spanKind CLIENT
+          name expectedOperationName("GET")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {
@@ -280,15 +269,15 @@ class HttpUrlConnectionTest extends HttpClientTest {
       server.distributedRequestTrace(it, 0, traces[1][1])
       trace(1, 2) {
         span(0) {
-          operationName "someTrace"
-          parent()
+          name "someTrace"
+          hasNoParent()
           errored false
           attributes {
           }
         }
         span(1) {
-          operationName expectedOperationName("POST")
-          spanKind CLIENT
+          name expectedOperationName("POST")
+          kind CLIENT
           childOf span(0)
           errored false
           attributes {

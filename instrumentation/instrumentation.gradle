@@ -77,8 +77,8 @@ shadowJar {
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"
   relocate "io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common"
+  relocate "io.opentelemetry.baggage", "io.opentelemetry.javaagent.shaded.io.opentelemetry.baggage"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
-  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.javaagent.shaded.io.opentelemetry.correlationcontext"
   relocate "io.opentelemetry.internal", "io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"
   relocate "io.opentelemetry.metrics", "io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"
   relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"
@@ -89,4 +89,15 @@ shadowJar {
   // this is for instrumentation on opentelemetry-api itself
   relocate "application.io.opentelemetry", "io.opentelemetry"
   relocate "application.io.grpc", "io.grpc"
+}
+
+tasks.register("listInstrumentations") {
+  group = "Help"
+  description = "List all available instrumentation modules"
+  doFirst {
+    subprojects
+      .findAll {it.plugins.hasPlugin("muzzle")}
+      .collect {it.path}
+      .each { println it}
+  }
 }

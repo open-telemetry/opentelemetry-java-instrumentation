@@ -1,17 +1,6 @@
 /*
  * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
@@ -19,13 +8,24 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
+import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.Unpooled
 import io.netty.channel.AbstractChannel
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelPipeline
+import io.netty.channel.EventLoopGroup
 import io.netty.channel.embedded.EmbeddedChannel
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.SocketChannel
+import io.netty.channel.socket.nio.NioSocketChannel
+import io.netty.handler.codec.http.DefaultFullHttpRequest
 import io.netty.handler.codec.http.HttpClientCodec
+import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.auto.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.ExecutionException
@@ -81,6 +81,68 @@ class Netty41ClientTest extends HttpClientTest {
     return false
   }
 
+  def "test connection reuse and second request with lazy execute"() {
+    setup:
+    //Create a simple Netty pipeline
+    EventLoopGroup group = new NioEventLoopGroup()
+    Bootstrap b = new Bootstrap()
+    b.group(group)
+      .channel(NioSocketChannel)
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        protected void initChannel(SocketChannel socketChannel) throws Exception {
+          ChannelPipeline pipeline = socketChannel.pipeline()
+          pipeline.addLast(new HttpClientCodec())
+        }
+      })
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, server.address.host)
+    request.headers().set(HttpHeaderNames.USER_AGENT, userAgent())
+    Channel ch = null
+
+    when:
+    // note that this is a purely asynchronous request
+    runUnderTrace("parent1") {
+      ch = b.connect(server.address.host, server.address.port).sync().channel()
+      ch.write(request)
+      ch.flush()
+    }
+    // This is a cheap/easy way to block/ensure that the first request has finished and check reported spans midway through
+    // the complex sequence of events
+    assertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent1")
+        clientSpan(it, 1, span(0))
+        serverSpan(it, 2, span(1))
+      }
+    }
+
+    then:
+    // now run a second request through the same channel
+    runUnderTrace("parent2") {
+      ch.write(request)
+      ch.flush()
+    }
+
+    assertTraces(2) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent1")
+        clientSpan(it, 1, span(0))
+        serverSpan(it, 2, span(1))
+      }
+      trace(1, 3) {
+        basicSpan(it, 0, "parent2")
+        clientSpan(it, 1, span(0))
+        serverSpan(it, 2, span(1))
+      }
+    }
+
+
+    cleanup:
+    group.shutdownGracefully()
+  }
+
+
   def "connection error (unopened port)"() {
     given:
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
@@ -105,7 +167,7 @@ class Netty41ClientTest extends HttpClientTest {
         // for up to a total of 10 seconds (default connection time limit)
         for (def i = 1; i < size; i++) {
           span(i) {
-            operationName "CONNECT"
+            name "CONNECT"
             childOf span(0)
             errored true
             errorEvent(AbstractChannel.AnnotatedConnectException, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
@@ -206,7 +268,7 @@ class Netty41ClientTest extends HttpClientTest {
         basicSpan(it, 0, "parent")
         span(1) {
           childOf span(0)
-          operationName "tracedMethod"
+          name "tracedMethod"
           errored false
           attributes {
           }

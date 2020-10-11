@@ -111,7 +111,7 @@ public class OtelConfig {
       Tracer tracer = OpenTelemetry.getTracer(tracerName);
 
       SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
-      OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);
+      OpenTelemetrySdk.getTracerManagement().addSpanProcessor(logProcessor);
 
       return tracer;
    }
@@ -130,7 +130,7 @@ SpanProcessor jaegerProcessor = SimpleSpanProcessor
                   .setChannel(ManagedChannelBuilder.forAddress("localhost", 14250).usePlaintext().build())
                   .build())
             .build();
-OpenTelemetrySdk.getTracerProvider().addSpanProcessor(jaegerProcessor);
+OpenTelemetrySdk.getTracerManagement().addSpanProcessor(jaegerProcessor);
 ```
 
 ### Project Background
