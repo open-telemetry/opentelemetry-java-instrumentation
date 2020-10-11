@@ -22,7 +22,7 @@ options {
 
 PARSER_BEGIN(SqlNormalizer)
 
-package io.opentelemetry.instrumentation.auto.jdbc.normalizer;
+package io.opentelemetry.javaagent.instrumentation.jdbc.normalizer;
 
 import java.io.StringReader;
 

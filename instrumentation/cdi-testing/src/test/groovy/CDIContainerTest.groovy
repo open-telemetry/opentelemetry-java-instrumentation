@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.jboss.weld.environment.se.Weld
 import org.jboss.weld.environment.se.WeldContainer
 import org.jboss.weld.environment.se.threading.RunnableDecorator

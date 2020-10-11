@@ -5,9 +5,9 @@
 
 package server
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
-import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx

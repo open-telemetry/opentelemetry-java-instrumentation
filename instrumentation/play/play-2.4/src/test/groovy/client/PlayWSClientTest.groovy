@@ -5,7 +5,7 @@
 
 package client
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import play.libs.ws.WS
 import spock.lang.AutoCleanup
 import spock.lang.Shared

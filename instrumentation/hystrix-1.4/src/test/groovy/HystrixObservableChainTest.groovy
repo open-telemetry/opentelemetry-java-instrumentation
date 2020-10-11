@@ -4,11 +4,11 @@
  */
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixObservableCommand
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import rx.Observable
 import rx.schedulers.Schedulers
 

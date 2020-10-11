@@ -10,7 +10,7 @@ import static application.io.opentelemetry.trace.TracingContextUtils.getSpanWith
 
 import application.io.grpc.Context
 import application.io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracingContextUtilsTest extends AgentTestRunner {
 

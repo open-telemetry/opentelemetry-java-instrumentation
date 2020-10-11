@@ -5,7 +5,7 @@
 
 import application.io.opentelemetry.sdk.OpenTelemetrySdk
 import application.io.opentelemetry.sdk.trace.TracerSdkProvider
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracerSdkTest extends AgentTestRunner {
 

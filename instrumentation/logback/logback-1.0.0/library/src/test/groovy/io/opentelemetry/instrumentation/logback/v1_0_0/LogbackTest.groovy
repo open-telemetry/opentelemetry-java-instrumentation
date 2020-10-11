@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.v1_0_0
 
-import io.opentelemetry.auto.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
 class LogbackTest extends AbstractLogbackTest implements InstrumentationTestTrait {
 }

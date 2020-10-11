@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.jboss.modules.ModuleFinder
 import org.jboss.modules.ModuleIdentifier
 import org.jboss.modules.ModuleLoadException
@@ -28,7 +28,7 @@ class JBossClassloadingTest extends AgentTestRunner {
     when:
     Class<?> clazz
     try {
-      clazz = Class.forName("io.opentelemetry.instrumentation.auto.api.concurrent.State", false, classLoader)
+      clazz = Class.forName("io.opentelemetry.javaagent.instrumentation.api.concurrent.State", false, classLoader)
     } catch (ClassNotFoundException e) {
     }
 

@@ -11,9 +11,9 @@ import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
 import static context.ContextTestInstrumentation.KeyClass
 import static context.ContextTestInstrumentation.UntransformableKeyClass
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ClasspathUtils
-import io.opentelemetry.auto.util.gc.GCUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
+import io.opentelemetry.instrumentation.util.gc.GCUtils
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field

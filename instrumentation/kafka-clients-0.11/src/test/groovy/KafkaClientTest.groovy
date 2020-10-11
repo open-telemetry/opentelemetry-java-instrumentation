@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.setConfig
-import static io.opentelemetry.auto.test.utils.ConfigUtils.updateConfig
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
+import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit

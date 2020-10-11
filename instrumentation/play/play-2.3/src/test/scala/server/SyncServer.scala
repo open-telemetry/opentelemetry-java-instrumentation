@@ -5,8 +5,8 @@
 
 package server
 
-import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
 import play.api.mvc.{Action, Handler, Results}
 import play.api.test.{FakeApplication, TestServer}
 

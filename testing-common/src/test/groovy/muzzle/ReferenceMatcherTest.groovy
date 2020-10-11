@@ -18,8 +18,8 @@ import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.Missi
 import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingMethod
 import static muzzle.TestClasses.MethodBodyAdvice
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ClasspathUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source

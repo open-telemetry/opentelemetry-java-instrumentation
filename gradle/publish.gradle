@@ -73,7 +73,7 @@ private String artifactPrefix(Project p, String archivesBaseName) {
   if (p.name.startsWith("auto")) {
     return 'opentelemetry-'
   }
-  if (p.group == 'io.opentelemetry.instrumentation.auto') {
+  if (p.group == 'io.opentelemetry.javaagent.instrumentation') {
     return 'opentelemetry-auto-'
   }
   return 'opentelemetry-'

@@ -23,7 +23,7 @@ public final class Constants {
     "io.opentelemetry.javaagent.slf4j",
     "io.opentelemetry.javaagent.bootstrap",
     "io.opentelemetry.javaagent.shaded",
-    "io.opentelemetry.instrumentation.auto.api",
+    "io.opentelemetry.javaagent.instrumentation.api",
   };
 
   // This is used in IntegrationTestUtils.java

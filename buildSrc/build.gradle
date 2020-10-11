@@ -22,7 +22,7 @@ gradlePlugin {
       implementationClass = "MuzzlePlugin"
     }
     create("auto-instrumentation-plugin") {
-      id = "io.opentelemetry.instrumentation.auto-instrumentation"
+      id = "io.opentelemetry.javaagent.instrumentation-instrumentation"
       implementationClass = "io.opentelemetry.instrumentation.gradle.AutoInstrumentationPlugin"
     }
   }

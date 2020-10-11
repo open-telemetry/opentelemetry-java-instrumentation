@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.WeakHashMap;

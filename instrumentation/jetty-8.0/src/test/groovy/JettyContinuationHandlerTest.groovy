@@ -43,7 +43,7 @@ abstract class JettyContinuationHandlerTest extends JettyHandlerTest {
 //  // This server seems to generate a TEST_SPAN twice... once for the initial request, and once for the continuation.
 //  void cleanAndAssertTraces(
 //    final int size,
-//    @ClosureParams(value = SimpleType, options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+//    @ClosureParams(value = SimpleType, options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
 //    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
 //    final Closure spec) {
 //

@@ -10,10 +10,10 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementM
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.auto.api.ContextStore;
-import io.opentelemetry.instrumentation.auto.api.InstrumentationContext;
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
 import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.Instrumenter.Default;

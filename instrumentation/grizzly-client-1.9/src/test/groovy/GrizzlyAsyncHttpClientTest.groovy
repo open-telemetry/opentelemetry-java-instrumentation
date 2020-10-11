@@ -9,7 +9,7 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 

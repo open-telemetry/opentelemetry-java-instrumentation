@@ -5,8 +5,8 @@
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
