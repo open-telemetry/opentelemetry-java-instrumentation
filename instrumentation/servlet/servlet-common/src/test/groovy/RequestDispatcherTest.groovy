@@ -80,6 +80,50 @@ class RequestDispatcherTest extends AgentTestRunner {
     target = "test-$method"
   }
 
+  def "test dispatcher #method with parent from request attribute"() {
+    setup:
+    def mockContext = null
+    runUnderTrace("parent") {
+      mockContext = Context.current()
+    }
+
+    when:
+    runUnderTrace("notParent") {
+      dispatcher."$method"(target)
+    }
+
+    then:
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
+    assertTraces(2) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name "TestDispatcher.$operation"
+          childOf span(0)
+        }
+        basicSpan(it, 2, "$operation-child", span(1))
+      }
+      trace(1, 1) {
+        basicSpan(it, 0, "notParent")
+      }
+    }
+
+    then:
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "parent" })
+    0 * _
+
+    where:
+    operation | method
+    "forward" | "forward"
+    "forward" | "forwardNamed"
+    "include" | "include"
+    "include" | "includeNamed"
+
+    target = "test-$method"
+  }
+
   def "test dispatcher #method exception"() {
     setup:
     def ex = new ServletException("some error")
