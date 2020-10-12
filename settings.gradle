@@ -203,7 +203,7 @@ include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 
 def setBuildFile(project) {
-  if (['javaagent', 'library', 'testing'].contains(project.projectDir.name)) {
+  if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"
