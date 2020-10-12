@@ -8,7 +8,6 @@ import static JMS2Test.producerSpan
 
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.auto.jms.Operation
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -90,7 +89,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, Operation.receive)
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
@@ -123,13 +122,13 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, Operation.receive)
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }
       trace(2, 1) {
         producerSpan(it, 0, "queue", "(temporary)")
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, Operation.receive)
+        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 

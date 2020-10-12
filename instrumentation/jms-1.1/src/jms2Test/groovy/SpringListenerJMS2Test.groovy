@@ -7,7 +7,6 @@ import static JMS2Test.consumerSpan
 import static JMS2Test.producerSpan
 
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.auto.jms.Operation
 import javax.jms.ConnectionFactory
 import listener.Config
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -25,10 +24,10 @@ class SpringListenerJMS2Test extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         producerSpan(it, 0, "queue", "SpringListenerJMS2")
-        consumerSpan(it, 1, "queue", "SpringListenerJMS2", "", span(0), Operation.process)
+        consumerSpan(it, 1, "queue", "SpringListenerJMS2", "", span(0), "process")
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJMS2", "", null, Operation.receive)
+        consumerSpan(it, 0, "queue", "SpringListenerJMS2", "", null, "receive")
       }
     }
 

@@ -41,15 +41,15 @@ public class JMSTracer extends BaseTracer {
   public static final JMSTracer TRACER = new JMSTracer();
 
   public Span startConsumerSpan(
-      MessageDestination destination, Operation operation, Message message, long startTime) {
+      MessageDestination destination, String operation, Message message, long startTime) {
     Span.Builder spanBuilder =
         tracer
             .spanBuilder(spanName(destination, operation))
             .setSpanKind(CONSUMER)
             .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime))
-            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, operation.name());
+            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, operation);
 
-    if (message != null && operation == Operation.process) {
+    if (message != null && "process".equals(operation)) {
       Context context = extract(message, GETTER);
       SpanContext spanContext = getSpan(context).getContext();
       if (spanContext.isValid()) {
@@ -63,8 +63,7 @@ public class JMSTracer extends BaseTracer {
   }
 
   public Span startProducerSpan(MessageDestination destination, Message message) {
-    Span span =
-        tracer.spanBuilder(spanName(destination, Operation.send)).setSpanKind(PRODUCER).startSpan();
+    Span span = tracer.spanBuilder(spanName(destination, "send")).setSpanKind(PRODUCER).startSpan();
     afterStart(span, destination, message);
     return span;
   }
@@ -75,11 +74,11 @@ public class JMSTracer extends BaseTracer {
     return withScopedContext(context);
   }
 
-  public String spanName(MessageDestination destination, Operation operation) {
+  public String spanName(MessageDestination destination, String operation) {
     if (destination.temporary) {
-      return TEMP_DESTINATION_NAME + " " + operation.name();
+      return TEMP_DESTINATION_NAME + " " + operation;
     } else {
-      return destination.destinationName + " " + operation.name();
+      return destination.destinationName + " " + operation;
     }
   }
 
@@ -89,7 +88,7 @@ public class JMSTracer extends BaseTracer {
     Destination jmsDestination = null;
     try {
       jmsDestination = message.getJMSDestination();
-    } catch (Exception e) {
+    } catch (Exception ignored) {
     }
 
     if (jmsDestination == null) {

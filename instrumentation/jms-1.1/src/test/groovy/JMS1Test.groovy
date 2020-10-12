@@ -9,7 +9,6 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.auto.jms.JMSTracer
-import io.opentelemetry.instrumentation.auto.jms.Operation
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -74,7 +73,7 @@ class JMS1Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, messageId, null, Operation.receive)
+        consumerSpan(it, 0, destinationType, destinationName, messageId, null, "receive")
       }
     }
 
@@ -111,7 +110,7 @@ class JMS1Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), Operation.process)
+        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -276,9 +275,9 @@ class JMS1Test extends AgentTestRunner {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, Operation operation) {
+  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation) {
     trace.span(index) {
-      name destinationName + " " + operation.name()
+      name destinationName + " " + operation
       kind CONSUMER
       if (parentOrLinkedSpan != null) {
         childOf((SpanData) parentOrLinkedSpan)
@@ -290,7 +289,7 @@ class JMS1Test extends AgentTestRunner {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-        "${SemanticAttributes.MESSAGING_OPERATION.key}" operation.name()
+        "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         if (messageId != null) {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute
           "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" { it == messageId || messageId == "" }

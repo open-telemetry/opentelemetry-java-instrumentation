@@ -69,9 +69,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
         @Advice.Local("otelScope") Scope scope) {
 
       MessageDestination destination = TRACER.extractDestination(message, null);
-      span =
-          TRACER.startConsumerSpan(
-              destination, Operation.process, message, System.currentTimeMillis());
+      span = TRACER.startConsumerSpan(destination, "process", message, System.currentTimeMillis());
       scope = TRACER.startScope(span);
     }
 

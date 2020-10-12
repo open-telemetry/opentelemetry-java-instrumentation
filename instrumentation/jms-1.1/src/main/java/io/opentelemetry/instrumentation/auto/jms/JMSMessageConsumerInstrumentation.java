@@ -99,7 +99,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         destination = TRACER.extractDestination(message, null);
       }
 
-      Span span = TRACER.startConsumerSpan(destination, Operation.receive, message, startTime);
+      Span span = TRACER.startConsumerSpan(destination, "receive", message, startTime);
 
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
