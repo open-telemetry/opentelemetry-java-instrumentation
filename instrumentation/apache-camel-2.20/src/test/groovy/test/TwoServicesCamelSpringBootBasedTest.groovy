@@ -1,0 +1,174 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package test
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
+import com.google.common.collect.ImmutableMap
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
+import org.apache.camel.CamelContext
+import org.apache.camel.ProducerTemplate
+import org.apache.camel.builder.RouteBuilder
+import org.apache.camel.impl.DefaultCamelContext
+import org.springframework.boot.SpringApplication
+import org.springframework.context.ConfigurableApplicationContext
+import spock.lang.Shared
+
+class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
+
+  @Shared
+  int portOne = PortUtils.randomOpenPort()
+  @Shared
+  int portTwo = PortUtils.randomOpenPort()
+  @Shared
+  ConfigurableApplicationContext server
+  @Shared
+  CamelContext clientContext
+
+  def setupSpec() {
+    createServer()
+  }
+
+  def createServer() {
+    def app = new SpringApplication(TwoServicesConfig)
+    app.setDefaultProperties(ImmutableMap.of("service.one.port", portOne, "service.two.port", portTwo))
+    server = app.run()
+  }
+
+  def createAndStartClient() {
+    clientContext = new DefaultCamelContext()
+    clientContext.addRoutes(new RouteBuilder() {
+      void configure() {
+        from("direct:input")
+          .log("SENT Client request")
+          .to("http://localhost:$portOne/serviceOne")
+          .log("RECEIVED Client response")
+      }
+    })
+    clientContext.start()
+  }
+
+  def cleanupSpec() {
+    if (server != null) {
+      server.close()
+      server = null
+    }
+  }
+
+  def "two camel service spans"() {
+    setup:
+    createAndStartClient()
+    ProducerTemplate template = clientContext.createProducerTemplate()
+
+    when:
+    template.sendBody("direct:input", "Example request")
+
+    then:
+    assertTraces(1) {
+      trace(0, 9) {
+        it.span(0) {
+          name "input"
+          kind CLIENT
+          attributes {
+            "camel.uri" "direct://input"
+          }
+        }
+        it.span(1) {
+          name "input"
+          kind INTERNAL
+          attributes {
+            "camel.uri" "direct://input"
+          }
+        }
+        it.span(2) {
+          name "POST"
+          kind CLIENT
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "camel.uri" "http://localhost:$portOne/serviceOne"
+          }
+        }
+        it.span(3) {
+          name "HTTP POST"
+          kind CLIENT
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" portOne
+            "$SemanticAttributes.NET_TRANSPORT.key" "IP.TCP"
+            "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
+          }
+        }
+        it.span(4) {
+          name "POST"
+          kind SERVER
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "camel.uri" "http://0.0.0.0:$portOne/serviceOne"
+          }
+        }
+        it.span(5) {
+          name "POST"
+          kind CLIENT
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "camel.uri" "http://0.0.0.0:$portTwo/serviceTwo"
+          }
+        }
+        it.span(6) {
+          name "HTTP POST"
+          kind CLIENT
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.NET_PEER_NAME.key" "0.0.0.0"
+            "$SemanticAttributes.NET_PEER_PORT.key" portTwo
+            "$SemanticAttributes.NET_TRANSPORT.key" "IP.TCP"
+            "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
+            "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
+          }
+        }
+        it.span(7) {
+          name "CachedChain.doFilter"
+          kind SERVER
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.NET_PEER_PORT.key" Number
+            "$SemanticAttributes.NET_PEER_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
+            "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
+            "$SemanticAttributes.HTTP_FLAVOR.key" "HTTP/1.1"
+            "$SemanticAttributes.HTTP_CLIENT_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
+
+          }
+        }
+        it.span(8) {
+          name "POST"
+          kind INTERNAL
+          attributes {
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo"
+          }
+        }
+      }
+    }
+  }
+}
