@@ -48,7 +48,6 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".MessageDestination",
-      packageName + ".Operation",
       packageName + ".JMSTracer",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"

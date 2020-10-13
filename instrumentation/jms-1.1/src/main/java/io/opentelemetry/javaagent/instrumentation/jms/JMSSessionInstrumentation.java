@@ -43,9 +43,7 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".MessageDestination", packageName + ".Operation", packageName + ".JMSTracer"
-    };
+    return new String[] {packageName + ".MessageDestination", packageName + ".JMSTracer"};
   }
 
   @Override
