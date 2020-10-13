@@ -1,0 +1,10 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+// need to override archivesBaseName set in instrumentation-library.gradle
+archivesBaseName = "servlet-2.2"
+
+dependencies {
+  implementation deps.slf4j
+
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+}

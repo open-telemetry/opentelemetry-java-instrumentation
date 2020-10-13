@@ -1,3 +1,5 @@
+group = 'io.opentelemetry.javaagent'
+
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
@@ -12,7 +14,7 @@ dependencies {
   implementation group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
-  implementation project(':auto-api')
+  implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
 
   testImplementation project(':testing-common')

@@ -24,7 +24,7 @@ if (project.ext.find("skipPublish") != true) {
 
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
-if (projectDir.name == 'auto') {
+if (projectDir.name == 'javaagent') {
   archivesBaseName = projectDir.parentFile.name
 }
 
@@ -39,7 +39,7 @@ afterEvaluate {
 
   dependencies {
     implementation project(':instrumentation-api')
-    implementation project(':auto-api')
+    implementation project(':javaagent-api')
     // Apply common dependencies for instrumentation.
     implementation(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
