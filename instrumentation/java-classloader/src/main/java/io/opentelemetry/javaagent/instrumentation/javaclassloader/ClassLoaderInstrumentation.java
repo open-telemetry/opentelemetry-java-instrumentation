@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.config.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Constants;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -88,7 +89,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
         return null;
       }
       try {
-        for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
+        for (String prefix : BootstrapPackagePrefixesHolder.getBootstrapPrefixes()) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
