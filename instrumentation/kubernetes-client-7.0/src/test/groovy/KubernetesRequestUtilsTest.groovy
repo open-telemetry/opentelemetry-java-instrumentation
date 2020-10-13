@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.auto.kubernetesclient.KubernetesRequestDigest
-import io.opentelemetry.instrumentation.auto.kubernetesclient.KubernetesResource
-import io.opentelemetry.instrumentation.auto.kubernetesclient.KubernetesVerb
+import io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesRequestDigest
+import io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesResource
+import io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesVerb
 import spock.lang.Specification
 
 class KubernetesRequestUtilsTest extends Specification {

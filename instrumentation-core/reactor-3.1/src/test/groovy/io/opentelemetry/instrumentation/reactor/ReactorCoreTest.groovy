@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.reactor
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.test.InstrumentationTestRunner
-import io.opentelemetry.auto.test.utils.TraceUtils
+import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.trace.Tracer
 import java.time.Duration
 import org.reactivestreams.Publisher
@@ -17,7 +17,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 class ReactorCoreTest extends InstrumentationTestRunner {
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.StatusCanonicalCode
 import io.opentelemetry.trace.attributes.SemanticAttributes

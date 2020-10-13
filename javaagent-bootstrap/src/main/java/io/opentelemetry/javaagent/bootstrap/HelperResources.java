@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import static io.opentelemetry.instrumentation.auto.api.WeakMap.Provider.newWeakMap;
+import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.instrumentation.auto.api.WeakMap;
+import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

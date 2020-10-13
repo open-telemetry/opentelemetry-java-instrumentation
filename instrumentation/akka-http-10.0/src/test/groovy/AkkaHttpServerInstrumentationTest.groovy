@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
 

@@ -3,17 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static JMS1Test.consumerSpan
-import static JMS1Test.producerSpan
-
 import com.google.common.base.Stopwatch
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.auto.jms.JMSTracer
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.jms.Connection
-import javax.jms.Session
-import javax.jms.TextMessage
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,7 +14,16 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Requires
 import spock.lang.Shared
 
-@Requires({"true" != System.getenv("CIRCLECI")})
+import javax.jms.Connection
+import javax.jms.Session
+import javax.jms.TextMessage
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+
+import static JMS1Test.consumerSpan
+import static JMS1Test.producerSpan
+
+@Requires({ "true" != System.getenv("CIRCLECI") })
 class SpringTemplateJMS1Test extends AgentTestRunner {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
 

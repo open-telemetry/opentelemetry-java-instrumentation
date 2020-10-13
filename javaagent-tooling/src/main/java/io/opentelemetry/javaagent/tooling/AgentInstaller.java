@@ -14,9 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.instrumentation.auto.api.OpenTelemetrySdkAccess.ForceFlusher;
-import io.opentelemetry.instrumentation.auto.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess.ForceFlusher;
+import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;

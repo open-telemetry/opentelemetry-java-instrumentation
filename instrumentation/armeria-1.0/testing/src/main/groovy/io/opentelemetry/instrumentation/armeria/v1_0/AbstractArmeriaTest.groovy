@@ -16,7 +16,7 @@ import com.linecorp.armeria.common.HttpResponse
 import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.testing.junit4.server.ServerRule
-import io.opentelemetry.auto.test.InstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll

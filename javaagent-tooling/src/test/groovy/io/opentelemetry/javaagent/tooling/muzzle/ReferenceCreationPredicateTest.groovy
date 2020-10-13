@@ -16,7 +16,7 @@ class ReferenceCreationPredicateTest extends Specification {
 
     where:
     desc                            | className
-    "auto instrumentation class"    | "io.opentelemetry.instrumentation.auto.some_instrumentation.Advice"
+    "auto instrumentation class"    | "io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice"
     "javaagent-tooling class"       | "io.opentelemetry.javaagent.tooling.Constants"
     "library instrumentation class" | "io.opentelemetry.instrumentation.LibraryClass"
   }
@@ -30,6 +30,6 @@ class ReferenceCreationPredicateTest extends Specification {
     desc                        | className
     "Java SDK class"            | "java.util.ArrayList"
     "instrumentation-api class" | "io.opentelemetry.instrumentation.api.InstrumentationVersion"
-    "auto-api class"            | "io.opentelemetry.instrumentation.auto.api.ContextStore"
+    "auto-api class"            | "io.opentelemetry.javaagent.instrumentation.api.ContextStore"
   }
 }

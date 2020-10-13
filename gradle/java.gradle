@@ -11,7 +11,7 @@ apply from: "$rootDir/gradle/spotbugs.gradle"
 
 afterEvaluate {
   if (!archivesBaseName.startsWith('javaagent') &&
-    (group == 'io.opentelemetry.instrumentation.auto' || findProperty('mavenGroupId') == 'io.opentelemetry.instrumentation.auto')) {
+    (group == 'io.opentelemetry.javaagent.instrumentation' || findProperty('mavenGroupId') == 'io.opentelemetry.javaagent.instrumentation')) {
     archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
   } else {
     archivesBaseName = 'opentelemetry-' + archivesBaseName

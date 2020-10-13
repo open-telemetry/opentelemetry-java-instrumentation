@@ -4,8 +4,8 @@
  */
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.TraceUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import java.time.Duration
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 

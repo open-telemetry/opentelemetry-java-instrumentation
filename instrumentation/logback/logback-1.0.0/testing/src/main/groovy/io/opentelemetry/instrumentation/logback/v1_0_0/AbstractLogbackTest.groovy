@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.logback.v1_0_0
 
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import io.opentelemetry.auto.test.InstrumentationSpecification
-import io.opentelemetry.auto.test.utils.TraceUtils
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.TracingContextUtils
 import org.slf4j.Logger
