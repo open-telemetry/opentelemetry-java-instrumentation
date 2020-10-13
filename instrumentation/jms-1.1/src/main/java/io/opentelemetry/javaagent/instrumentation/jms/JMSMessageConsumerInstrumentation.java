@@ -70,7 +70,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   public Map<String, String> contextStore() {
     return singletonMap(
         "javax.jms.MessageConsumer",
-        "io.opentelemetry.instrumentation.auto.jms.MessageDestination");
+        "io.opentelemetry.javaagent.instrumentation.jms.MessageDestination");
   }
 
   public static class ConsumerAdvice {

@@ -6,6 +6,7 @@
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hornetq.api.core.TransportConfiguration

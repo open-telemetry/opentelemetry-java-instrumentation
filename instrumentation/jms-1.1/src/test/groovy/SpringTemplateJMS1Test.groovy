@@ -5,6 +5,7 @@
 
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
