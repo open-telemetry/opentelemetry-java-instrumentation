@@ -5,21 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.TRACER;
-import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapter.GETTER;
+import static io.opentelemetry.javaagent.instrumentation.jms.JMSTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -50,7 +45,8 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JMSDecorator",
+      packageName + ".MessageDestination",
+      packageName + ".JMSTracer",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"
     };
@@ -66,29 +62,28 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) Message message) {
+    public static void onEnter(
+        @Advice.Argument(0) Message message,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
-      String spanName = DECORATE.spanNameForConsumer(message);
-      Span.Builder spanBuilder = TRACER.spanBuilder(spanName).setSpanKind(CONSUMER);
-      spanBuilder.setParent(extract(message, GETTER));
-
-      Span span = spanBuilder.startSpan();
-      DECORATE.afterStart(span, spanName, message);
-
-      return new SpanWithScope(span, currentContextWith(span));
+      MessageDestination destination = TRACER.extractDestination(message, null);
+      span = TRACER.startConsumerSpan(destination, "process", message, System.currentTimeMillis());
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      scope.close();
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
       }
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
     }
   }
 }

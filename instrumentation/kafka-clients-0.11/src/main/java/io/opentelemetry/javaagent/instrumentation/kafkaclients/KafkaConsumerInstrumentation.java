@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaConsumerTracer.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,7 +41,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KafkaClientConfiguration",
-      packageName + ".KafkaDecorator",
+      packageName + ".KafkaConsumerTracer",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracingIterable",
       packageName + ".TracingIterator",
@@ -79,9 +79,10 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   public static class IterableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(@Advice.Return(readOnly = false) Iterable<ConsumerRecord> iterable) {
+    public static void wrap(
+        @Advice.Return(readOnly = false) Iterable<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingIterable(iterable, DECORATE);
+        iterable = new TracingIterable(iterable, TRACER);
       }
     }
   }
@@ -89,9 +90,9 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   public static class ListAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord> iterable) {
+    public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord<?, ?>> iterable) {
       if (iterable != null) {
-        iterable = new TracingList(iterable, DECORATE);
+        iterable = new TracingList(iterable, TRACER);
       }
     }
   }
@@ -99,9 +100,10 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   public static class IteratorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
+    public static void wrap(
+        @Advice.Return(readOnly = false) Iterator<ConsumerRecord<?, ?>> iterator) {
       if (iterator != null) {
-        iterator = new TracingIterator(iterator, DECORATE);
+        iterator = new TracingIterator(iterator, TRACER);
       }
     }
   }

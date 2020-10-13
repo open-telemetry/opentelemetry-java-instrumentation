@@ -6,11 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.TRACER;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.PRODUCER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -22,7 +19,6 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -34,7 +30,6 @@ import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.record.RecordBatch;
 
 @AutoService(Instrumenter.class)
 public final class KafkaProducerInstrumentation extends Instrumenter.Default {
@@ -52,7 +47,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KafkaClientConfiguration",
-      packageName + ".KafkaDecorator",
+      packageName + ".KafkaProducerTracer",
       packageName + ".TextMapInjectAdapter",
       KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
     };
@@ -72,36 +67,25 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
+    public static void onEnter(
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
-        @Advice.Argument(value = 1, readOnly = false) Callback callback) {
+        @Advice.Argument(value = 1, readOnly = false) Callback callback,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+
       Context parent = Context.current();
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameOnProduce(record)).setSpanKind(PRODUCER).startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onProduce(span, record);
+
+      span = TRACER.startProducerSpan(record);
+      Context newContext = withSpan(span, parent);
 
       callback = new ProducerCallback(callback, parent, span);
 
-      if (record.value() == null) {
-        span.setAttribute("tombstone", true);
-      }
-
-      // Do not inject headers for batch versions below 2
-      // This is how similar check is being done in Kafka client itself:
-      // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
-      // Also, do not inject headers if specified by JVM option or environment variable
-      // This can help in mixed client environments where clients < 0.11 that do not support
-      // headers attempt to read messages that were produced by clients > 0.11 and the magic
-      // value of the broker(s) is >= 2
-      if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-          && KafkaClientConfiguration.isPropagationEnabled()) {
-        Context context = withSpan(span, Context.current());
+      if (TRACER.shouldPropagate(apiVersions)) {
         try {
           OpenTelemetry.getPropagators()
               .getTextMapPropagator()
-              .inject(context, record.headers(), SETTER);
+              .inject(newContext, record.headers(), SETTER);
         } catch (IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -115,20 +99,24 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
           OpenTelemetry.getPropagators()
               .getTextMapPropagator()
-              .inject(context, record.headers(), SETTER);
+              .inject(newContext, record.headers(), SETTER);
         }
       }
 
-      return new SpanWithScope(span, currentContextWith(span));
+      scope = withScopedContext(newContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      spanWithScope.closeScope();
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+
+      scope.close();
+
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      }
       // span finished by ProducerCallback
     }
   }
@@ -146,12 +134,15 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onCompletion(RecordMetadata metadata, Exception exception) {
-      DECORATE.onError(span, exception);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (exception != null) {
+        TRACER.endExceptionally(span, exception);
+      } else {
+        TRACER.end(span);
+      }
+
       if (callback != null) {
         if (parent != null) {
-          try (Scope scope = withScopedContext(parent)) {
+          try (Scope ignored = withScopedContext(parent)) {
             callback.onCompletion(metadata, exception);
           }
         } else {

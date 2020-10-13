@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -44,7 +44,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".RabbitDecorator",
+      packageName + ".RabbitTracer",
       // These are only used by muzzleCheck:
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
@@ -69,7 +69,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
       Span span = CURRENT_RABBIT_SPAN.get();
       if (span != null && command.getMethod() != null) {
-        DECORATE.onCommand(span, command);
+        TRACER.onCommand(span, command);
       }
     }
 

@@ -23,7 +23,6 @@ import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
-import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
@@ -90,7 +89,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
@@ -123,14 +122,13 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }
       trace(2, 1) {
-        // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", "<temporary>")
+        producerSpan(it, 0, "queue", "(temporary)")
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, HornetQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 

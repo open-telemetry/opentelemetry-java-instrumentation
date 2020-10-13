@@ -43,7 +43,7 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".JMSDecorator"};
+    return new String[] {packageName + ".MessageDestination", packageName + ".JMSTracer"};
   }
 
   @Override
@@ -57,7 +57,9 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("javax.jms.MessageConsumer", "java.lang.String");
+    return singletonMap(
+        "javax.jms.MessageConsumer",
+        "io.opentelemetry.javaagent.instrumentation.jms.MessageDestination");
   }
 
   public static class ConsumerAdvice {
@@ -65,8 +67,9 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) Destination destination, @Advice.Return MessageConsumer consumer) {
-      String spanName = JMSDecorator.toSpanName(destination, "receive");
-      InstrumentationContext.get(MessageConsumer.class, String.class).put(consumer, spanName);
+      MessageDestination messageDestination = JMSTracer.extractMessageDestination(destination);
+      InstrumentationContext.get(MessageConsumer.class, MessageDestination.class)
+          .put(consumer, messageDestination);
     }
   }
 }

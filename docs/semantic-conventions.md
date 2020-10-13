@@ -89,3 +89,22 @@ not values defined by spec.
 | `db.hbase`   | Y | -, HBase is not supported |
 | `db.redis.database_index`   | N | only set for Lettuce driver, not for Jedis |
 | `db.mongodb.collection`   | Y | - |
+
+## Messaging
+
+ Attribute name |  Required? | Implemented? |
+| -------------- |  :-----: | :---: |
+| `messaging.system` |  Y | + |
+| `messaging.destination` | Y | + |
+| `messaging.destination_kind` | Y | + |
+| `messaging.temp_destination` | N | - |
+| `messaging.protocol` | N | - |
+| `messaging.protocol_version` | N | - |
+| `messaging.url` | N | - |
+| `messaging.message_id` | N | only for JMS |
+| `messaging.conversation_id` | N | only for JMS |
+| `messaging.message_payload_size_bytes` | N | only for RabbitMQ and Kafka [1] |
+| `messaging.message_payload_compressed_size_bytes` | N | - |
+| `messaging.operation` | for consumers only | +
+
+**[1]:** Kafka consumer instrumentation sets this to the serialized size of the value

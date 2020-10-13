@@ -5,23 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.jms.JMSDecorator.TRACER;
-import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.jms.JMSTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.PRODUCER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -56,7 +49,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JMSDecorator",
+      packageName + ".MessageDestination",
+      packageName + ".JMSTracer",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"
     };
@@ -80,11 +74,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
+    public static void onEnter(
+        @Advice.Argument(0) Message message,
+        @Advice.This MessageProducer producer,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
 
       Destination defaultDestination;
@@ -94,67 +91,64 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         defaultDestination = null;
       }
 
-      String spanName = DECORATE.spanNameForProducer(message, defaultDestination);
-      Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
-      DECORATE.afterStart(span, spanName, message);
-
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
-
-      return new SpanWithScope(span, withScopedContext(context));
+      MessageDestination messageDestination =
+          TRACER.extractDestination(message, defaultDestination);
+      span = TRACER.startProducerSpan(messageDestination, message);
+      scope = TRACER.startProducerScope(span, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      if (scope == null) {
         return;
       }
+      scope.close();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 
   public static class ProducerWithDestinationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
+    public static void onEnter(
+        @Advice.Argument(0) Destination destination,
+        @Advice.Argument(1) Message message,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
-        return null;
+        return;
       }
 
-      String spanName = DECORATE.spanNameForProducer(message, destination);
-
-      Span span = TRACER.spanBuilder(spanName).setSpanKind(PRODUCER).startSpan();
-      DECORATE.afterStart(span, spanName, message);
-
-      Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
-
-      return new SpanWithScope(span, withScopedContext(context));
+      MessageDestination messageDestination = TRACER.extractDestination(message, destination);
+      span = TRACER.startProducerSpan(messageDestination, message);
+      scope = TRACER.startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
+      if (scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
-      Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable != null) {
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span);
+      }
     }
   }
 }

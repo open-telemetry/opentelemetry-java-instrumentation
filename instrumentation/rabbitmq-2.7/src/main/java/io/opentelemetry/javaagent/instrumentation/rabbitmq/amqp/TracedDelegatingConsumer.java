@@ -5,13 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.TRACER;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
@@ -20,8 +14,6 @@ import com.rabbitmq.client.ShutdownSignalException;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,46 +65,29 @@ public class TracedDelegatingConsumer implements Consumer {
     Span span = null;
     Scope scope = null;
     try {
-      Map<String, Object> headers = properties.getHeaders();
-      long startTimeMillis = System.currentTimeMillis();
-      span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameOnDeliver(queue))
-              .setSpanKind(CONSUMER)
-              .setParent(extract(headers, GETTER))
-              .setAttribute("message.size", body == null ? 0 : body.length)
-              .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis))
-              .startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onDeliver(span, envelope);
-
-      if (properties.getTimestamp() != null) {
-        // this will be set if the sender sets the timestamp,
-        // or if a plugin is installed on the rabbitmq broker
-        long produceTime = properties.getTimestamp().getTime();
-        long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
-        span.setAttribute("record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
-      }
-
-      scope = currentContextWith(span);
+      span = TRACER.startDeliverySpan(queue, envelope, properties, body);
+      scope = TRACER.startScope(span);
 
     } catch (Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);
     } finally {
+      // TODO this is very unusual code structure for this repo
+      // We have to review it
       try {
-
         // Call delegate.
         delegate.handleDelivery(consumerTag, envelope, properties, body);
 
+        if (span != null) {
+          TRACER.end(span);
+        }
       } catch (Throwable throwable) {
         if (span != null) {
-          DECORATE.onError(span, throwable);
+          TRACER.endExceptionally(span, throwable);
         }
+
         throw throwable;
       } finally {
         if (scope != null) {
-          DECORATE.beforeFinish(span);
-          span.end();
           scope.close();
         }
       }

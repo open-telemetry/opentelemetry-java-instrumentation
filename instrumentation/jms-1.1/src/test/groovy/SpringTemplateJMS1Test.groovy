@@ -3,18 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static JMS1Test.consumerSpan
-import static JMS1Test.producerSpan
-
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.jms.Connection
-import javax.jms.Session
-import javax.jms.TextMessage
+import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.ActiveMQMessageConsumer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.jms.core.JmsTemplate
@@ -23,7 +15,16 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Requires
 import spock.lang.Shared
 
-@Requires({"true" != System.getenv("CIRCLECI")})
+import javax.jms.Connection
+import javax.jms.Session
+import javax.jms.TextMessage
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+
+import static JMS1Test.consumerSpan
+import static JMS1Test.producerSpan
+
+@Requires({ "true" != System.getenv("CIRCLECI") })
 class SpringTemplateJMS1Test extends AgentTestRunner {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
 
@@ -67,7 +68,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
@@ -104,14 +105,14 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }
       trace(2, 1) {
         // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", "<temporary>")
+        producerSpan(it, 0, "queue", JMSTracer.TEMP_DESTINATION_NAME)
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue", "<temporary>", receivedMessage.getJMSMessageID(), false, ActiveMQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue", JMSTracer.TEMP_DESTINATION_NAME, receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
