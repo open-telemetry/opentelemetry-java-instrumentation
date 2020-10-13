@@ -3,12 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
+
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Message
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -22,16 +31,6 @@ import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
-
-import javax.jms.Message
-import javax.jms.MessageListener
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class JMS2Test extends AgentTestRunner {
   @Shared
