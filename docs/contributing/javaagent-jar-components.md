@@ -82,7 +82,7 @@ module
 Available in the bootstrap class loader:
 
 - `io/opentelemetry/javaagent/bootstrap/` - contains the `javaagent-bootstrap` module
-- `io/opentelemetry/javaagent/api/` - contains the `javaagent-api` module
+- `io/opentelemetry/javaagent/instrumentation/api/` - contains the `javaagent-api` module
 - `io/opentelemetry/javaagent/shaded/instrumentation/api/` - contains the `instrumentation-api` module,
  shaded during creation of `javaagent` jar file by Shadow Gradle plugin
 - `io/opentelemetry/javaagent/shaded/io/` - contains the OpenTelemetry API and its dependency gRPC
