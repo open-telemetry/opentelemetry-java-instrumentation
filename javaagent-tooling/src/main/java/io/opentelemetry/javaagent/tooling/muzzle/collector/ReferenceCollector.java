@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle;
+package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreationPredicate.shouldCreateReferenceFor;
+import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
 
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,17 +42,22 @@ import net.bytebuddy.jar.asm.Type;
 // - outer class
 // - inner class
 // - cast opcodes in method bodies
-public class ReferenceCreator extends ClassVisitor {
+public class ReferenceCollector extends ClassVisitor {
   /**
-   * Generate all references reachable from a given class.
+   * Traverse a graph of classes starting from {@code entryPointClassName} (usually an advice class)
+   * and collect all references to both internal (instrumentation) and external classes.
+   *
+   * <p>The graph of classes is traversed until a non-instrumentation (external) class is
+   * encountered.
+   *
+   * <p>This class is only called at compile time by the {@link MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
    *
    * @param entryPointClassName Starting point for generating references.
-   * @param loader Classloader used to read class bytes.
    * @return Map of [referenceClassName -> Reference]
-   * @throws IllegalStateException if class is not found or unable to be loaded.
+   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
    */
-  public static Map<String, Reference> createReferencesFrom(
-      String entryPointClassName, ClassLoader loader) {
+  public static Map<String, Reference> collectReferencesFrom(String entryPointClassName) {
     Set<String> visitedSources = new HashSet<>();
     Map<String, Reference> references = new HashMap<>();
 
@@ -62,12 +72,14 @@ public class ReferenceCreator extends ClassVisitor {
 
       try (InputStream in =
           checkNotNull(
-              loader.getResourceAsStream(Utils.getResourceName(className)),
+              ReferenceCollector.class
+                  .getClassLoader()
+                  .getResourceAsStream(Utils.getResourceName(className)),
               "Couldn't find class file %s",
               className)) {
 
         // only start from method bodies for entry point class (skips class/method references)
-        ReferenceCreator cv = new ReferenceCreator(isEntryPoint);
+        ReferenceCollector cv = new ReferenceCollector(isEntryPoint);
         ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -75,7 +87,7 @@ public class ReferenceCreator extends ClassVisitor {
         for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
           String key = entry.getKey();
           // Don't generate references created outside of the instrumentation package.
-          if (!visitedSources.contains(entry.getKey()) && shouldCreateReferenceFor(key)) {
+          if (!visitedSources.contains(entry.getKey()) && isInstrumentationClass(key)) {
             instrumentationQueue.add(key);
           }
           if (references.containsKey(key)) {
@@ -110,14 +122,14 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumClassAccess(Type from, Type to) {
+  private static Flag computeMinimumClassAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
-      return Reference.Flag.PRIVATE_OR_HIGHER;
+      return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
         .equals(internalPackageName(to.getInternalName()))) {
-      return Reference.Flag.PACKAGE_OR_HIGHER;
+      return MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
     } else {
-      return Reference.Flag.PUBLIC;
+      return VisibilityFlag.PUBLIC;
     }
   }
 
@@ -126,16 +138,16 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumFieldAccess(Type from, Type to) {
+  private static Flag computeMinimumFieldAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
-      return Reference.Flag.PRIVATE_OR_HIGHER;
+      return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
         .equals(internalPackageName(to.getInternalName()))) {
-      return Reference.Flag.PACKAGE_OR_HIGHER;
+      return MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
     } else {
       // Additional references: check the type hierarchy of FROM to distinguish public from
       // protected
-      return Reference.Flag.PROTECTED_OR_HIGHER;
+      return MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
     }
   }
 
@@ -144,13 +156,13 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
+  private static Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
-      return Reference.Flag.PRIVATE_OR_HIGHER;
+      return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else {
       // Additional references: check the type hierarchy of FROM to distinguish public from
       // protected
-      return Reference.Flag.PROTECTED_OR_HIGHER;
+      return MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
     }
   }
 
@@ -170,7 +182,7 @@ public class ReferenceCreator extends ClassVisitor {
   private String refSourceClassName;
   private Type refSourceType;
 
-  private ReferenceCreator(boolean skipClassReferenceGeneration) {
+  private ReferenceCollector(boolean skipClassReferenceGeneration) {
     super(Opcodes.ASM7);
     this.skipClassReferenceGeneration = skipClassReferenceGeneration;
   }
@@ -253,8 +265,8 @@ public class ReferenceCreator extends ClassVisitor {
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
       // as an optimization skip constructors, private and static methods
-      if (!(visibilityFlag == Flag.PRIVATE
-          || ownershipFlag == Flag.STATIC
+      if (!(visibilityFlag == VisibilityFlag.PRIVATE
+          || ownershipFlag == OwnershipFlag.STATIC
           || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
         addReference(
             new Reference.Builder(refSourceClassName)
@@ -275,36 +287,33 @@ public class ReferenceCreator extends ClassVisitor {
         super.visitMethod(access, name, descriptor, signature, exceptions));
   }
 
-  /** @see net.bytebuddy.description.modifier.Visibility */
   private static Flag computeVisibilityFlag(int access) {
-    if (Flag.PUBLIC.matches(access)) {
-      return Flag.PUBLIC;
-    } else if (Flag.PROTECTED.matches(access)) {
-      return Flag.PROTECTED;
-    } else if (Flag.PACKAGE.matches(access)) {
-      return Flag.PACKAGE;
+    if (VisibilityFlag.PUBLIC.matches(access)) {
+      return VisibilityFlag.PUBLIC;
+    } else if (VisibilityFlag.PROTECTED.matches(access)) {
+      return VisibilityFlag.PROTECTED;
+    } else if (VisibilityFlag.PACKAGE.matches(access)) {
+      return VisibilityFlag.PACKAGE;
     } else {
-      return Flag.PRIVATE;
+      return VisibilityFlag.PRIVATE;
     }
   }
 
-  /** @see net.bytebuddy.description.modifier.Ownership */
   private static Flag computeOwnershipFlag(int access) {
-    if (Flag.STATIC.matches(access)) {
-      return Flag.STATIC;
+    if (OwnershipFlag.STATIC.matches(access)) {
+      return OwnershipFlag.STATIC;
     } else {
-      return Flag.NON_STATIC;
+      return OwnershipFlag.NON_STATIC;
     }
   }
 
-  /** @see net.bytebuddy.description.modifier.TypeManifestation */
   private static Flag computeTypeManifestationFlag(int access) {
-    if (Flag.ABSTRACT.matches(access)) {
-      return Flag.ABSTRACT;
-    } else if (Flag.FINAL.matches(access)) {
-      return Flag.FINAL;
+    if (ManifestationFlag.ABSTRACT.matches(access)) {
+      return ManifestationFlag.ABSTRACT;
+    } else if (ManifestationFlag.FINAL.matches(access)) {
+      return ManifestationFlag.FINAL;
     } else {
-      return Flag.NON_FINAL;
+      return ManifestationFlag.NON_FINAL;
     }
   }
 
@@ -339,12 +348,12 @@ public class ReferenceCreator extends ClassVisitor {
               : Type.getType("L" + owner + ";");
       Type fieldType = Type.getType(descriptor);
 
-      List<Reference.Flag> fieldFlags = new ArrayList<>();
+      List<Flag> fieldFlags = new ArrayList<>();
       fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
       fieldFlags.add(
           opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
-              ? Reference.Flag.STATIC
-              : Reference.Flag.NON_STATIC);
+              ? OwnershipFlag.STATIC
+              : OwnershipFlag.NON_STATIC);
 
       addReference(
           new Reference.Builder(ownerType.getInternalName())
@@ -413,13 +422,13 @@ public class ReferenceCreator extends ClassVisitor {
 
       List<Reference.Flag> methodFlags = new ArrayList<>();
       methodFlags.add(
-          opcode == Opcodes.INVOKESTATIC ? Reference.Flag.STATIC : Reference.Flag.NON_STATIC);
+          opcode == Opcodes.INVOKESTATIC ? OwnershipFlag.STATIC : OwnershipFlag.NON_STATIC);
       methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType, methodType));
 
       addReference(
           new Reference.Builder(ownerType.getInternalName())
               .withSource(refSourceClassName, currentLineNumber)
-              .withFlag(isInterface ? Reference.Flag.INTERFACE : Reference.Flag.NON_INTERFACE)
+              .withFlag(isInterface ? ManifestationFlag.INTERFACE : ManifestationFlag.NON_INTERFACE)
               .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
               .withMethod(
                   new Reference.Source[] {

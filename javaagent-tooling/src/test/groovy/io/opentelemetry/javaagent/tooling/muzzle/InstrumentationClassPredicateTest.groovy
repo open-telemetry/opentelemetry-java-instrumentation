@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.tooling.muzzle
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class ReferenceCreationPredicateTest extends Specification {
+class InstrumentationClassPredicateTest extends Specification {
   @Unroll
-  def "should create reference for #desc"() {
+  def "should collect references for #desc"() {
     expect:
-    ReferenceCreationPredicate.shouldCreateReferenceFor(className)
+    InstrumentationClassPredicate.isInstrumentationClass(className)
 
     where:
     desc                            | className
@@ -22,9 +22,9 @@ class ReferenceCreationPredicateTest extends Specification {
   }
 
   @Unroll
-  def "should not create reference for #desc"() {
+  def "should not collect references for #desc"() {
     expect:
-    !ReferenceCreationPredicate.shouldCreateReferenceFor(className)
+    !InstrumentationClassPredicate.isInstrumentationClass(className)
 
     where:
     desc                        | className

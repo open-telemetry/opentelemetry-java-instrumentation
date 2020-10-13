@@ -5,20 +5,24 @@
 
 package muzzle
 
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag
 import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.TestHelperClasses
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Ignore
 
-class ReferenceCreatorTest extends AgentTestRunner {
+class ReferenceCollectorTest extends AgentTestRunner {
   def "method body creates references"() {
     setup:
-    def references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
 
     expect:
     references.keySet() == [
@@ -32,47 +36,47 @@ class ReferenceCreatorTest extends AgentTestRunner {
     def aRef = references[MethodBodyAdvice.A.name]
 
     // interface flags
-    bRef.flags.contains(Reference.Flag.NON_INTERFACE)
-    references[MethodBodyAdvice.SomeInterface.name].flags.contains(Reference.Flag.INTERFACE)
+    bRef.flags.contains(ManifestationFlag.NON_INTERFACE)
+    references[MethodBodyAdvice.SomeInterface.name].flags.contains(ManifestationFlag.INTERFACE)
 
     // class access flags
-    aRef.flags.contains(Reference.Flag.PACKAGE_OR_HIGHER)
-    bRef.flags.contains(Reference.Flag.PACKAGE_OR_HIGHER)
+    aRef.flags.contains(MinimumVisibilityFlag.PACKAGE_OR_HIGHER)
+    bRef.flags.contains(MinimumVisibilityFlag.PACKAGE_OR_HIGHER)
 
     // method refs
     assertMethod bRef, 'aMethod', '(Ljava/lang/String;)Ljava/lang/String;',
-      Reference.Flag.PROTECTED_OR_HIGHER,
-      Reference.Flag.NON_STATIC
+      MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
+      OwnershipFlag.NON_STATIC
     assertMethod bRef, 'aMethodWithPrimitives', '(Z)V',
-      Reference.Flag.PROTECTED_OR_HIGHER,
-      Reference.Flag.NON_STATIC
+      MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
+      OwnershipFlag.NON_STATIC
     assertMethod bRef, 'aStaticMethod', '()V',
-      Reference.Flag.PROTECTED_OR_HIGHER,
-      Reference.Flag.STATIC
+      MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
+      OwnershipFlag.STATIC
     assertMethod bRef, 'aMethodWithArrays', '([Ljava/lang/String;)[Ljava/lang/Object;',
-      Reference.Flag.PROTECTED_OR_HIGHER,
-      Reference.Flag.NON_STATIC
+      MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
+      OwnershipFlag.NON_STATIC
 
     // field refs
     bRef.fields.isEmpty()
     aRef.fields.size() == 2
-    assertField aRef, 'b', Reference.Flag.PACKAGE_OR_HIGHER, Reference.Flag.NON_STATIC
-    assertField aRef, 'staticB', Reference.Flag.PACKAGE_OR_HIGHER, Reference.Flag.STATIC
+    assertField aRef, 'b', MinimumVisibilityFlag.PACKAGE_OR_HIGHER, OwnershipFlag.NON_STATIC
+    assertField aRef, 'staticB', MinimumVisibilityFlag.PACKAGE_OR_HIGHER, OwnershipFlag.STATIC
   }
 
   def "protected ref test"() {
     setup:
-    def references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.B2.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.B2.name)
 
     expect:
     assertMethod references[MethodBodyAdvice.B.name], 'protectedMethod', '()V',
-      Reference.Flag.PROTECTED_OR_HIGHER,
-      Reference.Flag.NON_STATIC
+      MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
+      OwnershipFlag.NON_STATIC
   }
 
   def "ldc creates references"() {
     setup:
-    def references = ReferenceCreator.createReferencesFrom(LdcAdvice.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(LdcAdvice.name)
 
     expect:
     references[MethodBodyAdvice.A.name] != null
@@ -80,7 +84,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
   def "instanceof creates references"() {
     setup:
-    def references = ReferenceCreator.createReferencesFrom(TestClasses.InstanceofAdvice.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InstanceofAdvice.name)
 
     expect:
     references[MethodBodyAdvice.A.name] != null
@@ -90,7 +94,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
   @Ignore
   def "invokedynamic creates references"() {
     setup:
-    def references = ReferenceCreator.createReferencesFrom(TestClasses.InDyAdvice.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InDyAdvice.name)
 
     expect:
     references['muzzle.TestClasses$MethodBodyAdvice$SomeImplementation'] != null
@@ -99,7 +103,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
   def "should create references for helper classes"() {
     when:
-    def references = ReferenceCreator.createReferencesFrom(HelperAdvice.name, this.class.classLoader)
+    def references = ReferenceCollector.collectReferencesFrom(HelperAdvice.name)
 
     then:
     references.keySet() == [
@@ -109,21 +113,21 @@ class ReferenceCreatorTest extends AgentTestRunner {
     ] as Set
 
     with(references[TestHelperClasses.HelperSuperClass.name]) { helperSuperClass ->
-      helperSuperClass.flags.contains(Reference.Flag.ABSTRACT)
+      helperSuperClass.flags.contains(ManifestationFlag.ABSTRACT)
       assertHelperSuperClassMethod(helperSuperClass, true)
       assertMethod helperSuperClass, 'finalMethod', '()Ljava/lang/String;',
-        Reference.Flag.PUBLIC,
-        Reference.Flag.NON_STATIC,
-        Reference.Flag.FINAL
+        VisibilityFlag.PUBLIC,
+        OwnershipFlag.NON_STATIC,
+        ManifestationFlag.FINAL
     }
 
     with(references[TestHelperClasses.HelperInterface.name]) { helperInterface ->
-      helperInterface.flags.contains(Reference.Flag.ABSTRACT)
+      helperInterface.flags.contains(ManifestationFlag.ABSTRACT)
       assertHelperInterfaceMethod helperInterface, true
     }
 
     with(references[TestHelperClasses.Helper.name]) { helperClass ->
-      helperClass.flags.contains(Reference.Flag.NON_FINAL)
+      helperClass.flags.contains(ManifestationFlag.NON_FINAL)
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
     }
@@ -131,16 +135,16 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
     assertMethod reference, 'abstractMethod', '()I',
-      Reference.Flag.PROTECTED,
-      Reference.Flag.NON_STATIC,
-      isAbstract ? Reference.Flag.ABSTRACT : Reference.Flag.NON_FINAL
+      VisibilityFlag.PROTECTED,
+      OwnershipFlag.NON_STATIC,
+      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
   private static assertHelperInterfaceMethod(Reference reference, boolean isAbstract) {
     assertMethod reference, 'foo', '()V',
-      Reference.Flag.PUBLIC,
-      Reference.Flag.NON_STATIC,
-      isAbstract ? Reference.Flag.ABSTRACT : Reference.Flag.NON_FINAL
+      VisibilityFlag.PUBLIC,
+      OwnershipFlag.NON_STATIC,
+      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
   private static assertMethod(Reference reference, String methodName, String methodDesc, Reference.Flag... flags) {
