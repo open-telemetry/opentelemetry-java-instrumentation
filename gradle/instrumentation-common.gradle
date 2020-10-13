@@ -1,4 +1,4 @@
-/** Common setup for manual instrumentation of libraries and auto instrumentation. */
+/** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
 
 /**
@@ -75,7 +75,7 @@ if (testLatestDeps) {
   }
 }
 
-if (['auto', 'library', 'testing'].contains(projectDir.name)) {
+if (['javaagent', 'library', 'testing'].contains(projectDir.name)) {
   // We don't use this group anywhere in our config, but we need to make sure it is unique per
   // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
   // https://github.com/gradle/gradle/issues/847

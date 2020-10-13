@@ -21,7 +21,7 @@ gradlePlugin {
       id = "muzzle"
       implementationClass = "MuzzlePlugin"
     }
-    create("auto-instrumentation-plugin") {
+    create("javaagent-instrumentation-plugin") {
       id = "io.opentelemetry.javaagent.instrumentation-instrumentation"
       implementationClass = "io.opentelemetry.instrumentation.gradle.AutoInstrumentationPlugin"
     }

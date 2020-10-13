@@ -27,8 +27,6 @@ release {
 }
 
 allprojects {
-  group = 'io.opentelemetry.javaagent.instrumentation'
-
   ext.isCI = System.getenv("CI") != null
   if (isCI) {
     buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"

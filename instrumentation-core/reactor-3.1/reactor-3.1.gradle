@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-group = 'io.opentelemetry.instrumentation'
-
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+// need to override archivesBaseName set in instrumentation-library.gradle
+archivesBaseName = "reactor-3.1"
 
 dependencies {
   library group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'

@@ -10,9 +10,8 @@ apply from: "$rootDir/gradle/codenarc.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"
 
 afterEvaluate {
-  if (!archivesBaseName.startsWith('javaagent') &&
-    (group == 'io.opentelemetry.javaagent.instrumentation' || findProperty('mavenGroupId') == 'io.opentelemetry.javaagent.instrumentation')) {
-    archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
+  if (findProperty('mavenGroupId') == 'io.opentelemetry.javaagent.instrumentation') {
+    archivesBaseName = 'opentelemetry-javaagent-' + archivesBaseName
   } else {
     archivesBaseName = 'opentelemetry-' + archivesBaseName
   }

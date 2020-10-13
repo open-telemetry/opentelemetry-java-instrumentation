@@ -24,7 +24,7 @@ if (project.ext.find("skipPublish") != true) {
 
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
-if (projectDir.name == 'auto') {
+if (projectDir.name == 'javaagent') {
   archivesBaseName = projectDir.parentFile.name
 }
 
