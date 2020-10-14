@@ -46,14 +46,16 @@ has been made by the `InstrumenterDefault#classLoaderMatcher()` and `Instrumente
 matchers.
 
 The source code of the runtime muzzle matcher is located in the `javaagent-tooling` module,
-class `Instrumenter.Default` and package `io.opentelemetry.javaagent.tooling.muzzle.matcher`.
+in the class `Instrumenter.Default` and under the package `io.opentelemetry.javaagent.tooling.muzzle`.
 
 ## Muzzle gradle plugin
 
 The muzzle gradle plugin allows to perform the runtime reference matching process against different
 third party library versions, when the project is built.
 
-Muzzle gradle plugin is just an additional utility for enhanced build-time checking.
+Muzzle gradle plugin is just an additional utility for enhanced build-time checking
+to alert us when there are breaking changes in the underlying third party library
+that will cause the instrumentation not to get applied.
 **Even without using it muzzle reference matching is _always_ active in runtime**,
 it's not an optional feature.
 
@@ -68,7 +70,7 @@ The gradle plugin defines two tasks:
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:muzzle
     ```
-    If a new, incompatible version is published it fails the build.
+    If a new, incompatible version of the instrumented library is published it fails the build.
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:
@@ -104,4 +106,4 @@ muzzle {
 * `assertInverse` is basically a shortcut for adding an opposite directive for all library versions
   that are not included in the specified `versions` range.
 
-The source code of the gradle plugin is located in the `buildSrd` directory.
+The source code of the gradle plugin is located in the `buildSrc` directory.

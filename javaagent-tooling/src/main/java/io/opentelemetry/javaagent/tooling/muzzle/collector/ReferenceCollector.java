@@ -138,7 +138,7 @@ public class ReferenceCollector extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Flag computeMinimumFieldAccess(Type from, Type to) {
+  private static MinimumVisibilityFlag computeMinimumFieldAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
@@ -156,7 +156,7 @@ public class ReferenceCollector extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
+  private static MinimumVisibilityFlag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else {
@@ -287,7 +287,7 @@ public class ReferenceCollector extends ClassVisitor {
         super.visitMethod(access, name, descriptor, signature, exceptions));
   }
 
-  private static Flag computeVisibilityFlag(int access) {
+  private static VisibilityFlag computeVisibilityFlag(int access) {
     if (VisibilityFlag.PUBLIC.matches(access)) {
       return VisibilityFlag.PUBLIC;
     } else if (VisibilityFlag.PROTECTED.matches(access)) {
@@ -299,7 +299,7 @@ public class ReferenceCollector extends ClassVisitor {
     }
   }
 
-  private static Flag computeOwnershipFlag(int access) {
+  private static OwnershipFlag computeOwnershipFlag(int access) {
     if (OwnershipFlag.STATIC.matches(access)) {
       return OwnershipFlag.STATIC;
     } else {
@@ -307,7 +307,7 @@ public class ReferenceCollector extends ClassVisitor {
     }
   }
 
-  private static Flag computeTypeManifestationFlag(int access) {
+  private static ManifestationFlag computeTypeManifestationFlag(int access) {
     if (ManifestationFlag.ABSTRACT.matches(access)) {
       return ManifestationFlag.ABSTRACT;
     } else if (ManifestationFlag.FINAL.matches(access)) {
