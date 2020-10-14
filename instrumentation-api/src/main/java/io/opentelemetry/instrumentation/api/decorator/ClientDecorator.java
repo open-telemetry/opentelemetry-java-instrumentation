@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -17,8 +18,8 @@ public abstract class ClientDecorator extends BaseDecorator {
 
   // Keeps track of the client span in a subtree corresponding to a client request.
   // Visible for testing
-  static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
-      Context.key("opentelemetry-trace-auto-client-span-key");
+  static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+      ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   /**
    * Returns a new {@link Context} forked from the {@linkplain Context#current()} current context}
@@ -27,7 +28,7 @@ public abstract class ClientDecorator extends BaseDecorator {
   public static Context currentContextWith(Span clientSpan) {
     Context context = Context.current();
     if (clientSpan.getContext().isValid()) {
-      context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+      context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
     return TracingContextUtils.withSpan(clientSpan, context);
   }
@@ -38,7 +39,7 @@ public abstract class ClientDecorator extends BaseDecorator {
    */
   public static Span getOrCreateSpan(String name, Tracer tracer) {
     Context context = Context.current();
-    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = context.getValue(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCanonicalCode;

@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Tracer;
 import org.slf4j.Logger;
@@ -32,7 +30,7 @@ public class BlockWrapper implements Block {
 
   @Override
   public void execute() throws Exception {
-    try (Scope ignored = withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.execute();
     }
   }

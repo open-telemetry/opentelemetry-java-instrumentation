@@ -91,7 +91,7 @@ public class Bridging {
 
   public static io.opentelemetry.common.Attributes toAgent(Attributes applicationAttributes) {
     final io.opentelemetry.common.Attributes.Builder agentAttributes =
-        io.opentelemetry.common.Attributes.newBuilder();
+        io.opentelemetry.common.Attributes.builder();
     applicationAttributes.forEach(
         new AttributeConsumer() {
           @Override

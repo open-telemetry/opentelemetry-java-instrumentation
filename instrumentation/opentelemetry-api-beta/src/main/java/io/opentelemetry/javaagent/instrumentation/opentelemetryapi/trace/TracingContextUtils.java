@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toApplication;
 
-import application.io.grpc.Context;
+import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.Span;
@@ -24,7 +24,7 @@ public class TracingContextUtils {
   public static Context withSpan(
       Span applicationSpan,
       Context applicationContext,
-      ContextStore<Context, io.grpc.Context> contextStore) {
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
     io.opentelemetry.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
     if (agentSpan == null) {
       if (log.isDebugEnabled()) {
@@ -32,7 +32,7 @@ public class TracingContextUtils {
       }
       return applicationContext;
     }
-    io.grpc.Context agentContext = contextStore.get(applicationContext);
+    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
         log.debug(
@@ -40,11 +40,10 @@ public class TracingContextUtils {
       }
       return applicationContext;
     }
-    io.grpc.Context agentUpdatedContext =
+    io.opentelemetry.context.Context agentUpdatedContext =
         io.opentelemetry.trace.TracingContextUtils.withSpan(agentSpan, agentContext);
-    Context applicationUpdatedContext = applicationContext.fork();
-    contextStore.put(applicationUpdatedContext, agentUpdatedContext);
-    return applicationUpdatedContext;
+    contextStore.put(applicationContext, agentUpdatedContext);
+    return applicationContext;
   }
 
   public static Span getCurrentSpan() {
@@ -52,8 +51,9 @@ public class TracingContextUtils {
   }
 
   public static Span getSpan(
-      Context applicationContext, ContextStore<Context, io.grpc.Context> contextStore) {
-    io.grpc.Context agentContext = contextStore.get(applicationContext);
+      Context applicationContext,
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
+    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
         log.debug(
@@ -65,8 +65,9 @@ public class TracingContextUtils {
   }
 
   public static Span getSpanWithoutDefault(
-      Context applicationContext, ContextStore<Context, io.grpc.Context> contextStore) {
-    io.grpc.Context agentContext = contextStore.get(applicationContext);
+      Context applicationContext,
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
+    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
     if (agentContext == null) {
       if (log.isDebugEnabled()) {
         log.debug(

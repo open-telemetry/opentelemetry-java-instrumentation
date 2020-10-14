@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -36,7 +35,7 @@ public class DispatcherHandlerAdvice {
     // right things so we have to store the context in request itself.
     exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, otelContext);
 
-    otelScope = withScopedContext(otelContext);
+    otelScope = otelContext.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

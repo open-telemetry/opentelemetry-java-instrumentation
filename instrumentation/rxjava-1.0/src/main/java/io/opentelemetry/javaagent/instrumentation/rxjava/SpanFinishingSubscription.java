@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rxjava;
 
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;

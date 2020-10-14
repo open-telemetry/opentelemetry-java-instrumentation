@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTE
 import static io.opentelemetry.trace.TracingContextUtils.getSpan
 import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
-import io.grpc.Context
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.Span
 import javax.servlet.ServletException

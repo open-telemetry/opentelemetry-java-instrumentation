@@ -311,7 +311,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           responseObserver.onError(new AssertionError((Object) "context not preserved"))
           return
         }
-        if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+        if (!TracingContextUtils.getSpan(io.opentelemetry.context.Context.current()).getContext().isValid()) {
           responseObserver.onError(new AssertionError((Object) "span not attached"))
           return
         }
@@ -375,7 +375,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               error.set(new AssertionError((Object) "context not preserved"))
               return
             }
-            if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+            if (!TracingContextUtils.getSpan(io.opentelemetry.context.Context.current()).getContext().isValid()) {
               error.set(new AssertionError((Object) "span not attached"))
               return
             }

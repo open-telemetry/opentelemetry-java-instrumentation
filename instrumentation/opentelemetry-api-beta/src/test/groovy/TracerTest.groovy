@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static application.io.opentelemetry.context.ContextUtils.withScopedContext
 import static application.io.opentelemetry.trace.Span.Kind.PRODUCER
 import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
 import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
 import static application.io.opentelemetry.trace.TracingContextUtils.withSpan
 
-import application.io.grpc.Context
+import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.common.Attributes
 import application.io.opentelemetry.context.Scope
@@ -114,12 +113,12 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "capture span with implicit parent using TracingContextUtils.withSpan and ContextUtils.withScopedContext()"() {
+  def "capture span with implicit parent using TracingContextUtils.withSpan and makeCurrent"() {
     when:
     def tracer = OpenTelemetry.getTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentContext = withSpan(parentSpan, Context.current())
-    Scope parentScope = withScopedContext(parentContext)
+    Scope parentScope = parentContext.makeCurrent()
 
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.end()
@@ -150,7 +149,7 @@ class TracerTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def context = withSpan(parentSpan, Context.ROOT)
+    def context = withSpan(parentSpan, Context.root())
     def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
     testSpan.end()
     parentSpan.end()
@@ -257,7 +256,7 @@ class TracerTest extends AgentTestRunner {
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.recordException(
       new IllegalStateException(),
-      Attributes.newBuilder().setAttribute("dog", "bark").build())
+      Attributes.builder().setAttribute("dog", "bark").build())
     testSpan.end()
 
     then:

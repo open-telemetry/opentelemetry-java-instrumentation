@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -17,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -187,7 +186,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         completeDelegate(result);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           completeDelegate(result);
         }
       }
@@ -201,7 +200,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         failDelegate(ex);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           failDelegate(ex);
         }
       }
@@ -215,7 +214,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         cancelDelegate();
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           cancelDelegate();
         }
       }

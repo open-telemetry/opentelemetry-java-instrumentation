@@ -25,15 +25,15 @@ public final class TracingHandler implements Handler {
    * io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys. The key string must be
    * kept consistent.
    */
-  public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
+  public static final AttributeKey<io.opentelemetry.context.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
           "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
   public void handle(Context ctx) {
-    Attribute<io.grpc.Context> spanAttribute =
+    Attribute<io.opentelemetry.context.Context> spanAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(SERVER_ATTRIBUTE_KEY);
-    io.grpc.Context serverSpanContext = spanAttribute.get();
+    io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
     Span ratpackSpan = TRACER.startSpan("ratpack.handler", Kind.INTERNAL);

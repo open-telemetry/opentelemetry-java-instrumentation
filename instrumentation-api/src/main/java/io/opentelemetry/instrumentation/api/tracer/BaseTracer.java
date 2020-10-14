@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -21,13 +22,13 @@ public abstract class BaseTracer {
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
   // or other non-server root.
-  public static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
-      Context.key("opentelemetry-trace-server-span-key");
+  public static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
+      ContextKey.named("opentelemetry-trace-server-span-key");
 
   // Keeps track of the client span in a subtree corresponding to a client request.
   // Visible for testing
-  public static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
-      Context.key("opentelemetry-trace-auto-client-span-key");
+  public static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+      ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
 
@@ -145,6 +146,6 @@ public abstract class BaseTracer {
   /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
   // TODO when all decorator are replaced with tracers, make this method instance
   public static Span getCurrentServerSpan() {
-    return CONTEXT_SERVER_SPAN_KEY.get(Context.current());
+    return Context.current().getValue(CONTEXT_SERVER_SPAN_KEY);
   }
 }

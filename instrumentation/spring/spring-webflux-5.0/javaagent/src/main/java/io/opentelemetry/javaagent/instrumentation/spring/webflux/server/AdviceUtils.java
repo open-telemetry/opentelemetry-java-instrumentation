@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Scope;
@@ -42,7 +41,8 @@ public class AdviceUtils {
     return operationName;
   }
 
-  public static <T> Mono<T> setPublisherSpan(Mono<T> mono, io.grpc.Context context) {
+  public static <T> Mono<T> setPublisherSpan(
+      Mono<T> mono, io.opentelemetry.context.Context context) {
     return mono.<T>transform(finishSpanNextOrError(context));
   }
 
@@ -52,7 +52,7 @@ public class AdviceUtils {
    * versions.
    */
   public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> finishSpanNextOrError(
-      io.grpc.Context context) {
+      io.opentelemetry.context.Context context) {
     return Operators.lift(
         (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, context));
   }
@@ -72,11 +72,12 @@ public class AdviceUtils {
   private static void finishSpanIfPresentInAttributes(
       Map<String, Object> attributes, Throwable throwable) {
 
-    io.grpc.Context context = (io.grpc.Context) attributes.remove(CONTEXT_ATTRIBUTE);
+    io.opentelemetry.context.Context context =
+        (io.opentelemetry.context.Context) attributes.remove(CONTEXT_ATTRIBUTE);
     finishSpanIfPresent(context, throwable);
   }
 
-  static void finishSpanIfPresent(io.grpc.Context context, Throwable throwable) {
+  static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
     if (context != null) {
       Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
@@ -90,11 +91,11 @@ public class AdviceUtils {
   public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T> {
 
     private final CoreSubscriber<? super T> subscriber;
-    private final io.grpc.Context otelContext;
+    private final io.opentelemetry.context.Context otelContext;
     private final Context context;
 
     public SpanFinishingSubscriber(
-        CoreSubscriber<? super T> subscriber, io.grpc.Context otelContext) {
+        CoreSubscriber<? super T> subscriber, io.opentelemetry.context.Context otelContext) {
       this.subscriber = subscriber;
       this.otelContext = otelContext;
       context = subscriber.currentContext().put(Span.class, otelContext);
@@ -102,14 +103,14 @@ public class AdviceUtils {
 
     @Override
     public void onSubscribe(Subscription s) {
-      try (Scope scope = withScopedContext(otelContext)) {
+      try (Scope scope = otelContext.makeCurrent()) {
         subscriber.onSubscribe(s);
       }
     }
 
     @Override
     public void onNext(T t) {
-      try (Scope scope = withScopedContext(otelContext)) {
+      try (Scope scope = otelContext.makeCurrent()) {
         subscriber.onNext(t);
       }
     }

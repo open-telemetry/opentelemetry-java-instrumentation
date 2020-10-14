@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -35,8 +34,8 @@ public class NettyHttpClientTracer
       //  spans, do we still need this condition?
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       Context context = withSpan(span, Context.current());
-      context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-      return withScopedContext(context);
+      context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+      return context.makeCurrent();
     }
   }
 

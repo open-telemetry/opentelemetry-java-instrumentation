@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.grpc.Context
+import io.opentelemetry.context.Context;
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.context.ContextUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
 import io.opentelemetry.trace.TracingContextUtils
@@ -50,7 +49,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
   def "test getOrCreateSpan when existing client span"() {
     setup:
     def existing = ClientDecorator.getOrCreateSpan("existing", TRACER)
-    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(existing))
+    def scope = ClientDecorator.currentContextWith(existing).makeCurrent()
 
     when:
     def span = ClientDecorator.getOrCreateSpan("test", TRACER)
@@ -65,7 +64,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
   def "test getOrCreateSpan internal after client span"() {
     setup:
     def client = ClientDecorator.getOrCreateSpan("existing", TRACER)
-    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(client))
+    def scope = ClientDecorator.currentContextWith(client).makeCurrent()
 
     when:
     def internal = TRACER.spanBuilder("internal").setSpanKind(Span.Kind.INTERNAL).startSpan()

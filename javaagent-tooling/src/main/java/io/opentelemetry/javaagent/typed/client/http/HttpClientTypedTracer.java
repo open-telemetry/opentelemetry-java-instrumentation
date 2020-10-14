@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.typed.client.http;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.typed.client.ClientTypedTracer;
 import io.opentelemetry.trace.TracingContextUtils;

@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

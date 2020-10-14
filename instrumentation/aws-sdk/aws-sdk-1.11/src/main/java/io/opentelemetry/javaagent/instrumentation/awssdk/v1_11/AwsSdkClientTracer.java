@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -69,8 +68,8 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   @Override
   public Scope startScope(Span span, Request<?> request) {
     Context context = withSpan(span, Context.current());
-    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-    return withScopedContext(context);
+    context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+    return context.makeCurrent();
   }
 
   @Override

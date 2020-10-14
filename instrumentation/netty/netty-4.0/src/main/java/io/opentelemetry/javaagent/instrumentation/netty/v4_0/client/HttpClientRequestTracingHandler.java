@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer.TRACER;
 
-import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
@@ -33,7 +32,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     Context parentContext =
         ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
     if (parentContext != null) {
-      parentScope = withScopedContext(parentContext);
+      parentScope = parentContext.makeCurrent();
     }
 
     HttpRequest request = (HttpRequest) msg;

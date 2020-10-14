@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
@@ -33,7 +32,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onStart() {
     Context context = contextRef.get();
     if (context != null) {
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onStart();
       }
     } else {
@@ -45,7 +44,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onNext(T value) {
     Context context = contextRef.get();
     if (context != null) {
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onNext(value);
       }
     } else {
@@ -58,7 +57,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
       Throwable error = null;
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onCompleted();
       } catch (Throwable t) {
         error = t;

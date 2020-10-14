@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import application.io.grpc.Context;
+import application.io.opentelemetry.context.Context;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.baggage.Baggage;
 import io.opentelemetry.javaagent.tooling.Instrumenter;

@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;

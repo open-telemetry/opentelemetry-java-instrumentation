@@ -106,8 +106,6 @@ class MeterTest extends AgentTestRunner {
     } else {
       point.labels == io.opentelemetry.common.Labels.of("q", "r")
     }
-    point.count == 2
-    point.sum == sum
 
     where:
     builderMethod                | bind  | value1 | value2 | sum
@@ -184,19 +182,19 @@ class MeterTest extends AgentTestRunner {
     def point = metricData.points.iterator().next()
     point.labels == io.opentelemetry.common.Labels.of("q", "r")
     if (builderMethod.startsWith("long")) {
-      point."$valueMethod" == 123
+      point.value == 123
     } else {
-      point."$valueMethod" == 1.23
+      point.value == 1.23
     }
 
     where:
     builderMethod                    | valueMethod | expectedType
     "longSumObserverBuilder"         | "value"     | MONOTONIC_LONG
     "longUpDownSumObserverBuilder"   | "value"     | NON_MONOTONIC_LONG
-    "longValueObserverBuilder"       | "sum"       | SUMMARY
+    "longValueObserverBuilder"       | "sum"       | NON_MONOTONIC_LONG
     "doubleSumObserverBuilder"       | "value"     | MONOTONIC_DOUBLE
     "doubleUpDownSumObserverBuilder" | "value"     | NON_MONOTONIC_DOUBLE
-    "doubleValueObserverBuilder"     | "sum"       | SUMMARY
+    "doubleValueObserverBuilder"     | "sum"       | NON_MONOTONIC_DOUBLE
   }
 
   def "test batch recorder"() {

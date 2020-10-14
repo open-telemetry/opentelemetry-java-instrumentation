@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import java.io.InputStream;
@@ -103,7 +102,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (parentContext != null) {
       // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
       // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-      ScopeHolder.CURRENT.set(ContextUtils.withScopedContext(parentContext));
+      ScopeHolder.CURRENT.set(parentContext.makeCurrent());
     }
   }
 

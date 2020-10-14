@@ -118,9 +118,10 @@ dependencies {
     // latest snapshots are used, because the opentelemetry-sdk snapshot pom references these
     // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
     implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry
+    // implementation group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-baggage', version: versions.opentelemetryBaggage
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-baggage', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-otproto', version: versions.opentelemetryOther

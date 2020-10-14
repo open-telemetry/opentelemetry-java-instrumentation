@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
@@ -80,8 +79,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
     OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-    return withScopedContext(context);
+    context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+    return context.makeCurrent();
   }
 
   public void end(Span span, RESPONSE response) {
@@ -109,7 +108,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
    */
   private Span startSpan(REQUEST request, String name, long startTimeNanos) {
     Context context = Context.current();
-    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = context.getValue(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

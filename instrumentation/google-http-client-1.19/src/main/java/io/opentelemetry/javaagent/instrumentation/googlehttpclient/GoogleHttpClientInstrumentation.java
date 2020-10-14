@@ -16,8 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -95,7 +94,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         span = TracingContextUtils.getSpan(context);
-        scope = ContextUtils.withScopedContext(context);
+        scope = context.makeCurrent();
       }
     }
 

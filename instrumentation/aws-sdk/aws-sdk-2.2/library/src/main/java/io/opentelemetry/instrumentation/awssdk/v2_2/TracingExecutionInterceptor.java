@@ -28,7 +28,7 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 /** AWS request execution interceptor */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  static final ExecutionAttribute<io.grpc.Context> CONTEXT_ATTRIBUTE =
+  static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
       new ExecutionAttribute<>("io.opentelemetry.auto.Context");
 
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
@@ -75,7 +75,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer(), kind);
-    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, withSpan(span, io.grpc.Context.current()));
+    executionAttributes.putAttribute(
+        CONTEXT_ATTRIBUTE, withSpan(span, io.opentelemetry.context.Context.current()));
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);

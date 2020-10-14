@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.grizzly.client.GrizzlyC
 
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Pair;

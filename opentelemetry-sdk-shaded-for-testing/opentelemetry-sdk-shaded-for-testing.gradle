@@ -27,9 +27,6 @@ shadowJar {
   relocate "org.checkerframework", "io.opentelemetry.javaagent.shaded.org.checkerframework"
   relocate "org.codehaus", "io.opentelemetry.javaagent.shaded.org.codehaus"
 
-  // this is brought by OpenTelemetry API
-  exclude "io/grpc/**"
-
   exclude 'META-INF/maven/**'
   exclude 'org/codehaus/mojo/animal_sniffer/**' // this is Java 8 bytecode
 }

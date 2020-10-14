@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.TRACER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.trace.Span;

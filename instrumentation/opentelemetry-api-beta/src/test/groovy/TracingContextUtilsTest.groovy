@@ -8,7 +8,7 @@ import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentS
 import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
 import static application.io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault
 
-import application.io.grpc.Context
+import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.OpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 

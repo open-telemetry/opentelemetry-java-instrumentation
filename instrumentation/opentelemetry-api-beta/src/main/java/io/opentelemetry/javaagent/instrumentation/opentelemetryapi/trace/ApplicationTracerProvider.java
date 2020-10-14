@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.grpc.Context;
+import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.internal.Obfuscated;
 import application.io.opentelemetry.trace.Tracer;
 import application.io.opentelemetry.trace.TracerProvider;
@@ -20,11 +20,11 @@ public class ApplicationTracerProvider implements TracerProvider, Obfuscated {
 
   private static final AtomicBoolean messageAlreadyLogged = new AtomicBoolean();
 
-  private final ContextStore<Context, io.grpc.Context> contextStore;
+  private final ContextStore<Context, io.opentelemetry.context.Context> contextStore;
   private final TracerProvider applicationOriginalTracerProvider;
 
   public ApplicationTracerProvider(
-      ContextStore<Context, io.grpc.Context> contextStore,
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore,
       TracerProvider applicationOriginalTracerProvider) {
     this.contextStore = contextStore;
     this.applicationOriginalTracerProvider = applicationOriginalTracerProvider;

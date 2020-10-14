@@ -19,8 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -115,7 +114,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletContext;
       }
 
-      try (Scope ignored = ContextUtils.withScopedContext(parent)) {
+      try (Scope ignored = parent.makeCurrent()) {
         span = TRACER.startSpan(method);
 
         // save the original servlet span before overwriting the request attribute, so that it can

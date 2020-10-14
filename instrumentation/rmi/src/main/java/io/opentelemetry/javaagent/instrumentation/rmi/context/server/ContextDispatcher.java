@@ -12,7 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextProp
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;

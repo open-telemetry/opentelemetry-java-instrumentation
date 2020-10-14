@@ -18,7 +18,6 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".context.ContextUtils",
       packageName + ".context.ApplicationScope",
       packageName + ".context.NoopScope",
       packageName + ".context.propagation.ApplicationContextPropagators",
@@ -88,6 +87,7 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("application.io.grpc.Context", "io.grpc.Context");
+    return singletonMap(
+        "application.io.opentelemetry.context.Context", "io.opentelemetry.context.Context");
   }
 }

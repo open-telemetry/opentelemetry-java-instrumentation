@@ -36,8 +36,7 @@ public class PropagatorsInitializer {
   private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
       ImmutableMap.<String, TextMapPropagator>builder()
           .put(TRACE_CONTEXT, HttpTraceContext.getInstance())
-          .put(B3, B3Propagator.getMultipleHeaderPropagator())
-          .put(B3_SINGLE, B3Propagator.getSingleHeaderPropagator())
+          .put(B3, B3Propagator.getInstance())
           .put(JAEGER, JaegerPropagator.getInstance())
           .put(OT_TRACER, OtTracerPropagator.getInstance())
           .put(XRAY, AwsXRayPropagator.getInstance())

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.TRACER;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
@@ -16,8 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -103,7 +102,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         }
       }
 
-      scope = withScopedContext(newContext);
+      scope = newContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -142,7 +141,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       if (callback != null) {
         if (parent != null) {
-          try (Scope ignored = withScopedContext(parent)) {
+          try (Scope ignored = parent.makeCurrent()) {
             callback.onCompletion(metadata, exception);
           }
         } else {

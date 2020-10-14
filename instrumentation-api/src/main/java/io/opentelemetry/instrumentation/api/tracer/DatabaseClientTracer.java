@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
@@ -57,9 +56,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context clientSpanContext = Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context clientSpanContext = Context.current().withValues(CONTEXT_CLIENT_SPAN_KEY, span);
     Context newContext = withSpan(span, clientSpanContext);
-    return withScopedContext(newContext);
+    return newContext.makeCurrent();
   }
 
   @Override
@@ -69,7 +68,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   public Span getClientSpan() {
     Context context = Context.current();
-    return CONTEXT_CLIENT_SPAN_KEY.get(context);
+    return context.getValue(CONTEXT_CLIENT_SPAN_KEY);
   }
 
   @Override

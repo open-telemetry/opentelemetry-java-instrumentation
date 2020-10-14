@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;

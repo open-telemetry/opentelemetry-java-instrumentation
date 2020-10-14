@@ -7,7 +7,7 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.trace.TracingContextUtils.getSpan
 
-import io.grpc.Context
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.trace.attributes.SemanticAttributes

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.TRACER;
 
-import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.trace.Span;
@@ -33,7 +32,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
     // We want the callback in the scope of the parent, not the client span
     if (parentContext != null) {
-      try (Scope ignored = withScopedContext(parentContext)) {
+      try (Scope ignored = parentContext.makeCurrent()) {
         ctx.fireChannelRead(msg);
       }
     } else {

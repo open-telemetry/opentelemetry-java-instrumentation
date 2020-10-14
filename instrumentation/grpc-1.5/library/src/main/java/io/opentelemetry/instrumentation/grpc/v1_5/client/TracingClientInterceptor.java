@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
@@ -14,7 +13,6 @@ import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientCall.Listener;
 import io.grpc.ClientInterceptor;
-import io.grpc.Context;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Grpc;
@@ -23,6 +21,7 @@ import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.common.Attributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
@@ -61,7 +60,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     GrpcHelper.prepareSpan(span, methodName);
     Context context = withSpan(span, Context.current());
     final ClientCall<ReqT, RespT> result;
-    try (Scope ignored = withScopedContext(context)) {
+    try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);

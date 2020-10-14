@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
-import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
@@ -17,6 +16,8 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.common.Attributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -64,10 +65,13 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     Context context = TracingContextUtils.withSpan(span, Context.current());
 
-    try {
+    try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
           Contexts.interceptCall(
-              context, new TracingServerCall<>(call, span, tracer), headers, next),
+              io.grpc.Context.current(),
+              new TracingServerCall<>(call, span, tracer),
+              headers,
+              next),
           span,
           tracer);
     } catch (Throwable e) {

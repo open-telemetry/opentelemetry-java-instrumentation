@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

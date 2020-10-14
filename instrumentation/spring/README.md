@@ -221,7 +221,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
@@ -504,7 +504,7 @@ Include the two classes below to your MainService project to add this functional
 
 import java.io.IOException;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 

@@ -13,7 +13,5 @@ dependencies {
 // and then its usage can be unshaded after OpenTelemetry API is shaded
 // (see more explanation in opentelemetry-api-beta.gradle)
 shadowJar {
-
   relocate "io.opentelemetry", "application.io.opentelemetry"
-  relocate "io.grpc", "application.io.grpc"
 }

@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.typed.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.trace.Tracer;
@@ -31,7 +30,7 @@ public class AdviceUtils {
     if (state != null) {
       Context parentContext = state.getAndResetParentContext();
       if (parentContext != null) {
-        return ContextUtils.withScopedContext(parentContext);
+        return parentContext.makeCurrent();
       }
     }
     return null;

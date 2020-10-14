@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
@@ -27,7 +26,7 @@ public class FilterAdvice {
 
     Context context = TRACER.getServerContext(ctx);
     if (context != null) {
-      scope = withScopedContext(context);
+      scope = context.makeCurrent();
     }
   }
 
