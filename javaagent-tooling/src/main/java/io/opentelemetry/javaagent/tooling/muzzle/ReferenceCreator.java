@@ -43,7 +43,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @param entryPointClassName Starting point for generating references.
    * @param loader Classloader used to read class bytes.
-   * @return Map of [referenceClassName -> Reference]
+   * @return Map of [referenceClassName to Reference]
    * @throws IllegalStateException if class is not found or unable to be loaded.
    */
   public static Map<String, Reference> createReferencesFrom(

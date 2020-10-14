@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
@@ -19,10 +20,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Instrumentation for methods annotated with {@link
- * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation.
- */
+/** Instrumentation for methods annotated with {@link WithSpan} annotation. */
 @AutoService(Instrumenter.class)
 public final class WithSpanAnnotationInstrumentation
     extends AbstractTraceAnnotationInstrumentation {

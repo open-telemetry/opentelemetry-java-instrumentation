@@ -3,20 +3,21 @@ name: PR build
 on: pull_request
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up JDK 11 for running checks
         uses: actions/setup-java@v1
         with:
-          java-version: ${{ matrix.java }}
+          java-version: 11
 
-      - name: Check
+      - name: Build
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk11
-          arguments: check --stacktrace -x :smoke-tests:test
+          arguments: build --stacktrace -x :smoke-tests:test
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -124,7 +125,7 @@ jobs:
         run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
 
   accept-pr:
-    needs: [ check, test, smoke-test, muzzle ]
+    needs: [ build, test, smoke-test, muzzle ]
     runs-on: ubuntu-latest
     steps:
       - name: Success

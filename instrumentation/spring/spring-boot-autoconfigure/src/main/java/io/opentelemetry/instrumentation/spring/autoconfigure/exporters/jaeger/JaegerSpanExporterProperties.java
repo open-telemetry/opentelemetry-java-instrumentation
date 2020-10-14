@@ -13,7 +13,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link JaegerSpanExporter}
+ * Configuration for {@link io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter}
  *
  * <p>Get Exporter Service Name
  *

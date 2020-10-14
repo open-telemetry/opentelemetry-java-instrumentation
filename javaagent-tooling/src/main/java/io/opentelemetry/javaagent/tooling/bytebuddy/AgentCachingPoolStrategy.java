@@ -32,7 +32,7 @@ import net.bytebuddy.pool.TypePool;
  *   There two core parts to the cache...
  *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;
  *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key of
- *       ClassLoader & class name
+ *       ClassLoader and class name
  * </ul>
  *
  * <p>This design was chosen to create a single limited size cache that can be adjusted for the

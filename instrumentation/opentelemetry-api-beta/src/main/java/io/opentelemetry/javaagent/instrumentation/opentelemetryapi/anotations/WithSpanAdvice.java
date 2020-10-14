@@ -15,8 +15,7 @@ import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
 /**
- * Instrumentation for methods annotated with {@link
- * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation.
+ * Instrumentation for methods annotated with {@link WithSpan} annotation.
  *
  * @see WithSpanAnnotationInstrumentation
  */

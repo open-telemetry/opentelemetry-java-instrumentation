@@ -226,13 +226,13 @@ public interface Instrumenter {
     /** @return A type matcher used to match the class under transform. */
     public abstract ElementMatcher<? super TypeDescription> typeMatcher();
 
-    /** @return A map of matcher->advice */
+    /** @return A map of matcher to advice */
     public abstract Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 
     /**
      * Context stores to define for this instrumentation.
      *
-     * <p>A map of {class-name -> context-class-name}. Keys (and their subclasses) will be
+     * <p>A map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
      * associated with a context of the value.
      */
     public Map<String, String> contextStore() {
