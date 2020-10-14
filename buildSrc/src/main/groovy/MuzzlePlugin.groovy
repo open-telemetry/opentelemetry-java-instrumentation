@@ -74,7 +74,7 @@ class MuzzlePlugin implements Plugin<Project> {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
           ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
           ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
         }
@@ -86,7 +86,7 @@ class MuzzlePlugin implements Plugin<Project> {
       description = "Print references created by instrumentation muzzle"
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
       }
@@ -340,7 +340,7 @@ class MuzzlePlugin implements Plugin<Project> {
         ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
         } finally {

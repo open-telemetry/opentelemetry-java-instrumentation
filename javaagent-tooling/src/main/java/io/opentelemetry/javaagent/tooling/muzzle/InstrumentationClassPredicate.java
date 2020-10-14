@@ -5,13 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-/**
- * Defines a set of packages for which we'll create references.
- *
- * <p>For now we're hardcoding this to the instrumentation and javaagent-tooling packages so we only
- * create references from the method advice and helper classes.
- */
-final class ReferenceCreationPredicate {
+public final class InstrumentationClassPredicate {
   // non-shaded packages
   private static final String AUTO_INSTRUMENTATION_PACKAGE =
       "io.opentelemetry.javaagent.instrumentation.";
@@ -23,7 +17,16 @@ final class ReferenceCreationPredicate {
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
   private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
-  static boolean shouldCreateReferenceFor(String className) {
+  /**
+   * Defines which classes are treated by muzzle as "internal", "helper" instrumentation classes.
+   *
+   * <p>This set of classes is defined by a package naming convention: all automatic and manual
+   * instrumentation classes and {@code javaagent.tooling} classes are treated as "helper" classes
+   * and are subjected to the reference collection process. All others (including {@code
+   * instrumentation-api} and {@code javaagent-api} modules are not scanned for referenced (but
+   * references to them are collected).
+   */
+  public static boolean isInstrumentationClass(String className) {
     if (className.startsWith(INSTRUMENTATION_API_PACKAGE)
         || className.startsWith(AUTO_INSTRUMENTATION_API_PACKAGE)) {
       return false;
@@ -33,5 +36,5 @@ final class ReferenceCreationPredicate {
         || className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE);
   }
 
-  private ReferenceCreationPredicate() {}
+  private InstrumentationClassPredicate() {}
 }

@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle;
+package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
+import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
@@ -15,28 +17,40 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import net.bytebuddy.dynamic.ClassFileLocator;
 
-/**
- * Entry point for muzzle version scan gradle plugin.
- *
- * <p>For each instrumenter on the classpath, run muzzle validation and throw an exception if any
- * mismatches are detected.
- *
- * <p>Additionally, after a successful muzzle validation run each instrumenter's helper injector.
- */
-public class MuzzleVersionScanPlugin {
+/** Entry point for the muzzle gradle plugin. */
+public final class MuzzleGradlePluginUtil {
 
+  /**
+   * Verifies that all instrumenters present in the {@code agentClassLoader} can be safely applied
+   * to the passed {@code userClassLoader}.
+   *
+   * <p>This method throws whenever one of the following step fails (and {@code assertPass} is
+   * true):
+   *
+   * <ol>
+   *   <li>{@code userClassLoader} is not matched by the {@link Default#classLoaderMatcher()} method
+   *   <li>{@link ReferenceMatcher} of any instrumenter finds any mismatch
+   *   <li>any helper class defined in {@link Default#helperClassNames()} fails to be injected into
+   *       {@code userClassLoader}
+   * </ol>
+   *
+   * When {@code assertPass = false} this method behaves in an opposite way: failure in any of the
+   * first two steps is expected (helper classes are not injected at all).
+   *
+   * <p>This method is repeatedly called by the {@code :muzzle} gradle task - each tested dependency
+   * version passes different {@code userClassLoader}.
+   */
   public static void assertInstrumentationMuzzled(
-      ClassLoader instrumentationLoader, ClassLoader userClassLoader, boolean assertPass)
+      ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
     // muzzle validate all instrumenters
-    for (Instrumenter instrumenter :
-        ServiceLoader.load(Instrumenter.class, instrumentationLoader)) {
+    for (Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class, agentClassLoader)) {
       if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
         // TraceConfigInstrumentation doesn't do muzzle checks
         // check on TracerClassInstrumentation instead
         instrumenter =
             (Instrumenter)
-                instrumentationLoader
+                agentClassLoader
                     .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
                     .getDeclaredConstructor()
                     .newInstance();
@@ -47,10 +61,10 @@ public class MuzzleVersionScanPlugin {
       }
       Method m = null;
       try {
-        m = instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
+        m = instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
         m.setAccessible(true);
         ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
-        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
+        List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
         boolean classLoaderMatch =
             ((Instrumenter.Default) instrumenter).classLoaderMatcher().matches(userClassLoader);
@@ -70,7 +84,7 @@ public class MuzzleVersionScanPlugin {
             System.err.println("-- classloader mismatch");
           }
 
-          for (Reference.Mismatch mismatch : mismatches) {
+          for (Mismatch mismatch : mismatches) {
             System.err.println("-- " + mismatch);
           }
           throw new RuntimeException("Instrumentation failed Muzzle validation");
@@ -83,14 +97,13 @@ public class MuzzleVersionScanPlugin {
     }
     // run helper injector on all instrumenters
     if (assertPass) {
-      for (Instrumenter instrumenter :
-          ServiceLoader.load(Instrumenter.class, instrumentationLoader)) {
+      for (Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class, agentClassLoader)) {
         if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
           // TraceConfigInstrumentation doesn't do muzzle checks
           // check on TracerClassInstrumentation instead
           instrumenter =
               (Instrumenter)
-                  instrumentationLoader
+                  agentClassLoader
                       .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
                       .getDeclaredConstructor()
                       .newInstance();
@@ -105,7 +118,7 @@ public class MuzzleVersionScanPlugin {
           String[] helperClassNames = defaultInstrumenter.helperClassNames();
           if (helperClassNames.length > 0) {
             new HelperInjector(
-                    MuzzleVersionScanPlugin.class.getSimpleName(),
+                    MuzzleGradlePluginUtil.class.getSimpleName(),
                     createHelperMap(defaultInstrumenter))
                 .transform(null, null, userClassLoader, null);
           }
@@ -130,13 +143,19 @@ public class MuzzleVersionScanPlugin {
     return helperMap;
   }
 
-  public static void printMuzzleReferences(ClassLoader instrumentationLoader) {
+  /**
+   * Prints all references from all instrumenters present in the passed {@code
+   * instrumentationClassLoader}.
+   *
+   * <p>Called by the {@code :printReferences} gradle task.
+   */
+  public static void printMuzzleReferences(ClassLoader instrumentationClassLoader) {
     for (Instrumenter instrumenter :
-        ServiceLoader.load(Instrumenter.class, instrumentationLoader)) {
+        ServiceLoader.load(Instrumenter.class, instrumentationClassLoader)) {
       if (instrumenter instanceof Instrumenter.Default) {
         try {
           Method getMuzzleMethod =
-              instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
+              instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
           ReferenceMatcher muzzle;
           try {
             getMuzzleMethod.setAccessible(true);
@@ -196,5 +215,5 @@ public class MuzzleVersionScanPlugin {
     return builder.toString();
   }
 
-  private MuzzleVersionScanPlugin() {}
+  private MuzzleGradlePluginUtil() {}
 }

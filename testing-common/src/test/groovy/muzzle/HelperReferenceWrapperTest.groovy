@@ -5,8 +5,11 @@
 
 package muzzle
 
-import io.opentelemetry.javaagent.tooling.muzzle.HelperReferenceWrapper
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag
+import static java.util.stream.Collectors.toList
+
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper
 import net.bytebuddy.jar.asm.Type
 import net.bytebuddy.pool.TypePool
 import spock.lang.Shared
@@ -17,9 +20,9 @@ class HelperReferenceWrapperTest extends Specification {
   @Shared
   def baseHelperClass = new Reference.Builder(HelperReferenceWrapperTest.name + '$BaseHelper')
     .withSuperName(HelperReferenceWrapperTestClasses.AbstractClasspathType.name)
-    .withFlag(Reference.Flag.ABSTRACT)
+    .withFlag(ManifestationFlag.ABSTRACT)
     .withMethod(new Reference.Source[0], new Reference.Flag[0], "foo", Type.VOID_TYPE)
-    .withMethod(new Reference.Source[0], [Reference.Flag.ABSTRACT] as Reference.Flag[], "abstract", Type.INT_TYPE)
+    .withMethod(new Reference.Source[0], [ManifestationFlag.ABSTRACT] as Reference.Flag[], "abstract", Type.INT_TYPE)
     .build()
 
   @Shared
@@ -44,7 +47,7 @@ class HelperReferenceWrapperTest extends Specification {
     with(helperWrapper) { helper ->
       !helper.abstract
 
-      with(helper.methods.toList()) {
+      with(helper.methods.collect(toList())) {
         it.size() == 1
         with(it[0]) {
           !it.abstract
@@ -54,12 +57,12 @@ class HelperReferenceWrapperTest extends Specification {
       }
 
       helper.hasSuperTypes()
-      with(helper.superTypes.toList()) {
+      with(helper.superTypes.collect(toList())) {
         it.size() == 2
         with(it[0]) { baseHelper ->
           baseHelper.abstract
 
-          with(baseHelper.methods.toList()) {
+          with(baseHelper.methods.collect(toList())) {
             it.size() == 2
             with(it[0]) {
               !it.abstract
@@ -74,15 +77,15 @@ class HelperReferenceWrapperTest extends Specification {
           }
 
           baseHelper.hasSuperTypes()
-          with(baseHelper.superTypes.toList()) {
+          with(baseHelper.superTypes.collect(toList())) {
             it.size() == 1
             with(it[0]) { abstractClasspathType ->
               abstractClasspathType.abstract
 
-              abstractClasspathType.methods.empty
+              abstractClasspathType.getMethods().collect(toList()).isEmpty()
 
               abstractClasspathType.hasSuperTypes()
-              with(abstractClasspathType.superTypes.toList()) {
+              with(abstractClasspathType.superTypes.collect(toList())) {
                 it.size() == 2
                 with(it[0]) { object ->
                   !object.hasSuperTypes()
@@ -90,7 +93,7 @@ class HelperReferenceWrapperTest extends Specification {
                 with(it[1]) { interface1 ->
                   interface1.abstract
 
-                  with(interface1.methods.toList()) {
+                  with(interface1.methods.collect(toList())) {
                     it.size() == 1
                     with(it[0]) {
                       it.abstract
@@ -100,7 +103,7 @@ class HelperReferenceWrapperTest extends Specification {
                   }
 
                   !interface1.hasSuperTypes()
-                  interface1.superTypes.empty
+                  interface1.getSuperTypes().collect(toList()).isEmpty()
                 }
               }
             }
@@ -109,7 +112,7 @@ class HelperReferenceWrapperTest extends Specification {
         with(it[1]) { interface2 ->
           interface2.abstract
 
-          with(interface2.methods.toList()) {
+          with(interface2.methods.collect(toList())) {
             it.size() == 1
             with(it[0]) {
               it.abstract
@@ -119,7 +122,7 @@ class HelperReferenceWrapperTest extends Specification {
           }
 
           !interface2.hasSuperTypes()
-          interface2.superTypes.empty
+          interface2.getSuperTypes().collect(toList()).isEmpty()
         }
       }
     }
