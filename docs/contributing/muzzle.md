@@ -61,16 +61,16 @@ it's not an optional feature.
 
 The gradle plugin defines two tasks:
 
-* `printReferences` task prints all API references in a given module:
-    ```sh
-    ./gradlew :instrumentation:google-http-client-1.19:printReferences
-    ```
-
 * `muzzle` task runs the runtime muzzle verification against different library versions:
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:muzzle
     ```
     If a new, incompatible version of the instrumented library is published it fails the build.
+
+* `printReferences` task prints all API references in a given module:
+    ```sh
+    ./gradlew :instrumentation:google-http-client-1.19:printReferences
+    ```
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:

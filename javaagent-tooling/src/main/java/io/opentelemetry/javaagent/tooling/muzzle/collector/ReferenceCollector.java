@@ -122,14 +122,14 @@ public class ReferenceCollector extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Flag computeMinimumClassAccess(Type from, Type to) {
+  private static MinimumVisibilityFlag computeMinimumClassAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
         .equals(internalPackageName(to.getInternalName()))) {
       return MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
     } else {
-      return VisibilityFlag.PUBLIC;
+      return MinimumVisibilityFlag.PUBLIC;
     }
   }
 
@@ -156,7 +156,8 @@ public class ReferenceCollector extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static MinimumVisibilityFlag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
+  private static MinimumVisibilityFlag computeMinimumMethodAccess(
+      Type from, Type to, Type methodType) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else {

@@ -232,6 +232,12 @@ public final class Reference {
      * @see net.bytebuddy.description.modifier.Visibility
      */
     enum MinimumVisibilityFlag implements Flag {
+      PUBLIC {
+        @Override
+        public boolean matches(int asmFlags) {
+          return VisibilityFlag.PUBLIC.matches(asmFlags);
+        }
+      },
       PROTECTED_OR_HIGHER {
         @Override
         public boolean matches(int asmFlags) {
