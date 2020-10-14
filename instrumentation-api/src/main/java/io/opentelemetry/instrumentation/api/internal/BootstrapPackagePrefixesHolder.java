@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.config;
+package io.opentelemetry.instrumentation.api.internal;
 
 /**
- * {@link BootstrapPackagePrefixesHolder} in an utility class that holds package prefixes. The
+ * {@link BootstrapPackagePrefixesHolder} is an utility class that holds package prefixes. The
  * classes from these packages are pushed to the bootstrap classloader.
  *
  * <p>The prefixes are loaded by {@code AgentInstaller} and consumed by classloader instrumentation.

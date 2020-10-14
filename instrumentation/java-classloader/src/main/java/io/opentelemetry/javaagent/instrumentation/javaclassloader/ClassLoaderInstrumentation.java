@@ -18,7 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.BootstrapPackagePrefixesHolder;
+import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Constants;
 import io.opentelemetry.javaagent.tooling.Instrumenter;

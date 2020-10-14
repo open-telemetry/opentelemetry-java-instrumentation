@@ -13,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess.ForceFlusher;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
@@ -55,7 +55,7 @@ public class AgentInstaller {
   }
 
   static {
-    BootstrapPackagePrefixesHolder.setBootstrapPrefixes(loadClassPrefixes());
+    BootstrapPackagePrefixesHolder.setBootstrapPrefixes(loadBootstrapPackagesPrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
     // this needs to be done as early as possible - before the first Config.get() call
@@ -211,7 +211,7 @@ public class AgentInstaller {
     return matcher;
   }
 
-  private static String[] loadClassPrefixes() {
+  private static String[] loadBootstrapPackagesPrefixes() {
     List<String> bootstrapPackages =
         new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
