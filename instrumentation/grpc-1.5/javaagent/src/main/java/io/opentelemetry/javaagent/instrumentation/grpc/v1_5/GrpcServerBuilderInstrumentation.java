@@ -48,7 +48,7 @@ public class GrpcServerBuilderInstrumentation extends AbstractGrpcInstrumentatio
         }
       }
       if (shouldRegister) {
-        interceptors.add(0, TracingServerInterceptor.newInterceptor());
+        interceptors.add(TracingServerInterceptor.newInterceptor());
       }
     }
   }

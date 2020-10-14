@@ -18,6 +18,7 @@ import io.grpc.Channel
 import io.grpc.ClientCall
 import io.grpc.ClientInterceptor
 import io.grpc.Context
+import io.grpc.Contexts
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
@@ -323,25 +324,26 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     def port = PortUtils.randomOpenPort()
     Server server
     server = configureServer(ServerBuilder.forPort(port)
-      .addService(greeter))
+      .addService(greeter)
       .intercept(new ServerInterceptor() {
         @Override
         <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
-          def ctx = Context.current().withValue(key, "meow")
-          def oldCtx = ctx.attach()
-          try {
-            return next.startCall(call, headers)
-          } finally {
-            ctx.detach(oldCtx)
+          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+            throw new AssertionError((Object) "span not attached in server interceptor")
           }
+          def ctx = Context.current().withValue(key, "meow")
+          return Contexts.interceptCall(ctx, call, headers, next)
         }
-      })
+      }))
       .build().start()
     ManagedChannelBuilder channelBuilder
     channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
       .intercept(new ClientInterceptor() {
         @Override
         <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+            throw new AssertionError((Object) "span not attached in client interceptor")
+          }
           def ctx = Context.current().withValue(key, "meow")
           def oldCtx = ctx.attach()
           try {
