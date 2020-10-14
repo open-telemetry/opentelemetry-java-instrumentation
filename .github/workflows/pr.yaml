@@ -43,7 +43,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Set JDK ${{ matrix.java }} home
-        run: echo "::set-env name=JAVA_${{ matrix.java }}_HOME::${{ env.JAVA_HOME }}"
+        run: echo JAVA_${{ matrix.java }}_HOME=${{ env.JAVA_HOME }} >> $GITHUB_ENV
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v1
