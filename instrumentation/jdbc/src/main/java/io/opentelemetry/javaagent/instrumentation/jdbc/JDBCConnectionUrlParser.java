@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.jdbc;
+package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.api.jdbc.DBInfo.DEFAULT;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.DBInfo.DEFAULT;
 
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.jdbc.DBInfo.Builder;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -27,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public enum JDBCConnectionUrlParser {
   GENERIC_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
+    Builder doParse(String jdbcUrl, Builder builder) {
       try {
         // Attempt generic parsing
         URI uri = new URI(jdbcUrl);
@@ -68,7 +70,7 @@ public enum JDBCConnectionUrlParser {
    */
   JTDS_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
+    Builder doParse(String jdbcUrl, Builder builder) {
       String serverName = "";
       Integer port = null;
 
@@ -113,7 +115,7 @@ public enum JDBCConnectionUrlParser {
 
   MODIFIED_URL_LIKE() {
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
+    Builder doParse(String jdbcUrl, Builder builder) {
       String type;
       String serverName = "";
       Integer port = null;
@@ -192,7 +194,7 @@ public enum JDBCConnectionUrlParser {
     private static final int DEFAULT_PORT = 5432;
 
     @Override
-    DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
+    Builder doParse(String jdbcUrl, Builder builder) {
       DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
