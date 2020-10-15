@@ -65,8 +65,7 @@ public class CamelContextInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.auto.apachecamel.CamelTracer",
       "io.opentelemetry.instrumentation.auto.apachecamel.CamelEventNotifier",
       "io.opentelemetry.instrumentation.auto.apachecamel.CamelRoutePolicy",
-      "io.opentelemetry.instrumentation.auto.apachecamel.CamelTracingService",
-      "io.opentelemetry.instrumentation.auto.apachecamel.CamelContextInstrumentation"
+      "io.opentelemetry.instrumentation.auto.apachecamel.CamelTracingService"
     };
   }
 
