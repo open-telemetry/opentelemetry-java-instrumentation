@@ -16,6 +16,6 @@ public class OtlpSpanExporterFactory implements SpanExporterFactory {
 
   @Override
   public SpanExporter fromConfig(Properties config) {
-    return OtlpGrpcSpanExporter.newBuilder().readProperties(config).build();
+    return OtlpGrpcSpanExporter.builder().readProperties(config).build();
   }
 }

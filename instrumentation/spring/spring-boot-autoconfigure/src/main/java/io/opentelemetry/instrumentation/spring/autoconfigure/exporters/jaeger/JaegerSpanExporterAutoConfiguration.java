@@ -36,7 +36,7 @@ public class JaegerSpanExporterAutoConfiguration {
   public JaegerGrpcSpanExporter otelJaegerSpanExporter(
       JaegerSpanExporterProperties jaegerSpanExporterProperties) {
 
-    return JaegerGrpcSpanExporter.newBuilder()
+    return JaegerGrpcSpanExporter.builder()
         .setServiceName(jaegerSpanExporterProperties.getServiceName())
         .setDeadlineMs(jaegerSpanExporterProperties.getSpanTimeout().toMillis())
         .setEndpoint(jaegerSpanExporterProperties.getEndpoint())

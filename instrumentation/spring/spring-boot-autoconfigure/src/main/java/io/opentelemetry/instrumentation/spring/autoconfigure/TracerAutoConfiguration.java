@@ -54,7 +54,7 @@ public class TracerAutoConfiguration {
   private void addSpanProcessors(List<SpanExporter> spanExporters) {
     List<SpanProcessor> spanProcessors =
         spanExporters.stream()
-            .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())
+            .map(spanExporter -> SimpleSpanProcessor.builder(spanExporter).build())
             .collect(Collectors.toList());
 
     OpenTelemetrySdk.getTracerManagement()

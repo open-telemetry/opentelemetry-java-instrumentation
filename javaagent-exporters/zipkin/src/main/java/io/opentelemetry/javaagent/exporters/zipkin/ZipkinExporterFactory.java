@@ -16,6 +16,6 @@ public class ZipkinExporterFactory implements SpanExporterFactory {
 
   @Override
   public SpanExporter fromConfig(Properties config) {
-    return ZipkinSpanExporter.newBuilder().readProperties(config).build();
+    return ZipkinSpanExporter.builder().readProperties(config).build();
   }
 }
