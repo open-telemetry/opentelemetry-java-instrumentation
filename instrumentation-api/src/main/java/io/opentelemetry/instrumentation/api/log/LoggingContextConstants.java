@@ -10,8 +10,6 @@ package io.opentelemetry.instrumentation.api.log;
  * instrumentations.
  *
  * @see org.slf4j.MDC
- * @see org.apache.logging.log4j.ThreadContext
- * @see org.apache.log4j.MDC
  */
 public final class LoggingContextConstants {
   /** Key under which the current trace id will be injected into the context data. */

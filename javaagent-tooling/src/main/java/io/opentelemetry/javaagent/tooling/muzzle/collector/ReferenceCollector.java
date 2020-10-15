@@ -54,7 +54,7 @@ public class ReferenceCollector extends ClassVisitor {
    * ByteBuddy plugin.
    *
    * @param entryPointClassName Starting point for generating references.
-   * @return Map of [referenceClassName -> Reference]
+   * @return Map of [referenceClassName to Reference]
    * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
    */
   public static Map<String, Reference> collectReferencesFrom(String entryPointClassName) {

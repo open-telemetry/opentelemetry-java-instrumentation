@@ -5,7 +5,6 @@ apply plugin: 'groovy'
 apply plugin: 'org.gradle.test-retry'
 
 apply from: "$rootDir/gradle/spotless.gradle"
-apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"
 

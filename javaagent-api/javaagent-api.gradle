@@ -3,6 +3,9 @@ group = 'io.opentelemetry.javaagent'
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
+project.ext.minimumBranchCoverage = 0.0
+project.ext.minimumInstructionCoverage = 0.0
+
 dependencies {
   api deps.opentelemetryApi
   compileOnly deps.opentelemetrySdk

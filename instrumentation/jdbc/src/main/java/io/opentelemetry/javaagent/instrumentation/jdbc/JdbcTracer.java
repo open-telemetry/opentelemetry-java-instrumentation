@@ -10,8 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils.connecti
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DBInfo;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.sql.Connection;

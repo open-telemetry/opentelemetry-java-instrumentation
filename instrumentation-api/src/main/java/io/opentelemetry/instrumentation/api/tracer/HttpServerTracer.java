@@ -101,7 +101,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE)}, passing
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object)}, passing
    * {@code response} value of {@code null}.
    */
   @Override
@@ -110,7 +110,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE, long)},
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object, long)},
    * passing {@code timestamp} value of {@code -1}.
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response) {
@@ -119,7 +119,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   /**
    * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
-   * and the {@link Span} status will be set to {@link io.opentelemetry.trace.Status#INTERNAL}.
+   * and the {@link Span} status will be set to {@link
+   * io.opentelemetry.trace.StatusCanonicalCode#ERROR}.
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
     onError(span, unwrapThrowable(throwable));
@@ -138,7 +139,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   /**
    * Returns context stored to the given request-response-loop storage by {@link
-   * #attachServerContext(Context, STORAGE)}.
+   * #attachServerContext(Context, Object)}.
    */
   @Nullable
   public abstract Context getServerContext(STORAGE storage);
