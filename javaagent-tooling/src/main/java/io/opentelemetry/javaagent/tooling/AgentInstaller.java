@@ -55,7 +55,7 @@ public class AgentInstaller {
   }
 
   static {
-    BootstrapPackagePrefixesHolder.setBootstrapPrefixes(loadBootstrapPackagesPrefixes());
+    BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
     // this needs to be done as early as possible - before the first Config.get() call
@@ -211,7 +211,7 @@ public class AgentInstaller {
     return matcher;
   }
 
-  private static String[] loadBootstrapPackagesPrefixes() {
+  private static List<String> loadBootstrapPackagePrefixes() {
     List<String> bootstrapPackages =
         new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
@@ -225,7 +225,7 @@ public class AgentInstaller {
           packagePrefixes);
       bootstrapPackages.addAll(packagePrefixes);
     }
-    return bootstrapPackages.toArray(new String[] {});
+    return bootstrapPackages;
   }
 
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {

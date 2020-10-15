@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * {@link BootstrapPackagePrefixesHolder} is an utility class that holds package prefixes. The
  * classes from these packages are pushed to the bootstrap classloader.
@@ -15,13 +18,17 @@ package io.opentelemetry.instrumentation.api.internal;
  */
 public class BootstrapPackagePrefixesHolder {
 
-  private static String[] bootstrapPrefixes;
+  private static volatile List<String> BOOSTRAP_PACKAGE_PREFIXES;
 
-  public static String[] getBootstrapPrefixes() {
-    return bootstrapPrefixes;
+  public static List<String> getBoostrapPackagePrefixes() {
+    return BOOSTRAP_PACKAGE_PREFIXES;
   }
 
-  public static void setBootstrapPrefixes(String[] prefixes) {
-    bootstrapPrefixes = prefixes;
+  public static void setBoostrapPackagePrefixes(List<String> prefixes) {
+    if (BOOSTRAP_PACKAGE_PREFIXES != null) {
+      // Only possible by misuse of this API, just ignore.
+      return;
+    }
+    BOOSTRAP_PACKAGE_PREFIXES = Collections.unmodifiableList(prefixes);
   }
 }
