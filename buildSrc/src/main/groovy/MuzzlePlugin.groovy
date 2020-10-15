@@ -251,17 +251,16 @@ class MuzzlePlugin implements Plugin<Project> {
     rangeRequest.setRepositories(MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-    Set<String> versions = rangeResult.versions.collect {it.toString()}.toSet()
+
+    allRangeResult.getVersions().removeAll(rangeResult.getVersions())
 
     filterVersions(allRangeResult, muzzleDirective.skipVersions).each { version ->
-      if (!versions.contains(version)) {
-        MuzzleDirective inverseDirective = new MuzzleDirective()
-        inverseDirective.group = muzzleDirective.group
-        inverseDirective.module = muzzleDirective.module
-        inverseDirective.versions = version
-        inverseDirective.assertPass = !muzzleDirective.assertPass
-        inverseDirectives.add(inverseDirective)
-      }
+      MuzzleDirective inverseDirective = new MuzzleDirective()
+      inverseDirective.group = muzzleDirective.group
+      inverseDirective.module = muzzleDirective.module
+      inverseDirective.versions = version
+      inverseDirective.assertPass = !muzzleDirective.assertPass
+      inverseDirectives.add(inverseDirective)
     }
 
     return inverseDirectives
@@ -271,10 +270,10 @@ class MuzzlePlugin implements Plugin<Project> {
     Set<String> result = new HashSet<>()
 
     def predicate = new AcceptableVersions(range, skipVersions)
-    if(predicate.test(range.lowestVersion)){
+    if (predicate.test(range.lowestVersion)) {
       result.add(range.lowestVersion.toString())
     }
-    if(predicate.test(range.highestVersion)){
+    if (predicate.test(range.highestVersion)) {
       result.add(range.highestVersion.toString())
     }
 
