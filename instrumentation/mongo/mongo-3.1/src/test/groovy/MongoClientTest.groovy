@@ -279,7 +279,7 @@ class MongoClientTest extends MongoBaseTest {
         "${SemanticAttributes.DB_SYSTEM.key()}" "mongodb"
         "${SemanticAttributes.DB_NAME.key()}" instance
         "${SemanticAttributes.DB_OPERATION.key()}" operation
-        "${MongoClientTracer.DB_MONGODB_COLLECTION.key()}" collection
+        "${SemanticAttributes.MONGODB_COLLECTION.key()}" collection
       }
     }
   }

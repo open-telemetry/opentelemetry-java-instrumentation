@@ -11,7 +11,6 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
@@ -27,9 +26,6 @@ import org.bson.BsonValue;
 
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
   public static final MongoClientTracer TRACER = new MongoClientTracer();
-
-  public static final AttributeKey<String> DB_MONGODB_COLLECTION =
-      AttributeKey.stringKey("db.mongodb.collection");
 
   // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   @Override
@@ -47,7 +43,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
     String collection = collectionName(event);
     if (collection != null) {
-      span.setAttribute(DB_MONGODB_COLLECTION, collection);
+      span.setAttribute(SemanticAttributes.MONGODB_COLLECTION, collection);
     }
     return super.onConnection(span, event);
   }
