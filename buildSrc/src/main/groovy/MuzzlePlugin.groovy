@@ -302,6 +302,9 @@ class MuzzlePlugin implements Plugin<Project> {
 
     @Override
     boolean test(Version version) {
+      if (version == null) {
+        return false
+      }
       def versionString = version.toString()
       if (skipVersions.contains(versionString)) {
         return false
