@@ -24,19 +24,23 @@ import spock.lang.Shared
 class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
 
   @Shared
-  int portOne = PortUtils.randomOpenPort()
+  int portOne
   @Shared
-  int portTwo = PortUtils.randomOpenPort()
+  int portTwo
   @Shared
   ConfigurableApplicationContext server
   @Shared
   CamelContext clientContext
 
   def setupSpec() {
-    createServer()
+    withRetryOnAddressAlreadyInUse({
+      setupSpecUnderRetry()
+    })
   }
 
-  def createServer() {
+  def setupSpecUnderRetry() {
+    portOne = PortUtils.randomOpenPort()
+    portTwo = PortUtils.randomOpenPort()
     def app = new SpringApplication(TwoServicesConfig)
     app.setDefaultProperties(ImmutableMap.of("service.one.port", portOne, "service.two.port", portTwo))
     server = app.run()

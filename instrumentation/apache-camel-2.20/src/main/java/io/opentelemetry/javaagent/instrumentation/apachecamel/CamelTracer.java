@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel;
+package io.opentelemetry.javaagent.instrumentation.apachecamel;
 /*
  * Includes work from:
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.auto.apachecamel.decorators.DecoratorRegistry;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DecoratorRegistry;
 import io.opentelemetry.trace.Span;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;

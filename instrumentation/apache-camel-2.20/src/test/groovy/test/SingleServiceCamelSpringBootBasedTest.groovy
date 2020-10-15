@@ -27,15 +27,23 @@ class SingleServiceCamelSpringBootBasedTest extends AgentTestRunner {
   @Shared
   OkHttpClient client = OkHttpUtils.client()
   @Shared
-  int port = PortUtils.randomOpenPort()
+  int port
   @Shared
-  URI address = new URI("http://localhost:$port/")
-
+  URI address
 
   def setupSpec() {
+    withRetryOnAddressAlreadyInUse({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
+    port = PortUtils.randomOpenPort()
+    address = new URI("http://localhost:$port/")
     def app = new SpringApplication(SingleServiceConfig)
     app.setDefaultProperties(ImmutableMap.of("camelService.port", port))
     server = app.run()
+    println getClass().name + " http server started at: http://localhost:$port/"
   }
 
   def cleanupSpec() {

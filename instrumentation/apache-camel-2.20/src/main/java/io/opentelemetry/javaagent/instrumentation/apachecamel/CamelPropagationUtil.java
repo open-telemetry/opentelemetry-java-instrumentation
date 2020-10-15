@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel;
+package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
@@ -11,7 +11,9 @@ import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import java.util.Map;
 
-public class CamelPropagationUtil {
+final class CamelPropagationUtil {
+
+  private CamelPropagationUtil() {}
 
   static Context extractParent(final Map<String, Object> exchangeHeaders) {
     return OpenTelemetry.getPropagators()

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel;
+package io.opentelemetry.javaagent.instrumentation.apachecamel;
 /*
  * Includes work from:
  * Copyright Apache Camel Authors
@@ -12,6 +12,7 @@ package io.opentelemetry.instrumentation.auto.apachecamel;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import org.apache.camel.Exchange;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ class ActiveSpanManager {
   }
 
   public static class SpanWithScope {
-    private SpanWithScope parent;
+    @Nullable private SpanWithScope parent;
     private Span span;
     private Scope scope;
 

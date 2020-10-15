@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel.decorators;
+package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.instrumentation.auto.apachecamel.SpanDecorator;
 import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import java.util.HashMap;
 import java.util.Map;
 

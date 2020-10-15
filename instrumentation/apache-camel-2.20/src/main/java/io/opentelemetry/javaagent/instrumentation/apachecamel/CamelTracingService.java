@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel;
+package io.opentelemetry.javaagent.instrumentation.apachecamel;
 /*
  * Includes work from:
  * Copyright Apache Camel Authors

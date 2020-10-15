@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.auto.apachecamel.decorators;
+package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 /*
  * Includes work from:
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.common.Attributes;
-import io.opentelemetry.instrumentation.auto.apachecamel.SpanDecorator;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import java.util.Collections;
@@ -87,12 +86,7 @@ class BaseSpanDecorator implements SpanDecorator {
     if (exchange.isFailed()) {
       span.setAttribute("error", true);
       if (exchange.getException() != null) {
-        Attributes logEvent =
-            Attributes.newBuilder()
-                .setAttribute("error.kind", "Exception")
-                .setAttribute("message", exchange.getException().getMessage())
-                .build();
-        span.addEvent("error", logEvent);
+        span.recordException(exchange.getException());
       }
     }
   }
