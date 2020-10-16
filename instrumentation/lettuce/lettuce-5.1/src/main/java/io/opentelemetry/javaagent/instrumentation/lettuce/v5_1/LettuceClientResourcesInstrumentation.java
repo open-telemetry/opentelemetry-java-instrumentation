@@ -41,6 +41,12 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".RedisCommandNormalizer",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer$Default",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer$CommandAndNumArgs",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer$MultiKeyValue",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer$Eval",
       packageName + ".OpenTelemetryTracing",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTracerProvider",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContextProvider",
