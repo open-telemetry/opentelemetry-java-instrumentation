@@ -18,6 +18,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -73,7 +74,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parent = Context.current();
+      Context parent = Java8Bridge.currentContext();
 
       span = TRACER.startProducerSpan(record);
       Context newContext = withSpan(span, parent);

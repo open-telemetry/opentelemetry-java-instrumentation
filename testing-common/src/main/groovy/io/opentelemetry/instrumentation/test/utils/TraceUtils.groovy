@@ -29,7 +29,7 @@ class TraceUtils {
       //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
       def span = TRACER.startSpan(rootOperationName, Span.Kind.SERVER)
-      Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))
+      Context newContext = withSpan(span, Context.current().withValues(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))
 
 
       try {

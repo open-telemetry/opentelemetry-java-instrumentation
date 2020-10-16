@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -68,7 +68,7 @@ public class VertxRxInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false) Handler<Handler<AsyncResult<?>>> handler) {
-      handler = AsyncResultHandlerWrapper.wrapIfNeeded(handler, Context.current());
+      handler = AsyncResultHandlerWrapper.wrapIfNeeded(handler, Java8Bridge.currentContext());
     }
   }
 
@@ -77,7 +77,7 @@ public class VertxRxInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false) Consumer<Handler<AsyncResult<?>>> handler) {
-      handler = AsyncResultConsumerWrapper.wrapIfNeeded(handler, Context.current());
+      handler = AsyncResultConsumerWrapper.wrapIfNeeded(handler, Java8Bridge.currentContext());
     }
   }
 }

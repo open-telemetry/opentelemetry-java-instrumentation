@@ -193,6 +193,9 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
     // Actual tracing context-switch logic
     public void tracingSuspend() {
+      // TODO(anuraaga): Investigate why test passes only with this call here. Conceptually it seems
+      // weird to overwrite current context like this.
+      myTracingContext = Context.current();
       scope.close();
     }
 

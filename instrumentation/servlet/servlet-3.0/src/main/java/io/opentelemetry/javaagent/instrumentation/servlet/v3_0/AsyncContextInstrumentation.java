@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -76,7 +77,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       ServletRequest request = context.getRequest();
 
-      Context currentContext = Context.current();
+      Context currentContext = Java8Bridge.currentContext();
       Span currentSpan = getSpan(currentContext);
       if (currentSpan.getContext().isValid()) {
         // this tells the dispatched servlet to use the current span as the parent for its work

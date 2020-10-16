@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
@@ -162,7 +163,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Attribute<Context> attribute =
           pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
-      attribute.compareAndSet(null, Context.current());
+      attribute.compareAndSet(null, Java8Bridge.currentContext());
     }
   }
 }

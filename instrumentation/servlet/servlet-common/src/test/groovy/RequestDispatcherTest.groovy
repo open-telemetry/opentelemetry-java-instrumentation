@@ -20,7 +20,7 @@ class RequestDispatcherTest extends AgentTestRunner {
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
-  def mockContext = withSpan(Mock(Span), Context.ROOT)
+  def mockContext = withSpan(Mock(Span), Context.root())
   def dispatcher = new RequestDispatcherUtils(request, response)
 
   def "test dispatch no-parent"() {

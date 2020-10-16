@@ -21,6 +21,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -85,7 +86,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(0) ServletRequest request) {
 
-      Context parentContext = Context.current();
+      Context parentContext = Java8Bridge.currentContext();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
       Context servletContext =
@@ -123,7 +124,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
         // this tells the dispatched servlet to use the current span as the parent for its work
-        Context newContext = withSpan(span, Context.current());
+        Context newContext = withSpan(span, Java8Bridge.currentContext());
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
       scope = TRACER.startScope(span);

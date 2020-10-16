@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -87,7 +88,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      Context parentContext = Context.current();
+      Context parentContext = Java8Bridge.currentContext();
       Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
