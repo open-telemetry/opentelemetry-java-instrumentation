@@ -327,6 +327,7 @@ class MuzzlePlugin implements Plugin<Project> {
     }
 
     def muzzleTask = instrumentationProject.task(taskName) {
+      dependsOn(instrumentationProject.configurations.named("runtimeClasspath"))
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
         def ccl = Thread.currentThread().contextClassLoader
