@@ -127,9 +127,8 @@ public class TracerInstaller {
       if (spanExporterFactory
           .getClass()
           .getSimpleName()
-          .replace("_", "")
           .toLowerCase()
-          .startsWith(exporterName.toLowerCase())) {
+          .startsWith(exporterName.replace("_", "").toLowerCase())) {
         return spanExporterFactory;
       }
     }
