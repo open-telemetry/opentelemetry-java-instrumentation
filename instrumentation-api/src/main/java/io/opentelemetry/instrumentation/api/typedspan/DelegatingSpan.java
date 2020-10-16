@@ -71,7 +71,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, @Nullable String description) {
+  public void setStatus(StatusCanonicalCode status, String description) {
     delegate.setStatus(status, description);
   }
 

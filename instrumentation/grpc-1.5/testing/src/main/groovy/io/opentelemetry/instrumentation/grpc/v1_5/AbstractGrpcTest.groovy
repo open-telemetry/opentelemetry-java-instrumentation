@@ -328,7 +328,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
       .intercept(new ServerInterceptor() {
         @Override
         <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
-          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+          if (!TracingContextUtils.getSpan(io.opentelemetry.context.Context.current()).getContext().isValid()) {
             throw new AssertionError((Object) "span not attached in server interceptor")
           }
           def ctx = Context.current().withValue(key, "meow")
@@ -341,7 +341,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
       .intercept(new ClientInterceptor() {
         @Override
         <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+          if (!TracingContextUtils.getSpan(io.opentelemetry.context.Context.current()).getContext().isValid()) {
             throw new AssertionError((Object) "span not attached in client interceptor")
           }
           def ctx = Context.current().withValue(key, "meow")
