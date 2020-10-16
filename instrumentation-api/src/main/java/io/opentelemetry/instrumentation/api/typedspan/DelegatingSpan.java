@@ -11,7 +11,6 @@ import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.StatusCanonicalCode;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
