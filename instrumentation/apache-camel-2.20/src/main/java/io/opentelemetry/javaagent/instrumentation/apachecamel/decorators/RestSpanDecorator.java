@@ -9,6 +9,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.trace.Span;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -74,8 +75,8 @@ class RestSpanDecorator extends HttpSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint) {
-    super.pre(span, exchange, endpoint);
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    super.pre(span, exchange, endpoint, camelDirection);
 
     getParameters(getPath(endpoint.getEndpointUri()))
         .forEach(

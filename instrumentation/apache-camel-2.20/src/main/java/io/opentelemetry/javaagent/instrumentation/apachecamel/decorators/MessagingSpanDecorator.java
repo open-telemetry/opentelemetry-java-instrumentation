@@ -9,6 +9,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -36,8 +37,8 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint) {
-    super.pre(span, exchange, endpoint);
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    super.pre(span, exchange, endpoint, camelDirection);
 
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, getDestination(exchange, endpoint));
 

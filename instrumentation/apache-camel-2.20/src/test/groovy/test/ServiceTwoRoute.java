@@ -12,7 +12,7 @@ public class ServiceTwoRoute extends RouteBuilder {
   @Override
   public void configure() throws Exception {
 
-    from("jetty:http://0.0.0.0:{{service.two.port}}/serviceTwo")
+    from("jetty:http://0.0.0.0:{{service.two.port}}/serviceTwo?arg=value")
         .routeId("serviceTwo")
         .streamCaching()
         .log("Service Two request: ${body}")

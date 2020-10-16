@@ -9,8 +9,13 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+import io.grpc.Context;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -52,8 +57,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint) {
-    super.pre(span, exchange, endpoint);
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    super.pre(span, exchange, endpoint, camelDirection);
 
     String httpUrl = getHttpURL(exchange, endpoint);
     if (httpUrl != null) {
@@ -61,6 +66,25 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
 
     span.setAttribute(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
+
+    Span serverSpan = BaseTracer.CONTEXT_SERVER_SPAN_KEY.get(Context.current());
+    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
+      updateServerSpanName(serverSpan, httpUrl);
+    }
+  }
+
+  private boolean shouldUpdateServerSpanName(Span serverSpan, CamelDirection camelDirection) {
+
+    return (serverSpan != null && CamelDirection.INBOUND.equals(camelDirection));
+  }
+
+  private void updateServerSpanName(Span serverSpan, String httpUrl) {
+    try {
+      URL url = new URL(httpUrl);
+      serverSpan.updateName(url.getPath());
+    } catch (MalformedURLException e) {
+      // ignored
+    }
   }
 
   protected String getHttpURL(Exchange exchange, Endpoint endpoint) {

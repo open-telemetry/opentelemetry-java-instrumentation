@@ -23,7 +23,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     Span.Builder builder =
         CamelTracer.TRACER.spanBuilder(sd.getOperationName(exchange, route.getEndpoint()));
     if (!activeSpan.getContext().isValid()) {
-      // root operation, set kind
+      // root operation, set kind, otherwise - INTERNAL
       builder.setSpanKind(sd.getReceiverSpanKind());
       Context parentContext = CamelPropagationUtil.extractParent(exchange.getIn().getHeaders());
       if (parentContext != null) {
@@ -42,7 +42,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     try {
       SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
       Span span = spanOnExchangeBegin(route, exchange, sd);
-      sd.pre(span, exchange, route.getEndpoint());
+      sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
       ActiveSpanManager.activate(exchange, span);
       if (CamelTracer.LOG.isTraceEnabled()) {
         CamelTracer.LOG.trace("Span started " + span);

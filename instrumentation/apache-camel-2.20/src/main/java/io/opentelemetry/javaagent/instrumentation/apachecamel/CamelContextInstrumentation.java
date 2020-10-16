@@ -45,6 +45,7 @@ public class CamelContextInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection",
       "io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator",
       "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.BaseSpanDecorator",
       "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DbSpanDecorator",

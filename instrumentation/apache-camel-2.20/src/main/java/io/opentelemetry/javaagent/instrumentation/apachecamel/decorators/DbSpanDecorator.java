@@ -9,6 +9,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
  * Copyright Apache Camel Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -84,7 +85,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
       case "mongodb":
         {
           Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          return queryParameters.toString();
+          return queryParameters.get("database");
         }
       case "cql":
         {
@@ -106,8 +107,8 @@ class DbSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint) {
-    super.pre(span, exchange, endpoint);
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    super.pre(span, exchange, endpoint, camelDirection);
 
     span.setAttribute(SemanticAttributes.DB_SYSTEM, system);
     String statement = getStatement(exchange, endpoint);

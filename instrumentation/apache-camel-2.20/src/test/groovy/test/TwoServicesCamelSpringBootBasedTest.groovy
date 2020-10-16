@@ -149,7 +149,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
           }
         }
         it.span(7) {
-          name "CachedChain.doFilter"
+          name "/serviceTwo"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
@@ -169,7 +169,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
-            "camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo"
+            "camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo?arg=value"
           }
         }
       }

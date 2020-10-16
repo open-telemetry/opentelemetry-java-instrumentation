@@ -26,7 +26,7 @@ class ActiveSpanManager {
   private ActiveSpanManager() {}
 
   public static Span getSpan(Exchange exchange) {
-    SpanWithScope spanWithScope = (SpanWithScope) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
+    SpanWithScope spanWithScope = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
     if (spanWithScope != null) {
       return spanWithScope.getSpan();
     }
@@ -42,7 +42,7 @@ class ActiveSpanManager {
    */
   public static void activate(Exchange exchange, Span span) {
 
-    SpanWithScope parent = (SpanWithScope) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
+    SpanWithScope parent = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
     SpanWithScope spanWithScope = SpanWithScope.activate(span, parent);
     exchange.setProperty(ACTIVE_SPAN_PROPERTY, spanWithScope);
     if (LOG.isTraceEnabled()) {
@@ -59,7 +59,7 @@ class ActiveSpanManager {
    */
   public static void deactivate(Exchange exchange) {
 
-    SpanWithScope spanWithScope = (SpanWithScope) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
+    SpanWithScope spanWithScope = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
     if (spanWithScope != null) {
       spanWithScope.deactivate();
       exchange.setProperty(ACTIVE_SPAN_PROPERTY, spanWithScope.getParent());

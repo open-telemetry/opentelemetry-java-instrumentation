@@ -10,6 +10,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -77,7 +78,7 @@ class BaseSpanDecorator implements SpanDecorator {
   }
 
   @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint) {
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     span.setAttribute("camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
   }
 

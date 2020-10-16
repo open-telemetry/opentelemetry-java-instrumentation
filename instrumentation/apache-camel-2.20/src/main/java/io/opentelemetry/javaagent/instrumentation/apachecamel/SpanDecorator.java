@@ -42,7 +42,7 @@ public interface SpanDecorator {
    * @param exchange The exchange
    * @param endpoint The endpoint
    */
-  void pre(Span span, Exchange exchange, Endpoint endpoint);
+  void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection);
 
   /**
    * This method adds appropriate details (tags/logs) to the supplied span based on the post
