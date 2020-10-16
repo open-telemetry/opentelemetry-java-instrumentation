@@ -118,13 +118,27 @@ public enum JDBCConnectionUrlParser {
     // Matches Standard, Mixed or Compressed notation in a wider body of text
     private final Pattern IPv6 =
         Pattern.compile(
+            // Non Compressed
             "(?:(?:(?:[A-F0-9]{1,4}:){6}"
-                + "|(?=(?:[A-F0-9]{0,4}:){0,6}(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?![:.\\w]))"
-                + "(([0-9A-F]{1,4}:){0,5}|:)((:[0-9A-F]{1,4}){1,5}:|:)|::(?:[A-F0-9]{1,4}:){5})"
+                // Compressed with at most 6 colons
+                + "|(?=(?:[A-F0-9]{0,4}:){0,6}"
+                // and 4 bytes and anchored
+                + "(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?![:.\\w]))"
+                // and at most 1 double colon
+                + "(([0-9A-F]{1,4}:){0,5}|:)((:[0-9A-F]{1,4}){1,5}:|:)"
+                // Compressed with 7 colons and 5 numbers
+                + "|::(?:[A-F0-9]{1,4}:){5})"
+                // 255.255.255.
                 + "(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}"
-                + "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:[A-F0-9]{1,4}:){7}"
-                + "[A-F0-9]{1,4}|(?=(?:[A-F0-9]{0,4}:){0,7}[A-F0-9]{0,4}(?![:.\\w]))"
+                // 255
+                + "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+                // Standard
+                + "|(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}"
+                // Compressed with at most 7 colons and anchored
+                + "|(?=(?:[A-F0-9]{0,4}:){0,7}[A-F0-9]{0,4}(?![:.\\w]))"
+                // and at most 1 double colon
                 + "(([0-9A-F]{1,4}:){1,7}|:)((:[0-9A-F]{1,4}){1,7}|:)"
+                // Compressed with 8 colons
                 + "|(?:[A-F0-9]{1,4}:){7}:|:(:[A-F0-9]{1,4}){7})(?![:.\\w])",
             CASE_INSENSITIVE);
 
