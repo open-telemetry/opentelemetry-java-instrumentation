@@ -45,7 +45,7 @@ public class Utils {
     }
   }
 
-  /** com.foo.Bar -> com/foo/Bar.class */
+  /** com.foo.Bar to com/foo/Bar.class */
   public static String getResourceName(String className) {
     if (!className.endsWith(".class")) {
       return className.replace('.', '/') + ".class";
@@ -54,12 +54,12 @@ public class Utils {
     }
   }
 
-  /** com/foo/Bar.class -> com.foo.Bar */
+  /** com/foo/Bar.class to com.foo.Bar */
   public static String getClassName(String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
   }
 
-  /** com.foo.Bar -> com/foo/Bar */
+  /** com.foo.Bar to com/foo/Bar */
   public static String getInternalName(String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
   }

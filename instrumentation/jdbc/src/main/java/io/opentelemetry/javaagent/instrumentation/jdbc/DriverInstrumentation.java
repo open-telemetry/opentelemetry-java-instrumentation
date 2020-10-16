@@ -14,8 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DBInfo;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.sql.Connection;
 import java.util.Map;

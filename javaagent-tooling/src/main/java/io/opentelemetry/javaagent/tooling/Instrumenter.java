@@ -17,8 +17,8 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
@@ -153,7 +153,11 @@ public interface Instrumenter {
       return 0;
     }
 
-    /** Matches classes for which instrumentation is not muzzled. */
+    /**
+     * A ByteBuddy matcher that decides whether this instrumentation should be applied. Calls
+     * generated {@link ReferenceMatcher}: if any mismatch with the passed {@code classLoader} is
+     * found this instrumentation is skipped.
+     */
     private class MuzzleMatcher implements AgentBuilder.RawMatcher {
       @Override
       public boolean matches(
@@ -162,30 +166,26 @@ public interface Instrumenter {
           JavaModule module,
           Class<?> classBeingRedefined,
           ProtectionDomain protectionDomain) {
-        /* Optimization: calling getInstrumentationMuzzle() inside this method
+        /* Optimization: calling getMuzzleReferenceMatcher() inside this method
          * prevents unnecessary loading of muzzle references during agentBuilder
          * setup.
          */
-        ReferenceMatcher muzzle = getInstrumentationMuzzle();
-        if (null != muzzle) {
+        ReferenceMatcher muzzle = getMuzzleReferenceMatcher();
+        if (muzzle != null) {
           boolean isMatch = muzzle.matches(classLoader);
-          if (!isMatch) {
-            if (log.isDebugEnabled()) {
-              List<Reference.Mismatch> mismatches =
-                  muzzle.getMismatchedReferenceSources(classLoader);
-              if (log.isDebugEnabled()) {
-                log.debug(
-                    "Instrumentation muzzled: {} -- {} on {}",
-                    instrumentationNames,
-                    Instrumenter.Default.this.getClass().getName(),
-                    classLoader);
-              }
-              for (Reference.Mismatch mismatch : mismatches) {
+
+          if (log.isDebugEnabled()) {
+            if (!isMatch) {
+              log.debug(
+                  "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
+                  instrumentationNames,
+                  Instrumenter.Default.this.getClass().getName(),
+                  classLoader);
+              List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
+              for (Mismatch mismatch : mismatches) {
                 log.debug("-- {}", mismatch);
               }
-            }
-          } else {
-            if (log.isDebugEnabled()) {
+            } else {
               log.debug(
                   "Applying instrumentation: {} -- {} on {}",
                   instrumentationPrimaryName,
@@ -193,6 +193,7 @@ public interface Instrumenter {
                   classLoader);
             }
           }
+
           return isMatch;
         }
         return true;
@@ -200,11 +201,11 @@ public interface Instrumenter {
     }
 
     /**
-     * This method is implemented dynamically by compile-time bytecode transformations.
-     *
-     * <p>{@see io.opentelemetry.javaagent.tooling.muzzle.MuzzleGradlePlugin}
+     * The actual implementation of this method is generated automatically during compilation by the
+     * {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+     * ByteBuddy plugin.
      */
-    protected ReferenceMatcher getInstrumentationMuzzle() {
+    protected ReferenceMatcher getMuzzleReferenceMatcher() {
       return null;
     }
 
@@ -226,13 +227,13 @@ public interface Instrumenter {
     /** @return A type matcher used to match the class under transform. */
     public abstract ElementMatcher<? super TypeDescription> typeMatcher();
 
-    /** @return A map of matcher->advice */
+    /** @return A map of matcher to advice */
     public abstract Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 
     /**
      * Context stores to define for this instrumentation.
      *
-     * <p>A map of {class-name -> context-class-name}. Keys (and their subclasses) will be
+     * <p>A map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
      * associated with a context of the value.
      */
     public Map<String, String> contextStore() {

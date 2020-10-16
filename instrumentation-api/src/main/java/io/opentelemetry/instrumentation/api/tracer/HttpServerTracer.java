@@ -101,7 +101,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE)}, passing
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object)}, passing
    * {@code response} value of {@code null}.
    */
   @Override
@@ -110,7 +110,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, RESPONSE, long)},
+   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object, long)},
    * passing {@code timestamp} value of {@code -1}.
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response) {
@@ -139,7 +139,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   /**
    * Returns context stored to the given request-response-loop storage by {@link
-   * #attachServerContext(Context, STORAGE)}.
+   * #attachServerContext(Context, Object)}.
    */
   @Nullable
   public abstract Context getServerContext(STORAGE storage);

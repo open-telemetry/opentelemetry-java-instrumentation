@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DBInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
