@@ -93,6 +93,21 @@ The following configuration properties are common to all exporters:
 |-----------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | otel.exporter   | OTEL_EXPORTER        | Exporter to be used, can be a comma-separated list to use multiple exporters. Currently does not support multiple metric exporters. Defaults to `otlp`. |
 
+##### OTLP exporter (both span and metric exporters)
+
+A simple wrapper for the OTLP span and metric exporters of opentelemetry-java.
+
+| System property              | Environment variable        | Purpose                                                               |
+|------------------------------|-----------------------------|-----------------------------------------------------------------------|
+| otel.exporter=otlp (default) | OTEL_EXPORTER=otlp          | To select OpenTelemetry exporter (default)                            |
+| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to, default is "localhost:55680"         |
+| otel.exporter.otlp.insecure  | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection        |
+| otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | The key-value pairs separated by semicolon to pass as request headers |
+| otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The max waiting time allowed to send each batch, default is 1000      |
+
+In order to configure the service name for the OTLP exporter, you must add `service.name` key
+to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
+
 ##### Jaeger exporter
 
 A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
@@ -112,51 +127,6 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 | otel.exporter=zipkin              | OTEL_EXPORTER=zipkin              | To select Zipkin exporter                                                                                             |
 | otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to, default is "http://localhost:9411/api/v2/spans". Currently only HTTP is supported. |
 | otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                                          |
-
-##### OTLP span exporter
-
-A simple wrapper for the OTLP span exporter of opentelemetry-java.
-
-| System property                  | Environment variable             | Purpose                                                               |
-|----------------------------------|----------------------------------|-----------------------------------------------------------------------|
-| otel.exporter=otlp_span          | OTEL_EXPORTER=otlp_span          | Select the OpenTelemetry span exporter                                |
-| otel.exporter.otlp.span.endpoint | OTEL_EXPORTER_OTLP_SPAN_ENDPOINT | The OTLP span endpoint to connect to, default is "localhost:55680"    |
-| otel.exporter.otlp.span.insecure | OTEL_EXPORTER_OTLP_SPAN_INSECURE | Whether to enable client transport security for the connection        |
-| otel.exporter.otlp.span.headers  | OTEL_EXPORTER_OTLP_SPAN_HEADERS  | The key-value pairs separated by semicolon to pass as request headers |
-| otel.exporter.otlp.span.timeout  | OTEL_EXPORTER_OTLP_SPAN_TIMEOUT  | The max waiting time allowed to send each span batch, default is 1000 |
-
-In order to configure the service name for the OTLP exporter, you must add `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
-
-##### OTLP metric exporter
-
-A simple wrapper for the OTLP metric exporter of opentelemetry-java.
-
-| System property                    | Environment variable               | Purpose                                                                 |
-|------------------------------------|------------------------------------|-------------------------------------------------------------------------|
-| otel.exporter=otlp_metric          | OTEL_EXPORTER=otlp_metric          | Select the OpenTelemetry metric exporter                                |
-| otel.exporter.otlp.metric.endpoint | OTEL_EXPORTER_OTLP_METRIC_ENDPOINT | The OTLP metric endpoint to connect to, default is "localhost:55680"    |
-| otel.exporter.otlp.metric.insecure | OTEL_EXPORTER_OTLP_METRIC_INSECURE | Whether to enable client transport security for the connection          |
-| otel.exporter.otlp.metric.headers  | OTEL_EXPORTER_OTLP_METRIC_HEADERS  | The key-value pairs separated by semicolon to pass as request headers   |
-| otel.exporter.otlp.metric.timeout  | OTEL_EXPORTER_OTLP_METRIC_TIMEOUT  | The max waiting time allowed to send each metric batch, default is 1000 |
-
-In order to configure the service name for the OTLP exporter, you must add `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
-
-##### OTLP exporter (both span and metric exporters)
-
-A simple wrapper for the OTLP span and metric exporters of opentelemetry-java.
-
-| System property              | Environment variable        | Purpose                                                               |
-|------------------------------|-----------------------------|-----------------------------------------------------------------------|
-| otel.exporter=otlp (default) | OTEL_EXPORTER=otlp          | To select OpenTelemetry exporter (default)                            |
-| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to, default is "localhost:55680"         |
-| otel.exporter.otlp.insecure  | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection        |
-| otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | The key-value pairs separated by semicolon to pass as request headers |
-| otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The max waiting time allowed to send each batch, default is 1000      |
-
-In order to configure the service name for the OTLP exporter, you must add `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
 ##### Prometheus exporter
 A simple wrapper for the Prometheus exporter of opentelemetry-java.
