@@ -30,7 +30,7 @@ import spock.lang.Requires
 class FieldBackedProviderTest extends AgentTestRunner {
 
   static {
-    System.setProperty("otel.integration.context-test-instrumentation.enabled", "true")
+    System.setProperty("otel.instrumentation.context-test-instrumentation.enabled", "true")
   }
 
   @Override
@@ -221,7 +221,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
 class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
 
   static {
-    System.setProperty("otel.integration.context-test-instrumentation.enabled", "true")
+    System.setProperty("otel.instrumentation.context-test-instrumentation.enabled", "true")
   }
 
   @Override
