@@ -63,12 +63,12 @@ They are the targets for `HttpServletInstrumentation`.
 From the observability point of view nothing of interest usually happens inside these methods.
 Thus it usually does not make sense to create spans from them, as they would only add useless noise.
 For this reason `HttpServletInstrumentation` is disabled by default.
-In rare cases when you need it, you can enable it using configuration property `otel.instrumentation.servlet-service.enabled`.
+In rare cases when you need it, you can enable it using configuration property `otel.integration.servlet-service.enabled`.
 
 In exactly the same situation are all other Servlet filters beyond the initial entry point.
 Usually unimportant, they may be sometimes of interest during troubleshooting.
 They are instrumented by `FilterInstrumentation` which is also disabled by default.
-You can enable it with the configuration property `otel.instrumentation.servlet-filter.enabled`.
+You can enable it with the configuration property `otel.integration.servlet-filter.enabled`.
 At last, request processing may reach the specific framework that your application uses.
 In this case Spring MVC and `OwnerController.initCreationForm`.
 
