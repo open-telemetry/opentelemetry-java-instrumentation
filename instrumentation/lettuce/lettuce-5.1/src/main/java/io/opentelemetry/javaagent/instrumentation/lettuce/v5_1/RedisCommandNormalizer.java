@@ -5,20 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.RedisCommandNormalizer.CommandNormalizer.CommandAndNumArgs;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.RedisCommandNormalizer.CommandNormalizer.Default;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.RedisCommandNormalizer.CommandNormalizer.Eval;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.RedisCommandNormalizer.CommandNormalizer.KeepAllArgs;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.RedisCommandNormalizer.CommandNormalizer.MultiKeyValue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** This class is responsible for masking potentially sensitive data in Redis commands. */
+/**
+ * This class is responsible for masking potentially sensitive data in Redis commands.
+ *
+ * <p>Examples:
+ *
+ * <table>
+ *   <tr>
+ *     <th>Raw command</th>
+ *     <th>Normalized command</th>
+ *   </tr>
+ *   <tr>
+ *     <td>{@code AUTH password}</td>
+ *     <td>{@code AUTH ?}</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@code HMSET hash creditcard 1234567887654321 address asdf}</td>
+ *     <td>{@code HMSET hash creditcard ? address ?}</td>
+ *   </tr>
+ * </table>
+ */
 public final class RedisCommandNormalizer {
 
   private static final Map<String, CommandNormalizer> NORMALIZERS;
+  private static final CommandNormalizer DEFAULT = new CommandAndNumArgs(0);
 
   static {
     Map<String, CommandNormalizer> normalizers = new HashMap<>();
@@ -28,22 +49,82 @@ public final class RedisCommandNormalizer {
     CommandNormalizer setMultiHashField = new MultiKeyValue(1);
     CommandNormalizer setMultiField = new MultiKeyValue(0);
 
+    // Cluster
+    for (String command : asList("CLUSTER", "READONLY", "READWRITE")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
+
     // Connection
-    // can contain AUTH data
-    normalizers.put("AUTH", new CommandAndNumArgs(0));
+    normalizers.put("AUTH", DEFAULT);
+    // HELLO can contain AUTH data
     normalizers.put("HELLO", keepTwoArgs);
+    for (String command : asList("CLIENT", "ECHO", "PING", "QUIT", "SELECT")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
+
+    // Geo
+    for (String command :
+        asList("GEOADD", "GEODIST", "GEOHASH", "GEOPOS", "GEORADIUS", "GEORADIUSBYMEMBER")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Hashes
     normalizers.put("HMSET", setMultiHashField);
     normalizers.put("HSET", setMultiHashField);
     normalizers.put("HSETNX", keepTwoArgs);
+    for (String command :
+        asList(
+            "HDEL",
+            "HEXISTS",
+            "HGET",
+            "HGETALL",
+            "HINCRBY",
+            "HINCRBYFLOAT",
+            "HKEYS",
+            "HLEN",
+            "HMGET",
+            "HSCAN",
+            "HSTRLEN",
+            "HVALS")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // HyperLogLog
     normalizers.put("PFADD", keepOneArg);
+    for (String command : asList("PFCOUNT", "PFMERGE")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Keys
-    // can contain AUTH data
+    // MIGRATE can contain AUTH data
     normalizers.put("MIGRATE", new CommandAndNumArgs(6));
+    normalizers.put("RESTORE", keepTwoArgs);
+    for (String command :
+        asList(
+            "DEL",
+            "DUMP",
+            "EXISTS",
+            "EXPIRE",
+            "EXPIREAT",
+            "KEYS",
+            "MOVE",
+            "OBJECT",
+            "PERSIST",
+            "PEXPIRE",
+            "PEXPIREAT",
+            "PTTL",
+            "RANDOMKEY",
+            "RENAME",
+            "RENAMENX",
+            "SCAN",
+            "SORT",
+            "TOUCH",
+            "TTL",
+            "TYPE",
+            "UNLINK",
+            "WAIT")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Lists
     normalizers.put("LINSERT", keepTwoArgs);
@@ -54,13 +135,67 @@ public final class RedisCommandNormalizer {
     normalizers.put("LSET", keepOneArg);
     normalizers.put("RPUSH", keepOneArg);
     normalizers.put("RPUSHX", keepOneArg);
+    for (String command :
+        asList(
+            "BLMOVE",
+            "BLPOP",
+            "BRPOP",
+            "BRPOPLPUSH",
+            "LINDEX",
+            "LLEN",
+            "LMOVE",
+            "LPOP",
+            "LRANGE",
+            "LTRIM",
+            "RPOP",
+            "RPOPLPUSH")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Pub/Sub
     normalizers.put("PUBLISH", keepOneArg);
+    for (String command :
+        asList("PSUBSCRIBE", "PUBSUB", "PUNSUBSCRIBE", "SUBSCRIBE", "UNSUBSCRIBE")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Scripting
     normalizers.put("EVAL", Eval.INSTANCE);
     normalizers.put("EVALSHA", Eval.INSTANCE);
+    normalizers.put("SCRIPT", KeepAllArgs.INSTANCE);
+
+    // Server
+    // CONFIG SET can set any property, including the master password
+    normalizers.put("CONFIG", keepTwoArgs);
+    for (String command :
+        asList(
+            "ACL",
+            "BGREWRITEAOF",
+            "BGSAVE",
+            "COMMAND",
+            "DBSIZE",
+            "DEBUG",
+            "FLUSHALL",
+            "FLUSHDB",
+            "INFO",
+            "LASTSAVE",
+            "LATENCY",
+            "LOLWUT",
+            "MEMORY",
+            "MODULE",
+            "MONITOR",
+            "PSYNC",
+            "REPLICAOF",
+            "ROLE",
+            "SAVE",
+            "SHUTDOWN",
+            "SLAVEOF",
+            "SLOWLOG",
+            "SWAPDB",
+            "SYNC",
+            "TIME")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Sets
     normalizers.put("SADD", keepOneArg);
@@ -68,6 +203,21 @@ public final class RedisCommandNormalizer {
     normalizers.put("SMISMEMBER", keepOneArg);
     normalizers.put("SMOVE", keepTwoArgs);
     normalizers.put("SREM", keepOneArg);
+    for (String command :
+        asList(
+            "SCARD",
+            "SDIFF",
+            "SDIFFSTORE",
+            "SINTER",
+            "SINTERSTORE",
+            "SMEMBERS",
+            "SPOP",
+            "SRANDMEMBER",
+            "SSCAN",
+            "SUNION",
+            "SUNIONSTORE")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Sorted Sets
     normalizers.put("ZADD", keepOneArg);
@@ -85,9 +235,42 @@ public final class RedisCommandNormalizer {
     normalizers.put("ZREVRANGEBYSCORE", keepOneArg);
     normalizers.put("ZREVRANK", keepOneArg);
     normalizers.put("ZSCORE", keepOneArg);
+    for (String command :
+        asList(
+            "BZPOPMAX",
+            "BZPOPMIN",
+            "ZCARD",
+            "ZINTER",
+            "ZINTERSTORE",
+            "ZPOPMAX",
+            "ZPOPMIN",
+            "ZRANGE",
+            "ZREMRANGEBYRANK",
+            "ZREVRANGE",
+            "ZSCAN",
+            "ZUNION",
+            "ZUNIONSTORE")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Streams
     normalizers.put("XADD", new MultiKeyValue(2));
+    for (String command :
+        asList(
+            "XACK",
+            "XCLAIM",
+            "XDEL",
+            "XGROUP",
+            "XINFO",
+            "XLEN",
+            "XPENDING",
+            "XRANGE",
+            "XREAD",
+            "XREADGROUP",
+            "XREVRANGE",
+            "XTRIM")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     // Strings
     normalizers.put("APPEND", keepOneArg);
@@ -99,20 +282,43 @@ public final class RedisCommandNormalizer {
     normalizers.put("SETEX", keepTwoArgs);
     normalizers.put("SETNX", keepOneArg);
     normalizers.put("SETRANGE", keepOneArg);
+    for (String command :
+        asList(
+            "BITCOUNT",
+            "BITFIELD",
+            "BITOP",
+            "BITPOS",
+            "DECR",
+            "DECRBY",
+            "GET",
+            "GETBIT",
+            "GETRANGE",
+            "INCR",
+            "INCRBY",
+            "INCRBYFLOAT",
+            "MGET",
+            "SETBIT",
+            "STRALGO",
+            "STRLEN")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
+
+    // Transactions
+    for (String command : asList("DISCARD", "EXEC", "MULTI", "UNWATCH", "WATCH")) {
+      normalizers.put(command, KeepAllArgs.INSTANCE);
+    }
 
     NORMALIZERS = unmodifiableMap(normalizers);
   }
 
   public static String normalize(String command, List<String> args) {
-    return NORMALIZERS
-        .getOrDefault(command.toUpperCase(), Default.INSTANCE)
-        .normalize(command, args);
+    return NORMALIZERS.getOrDefault(command.toUpperCase(), DEFAULT).normalize(command, args);
   }
 
   public interface CommandNormalizer {
     String normalize(String command, List<String> args);
 
-    enum Default implements CommandNormalizer {
+    enum KeepAllArgs implements CommandNormalizer {
       INSTANCE;
 
       @Override
@@ -125,6 +331,8 @@ public final class RedisCommandNormalizer {
       }
     }
 
+    // keeps only a chosen number of arguments
+    // example for num=2: CMD arg1 arg2 ? ?
     class CommandAndNumArgs implements CommandNormalizer {
       private final int numOfArgsToKeep;
 
@@ -145,6 +353,8 @@ public final class RedisCommandNormalizer {
       }
     }
 
+    // keeps only chosen number of arguments and then every second one
+    // example for num=2: CMD arg1 arg2 key1 ? key2 ?
     class MultiKeyValue implements CommandNormalizer {
       private final int numOfArgsBeforeKeyValue;
 
@@ -155,18 +365,14 @@ public final class RedisCommandNormalizer {
       @Override
       public String normalize(String command, List<String> args) {
         StringBuilder normalised = new StringBuilder(command);
-        int i = 0;
         // append all "initial" arguments before key-value pairs start
-        for (; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
+        for (int i = 0; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
           normalised.append(" ").append(args.get(i));
         }
 
         // loop over keys only
-        for (i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
-          normalised
-              .append(" ")
-              .append(args.get(i))
-              .append(" ?");
+        for (int i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
+          normalised.append(" ").append(args.get(i)).append(" ?");
         }
         return normalised.toString();
       }

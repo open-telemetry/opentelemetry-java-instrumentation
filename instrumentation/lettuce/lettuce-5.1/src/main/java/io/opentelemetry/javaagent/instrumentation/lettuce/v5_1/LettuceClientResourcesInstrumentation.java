@@ -43,10 +43,11 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
     return new String[] {
       packageName + ".RedisCommandNormalizer",
       packageName + ".RedisCommandNormalizer$CommandNormalizer",
-      packageName + ".RedisCommandNormalizer$CommandNormalizer$Default",
+      packageName + ".RedisCommandNormalizer$CommandNormalizer$KeepAllArgs",
       packageName + ".RedisCommandNormalizer$CommandNormalizer$CommandAndNumArgs",
       packageName + ".RedisCommandNormalizer$CommandNormalizer$MultiKeyValue",
       packageName + ".RedisCommandNormalizer$CommandNormalizer$Eval",
+      packageName + ".LettuceArgSplitter",
       packageName + ".OpenTelemetryTracing",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTracerProvider",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContextProvider",

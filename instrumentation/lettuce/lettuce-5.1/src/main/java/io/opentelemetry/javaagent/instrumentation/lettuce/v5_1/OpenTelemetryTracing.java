@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
-import static java.util.Arrays.asList;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceArgSplitter.splitArgs;
 
 import io.grpc.Context;
 import io.lettuce.core.tracing.TraceContext;
@@ -25,11 +25,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum OpenTelemetryTracing implements Tracing {
@@ -252,35 +249,11 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement = RedisCommandNormalizer.normalize(name, splitArgs());
+          String statement = RedisCommandNormalizer.normalize(name, splitArgs(args));
           span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
         }
         span.end();
       }
-    }
-
-    private static final Pattern KEY_PATTERN = Pattern.compile("(?<wrappedKey>key<(?<key>[^>]+)>)");
-
-    // this method removes the key<...> wrapper around redis keys and splits the args string
-    private List<String> splitArgs() {
-      if (args == null || args.isEmpty()) {
-        return Collections.emptyList();
-      }
-
-      StringBuilder newArgs = new StringBuilder(args.length());
-
-      Matcher m = KEY_PATTERN.matcher(args);
-      int end = 0;
-      while (m.find()) {
-        int wrapperStart = m.start("wrappedKey");
-
-        newArgs.append(args, end, wrapperStart).append(m.group("key"));
-
-        end = m.end("wrappedKey");
-      }
-      newArgs.append(args, end, args.length());
-
-      return asList(newArgs.toString().split(" "));
     }
 
     private static void fillEndpoint(SpanAttributeSetter span, OpenTelemetryEndpoint endpoint) {

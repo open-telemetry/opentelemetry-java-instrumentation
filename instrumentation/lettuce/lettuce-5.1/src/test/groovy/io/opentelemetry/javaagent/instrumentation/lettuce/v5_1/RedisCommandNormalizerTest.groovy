@@ -10,7 +10,7 @@ import spock.lang.Unroll
 
 class RedisCommandNormalizerTest extends Specification {
   @Unroll
-  def "should normalise #expected"() {
+  def "should normalize #expected"() {
     when:
     def normalised = RedisCommandNormalizer.normalize(command, args)
 
@@ -31,6 +31,7 @@ class RedisCommandNormalizerTest extends Specification {
     "PFADD"            | ["hll", "a", "b", "c"]                                        | "PFADD hll ? ? ?"
     // Keys
     "MIGRATE"          | ["127.0.0.1", "4242", "key", "0", "5000", "AUTH", "password"] | "MIGRATE 127.0.0.1 4242 key 0 5000 AUTH ?"
+    "RESTORE"          | ["key", "42", "value"]                                        | "RESTORE key 42 ?"
     // Lists
     "LINSERT"          | ["list", "BEFORE", "value1", "value2"]                        | "LINSERT list BEFORE ? ?"
     "LPOS"             | ["list", "value"]                                             | "LPOS list ?"
@@ -51,6 +52,8 @@ class RedisCommandNormalizerTest extends Specification {
     "SMISMEMBER"       | ["set", "value1", "value2"]                                   | "SMISMEMBER set ? ?"
     "SMOVE"            | ["set1", "set2", "value"]                                     | "SMOVE set1 set2 ?"
     "SREM"             | ["set", "value1", "value2"]                                   | "SREM set ? ?"
+    // Server
+    "CONFIG"           | ["SET", "masterpassword", "password"]                         | "CONFIG SET masterpassword ?"
     // Sorted Sets
     "ZADD"             | ["sset", "1", "value1", "2", "value2"]                        | "ZADD sset ? ? ? ?"
     "ZCOUNT"           | ["sset", "1", "10"]                                           | "ZCOUNT sset ? ?"
@@ -81,11 +84,65 @@ class RedisCommandNormalizerTest extends Specification {
     "SETRANGE"         | ["key", "42", "value"]                                        | "SETRANGE key ? ?"
   }
 
-  def "should not normalise any other command"() {
+  @Unroll
+  def "should keep all arguments of #command"() {
+    given:
+    def args = ["arg1", "arg 2"]
+
     when:
-    def normalised = RedisCommandNormalizer.normalize("MGET", ["key1", "key2"])
+    def normalised = RedisCommandNormalizer.normalize(command, args)
 
     then:
-    normalised == "MGET key1 key2"
+    normalised == command + " " + args.join(" ")
+
+    where:
+    command << [
+      // Cluster
+      "CLUSTER", "READONLY", "READWRITE",
+      // Connection
+      "CLIENT", "ECHO", "PING", "QUIT", "SELECT",
+      // Geo
+      "GEOADD", "GEODIST", "GEOHASH", "GEOPOS", "GEORADIUS", "GEORADIUSBYMEMBER",
+      // Hashes
+      "HDEL", "HEXISTS", "HGET", "HGETALL", "HINCRBY", "HINCRBYFLOAT", "HKEYS", "HLEN", "HMGET",
+      "HSCAN", "HSTRLEN", "HVALS",
+      // HyperLogLog
+      "PFCOUNT", "PFMERGE",
+      // Keys
+      "DEL", "DUMP", "EXISTS", "EXPIRE", "EXPIREAT", "KEYS", "MOVE", "OBJECT", "PERSIST", "PEXPIRE",
+      "PEXPIREAT", "PTTL", "RANDOMKEY", "RENAME", "RENAMENX", "RESTORE", "SCAN", "SORT", "TOUCH",
+      "TTL", "TYPE", "UNLINK", "WAIT",
+      // Lists
+      "BLMOVE", "BLPOP", "BRPOP", "BRPOPLPUSH", "LINDEX", "LLEN", "LMOVE", "LPOP", "LRANGE",
+      "LTRIM", "RPOP", "RPOPLPUSH",
+      // Pub/Sub
+      "PSUBSCRIBE", "PUBSUB", "PUNSUBSCRIBE", "SUBSCRIBE", "UNSUBSCRIBE",
+      // Server
+      "ACL", "BGREWRITEAOF", "BGSAVE", "COMMAND", "DBSIZE", "DEBUG", "FLUSHALL", "FLUSHDB", "INFO",
+      "LASTSAVE", "LATENCY", "LOLWUT", "MEMORY", "MODULE", "MONITOR", "PSYNC", "REPLICAOF", "ROLE",
+      "SAVE", "SHUTDOWN", "SLAVEOF", "SLOWLOG", "SWAPDB", "SYNC", "TIME",
+      // Sets
+      "SCARD", "SDIFF", "SDIFFSTORE", "SINTER", "SINTERSTORE", "SMEMBERS", "SPOP", "SRANDMEMBER",
+      "SSCAN", "SUNION", "SUNIONSTORE",
+      // Sorted Sets
+      "BZPOPMAX", "BZPOPMIN", "ZCARD", "ZINTER", "ZINTERSTORE", "ZPOPMAX", "ZPOPMIN", "ZRANGE",
+      "ZREMRANGEBYRANK", "ZREVRANGE", "ZSCAN", "ZUNION", "ZUNIONSTORE",
+      // Streams
+      "XACK", "XCLAIM", "XDEL", "XGROUP", "XINFO", "XLEN", "XPENDING", "XRANGE", "XREAD",
+      "XREADGROUP", "XREVRANGE", "XTRIM",
+      // Strings
+      "BITCOUNT", "BITFIELD", "BITOP", "BITPOS", "DECR", "DECRBY", "GET", "GETBIT", "GETRANGE",
+      "INCR", "INCRBY", "INCRBYFLOAT", "MGET", "SETBIT", "STRALGO", "STRLEN",
+      // Transactions
+      "DISCARD", "EXEC", "MULTI", "UNWATCH", "WATCH"
+    ]
+  }
+
+  def "should mask all arguments of an unknown command"() {
+    when:
+    def normalised = RedisCommandNormalizer.normalize("NEWAUTH", ["password", "secret"])
+
+    then:
+    normalised == "NEWAUTH ? ?"
   }
 }

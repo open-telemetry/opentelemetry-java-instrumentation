@@ -299,7 +299,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH TESTLIST ? ?"
+            "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH TESTLIST ?"
           }
           event(0) {
             eventName "redis.encode.start"
