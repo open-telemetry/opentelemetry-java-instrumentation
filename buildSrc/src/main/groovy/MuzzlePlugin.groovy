@@ -305,12 +305,11 @@ class MuzzlePlugin implements Plugin<Project> {
       if (version == null) {
         return false
       }
-      def versionString = version.toString()
+      def versionString = version.toString().toLowerCase()
       if (skipVersions.contains(versionString)) {
         return false
       }
 
-      versionString = versionString.toLowerCase()
       def draftVersion = versionString.contains("rc") ||
         versionString.contains(".cr") ||
         versionString.contains("alpha") ||
