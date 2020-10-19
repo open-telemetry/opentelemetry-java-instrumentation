@@ -93,9 +93,8 @@ public class TracerInstaller {
       if (metricExporterFactory
           .getClass()
           .getSimpleName()
-          .replace("_", "")
           .toLowerCase()
-          .startsWith(exporterName.toLowerCase())) {
+          .startsWith(exporterName(exporterName).toLowerCase())) {
         return metricExporterFactory;
       }
     }
@@ -110,9 +109,8 @@ public class TracerInstaller {
       if (metricServer
           .getClass()
           .getSimpleName()
-          .replace("_", "")
           .toLowerCase()
-          .startsWith(exporterName.toLowerCase())) {
+          .startsWith(exporterName(exporterName).toLowerCase())) {
         return metricServer;
       }
     }
@@ -128,11 +126,15 @@ public class TracerInstaller {
           .getClass()
           .getSimpleName()
           .toLowerCase()
-          .startsWith(exporterName.replace("_", "").toLowerCase())) {
+          .startsWith(exporterName(exporterName).toLowerCase())) {
         return spanExporterFactory;
       }
     }
     return null;
+  }
+
+  private static String exporterName(String exporterName) {
+    return exporterName.replace("otlp_span", "otlpspan").replace("otlp_metric", "otlpmetric");
   }
 
   private static synchronized void installExportersFromJar(String exporterJar, Properties config) {
