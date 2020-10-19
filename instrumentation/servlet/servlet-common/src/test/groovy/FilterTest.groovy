@@ -16,92 +16,92 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
 class FilterTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.integration.servlet-filter.enabled", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
-
-  def "test doFilter no-parent"() {
-    when:
-    filter.doFilter(null, null, null)
-
-    then:
-    assertTraces(0) {}
-
-    where:
-    filter = new TestFilter()
-  }
-
-  def "test doFilter with parent"() {
-    when:
-    runUnderTrace("parent") {
-      filter.doFilter(null, null, null)
+    static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+        it.setProperty("otel.instrumentation.servlet-filter.enabled", "true")
     }
 
-    then:
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        span(1) {
-          name "${filter.class.simpleName}.doFilter"
-          childOf span(0)
-          attributes {
-          }
+    def cleanupSpec() {
+        ConfigUtils.setConfig(PREVIOUS_CONFIG)
+    }
+
+    def "test doFilter no-parent"() {
+        when:
+        filter.doFilter(null, null, null)
+
+        then:
+        assertTraces(0) {}
+
+        where:
+        filter = new TestFilter()
+    }
+
+    def "test doFilter with parent"() {
+        when:
+        runUnderTrace("parent") {
+            filter.doFilter(null, null, null)
         }
-      }
-    }
 
-    where:
-    filter << [new TestFilter(), new TestFilter() {}]
-  }
-
-  def "test doFilter exception"() {
-    setup:
-    def ex = new Exception("some error")
-    def filter = new TestFilter() {
-      @Override
-      void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) {
-        throw ex
-      }
-    }
-
-    when:
-    runUnderTrace("parent") {
-      filter.doFilter(null, null, null)
-    }
-
-    then:
-    def th = thrown(Exception)
-    th == ex
-
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent", null, ex)
-        span(1) {
-          name "${filter.class.simpleName}.doFilter"
-          childOf span(0)
-          errored true
-          errorEvent(ex.class, ex.message)
+        then:
+        assertTraces(1) {
+            trace(0, 2) {
+                basicSpan(it, 0, "parent")
+                span(1) {
+                    name "${filter.class.simpleName}.doFilter"
+                    childOf span(0)
+                    attributes {
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  static class TestFilter implements Filter {
-
-    @Override
-    void init(FilterConfig filterConfig) throws ServletException {
+        where:
+        filter << [new TestFilter(), new TestFilter() {}]
     }
 
-    @Override
-    void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    def "test doFilter exception"() {
+        setup:
+        def ex = new Exception("some error")
+        def filter = new TestFilter() {
+            @Override
+            void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) {
+                throw ex
+            }
+        }
+
+        when:
+        runUnderTrace("parent") {
+            filter.doFilter(null, null, null)
+        }
+
+        then:
+        def th = thrown(Exception)
+        th == ex
+
+        assertTraces(1) {
+            trace(0, 2) {
+                basicSpan(it, 0, "parent", null, ex)
+                span(1) {
+                    name "${filter.class.simpleName}.doFilter"
+                    childOf span(0)
+                    errored true
+                    errorEvent(ex.class, ex.message)
+                }
+            }
+        }
     }
 
-    @Override
-    void destroy() {
+    static class TestFilter implements Filter {
+
+        @Override
+        void init(FilterConfig filterConfig) throws ServletException {
+        }
+
+        @Override
+        void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        }
+
+        @Override
+        void destroy() {
+        }
     }
-  }
 }

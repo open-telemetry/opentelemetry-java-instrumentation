@@ -64,7 +64,7 @@ class DefaultInstrumenterTest extends Specification {
   def "default disabled can override to enabled"() {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.integration.test.enabled", "$enabled")
+      it.setProperty("otel.instrumentation.test.enabled", "$enabled")
     }
     def target = new TestDefaultInstrumenter("test") {
       @Override
@@ -88,7 +88,7 @@ class DefaultInstrumenterTest extends Specification {
   def "configure default sys prop as #value"() {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.integrations.enabled", value)
+      it.setProperty("otel.instrumentations.enabled", value)
     }
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
@@ -110,8 +110,8 @@ class DefaultInstrumenterTest extends Specification {
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.integrations.enabled", "false")
-      it.setProperty("otel.integration.${value}.enabled", "true")
+      it.setProperty("otel.instrumentations.enabled", "false")
+      it.setProperty("otel.instrumentation.${value}.enabled", "true")
     }
     def target = new TestDefaultInstrumenter(name, altName)
     target.instrument(new AgentBuilder.Default())
