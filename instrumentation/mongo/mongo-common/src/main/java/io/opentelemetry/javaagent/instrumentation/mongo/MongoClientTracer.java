@@ -13,6 +13,8 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +36,16 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   @Override
   protected String dbSystem(CommandStartedEvent event) {
     return DbSystem.MONGODB;
+  }
+
+  @Override
+  protected Span onConnection(Span span, CommandStartedEvent event) {
+    span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
+    String collection = collectionName(event);
+    if (collection != null) {
+      span.setAttribute(SemanticAttributes.MONGODB_COLLECTION, collection);
+    }
+    return super.onConnection(span, event);
   }
 
   @Override
@@ -134,5 +146,13 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
       scrubbed = HIDDEN_CHAR;
     }
     return scrubbed;
+  }
+
+  private static String collectionName(CommandStartedEvent event) {
+    BsonValue collectionValue = event.getCommand().get(event.getCommandName());
+    if (collectionValue != null && collectionValue.isString()) {
+      return collectionValue.asString().getValue();
+    }
+    return null;
   }
 }
