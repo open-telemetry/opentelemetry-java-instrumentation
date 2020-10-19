@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
@@ -26,7 +27,8 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   public Span startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
-    Span serverSpan = BaseTracer.getCurrentServerSpan();
+    Context context = Context.current();
+    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String spanName;
@@ -34,15 +36,15 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       spanName = pathBasedSpanName;
     } else {
       spanName = spanNameForMethod(target, method);
-      updateServerSpanName(serverSpan, pathBasedSpanName);
+      updateServerSpanName(context, serverSpan, pathBasedSpanName);
     }
 
     return tracer.spanBuilder(spanName).startSpan();
   }
 
-  private void updateServerSpanName(Span span, String spanName) {
+  private void updateServerSpanName(Context context, Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(BaseTracer.getApplicationRoot() + spanName);
+      span.updateName(BaseTracer.getApplicationRoot(context) + spanName);
     }
   }
 

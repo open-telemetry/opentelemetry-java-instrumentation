@@ -148,15 +148,19 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
-  // TODO when all decorator are replaced with tracers, make this method instance
+  /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
   public static Span getCurrentServerSpan() {
-    return Context.current().get(CONTEXT_SERVER_SPAN_KEY);
+    return getCurrentServerSpan(Context.current());
   }
 
-  /** Returns the application root from current context or <code>""</code> if not found. */
-  public static String getApplicationRoot() {
-    String value = Context.current().get(CONTEXT_APPLICATION_ROOT_KEY);
+  /** Returns span of type SERVER from the given context or <code>null</code> if not found. */
+  public static Span getCurrentServerSpan(Context context) {
+    return context.get(CONTEXT_SERVER_SPAN_KEY);
+  }
+
+  /** Returns the application root from the given context or <code>""</code> if not found. */
+  public static String getApplicationRoot(Context context) {
+    String value = context.get(CONTEXT_APPLICATION_ROOT_KEY);
     return value != null ? value : "";
   }
 }

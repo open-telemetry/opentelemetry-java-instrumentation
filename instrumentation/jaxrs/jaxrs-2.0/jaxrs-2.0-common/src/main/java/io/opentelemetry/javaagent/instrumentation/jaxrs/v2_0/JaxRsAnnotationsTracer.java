@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
@@ -32,14 +33,16 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // We create span and immediately update its name
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
-    Span span = tracer.spanBuilder("jax-rs.request").startSpan();
-    updateSpanNames(span, BaseTracer.getCurrentServerSpan(), target, method);
+    Context context = Context.current();
+    Span span = tracer.spanBuilder("jax-rs.request").setParent(context).startSpan();
+    updateSpanNames(context, span, BaseTracer.getCurrentServerSpan(context), target, method);
     return span;
   }
 
-  public void updateSpanNames(Span span, Span serverSpan, Class<?> target, Method method) {
-    // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
-    String pathBasedSpanName = getPathSpanName(target, method);
+  public void updateSpanNames(
+      Context context, Span span, Span serverSpan, Class<?> target, Method method) {
+    String pathBasedSpanName =
+        BaseTracer.getApplicationRoot(context) + getPathSpanName(target, method);
     if (serverSpan == null) {
       updateSpanName(span, pathBasedSpanName);
     } else {
@@ -50,7 +53,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private void updateSpanName(Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(BaseTracer.getApplicationRoot() + spanName);
+      span.updateName(spanName);
     }
   }
 

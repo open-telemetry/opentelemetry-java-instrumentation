@@ -41,7 +41,8 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
 
           Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
           if (serverSpan != null) {
-            serverSpan.updateName(BaseTracer.getApplicationRoot() + parseRoute(predicateString));
+            serverSpan.updateName(
+                BaseTracer.getApplicationRoot(context) + parseRoute(predicateString));
           }
         }
       }
