@@ -50,28 +50,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   @Override
   protected String dbName(CommandStartedEvent event) {
-    if (event.getDatabaseName() != null) {
-      return event.getDatabaseName();
-    }
-    // Fallback to use description if set.
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ConnectionId connectionId = connectionDescription.getConnectionId();
-      if (connectionId != null) {
-        ServerId serverId = connectionId.getServerId();
-        if (serverId != null) {
-          ClusterId clusterId = serverId.getClusterId();
-          if (clusterId != null) {
-            String description = clusterId.getDescription();
-            if (description != null) {
-              return description;
-            }
-          }
-        }
-      }
-    }
-    // give up
-    return null;
+    return event.getDatabaseName();
   }
 
   @Override
