@@ -50,7 +50,10 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   @Override
   protected String dbName(CommandStartedEvent event) {
-    // Use description if set.
+    if (event.getDatabaseName() != null) {
+      return event.getDatabaseName();
+    }
+    // Fallback to use description if set.
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ConnectionId connectionId = connectionDescription.getConnectionId();
@@ -67,8 +70,8 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
         }
       }
     }
-    // Fallback to db name.
-    return event.getDatabaseName();
+    // give up
+    return null;
   }
 
   @Override
