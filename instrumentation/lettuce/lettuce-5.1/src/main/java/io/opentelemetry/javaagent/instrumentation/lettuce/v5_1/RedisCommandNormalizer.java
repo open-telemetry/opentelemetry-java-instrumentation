@@ -135,12 +135,11 @@ public final class RedisCommandNormalizer {
       @Override
       public String normalize(String command, List<String> args) {
         StringBuilder normalised = new StringBuilder(command);
-        int i = 0;
-        for (; i < numOfArgsToKeep && i < args.size(); ++i) {
+        for (int i = 0; i < numOfArgsToKeep && i < args.size(); ++i) {
           normalised.append(" ").append(args.get(i));
         }
-        for (; i < args.size(); ++i) {
-          normalised.append(" ").append("?");
+        for (int i = numOfArgsToKeep; i < args.size(); ++i) {
+          normalised.append(" ?");
         }
         return normalised.toString();
       }
@@ -162,13 +161,12 @@ public final class RedisCommandNormalizer {
           normalised.append(" ").append(args.get(i));
         }
 
-        // whether keys are on even or odd index depends on the number of initial args
-        int keys = numOfArgsBeforeKeyValue % 2;
-        for (; i < args.size(); ++i) {
+        // loop over keys only
+        for (i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
           normalised
               .append(" ")
-              // append only keys, skip values
-              .append(i % 2 == keys ? args.get(i) : "?");
+              .append(args.get(i))
+              .append(" ?");
         }
         return normalised.toString();
       }
@@ -197,7 +195,7 @@ public final class RedisCommandNormalizer {
         }
         // mask the rest
         for (; i < args.size(); ++i) {
-          normalised.append(" ").append("?");
+          normalised.append(" ?");
         }
         return normalised.toString();
       }
