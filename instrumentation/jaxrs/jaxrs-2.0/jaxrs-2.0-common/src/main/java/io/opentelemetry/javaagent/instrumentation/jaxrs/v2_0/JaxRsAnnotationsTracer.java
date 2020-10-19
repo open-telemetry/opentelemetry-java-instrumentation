@@ -50,7 +50,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private void updateSpanName(Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(spanName);
+      span.updateName(BaseTracer.getApplicationRoot() + spanName);
     }
   }
 

@@ -51,7 +51,7 @@ public class HandlerAdapterAdvice {
       PathPattern bestPattern =
           exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (serverSpan != null && bestPattern != null) {
-        serverSpan.updateName(bestPattern.getPatternString());
+        serverSpan.updateName(BaseTracer.getApplicationRoot() + bestPattern.getPatternString());
       }
     }
 

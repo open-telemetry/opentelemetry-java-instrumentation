@@ -30,7 +30,10 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(AppConfig, SecurityConfig, AuthServerConfig)
-    app.setDefaultProperties(ImmutableMap.of("server.port", port, "server.error.include-message", "always"))
+    app.setDefaultProperties(ImmutableMap.of(
+      "server.port", port,
+      "server.context-path", getContextPath(),
+      "server.error.include-message", "always"))
     def context = app.run()
     return context
   }
@@ -38,6 +41,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void stopServer(ConfigurableApplicationContext ctx) {
     ctx.close()
+  }
+
+  @Override
+  String getContextPath() {
+    return "/xyz"
   }
 
   @Override
@@ -165,7 +173,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
 
     trace.span(index) {
-      name endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
+      name endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
       kind SERVER
       errored endpoint.errored
       if (parentID != null) {

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
@@ -22,6 +23,17 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+
+  @Override
+  public Scope startScope(Span span, HttpServletRequest request) {
+    String contextPath = request.getContextPath();
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      Context context = Context.current().with(CONTEXT_APPLICATION_ROOT_KEY, contextPath);
+      return super.startScope(span, request, context);
+    } else {
+      return super.startScope(span, request);
+    }
+  }
 
   @Override
   protected String url(HttpServletRequest httpServletRequest) {

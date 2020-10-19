@@ -42,7 +42,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private void updateServerSpanName(Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(spanName);
+      span.updateName(BaseTracer.getApplicationRoot() + spanName);
     }
   }
 
@@ -56,7 +56,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     Map<Method, String> classMap = spanNames.get(target);
 
     if (classMap == null) {
-      spanNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
+      spanNames.putIfAbsent(target, new ConcurrentHashMap<>());
       classMap = spanNames.get(target);
       // classMap should not be null at this point because we have a
       // strong reference to target and don't manually clear the map.

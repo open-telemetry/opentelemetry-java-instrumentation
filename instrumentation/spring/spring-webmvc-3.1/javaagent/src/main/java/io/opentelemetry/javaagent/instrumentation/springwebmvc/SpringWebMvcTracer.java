@@ -36,7 +36,7 @@ public class SpringWebMvcTracer extends BaseTracer {
       Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestMatchingPattern != null) {
-        span.updateName(bestMatchingPattern.toString());
+        span.updateName(BaseTracer.getApplicationRoot() + bestMatchingPattern.toString());
       }
     }
   }
