@@ -13,7 +13,6 @@ muzzle {
     group = "org.elasticsearch.client"
     module = "rest"
     versions = "(,)"
-    assertInverse = true
   }
 }
 

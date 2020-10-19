@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.reactor
 
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
@@ -16,8 +18,6 @@ import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 class ReactorCoreTest extends InstrumentationTestRunner {
 
@@ -111,7 +111,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
-        // impact the spans on reactor integrations such as netty and lettuce, as reactor is
+        // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
         basicSpan(it, 1, "publisher-parent", span(0))
@@ -142,7 +142,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
-        // impact the spans on reactor integrations such as netty and lettuce, as reactor is
+        // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
         basicSpan(it, 1, "publisher-parent", span(0))
