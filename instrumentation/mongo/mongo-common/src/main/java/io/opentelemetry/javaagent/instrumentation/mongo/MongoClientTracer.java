@@ -6,10 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongo;
 
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
-import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
