@@ -72,7 +72,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
     then:
     assert internal.getContext().isValid()
-    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(Context.current()) == client
+    assert Context.current().getValue(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == client
     assert TracingContextUtils.getSpan(Context.current()) == internal
 
     cleanup:
@@ -88,7 +88,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     def context = ClientDecorator.currentContextWith(span)
 
     then:
-    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context) == span
+    assert context.getValue(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == span
     assert TracingContextUtils.getSpan(context) == span
   }
 

@@ -11,7 +11,6 @@ import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.StatusCanonicalCode;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO: This should be moved into the API.
 public class DelegatingSpan implements Span {
@@ -72,7 +71,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, @Nullable String description) {
+  public void setStatus(StatusCanonicalCode status, String description) {
     delegate.setStatus(status, description);
   }
 

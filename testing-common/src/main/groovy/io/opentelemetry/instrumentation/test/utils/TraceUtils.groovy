@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.test.utils
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.sdk.trace.data.SpanData

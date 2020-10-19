@@ -49,6 +49,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
     String[] testBS = {
       "io.opentelemetry.instrumentation.api",
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
+      "io.opentelemetry.package-info", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.baggage", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API
