@@ -6,10 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongo;
 
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
-import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
@@ -50,24 +47,6 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   @Override
   protected String dbName(CommandStartedEvent event) {
-    // Use description if set.
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ConnectionId connectionId = connectionDescription.getConnectionId();
-      if (connectionId != null) {
-        ServerId serverId = connectionId.getServerId();
-        if (serverId != null) {
-          ClusterId clusterId = serverId.getClusterId();
-          if (clusterId != null) {
-            String description = clusterId.getDescription();
-            if (description != null) {
-              return description;
-            }
-          }
-        }
-      }
-    }
-    // Fallback to db name.
     return event.getDatabaseName();
   }
 

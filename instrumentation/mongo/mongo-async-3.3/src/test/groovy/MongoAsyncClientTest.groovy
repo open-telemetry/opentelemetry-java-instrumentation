@@ -59,7 +59,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName) {
+        mongoSpan(it, 0, "create", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -87,7 +87,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName) {
+        mongoSpan(it, 0, "create", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -110,11 +110,11 @@ class MongoAsyncClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, {
+        mongoSpan(it, 0, "create", collectionName, dbName){
           assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
-        }, dbName)
+        }
       }
     }
 
@@ -135,7 +135,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     count.get() == 0
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "count", collectionName) {
+        mongoSpan(it, 0, "count", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -170,14 +170,14 @@ class MongoAsyncClientTest extends MongoBaseTest {
     count.get() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "insert", collectionName) {
+        mongoSpan(it, 0, "insert", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}" ||
             it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
           true
         }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName) {
+        mongoSpan(it, 0, "count", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -221,14 +221,14 @@ class MongoAsyncClientTest extends MongoBaseTest {
     count.get() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "update", collectionName) {
+        mongoSpan(it, 0, "update", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"update\":\"?\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}" ||
             it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
           true
         }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName) {
+        mongoSpan(it, 0, "count", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -270,14 +270,14 @@ class MongoAsyncClientTest extends MongoBaseTest {
     count.get() == 0
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "delete", collectionName) {
+        mongoSpan(it, 0, "delete", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"delete\":\"?\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}" ||
             it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
           true
         }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName) {
+        mongoSpan(it, 0, "count", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -303,7 +303,10 @@ class MongoAsyncClientTest extends MongoBaseTest {
     }
   }
 
-  def mongoSpan(TraceAssert trace, int index, String operation, String collection, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index,
+                String operation, String collection,
+                String dbName, Closure<Boolean> statementEval,
+                Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       name statementEval
       kind CLIENT
@@ -313,15 +316,15 @@ class MongoAsyncClientTest extends MongoBaseTest {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-        "${SemanticAttributes.NET_PEER_PORT.key()}" port
-        "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "mongodb://localhost:" + port
-        "${SemanticAttributes.DB_STATEMENT.key()}" statementEval
-        "${SemanticAttributes.DB_SYSTEM.key()}" "mongodb"
-        "${SemanticAttributes.DB_NAME.key()}" instance
-        "${SemanticAttributes.DB_OPERATION.key()}" operation
-        "${SemanticAttributes.MONGODB_COLLECTION.key()}" collection
+        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT.key" port
+        "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
+        "$SemanticAttributes.DB_STATEMENT.key" statementEval
+        "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
+        "$SemanticAttributes.DB_NAME.key" dbName
+        "$SemanticAttributes.DB_OPERATION.key" operation
+        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
       }
     }
   }
