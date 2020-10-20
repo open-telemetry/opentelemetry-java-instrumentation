@@ -46,9 +46,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JDBCUtils",
-      packageName + ".JDBCMaps",
-      packageName + ".JdbcTracer",
+      packageName + ".JDBCUtils", packageName + ".JDBCMaps", packageName + ".JdbcTracer",
     };
   }
 
