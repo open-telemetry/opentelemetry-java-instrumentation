@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.instrumentation.auto.api.jdbc.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
+import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -8,9 +8,9 @@ package test
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 import com.google.common.collect.ImmutableMap
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.OkHttpUtils
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.HttpUrl

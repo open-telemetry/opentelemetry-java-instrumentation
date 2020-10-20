@@ -7,7 +7,7 @@ package test
 
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
