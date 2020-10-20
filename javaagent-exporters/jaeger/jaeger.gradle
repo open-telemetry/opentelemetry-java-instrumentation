@@ -17,8 +17,7 @@ dependencies {
   implementation(deps.opentelemetryJaeger) {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
-  implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
-  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.24.0'
+  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
 }
 
 jar.enabled = false
