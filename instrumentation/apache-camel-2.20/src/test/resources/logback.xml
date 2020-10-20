@@ -13,6 +13,8 @@
     <appender-ref ref="console"/>
   </root>
 
-  <logger name="io.opentelemetry.instrumentation.auto.apachecamel" level="trace"/>
+  <logger name="io.opentelemetry.javaagent.instrumentation.apachecamel" level="trace"/>
+  <logger name="org.apache.camel" level="debug" />
+  <logger name="test" level="trace"/>
 
 </configuration>

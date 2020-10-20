@@ -20,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class SingleServiceCamelSpringBootBasedTest extends AgentTestRunner {
+class SingleServiceCamelTest extends AgentTestRunner {
 
   @Shared
   ConfigurableApplicationContext server

@@ -21,7 +21,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
+class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
 
   @Shared
   int portOne
@@ -76,22 +76,15 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 9) {
+      trace(0, 8) {
         it.span(0) {
-          name "input"
-          kind CLIENT
-          attributes {
-            "camel.uri" "direct://input"
-          }
-        }
-        it.span(1) {
           name "input"
           kind INTERNAL
           attributes {
             "camel.uri" "direct://input"
           }
         }
-        it.span(2) {
+        it.span(1) {
           name "POST"
           kind CLIENT
           attributes {
@@ -101,7 +94,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
             "camel.uri" "http://localhost:$portOne/serviceOne"
           }
         }
-        it.span(3) {
+        it.span(2) {
           name "HTTP POST"
           kind CLIENT
           attributes {
@@ -114,7 +107,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
             "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
           }
         }
-        it.span(4) {
+        it.span(3) {
           name "POST"
           kind SERVER
           attributes {
@@ -124,7 +117,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
             "camel.uri" "http://0.0.0.0:$portOne/serviceOne"
           }
         }
-        it.span(5) {
+        it.span(4) {
           name "POST"
           kind CLIENT
           attributes {
@@ -134,7 +127,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
             "camel.uri" "http://0.0.0.0:$portTwo/serviceTwo"
           }
         }
-        it.span(6) {
+        it.span(5) {
           name "HTTP POST"
           kind CLIENT
           attributes {
@@ -148,7 +141,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
             "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
           }
         }
-        it.span(7) {
+        it.span(6) {
           name "/serviceTwo"
           kind SERVER
           attributes {
@@ -163,7 +156,7 @@ class TwoServicesCamelSpringBootBasedTest extends AgentTestRunner {
 
           }
         }
-        it.span(8) {
+        it.span(7) {
           name "POST"
           kind INTERNAL
           attributes {

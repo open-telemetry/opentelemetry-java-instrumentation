@@ -3,12 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachecamel;
+// Includes work from:
 /*
- * Includes work from:
- * Copyright Apache Camel Authors
- * SPDX-License-Identifier: Apache-2.0
+ * Apache Camel Opentracing Component
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license
+ * agreements. See the NOTICE file distributed with this work for additional information regarding
+ * copyright ownership. The ASF licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
+package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
@@ -16,11 +29,15 @@ import java.util.EventObject;
 import org.apache.camel.management.event.ExchangeSendingEvent;
 import org.apache.camel.management.event.ExchangeSentEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class CamelEventNotifier extends EventNotifierSupport {
 
+  private static final Logger LOG = LoggerFactory.getLogger(CamelEventNotifier.class);
+
   @Override
-  public void notify(EventObject event) throws Exception {
+  public void notify(EventObject event) {
 
     try {
       /** Camel about to send (outbound). */
@@ -40,8 +57,8 @@ final class CamelEventNotifier extends EventNotifierSupport {
             Context.current(), ese.getExchange().getIn().getHeaders());
         ActiveSpanManager.activate(ese.getExchange(), span);
 
-        if (CamelTracer.LOG.isTraceEnabled()) {
-          CamelTracer.LOG.trace("Client span started " + span);
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("[Exchange sending] Initiator span started " + span);
         }
         /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
       } else if (event instanceof ExchangeSentEvent) {
@@ -52,17 +69,17 @@ final class CamelEventNotifier extends EventNotifierSupport {
         }
         Span span = ActiveSpanManager.getSpan(ese.getExchange());
         if (span != null) {
-          if (CamelTracer.LOG.isTraceEnabled()) {
-            CamelTracer.LOG.trace("Client span finished " + span);
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("[Exchange sent] Initiator span finished " + span);
           }
           sd.post(span, ese.getExchange(), ese.getEndpoint());
           ActiveSpanManager.deactivate(ese.getExchange());
         } else {
-          CamelTracer.LOG.warn("Could not find managed span for exchange " + ese.getExchange());
+          LOG.warn("Could not find managed span for exchange " + ese.getExchange());
         }
       }
     } catch (Throwable t) {
-      CamelTracer.LOG.warn("Failed to capture tracing data", t);
+      LOG.warn("Failed to capture tracing data", t);
     }
   }
 
