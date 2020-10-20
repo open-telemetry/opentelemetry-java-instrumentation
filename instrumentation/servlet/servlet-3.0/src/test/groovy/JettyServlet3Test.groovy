@@ -21,7 +21,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
 
   //We want to test spans produced by servlet instrumentation, not those of jetty
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.integration.jetty.enabled", "false")
+    it.setProperty("otel.instrumentation.jetty.enabled", "false")
   }
 
   @Override

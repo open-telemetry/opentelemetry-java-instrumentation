@@ -11,7 +11,7 @@ muzzle {
     assertInverse = true
   }
 
-  // FIXME: webmvc depends on web, so we need a separate integration for spring-web specifically.
+  // FIXME: webmvc depends on web, so we need a separate instrumentation for spring-web specifically.
   fail {
     group = 'org.springframework'
     module = 'spring-web'
@@ -38,7 +38,7 @@ dependencies {
   testImplementation group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
 
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
-  
+
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'

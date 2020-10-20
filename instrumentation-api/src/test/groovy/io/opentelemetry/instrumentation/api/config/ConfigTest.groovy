@@ -8,18 +8,18 @@ package io.opentelemetry.instrumentation.api.config
 import spock.lang.Specification
 
 class ConfigTest extends Specification {
-  def "verify integration config"() {
+  def "verify instrumentation config"() {
     setup:
     def config = Config.create([
-      "otel.integration.order.enabled"        : "true",
-      "otel.integration.test.prop.enabled"    : "true",
-      "otel.integration.disabled.prop.enabled": "false",
-      "otel.integration.test.env.enabled"     : "true",
-      "otel.integration.disabled.env.enabled" : "false"
+      "otel.instrumentation.order.enabled"        : "true",
+      "otel.instrumentation.test.prop.enabled"    : "true",
+      "otel.instrumentation.disabled.prop.enabled": "false",
+      "otel.instrumentation.test.env.enabled"     : "true",
+      "otel.instrumentation.disabled.env.enabled" : "false"
     ])
 
     expect:
-    config.isIntegrationEnabled(integrationNames, defaultEnabled) == expected
+    config.isInstrumentationEnabled(instrumentationNames, defaultEnabled) == expected
 
     where:
     names                          | defaultEnabled | expected
@@ -39,7 +39,7 @@ class ConfigTest extends Specification {
     ["test-prop", "disabled-prop"] | true           | false
     ["disabled-env", "test-env"]   | true           | false
 
-    integrationNames = new TreeSet<String>(names)
+    instrumentationNames = new TreeSet<String>(names)
   }
 
   def "should get string property"() {

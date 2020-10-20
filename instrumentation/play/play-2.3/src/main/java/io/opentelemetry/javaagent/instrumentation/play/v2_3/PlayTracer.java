@@ -19,7 +19,7 @@ public class PlayTracer extends BaseTracer {
     Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
     if (!pathOption.isEmpty()) {
       String path = pathOption.get();
-      span.updateName(request.method() + " " + path);
+      span.updateName(path);
     }
     return span;
   }

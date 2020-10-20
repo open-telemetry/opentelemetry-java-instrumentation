@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
@@ -13,8 +15,6 @@ import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 
@@ -114,7 +114,7 @@ class ReactorCoreTest extends AgentTestRunner {
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
-        // impact the spans on reactor integrations such as netty and lettuce, as reactor is
+        // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
         basicSpan(it, 1, "publisher-parent", span(0))
@@ -122,9 +122,9 @@ class ReactorCoreTest extends AgentTestRunner {
     }
 
     where:
-    paramName   | publisherSupplier
-    "mono"      | { -> Mono.error(new RuntimeException(EXCEPTION_MESSAGE)) }
-    "flux"      | { -> Flux.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    paramName | publisherSupplier
+    "mono"    | { -> Mono.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "flux"    | { -> Flux.error(new RuntimeException(EXCEPTION_MESSAGE)) }
   }
 
   def "Publisher step '#name' test"() {
@@ -145,7 +145,7 @@ class ReactorCoreTest extends AgentTestRunner {
         }
 
         // It's important that we don't attach errors at the Reactor level so that we don't
-        // impact the spans on reactor integrations such as netty and lettuce, as reactor is
+        // impact the spans on reactor instrumentations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
         basicSpan(it, 1, "publisher-parent", span(0))

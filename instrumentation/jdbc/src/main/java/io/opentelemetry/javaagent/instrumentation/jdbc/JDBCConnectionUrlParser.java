@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DBInfo.DEFAULT;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import java.io.UnsupportedEncodingException;
@@ -113,6 +114,34 @@ public enum JDBCConnectionUrlParser {
   },
 
   MODIFIED_URL_LIKE() {
+    // Source: Regular Expressions Cookbook 2nd edition - 8.17.
+    // Matches Standard, Mixed or Compressed notation in a wider body of text
+    private final Pattern IPv6 =
+        Pattern.compile(
+            // Non Compressed
+            "(?:(?:(?:[A-F0-9]{1,4}:){6}"
+                // Compressed with at most 6 colons
+                + "|(?=(?:[A-F0-9]{0,4}:){0,6}"
+                // and 4 bytes and anchored
+                + "(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?![:.\\w]))"
+                // and at most 1 double colon
+                + "(([0-9A-F]{1,4}:){0,5}|:)((:[0-9A-F]{1,4}){1,5}:|:)"
+                // Compressed with 7 colons and 5 numbers
+                + "|::(?:[A-F0-9]{1,4}:){5})"
+                // 255.255.255.
+                + "(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}"
+                // 255
+                + "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+                // Standard
+                + "|(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}"
+                // Compressed with at most 7 colons and anchored
+                + "|(?=(?:[A-F0-9]{0,4}:){0,7}[A-F0-9]{0,4}(?![:.\\w]))"
+                // and at most 1 double colon
+                + "(([0-9A-F]{1,4}:){1,7}|:)((:[0-9A-F]{1,4}){1,7}|:)"
+                // Compressed with 8 colons
+                + "|(?:[A-F0-9]{1,4}:){7}:|:(:[A-F0-9]{1,4}){7})(?![:.\\w])",
+            CASE_INSENSITIVE);
+
     @Override
     DBInfo.Builder doParse(String jdbcUrl, DBInfo.Builder builder) {
       String type;
@@ -159,7 +188,19 @@ public enum JDBCConnectionUrlParser {
         serverName = serverName.substring(0, instanceLoc);
       }
 
-      int portLoc = serverName.indexOf(":");
+      Matcher ipv6Matcher = IPv6.matcher(serverName);
+      boolean isIpv6 = ipv6Matcher.find();
+
+      int portLoc = -1;
+      if (isIpv6) {
+        if (serverName.startsWith("[")) {
+          portLoc = serverName.indexOf("]:") + 1;
+        } else {
+          serverName = "[" + serverName + "]";
+        }
+      } else {
+        portLoc = serverName.indexOf(":");
+      }
 
       if (portLoc > 1) {
         port = Integer.parseInt(serverName.substring(portLoc + 1));
@@ -168,8 +209,13 @@ public enum JDBCConnectionUrlParser {
 
       instanceLoc = serverName.indexOf("\\");
       if (instanceLoc > 1) {
-        name = serverName.substring(instanceLoc + 1);
-        serverName = serverName.substring(0, instanceLoc);
+        if (isIpv6) {
+          name = serverName.substring(instanceLoc + 1, serverName.lastIndexOf(']'));
+          serverName = "[" + ipv6Matcher.group(0) + "]";
+        } else {
+          name = serverName.substring(instanceLoc + 1);
+          serverName = serverName.substring(0, instanceLoc);
+        }
       }
 
       if (name != null) {
