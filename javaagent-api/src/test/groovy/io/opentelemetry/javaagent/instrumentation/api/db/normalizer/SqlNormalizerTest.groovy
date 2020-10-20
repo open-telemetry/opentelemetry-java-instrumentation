@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db.sql.normalizer
+package io.opentelemetry.javaagent.instrumentation.api.db.normalizer
 
 import spock.lang.Specification
 import spock.lang.Timeout
