@@ -64,7 +64,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     Map<Method, String> classMap = spanNames.get(target);
 
     if (classMap == null) {
-      spanNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
+      spanNames.putIfAbsent(target, new ConcurrentHashMap<>());
       classMap = spanNames.get(target);
       // classMap should not be null at this point because we have a
       // strong reference to target and don't manually clear the map.
@@ -96,7 +96,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
           }
         }
       }
-      spanName = buildSpanName(httpMethod, classPath, methodPath);
+      spanName = buildSpanName(classPath, methodPath);
       classMap.put(method, spanName);
     }
 
@@ -155,20 +155,17 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
+  private String buildSpanName(Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
-    if (httpMethod != null) {
-      spanNameBuilder.append(httpMethod);
-      spanNameBuilder.append(" ");
-    }
     boolean skipSlash = false;
     if (classPath != null) {
-      if (!classPath.value().startsWith("/")) {
+      String classPathValue = classPath.value();
+      if (!classPathValue.startsWith("/")) {
         spanNameBuilder.append("/");
       }
-      spanNameBuilder.append(classPath.value());
-      skipSlash = classPath.value().endsWith("/");
+      spanNameBuilder.append(classPathValue);
+      skipSlash = classPathValue.endsWith("/") || classPathValue.isEmpty();
     }
 
     if (methodPath != null) {
@@ -184,6 +181,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     }
 
     spanName = spanNameBuilder.toString().trim();
+
     return spanName;
   }
 

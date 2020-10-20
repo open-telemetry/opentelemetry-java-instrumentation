@@ -16,6 +16,7 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import spock.lang.Unroll
 
 abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -32,7 +33,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "POST /a"
+          name "/a"
           attributes {
           }
         }
@@ -40,6 +41,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
   }
 
+  @Unroll
   def "span named '#name' from annotations on class when is not root span"() {
     setup:
     def startingCacheSize = spanNames.size()
