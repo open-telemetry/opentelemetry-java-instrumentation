@@ -46,13 +46,6 @@ public final class StatementInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".normalizer.Token",
-      packageName + ".normalizer.ParseException",
-      packageName + ".normalizer.SimpleCharStream",
-      packageName + ".normalizer.SqlNormalizerConstants",
-      packageName + ".normalizer.TokenMgrError",
-      packageName + ".normalizer.SqlNormalizerTokenManager",
-      packageName + ".normalizer.SqlNormalizer",
       packageName + ".JDBCMaps",
       packageName + ".JDBCUtils",
       packageName + ".JdbcTracer",
