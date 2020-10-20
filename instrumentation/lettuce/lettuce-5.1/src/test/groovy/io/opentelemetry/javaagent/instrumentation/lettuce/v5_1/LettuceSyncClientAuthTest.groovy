@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -12,8 +14,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceSyncClientAuthTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"
@@ -74,12 +74,12 @@ class LettuceSyncClientAuthTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "AUTH"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "AUTH ?"
           }
           event(0) {
             eventName "redis.encode.start"
