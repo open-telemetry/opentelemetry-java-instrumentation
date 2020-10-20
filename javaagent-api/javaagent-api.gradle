@@ -1,3 +1,7 @@
+plugins {
+  id 'com.intershop.gradle.javacc' version '4.0.0'
+}
+
 group = 'io.opentelemetry.javaagent'
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -5,6 +9,19 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 project.ext.minimumBranchCoverage = 0.0
 project.ext.minimumInstructionCoverage = 0.0
+
+javacc {
+  configs {
+    template {
+      inputFile = file('src/main/javacc/SqlNormalizer.jj')
+      packageName = 'io.opentelemetry.javaagent.instrumentation.api.db.sql.normalizer'
+    }
+  }
+}
+
+tasks.withType(Checkstyle).configureEach {
+  exclude '**/db/sql/normalizer/*.java'
+}
 
 dependencies {
   api deps.opentelemetryApi

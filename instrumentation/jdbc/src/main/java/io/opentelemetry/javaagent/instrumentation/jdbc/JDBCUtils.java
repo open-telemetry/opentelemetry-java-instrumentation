@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SqlNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.sql.normalizer.SqlNormalizer;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;

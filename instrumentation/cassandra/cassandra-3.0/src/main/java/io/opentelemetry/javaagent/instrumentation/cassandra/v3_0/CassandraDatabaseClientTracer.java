@@ -10,7 +10,8 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.cassandra.CassandraQueryNormalizer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -25,7 +26,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
 
   @Override
   protected String normalizeQuery(String query) {
-    return query;
+    return CassandraQueryNormalizer.normalize(query);
   }
 
   @Override

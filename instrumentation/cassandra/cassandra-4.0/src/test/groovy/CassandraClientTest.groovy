@@ -43,7 +43,7 @@ class CassandraClientTest extends AgentTestRunner {
     expect:
     assertTraces(1) {
       trace(0, 1) {
-        cassandraSpan(it, 0, statement, keyspace)
+        cassandraSpan(it, 0, expectedStatement, keyspace)
       }
     }
 
@@ -51,12 +51,12 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                         | keyspace
-    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null
-    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
-    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test"
-    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test"
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test"
+    keyspace    | statement                                                                                         | expectedStatement
+    null        | "DROP KEYSPACE IF EXISTS sync_test"                                                               | "DROP KEYSPACE IF EXISTS sync_test"
+    null        | "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}"
+    "sync_test" | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"
+    "sync_test" | "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO sync_test.users (id, name) values (uuid(), ?)"
+    "sync_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "SELECT * FROM users where name = ? ALLOW FILTERING"
   }
 
   def "test async"() {
@@ -71,7 +71,7 @@ class CassandraClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
-        cassandraSpan(it, 1, statement, keyspace, span(0))
+        cassandraSpan(it, 1, expectedStatement, keyspace, span(0))
       }
     }
 
@@ -79,12 +79,12 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                          | keyspace
-    "DROP KEYSPACE IF EXISTS async_test"                                                               | null
-    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
-    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test"
-    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test"
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test"
+    keyspace     | statement                                                                                          | expectedStatement
+    null         | "DROP KEYSPACE IF EXISTS async_test"                                                               | "DROP KEYSPACE IF EXISTS async_test"
+    null         | "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}"
+    "async_test" | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"
+    "async_test" | "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO async_test.users (id, name) values (uuid(), ?)"
+    "async_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "SELECT * FROM users where name = ? ALLOW FILTERING"
   }
 
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
@@ -97,12 +97,12 @@ class CassandraClientTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-        "${SemanticAttributes.NET_PEER_PORT.key()}" EmbeddedCassandraServerHelper.getNativeTransportPort()
-        "${SemanticAttributes.DB_SYSTEM.key()}" "cassandra"
-        "${SemanticAttributes.DB_NAME.key()}" keyspace
-        "${SemanticAttributes.DB_STATEMENT.key()}" statement
+        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT.key" EmbeddedCassandraServerHelper.getNativeTransportPort()
+        "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
+        "$SemanticAttributes.DB_NAME.key" keyspace
+        "$SemanticAttributes.DB_STATEMENT.key" statement
       }
     }
   }
@@ -118,5 +118,4 @@ class CassandraClientTest extends AgentTestRunner {
       .withKeyspace((String) keyspace)
       .build()
   }
-
 }

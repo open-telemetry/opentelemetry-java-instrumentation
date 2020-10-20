@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.jdbc;
+package io.opentelemetry.javaagent.instrumentation.api.db;
 
 public final class DbSystem {
 
@@ -23,4 +23,6 @@ public final class DbSystem {
   public static final String OTHER_SQL = "other_sql";
   public static final String POSTGRESQL = "postgresql";
   public static final String REDIS = "redis";
+
+  private DbSystem() {}
 }

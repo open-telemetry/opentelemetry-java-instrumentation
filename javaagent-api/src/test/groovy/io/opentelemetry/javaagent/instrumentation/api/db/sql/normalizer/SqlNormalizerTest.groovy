@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils
-import io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SqlNormalizer
+package io.opentelemetry.javaagent.instrumentation.api.db.sql.normalizer
+
 import spock.lang.Specification
 import spock.lang.Timeout
 
@@ -13,7 +13,7 @@ class SqlNormalizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
-    def actualNormalized = JDBCUtils.normalizeSql(originalSql)
+    def actualNormalized = SqlNormalizer.normalize(originalSql)
 
     expect:
     actualNormalized == normalizedSql
@@ -57,7 +57,7 @@ class SqlNormalizerTest extends Specification {
     "SELECT * FROM TABLE WHERE FIELD = ' an escaped '' quote mark inside'"     | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = '\\\\'"                                 | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = '\"inside doubles\"'"                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = '\"\"'"                                 | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = '\"\$\$\$\$\"'"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'"       | "SELECT * FROM TABLE WHERE FIELD = ?"
 
     // Some databases support/encourage " instead of ' with same escape rules
@@ -66,8 +66,15 @@ class SqlNormalizerTest extends Specification {
     "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"" | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = \"\\\\\""                               | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\""                   | "SELECT * FROM TABLE WHERE FIELD = ?"
-    "SELECT * FROM TABLE WHERE FIELD = \"''\""                                 | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \"'\$\$\$\$'\""                         | "SELECT * FROM TABLE WHERE FIELD = ?"
     "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\""      | "SELECT * FROM TABLE WHERE FIELD = ?"
+
+    // Some databases allow using dollar-quoted strings
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\$\$"                               | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$words and spaces\$\$"               | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$quotes '\" inside\$\$"              | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\"''\"\$\$"                         | "SELECT * FROM TABLE WHERE FIELD = ?"
+    "SELECT * FROM TABLE WHERE FIELD = \$\$\\\\\$\$"                           | "SELECT * FROM TABLE WHERE FIELD = ?"
 
     // Unicode, including a unicode identifier with a trailing number
     "SELECT * FROM TABLE\u09137 WHERE FIELD = '\u0194'"                        | "SELECT * FROM TABLE\u09137 WHERE FIELD = ?"
@@ -80,7 +87,7 @@ class SqlNormalizerTest extends Specification {
     setup:
     String s = "'"
     for (int i = 0; i < 10000; i++) {
-      assert JDBCUtils.normalizeSql(s) != null
+      assert SqlNormalizer.normalize(s) != null
       s += "'"
     }
   }
@@ -91,7 +98,7 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert "?" == JDBCUtils.normalizeSql(s)
+    assert "?" == SqlNormalizer.normalize(s)
   }
 
   def "very long numbers at end of table name don't cause problem"() {
@@ -100,7 +107,7 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert s.substring(0, SqlNormalizer.LIMIT) == JDBCUtils.normalizeSql(s)
+    assert s.substring(0, SqlNormalizer.LIMIT) == SqlNormalizer.normalize(s)
   }
 
   def "test 32k truncation"() {
@@ -109,7 +116,7 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ")
     }
-    String normalized = JDBCUtils.normalizeSql(s.toString())
+    String normalized = SqlNormalizer.normalize(s.toString())
     System.out.println(normalized.length())
     assert normalized.length() <= SqlNormalizer.LIMIT
     assert !normalized.contains("1234")
@@ -123,7 +130,7 @@ class SqlNormalizerTest extends Specification {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt((int) Character.MAX_VALUE))
       }
-      JDBCUtils.normalizeSql(sb.toString())
+      SqlNormalizer.normalize(sb.toString())
     }
   }
 }
