@@ -16,22 +16,32 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.time.Duration
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Shared
 
 class CassandraClientTest extends AgentTestRunner {
+  private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
+
+  @Shared
+  GenericContainer cassandra
+  @Shared
+  int cassandraPort
 
   def setupSpec() {
-    /*
-     This timeout seems excessive but we've seen tests fail with timeout of 40s.
-     TODO: if we continue to see failures we may want to consider using 'real' Cassandra
-     started in container like we do for memcached. Note: this will complicate things because
-     tests would have to assume they run under shared Cassandra and act accordingly.
-      */
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE, 120000L)
+    cassandra = new GenericContainer("cassandra:4.0")
+      .withExposedPorts(9042)
+      .withLogConsumer(new Slf4jLogConsumer(log))
+      .withStartupTimeout(Duration.ofSeconds(120))
+    cassandra.start()
+
+    cassandraPort = cassandra.getMappedPort(9042)
   }
 
   def cleanupSpec() {
-    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
+    cassandra.stop()
   }
 
   def "test sync"() {
@@ -99,7 +109,7 @@ class CassandraClientTest extends AgentTestRunner {
       attributes {
         "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
         "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT.key" EmbeddedCassandraServerHelper.getNativeTransportPort()
+        "$SemanticAttributes.NET_PEER_PORT.key" cassandraPort
         "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
         "$SemanticAttributes.DB_NAME.key" keyspace
         "$SemanticAttributes.DB_STATEMENT.key" statement
@@ -112,7 +122,7 @@ class CassandraClientTest extends AgentTestRunner {
       .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
       .build()
     return CqlSession.builder()
-      .addContactPoint(new InetSocketAddress(EmbeddedCassandraServerHelper.getHost(), EmbeddedCassandraServerHelper.getNativeTransportPort()))
+      .addContactPoint(new InetSocketAddress("localhost", cassandraPort))
       .withConfigLoader(configLoader)
       .withLocalDatacenter("datacenter1")
       .withKeyspace((String) keyspace)
