@@ -14,7 +14,6 @@ import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.DefaultSpan;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -23,25 +22,25 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class DefaultSpanInstrumentation extends AbstractInstrumentation {
+public class SpanInstrumentation extends AbstractInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.trace.DefaultSpan");
+    return named("application.io.opentelemetry.trace.Span");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod().and(isPublic()).and(isStatic()).and(named("create")),
-        DefaultSpanInstrumentation.class.getName() + "$CreateAdvice");
+        isMethod().and(isPublic()).and(isStatic()).and(named("wrap")),
+        SpanInstrumentation.class.getName() + "$WrapAdvice");
   }
 
-  public static class CreateAdvice {
+  public static class WrapAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) Span applicationSpan) {
       applicationSpan =
           Bridging.toApplication(
-              DefaultSpan.create(Bridging.toAgent(applicationSpan.getContext())));
+              io.opentelemetry.trace.Span.wrap(Bridging.toAgent(applicationSpan.getContext())));
     }
   }
 }

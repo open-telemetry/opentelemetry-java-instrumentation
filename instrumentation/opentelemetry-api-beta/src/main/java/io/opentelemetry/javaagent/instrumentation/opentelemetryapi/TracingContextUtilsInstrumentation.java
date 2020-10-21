@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -36,33 +35,23 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    // TODO(anuraaga): Switch to using public APIs after context API settles down.
+    // https://github.com/open-telemetry/opentelemetry-java/issues/1807
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod().and(isPublic()).and(isStatic()).and(named("withSpan")).and(takesArguments(2)),
+        isMethod().and(isStatic()).and(named("withSpan")).and(takesArguments(2)),
         TracingContextUtilsInstrumentation.class.getName() + "$WithSpanAdvice");
     transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(isStatic())
-            .and(named("getCurrentSpan"))
-            .and(takesArguments(0)),
+        isMethod().and(isStatic()).and(named("getCurrentSpan")).and(takesArguments(0)),
         TracingContextUtilsInstrumentation.class.getName() + "$GetCurrentSpanAdvice");
     transformers.put(
-        isMethod().and(isPublic()).and(isStatic()).and(named("getSpan")).and(takesArguments(1)),
+        isMethod().and(isStatic()).and(named("getSpan")).and(takesArguments(1)),
         TracingContextUtilsInstrumentation.class.getName() + "$GetSpanAdvice");
     transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(isStatic())
-            .and(named("getSpanWithoutDefault"))
-            .and(takesArguments(1)),
+        isMethod().and(isStatic()).and(named("getSpanWithoutDefault")).and(takesArguments(1)),
         TracingContextUtilsInstrumentation.class.getName() + "$GetSpanWithoutDefaultAdvice");
     transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(isStatic())
-            .and(named("currentContextWith"))
-            .and(takesArguments(1)),
+        isMethod().and(isStatic()).and(named("currentContextWith")).and(takesArguments(1)),
         TracingContextUtilsInstrumentation.class.getName() + "$CurrentContextWithAdvice");
     return transformers;
   }

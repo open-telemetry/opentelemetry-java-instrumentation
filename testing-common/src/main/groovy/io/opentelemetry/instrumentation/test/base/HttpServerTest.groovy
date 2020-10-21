@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.TracingContextUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
@@ -204,7 +205,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
-    assert TEST_TRACER.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
+    assert TracingContextUtils.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }

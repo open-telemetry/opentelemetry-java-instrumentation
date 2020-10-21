@@ -7,11 +7,9 @@ package io.opentelemetry.instrumentation.api.decorator;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 
 @Deprecated
 public abstract class ClientDecorator extends BaseDecorator {
@@ -30,7 +28,7 @@ public abstract class ClientDecorator extends BaseDecorator {
     if (clientSpan.getContext().isValid()) {
       context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
-    return TracingContextUtils.withSpan(clientSpan, context);
+    return context.with(clientSpan);
   }
 
   /**
@@ -43,7 +41,7 @@ public abstract class ClientDecorator extends BaseDecorator {
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context).startSpan();

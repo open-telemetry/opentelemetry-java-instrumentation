@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttrib
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -198,7 +198,7 @@ public enum OpenTelemetryTracing implements Tracing {
       }
 
       if (error != null) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
         span.recordException(error);
         error = null;
       }

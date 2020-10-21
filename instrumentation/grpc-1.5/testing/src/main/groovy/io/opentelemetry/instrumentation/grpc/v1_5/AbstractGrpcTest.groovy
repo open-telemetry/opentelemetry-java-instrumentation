@@ -33,7 +33,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.StatusCanonicalCode
+import io.opentelemetry.trace.StatusCode
 import io.opentelemetry.trace.TracingContextUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -168,7 +168,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -180,7 +180,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           event(0) {
             eventName "message"
             attributes {
@@ -265,7 +265,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           event(0) {
             eventName "message"
             attributes {

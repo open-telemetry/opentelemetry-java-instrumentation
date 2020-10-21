@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapIn
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -151,7 +150,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = TRACER.getCurrentSpan();
+      Span span = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
 
       if (span.getContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);
@@ -173,7 +172,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        Context context = withSpan(span, Java8Bridge.currentContext());
+        Context context = Java8Bridge.currentContext().with(span);
 
         OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
 

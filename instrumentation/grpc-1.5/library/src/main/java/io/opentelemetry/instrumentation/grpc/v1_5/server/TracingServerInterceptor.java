@@ -22,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -64,7 +63,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
     GrpcHelper.prepareSpan(span, methodName);
 
-    Context context = TracingContextUtils.withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(

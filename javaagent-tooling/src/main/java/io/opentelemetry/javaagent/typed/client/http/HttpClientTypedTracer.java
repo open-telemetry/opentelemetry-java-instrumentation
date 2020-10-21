@@ -9,7 +9,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.typed.client.ClientTypedTracer;
-import io.opentelemetry.trace.TracingContextUtils;
 
 public abstract class HttpClientTypedTracer<
         T extends HttpClientTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
@@ -17,7 +16,7 @@ public abstract class HttpClientTypedTracer<
 
   @Override
   protected T startSpan(REQUEST request, T span) {
-    Context context = TracingContextUtils.withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, request, getSetter());
     return super.startSpan(request, span);
   }

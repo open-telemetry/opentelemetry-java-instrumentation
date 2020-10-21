@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.client;
 
-import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -93,7 +92,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
       if (PROPAGATOR.isRMIInternalObject(id)) {
         return;
       }
-      Span activeSpan = TRACER.getCurrentSpan();
+      Span activeSpan = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
       if (!activeSpan.getContext().isValid()) {
         return;
       }

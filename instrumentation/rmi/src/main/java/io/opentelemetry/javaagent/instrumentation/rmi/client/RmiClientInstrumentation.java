@@ -17,6 +17,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -59,7 +60,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope) {
 
       // TODO replace with client span check
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!TracingContextUtils.getCurrentSpan().getContext().isValid()) {
         return;
       }
       span = TRACER.startSpan(method);

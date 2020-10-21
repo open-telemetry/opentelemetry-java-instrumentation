@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.sparkjava;
 
-import static io.opentelemetry.javaagent.instrumentation.sparkjava.RoutesInstrumentation.TracerHolder.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -63,7 +62,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
-      Span span = TRACER.getCurrentSpan();
+      Span span = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
       if (span != null && routeMatch != null) {
         span.updateName(routeMatch.getMatchUri());
       }

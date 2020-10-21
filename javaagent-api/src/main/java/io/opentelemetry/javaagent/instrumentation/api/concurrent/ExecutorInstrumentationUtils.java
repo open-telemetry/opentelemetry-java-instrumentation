@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import static io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils.TRACER;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -28,7 +27,7 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
-    Span span = TRACER.getCurrentSpan();
+    Span span = TracingContextUtils.getCurrentSpan();
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 

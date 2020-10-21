@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -80,7 +79,7 @@ final class AwsSdkHttpClientTracer
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     return tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();

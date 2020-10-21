@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapte
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -68,7 +67,7 @@ public class JMSTracer extends BaseTracer {
   }
 
   public Scope startProducerScope(Span span, Message message) {
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
     return context.makeCurrent();
   }

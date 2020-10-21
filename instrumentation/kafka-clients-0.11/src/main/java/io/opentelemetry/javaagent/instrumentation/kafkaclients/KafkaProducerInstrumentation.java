@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.TRACER;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -77,7 +76,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       Context parent = Java8Bridge.currentContext();
 
       span = TRACER.startProducerSpan(record);
-      Context newContext = withSpan(span, parent);
+      Context newContext = parent.with(span);
 
       callback = new ProducerCallback(callback, parent, span);
 

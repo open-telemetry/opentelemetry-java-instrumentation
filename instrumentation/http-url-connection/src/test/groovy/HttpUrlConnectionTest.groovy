@@ -7,6 +7,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.trace.TracingContextUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Ignore
 import spock.lang.Requires
@@ -28,9 +29,9 @@ class HttpUrlConnectionTest extends HttpClientTest {
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      def parentSpan = TEST_TRACER.getCurrentSpan()
+      def parentSpan = TracingContextUtils.getCurrentSpan()
       def stream = connection.inputStream
-      assert TEST_TRACER.getCurrentSpan() == parentSpan
+      assert TracingContextUtils.getCurrentSpan() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

@@ -98,7 +98,10 @@ public class ArmeriaServerTracer
 
     @Override
     @Nullable
-    public String get(HttpRequest carrier, String key) {
+    public String get(@Nullable HttpRequest carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
       return carrier.headers().get(key);
     }
   }

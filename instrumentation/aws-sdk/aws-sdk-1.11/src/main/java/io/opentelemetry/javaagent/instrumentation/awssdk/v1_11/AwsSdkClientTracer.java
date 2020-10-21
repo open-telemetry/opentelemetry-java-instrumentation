@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
@@ -67,7 +65,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
    */
   @Override
   public Scope startScope(Span span, Request<?> request) {
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
     return context.makeCurrent();
   }

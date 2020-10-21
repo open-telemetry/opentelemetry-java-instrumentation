@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.S
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import java.util.function.Function;
@@ -81,7 +81,7 @@ public class AdviceUtils {
     if (context != null) {
       Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();

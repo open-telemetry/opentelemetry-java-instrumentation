@@ -10,7 +10,6 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -66,7 +65,7 @@ public class AwsSdk {
    */
   public static Span getSpanFromAttributes(ExecutionAttributes attributes) {
     Context context = getContextFromAttributes(attributes);
-    return context == null ? DefaultSpan.getInvalid() : getSpan(context);
+    return context == null ? Span.getInvalid() : getSpan(context);
   }
 
   /**

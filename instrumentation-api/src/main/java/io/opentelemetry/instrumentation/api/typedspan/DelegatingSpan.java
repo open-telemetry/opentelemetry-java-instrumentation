@@ -10,7 +10,7 @@ import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
@@ -65,12 +65,12 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status) {
+  public void setStatus(StatusCode status) {
     delegate.setStatus(status);
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, String description) {
+  public void setStatus(StatusCode status, String description) {
     delegate.setStatus(status, description);
   }
 

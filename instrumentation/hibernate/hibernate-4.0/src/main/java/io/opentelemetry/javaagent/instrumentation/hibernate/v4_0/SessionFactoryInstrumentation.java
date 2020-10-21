@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDeco
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,7 +63,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
       ContextStore<SharedSessionContract, Context> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Context.class);
-      contextStore.putIfAbsent(session, withSpan(span, context));
+      contextStore.putIfAbsent(session, context.with(span));
     }
   }
 }

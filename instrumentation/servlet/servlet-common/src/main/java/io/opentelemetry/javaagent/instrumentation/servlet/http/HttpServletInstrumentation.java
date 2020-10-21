@@ -79,7 +79,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

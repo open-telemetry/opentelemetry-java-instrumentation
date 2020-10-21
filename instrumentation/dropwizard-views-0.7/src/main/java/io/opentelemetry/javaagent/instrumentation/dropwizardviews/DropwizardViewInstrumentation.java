@@ -21,8 +21,9 @@ import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -68,7 +69,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!TracingContextUtils.getCurrentSpan().getContext().isValid()) {
         return null;
       }
       Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
@@ -83,7 +84,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       }
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();

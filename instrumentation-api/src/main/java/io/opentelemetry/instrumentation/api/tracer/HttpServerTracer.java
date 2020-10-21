@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -79,8 +78,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    */
   public Scope startScope(Span span, STORAGE storage) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context newContext =
-        withSpan(span, Context.current().withValues(CONTEXT_SERVER_SPAN_KEY, span));
+    Context newContext = Context.current().withValues(CONTEXT_SERVER_SPAN_KEY, span).with(span);
     attachServerContext(newContext, storage);
     return newContext.makeCurrent();
   }
@@ -119,8 +117,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   /**
    * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
-   * and the {@link Span} status will be set to {@link
-   * io.opentelemetry.trace.StatusCanonicalCode#ERROR}.
+   * and the {@link Span} status will be set to {@link io.opentelemetry.trace.StatusCode#ERROR}.
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
     onError(span, unwrapThrowable(throwable));

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_DOUBLE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_DOUBLE
@@ -191,10 +193,10 @@ class MeterTest extends AgentTestRunner {
     builderMethod                    | valueMethod | expectedType
     "longSumObserverBuilder"         | "value"     | MONOTONIC_LONG
     "longUpDownSumObserverBuilder"   | "value"     | NON_MONOTONIC_LONG
-    "longValueObserverBuilder"       | "sum"       | NON_MONOTONIC_LONG
+    "longValueObserverBuilder"       | "sum"       | GAUGE_LONG
     "doubleSumObserverBuilder"       | "value"     | MONOTONIC_DOUBLE
     "doubleUpDownSumObserverBuilder" | "value"     | NON_MONOTONIC_DOUBLE
-    "doubleValueObserverBuilder"     | "sum"       | NON_MONOTONIC_DOUBLE
+    "doubleValueObserverBuilder"     | "sum"       | GAUGE_DOUBLE
   }
 
   def "test batch recorder"() {

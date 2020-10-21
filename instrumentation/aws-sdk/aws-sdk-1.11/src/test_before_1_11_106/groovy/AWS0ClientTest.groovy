@@ -26,6 +26,7 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.trace.TracingContextUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicReference
 import spock.lang.AutoCleanup
@@ -199,7 +200,7 @@ class AWS0ClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    !TEST_TRACER.getCurrentSpan().getContext().isValid()
+    !TracingContextUtils.getCurrentSpan().getContext().isValid()
     thrown RuntimeException
 
     assertTraces(1) {
@@ -245,7 +246,7 @@ class AWS0ClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    !TEST_TRACER.getCurrentSpan().getContext().isValid()
+    !io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().getContext().isValid()
     thrown AmazonClientException
 
     assertTraces(1) {

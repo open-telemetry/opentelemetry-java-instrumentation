@@ -14,7 +14,7 @@ import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
-import application.io.opentelemetry.trace.StatusCanonicalCode;
+import application.io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,12 +80,12 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status) {
+  public void setStatus(StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, String description) {
+  public void setStatus(StatusCode status, String description) {
     agentSpan.setStatus(Bridging.toAgent(status), description);
   }
 

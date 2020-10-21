@@ -13,8 +13,9 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 
@@ -55,11 +56,11 @@ public abstract class BaseTracer {
   }
 
   public Scope startScope(Span span) {
-    return tracer.withSpan(span);
+    return Context.current().with(span).makeCurrent();
   }
 
   public Span getCurrentSpan() {
-    return tracer.getCurrentSpan();
+    return TracingContextUtils.getCurrentSpan();
   }
 
   protected abstract String getInstrumentationName();
@@ -126,7 +127,7 @@ public abstract class BaseTracer {
   }
 
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
-    span.setStatus(StatusCanonicalCode.ERROR);
+    span.setStatus(StatusCode.ERROR);
     onError(span, unwrapThrowable(throwable));
     end(span, endTimeNanos);
   }

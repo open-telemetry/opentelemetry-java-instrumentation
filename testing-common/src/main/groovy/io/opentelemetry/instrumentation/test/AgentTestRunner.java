@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatche
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -176,8 +177,8 @@ public abstract class AgentTestRunner extends Specification {
 
   @Before
   public void beforeTest() {
-    assert !getTestTracer().getCurrentSpan().getContext().isValid()
-        : "Span is active before test has started: " + getTestTracer().getCurrentSpan();
+    assert !TracingContextUtils.getCurrentSpan().getContext().isValid()
+        : "Span is active before test has started: " + TracingContextUtils.getCurrentSpan();
     TEST_WRITER.clear();
   }
 

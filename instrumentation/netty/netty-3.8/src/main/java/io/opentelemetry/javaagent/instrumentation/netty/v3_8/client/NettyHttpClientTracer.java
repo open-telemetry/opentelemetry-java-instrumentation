@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.opentelemetry.context.Context;
@@ -33,7 +32,7 @@ public class NettyHttpClientTracer
       // TODO (trask) if we move injection up to aws-sdk layer, and start suppressing nested netty
       //  spans, do we still need this condition?
       // AWS calls are often signed, so we can't add headers without breaking the signature.
-      Context context = withSpan(span, Context.current());
+      Context context = Context.current().with(span);
       context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
       return context.makeCurrent();
     }

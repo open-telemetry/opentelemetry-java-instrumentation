@@ -118,7 +118,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) Exception exception) {
-      Span span = TRACER.getCurrentSpan();
+      Span span = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
       if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)

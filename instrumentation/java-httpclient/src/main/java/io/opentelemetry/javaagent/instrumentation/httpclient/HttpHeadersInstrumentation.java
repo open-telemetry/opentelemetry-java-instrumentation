@@ -53,7 +53,7 @@ public class HttpHeadersInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      if (TRACER.getCurrentSpan().isRecording()) {
+      if (io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().isRecording()) {
         headers = TRACER.inject(headers);
       }
     }

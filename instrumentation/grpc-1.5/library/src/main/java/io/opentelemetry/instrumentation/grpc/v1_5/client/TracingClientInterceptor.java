@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
 import static io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcInjectAdapter.SETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -59,7 +58,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     String methodName = method.getFullMethodName();
     Span span = tracer.startSpan(methodName);
     GrpcHelper.prepareSpan(span, methodName);
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     final ClientCall<ReqT, RespT> result;
     try (Scope ignored = context.makeCurrent()) {
       try {

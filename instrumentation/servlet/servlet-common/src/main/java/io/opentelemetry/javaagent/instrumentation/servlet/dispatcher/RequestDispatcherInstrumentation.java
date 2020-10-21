@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -124,7 +123,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
         // this tells the dispatched servlet to use the current span as the parent for its work
-        Context newContext = withSpan(span, Java8Bridge.currentContext());
+        Context newContext = Java8Bridge.currentContext().with(span);
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
       scope = TRACER.startScope(span);

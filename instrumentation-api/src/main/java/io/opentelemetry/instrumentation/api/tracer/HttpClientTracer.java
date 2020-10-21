@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -14,7 +12,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -71,7 +68,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public Scope startScope(Span span, CARRIER carrier) {
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
@@ -112,7 +109,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context);

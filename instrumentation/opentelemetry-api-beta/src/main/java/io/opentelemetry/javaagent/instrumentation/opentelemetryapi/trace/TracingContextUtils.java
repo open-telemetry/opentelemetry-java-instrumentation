@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.
 
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.Scope;
-import application.io.opentelemetry.trace.DefaultSpan;
 import application.io.opentelemetry.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.ApplicationScope;
@@ -40,8 +39,7 @@ public class TracingContextUtils {
       }
       return applicationContext;
     }
-    io.opentelemetry.context.Context agentUpdatedContext =
-        io.opentelemetry.trace.TracingContextUtils.withSpan(agentSpan, agentContext);
+    io.opentelemetry.context.Context agentUpdatedContext = agentContext.with(agentSpan);
     contextStore.put(applicationContext, agentUpdatedContext);
     return applicationContext;
   }
@@ -59,7 +57,7 @@ public class TracingContextUtils {
         log.debug(
             "unexpected context: {}", applicationContext, new Exception("unexpected context"));
       }
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
     return toApplication(io.opentelemetry.trace.TracingContextUtils.getSpan(agentContext));
   }
@@ -82,10 +80,10 @@ public class TracingContextUtils {
 
   public static Scope currentContextWith(Span applicationSpan) {
     if (!applicationSpan.getContext().isValid()) {
-      // this supports direct usage of DefaultSpan.getInvalid()
+      // this supports direct usage of Span.getInvalid()
       return new ApplicationScope(
           io.opentelemetry.trace.TracingContextUtils.currentContextWith(
-              io.opentelemetry.trace.DefaultSpan.getInvalid()));
+              io.opentelemetry.trace.Span.getInvalid()));
     }
     if (applicationSpan instanceof ApplicationSpan) {
       return new ApplicationScope(

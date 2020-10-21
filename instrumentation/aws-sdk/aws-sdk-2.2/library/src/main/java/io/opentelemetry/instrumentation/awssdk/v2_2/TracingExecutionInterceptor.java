@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAttributes;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.TRACER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -76,7 +75,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer(), kind);
     executionAttributes.putAttribute(
-        CONTEXT_ATTRIBUTE, withSpan(span, io.opentelemetry.context.Context.current()));
+        CONTEXT_ATTRIBUTE, io.opentelemetry.context.Context.current().with(span));
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);

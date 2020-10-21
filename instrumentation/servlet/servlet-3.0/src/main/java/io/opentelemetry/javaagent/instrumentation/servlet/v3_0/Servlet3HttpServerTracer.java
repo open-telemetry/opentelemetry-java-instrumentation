@@ -10,7 +10,7 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -53,7 +53,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   public void onTimeout(Span span, long timeout) {
-    span.setStatus(StatusCanonicalCode.ERROR);
+    span.setStatus(StatusCode.ERROR);
     span.setAttribute("timeout", timeout);
     span.end();
   }

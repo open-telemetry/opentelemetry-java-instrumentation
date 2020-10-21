@@ -66,7 +66,8 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         @Advice.Local("otelCallDepth") Depth callDepth) {
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
       // Don't want to generate a new top-level span
-      if (callDepth.getAndIncrement() == 0 && TRACER.getCurrentSpan().getContext().isValid()) {
+      if (callDepth.getAndIncrement() == 0
+          && io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().getContext().isValid()) {
         span = TRACER.startSpan(method);
         scope = currentContextWith(span);
       }

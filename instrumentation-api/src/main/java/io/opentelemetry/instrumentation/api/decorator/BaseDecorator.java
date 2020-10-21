@@ -11,7 +11,7 @@ import static io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.END
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -45,12 +45,12 @@ public abstract class BaseDecorator {
   public Span onError(Span span, Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      onComplete(span, StatusCanonicalCode.ERROR, throwable);
+      onComplete(span, StatusCode.ERROR, throwable);
     }
     return span;
   }
 
-  public Span onComplete(Span span, StatusCanonicalCode status, Throwable throwable) {
+  public Span onComplete(Span span, StatusCode status, Throwable throwable) {
     assert span != null;
     span.setStatus(status);
     if (throwable != null) {

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -41,7 +39,7 @@ public class ContextPayload {
 
   public static ContextPayload from(Span span) {
     ContextPayload payload = new ContextPayload();
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, payload, SETTER);
     return payload;
   }

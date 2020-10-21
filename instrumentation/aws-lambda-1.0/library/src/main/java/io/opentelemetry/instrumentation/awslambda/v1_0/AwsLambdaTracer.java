@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -45,9 +43,9 @@ public class AwsLambdaTracer extends BaseTracer {
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     io.opentelemetry.context.Context newContext =
-        withSpan(
-            span,
-            io.opentelemetry.context.Context.current().withValues(CONTEXT_SERVER_SPAN_KEY, span));
+        io.opentelemetry.context.Context.current()
+            .withValues(CONTEXT_SERVER_SPAN_KEY, span)
+            .with(span);
     return newContext.makeCurrent();
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -25,7 +24,7 @@ public class TracingInterceptor implements Interceptor {
     Span span = TRACER.startSpan(digest);
     TRACER.onRequest(span, chain.request());
 
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
     Response response;
     try (Scope scope = context.makeCurrent()) {
