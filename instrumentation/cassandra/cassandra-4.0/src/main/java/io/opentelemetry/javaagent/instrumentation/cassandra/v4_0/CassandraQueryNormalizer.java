@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
