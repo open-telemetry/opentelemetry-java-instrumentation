@@ -1,4 +1,4 @@
-name: Build Spring Boot smoke test distribution
+name: Build gRPC smoke test distribution
 
 on:
   push:
