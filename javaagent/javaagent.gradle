@@ -6,6 +6,8 @@ plugins {
 
 description = 'OpenTelemetry Javaagent'
 
+group = 'io.opentelemetry.javaagent'
+
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
@@ -101,7 +103,7 @@ tasks.withType(ShadowJar).configureEach {
 
 dependencies {
   testImplementation project(':javaagent-bootstrap')
-  testImplementation project(':auto-api')
+  testImplementation project(':javaagent-api')
   testImplementation project(':instrumentation-api')
   testImplementation project(':utils:test-utils')
 

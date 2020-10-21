@@ -11,10 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.9.0-20201005.194248-83',
-    opentelemetryOther  : '0.9.0-20201005.194248-84',
-    opentelemetryAnother: '0.9.0-20201005.194248-82',
-    opentelemetryBaggage: '0.9.0-20201005.194248-32',
+    opentelemetry       : '0.9.1',
+    opentelemetryOther  : '0.9.1',
+    opentelemetryAnother: '0.9.1',
+    opentelemetryBaggage: '0.9.1',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7
@@ -34,6 +34,7 @@ ext {
     nullaway            : "0.8.0",
     autoValue           : "1.7.4",
     systemLambda        : "1.1.0",
+    prometheus          : "0.9.0"
   ]
 
   deps = [
@@ -46,6 +47,7 @@ ext {
     opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
     opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryAnother),
     opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
+    opentelemetryPrometheus     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-prometheus', version: versions.opentelemetry),
     opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetry),
     opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
 
@@ -63,6 +65,10 @@ ext {
     autoValueAnnotations        : "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
     // annotation processor
     autoValue                   : "com.google.auto.value:auto-value:${versions.autoValue}",
+    prometheus                  : [
+      dependencies.create(group: 'io.prometheus', name: 'simpleclient', version: "${versions.prometheus}"),
+      dependencies.create(group: 'io.prometheus', name: 'simpleclient_httpserver', version: "${versions.prometheus}"),
+    ],
 
     // Testing
 

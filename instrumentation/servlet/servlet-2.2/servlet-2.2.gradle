@@ -17,7 +17,7 @@ muzzle {
 
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
-  api(project(':instrumentation-core:servlet'))
+  api(project(':instrumentation-core:servlet-2.2'))
 
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'

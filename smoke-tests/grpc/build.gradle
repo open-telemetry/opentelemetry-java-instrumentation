@@ -1,0 +1,35 @@
+plugins {
+  id "java"
+  id "com.google.cloud.tools.jib" version "2.6.0"
+}
+
+group = "io.opentelemetry"
+version = "0.0.1-SNAPSHOT"
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation platform("org.apache.logging.log4j:log4j-bom:2.13.3")
+
+  implementation "io.grpc:grpc-netty-shaded:1.32.1"
+  implementation "io.grpc:grpc-protobuf:1.32.1"
+  implementation "io.grpc:grpc-stub:1.32.1"
+  implementation "io.opentelemetry:opentelemetry-proto:0.9.1"
+  implementation "io.opentelemetry:opentelemetry-extension-auto-annotations:0.9.1"
+  implementation "org.apache.logging.log4j:log4j-core"
+
+  runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl")
+}
+
+compileJava {
+  options.release = 8
+}
+
+def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
+
+jib {
+  from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
+  to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-grpc-jdk$targetJDK"
+}

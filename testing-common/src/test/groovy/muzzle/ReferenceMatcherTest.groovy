@@ -5,26 +5,27 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ABSTRACT
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.INTERFACE
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_INTERFACE
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.NON_STATIC
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.STATIC
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingClass
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingField
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Mismatch.MissingMethod
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag.ABSTRACT
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag.INTERFACE
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag.NON_INTERFACE
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag.PRIVATE_OR_HIGHER
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag.NON_STATIC
+import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag.STATIC
+import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.MissingClass
+import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.MissingField
+import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.MissingFlag
+import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.MissingMethod
 import static muzzle.TestClasses.MethodBodyAdvice
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.TestHelperClasses
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceCreator
-import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher
+import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
 
@@ -45,7 +46,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
 
   def "match safe classpaths"() {
     setup:
-    Reference[] refs = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.name, this.class.classLoader)
+    Reference[] refs = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
       .values()
       .toArray(new Reference[0])
     def refMatcher = new ReferenceMatcher(refs)
@@ -82,7 +83,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
         MethodBodyAdvice.SomeInterface,
         MethodBodyAdvice.SomeImplementation)] as URL[],
       (ClassLoader) null)
-    Reference[] refs = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.name, this.class.classLoader)
+    Reference[] refs = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
       .values()
       .toArray(new Reference[0])
     def refMatcher1 = new ReferenceMatcher(refs)
@@ -99,7 +100,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
   def "matching ref #referenceName #referenceFlags against #classToCheck produces #expectedMismatches"() {
     setup:
     def ref = new Reference.Builder(referenceName)
-      .withFlags(referenceFlags)
+      .withFlag(referenceFlag)
       .build()
 
     when:
@@ -109,9 +110,9 @@ class ReferenceMatcherTest extends AgentTestRunner {
     getMismatchClassSet(mismatches) == expectedMismatches as Set
 
     where:
-    referenceName           | referenceFlags  | classToCheck       | expectedMismatches
-    MethodBodyAdvice.B.name | [NON_INTERFACE] | MethodBodyAdvice.B | []
-    MethodBodyAdvice.B.name | [INTERFACE]     | MethodBodyAdvice.B | [MissingFlag]
+    referenceName           | referenceFlag | classToCheck       | expectedMismatches
+    MethodBodyAdvice.B.name | NON_INTERFACE | MethodBodyAdvice.B | []
+    MethodBodyAdvice.B.name | INTERFACE     | MethodBodyAdvice.B | [MissingFlag]
   }
 
   def "method match #methodTestDesc"() {
@@ -261,9 +262,9 @@ class ReferenceMatcherTest extends AgentTestRunner {
     mismatches.empty
   }
 
-  private static Set<Class> getMismatchClassSet(List<Reference.Mismatch> mismatches) {
+  private static Set<Class> getMismatchClassSet(List<Mismatch> mismatches) {
     Set<Class> mismatchClasses = new HashSet<>(mismatches.size())
-    for (Reference.Mismatch mismatch : mismatches) {
+    for (Mismatch mismatch : mismatches) {
       mismatchClasses.add(mismatch.class)
     }
     return mismatchClasses

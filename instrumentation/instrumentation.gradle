@@ -35,7 +35,7 @@ subprojects {
 
 dependencies {
   implementation project(':instrumentation-api')
-  implementation project(':auto-api')
+  implementation project(':javaagent-api')
   implementation(project(':javaagent-tooling')) {
     exclude module: ':javaagent-bootstrap'
   }
@@ -65,7 +65,7 @@ shadowJar {
 
   // rewrite library instrumentation dependencies
   relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
-    exclude "io.opentelemetry.instrumentation.auto.**"
+    exclude "io.opentelemetry.javaagent.instrumentation.**"
   }
 
   // rewrite dependencies calling Logger.getLogger
@@ -84,7 +84,9 @@ shadowJar {
   relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"
 
   // relocate OpenTelemetry API dependency usage
-  relocate "io.grpc.Context", "io.opentelemetry.javaagent.shaded.io.grpc.Context"
+  relocate("io.grpc.Context", "io.opentelemetry.javaagent.shaded.io.grpc.Context") {
+    exclude "io.grpc.Contexts"
+  }
 
   // this is for instrumentation on opentelemetry-api itself
   relocate "application.io.opentelemetry", "io.opentelemetry"

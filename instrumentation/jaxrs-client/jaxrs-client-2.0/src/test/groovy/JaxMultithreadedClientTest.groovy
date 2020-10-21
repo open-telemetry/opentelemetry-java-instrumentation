@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.ws.rs.client.Client
 import org.glassfish.jersey.client.JerseyClientBuilder
 import spock.lang.AutoCleanup

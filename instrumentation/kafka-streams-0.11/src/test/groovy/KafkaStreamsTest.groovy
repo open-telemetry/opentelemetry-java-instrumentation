@@ -8,8 +8,9 @@ import static io.opentelemetry.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.trace.TracingContextUtils.getSpan
 
 import io.grpc.Context
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.context.propagation.TextMapPropagator
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.opentelemetry.trace.propagation.HttpTraceContext
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -126,20 +127,28 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(0, 5) {
         // PRODUCER span 0
         span(0) {
-          name STREAM_PENDING
+          name STREAM_PENDING + " send"
           kind PRODUCER
           errored false
           hasNoParent()
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         // CONSUMER span 0
         span(1) {
-          name STREAM_PENDING
+          name STREAM_PENDING + " process"
           kind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -147,11 +156,15 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 1
         span(2) {
-          name STREAM_PENDING
+          name STREAM_PENDING + " process"
           kind CONSUMER
           errored false
           childOf span(0)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "partition" { it >= 0 }
             "offset" 0
             "asdf" "testing"
@@ -159,20 +172,28 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 0
         span(3) {
-          name STREAM_PROCESSED
+          name STREAM_PROCESSED + " send"
           kind PRODUCER
           errored false
           childOf span(2)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
           }
         }
         // CONSUMER span 0
         span(4) {
-          name STREAM_PROCESSED
+          name STREAM_PROCESSED + " process"
           kind CONSUMER
           errored false
           childOf span(3)
           attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PROCESSED
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }

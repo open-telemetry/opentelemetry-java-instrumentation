@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import com.amazonaws.AmazonClientException
@@ -24,7 +24,7 @@ import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicReference

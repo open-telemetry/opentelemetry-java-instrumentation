@@ -27,7 +27,7 @@ public abstract class Config {
   private static final Config DEFAULT = Config.create(Collections.emptyMap());
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
-  // getInstrumentationMuzzle() and the Instrumenter.Default constructor uses Config
+  // getMuzzleReferenceMatcher() and the Instrumenter.Default constructor uses Config
   private static volatile Config INSTANCE = DEFAULT;
 
   /**
@@ -129,20 +129,21 @@ public abstract class Config {
     }
   }
 
-  // some integrations have '-' or '_' character in their names -- this does not work well with
+  // some instrumentation names have '-' or '_' character -- this does not work well with
   // environment variables (where we replace every non-alphanumeric character with '.'), so we're
   // replacing those with a dot
   public static String normalizePropertyName(String propertyName) {
     return PROPERTY_NAME_REPLACEMENTS.matcher(propertyName.toLowerCase()).replaceAll(".");
   }
 
-  public boolean isIntegrationEnabled(SortedSet<String> integrationNames, boolean defaultEnabled) {
+  public boolean isInstrumentationEnabled(
+      SortedSet<String> instrumentationNames, boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
-    for (String name : integrationNames) {
+    for (String name : instrumentationNames) {
       boolean configEnabled =
-          getBooleanProperty("otel.integration." + name + ".enabled", defaultEnabled);
+          getBooleanProperty("otel.instrumentation." + name + ".enabled", defaultEnabled);
 
       if (defaultEnabled) {
         anyEnabled &= configEnabled;

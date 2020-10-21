@@ -50,7 +50,7 @@ publishing {
         scm {
           connection = 'scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git'
           developerConnection = 'scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git'
-          url = 'git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
+          url = 'git@github.com:open-telemetry/opentelemetry-java-instrumentation.git'
         }
 
         afterEvaluate {
@@ -70,11 +70,11 @@ private String artifactPrefix(Project p, String archivesBaseName) {
   if (p.name.startsWith("opentelemetry")) {
     return ''
   }
-  if (p.name.startsWith("auto")) {
+  if (p.name.startsWith("javaagent")) {
     return 'opentelemetry-'
   }
-  if (p.group == 'io.opentelemetry.instrumentation.auto') {
-    return 'opentelemetry-auto-'
+  if (p.group == 'io.opentelemetry.javaagent.instrumentation') {
+    return 'opentelemetry-javaagent-'
   }
   return 'opentelemetry-'
 }

@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
   <Match>
-    <Class name="io.opentelemetry.instrumentation.auto.jdbc.normalizer.SimpleCharStream"/>
+    <Class name="io.opentelemetry.javaagent.instrumentation.jdbc.normalizer.SimpleCharStream"/>
     <Bug pattern="DM_DEFAULT_ENCODING"/> <!-- ignore default encoding for auto-genned class -->
   </Match>
 
   <Match>
-    <Class name="io.opentelemetry.auto.util.gc.GCUtils"/>
+    <Class name="io.opentelemetry.instrumentation.util.gc.GCUtils"/>
     <Bug pattern="DM_GC"/> <!-- forced GC only used in testing -->
+  </Match>
+
+  <Match>
+    <Source name="~.*\.kt" /> <!-- https://github.com/spotbugs/spotbugs/issues/573 kotlin is not well supported (yet) -->
   </Match>
 
   <Match>

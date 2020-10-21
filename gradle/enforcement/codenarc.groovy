@@ -308,7 +308,8 @@ ruleset {
   FieldName {
     regex = '^_?[a-z][a-zA-Z0-9]*$'
     finalRegex = '^_?[a-z][a-zA-Z0-9]*$'
-    staticFinalRegex = '^logger$|^[A-Z][A-Z_0-9]*$|^serialVersionUID$'
+    // can be either constant (ABC_XYZ) or non-constant (abcXyz)
+    staticFinalRegex = '^[A-Z][A-Z_0-9]*$|^_?[a-z][a-zA-Z0-9]*$'
   }
   InterfaceName
   MethodName {

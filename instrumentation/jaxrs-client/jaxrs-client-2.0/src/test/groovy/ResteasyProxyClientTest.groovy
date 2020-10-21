@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.nio.charset.StandardCharsets
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam

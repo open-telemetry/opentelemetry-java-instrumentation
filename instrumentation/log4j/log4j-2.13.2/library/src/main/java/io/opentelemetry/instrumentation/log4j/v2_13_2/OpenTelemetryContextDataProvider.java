@@ -40,9 +40,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     SpanContext spanContext = currentSpan.getContext();
     contextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
     contextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
-    if (spanContext.isSampled()) {
-      contextData.put(SAMPLED, "true");
-    }
+    contextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
     return contextData;
   }
 }

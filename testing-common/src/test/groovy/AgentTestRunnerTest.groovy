@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.google.common.reflect.ClassPath
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ClasspathUtils
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.javaagent.tooling.Constants
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
@@ -17,14 +17,17 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final boolean AGENT_INSTALLED_IN_CLINIT
 
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty(
-        "otel.trace.classes.exclude",
-        "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
+    it.setProperty("otel.trace.classes.exclude",
+      "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+  }
 
+  static {
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   def "classpath setup"() {

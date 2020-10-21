@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.tooling;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.TracerCustomizer;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
+import io.opentelemetry.javaagent.spi.exporter.MetricServer;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
@@ -73,6 +75,13 @@ public class TracerInstaller {
       } else {
         log.debug("No {} metric exporter found", exporterName);
       }
+
+      MetricServer metricServer = findMetricServer(exporterName);
+      if (metricServer != null) {
+        installMetricServer(metricServer, config);
+      } else {
+        log.debug("No {} metric server found", exporterName);
+      }
     }
   }
 
@@ -84,10 +93,25 @@ public class TracerInstaller {
       if (metricExporterFactory
           .getClass()
           .getSimpleName()
-          .replace("_", "")
           .toLowerCase()
-          .startsWith(exporterName.toLowerCase())) {
+          .startsWith(exporterName(exporterName).toLowerCase())) {
         return metricExporterFactory;
+      }
+    }
+    return null;
+  }
+
+  private static MetricServer findMetricServer(String exporterName) {
+    ServiceLoader<MetricServer> serviceLoader =
+        ServiceLoader.load(MetricServer.class, TracerInstaller.class.getClassLoader());
+
+    for (MetricServer metricServer : serviceLoader) {
+      if (metricServer
+          .getClass()
+          .getSimpleName()
+          .toLowerCase()
+          .startsWith(exporterName(exporterName).toLowerCase())) {
+        return metricServer;
       }
     }
     return null;
@@ -101,13 +125,16 @@ public class TracerInstaller {
       if (spanExporterFactory
           .getClass()
           .getSimpleName()
-          .replace("_", "")
           .toLowerCase()
-          .startsWith(exporterName.toLowerCase())) {
+          .startsWith(exporterName(exporterName).toLowerCase())) {
         return spanExporterFactory;
       }
     }
     return null;
+  }
+
+  private static String exporterName(String exporterName) {
+    return exporterName.replace("otlp_span", "otlpspan").replace("otlp_metric", "otlpmetric");
   }
 
   private static synchronized void installExportersFromJar(String exporterJar, Properties config) {
@@ -157,6 +184,12 @@ public class TracerInstaller {
         BatchSpanProcessor.newBuilder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
+  }
+
+  private static void installMetricServer(MetricServer metricServer, Properties config) {
+    MetricProducer metricProducer = OpenTelemetrySdk.getMeterProvider().getMetricProducer();
+    metricServer.start(metricProducer, config);
+    log.info("Installed metric server: " + metricServer.getClass().getName());
   }
 
   private static <F> F getExporterFactory(Class<F> service, ExporterClassLoader exporterLoader) {

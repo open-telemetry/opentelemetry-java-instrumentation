@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils

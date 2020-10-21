@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.instrumentation.auto.api.WeakMap
-import io.opentelemetry.instrumentation.auto.jaxrs.v2_0.JaxRsAnnotationsTracer
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.javaagent.instrumentation.api.WeakMap
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer
 import java.lang.reflect.Method
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -16,6 +16,7 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import spock.lang.Unroll
 
 abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -32,7 +33,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "POST /a"
+          name "/a"
           attributes {
           }
         }
@@ -40,7 +41,8 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
   }
 
-  def "span named '#name' from annotations on class when is not root span"() {
+  @Unroll
+  def "span named '#paramName' from annotations on class when is not root span"() {
     setup:
     def startingCacheSize = spanNames.size()
     runUnderServerTrace("test") {
@@ -78,53 +80,53 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     spanNames.get(obj.class).size() == 1
 
     where:
-    paramName            | obj
-    "/a"                 | new Jax() {
+    paramName      | obj
+    "/a"           | new Jax() {
       @Path("/a")
       void call() {
       }
     }
-    "GET /b"             | new Jax() {
+    "/b"           | new Jax() {
       @GET
       @Path("/b")
       void call() {
       }
     }
-    "POST /interface/c"  | new InterfaceWithPath() {
+    "/interface/c" | new InterfaceWithPath() {
       @POST
       @Path("/c")
       void call() {
       }
     }
-    "HEAD /interface"    | new InterfaceWithPath() {
+    "/interface"   | new InterfaceWithPath() {
       @HEAD
       void call() {
       }
     }
-    "POST /abstract/d"   | new AbstractClassWithPath() {
+    "/abstract/d"  | new AbstractClassWithPath() {
       @POST
       @Path("/d")
       void call() {
       }
     }
-    "PUT /abstract"      | new AbstractClassWithPath() {
+    "/abstract"    | new AbstractClassWithPath() {
       @PUT
       void call() {
       }
     }
-    "OPTIONS /child/e"   | new ChildClassWithPath() {
+    "/child/e"     | new ChildClassWithPath() {
       @OPTIONS
       @Path("/e")
       void call() {
       }
     }
-    "DELETE /child/call" | new ChildClassWithPath() {
+    "/child/call"  | new ChildClassWithPath() {
       @DELETE
       void call() {
       }
     }
-    "POST /child/call"   | new ChildClassWithPath()
-    "GET /child/call"    | new JavaInterfaces.ChildClassOnInterface()
+    "/child/call"  | new ChildClassWithPath()
+    "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
 //    "GET /child/invoke"         | new JavaInterfaces.DefaultChildClassOnInterface()
 

@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

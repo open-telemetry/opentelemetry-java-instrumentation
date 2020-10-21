@@ -9,7 +9,7 @@ import static java.util.stream.Collectors.toSet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.protobuf.util.JsonFormat
-import io.opentelemetry.auto.test.utils.OkHttpUtils
+import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span

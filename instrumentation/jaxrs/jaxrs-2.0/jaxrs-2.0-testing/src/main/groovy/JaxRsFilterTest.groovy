@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderServerTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -65,21 +65,21 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     }
 
     where:
-    resource           | abortNormal | abortPrematch | parentSpanName             | controllerName                 | expectedResponse
-    "/test/hello/bob"  | false       | false         | "POST /test/hello/{name}"  | "Test1.hello"                  | "Test1 bob!"
-    "/test2/hello/bob" | false       | false         | "POST /test2/hello/{name}" | "Test2.hello"                  | "Test2 bob!"
-    "/test3/hi/bob"    | false       | false         | "POST /test3/hi/{name}"    | "Test3.hello"                  | "Test3 bob!"
+    resource           | abortNormal | abortPrematch | parentSpanName        | controllerName                 | expectedResponse
+    "/test/hello/bob"  | false       | false         | "/test/hello/{name}"  | "Test1.hello"                  | "Test1 bob!"
+    "/test2/hello/bob" | false       | false         | "/test2/hello/{name}" | "Test2.hello"                  | "Test2 bob!"
+    "/test3/hi/bob"    | false       | false         | "/test3/hi/{name}"    | "Test3.hello"                  | "Test3 bob!"
 
     // Resteasy and Jersey give different resource class names for just the below case
     // Resteasy returns "SubResource.class"
     // Jersey returns "Test1.class
-    // "/test/hello/bob"  | true        | false         | "POST /test/hello/{name}"  | "Test1.hello"                  | "Aborted"
+    // "/test/hello/bob"  | true        | false         | "/test/hello/{name}"  | "Test1.hello"                  | "Aborted"
 
-    "/test2/hello/bob" | true        | false         | "POST /test2/hello/{name}" | "Test2.hello"                  | "Aborted"
-    "/test3/hi/bob"    | true        | false         | "POST /test3/hi/{name}"    | "Test3.hello"                  | "Aborted"
-    "/test/hello/bob"  | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
-    "/test2/hello/bob" | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
-    "/test3/hi/bob"    | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
+    "/test2/hello/bob" | true        | false         | "/test2/hello/{name}" | "Test2.hello"                  | "Aborted"
+    "/test3/hi/bob"    | true        | false         | "/test3/hi/{name}"    | "Test3.hello"                  | "Aborted"
+    "/test/hello/bob"  | false       | true          | null                  | "PrematchRequestFilter.filter" | "Aborted Prematch"
+    "/test2/hello/bob" | false       | true          | null                  | "PrematchRequestFilter.filter" | "Aborted Prematch"
+    "/test3/hi/bob"    | false       | true          | null                  | "PrematchRequestFilter.filter" | "Aborted Prematch"
   }
 
   def "test nested call"() {
@@ -115,8 +115,8 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     }
 
     where:
-    resource        | parentResourceName   | controller1Name | expectedResponse
-    "/test3/nested" | "POST /test3/nested" | "Test3.nested"  | "Test3 nested!"
+    resource        | parentResourceName | controller1Name | expectedResponse
+    "/test3/nested" | "/test3/nested"    | "Test3.nested"  | "Test3 nested!"
   }
 
   @Provider

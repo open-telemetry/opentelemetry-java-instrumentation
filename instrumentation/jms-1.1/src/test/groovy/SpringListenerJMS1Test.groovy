@@ -6,16 +6,14 @@
 import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.jms.ConnectionFactory
 import listener.Config
-import org.apache.activemq.ActiveMQMessageConsumer
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
-import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter
 import spock.lang.Requires
 
-@Requires({"true" != System.getenv("CIRCLECI")})
+@Requires({ "true" != System.getenv("CIRCLECI") })
 class SpringListenerJMS1Test extends AgentTestRunner {
 
   def "receiving message in spring listener generates spans"() {
@@ -29,10 +27,10 @@ class SpringListenerJMS1Test extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         producerSpan(it, 0, "queue", "SpringListenerJMS1")
-        consumerSpan(it, 1, "queue", "SpringListenerJMS1", null, true, MessagingMessageListenerAdapter, span(0))
+        consumerSpan(it, 1, "queue", "SpringListenerJMS1", "", span(0), "process")
       }
       trace(1, 1) {
-        consumerSpan(it, 0, "queue", "SpringListenerJMS1", null, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, "queue", "SpringListenerJMS1", "", null, "receive")
       }
     }
 

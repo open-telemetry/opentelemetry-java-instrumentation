@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
@@ -23,7 +23,7 @@ import org.glassfish.jersey.server.ResourceConfig
 class GrizzlyTest extends HttpServerTest<HttpServer> {
 
   static {
-    System.setProperty("otel.integration.grizzly.enabled", "true")
+    System.setProperty("otel.instrumentation.grizzly.enabled", "true")
   }
 
   @Override

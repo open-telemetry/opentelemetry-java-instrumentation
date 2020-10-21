@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.SPAN_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -62,6 +65,15 @@ public class AwsSdk {
    * no span set.
    */
   public static Span getSpanFromAttributes(ExecutionAttributes attributes) {
-    return attributes.getAttribute(SPAN_ATTRIBUTE);
+    Context context = getContextFromAttributes(attributes);
+    return context == null ? DefaultSpan.getInvalid() : getSpan(context);
+  }
+
+  /**
+   * Returns the {@link Span} stored in the {@link ExecutionAttributes}, or {@code null} if there is
+   * no span set.
+   */
+  public static Context getContextFromAttributes(ExecutionAttributes attributes) {
+    return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }
 }

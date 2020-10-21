@@ -10,8 +10,8 @@ import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
 import com.lambdaworks.redis.api.StatefulConnection
 import com.lambdaworks.redis.api.sync.RedisCommands
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.embedded.RedisServer
 import spock.lang.Shared

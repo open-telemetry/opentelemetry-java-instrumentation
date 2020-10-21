@@ -5,11 +5,11 @@
 
 package springdata
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method

@@ -6,7 +6,7 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
-import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import play.shaded.ahc.org.asynchttpclient.AsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.AsyncHttpClientConfig
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient

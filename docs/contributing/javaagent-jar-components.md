@@ -28,7 +28,7 @@ class from there.
 `io.opentelemetry.javaagent.bootstrap.AgentInitializer` and a few other classes that live in the bootstrap class
 loader but are not used directly by auto-instrumentation
 
-#### `instrumentation-api` and `auto-api` modules
+#### `instrumentation-api` and `javaagent-api` modules
 
 These modules contain support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
@@ -39,7 +39,7 @@ possible. Otherwise, there is a risk of accidentally exposing this classes to
 the actual application.
 
 `instrumentation-api` contains classes that are needed for both library and auto-instrumentation,
-while `auto-api` contains classes that are only needed for auto-instrumentation.
+while `javaagent-api` contains classes that are only needed for auto-instrumentation.
 
 ### Modules that live in the agent class loader
 
@@ -57,7 +57,7 @@ folder inside final jar file, called`inst`.
 In addition, the extension of all class files is changed from `class` to `classdata`.
 This ensures that general classloaders cannot find nor load these classes.
 - When `io.opentelemetry.javaagent.bootstrap.AgentInitializer` is invoked, it creates an
-instance of `io.opentelemetry.instrumentation.auto.api.AgentClassLoader`, loads an
+instance of `io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader`, loads an
 `io.opentelemetry.javaagent.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the
@@ -82,7 +82,7 @@ module
 Available in the bootstrap class loader:
 
 - `io/opentelemetry/javaagent/bootstrap/` - contains the `javaagent-bootstrap` module
-- `io/opentelemetry/instrumentation/auto/api/` - contains the `auto-api` module
+- `io/opentelemetry/javaagent/instrumentation/api/` - contains the `javaagent-api` module
 - `io/opentelemetry/javaagent/shaded/instrumentation/api/` - contains the `instrumentation-api` module,
  shaded during creation of `javaagent` jar file by Shadow Gradle plugin
 - `io/opentelemetry/javaagent/shaded/io/` - contains the OpenTelemetry API and its dependency gRPC

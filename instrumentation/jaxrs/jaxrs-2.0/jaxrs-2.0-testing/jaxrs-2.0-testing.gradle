@@ -10,7 +10,7 @@ dependencies {
   implementation deps.slf4j
   implementation deps.testLogging
 
-  implementation project(':auto-api')
+  implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common')
 }

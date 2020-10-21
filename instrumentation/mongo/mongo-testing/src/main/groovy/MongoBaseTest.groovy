@@ -11,9 +11,14 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder
 import de.flapdoodle.embed.mongo.config.Net
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.process.runtime.Network
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 /**
  * Testing needs to be in a centralized project.
@@ -65,5 +70,33 @@ class MongoBaseTest extends AgentTestRunner {
 
     then:
     noExceptionThrown()
+  }
+
+  def mongoSpan(TraceAssert trace, int index,
+                String operation, String collection,
+                String dbName, String statement,
+                Object parentSpan = null, Throwable exception = null) {
+    trace.span(index) {
+      name { it.replace(" ", "") == statement }
+      kind CLIENT
+      if (parentSpan == null) {
+        hasNoParent()
+      } else {
+        childOf((SpanData) parentSpan)
+      }
+      attributes {
+        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+        "$SemanticAttributes.NET_PEER_PORT.key" port
+        "$SemanticAttributes.DB_STATEMENT.key" {
+          it.replace(" ", "") == statement
+        }
+        "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
+        "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
+        "$SemanticAttributes.DB_NAME.key" dbName
+        "$SemanticAttributes.DB_OPERATION.key" operation
+        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
+      }
+    }
   }
 }

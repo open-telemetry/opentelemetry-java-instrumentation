@@ -5,14 +5,12 @@ apply plugin: 'groovy'
 apply plugin: 'org.gradle.test-retry'
 
 apply from: "$rootDir/gradle/spotless.gradle"
-apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"
 
 afterEvaluate {
-  if (!archivesBaseName.startsWith('javaagent') &&
-    (group == 'io.opentelemetry.instrumentation.auto' || findProperty('mavenGroupId') == 'io.opentelemetry.instrumentation.auto')) {
-    archivesBaseName = 'opentelemetry-auto-' + archivesBaseName
+  if (findProperty('mavenGroupId') == 'io.opentelemetry.javaagent.instrumentation') {
+    archivesBaseName = 'opentelemetry-javaagent-' + archivesBaseName
   } else {
     archivesBaseName = 'opentelemetry-' + archivesBaseName
   }

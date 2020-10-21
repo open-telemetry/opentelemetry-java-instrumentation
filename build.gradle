@@ -16,8 +16,8 @@ plugins {
 
   id "com.github.johnrengelman.shadow" version "6.0.0"
 
-  id "com.diffplug.gradle.spotless" version "4.3.0"
-  id "com.github.spotbugs" version "4.0.1"
+  id "com.diffplug.spotless" version "5.6.1"
+  id "com.github.spotbugs" version "4.5.1"
 
   id "net.ltgt.errorprone" version "1.2.1" apply false
 }
@@ -26,11 +26,8 @@ release {
   defaultVersionStrategy = Strategies.SNAPSHOT
 }
 
-def isCI = System.getenv("CI") != null
-
 allprojects {
-  group = 'io.opentelemetry.instrumentation.auto'
-
+  ext.isCI = System.getenv("CI") != null
   if (isCI) {
     buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
   }
@@ -62,7 +59,7 @@ allprojects {
   }
 }
 
-apply plugin: 'com.diffplug.gradle.spotless'
+apply plugin: 'com.diffplug.spotless'
 
 spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules

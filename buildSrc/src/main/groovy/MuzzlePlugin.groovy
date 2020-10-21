@@ -1,6 +1,12 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import java.lang.reflect.Method
 import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Predicate
 import java.util.regex.Pattern
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
@@ -69,7 +75,7 @@ class MuzzlePlugin implements Plugin<Project> {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
           ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
           ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
         }
@@ -81,7 +87,7 @@ class MuzzlePlugin implements Plugin<Project> {
       description = "Print references created by instrumentation muzzle"
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
       }
@@ -215,15 +221,9 @@ class MuzzlePlugin implements Plugin<Project> {
     rangeRequest.setRepositories(MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-    Set<Version> versions = rangeResult.versions.toSet()
 
-    limitLargeRanges(rangeResult, versions, muzzleDirective.skipVersions)
-
-//    println "Range Request: " + rangeRequest
-//    println "Range Result: " + rangeResult
-
-    Set<Artifact> allVersionArtifacts = filterVersion(versions, muzzleDirective.skipVersions).collect { version ->
-      new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version.toString())
+    Set<Artifact> allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.skipVersions).collect { version ->
+      new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version)
     }.toSet()
 
     if (allVersionArtifacts.isEmpty()) {
@@ -239,47 +239,91 @@ class MuzzlePlugin implements Plugin<Project> {
   private static Set<MuzzleDirective> inverseOf(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Set<MuzzleDirective> inverseDirectives = new HashSet<>()
 
-    Artifact allVerisonsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
+    Artifact allVersionsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
     Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
-
 
     VersionRangeRequest allRangeRequest = new VersionRangeRequest()
     allRangeRequest.setRepositories(MUZZLE_REPOS)
-    allRangeRequest.setArtifact(allVerisonsArtifact)
+    allRangeRequest.setArtifact(allVersionsArtifact)
     VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-    Set<Version> versions = rangeResult.versions.toSet()
 
-    filterVersion(allRangeResult.versions.toSet(), muzzleDirective.skipVersions).collect { version ->
-      if (!versions.contains(version)) {
-        MuzzleDirective inverseDirective = new MuzzleDirective()
-        inverseDirective.group = muzzleDirective.group
-        inverseDirective.module = muzzleDirective.module
-        inverseDirective.versions = "$version"
-        inverseDirective.assertPass = !muzzleDirective.assertPass
-        inverseDirectives.add(inverseDirective)
-      }
+    allRangeResult.getVersions().removeAll(rangeResult.getVersions())
+
+    filterVersions(allRangeResult, muzzleDirective.skipVersions).each { version ->
+      MuzzleDirective inverseDirective = new MuzzleDirective()
+      inverseDirective.group = muzzleDirective.group
+      inverseDirective.module = muzzleDirective.module
+      inverseDirective.versions = version
+      inverseDirective.assertPass = !muzzleDirective.assertPass
+      inverseDirectives.add(inverseDirective)
     }
 
     return inverseDirectives
   }
 
-  private static void limitLargeRanges(VersionRangeResult result, Set<Version> versions, Set<String> skipVersions) {
-    List<Version> copy = new ArrayList<>(versions)
-    copy.removeAll(skipVersions)
+  private static Set<String> filterVersions(VersionRangeResult range, Set<String> skipVersions) {
+    Set<String> result = new HashSet<>()
+
+    def predicate = new AcceptableVersions(range, skipVersions)
+    if (predicate.test(range.lowestVersion)) {
+      result.add(range.lowestVersion.toString())
+    }
+    if (predicate.test(range.highestVersion)) {
+      result.add(range.highestVersion.toString())
+    }
+
+    List<Version> copy = new ArrayList<>(range.versions)
     Collections.shuffle(copy)
-    while (RANGE_COUNT_LIMIT <= copy.size()) {
+    while (result.size() < RANGE_COUNT_LIMIT && !copy.isEmpty()) {
       Version version = copy.pop()
-      if (!(version.equals(result.lowestVersion) || version.equals(result.highestVersion))) {
-        skipVersions.add(version.toString())
+      if (predicate.test(version)) {
+        result.add(version.toString())
       }
     }
-    if (skipVersions.size() > 0) {
-      println "Muzzle skipping " + skipVersions.size() + " versions"
+
+    return result
+  }
+
+  static class AcceptableVersions implements Predicate<Version> {
+    private static final Pattern GIT_SHA_PATTERN = Pattern.compile('^.*-[0-9a-f]{7,}$')
+
+    private final VersionRangeResult range
+    private final Collection<String> skipVersions
+
+    AcceptableVersions(VersionRangeResult range, Collection<String> skipVersions) {
+      this.range = range
+      this.skipVersions = skipVersions
+    }
+
+    @Override
+    boolean test(Version version) {
+      if (version == null) {
+        return false
+      }
+      def versionString = version.toString().toLowerCase()
+      if (skipVersions.contains(versionString)) {
+        return false
+      }
+
+      def draftVersion = versionString.contains("rc") ||
+        versionString.contains(".cr") ||
+        versionString.contains("alpha") ||
+        versionString.contains("beta") ||
+        versionString.contains("-b") ||
+        versionString.contains(".m") ||
+        versionString.contains("-m") ||
+        versionString.contains("-dev") ||
+        versionString.contains("-ea") ||
+        versionString.contains("-atlassian-") ||
+        versionString.contains("public_draft") ||
+        versionString.matches(GIT_SHA_PATTERN)
+
+      return !draftVersion
     }
   }
 
@@ -322,6 +366,7 @@ class MuzzlePlugin implements Plugin<Project> {
     }
 
     def muzzleTask = instrumentationProject.task(taskName) {
+      dependsOn(instrumentationProject.configurations.named("runtimeClasspath"))
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
         def ccl = Thread.currentThread().contextClassLoader
@@ -330,12 +375,13 @@ class MuzzlePlugin implements Plugin<Project> {
           String toString() {
             return "bogus"
           }
+
         }
         Thread.currentThread().contextClassLoader = bogusLoader
         ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
         } finally {
@@ -364,6 +410,7 @@ class MuzzlePlugin implements Plugin<Project> {
     return locator.getService(RepositorySystem.class)
   }
 
+
   /**
    * Create muzzle's repository system session
    */
@@ -376,31 +423,6 @@ class MuzzlePlugin implements Plugin<Project> {
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
 
     return session
-  }
-
-  private static final Pattern GIT_SHA_PATTERN = Pattern.compile('^.*-[0-9a-f]{7,}$')
-
-  /**
-   * Filter out snapshot-type builds from versions list.
-   */
-  private static filterVersion(Set<Version> list, Set<String> skipVersions) {
-    list.removeIf {
-      def version = it.toString().toLowerCase()
-      return version.contains("rc") ||
-        version.contains(".cr") ||
-        version.contains("alpha") ||
-        version.contains("beta") ||
-        version.contains("-b") ||
-        version.contains(".m") ||
-        version.contains("-m") ||
-        version.contains("-dev") ||
-        version.contains("-ea") ||
-        version.contains("-atlassian-") ||
-        version.contains("public_draft") ||
-        skipVersions.contains(version) ||
-        version.matches(GIT_SHA_PATTERN)
-    }
-    return list
   }
 }
 

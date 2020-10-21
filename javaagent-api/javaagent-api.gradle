@@ -1,0 +1,18 @@
+group = 'io.opentelemetry.javaagent'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+project.ext.minimumBranchCoverage = 0.0
+project.ext.minimumInstructionCoverage = 0.0
+
+dependencies {
+  api deps.opentelemetryApi
+  compileOnly deps.opentelemetrySdk
+  implementation deps.slf4j
+  implementation project(':instrumentation-api')
+
+  testImplementation project(':testing-common')
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
+}

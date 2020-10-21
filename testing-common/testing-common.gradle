@@ -1,16 +1,16 @@
-apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
+apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply from: "$rootDir/gradle/java.gradle"
 
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
-  'io.opentelemetry.auto.test.asserts.*Assert*',
-  'io.opentelemetry.auto.test.base.*',
-  'io.opentelemetry.auto.test.log.*',
-  'io.opentelemetry.auto.test.AgentTestRunner',
-  'io.opentelemetry.auto.test.InstrumentationTestRunner',
-  'io.opentelemetry.auto.test.InMemoryExporter.*',
-  'io.opentelemetry.auto.test.utils.*',
+  'io.opentelemetry.instrumentation.test.asserts.*Assert*',
+  'io.opentelemetry.instrumentation.test.base.*',
+  'io.opentelemetry.instrumentation.test.log.*',
+  'io.opentelemetry.instrumentation.test.AgentTestRunner',
+  'io.opentelemetry.instrumentation.test.InstrumentationTestRunner',
+  'io.opentelemetry.instrumentation.test.InMemoryExporter.*',
+  'io.opentelemetry.instrumentation.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent
   'context.ContextTestInstrumentation**',
 ]
@@ -35,7 +35,7 @@ dependencies {
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
   implementation project(':javaagent-bootstrap')
-  implementation project(':auto-api')
+  implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
   implementation(project(':javaagent-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead

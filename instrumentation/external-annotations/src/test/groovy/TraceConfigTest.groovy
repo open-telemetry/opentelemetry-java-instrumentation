@@ -3,22 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.util.concurrent.Callable
 
 class TraceConfigTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.setProperty("otel.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
   }
 
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.methods")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   class ConfigTracedCallable implements Callable<String> {

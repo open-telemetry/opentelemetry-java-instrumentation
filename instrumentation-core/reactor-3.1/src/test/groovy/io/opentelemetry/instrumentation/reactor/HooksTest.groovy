@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-import io.opentelemetry.auto.test.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import java.util.concurrent.atomic.AtomicReference
 import reactor.core.CoreSubscriber
 import reactor.core.publisher.Mono

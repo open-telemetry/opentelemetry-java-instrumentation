@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
@@ -17,8 +17,8 @@ import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.common.AttributeKey
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -30,11 +30,8 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.testcontainers.containers.GenericContainer
-import spock.lang.Requires
 import spock.lang.Shared
 
-// Do not run tests on Java7 since testcontainers are not compatible with Java7
-@Requires({ jvm.java8Compatible })
 class RabbitMQTest extends AgentTestRunner {
 
   /*
@@ -107,11 +104,11 @@ class RabbitMQTest extends AgentTestRunner {
           attributes {
           }
         }
-        rabbitSpan(it, 1, "exchange.declare", span(0))
-        rabbitSpan(it, 2, "queue.declare", span(0))
-        rabbitSpan(it, 3, "queue.bind", span(0))
-        rabbitSpan(it, 4, "$exchangeName -> $routingKey", span(0))
-        rabbitSpan(it, 5, "<generated>", span(0), span(4))
+        rabbitSpan(it, 1, null, null, null, "exchange.declare", span(0))
+        rabbitSpan(it, 2, null, null, null, "queue.declare", span(0))
+        rabbitSpan(it, 3, null, null, null, "queue.bind", span(0))
+        rabbitSpan(it, 4, exchangeName, routingKey, "send", "$exchangeName -> $routingKey", span(0))
+        rabbitSpan(it, 5, exchangeName, routingKey, "receive", "<generated>", span(0))
       }
     }
 
@@ -132,13 +129,13 @@ class RabbitMQTest extends AgentTestRunner {
     and:
     assertTraces(3) {
       trace(0, 1) {
-        rabbitSpan(it, 0, "queue.declare")
+        rabbitSpan(it, 0, null, null, null, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "<default> -> <generated>")
+        rabbitSpan(it, 0, "<default>", null, "send", "<default> -> <generated>")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, "<generated>", null, traces[1][0])
+        rabbitSpan(it, 0, "<default>", null, "receive", "<generated>", null)
       }
     }
   }
@@ -176,21 +173,21 @@ class RabbitMQTest extends AgentTestRunner {
     expect:
     assertTraces(4 + messageCount) {
       trace(0, 1) {
-        rabbitSpan(it, "exchange.declare")
+        rabbitSpan(it, null, null, null, "exchange.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, null, null, null, "queue.declare")
       }
       trace(2, 1) {
-        rabbitSpan(it, "queue.bind")
+        rabbitSpan(it, null, null, null, "queue.bind")
       }
       trace(3, 1) {
-        rabbitSpan(it, "basic.consume")
+        rabbitSpan(it, null, null, null, "basic.consume")
       }
       (1..messageCount).each {
         trace(3 + it, 2) {
-          rabbitSpan(it, 0, "$exchangeName -> <all>")
-          rabbitSpan(it, 1, resource, span(0), null, null, null, setTimestamp)
+          rabbitSpan(it, 0, exchangeName, null, "send", "$exchangeName -> <all>")
+          rabbitSpan(it, 1, exchangeName, null, "process", resource, span(0), null, null, null, setTimestamp)
         }
       }
     }
@@ -231,20 +228,20 @@ class RabbitMQTest extends AgentTestRunner {
     expect:
     assertTraces(5) {
       trace(0, 1) {
-        rabbitSpan(it, "exchange.declare")
+        rabbitSpan(it, null, null, null, "exchange.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, null, null, null, "queue.declare")
       }
       trace(2, 1) {
-        rabbitSpan(it, "queue.bind")
+        rabbitSpan(it, null, null, null, "queue.bind")
       }
       trace(3, 1) {
-        rabbitSpan(it, "basic.consume")
+        rabbitSpan(it, null, null, null, "basic.consume")
       }
       trace(4, 2) {
-        rabbitSpan(it, 0, "$exchangeName -> <all>")
-        rabbitSpan(it, 1, "<generated>", span(0), null, error, error.message)
+        rabbitSpan(it, 0, exchangeName, null, "send", "$exchangeName -> <all>")
+        rabbitSpan(it, 1, exchangeName, null, "process", "<generated>", span(0), null, error, error.message)
       }
     }
 
@@ -263,19 +260,19 @@ class RabbitMQTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 1) {
-        rabbitSpan(it, command, null, null, throwable, errorMsg)
+        rabbitSpan(it, null, null, operation, command, null, null, throwable, errorMsg)
       }
     }
 
     where:
-    command                | exception             | errorMsg                                           | closure
-    "exchange.declare"     | IOException           | null                                               | {
+    command                | exception             | errorMsg                                           | operation | closure
+    "exchange.declare"     | IOException           | null                                               | null      | {
       it.exchangeDeclare("some-exchange", "invalid-type", true)
     }
-    "Channel.basicConsume" | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | {
+    "Channel.basicConsume" | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | null      | {
       it.basicConsume(null, null)
     }
-    "<generated>"          | IOException           | null                                               | {
+    "<generated>"          | IOException           | null                                               | "receive" | {
       it.basicGet("amq.gen-invalid-channel", true)
     }
   }
@@ -296,19 +293,22 @@ class RabbitMQTest extends AgentTestRunner {
     and:
     assertTraces(3) {
       trace(0, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, null, null, null, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "<default> -> some-routing-queue")
+        rabbitSpan(it, 0, "<default>", "some-routing-queue", "send", "<default> -> some-routing-queue")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, queue.name, null, traces[1][0])
+        rabbitSpan(it, 0, "<default>", "some-routing-queue", "receive", queue.name, null)
       }
     }
   }
 
   def rabbitSpan(
     TraceAssert trace,
+    String exchange,
+    String routingKey,
+    String operation,
     String resource,
     Object parentSpan = null,
     Object linkSpan = null,
@@ -316,12 +316,15 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null,
     Boolean expectTimestamp = false
   ) {
-    rabbitSpan(trace, 0, resource, parentSpan, linkSpan, exception, errorMsg, expectTimestamp)
+    rabbitSpan(trace, 0, exchange, routingKey, operation, resource, parentSpan, linkSpan, exception, errorMsg, expectTimestamp)
   }
 
   def rabbitSpan(
     TraceAssert trace,
     int index,
+    String exchange,
+    String routingKey,
+    String operation,
     String resource,
     Object parentSpan = null,
     Object linkSpan = null,
@@ -329,8 +332,14 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null,
     Boolean expectTimestamp = false
   ) {
+
+    def spanName = resource
+    if (operation != null) {
+      spanName = spanName + " " + operation
+    }
+
     trace.span(index) {
-      name resource
+      name spanName
 
       switch (trace.span(index).attributes.get(AttributeKey.stringKey("amqp.command"))) {
         case "basic.publish":
@@ -362,9 +371,18 @@ class RabbitMQTest extends AgentTestRunner {
       }
 
       attributes {
-        "${SemanticAttributes.NET_PEER_NAME.key()}" { it == null || it instanceof String }
-        "${SemanticAttributes.NET_PEER_IP.key()}" { "127.0.0.1" }
-        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
+        "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
+        "${SemanticAttributes.NET_PEER_IP.key}" { "127.0.0.1" }
+        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+
+        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+        "${SemanticAttributes.MESSAGING_DESTINATION.key}" exchange
+        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+        //TODO add to SemanticAttributes
+        "messaging.rabbitmq.routing_key" { it == null || it == routingKey || it.startsWith("amq.gen-") }
+        if (operation != null && operation != "send") {
+          "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
+        }
         if (expectTimestamp) {
           "record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
@@ -372,22 +390,21 @@ class RabbitMQTest extends AgentTestRunner {
         switch (attribute("amqp.command")) {
           case "basic.publish":
             "amqp.command" "basic.publish"
-            "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
               it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
             }
             "amqp.delivery_mode" { it == null || it == 2 }
-            "message.size" Long
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             break
           case "basic.get":
             "amqp.command" "basic.get"
+            //TODO why this queue name is not a destination for semantic convention
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
-            "message.size" { it == null || it instanceof Long }
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" { it == null || it instanceof Long }
             break
           case "basic.deliver":
             "amqp.command" "basic.deliver"
-            "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
-            "message.size" Long
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             break
           default:
             "amqp.command" { it == null || it == resource }

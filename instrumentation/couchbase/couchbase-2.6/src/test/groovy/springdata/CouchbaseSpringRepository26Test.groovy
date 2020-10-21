@@ -5,7 +5,7 @@
 
 package springdata
 
-import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 
 class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryTest {
 

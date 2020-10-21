@@ -44,7 +44,7 @@ include ':load-generator'
 include ':system-metrics'
 
 include ':instrumentation-api'
-include ':auto-api'
+include ':javaagent-api'
 
 // misc
 include ':testing-common'
@@ -58,14 +58,14 @@ include ':instrumentation:akka-http-10.0'
 include ':instrumentation:apache-httpasyncclient-4.0'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0'
 include ':instrumentation:apache-httpclient:apache-httpclient-4.0'
-include ':instrumentation:armeria-1.0:auto'
+include ':instrumentation:armeria-1.0:javaagent'
 include ':instrumentation:armeria-1.0:library'
 include ':instrumentation:armeria-1.0:testing'
-include ':instrumentation:aws-lambda-1.0:auto'
+include ':instrumentation:aws-lambda-1.0:javaagent'
 include ':instrumentation:aws-lambda-1.0:library'
 include ':instrumentation:aws-lambda-1.0:testing'
 include ':instrumentation:aws-sdk:aws-sdk-1.11'
-include ':instrumentation:aws-sdk:aws-sdk-2.2:auto'
+include ':instrumentation:aws-sdk:aws-sdk-2.2:javaagent'
 include ':instrumentation:aws-sdk:aws-sdk-2.2:library'
 include ':instrumentation:aws-sdk:aws-sdk-2.2:testing'
 include ':instrumentation:cassandra:cassandra-3.0'
@@ -89,7 +89,7 @@ include ':instrumentation:geode-1.4'
 include ':instrumentation:google-http-client-1.19'
 include ':instrumentation:grizzly-2.0'
 include ':instrumentation:grizzly-client-1.9'
-include ':instrumentation:grpc-1.5:auto'
+include ':instrumentation:grpc-1.5:javaagent'
 include ':instrumentation:grpc-1.5:library'
 include ':instrumentation:grpc-1.5:testing'
 include ':instrumentation:guava-10.0'
@@ -131,10 +131,10 @@ include ':instrumentation:lettuce:lettuce-5.0'
 include ':instrumentation:lettuce:lettuce-5.1'
 include ':instrumentation:log4j:log4j-1.2'
 include ':instrumentation:log4j:log4j-2.7'
-include ':instrumentation:log4j:log4j-2.13.2:auto'
+include ':instrumentation:log4j:log4j-2.13.2:javaagent'
 include ':instrumentation:log4j:log4j-2.13.2:library'
 include ':instrumentation:log4j:log4j-2-testing'
-include ':instrumentation:logback:logback-1.0.0:auto'
+include ':instrumentation:logback:logback-1.0.0:javaagent'
 include ':instrumentation:logback:logback-1.0.0:library'
 include ':instrumentation:logback:logback-1.0.0:testing'
 include ':instrumentation:mongo:mongo-3.1'
@@ -173,9 +173,9 @@ include ':instrumentation:spark-web-framework-2.3'
 include ':instrumentation:spring:spring-data-1.8'
 include ':instrumentation:spring:spring-scheduling-3.1'
 include ':instrumentation:spring:spring-web-3.1:library'
-include ':instrumentation:spring:spring-webmvc-3.1:auto'
+include ':instrumentation:spring:spring-webmvc-3.1:javaagent'
 include ':instrumentation:spring:spring-webmvc-3.1:library'
-include ':instrumentation:spring:spring-webflux-5.0:auto'
+include ':instrumentation:spring:spring-webflux-5.0:javaagent'
 include ':instrumentation:spring:spring-webflux-5.0:library'
 include ':instrumentation:spring:spring-boot-autoconfigure'
 include ':instrumentation:spring:starters:spring-starter'
@@ -188,7 +188,7 @@ include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
 
 include ':instrumentation-core:reactor-3.1'
-include ':instrumentation-core:servlet'
+include ':instrumentation-core:servlet-2.2'
 
 // exporter adapters
 include ":javaagent-exporters"
@@ -196,6 +196,7 @@ include ":javaagent-exporters:jaeger"
 include ":javaagent-exporters:logging"
 include ":javaagent-exporters:otlp"
 include ":javaagent-exporters:zipkin"
+include ":javaagent-exporters:prometheus"
 
 // benchmark
 include ':benchmark'
@@ -203,7 +204,7 @@ include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 
 def setBuildFile(project) {
-  if (['auto', 'library', 'testing'].contains(project.projectDir.name)) {
+  if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import com.google.common.io.Files
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -29,12 +29,10 @@ import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
-import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
 class JMS2Test extends AgentTestRunner {
-
   @Shared
   HornetQServer server
   @Shared
@@ -100,7 +98,7 @@ class JMS2Test extends AgentTestRunner {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, messageId, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, destinationType, destinationName, messageId, null, "receive")
       }
     }
 
@@ -112,8 +110,8 @@ class JMS2Test extends AgentTestRunner {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | "<temporary>"
-    session.createTemporaryTopic()   | "topic"         | "<temporary>"
+    session.createTemporaryQueue()   | "queue"         | JMSTracer.TEMP_DESTINATION_NAME
+    session.createTemporaryTopic()   | "topic"         | JMSTracer.TEMP_DESTINATION_NAME
   }
 
   def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
@@ -137,7 +135,7 @@ class JMS2Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), true, consumer.messageListener.class, span(0))
+        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -151,8 +149,8 @@ class JMS2Test extends AgentTestRunner {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | "<temporary>"
-    session.createTemporaryTopic()   | "topic"         | "<temporary>"
+    session.createTemporaryQueue()   | "queue"         | JMSTracer.TEMP_DESTINATION_NAME
+    session.createTemporaryTopic()   | "topic"         | JMSTracer.TEMP_DESTINATION_NAME
   }
 
   def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
@@ -168,12 +166,14 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           hasNoParent()
-          name destinationType + "/" + destinationName + " receive"
-          kind CLIENT
+          name destinationName + " receive"
+          kind CONSUMER
           errored false
           attributes {
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
           }
         }
       }
@@ -201,12 +201,15 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           hasNoParent()
-          name destinationType + "/" + destinationName + " receive"
-          kind CLIENT
+          name destinationName + " receive"
+          kind CONSUMER
           errored false
           attributes {
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+
           }
         }
       }
@@ -223,42 +226,45 @@ class JMS2Test extends AgentTestRunner {
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
     trace.span(index) {
-      name destinationType + "/" + destinationName + " send"
+      name destinationName + " send"
       kind PRODUCER
       errored false
       hasNoParent()
       attributes {
-        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
-        "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
-        if (destinationName == "<temporary>") {
-          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key()}" true
+        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
+        "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
+        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
+        if (destinationName == JMSTracer.TEMP_DESTINATION_NAME) {
+          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
       }
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
+  // passing messageId = null will verify message.id is not captured,
+  // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
+  // any other value for messageId will verify that message.id is captured and has that same value
+  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation) {
     trace.span(index) {
-      name destinationType + "/" + destinationName + " receive"
-      if (messageListener) {
-        kind CONSUMER
+      name destinationName + " " + operation
+      kind CONSUMER
+      if (parentOrLinkedSpan != null) {
         childOf((SpanData) parentOrLinkedSpan)
       } else {
-        kind CLIENT
         hasNoParent()
-        hasLink((SpanData) parentOrLinkedSpan)
       }
       errored false
       attributes {
-        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key()}" destinationType
-        "${SemanticAttributes.MESSAGING_DESTINATION.key()}" destinationName
+        "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
+        "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
+        "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
+        "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         if (messageId != null) {
-          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key()}" messageId
-        } else {
-          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key()}" String
+          //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute
+          "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" { it == messageId || messageId == "" }
         }
-        if (destinationName == "<temporary>") {
-          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key()}" true
+        if (destinationName == JMSTracer.TEMP_DESTINATION_NAME) {
+          "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
       }
     }

@@ -1,8 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
-archivesBaseName = "servlet"
-
-dependencies {
-  implementation deps.slf4j
-
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
-}

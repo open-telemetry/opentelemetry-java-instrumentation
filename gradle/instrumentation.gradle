@@ -1,19 +1,19 @@
 // common gradle file for instrumentation
 
-apply plugin: 'io.opentelemetry.instrumentation.auto-instrumentation'
+apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
 ext {
   packageInAgentBundle = true
-  mavenGroupId = 'io.opentelemetry.instrumentation.auto'
+  mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
 }
 
 byteBuddy {
   transformation {
     // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
     tasks = ['compileJava', 'compileScala', 'compileKotlin']
-    plugin = 'io.opentelemetry.javaagent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
+    plugin = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin$NoOp'
   }
 }
 
@@ -24,7 +24,7 @@ if (project.ext.find("skipPublish") != true) {
 
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
-if (projectDir.name == 'auto') {
+if (projectDir.name == 'javaagent') {
   archivesBaseName = projectDir.parentFile.name
 }
 
@@ -32,14 +32,14 @@ afterEvaluate {
   byteBuddy {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
-      plugin = 'io.opentelemetry.javaagent.tooling.muzzle.MuzzleGradlePlugin'
+      plugin = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
       classPath = project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
     }
   }
 
   dependencies {
     implementation project(':instrumentation-api')
-    implementation project(':auto-api')
+    implementation project(':javaagent-api')
     // Apply common dependencies for instrumentation.
     implementation(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing

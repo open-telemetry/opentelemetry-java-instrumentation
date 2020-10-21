@@ -3,24 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentTestRunner {
-
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
-      System.setProperty("otel.trace.annotated.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
-    }
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    // remove trace annotations in case previous tests have set it
+    it.remove("otel.trace.annotations")
+    it.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
+    it.setProperty("otel.trace.annotated.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
   }
 
   def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("otel.trace.methods")
-      System.clearProperty("otel.trace.annotated.methods.exclude")
-    }
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
   static class TestClass {
