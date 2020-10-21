@@ -83,7 +83,7 @@ public interface Instrumenter {
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
-      enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
+      enabled = Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
       Map<String, String> contextStore = contextStore();
       if (!contextStore.isEmpty()) {
         contextProvider = new FieldBackedProvider(this, contextStore);
@@ -241,7 +241,7 @@ public interface Instrumenter {
     }
 
     protected boolean defaultEnabled() {
-      return Config.get().getBooleanProperty("otel.integrations.enabled", true);
+      return Config.get().getBooleanProperty("otel.instrumentations.enabled", true);
     }
   }
 }

@@ -6,13 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.mongo;
 
 import com.mongodb.ServerAddress;
-import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
-import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -37,25 +36,17 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String dbName(CommandStartedEvent event) {
-    // Use description if set.
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ConnectionId connectionId = connectionDescription.getConnectionId();
-      if (connectionId != null) {
-        ServerId serverId = connectionId.getServerId();
-        if (serverId != null) {
-          ClusterId clusterId = serverId.getClusterId();
-          if (clusterId != null) {
-            String description = clusterId.getDescription();
-            if (description != null) {
-              return description;
-            }
-          }
-        }
-      }
+  protected Span onConnection(Span span, CommandStartedEvent event) {
+    span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
+    String collection = collectionName(event);
+    if (collection != null) {
+      span.setAttribute(SemanticAttributes.MONGODB_COLLECTION, collection);
     }
-    // Fallback to db name.
+    return super.onConnection(span, event);
+  }
+
+  @Override
+  protected String dbName(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
@@ -134,5 +125,13 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
       scrubbed = HIDDEN_CHAR;
     }
     return scrubbed;
+  }
+
+  private static String collectionName(CommandStartedEvent event) {
+    BsonValue collectionValue = event.getCommand().get(event.getCommandName());
+    if (collectionValue != null && collectionValue.isString()) {
+      return collectionValue.asString().getValue();
+    }
+    return null;
   }
 }

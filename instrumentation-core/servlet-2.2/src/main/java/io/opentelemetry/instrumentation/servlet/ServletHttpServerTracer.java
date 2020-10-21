@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.MoreAttributes;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -94,7 +94,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   public void setPrincipal(Span span, HttpServletRequest request) {
     Principal principal = request.getUserPrincipal();
     if (principal != null) {
-      span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
+      span.setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
     }
   }
 

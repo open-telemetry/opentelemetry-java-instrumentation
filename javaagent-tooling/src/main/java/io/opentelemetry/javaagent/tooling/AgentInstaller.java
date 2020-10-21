@@ -14,14 +14,17 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess.ForceFlusher;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -52,6 +55,7 @@ public class AgentInstaller {
   }
 
   static {
+    BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
     // this needs to be done as early as possible - before the first Config.get() call
@@ -205,6 +209,23 @@ public class AgentInstaller {
       matcher = matcher.or(nameStartsWith(prefix));
     }
     return matcher;
+  }
+
+  private static List<String> loadBootstrapPackagePrefixes() {
+    List<String> bootstrapPackages =
+        new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
+    Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
+        SafeServiceLoader.load(
+            BootstrapPackagesProvider.class, AgentInstaller.class.getClassLoader());
+    for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {
+      List<String> packagePrefixes = provider.getPackagePrefixes();
+      log.debug(
+          "Loaded bootstrap package prefixes from {}: {}",
+          provider.getClass().getName(),
+          packagePrefixes);
+      bootstrapPackages.addAll(packagePrefixes);
+    }
+    return bootstrapPackages;
   }
 
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {

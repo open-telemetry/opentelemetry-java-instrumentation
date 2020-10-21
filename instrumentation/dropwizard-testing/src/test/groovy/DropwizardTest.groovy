@@ -90,7 +90,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
+      name "${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
       kind SERVER
       errored endpoint.errored
       if (parentID != null) {
