@@ -20,8 +20,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import spock.lang.Requires
 import spock.lang.Shared
 
+@Requires({ "true" != System.getenv("CIRCLECI") })
 class CassandraClientTest extends AgentTestRunner {
   private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
 
