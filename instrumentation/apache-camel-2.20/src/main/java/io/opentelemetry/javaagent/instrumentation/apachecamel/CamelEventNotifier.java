@@ -40,46 +40,53 @@ final class CamelEventNotifier extends EventNotifierSupport {
   public void notify(EventObject event) {
 
     try {
-      /** Camel about to send (outbound). */
       if (event instanceof ExchangeSendingEvent) {
-        ExchangeSendingEvent ese = (ExchangeSendingEvent) event;
-        SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
-        if (!sd.shouldStartNewSpan()) {
-          return;
-        }
-
-        Span span =
-            CamelTracer.TRACER.startSpan(
-                sd.getOperationName(ese.getExchange(), ese.getEndpoint()),
-                sd.getInitiatorSpanKind());
-        sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
-        CamelPropagationUtil.injectParent(
-            Context.current(), ese.getExchange().getIn().getHeaders());
-        ActiveSpanManager.activate(ese.getExchange(), span);
-
-        if (LOG.isTraceEnabled()) {
-          LOG.trace("[Exchange sending] Initiator span started " + span);
-        }
-        /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
+        onExchangeSending((ExchangeSendingEvent) event);
       } else if (event instanceof ExchangeSentEvent) {
-        ExchangeSentEvent ese = (ExchangeSentEvent) event;
-        SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
-        if (!sd.shouldStartNewSpan()) {
-          return;
-        }
-        Span span = ActiveSpanManager.getSpan(ese.getExchange());
-        if (span != null) {
-          if (LOG.isTraceEnabled()) {
-            LOG.trace("[Exchange sent] Initiator span finished " + span);
-          }
-          sd.post(span, ese.getExchange(), ese.getEndpoint());
-          ActiveSpanManager.deactivate(ese.getExchange());
-        } else {
-          LOG.warn("Could not find managed span for exchange " + ese.getExchange());
-        }
+        onExchangeSent((ExchangeSentEvent) event);
       }
     } catch (Throwable t) {
       LOG.warn("Failed to capture tracing data", t);
+    }
+  }
+
+  /** Camel about to send (outbound). */
+  private void onExchangeSending(ExchangeSendingEvent event) {
+    ExchangeSendingEvent ese = event;
+    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
+    if (!sd.shouldStartNewSpan()) {
+      return;
+    }
+
+    Span span =
+        CamelTracer.TRACER.startSpan(
+            sd.getOperationName(ese.getExchange(), ese.getEndpoint()), sd.getInitiatorSpanKind());
+    sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
+    CamelPropagationUtil.injectParent(Context.current(), ese.getExchange().getIn().getHeaders());
+    ActiveSpanManager.activate(ese.getExchange(), span);
+
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("[Exchange sending] Initiator span started " + span);
+    }
+  }
+
+  /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
+  private void onExchangeSent(ExchangeSentEvent event) {
+    ExchangeSentEvent ese = event;
+    SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
+    if (!sd.shouldStartNewSpan()) {
+      return;
+    }
+
+    Span span = ActiveSpanManager.getSpan(ese.getExchange());
+    if (span != null) {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("[Exchange sent] Initiator span finished " + span);
+      }
+      sd.post(span, ese.getExchange(), ese.getEndpoint());
+      ActiveSpanManager.deactivate(ese.getExchange());
+    } else {
+      LOG.warn("Could not find managed span for exchange " + ese.getExchange());
     }
   }
 
