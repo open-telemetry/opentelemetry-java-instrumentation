@@ -84,7 +84,9 @@ shadowJar {
   relocate "io.opentelemetry.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"
 
   // relocate OpenTelemetry API dependency usage
-  relocate "io.grpc.Context", "io.opentelemetry.javaagent.shaded.io.grpc.Context"
+  relocate("io.grpc.Context", "io.opentelemetry.javaagent.shaded.io.grpc.Context") {
+    exclude "io.grpc.Contexts"
+  }
 
   // this is for instrumentation on opentelemetry-api itself
   relocate "application.io.opentelemetry", "io.opentelemetry"
