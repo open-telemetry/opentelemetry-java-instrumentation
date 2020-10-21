@@ -25,11 +25,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 /**
- * Unlike other supported JAX-RS Client implementations, Resteasy's one is very simple and
- * passes all requests through single point. Both sync ADN async! This allows for easy
- * instrumentation and proper scope handling.
+ * Unlike other supported JAX-RS Client implementations, Resteasy's one is very simple and passes
+ * all requests through single point. Both sync ADN async! This allows for easy instrumentation and
+ * proper scope handling.
  *
- * This specific instrumentation will not conflict with {@link JaxRsClientInstrumentation},
+ * <p>This specific instrumentation will not conflict with {@link JaxRsClientInstrumentation},
  * because {@link JaxRsClientTracer} used by the latter checks against double client spans.
  */
 @AutoService(Instrumenter.class)
@@ -47,8 +47,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ResteasyClientTracer",
-      packageName + ".ResteasyInjectAdapter",
+      packageName + ".ResteasyClientTracer", packageName + ".ResteasyInjectAdapter",
     };
   }
 
@@ -69,8 +68,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
     public static void methodEnter(
         @Advice.This ClientInvocation invocation,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope
-        ) {
+        @Advice.Local("otelScope") Scope scope) {
       span = TRACER.startSpan(invocation);
       scope = TRACER.startScope(span, invocation);
     }
@@ -84,7 +82,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
 
       scope.close();
 
-      if(throwable != null){
+      if (throwable != null) {
         TRACER.endExceptionally(span, throwable);
       } else {
         TRACER.end(span, response);
