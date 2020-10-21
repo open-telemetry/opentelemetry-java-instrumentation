@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
 import static io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcInjectAdapter.SETTER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.CallOptions;
@@ -97,7 +98,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(Listener<RespT> responseListener, Metadata headers) {
       OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
-      try {
+      try (Scope ignored = currentContextWith(span)) {
         super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -107,7 +108,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(ReqT message) {
-      try {
+      try (Scope ignored = currentContextWith(span)) {
         super.sendMessage(message);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -138,7 +139,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
               SemanticAttributes.GRPC_MESSAGE_ID,
               messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onMessage(message);
       } catch (Throwable e) {
         tracer.addThrowable(span, e);
@@ -147,7 +148,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onClose(Status status, Metadata trailers) {
-      try {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onClose(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -158,7 +159,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try {
+      try (Scope ignored = currentContextWith(span)) {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);

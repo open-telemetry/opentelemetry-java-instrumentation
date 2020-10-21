@@ -3,9 +3,6 @@ apply from: "$rootDir/gradle/instrumentation-library.gradle"
 def grpcVersion = '1.5.0'
 
 dependencies {
-  annotationProcessor deps.autoservice
-  compileOnly deps.autoservice
-
   library group: 'io.grpc', name: 'grpc-core', version: grpcVersion
 
   testLibrary group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
