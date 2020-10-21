@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.grpc.Context;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
