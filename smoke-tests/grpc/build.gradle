@@ -24,7 +24,7 @@ dependencies {
 }
 
 compileJava {
-  options.release = 11
+  options.release = 8
 }
 
 def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
