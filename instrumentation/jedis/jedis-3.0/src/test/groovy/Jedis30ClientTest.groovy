@@ -50,15 +50,15 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET"
+          name "SET foo ?"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -76,29 +76,29 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "SET"
+          name "SET foo ?"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          name "GET"
+          name "GET foo"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -116,15 +116,15 @@ class Jedis30ClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "SET"
+          name "SET foo ?"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -133,12 +133,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }

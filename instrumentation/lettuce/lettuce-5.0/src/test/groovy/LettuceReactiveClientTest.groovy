@@ -95,12 +95,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET"
+          name "SET TESTSETKEY ?"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
           }
         }
       }
@@ -119,12 +119,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET"
+          name "GET TESTKEY"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
           }
         }
       }
@@ -151,12 +151,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET"
+          name "GET NON_EXISTENT_KEY"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
           }
         }
       }
@@ -185,8 +185,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
           }
         }
       }
@@ -205,8 +205,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
             "db.command.results.count" 157
           }
         }
@@ -226,8 +226,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
             "db.command.cancelled" true
             "db.command.results.count" 2
           }
@@ -256,12 +256,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEBUG"
+          name "DEBUG SEGFAULT"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
           }
         }
       }
@@ -276,12 +276,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SHUTDOWN"
+          name "SHUTDOWN NOSAVE"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
           }
         }
       }
@@ -306,23 +306,23 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET"
+          name "SET a ?"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
-          name "GET"
+          name "GET a"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }
@@ -347,23 +347,23 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET"
+          name "SET a ?"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
-          name "GET"
+          name "GET a"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }
@@ -389,23 +389,23 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET"
+          name "SET a ?"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
-          name "GET"
+          name "GET a"
           kind CLIENT
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }

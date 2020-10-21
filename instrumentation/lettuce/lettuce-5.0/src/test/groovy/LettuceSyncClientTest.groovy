@@ -103,11 +103,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
-            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
+            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
+            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "CONNECT"
           }
         }
       }
@@ -135,11 +135,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored true
           errorEvent CompletionException, String
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
-            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
-            "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
+            "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
+            "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
+            "$SemanticAttributes.NET_PEER_PORT.key" incorrectPort
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "CONNECT"
           }
         }
       }
@@ -155,12 +155,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET"
+          name "SET TESTSETKEY ?"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
           }
         }
       }
@@ -176,12 +176,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET"
+          name "GET TESTKEY"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
           }
         }
       }
@@ -197,12 +197,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET"
+          name "GET NON_EXISTENT_KEY"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
           }
         }
       }
@@ -222,8 +222,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
           }
         }
       }
@@ -239,12 +239,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "LPUSH"
+          name "LPUSH TESTLIST ?"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "LPUSH"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "LPUSH TESTLIST ?"
           }
         }
       }
@@ -260,12 +260,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "HMSET"
+          name "HMSET user firstname ? lastname ? age ?"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "HMSET user firstname ? lastname ? age ?"
           }
         }
       }
@@ -281,12 +281,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "HGETALL"
+          name "HGETALL TESTHM"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "HGETALL TESTHM"
           }
         }
       }
@@ -301,12 +301,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEBUG"
+          name "DEBUG SEGFAULT"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
           }
         }
       }
@@ -321,12 +321,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SHUTDOWN"
+          name "SHUTDOWN NOSAVE"
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
           }
         }
       }

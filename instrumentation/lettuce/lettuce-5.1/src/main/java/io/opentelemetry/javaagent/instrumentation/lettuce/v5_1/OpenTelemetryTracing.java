@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceArgSplitter.splitArgs;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter.splitArgs;
 
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.StatusCode;

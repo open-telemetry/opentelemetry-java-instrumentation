@@ -39,6 +39,7 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      "io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter",
       packageName + ".LettuceAbstractDatabaseClientTracer",
       packageName + ".LettuceConnectionDatabaseClientTracer",
       packageName + ".LettuceDatabaseClientTracer",
