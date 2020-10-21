@@ -50,7 +50,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kubernetes-client-7.0";
+    return "io.opentelemetry.auto.kubernetes-client";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */

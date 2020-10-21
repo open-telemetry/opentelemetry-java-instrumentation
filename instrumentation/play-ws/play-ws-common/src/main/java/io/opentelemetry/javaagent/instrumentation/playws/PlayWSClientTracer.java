@@ -50,6 +50,6 @@ public class PlayWSClientTracer extends HttpClientTracer<Request, HttpHeaders, R
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play-ws-2.1";
+    return "io.opentelemetry.auto.play-ws";
   }
 }

@@ -24,7 +24,6 @@ import org.bson.BsonValue;
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
   public static final MongoClientTracer TRACER = new MongoClientTracer();
 
-  // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.mongo";

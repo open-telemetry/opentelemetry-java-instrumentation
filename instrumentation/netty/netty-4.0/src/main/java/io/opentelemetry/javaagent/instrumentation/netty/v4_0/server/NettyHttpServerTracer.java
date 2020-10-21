@@ -48,7 +48,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.netty-4.0";
+    return "io.opentelemetry.auto.netty";
   }
 
   @Override
