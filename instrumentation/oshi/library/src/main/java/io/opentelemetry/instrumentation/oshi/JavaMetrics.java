@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.system.metrics;
-
-import static io.opentelemetry.javaagent.system.metrics.SystemMetrics.TYPE_LABEL_KEY;
+package io.opentelemetry.instrumentation.oshi;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.common.Labels;
@@ -21,6 +19,7 @@ import oshi.software.os.OperatingSystem;
 
 /** Java Runtime Metrics Utility */
 public class JavaMetrics {
+  private static final String TYPE_LABEL_KEY = "type";
 
   private JavaMetrics() {}
 

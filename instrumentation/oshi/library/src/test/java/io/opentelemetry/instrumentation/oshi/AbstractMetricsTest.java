@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.system.metrics;
+package io.opentelemetry.instrumentation.oshi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
