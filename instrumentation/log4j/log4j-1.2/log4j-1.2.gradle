@@ -5,6 +5,7 @@ muzzle {
     group = "log4j"
     module = "log4j"
     versions = "[1.2,)"
+    skipVersions += '1.2.15' //for some reason only this version depends on jms jar which is not found in MavenCentral
   }
 }
 
