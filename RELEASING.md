@@ -13,22 +13,69 @@ This signals Nebula plugin to build and publish to
 [JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/)next _minor_ release version.
 This means version `vX.(Y+1).0-SNAPSHOT`.
 
-## Public releases
-All major and minor public releases are initiated by creating a git tag with a version to be released.
-Do the following:
-- Checkout a branch that you want to release.
-- Tag a commit on which you want to base the release by executing `git tag vX.Y.0` with the expected version string.
-- Push new tag to upstream repo.
+## Starting the Release
 
-On new tag creation a CI will start a new release build.
-It will do the following:
-- Checkout requested tag.
-- Run `./gradlew -Prelease.useLastTag=true final`.
-This signals Nebula plugin to build `X.Y.0` version and to publish it to
-[Bintray repository](https://bintray.com/open-telemetry/maven/opentelemetry-java-instrumentation).
+Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Release+Build%22).
 
-## Patch releases
-Whenever a fix is needed to any older branch, a PR should be made into the corresponding maintenance branch.
-When that PR is merge, CI will notice the new commit into maintenance branch and will initiate a new build for this.
-That build, after usual building and checking, will run `./gradlew -Prelease.scope=patch final`.
-This will signal Nebula plugin to build a new version `vX.Y.(Z+1)` and publish it to Bintray repo.
+You will see a button that says "Run workflow". Press the button, enter the version number you want
+to release in the input field that pops up, and then press "Run workflow".
+
+This triggers the release process, which builds the artifacts, updates the README with the new
+version numbers, commits the change to the README, publishes the artifacts, and creates and pushes
+a git tag with the version number.
+
+## Announcement
+   
+Once the GitHub workflow completes, go to Github [release
+page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
+`Draft a new release` to write release notes about the new release. If there is already a draft
+release notes, just point it at the created tag.
+
+## Patch Release
+
+All patch releases should include only bug-fixes, and must avoid
+adding/modifying the public APIs. 
+
+Open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Patch+Release+Build%22).
+
+You will see a button that says "Run workflow". Press the button, enter the version number you want
+to release in the input field for version that pops up and the commits you want to cherrypick for the
+patch as a comma-separated list. Then, press "Run workflow".
+
+If the commits cannot be cleanly applied to the release branch, for example because it has diverged
+too much from main, then the workflow will fail before building. In this case, you will need to
+prepare the release branch manually.
+
+This example will assume patching into release branch `v1.2.x` from a git repository with remotes
+named `origin` and `upstream`.
+
+```
+$ git remote -v
+origin	git@github.com:username/opentelemetry-java.git (fetch)
+origin	git@github.com:username/opentelemetry-java.git (push)
+upstream	git@github.com:open-telemetry/opentelemetry-java.git (fetch)
+upstream	git@github.com:open-telemetry/opentelemetry-java.git (push)
+```
+
+First, checkout the release branch
+
+```
+git fetch upstream v1.2.x
+git checkout upstream/v1.2.x
+```
+
+Apply cherrypicks manually and commit. It is ok to apply multiple cherrypicks in a single commit.
+Use a commit message such as "Manual cherrypick for commits commithash1, commithash2".
+
+After commiting the change, push to your fork's branch.
+
+```
+git push origin v1.2.x
+```
+
+Create a PR to have code review and merge this into upstream's release branch. As this was not
+applied automatically, we need to do code review to make sure the manual cherrypick is correct.
+
+After it is merged, Run the patch release workflow again, but leave the commits input field blank.
+The release will be made with the current state of the release branch, which is what you prepared
+above.

@@ -1,0 +1,32 @@
+# Releases a new minor / major version from the HEAD of the main branch
+name: Release Build
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to tag the release with, e.g., 1.2.0, 1.2.1-alpha.1
+        required: true
+
+jobs:
+  build:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+          remote-build-cache-proxy-enabled: false
+          arguments: build --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+      - name: Publish artifacts
+        run: ./gradlew final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+          GRGIT_USER: ${{ github.actor }}
+          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
