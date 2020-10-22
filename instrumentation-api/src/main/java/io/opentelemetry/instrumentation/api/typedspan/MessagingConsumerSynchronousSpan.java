@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.typedspan;
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class MessagingConsumerSynchronousSpan extends DelegatingSpan
     implements MessagingConsumerSynchronousSemanticConvention {
@@ -280,7 +281,7 @@ public class MessagingConsumerSynchronousSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSynchronousSemanticConvention setMessagingOperation(
       String messagingOperation) {
-    delegate.setAttribute("messaging.operation", messagingOperation);
+    delegate.setAttribute(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
     return this;
   }
 
@@ -526,7 +527,7 @@ public class MessagingConsumerSynchronousSpan extends DelegatingSpan
      */
     public MessagingConsumerSynchronousSpanBuilder setMessagingOperation(
         String messagingOperation) {
-      internalBuilder.setAttribute("messaging.operation", messagingOperation);
+      internalBuilder.setAttribute(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
       return this;
     }
   }
