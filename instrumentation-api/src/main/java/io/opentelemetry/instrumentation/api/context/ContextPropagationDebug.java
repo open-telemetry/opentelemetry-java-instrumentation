@@ -23,11 +23,11 @@ public final class ContextPropagationDebug {
   }
 
   public static List<StackTraceElement[]> getLocations(Context context) {
-    return context.getValue(THREAD_PROPAGATION_LOCATIONS);
+    return context.get(THREAD_PROPAGATION_LOCATIONS);
   }
 
   public static Context withLocations(List<StackTraceElement[]> locations, Context context) {
-    return context.withValues(THREAD_PROPAGATION_LOCATIONS, locations);
+    return context.with(THREAD_PROPAGATION_LOCATIONS, locations);
   }
 
   private ContextPropagationDebug() {}

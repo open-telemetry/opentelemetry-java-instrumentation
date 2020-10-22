@@ -68,7 +68,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
         Span serverSpan = BaseTracer.getCurrentServerSpan();
-        Span currentSpan = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
+        Span currentSpan = Span.current();
 
         // if there's no current span or it's the same as the server (servlet) span we need to start
         // a JAX-RS one

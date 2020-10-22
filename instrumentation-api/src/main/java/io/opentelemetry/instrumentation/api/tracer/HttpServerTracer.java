@@ -78,7 +78,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    */
   public Scope startScope(Span span, STORAGE storage) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context newContext = Context.current().withValues(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    Context newContext = Context.current().with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
     attachServerContext(newContext, storage);
     return newContext.makeCurrent();
   }
@@ -131,7 +131,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : attachedContext.getValue(CONTEXT_SERVER_SPAN_KEY);
+    return attachedContext == null ? null : attachedContext.get(CONTEXT_SERVER_SPAN_KEY);
   }
 
   /**

@@ -45,7 +45,7 @@ public class TracingContextUtils {
   }
 
   public static Span getCurrentSpan() {
-    return toApplication(io.opentelemetry.trace.TracingContextUtils.getCurrentSpan());
+    return toApplication(Span.current());
   }
 
   public static Span getSpan(

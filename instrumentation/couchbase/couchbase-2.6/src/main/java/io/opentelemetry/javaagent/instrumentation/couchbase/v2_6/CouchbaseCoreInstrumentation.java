@@ -19,7 +19,6 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -65,7 +64,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
-      Span parentSpan = TracingContextUtils.getCurrentSpan();
+      Span parentSpan = Span.current();
       if (parentSpan != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store

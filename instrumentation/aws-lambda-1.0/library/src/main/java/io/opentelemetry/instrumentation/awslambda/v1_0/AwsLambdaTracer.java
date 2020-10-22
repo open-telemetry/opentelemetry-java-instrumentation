@@ -43,9 +43,7 @@ public class AwsLambdaTracer extends BaseTracer {
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     io.opentelemetry.context.Context newContext =
-        io.opentelemetry.context.Context.current()
-            .withValues(CONTEXT_SERVER_SPAN_KEY, span)
-            .with(span);
+        io.opentelemetry.context.Context.current().with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
     return newContext.makeCurrent();
   }
 

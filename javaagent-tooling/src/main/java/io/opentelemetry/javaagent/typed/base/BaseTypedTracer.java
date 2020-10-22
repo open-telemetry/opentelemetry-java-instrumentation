@@ -18,7 +18,7 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
   protected final Tracer tracer;
 
   protected BaseTypedTracer() {
-    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
   protected abstract String getInstrumentationName();

@@ -15,76 +15,67 @@ public class SayTracedHello {
 
   @com.appoptics.api.ext.LogMethod
   public String appoptics() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "AppOptics");
+    Span.current().setAttribute("providerAttr", "AppOptics");
     return "hello!";
   }
 
   @com.newrelic.api.agent.Trace
   public String newrelic() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "NewRelic");
+    Span.current().setAttribute("providerAttr", "NewRelic");
     return "hello!";
   }
 
   @com.signalfx.tracing.api.Trace
   public String signalfx() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "SignalFx");
+    Span.current().setAttribute("providerAttr", "SignalFx");
     return "hello!";
   }
 
   @com.tracelytics.api.ext.LogMethod
   public String tracelytics() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "Tracelytics");
+    Span.current().setAttribute("providerAttr", "Tracelytics");
     return "hello!";
   }
 
   @datadog.trace.api.Trace
   public String datadog() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "Datadog");
+    Span.current().setAttribute("providerAttr", "Datadog");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
   public String dropwizard() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "Dropwizard");
+    Span.current().setAttribute("providerAttr", "Dropwizard");
     return "hello!";
   }
 
   @kamon.annotation.Trace("spanName")
   public String kamonold() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "KamonOld");
+    Span.current().setAttribute("providerAttr", "KamonOld");
     return "hello!";
   }
 
   @kamon.annotation.api.Trace
   public String kamonnew() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "KamonNew");
+    Span.current().setAttribute("providerAttr", "KamonNew");
     return "hello!";
   }
 
   @org.springframework.cloud.sleuth.annotation.NewSpan
   public String sleuth() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan()
-        .setAttribute("providerAttr", "Sleuth");
+    Span.current().setAttribute("providerAttr", "Sleuth");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
   public static String sayHello() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().setAttribute("myattr", "test");
+    Span.current().setAttribute("myattr", "test");
     return "hello!";
   }
 
   @io.opentracing.contrib.dropwizard.Trace
   public static String sayHELLOsayHA() {
-    io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().setAttribute("myattr", "test2");
+    Span.current().setAttribute("myattr", "test2");
     return sayHello() + sayHello();
   }
 

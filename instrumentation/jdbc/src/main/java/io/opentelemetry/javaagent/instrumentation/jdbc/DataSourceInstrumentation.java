@@ -59,7 +59,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       // TODO this is very strange condition
-      if (!io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().getContext().isValid()) {
+      if (!Span.current().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

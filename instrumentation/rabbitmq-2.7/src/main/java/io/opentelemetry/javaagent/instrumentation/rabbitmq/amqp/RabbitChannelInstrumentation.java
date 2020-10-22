@@ -150,7 +150,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
+      Span span = Span.current();
 
       if (span.getContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);

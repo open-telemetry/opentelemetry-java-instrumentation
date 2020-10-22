@@ -16,7 +16,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -54,8 +53,7 @@ public class Log4j1Instrumentation extends Instrumenter.Default {
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
-      InstrumentationContext.get(LoggingEvent.class, Span.class)
-          .put(event, TracingContextUtils.getCurrentSpan());
+      InstrumentationContext.get(LoggingEvent.class, Span.class).put(event, Span.current());
     }
   }
 }

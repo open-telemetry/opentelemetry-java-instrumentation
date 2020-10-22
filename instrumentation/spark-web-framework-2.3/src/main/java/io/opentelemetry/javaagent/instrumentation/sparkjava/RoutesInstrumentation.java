@@ -62,7 +62,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
-      Span span = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
+      Span span = Span.current();
       if (span != null && routeMatch != null) {
         span.updateName(routeMatch.getMatchUri());
       }

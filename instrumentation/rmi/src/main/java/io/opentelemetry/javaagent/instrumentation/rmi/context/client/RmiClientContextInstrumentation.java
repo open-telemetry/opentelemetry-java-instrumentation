@@ -92,7 +92,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
       if (PROPAGATOR.isRMIInternalObject(id)) {
         return;
       }
-      Span activeSpan = io.opentelemetry.trace.TracingContextUtils.getCurrentSpan();
+      Span activeSpan = Span.current();
       if (!activeSpan.getContext().isValid()) {
         return;
       }

@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -69,7 +68,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
-      if (!TracingContextUtils.getCurrentSpan().getContext().isValid()) {
+      if (!Span.current().getContext().isValid()) {
         return null;
       }
       Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();

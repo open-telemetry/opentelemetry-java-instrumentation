@@ -75,7 +75,7 @@ final class AwsSdkHttpClientTracer
 
   public Span getOrCreateSpan(String name, Tracer tracer, Kind kind) {
     io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
-    Span clientSpan = context.getValue(BaseTracer.CONTEXT_CLIENT_SPAN_KEY);
+    Span clientSpan = context.get(BaseTracer.CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

@@ -20,7 +20,7 @@ public class FilterAdvice {
       @Advice.This BaseFilter it,
       @Advice.Argument(0) FilterChainContext ctx,
       @Advice.Local("otelScope") Scope scope) {
-    if (io.opentelemetry.trace.TracingContextUtils.getCurrentSpan().getContext().isValid()) {
+    if (Span.current().getContext().isValid()) {
       return;
     }
 

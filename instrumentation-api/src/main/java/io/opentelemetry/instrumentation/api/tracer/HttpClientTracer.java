@@ -76,7 +76,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
     OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
     return context.makeCurrent();
   }
 
@@ -105,7 +105,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
    */
   private Span startSpan(REQUEST request, String name, long startTimeNanos) {
     Context context = Context.current();
-    Span clientSpan = context.getValue(CONTEXT_CLIENT_SPAN_KEY);
+    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

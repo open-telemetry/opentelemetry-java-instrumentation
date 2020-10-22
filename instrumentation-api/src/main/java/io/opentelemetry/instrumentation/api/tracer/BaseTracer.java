@@ -15,7 +15,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 
@@ -34,7 +33,7 @@ public abstract class BaseTracer {
   protected final Tracer tracer;
 
   public BaseTracer() {
-    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
   public BaseTracer(Tracer tracer) {
@@ -60,7 +59,7 @@ public abstract class BaseTracer {
   }
 
   public Span getCurrentSpan() {
-    return TracingContextUtils.getCurrentSpan();
+    return Span.current();
   }
 
   protected abstract String getInstrumentationName();
@@ -147,6 +146,6 @@ public abstract class BaseTracer {
   /** Returns valid span of type SERVER from current context or <code>null</code> if not found. */
   // TODO when all decorator are replaced with tracers, make this method instance
   public static Span getCurrentServerSpan() {
-    return Context.current().getValue(CONTEXT_SERVER_SPAN_KEY);
+    return Context.current().get(CONTEXT_SERVER_SPAN_KEY);
   }
 }

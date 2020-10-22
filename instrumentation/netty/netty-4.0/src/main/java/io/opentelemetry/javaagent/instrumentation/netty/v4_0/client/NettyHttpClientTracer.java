@@ -33,7 +33,7 @@ public class NettyHttpClientTracer
       //  spans, do we still need this condition?
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       Context context = Context.current().with(span);
-      context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+      context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
       return context.makeCurrent();
     }
   }

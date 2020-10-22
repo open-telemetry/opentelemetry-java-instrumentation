@@ -17,7 +17,6 @@ import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,7 +27,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
   public static ILoggingEvent wrapEvent(ILoggingEvent event) {
-    Span currentSpan = TracingContextUtils.getCurrentSpan();
+    Span currentSpan = Span.current();
     if (!currentSpan.getContext().isValid()) {
       return event;
     }

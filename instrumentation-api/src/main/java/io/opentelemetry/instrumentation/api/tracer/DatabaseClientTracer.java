@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
@@ -26,7 +25,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   protected final Tracer tracer;
 
   public DatabaseClientTracer() {
-    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
   public Span startSpan(CONNECTION connection, QUERY query) {
@@ -56,19 +55,19 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context clientSpanContext = Context.current().withValues(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context clientSpanContext = Context.current().with(CONTEXT_CLIENT_SPAN_KEY, span);
     Context newContext = clientSpanContext.with(span);
     return newContext.makeCurrent();
   }
 
   @Override
   public Span getCurrentSpan() {
-    return TracingContextUtils.getCurrentSpan();
+    return Span.current();
   }
 
   public Span getClientSpan() {
     Context context = Context.current();
-    return context.getValue(CONTEXT_CLIENT_SPAN_KEY);
+    return context.get(CONTEXT_CLIENT_SPAN_KEY);
   }
 
   @Override

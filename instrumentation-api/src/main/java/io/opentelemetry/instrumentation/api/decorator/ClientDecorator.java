@@ -26,7 +26,7 @@ public abstract class ClientDecorator extends BaseDecorator {
   public static Context currentContextWith(Span clientSpan) {
     Context context = Context.current();
     if (clientSpan.getContext().isValid()) {
-      context = context.withValues(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+      context = context.with(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
     return context.with(clientSpan);
   }
@@ -37,7 +37,7 @@ public abstract class ClientDecorator extends BaseDecorator {
    */
   public static Span getOrCreateSpan(String name, Tracer tracer) {
     Context context = Context.current();
-    Span clientSpan = context.getValue(CONTEXT_CLIENT_SPAN_KEY);
+    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.

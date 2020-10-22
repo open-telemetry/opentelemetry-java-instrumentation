@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
    */
   @Override
   public Map<String, String> supplyContextData() {
-    Span currentSpan = TracingContextUtils.getCurrentSpan();
+    Span currentSpan = Span.current();
     if (!currentSpan.getContext().isValid()) {
       return Collections.emptyMap();
     }
