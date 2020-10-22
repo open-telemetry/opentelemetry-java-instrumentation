@@ -33,6 +33,8 @@ dependencies {
 
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
 
+  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
+
   latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
   latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.27'
   latestDepTestLibrary group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
