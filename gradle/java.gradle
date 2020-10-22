@@ -83,8 +83,8 @@ jar {
 
 repositories {
   mavenLocal()
-  jcenter()
   mavenCentral()
+  jcenter()
   maven {
     url "https://repo.typesafe.com/typesafe/releases"
   }

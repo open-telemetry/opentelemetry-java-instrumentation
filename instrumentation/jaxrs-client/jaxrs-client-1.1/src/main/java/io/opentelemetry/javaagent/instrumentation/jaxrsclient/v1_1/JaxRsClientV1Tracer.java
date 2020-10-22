@@ -50,6 +50,6 @@ public class JaxRsClientV1Tracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jaxrs-client-1.1";
+    return "io.opentelemetry.auto.jaxrs-client";
   }
 }

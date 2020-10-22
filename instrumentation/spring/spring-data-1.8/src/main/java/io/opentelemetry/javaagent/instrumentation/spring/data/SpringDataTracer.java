@@ -14,6 +14,6 @@ public final class SpringDataTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-data-1.8";
+    return "io.opentelemetry.auto.spring-data";
   }
 }

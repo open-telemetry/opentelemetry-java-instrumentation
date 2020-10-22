@@ -64,7 +64,7 @@ final class AwsSdkHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.aws-sdk-2.2";
+    return "io.opentelemetry.auto.aws-sdk";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */

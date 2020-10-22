@@ -80,6 +80,6 @@ public class NettyHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.netty-3.8";
+    return "io.opentelemetry.auto.netty";
   }
 }

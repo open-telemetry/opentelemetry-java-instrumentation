@@ -38,8 +38,8 @@ allprojects {
 
 repositories {
   mavenLocal()
-  jcenter()
   mavenCentral()
+  jcenter()
 }
 
 description = 'OpenTelemetry instrumentations for Java'
