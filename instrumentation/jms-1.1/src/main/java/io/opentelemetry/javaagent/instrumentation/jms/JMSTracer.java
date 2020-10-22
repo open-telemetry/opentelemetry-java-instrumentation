@@ -163,6 +163,6 @@ public class JMSTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jms-1.1";
+    return "io.opentelemetry.auto.jms";
   }
 }

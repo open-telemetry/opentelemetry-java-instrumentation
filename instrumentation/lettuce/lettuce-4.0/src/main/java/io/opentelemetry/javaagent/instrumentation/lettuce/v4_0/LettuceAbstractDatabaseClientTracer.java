@@ -35,6 +35,6 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.lettuce-4.0";
+    return "io.opentelemetry.auto.lettuce";
   }
 }

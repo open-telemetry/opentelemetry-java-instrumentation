@@ -57,6 +57,6 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.geode-1.7";
+    return "io.opentelemetry.auto.geode";
   }
 }

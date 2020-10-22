@@ -44,6 +44,6 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, Protocol
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jedis-3.0";
+    return "io.opentelemetry.auto.jedis";
   }
 }

@@ -33,7 +33,7 @@ public class ArmeriaServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.armeria-1.0";
+    return "io.opentelemetry.armeria";
   }
 
   @Override

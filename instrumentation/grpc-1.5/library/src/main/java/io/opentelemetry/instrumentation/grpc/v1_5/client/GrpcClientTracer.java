@@ -43,6 +43,6 @@ public class GrpcClientTracer extends RpcClientTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.grpc-1.5";
+    return "io.opentelemetry.auto.grpc";
   }
 }
