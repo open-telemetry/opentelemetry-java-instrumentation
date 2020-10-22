@@ -41,6 +41,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
         .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
+        // In WebLogic, URL.openConnection() returns its own internal implementation of
+        // HttpURLConnection, which does not delegate the methods that have to be instrumented to
+        // the JDK superclass. Therefore it needs to be instrumented directly.
+        .or(named("weblogic.net.http.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
         .and(extendsClass(named("java.net.HttpURLConnection")));
