@@ -3,7 +3,7 @@ plugins {
 }
 
 ext {
-  mavenGroupId = 'io.opentelemetry.javaagent.exporters'
+  mavenGroupId = 'io.opentelemetry.javaagent'
 }
 
 apply from: "$rootDir/gradle/java.gradle"
