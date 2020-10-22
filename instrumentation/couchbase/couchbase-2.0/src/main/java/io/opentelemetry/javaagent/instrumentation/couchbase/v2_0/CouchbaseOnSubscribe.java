@@ -15,24 +15,26 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import rx.Observable;
 
-public class CouchbaseOnSubscribe extends TracedOnSubscribe {
+public class CouchbaseOnSubscribe<T> extends TracedOnSubscribe<T> {
   private final String bucket;
   private final String query;
 
-  public static CouchbaseOnSubscribe create(
-      Observable originalObservable, String bucket, Method method) {
+  public static <T> CouchbaseOnSubscribe<T> create(
+      Observable<T> originalObservable, String bucket, Method method) {
     Class<?> declaringClass = method.getDeclaringClass();
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-    return new CouchbaseOnSubscribe(originalObservable, bucket, className + "." + method.getName());
+    return new CouchbaseOnSubscribe<>(
+        originalObservable, bucket, className + "." + method.getName());
   }
 
-  public static CouchbaseOnSubscribe create(
-      Observable originalObservable, String bucket, String query) {
-    return new CouchbaseOnSubscribe(originalObservable, bucket, query);
+  public static <T> CouchbaseOnSubscribe<T> create(
+      Observable<T> originalObservable, String bucket, Object query) {
+    return new CouchbaseOnSubscribe<>(
+        originalObservable, bucket, CouchbaseQueryNormalizer.normalize(query));
   }
 
-  private CouchbaseOnSubscribe(Observable originalObservable, String bucket, String query) {
+  private CouchbaseOnSubscribe(Observable<T> originalObservable, String bucket, String query) {
     super(originalObservable, query, TRACER, CLIENT);
 
     this.bucket = bucket;
