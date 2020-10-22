@@ -20,11 +20,11 @@ Open the release build workflow in your browser [here](https://github.com/open-t
 You will see a button that says "Run workflow". Press the button, enter the version number you want
 to release in the input field that pops up, and then press "Run workflow".
 
-This triggers the release process, which builds the artifacts, publishes the artifacts, and creates 
+This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
 
 ## Announcement
-   
+
 Once the GitHub workflow completes, go to Github [release
 page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
 `Draft a new release` to write release notes about the new release. If there is already a draft
@@ -33,7 +33,7 @@ release notes, just point it at the created tag.
 ## Patch Release
 
 All patch releases should include only bug-fixes, and must avoid
-adding/modifying the public APIs. 
+adding/modifying the public APIs.
 
 Open the patch release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Patch+Release+Build%22).
 
