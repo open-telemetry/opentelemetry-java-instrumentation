@@ -55,7 +55,7 @@ public class LoggingExporter implements SpanExporter {
                 }
               });
     }
-    log.debug(stringBuilder.toString());
+    log.info(stringBuilder.toString());
     return CompletableResultCode.ofSuccess();
   }
 
