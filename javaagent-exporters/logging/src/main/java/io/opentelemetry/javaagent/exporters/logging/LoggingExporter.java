@@ -44,7 +44,7 @@ public class LoggingExporter implements SpanExporter {
                 @Override
                 public <T> void consume(AttributeKey<T> key, T value) {
 
-                  stringBuilder.append(key).append('=');
+                  stringBuilder.append(key.getKey()).append('=');
 
                   if (key.getType() == AttributeType.STRING) {
                     stringBuilder.append('"').append(value).append('"');
