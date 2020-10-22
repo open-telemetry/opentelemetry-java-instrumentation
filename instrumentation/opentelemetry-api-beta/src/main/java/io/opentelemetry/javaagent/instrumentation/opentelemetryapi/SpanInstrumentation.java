@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import application.io.opentelemetry.trace.Span;
+import application.io.opentelemetry.trace.SpanContext;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -25,22 +25,30 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpanInstrumentation extends AbstractInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.trace.Span");
+    return named("application.io.opentelemetry.trace.PropagatedSpan");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod().and(isPublic()).and(isStatic()).and(named("wrap")),
-        SpanInstrumentation.class.getName() + "$WrapAdvice");
+        isMethod().and(isStatic()).and(named("create")),
+        SpanInstrumentation.class.getName() + "$CreateAdvice");
   }
 
-  public static class WrapAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) Span applicationSpan) {
+  public static class CreateAdvice {
+    // We replace the return value completely so don't need to call the method.
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    public static boolean methodEnter() {
+      return false;
+    }
+
+    @Advice.OnMethodExit
+    public static void methodExit(
+        @Advice.Argument(0) SpanContext applicationSpanContext,
+        @Advice.Return(readOnly = false) Span applicationSpan) {
       applicationSpan =
           Bridging.toApplication(
-              io.opentelemetry.trace.Span.wrap(Bridging.toAgent(applicationSpan.getContext())));
+              io.opentelemetry.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
     }
   }
 }
