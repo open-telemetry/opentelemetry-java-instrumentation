@@ -66,7 +66,7 @@ public class AwsSdk {
     Context context = getContextFromAttributes(attributes);
     return context == null
         ? Span.getInvalid()
-        : application.io.opentelemetry.trace.Span.fromContext(context);
+        : Span.fromContext(context);
   }
 
   /**

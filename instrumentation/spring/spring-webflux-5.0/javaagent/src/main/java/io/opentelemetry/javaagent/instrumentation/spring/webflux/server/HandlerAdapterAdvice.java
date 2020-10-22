@@ -26,7 +26,7 @@ public class HandlerAdapterAdvice {
     SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
     if (handler != null && context != null) {
-      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+      Span span = Span.fromContext(context);
       String handlerType;
       String operationName;
 

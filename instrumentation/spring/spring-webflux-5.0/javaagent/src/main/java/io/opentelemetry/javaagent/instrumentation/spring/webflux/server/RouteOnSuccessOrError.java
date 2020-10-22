@@ -36,7 +36,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
       if (predicateString != null) {
         Context context = (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
         if (context != null) {
-          Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+          Span span = Span.fromContext(context);
           span.setAttribute("request.predicate", predicateString);
 
           Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);

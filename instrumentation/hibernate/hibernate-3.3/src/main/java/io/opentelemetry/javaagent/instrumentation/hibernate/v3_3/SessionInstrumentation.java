@@ -132,7 +132,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
       if (sessionContext == null) {
         return;
       }
-      Span sessionSpan = application.io.opentelemetry.trace.Span.fromContext(sessionContext);
+      Span sessionSpan = Span.fromContext(sessionContext);
 
       DECORATE.onError(sessionSpan, throwable);
       DECORATE.beforeFinish(sessionSpan);

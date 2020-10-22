@@ -90,7 +90,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       Context servletContext =
           servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      Span parentSpan = application.io.opentelemetry.trace.Span.fromContext(parentContext);
+      Span parentSpan = Span.fromContext(parentContext);
       SpanContext parentSpanContext = parentSpan.getSpanContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
@@ -99,7 +99,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
       Span servletSpan =
           servletContext != null
-              ? application.io.opentelemetry.trace.Span.fromContext(servletContext)
+              ? Span.fromContext(servletContext)
               : null;
       Context parent;
       if (servletContext == null

@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -70,8 +70,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   */
   public static boolean needsRescoping(Context attachedContext) {
     return !sameTrace(
-        application.io.opentelemetry.trace.Span.fromContext(Context.current()),
-        application.io.opentelemetry.trace.Span.fromContext(attachedContext));
+        Span.fromContext(Context.current()),
+        Span.fromContext(attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {

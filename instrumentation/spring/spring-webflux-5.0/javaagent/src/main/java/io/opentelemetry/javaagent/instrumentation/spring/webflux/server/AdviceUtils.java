@@ -78,7 +78,7 @@ public class AdviceUtils {
 
   static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
     if (context != null) {
-      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+      Span span = Span.fromContext(context);
       if (throwable != null) {
         span.setStatus(StatusCode.ERROR);
         BaseDecorator.addThrowable(span, throwable);

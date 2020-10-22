@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.S
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.util.List;
 import org.apache.logging.log4j.core.ContextDataInjector;

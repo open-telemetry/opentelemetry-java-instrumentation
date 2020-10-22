@@ -37,7 +37,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       return;
     }
 
-    Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+    Span span = Span.fromContext(context);
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {

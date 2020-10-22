@@ -77,7 +77,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       ServletRequest request = context.getRequest();
 
       Context currentContext = Java8Bridge.currentContext();
-      Span currentSpan = application.io.opentelemetry.trace.Span.fromContext(currentContext);
+      Span currentSpan = Span.fromContext(currentContext);
       if (currentSpan.getSpanContext().isValid()) {
         // this tells the dispatched servlet to use the current span as the parent for its work
         // (if the currentSpan is not valid for some reason, the original servlet span should still

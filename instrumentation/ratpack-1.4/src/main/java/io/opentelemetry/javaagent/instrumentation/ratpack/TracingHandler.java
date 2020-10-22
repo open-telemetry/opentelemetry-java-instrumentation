@@ -44,7 +44,7 @@ public final class TracingHandler implements Handler {
               if (serverSpanContext != null) {
                 // Rename the netty span name with the ratpack route.
                 TRACER.onContext(
-                    application.io.opentelemetry.trace.Span.fromContext(serverSpanContext), ctx);
+                    Span.fromContext(serverSpanContext), ctx);
               }
               TRACER.onContext(ratpackSpan, ctx);
               TRACER.end(ratpackSpan);

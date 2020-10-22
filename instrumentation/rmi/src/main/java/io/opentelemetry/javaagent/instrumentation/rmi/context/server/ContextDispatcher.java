@@ -51,7 +51,7 @@ public class ContextDispatcher implements Dispatcher {
       if (payload != null) {
         Context context = extract(payload, GETTER);
         SpanContext spanContext =
-            application.io.opentelemetry.trace.Span.fromContext(context).getSpanContext();
+            io.opentelemetry.trace.Span.fromContext(context).getSpanContext();
         if (spanContext.isValid()) {
           THREAD_LOCAL_CONTEXT.set(context);
         } else {

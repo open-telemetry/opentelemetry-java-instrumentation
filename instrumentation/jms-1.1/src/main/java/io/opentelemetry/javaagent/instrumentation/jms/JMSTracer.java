@@ -49,7 +49,7 @@ public class JMSTracer extends BaseTracer {
     if (message != null && "process".equals(operation)) {
       Context context = extract(message, GETTER);
       SpanContext spanContext =
-          application.io.opentelemetry.trace.Span.fromContext(context).getSpanContext();
+          Span.fromContext(context).getSpanContext();
       if (spanContext.isValid()) {
         spanBuilder.setParent(context);
       }

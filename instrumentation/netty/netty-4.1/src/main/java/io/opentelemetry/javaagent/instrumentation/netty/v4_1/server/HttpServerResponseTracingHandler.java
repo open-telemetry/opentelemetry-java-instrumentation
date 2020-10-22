@@ -25,7 +25,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       return;
     }
 
-    Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+    Span span = Span.fromContext(context);
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
     } catch (Throwable throwable) {

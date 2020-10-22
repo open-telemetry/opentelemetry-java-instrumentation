@@ -24,7 +24,7 @@ public class SpanFinishingSubscription implements Subscription {
   public void unsubscribe() {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+      Span span = Span.fromContext(context);
       if (span.getSpanContext().isValid()) {
         tracer.end(span);
       }

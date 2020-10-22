@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServ
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;

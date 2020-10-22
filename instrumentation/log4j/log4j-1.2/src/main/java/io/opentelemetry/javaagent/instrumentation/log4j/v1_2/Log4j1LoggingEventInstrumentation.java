@@ -112,7 +112,7 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
 
         Hashtable mdc = new Hashtable();
 
-        Hashtable originalMdc = MDC.getSpanContext();
+        Hashtable originalMdc = MDC.getContext();
         if (originalMdc != null) {
           mdc.putAll(originalMdc);
         }
