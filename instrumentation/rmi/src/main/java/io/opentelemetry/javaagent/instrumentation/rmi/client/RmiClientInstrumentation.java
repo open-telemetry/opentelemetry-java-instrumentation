@@ -59,7 +59,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope) {
 
       // TODO replace with client span check
-      if (!Span.current().getContext().isValid()) {
+      if (!Span.current().getSpanContext().isValid()) {
         return;
       }
       span = TRACER.startSpan(method);

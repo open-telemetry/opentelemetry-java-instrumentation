@@ -33,7 +33,7 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
       return contextData;
     }
 
-    SpanContext currentContext = Span.current().getContext();
+    SpanContext currentContext = Span.current().getSpanContext();
     if (!currentContext.isValid()) {
       return contextData;
     }

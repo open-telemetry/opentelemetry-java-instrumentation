@@ -93,7 +93,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
         return;
       }
       Span activeSpan = Span.current();
-      if (!activeSpan.getContext().isValid()) {
+      if (!activeSpan.getSpanContext().isValid()) {
         return;
       }
 

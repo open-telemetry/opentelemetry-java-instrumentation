@@ -20,7 +20,7 @@ public class FilterAdvice {
       @Advice.This BaseFilter it,
       @Advice.Argument(0) FilterChainContext ctx,
       @Advice.Local("otelScope") Scope scope) {
-    if (Span.current().getContext().isValid()) {
+    if (Span.current().getSpanContext().isValid()) {
       return;
     }
 

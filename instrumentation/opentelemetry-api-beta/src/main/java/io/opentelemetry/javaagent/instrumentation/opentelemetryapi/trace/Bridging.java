@@ -37,7 +37,7 @@ public class Bridging {
   public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();
 
   public static Span toApplication(io.opentelemetry.trace.Span agentSpan) {
-    if (!agentSpan.getContext().isValid()) {
+    if (!agentSpan.getSpanContext().isValid()) {
       // no need to wrap
       return Span.getInvalid();
     } else {
@@ -46,7 +46,7 @@ public class Bridging {
   }
 
   public static io.opentelemetry.trace.Span toAgentOrNull(Span applicationSpan) {
-    if (!applicationSpan.getContext().isValid()) {
+    if (!applicationSpan.getSpanContext().isValid()) {
       // no need to wrap
       return io.opentelemetry.trace.Span.getInvalid();
     } else if (applicationSpan instanceof ApplicationSpan) {
@@ -97,7 +97,7 @@ public class Bridging {
           public <T> void consume(AttributeKey<T> key, T value) {
             io.opentelemetry.common.AttributeKey<T> agentKey = toAgent(key);
             if (agentKey != null) {
-              agentAttributes.setAttribute(agentKey, value);
+              agentAttributes.put(agentKey, value);
             }
           }
         });

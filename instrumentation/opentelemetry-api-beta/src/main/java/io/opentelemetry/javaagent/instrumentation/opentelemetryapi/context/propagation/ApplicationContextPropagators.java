@@ -19,7 +19,7 @@ public class ApplicationContextPropagators implements ContextPropagators {
       ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
     applicationTextMapPropagator =
         new ApplicationTextMapPropagator(
-            OpenTelemetry.getPropagators().getTextMapPropagator(), contextStore);
+            OpenTelemetry.getGlobalPropagators().getTextMapPropagator(), contextStore);
   }
 
   @Override

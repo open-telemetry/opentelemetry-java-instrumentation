@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethod
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -121,7 +120,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
       if (sessionContext == null) {
         return;
       }
-      Span sessionSpan = getSpan(sessionContext);
+      Span sessionSpan = application.io.opentelemetry.trace.Span.fromContext(sessionContext);
 
       DECORATE.onError(sessionSpan, throwable);
       DECORATE.beforeFinish(sessionSpan);

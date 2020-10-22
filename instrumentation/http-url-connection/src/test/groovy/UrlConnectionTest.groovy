@@ -20,7 +20,7 @@ class UrlConnectionTest extends AgentTestRunner {
       URLConnection connection = url.openConnection()
       connection.setConnectTimeout(10000)
       connection.setReadTimeout(10000)
-      assert TracingContextUtils.getCurrentSpan() != null
+      assert io.opentelemetry.trace.Span.current() != null
       connection.inputStream
     }
 

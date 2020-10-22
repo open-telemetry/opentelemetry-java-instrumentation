@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
@@ -71,13 +69,15 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   In this case we have to put the span from the request into current context before continuing.
   */
   public static boolean needsRescoping(Context attachedContext) {
-    return !sameTrace(getSpan(Context.current()), getSpan(attachedContext));
+    return !sameTrace(
+        application.io.opentelemetry.trace.Span.fromContext(Context.current()),
+        application.io.opentelemetry.trace.Span.fromContext(attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan
-        .getContext()
+        .getSpanContext()
         .getTraceIdAsHexString()
-        .equals(otherSpan.getContext().getTraceIdAsHexString());
+        .equals(otherSpan.getSpanContext().getTraceIdAsHexString());
   }
 }

@@ -96,7 +96,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(Listener<RespT> responseListener, Metadata headers) {
-      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+      OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = currentContextWith(span)) {
         super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {

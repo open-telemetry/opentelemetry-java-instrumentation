@@ -13,7 +13,7 @@ import io.opentelemetry.trace.TracingContextUtils
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   def "test afterStart"() {
     setup:
@@ -43,7 +43,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     def span = ClientDecorator.getOrCreateSpan("test", TRACER)
 
     then:
-    assert span.getContext().isValid()
+    assert span.getSpanContext().isValid()
   }
 
   def "test getOrCreateSpan when existing client span"() {
@@ -55,7 +55,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     def span = ClientDecorator.getOrCreateSpan("test", TRACER)
 
     then:
-    assert !span.getContext().isValid()
+    assert !span.getSpanContext().isValid()
 
     cleanup:
     scope.close()
@@ -71,9 +71,9 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     def scope2 = TracingContextUtils.currentContextWith(internal)
 
     then:
-    assert internal.getContext().isValid()
+    assert internal.getSpanContext().isValid()
     assert Context.current().getValue(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == client
-    assert TracingContextUtils.getSpan(Context.current()) == internal
+    assert application.io.opentelemetry.trace.Span.fromContext(Context.current()) == internal
 
     cleanup:
     scope2.close()
@@ -89,7 +89,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
     then:
     assert context.getValue(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == span
-    assert TracingContextUtils.getSpan(context) == span
+    assert application.io.opentelemetry.trace.Span.fromContext(context) == span
   }
 
   @Override

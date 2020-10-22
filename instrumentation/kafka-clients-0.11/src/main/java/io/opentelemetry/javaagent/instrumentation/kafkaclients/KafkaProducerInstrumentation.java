@@ -82,7 +82,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       if (TRACER.shouldPropagate(apiVersions)) {
         try {
-          OpenTelemetry.getPropagators()
+          OpenTelemetry.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         } catch (IllegalStateException e) {
@@ -96,7 +96,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          OpenTelemetry.getPropagators()
+          OpenTelemetry.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         }

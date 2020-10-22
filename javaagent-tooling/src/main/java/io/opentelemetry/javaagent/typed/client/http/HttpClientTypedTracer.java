@@ -17,7 +17,9 @@ public abstract class HttpClientTypedTracer<
   @Override
   protected T startSpan(REQUEST request, T span) {
     Context context = Context.current().with(span);
-    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, request, getSetter());
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request, getSetter());
     return super.startSpan(request, span);
   }
 

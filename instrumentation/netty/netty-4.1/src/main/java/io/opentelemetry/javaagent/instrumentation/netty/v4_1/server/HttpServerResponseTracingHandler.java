@@ -14,7 +14,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
@@ -26,7 +25,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       return;
     }
 
-    Span span = TracingContextUtils.getSpan(context);
+    Span span = application.io.opentelemetry.trace.Span.fromContext(context);
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
     } catch (Throwable throwable) {

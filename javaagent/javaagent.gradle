@@ -89,6 +89,7 @@ tasks.withType(ShadowJar).configureEach {
   relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API
+  relocate "io.opentelemetry.DefaultOpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.DefaultOpenTelemetry"
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"
   relocate "io.opentelemetry.package-info", "io.opentelemetry.javaagent.shaded.io.opentelemetry.package-info"
   relocate "io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common"

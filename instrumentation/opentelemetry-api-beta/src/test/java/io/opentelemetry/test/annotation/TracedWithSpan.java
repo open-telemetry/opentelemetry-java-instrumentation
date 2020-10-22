@@ -6,6 +6,7 @@
 package io.opentelemetry.test.annotation;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
+import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.Span.Kind;
 
 public class TracedWithSpan {

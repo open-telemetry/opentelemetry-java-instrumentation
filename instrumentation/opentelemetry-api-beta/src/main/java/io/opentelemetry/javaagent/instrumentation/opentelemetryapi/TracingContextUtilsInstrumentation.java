@@ -85,7 +85,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) Span applicationSpan) {
-      applicationSpan = Span.current();
+      applicationSpan = TracingContextUtils.getCurrentSpan();
     }
   }
 

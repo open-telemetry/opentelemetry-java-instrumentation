@@ -17,7 +17,8 @@ public class BlockWrapper implements Block {
 
   private static final Logger log = LoggerFactory.getLogger(BlockWrapper.class);
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
+  private static final Tracer TRACER =
+      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
   private final Context parentContext;

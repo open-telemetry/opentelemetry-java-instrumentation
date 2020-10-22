@@ -54,7 +54,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
 
   public static class TracerHolder {
     public static final Tracer TRACER =
-        OpenTelemetry.getTracer("io.opentelemetry.auto.sparkjava-2.3");
+        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.sparkjava-2.3");
   }
 
   public static class RoutesAdvice {

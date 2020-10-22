@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -44,7 +43,8 @@ public final class TracingHandler implements Handler {
             response -> {
               if (serverSpanContext != null) {
                 // Rename the netty span name with the ratpack route.
-                TRACER.onContext(getSpan(serverSpanContext), ctx);
+                TRACER.onContext(
+                    application.io.opentelemetry.trace.Span.fromContext(serverSpanContext), ctx);
               }
               TRACER.onContext(ratpackSpan, ctx);
               TRACER.end(ratpackSpan);

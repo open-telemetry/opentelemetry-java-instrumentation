@@ -26,7 +26,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -77,7 +77,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -123,7 +123,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -205,7 +205,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")

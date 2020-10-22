@@ -115,8 +115,8 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public SpanContext getContext() {
-    return Bridging.toApplication(agentSpan.getContext());
+  public SpanContext getSpanContext() {
+    return Bridging.toApplication(agentSpan.getSpanContext());
   }
 
   @Override

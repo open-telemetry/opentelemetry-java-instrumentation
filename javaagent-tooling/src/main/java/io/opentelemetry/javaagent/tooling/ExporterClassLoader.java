@@ -30,6 +30,9 @@ public class ExporterClassLoader extends URLClassLoader {
   private static final ShadingRemapper remapper =
       new ShadingRemapper(
           rule(
+              "#io.opentelemetry.DefaultOpenTelemetry",
+              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.DefaultOpenTelemetry"),
+          rule(
               "#io.opentelemetry.OpenTelemetry",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"),
           rule(

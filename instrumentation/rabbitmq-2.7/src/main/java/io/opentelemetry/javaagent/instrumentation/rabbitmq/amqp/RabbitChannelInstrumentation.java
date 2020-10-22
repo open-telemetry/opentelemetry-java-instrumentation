@@ -152,7 +152,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(5) byte[] body) {
       Span span = Span.current();
 
-      if (span.getContext().isValid()) {
+      if (span.getSpanContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);
         if (body != null) {
           span.setAttribute(
@@ -174,7 +174,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         Context context = Java8Bridge.currentContext().with(span);
 
-        OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+        OpenTelemetry.getGlobalPropagators()
+            .getTextMapPropagator()
+            .inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(

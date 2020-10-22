@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -79,8 +78,8 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This Channel channel) {
       Context context = Java8Bridge.currentContext();
-      Span span = getSpan(context);
-      if (span.getContext().isValid()) {
+      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
+      if (span.getSpanContext().isValid()) {
         ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 

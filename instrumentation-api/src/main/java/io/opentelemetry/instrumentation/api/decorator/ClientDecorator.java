@@ -25,7 +25,7 @@ public abstract class ClientDecorator extends BaseDecorator {
    */
   public static Context currentContextWith(Span clientSpan) {
     Context context = Context.current();
-    if (clientSpan.getContext().isValid()) {
+    if (clientSpan.getSpanContext().isValid()) {
       context = context.with(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
     return context.with(clientSpan);

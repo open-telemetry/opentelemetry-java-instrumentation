@@ -24,7 +24,6 @@ import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -94,7 +93,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         contextStore.put(request, Java8Bridge.currentContext());
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        span = TracingContextUtils.getSpan(context);
+        span = application.io.opentelemetry.trace.Span.fromContext(context);
         scope = context.makeCurrent();
       }
     }

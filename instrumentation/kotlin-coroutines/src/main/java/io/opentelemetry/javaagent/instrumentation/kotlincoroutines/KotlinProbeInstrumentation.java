@@ -96,7 +96,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
         @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
-      CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
+      CoroutineContextWrapper w = continuation.getSpanContext().get(TraceScopeKey.INSTANCE);
       if (w != null) {
         w.tracingResume();
       }
@@ -107,7 +107,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
         @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
-      CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
+      CoroutineContextWrapper w = continuation.getSpanContext().get(TraceScopeKey.INSTANCE);
       if (w != null) {
         w.tracingSuspend();
       }
@@ -124,7 +124,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
     public CoroutineWrapper(Continuation proxy) {
       this.proxy = proxy;
-      this.contextWrapper = new CoroutineContextWrapper(proxy.getContext());
+      this.contextWrapper = new CoroutineContextWrapper(proxy.getSpanContext());
     }
 
     public String toString() {
@@ -133,7 +133,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
     @NotNull
     @Override
-    public CoroutineContext getContext() {
+    public CoroutineContext getSpanContext() {
       return contextWrapper;
     }
 

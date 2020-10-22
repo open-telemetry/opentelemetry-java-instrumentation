@@ -86,7 +86,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       TRACER.onRequest(span, context.httpRequest());
       SdkRequestDecorator decorator = decorator(executionAttributes);
       if (decorator != null) {
@@ -123,7 +123,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.afterExecution(span, context.httpRequest());
       onSdkResponse(span, context.response());
@@ -141,7 +141,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.endExceptionally(span, context.exception());
     }

@@ -28,7 +28,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   public static ILoggingEvent wrapEvent(ILoggingEvent event) {
     Span currentSpan = Span.current();
-    if (!currentSpan.getContext().isValid()) {
+    if (!currentSpan.getSpanContext().isValid()) {
       return event;
     }
 
@@ -39,7 +39,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> contextData = new HashMap<>();
-    SpanContext spanContext = currentSpan.getContext();
+    SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
     contextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
     contextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));

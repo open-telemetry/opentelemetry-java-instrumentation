@@ -33,7 +33,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
 
-  private static final Tracer tracer = OpenTelemetry.getTracer("test");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("test");
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;

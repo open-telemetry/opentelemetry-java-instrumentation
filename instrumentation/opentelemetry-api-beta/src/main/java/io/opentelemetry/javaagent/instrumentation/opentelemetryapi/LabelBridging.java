@@ -33,7 +33,7 @@ public class LabelBridging {
 
     @Override
     public void consume(String key, String value) {
-      builder.setLabel(key, value);
+      builder.put(key, value);
     }
   }
 }

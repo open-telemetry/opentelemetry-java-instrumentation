@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -78,8 +77,8 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       ServletRequest request = context.getRequest();
 
       Context currentContext = Java8Bridge.currentContext();
-      Span currentSpan = getSpan(currentContext);
-      if (currentSpan.getContext().isValid()) {
+      Span currentSpan = application.io.opentelemetry.trace.Span.fromContext(currentContext);
+      if (currentSpan.getSpanContext().isValid()) {
         // this tells the dispatched servlet to use the current span as the parent for its work
         // (if the currentSpan is not valid for some reason, the original servlet span should still
         // be present in the same request attribute, and so that will be used)

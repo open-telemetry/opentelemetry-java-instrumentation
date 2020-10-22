@@ -15,7 +15,7 @@ final class AwsLambdaUtil {
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "X-Amzn-Trace-Id";
 
   static Context extractParent(String parentHeader) {
-    return OpenTelemetry.getPropagators()
+    return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .extract(
             Context.current(),

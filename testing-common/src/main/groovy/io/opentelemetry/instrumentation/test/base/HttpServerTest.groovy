@@ -205,7 +205,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
-    assert TracingContextUtils.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
+    assert io.opentelemetry.trace.Span.current().getSpanContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }

@@ -25,7 +25,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
       .addTextMapPropagator(HttpTraceContext.instance)
       .addTextMapPropagator(AwsXRayPropagator.instance)
       .build()
-    OpenTelemetry.setPropagators(propagators)
+    OpenTelemetry.setGlobalPropagators(propagators)
   }
 
   protected static String doHandleRequest(String input, Context context) {

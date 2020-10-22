@@ -38,7 +38,7 @@ public class TracerAutoConfiguration {
   public Tracer otelTracer(
       TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider)
       throws Exception {
-    Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getName());
+    Tracer tracer = OpenTelemetry.getGlobalTracer(tracerProperties.getName());
 
     List<SpanExporter> spanExporters = spanExportersProvider.getIfAvailable();
     if (spanExporters == null || spanExporters.isEmpty()) {

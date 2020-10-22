@@ -48,7 +48,7 @@ public class PropagatorsInitializer {
     if (propagators.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      OpenTelemetry.setPropagators(
+      OpenTelemetry.setGlobalPropagators(
           DefaultContextPropagators.builder()
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
@@ -77,6 +77,6 @@ public class PropagatorsInitializer {
       propagatorsBuilder.addTextMapPropagator(textPropagators.get(0));
     }
     // Register it in the global propagators:
-    OpenTelemetry.setPropagators(propagatorsBuilder.build());
+    OpenTelemetry.setGlobalPropagators(propagatorsBuilder.build());
   }
 }

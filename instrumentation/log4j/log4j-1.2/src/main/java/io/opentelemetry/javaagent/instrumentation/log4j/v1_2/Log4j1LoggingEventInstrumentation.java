@@ -78,11 +78,11 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
         }
 
         Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
-        if (span == null || !span.getContext().isValid()) {
+        if (span == null || !span.getSpanContext().isValid()) {
           return;
         }
 
-        SpanContext spanContext = span.getContext();
+        SpanContext spanContext = span.getSpanContext();
         switch (key) {
           case TRACE_ID:
             value = spanContext.getTraceIdAsHexString();
@@ -112,7 +112,7 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
 
         Hashtable mdc = new Hashtable();
 
-        Hashtable originalMdc = MDC.getContext();
+        Hashtable originalMdc = MDC.getSpanContext();
         if (originalMdc != null) {
           mdc.putAll(originalMdc);
         }
@@ -120,8 +120,8 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
         // Assume already instrumented event if traceId is present.
         if (!mdc.contains(TRACE_ID)) {
           Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
-          if (span != null && span.getContext().isValid()) {
-            SpanContext spanContext = span.getContext();
+          if (span != null && span.getSpanContext().isValid()) {
+            SpanContext spanContext = span.getSpanContext();
             mdc.put(TRACE_ID, spanContext.getTraceIdAsHexString());
             mdc.put(SPAN_ID, spanContext.getSpanIdAsHexString());
             mdc.put(SAMPLED, Boolean.toString(spanContext.isSampled()));

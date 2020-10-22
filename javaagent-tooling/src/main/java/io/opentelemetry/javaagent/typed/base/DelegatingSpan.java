@@ -101,8 +101,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public SpanContext getContext() {
-    return delegate.getContext();
+  public SpanContext getSpanContext() {
+    return delegate.getSpanContext();
   }
 
   @Override

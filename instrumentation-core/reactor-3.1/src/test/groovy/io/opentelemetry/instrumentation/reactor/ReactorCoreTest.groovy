@@ -24,7 +24,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
   public static final String EXCEPTION_MESSAGE = "test exception"
 
   private static final Tracer TEST_TRACER =
-    OpenTelemetry.getTracer("io.opentelemetry.auto.reactor")
+    OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.reactor")
 
   def setupSpec() {
     TracingOperator.registerOnEachOperator()
@@ -233,7 +233,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
       Publisher<Integer> publisher = publisherSupplier()
 
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def intermediate = tracer.spanBuilder("intermediate").startSpan()
       // After this activation, the "add two" operations below should be children of this span
       def scope = tracer.withSpan(intermediate)
@@ -272,7 +272,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
 
   def runUnderTrace(def publisherSupplier) {
     TraceUtils.runUnderTrace("trace-parent") {
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = tracer.withSpan(span)
       try {
@@ -294,7 +294,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
 
   def cancelUnderTrace(def publisherSupplier) {
     TraceUtils.runUnderTrace("trace-parent") {
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = tracer.withSpan(span)
 

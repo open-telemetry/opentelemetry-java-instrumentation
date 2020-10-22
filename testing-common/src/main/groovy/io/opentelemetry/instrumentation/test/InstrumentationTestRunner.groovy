@@ -33,7 +33,7 @@ abstract class InstrumentationTestRunner extends Specification {
     //  currently checking against no-op implementation so that it won't override aws-lambda
     //  propagator configuration
     if (OpenTelemetry.getPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
-      OpenTelemetry.setPropagators(DefaultContextPropagators.builder()
+      OpenTelemetry.setGlobalPropagators(DefaultContextPropagators.builder()
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .build())
     }

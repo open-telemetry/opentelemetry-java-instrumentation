@@ -22,7 +22,7 @@ class TracerAutoConfigurationTest {
   static class CustomTracerConfiguration {
     @Bean
     public Tracer customTestTracer() {
-      return OpenTelemetry.getTracer("customTestTracer");
+      return OpenTelemetry.getGlobalTracer("customTestTracer");
     }
   }
 
@@ -61,7 +61,7 @@ class TracerAutoConfigurationTest {
         .run(
             (context) -> {
               assertThat(context.getBean("otelTracer", Tracer.class))
-                  .isEqualTo(OpenTelemetry.getTracer("testTracer"));
+                  .isEqualTo(OpenTelemetry.getGlobalTracer("testTracer"));
             });
   }
 }

@@ -119,8 +119,8 @@ public class TracingCqlSession implements CqlSession {
 
   @Override
   @NonNull
-  public DriverContext getContext() {
-    return session.getContext();
+  public DriverContext getSpanContext() {
+    return session.getSpanContext();
   }
 
   @Override

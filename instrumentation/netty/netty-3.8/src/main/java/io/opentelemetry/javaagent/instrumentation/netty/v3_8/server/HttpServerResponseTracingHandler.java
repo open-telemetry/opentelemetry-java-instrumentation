@@ -12,7 +12,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -38,7 +37,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       return;
     }
 
-    Span span = TracingContextUtils.getSpan(context);
+    Span span = application.io.opentelemetry.trace.Span.fromContext(context);
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {

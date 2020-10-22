@@ -256,7 +256,7 @@ class ReactorCoreTest extends AgentTestRunner {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
       Publisher<Integer> publisher = publisherSupplier()
 
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def intermediate = tracer.spanBuilder("intermediate").startSpan()
       // After this activation, the "add two" operations below should be children of this span
       def scope = tracer.withSpan(intermediate)
@@ -295,7 +295,7 @@ class ReactorCoreTest extends AgentTestRunner {
 
   def runUnderTrace(def publisherSupplier) {
     TraceUtils.runUnderTrace("trace-parent") {
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = tracer.withSpan(span)
       try {
@@ -317,7 +317,7 @@ class ReactorCoreTest extends AgentTestRunner {
 
   def cancelUnderTrace(def publisherSupplier) {
     TraceUtils.runUnderTrace("trace-parent") {
-      def tracer = OpenTelemetry.getTracer("test")
+      def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
       def scope = tracer.withSpan(span)
 

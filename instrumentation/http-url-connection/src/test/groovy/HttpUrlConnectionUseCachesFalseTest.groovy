@@ -19,9 +19,9 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      def parentSpan = TracingContextUtils.getCurrentSpan()
+      def parentSpan = io.opentelemetry.trace.Span.current()
       def stream = connection.inputStream
-      assert TracingContextUtils.getCurrentSpan() == parentSpan
+      assert io.opentelemetry.trace.Span.current() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

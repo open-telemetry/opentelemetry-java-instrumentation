@@ -59,7 +59,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       // TODO this is very strange condition
-      if (!Span.current().getContext().isValid()) {
+      if (!Span.current().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

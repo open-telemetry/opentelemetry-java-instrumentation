@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.Requ
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -91,19 +90,22 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       Context servletContext =
           servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      Span parentSpan = getSpan(parentContext);
-      SpanContext parentSpanContext = parentSpan.getContext();
+      Span parentSpan = application.io.opentelemetry.trace.Span.fromContext(parentContext);
+      SpanContext parentSpanContext = parentSpan.getSpanContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
         return;
       }
 
-      Span servletSpan = servletContext != null ? getSpan(servletContext) : null;
+      Span servletSpan =
+          servletContext != null
+              ? application.io.opentelemetry.trace.Span.fromContext(servletContext)
+              : null;
       Context parent;
       if (servletContext == null
           || (parentSpanContext.isValid()
               && servletSpan
-                  .getContext()
+                  .getSpanContext()
                   .getTraceIdAsHexString()
                   .equals(parentSpanContext.getTraceIdAsHexString()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.

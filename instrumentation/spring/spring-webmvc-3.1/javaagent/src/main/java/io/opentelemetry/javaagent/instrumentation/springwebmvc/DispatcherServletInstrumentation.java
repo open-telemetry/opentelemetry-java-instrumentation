@@ -119,7 +119,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) Exception exception) {
       Span span = Span.current();
-      if (span.getContext().isValid() && exception != null) {
+      if (span.getSpanContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
         TRACER.addThrowable(span, exception);

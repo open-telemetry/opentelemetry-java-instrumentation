@@ -64,11 +64,11 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
   public static class RenderAdvice {
     public static final Tracer TRACER =
-        OpenTelemetry.getTracer("io.opentelemetry.auto.dropwizard-views-0.7");
+        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.dropwizard-views-0.7");
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
-      if (!Span.current().getContext().isValid()) {
+      if (!Span.current().getSpanContext().isValid()) {
         return null;
       }
       Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();

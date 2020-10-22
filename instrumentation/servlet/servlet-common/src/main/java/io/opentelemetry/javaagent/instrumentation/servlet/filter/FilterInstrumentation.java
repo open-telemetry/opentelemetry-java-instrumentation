@@ -77,7 +77,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         @Advice.This Filter filter,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (!Span.current().getContext().isValid()) {
+      if (!Span.current().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

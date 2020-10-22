@@ -11,7 +11,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;
@@ -79,7 +78,7 @@ public class AdviceUtils {
 
   static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
     if (context != null) {
-      Span span = TracingContextUtils.getSpan(context);
+      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
       if (throwable != null) {
         span.setStatus(StatusCode.ERROR);
         BaseDecorator.addThrowable(span, throwable);

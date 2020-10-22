@@ -31,12 +31,12 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   @Override
   public Map<String, String> supplyContextData() {
     Span currentSpan = Span.current();
-    if (!currentSpan.getContext().isValid()) {
+    if (!currentSpan.getSpanContext().isValid()) {
       return Collections.emptyMap();
     }
 
     Map<String, String> contextData = new HashMap<>();
-    SpanContext spanContext = currentSpan.getContext();
+    SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
     contextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
     contextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));

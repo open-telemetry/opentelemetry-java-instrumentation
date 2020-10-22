@@ -39,13 +39,13 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod().and(isPublic()).and(named("getTracerProvider")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalTracerProvider")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerProviderAdvice");
     transformers.put(
-        isMethod().and(isPublic()).and(named("getMeterProvider")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalMeterProvider")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetMeterProviderAdvice");
     transformers.put(
-        isMethod().and(isPublic()).and(named("getPropagators")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalPropagators")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetPropagatorsAdvice");
     return transformers;
   }

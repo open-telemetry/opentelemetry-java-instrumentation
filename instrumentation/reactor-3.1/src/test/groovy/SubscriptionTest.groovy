@@ -39,7 +39,7 @@ class SubscriptionTest extends AgentTestRunner {
 
   static class Connection {
     static int query() {
-      def span = OpenTelemetry.getTracer("test").spanBuilder("Connection.query").startSpan()
+      def span = OpenTelemetry.getGlobalTracer("test").spanBuilder("Connection.query").startSpan()
       span.end()
       return new Random().nextInt()
     }

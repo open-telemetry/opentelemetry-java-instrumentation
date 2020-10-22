@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.ENDPOINT_PEER_SERVICE_MAPPING;
 
 import io.opentelemetry.context.Context;
@@ -180,7 +180,7 @@ public abstract class BaseDecorator {
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return getPropagators().getTextMapPropagator().extract(Context.root(), carrier, getter);
+    return getGlobalPropagators().getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   protected static String mapToPeer(String endpoint) {

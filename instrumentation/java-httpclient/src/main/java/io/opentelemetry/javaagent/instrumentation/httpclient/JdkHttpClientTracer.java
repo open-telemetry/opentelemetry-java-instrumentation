@@ -92,7 +92,7 @@ public class JdkHttpClientTracer
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 
-    OpenTelemetry.getPropagators()
+    OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(
             Context.current(),

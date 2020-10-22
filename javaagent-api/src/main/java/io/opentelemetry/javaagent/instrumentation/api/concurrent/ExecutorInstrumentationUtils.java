@@ -30,7 +30,7 @@ public class ExecutorInstrumentationUtils {
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    return span.getContext().isValid()
+    return span.getSpanContext().isValid()
         // TODO Workaround for
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
         && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")

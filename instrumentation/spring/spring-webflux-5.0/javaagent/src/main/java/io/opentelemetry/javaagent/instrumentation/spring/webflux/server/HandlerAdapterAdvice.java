@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -27,7 +26,7 @@ public class HandlerAdapterAdvice {
     SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
     if (handler != null && context != null) {
-      Span span = TracingContextUtils.getSpan(context);
+      Span span = application.io.opentelemetry.trace.Span.fromContext(context);
       String handlerType;
       String operationName;
 
