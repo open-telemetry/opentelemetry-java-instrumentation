@@ -184,7 +184,7 @@ class PutGetTest extends AgentTestRunner {
     }
   }
 
-  class Card implements DataSerializable {
+  static class Card implements DataSerializable {
     String cardNumber
     String expDate
 
