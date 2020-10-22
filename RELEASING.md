@@ -20,9 +20,8 @@ Open the release build workflow in your browser [here](https://github.com/open-t
 You will see a button that says "Run workflow". Press the button, enter the version number you want
 to release in the input field that pops up, and then press "Run workflow".
 
-This triggers the release process, which builds the artifacts, updates the README with the new
-version numbers, commits the change to the README, publishes the artifacts, and creates and pushes
-a git tag with the version number.
+This triggers the release process, which builds the artifacts, publishes the artifacts, and creates 
+and pushes a git tag with the version number.
 
 ## Announcement
    
