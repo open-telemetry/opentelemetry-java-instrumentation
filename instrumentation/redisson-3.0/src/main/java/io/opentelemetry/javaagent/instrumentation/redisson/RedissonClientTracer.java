@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.List;
 import org.redisson.client.RedisConnection;
@@ -20,7 +20,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.redisson-3.0";
+    return "io.opentelemetry.auto.redisson";
   }
 
   @Override

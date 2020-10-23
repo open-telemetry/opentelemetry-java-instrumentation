@@ -9,7 +9,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -24,7 +24,6 @@ import org.bson.BsonValue;
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
   public static final MongoClientTracer TRACER = new MongoClientTracer();
 
-  // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.mongo";

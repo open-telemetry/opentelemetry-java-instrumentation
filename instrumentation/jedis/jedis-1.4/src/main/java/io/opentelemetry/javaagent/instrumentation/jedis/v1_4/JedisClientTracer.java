@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
@@ -36,6 +36,6 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, Command>
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jedis-1.4";
+    return "io.opentelemetry.auto.jedis";
   }
 }

@@ -55,7 +55,7 @@ public class ArmeriaServerBuilderInstrumentation extends AbstractArmeriaInstrume
   // will end up with double telemetry.
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
   public static class SuppressDecoratorAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
       return decorator != ArmeriaDecorators.SERVER_DECORATOR;
     }

@@ -72,6 +72,6 @@ public class JSPTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jsp-2.3";
+    return "io.opentelemetry.auto.jsp";
   }
 }

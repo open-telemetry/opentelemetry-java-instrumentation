@@ -94,6 +94,6 @@ public class SpringWebMvcTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-webmvc-3.1";
+    return "io.opentelemetry.auto.spring-webmvc";
   }
 }

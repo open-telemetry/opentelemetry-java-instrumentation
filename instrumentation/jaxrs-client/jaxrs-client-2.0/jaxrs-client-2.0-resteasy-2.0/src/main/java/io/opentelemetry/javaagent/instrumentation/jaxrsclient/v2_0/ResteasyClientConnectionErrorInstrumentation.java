@@ -5,30 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import javax.ws.rs.core.Response;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
+import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 /**
- * JAX-RS Client API doesn't define a good point where we can handle connection failures, so we must
- * handle these errors at the implementation level.
+ * Unlike other supported JAX-RS Client implementations, Resteasy's one is very simple and passes
+ * all requests through single point. Both sync ADN async! This allows for easy instrumentation and
+ * proper scope handling.
+ *
+ * <p>This specific instrumentation will not conflict with {@link JaxRsClientInstrumentation},
+ * because {@link JaxRsClientTracer} used by the latter checks against double client spans.
  */
 @AutoService(Instrumenter.class)
 public final class ResteasyClientConnectionErrorInstrumentation extends Instrumenter.Default {
@@ -45,9 +47,7 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$WrappedFuture",
-      packageName + ".JaxRsClientTracer",
-      packageName + ".InjectAdapter",
+      packageName + ".ResteasyClientTracer", packageName + ".ResteasyInjectAdapter",
     };
   }
 
@@ -56,92 +56,36 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
     transformers.put(
-        isMethod().and(isPublic()).and(named("invoke")),
+        isMethod().and(isPublic()).and(named("invoke")).and(takesArguments(0)),
         ResteasyClientConnectionErrorInstrumentation.class.getName() + "$InvokeAdvice");
-
-    transformers.put(
-        isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),
-        ResteasyClientConnectionErrorInstrumentation.class.getName() + "$SubmitAdvice");
 
     return transformers;
   }
 
   public static class InvokeAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.This ClientInvocation invocation,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = TRACER.startSpan(invocation);
+      scope = TRACER.startScope(span, invocation);
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleError(
-        @Advice.FieldValue("configuration") ClientConfiguration context,
-        @Advice.Thrown Throwable throwable) {
+    public static void methodExit(
+        @Advice.Return Response response,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+
+      scope.close();
+
       if (throwable != null) {
-        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, throwable);
-        }
-      }
-    }
-  }
-
-  public static class SubmitAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void handleError(
-        @Advice.FieldValue("configuration") ClientConfiguration context,
-        @Advice.Return(readOnly = false) Future<?> future) {
-      if (!(future instanceof WrappedFuture)) {
-        future = new WrappedFuture<>(future, context);
-      }
-    }
-  }
-
-  public static class WrappedFuture<T> implements Future<T> {
-
-    private final Future<T> wrapped;
-    private final ClientConfiguration context;
-
-    public WrappedFuture(Future<T> wrapped, ClientConfiguration context) {
-      this.wrapped = wrapped;
-      this.context = context;
-    }
-
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-      return wrapped.cancel(mayInterruptIfRunning);
-    }
-
-    @Override
-    public boolean isCancelled() {
-      return wrapped.isCancelled();
-    }
-
-    @Override
-    public boolean isDone() {
-      return wrapped.isDone();
-    }
-
-    @Override
-    public T get() throws InterruptedException, ExecutionException {
-      try {
-        return wrapped.get();
-      } catch (ExecutionException e) {
-        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, e.getCause());
-        }
-        throw e;
-      }
-    }
-
-    @Override
-    public T get(long timeout, TimeUnit unit)
-        throws InterruptedException, ExecutionException, TimeoutException {
-      try {
-        return wrapped.get(timeout, unit);
-      } catch (ExecutionException e) {
-        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, e.getCause());
-        }
-        throw e;
+        TRACER.endExceptionally(span, throwable);
+      } else {
+        TRACER.end(span, response);
       }
     }
   }

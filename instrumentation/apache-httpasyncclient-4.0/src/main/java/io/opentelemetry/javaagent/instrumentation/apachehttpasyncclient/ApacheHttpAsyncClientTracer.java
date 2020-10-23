@@ -84,7 +84,7 @@ public class ApacheHttpAsyncClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.apache-httpasyncclient-4.0";
+    return "io.opentelemetry.auto.apache-httpasyncclient";
   }
 
   @Override

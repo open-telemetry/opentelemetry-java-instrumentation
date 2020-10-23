@@ -22,7 +22,7 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.apache-httpclient-2.0";
+    return "io.opentelemetry.auto.apache-httpclient";
   }
 
   public Depth getCallDepth() {

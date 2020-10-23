@@ -2,6 +2,10 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
+ext {
+  mavenGroupId = 'io.opentelemetry.javaagent'
+}
+
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
