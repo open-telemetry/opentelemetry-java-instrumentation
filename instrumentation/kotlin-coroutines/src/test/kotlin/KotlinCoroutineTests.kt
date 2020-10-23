@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge
 import io.opentelemetry.trace.Tracer
 import io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import java.util.concurrent.TimeUnit
@@ -26,7 +27,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
-  val tracer: Tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  val tracer: Tracer = Java8Bridge.getGlobalTracer("io.opentelemetry.auto")
 
   fun tracedAcrossChannels() = runTest {
 
