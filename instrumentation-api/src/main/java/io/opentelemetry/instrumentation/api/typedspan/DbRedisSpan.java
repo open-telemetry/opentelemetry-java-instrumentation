@@ -59,7 +59,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbSystem(String dbSystem) {
-    delegate.setAttribute("db.system", dbSystem);
+    delegate.setAttribute(DB_SYSTEM, dbSystem);
     return this;
   }
 
@@ -71,7 +71,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbConnectionString(String dbConnectionString) {
-    delegate.setAttribute("db.connection_string", dbConnectionString);
+    delegate.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
     return this;
   }
 
@@ -82,7 +82,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbUser(String dbUser) {
-    delegate.setAttribute("db.user", dbUser);
+    delegate.setAttribute(DB_USER, dbUser);
     return this;
   }
 
@@ -95,7 +95,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+    delegate.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
     return this;
   }
 
@@ -109,7 +109,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbName(String dbName) {
-    delegate.setAttribute("db.name", dbName);
+    delegate.setAttribute(DB_NAME, dbName);
     return this;
   }
 
@@ -121,7 +121,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbStatement(String dbStatement) {
-    delegate.setAttribute("db.statement", dbStatement);
+    delegate.setAttribute(DB_STATEMENT, dbStatement);
     return this;
   }
 
@@ -137,7 +137,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbOperation(String dbOperation) {
-    delegate.setAttribute("db.operation", dbOperation);
+    delegate.setAttribute(DB_OPERATION, dbOperation);
     return this;
   }
 
@@ -195,7 +195,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
    */
   @Override
   public DbRedisSemanticConvention setDbRedisDatabaseIndex(long dbRedisDatabaseIndex) {
-    delegate.setAttribute("db.redis.database_index", dbRedisDatabaseIndex);
+    delegate.setAttribute(REDIS_DATABASE_INDEX, dbRedisDatabaseIndex);
     return this;
   }
 
@@ -241,7 +241,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     See below for a list of well-known identifiers.
      */
     public DbRedisSpanBuilder setDbSystem(String dbSystem) {
-      internalBuilder.setAttribute("db.system", dbSystem);
+      internalBuilder.setAttribute(DB_SYSTEM, dbSystem);
       return this;
     }
 
@@ -252,7 +252,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     <p>It is recommended to remove embedded credentials.
      */
     public DbRedisSpanBuilder setDbConnectionString(String dbConnectionString) {
-      internalBuilder.setAttribute("db.connection_string", dbConnectionString);
+      internalBuilder.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
       return this;
     }
 
@@ -262,7 +262,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      * @param dbUser Username for accessing the database.
      */
     public DbRedisSpanBuilder setDbUser(String dbUser) {
-      internalBuilder.setAttribute("db.user", dbUser);
+      internalBuilder.setAttribute(DB_USER, dbUser);
       return this;
     }
 
@@ -274,7 +274,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     used to connect.
      */
     public DbRedisSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+      internalBuilder.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
       return this;
     }
 
@@ -287,7 +287,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbRedisSpanBuilder setDbName(String dbName) {
-      internalBuilder.setAttribute("db.name", dbName);
+      internalBuilder.setAttribute(DB_NAME, dbName);
       return this;
     }
 
@@ -298,7 +298,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbRedisSpanBuilder setDbStatement(String dbStatement) {
-      internalBuilder.setAttribute("db.statement", dbStatement);
+      internalBuilder.setAttribute(DB_STATEMENT, dbStatement);
       return this;
     }
 
@@ -313,7 +313,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbRedisSpanBuilder setDbOperation(String dbOperation) {
-      internalBuilder.setAttribute("db.operation", dbOperation);
+      internalBuilder.setAttribute(DB_OPERATION, dbOperation);
       return this;
     }
 
@@ -366,7 +366,7 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
      *     the generic `db.name` attribute.
      */
     public DbRedisSpanBuilder setDbRedisDatabaseIndex(long dbRedisDatabaseIndex) {
-      internalBuilder.setAttribute("db.redis.database_index", dbRedisDatabaseIndex);
+      internalBuilder.setAttribute(REDIS_DATABASE_INDEX, dbRedisDatabaseIndex);
       return this;
     }
   }

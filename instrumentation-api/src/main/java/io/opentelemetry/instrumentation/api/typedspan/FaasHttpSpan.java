@@ -58,7 +58,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setFaasTrigger(String faasTrigger) {
-    delegate.setAttribute("faas.trigger", faasTrigger);
+    delegate.setAttribute(FAAS_TRIGGER, faasTrigger);
     return this;
   }
 
@@ -69,7 +69,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setFaasExecution(String faasExecution) {
-    delegate.setAttribute("faas.execution", faasExecution);
+    delegate.setAttribute(FAAS_EXECUTION, faasExecution);
     return this;
   }
 
@@ -80,7 +80,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpMethod(String httpMethod) {
-    delegate.setAttribute("http.method", httpMethod);
+    delegate.setAttribute(HTTP_METHOD, httpMethod);
     return this;
   }
 
@@ -93,7 +93,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpUrl(String httpUrl) {
-    delegate.setAttribute("http.url", httpUrl);
+    delegate.setAttribute(HTTP_URL, httpUrl);
     return this;
   }
 
@@ -104,7 +104,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpTarget(String httpTarget) {
-    delegate.setAttribute("http.target", httpTarget);
+    delegate.setAttribute(HTTP_TARGET, httpTarget);
     return this;
   }
 
@@ -117,7 +117,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpHost(String httpHost) {
-    delegate.setAttribute("http.host", httpHost);
+    delegate.setAttribute(HTTP_HOST, httpHost);
     return this;
   }
 
@@ -128,7 +128,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpScheme(String httpScheme) {
-    delegate.setAttribute("http.scheme", httpScheme);
+    delegate.setAttribute(HTTP_SCHEME, httpScheme);
     return this;
   }
 
@@ -140,7 +140,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpStatusCode(long httpStatusCode) {
-    delegate.setAttribute("http.status_code", httpStatusCode);
+    delegate.setAttribute(HTTP_STATUS_CODE, httpStatusCode);
     return this;
   }
 
@@ -164,7 +164,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpFlavor(String httpFlavor) {
-    delegate.setAttribute("http.flavor", httpFlavor);
+    delegate.setAttribute(HTTP_FLAVOR, httpFlavor);
     return this;
   }
 
@@ -176,7 +176,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpUserAgent(String httpUserAgent) {
-    delegate.setAttribute("http.user_agent", httpUserAgent);
+    delegate.setAttribute(HTTP_USER_AGENT, httpUserAgent);
     return this;
   }
 
@@ -190,7 +190,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpRequestContentLength(long httpRequestContentLength) {
-    delegate.setAttribute("http.request_content_length", httpRequestContentLength);
+    delegate.setAttribute(HTTP_REQUEST_CONTENT_LENGTH, httpRequestContentLength);
     return this;
   }
 
@@ -204,7 +204,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
   public FaasHttpSemanticConvention setHttpRequestContentLengthUncompressed(
       long httpRequestContentLengthUncompressed) {
     delegate.setAttribute(
-        "http.request_content_length_uncompressed", httpRequestContentLengthUncompressed);
+        HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, httpRequestContentLengthUncompressed);
     return this;
   }
 
@@ -218,7 +218,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpResponseContentLength(long httpResponseContentLength) {
-    delegate.setAttribute("http.response_content_length", httpResponseContentLength);
+    delegate.setAttribute(HTTP_RESPONSE_CONTENT_LENGTH, httpResponseContentLength);
     return this;
   }
 
@@ -232,7 +232,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
   public FaasHttpSemanticConvention setHttpResponseContentLengthUncompressed(
       long httpResponseContentLengthUncompressed) {
     delegate.setAttribute(
-        "http.response_content_length_uncompressed", httpResponseContentLengthUncompressed);
+        HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, httpResponseContentLengthUncompressed);
     return this;
   }
 
@@ -249,7 +249,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpServerName(String httpServerName) {
-    delegate.setAttribute("http.server_name", httpServerName);
+    delegate.setAttribute(HTTP_SERVER_NAME, httpServerName);
     return this;
   }
 
@@ -260,7 +260,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpRoute(String httpRoute) {
-    delegate.setAttribute("http.route", httpRoute);
+    delegate.setAttribute(HTTP_ROUTE, httpRoute);
     return this;
   }
 
@@ -275,7 +275,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
    */
   @Override
   public FaasHttpSemanticConvention setHttpClientIp(String httpClientIp) {
-    delegate.setAttribute("http.client_ip", httpClientIp);
+    delegate.setAttribute(HTTP_CLIENT_IP, httpClientIp);
     return this;
   }
 
@@ -398,7 +398,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasHttpSpanBuilder setFaasTrigger(String faasTrigger) {
-      internalBuilder.setAttribute("faas.trigger", faasTrigger);
+      internalBuilder.setAttribute(FAAS_TRIGGER, faasTrigger);
       return this;
     }
 
@@ -408,7 +408,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasHttpSpanBuilder setFaasExecution(String faasExecution) {
-      internalBuilder.setAttribute("faas.execution", faasExecution);
+      internalBuilder.setAttribute(FAAS_EXECUTION, faasExecution);
       return this;
     }
 
@@ -418,7 +418,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param httpMethod HTTP request method.
      */
     public FaasHttpSpanBuilder setHttpMethod(String httpMethod) {
-      internalBuilder.setAttribute("http.method", httpMethod);
+      internalBuilder.setAttribute(HTTP_METHOD, httpMethod);
       return this;
     }
 
@@ -430,7 +430,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     over HTTP, but if it is known, it should be included nevertheless.
      */
     public FaasHttpSpanBuilder setHttpUrl(String httpUrl) {
-      internalBuilder.setAttribute("http.url", httpUrl);
+      internalBuilder.setAttribute(HTTP_URL, httpUrl);
       return this;
     }
 
@@ -440,7 +440,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
      */
     public FaasHttpSpanBuilder setHttpTarget(String httpTarget) {
-      internalBuilder.setAttribute("http.target", httpTarget);
+      internalBuilder.setAttribute(HTTP_TARGET, httpTarget);
       return this;
     }
 
@@ -452,7 +452,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     present, this attribute should be the same.
      */
     public FaasHttpSpanBuilder setHttpHost(String httpHost) {
-      internalBuilder.setAttribute("http.host", httpHost);
+      internalBuilder.setAttribute(HTTP_HOST, httpHost);
       return this;
     }
 
@@ -462,7 +462,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param httpScheme The URI scheme identifying the used protocol.
      */
     public FaasHttpSpanBuilder setHttpScheme(String httpScheme) {
-      internalBuilder.setAttribute("http.scheme", httpScheme);
+      internalBuilder.setAttribute(HTTP_SCHEME, httpScheme);
       return this;
     }
 
@@ -473,7 +473,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     code](https://tools.ietf.org/html/rfc7231#section-6).
      */
     public FaasHttpSpanBuilder setHttpStatusCode(long httpStatusCode) {
-      internalBuilder.setAttribute("http.status_code", httpStatusCode);
+      internalBuilder.setAttribute(HTTP_STATUS_CODE, httpStatusCode);
       return this;
     }
 
@@ -496,7 +496,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
      */
     public FaasHttpSpanBuilder setHttpFlavor(String httpFlavor) {
-      internalBuilder.setAttribute("http.flavor", httpFlavor);
+      internalBuilder.setAttribute(HTTP_FLAVOR, httpFlavor);
       return this;
     }
 
@@ -507,7 +507,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
      */
     public FaasHttpSpanBuilder setHttpUserAgent(String httpUserAgent) {
-      internalBuilder.setAttribute("http.user_agent", httpUserAgent);
+      internalBuilder.setAttribute(HTTP_USER_AGENT, httpUserAgent);
       return this;
     }
 
@@ -520,7 +520,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     requests using transport encoding, this should be the compressed size.
      */
     public FaasHttpSpanBuilder setHttpRequestContentLength(long httpRequestContentLength) {
-      internalBuilder.setAttribute("http.request_content_length", httpRequestContentLength);
+      internalBuilder.setAttribute(HTTP_REQUEST_CONTENT_LENGTH, httpRequestContentLength);
       return this;
     }
 
@@ -533,7 +533,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     public FaasHttpSpanBuilder setHttpRequestContentLengthUncompressed(
         long httpRequestContentLengthUncompressed) {
       internalBuilder.setAttribute(
-          "http.request_content_length_uncompressed", httpRequestContentLengthUncompressed);
+          HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, httpRequestContentLengthUncompressed);
       return this;
     }
 
@@ -546,7 +546,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     requests using transport encoding, this should be the compressed size.
      */
     public FaasHttpSpanBuilder setHttpResponseContentLength(long httpResponseContentLength) {
-      internalBuilder.setAttribute("http.response_content_length", httpResponseContentLength);
+      internalBuilder.setAttribute(HTTP_RESPONSE_CONTENT_LENGTH, httpResponseContentLength);
       return this;
     }
 
@@ -559,7 +559,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     public FaasHttpSpanBuilder setHttpResponseContentLengthUncompressed(
         long httpResponseContentLengthUncompressed) {
       internalBuilder.setAttribute(
-          "http.response_content_length_uncompressed", httpResponseContentLengthUncompressed);
+          HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, httpResponseContentLengthUncompressed);
       return this;
     }
 
@@ -575,7 +575,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     data that is available.
      */
     public FaasHttpSpanBuilder setHttpServerName(String httpServerName) {
-      internalBuilder.setAttribute("http.server_name", httpServerName);
+      internalBuilder.setAttribute(HTTP_SERVER_NAME, httpServerName);
       return this;
     }
 
@@ -585,7 +585,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      * @param httpRoute The matched route (path template).
      */
     public FaasHttpSpanBuilder setHttpRoute(String httpRoute) {
-      internalBuilder.setAttribute("http.route", httpRoute);
+      internalBuilder.setAttribute(HTTP_ROUTE, httpRoute);
       return this;
     }
 
@@ -599,7 +599,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
      *     network-level peer, which may be a proxy.
      */
     public FaasHttpSpanBuilder setHttpClientIp(String httpClientIp) {
-      internalBuilder.setAttribute("http.client_ip", httpClientIp);
+      internalBuilder.setAttribute(HTTP_CLIENT_IP, httpClientIp);
       return this;
     }
 

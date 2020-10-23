@@ -125,7 +125,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpMethod(String httpMethod) {
-    delegate.setAttribute("http.method", httpMethod);
+    delegate.setAttribute(HTTP_METHOD, httpMethod);
     return this;
   }
 
@@ -138,7 +138,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpUrl(String httpUrl) {
-    delegate.setAttribute("http.url", httpUrl);
+    delegate.setAttribute(HTTP_URL, httpUrl);
     return this;
   }
 
@@ -149,7 +149,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpTarget(String httpTarget) {
-    delegate.setAttribute("http.target", httpTarget);
+    delegate.setAttribute(HTTP_TARGET, httpTarget);
     return this;
   }
 
@@ -162,7 +162,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpHost(String httpHost) {
-    delegate.setAttribute("http.host", httpHost);
+    delegate.setAttribute(HTTP_HOST, httpHost);
     return this;
   }
 
@@ -173,7 +173,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpScheme(String httpScheme) {
-    delegate.setAttribute("http.scheme", httpScheme);
+    delegate.setAttribute(HTTP_SCHEME, httpScheme);
     return this;
   }
 
@@ -185,7 +185,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpStatusCode(long httpStatusCode) {
-    delegate.setAttribute("http.status_code", httpStatusCode);
+    delegate.setAttribute(HTTP_STATUS_CODE, httpStatusCode);
     return this;
   }
 
@@ -209,7 +209,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpFlavor(String httpFlavor) {
-    delegate.setAttribute("http.flavor", httpFlavor);
+    delegate.setAttribute(HTTP_FLAVOR, httpFlavor);
     return this;
   }
 
@@ -221,7 +221,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpUserAgent(String httpUserAgent) {
-    delegate.setAttribute("http.user_agent", httpUserAgent);
+    delegate.setAttribute(HTTP_USER_AGENT, httpUserAgent);
     return this;
   }
 
@@ -235,7 +235,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpRequestContentLength(long httpRequestContentLength) {
-    delegate.setAttribute("http.request_content_length", httpRequestContentLength);
+    delegate.setAttribute(HTTP_REQUEST_CONTENT_LENGTH, httpRequestContentLength);
     return this;
   }
 
@@ -249,7 +249,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
   public HttpSemanticConvention setHttpRequestContentLengthUncompressed(
       long httpRequestContentLengthUncompressed) {
     delegate.setAttribute(
-        "http.request_content_length_uncompressed", httpRequestContentLengthUncompressed);
+        HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, httpRequestContentLengthUncompressed);
     return this;
   }
 
@@ -263,7 +263,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
    */
   @Override
   public HttpSemanticConvention setHttpResponseContentLength(long httpResponseContentLength) {
-    delegate.setAttribute("http.response_content_length", httpResponseContentLength);
+    delegate.setAttribute(HTTP_RESPONSE_CONTENT_LENGTH, httpResponseContentLength);
     return this;
   }
 
@@ -277,7 +277,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
   public HttpSemanticConvention setHttpResponseContentLengthUncompressed(
       long httpResponseContentLengthUncompressed) {
     delegate.setAttribute(
-        "http.response_content_length_uncompressed", httpResponseContentLengthUncompressed);
+        HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, httpResponseContentLengthUncompressed);
     return this;
   }
 
@@ -393,7 +393,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      * @param httpMethod HTTP request method.
      */
     public HttpSpanBuilder setHttpMethod(String httpMethod) {
-      internalBuilder.setAttribute("http.method", httpMethod);
+      internalBuilder.setAttribute(HTTP_METHOD, httpMethod);
       return this;
     }
 
@@ -405,7 +405,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     over HTTP, but if it is known, it should be included nevertheless.
      */
     public HttpSpanBuilder setHttpUrl(String httpUrl) {
-      internalBuilder.setAttribute("http.url", httpUrl);
+      internalBuilder.setAttribute(HTTP_URL, httpUrl);
       return this;
     }
 
@@ -415,7 +415,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
      */
     public HttpSpanBuilder setHttpTarget(String httpTarget) {
-      internalBuilder.setAttribute("http.target", httpTarget);
+      internalBuilder.setAttribute(HTTP_TARGET, httpTarget);
       return this;
     }
 
@@ -427,7 +427,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     present, this attribute should be the same.
      */
     public HttpSpanBuilder setHttpHost(String httpHost) {
-      internalBuilder.setAttribute("http.host", httpHost);
+      internalBuilder.setAttribute(HTTP_HOST, httpHost);
       return this;
     }
 
@@ -437,7 +437,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      * @param httpScheme The URI scheme identifying the used protocol.
      */
     public HttpSpanBuilder setHttpScheme(String httpScheme) {
-      internalBuilder.setAttribute("http.scheme", httpScheme);
+      internalBuilder.setAttribute(HTTP_SCHEME, httpScheme);
       return this;
     }
 
@@ -448,7 +448,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     code](https://tools.ietf.org/html/rfc7231#section-6).
      */
     public HttpSpanBuilder setHttpStatusCode(long httpStatusCode) {
-      internalBuilder.setAttribute("http.status_code", httpStatusCode);
+      internalBuilder.setAttribute(HTTP_STATUS_CODE, httpStatusCode);
       return this;
     }
 
@@ -471,7 +471,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
      */
     public HttpSpanBuilder setHttpFlavor(String httpFlavor) {
-      internalBuilder.setAttribute("http.flavor", httpFlavor);
+      internalBuilder.setAttribute(HTTP_FLAVOR, httpFlavor);
       return this;
     }
 
@@ -482,7 +482,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
      */
     public HttpSpanBuilder setHttpUserAgent(String httpUserAgent) {
-      internalBuilder.setAttribute("http.user_agent", httpUserAgent);
+      internalBuilder.setAttribute(HTTP_USER_AGENT, httpUserAgent);
       return this;
     }
 
@@ -495,7 +495,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     requests using transport encoding, this should be the compressed size.
      */
     public HttpSpanBuilder setHttpRequestContentLength(long httpRequestContentLength) {
-      internalBuilder.setAttribute("http.request_content_length", httpRequestContentLength);
+      internalBuilder.setAttribute(HTTP_REQUEST_CONTENT_LENGTH, httpRequestContentLength);
       return this;
     }
 
@@ -508,7 +508,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     public HttpSpanBuilder setHttpRequestContentLengthUncompressed(
         long httpRequestContentLengthUncompressed) {
       internalBuilder.setAttribute(
-          "http.request_content_length_uncompressed", httpRequestContentLengthUncompressed);
+          HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, httpRequestContentLengthUncompressed);
       return this;
     }
 
@@ -521,7 +521,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
      *     requests using transport encoding, this should be the compressed size.
      */
     public HttpSpanBuilder setHttpResponseContentLength(long httpResponseContentLength) {
-      internalBuilder.setAttribute("http.response_content_length", httpResponseContentLength);
+      internalBuilder.setAttribute(HTTP_RESPONSE_CONTENT_LENGTH, httpResponseContentLength);
       return this;
     }
 
@@ -534,7 +534,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     public HttpSpanBuilder setHttpResponseContentLengthUncompressed(
         long httpResponseContentLengthUncompressed) {
       internalBuilder.setAttribute(
-          "http.response_content_length_uncompressed", httpResponseContentLengthUncompressed);
+          HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, httpResponseContentLengthUncompressed);
       return this;
     }
   }

@@ -103,7 +103,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingSystem(String messagingSystem) {
-    delegate.setAttribute("messaging.system", messagingSystem);
+    delegate.setAttribute(MESSAGING_SYSTEM, messagingSystem);
     return this;
   }
 
@@ -115,7 +115,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingDestination(String messagingDestination) {
-    delegate.setAttribute("messaging.destination", messagingDestination);
+    delegate.setAttribute(MESSAGING_DESTINATION, messagingDestination);
     return this;
   }
 
@@ -126,7 +126,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingDestinationKind(String messagingDestinationKind) {
-    delegate.setAttribute("messaging.destination_kind", messagingDestinationKind);
+    delegate.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
     return this;
   }
 
@@ -137,7 +137,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingTempDestination(boolean messagingTempDestination) {
-    delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
+    delegate.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
     return this;
   }
 
@@ -148,7 +148,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingProtocol(String messagingProtocol) {
-    delegate.setAttribute("messaging.protocol", messagingProtocol);
+    delegate.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
     return this;
   }
 
@@ -159,7 +159,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingProtocolVersion(String messagingProtocolVersion) {
-    delegate.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+    delegate.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
     return this;
   }
 
@@ -170,7 +170,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingUrl(String messagingUrl) {
-    delegate.setAttribute("messaging.url", messagingUrl);
+    delegate.setAttribute(MESSAGING_URL, messagingUrl);
     return this;
   }
 
@@ -182,7 +182,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingMessageId(String messagingMessageId) {
-    delegate.setAttribute("messaging.message_id", messagingMessageId);
+    delegate.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
     return this;
   }
 
@@ -194,7 +194,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
    */
   @Override
   public MessagingSemanticConvention setMessagingConversationId(String messagingConversationId) {
-    delegate.setAttribute("messaging.conversation_id", messagingConversationId);
+    delegate.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
     return this;
   }
 
@@ -208,7 +208,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
   @Override
   public MessagingSemanticConvention setMessagingMessagePayloadSizeBytes(
       long messagingMessagePayloadSizeBytes) {
-    delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+    delegate.setAttribute(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
     return this;
   }
 
@@ -222,7 +222,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
   public MessagingSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(
       long messagingMessagePayloadCompressedSizeBytes) {
     delegate.setAttribute(
-        "messaging.message_payload_compressed_size_bytes",
+        MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
@@ -341,7 +341,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      * @param messagingSystem A string identifying the messaging system.
      */
     public MessagingSpanBuilder setMessagingSystem(String messagingSystem) {
-      internalBuilder.setAttribute("messaging.system", messagingSystem);
+      internalBuilder.setAttribute(MESSAGING_SYSTEM, messagingSystem);
       return this;
     }
 
@@ -352,7 +352,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      *     name but is required nevertheless.
      */
     public MessagingSpanBuilder setMessagingDestination(String messagingDestination) {
-      internalBuilder.setAttribute("messaging.destination", messagingDestination);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION, messagingDestination);
       return this;
     }
 
@@ -362,7 +362,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      * @param messagingDestinationKind The kind of message destination.
      */
     public MessagingSpanBuilder setMessagingDestinationKind(String messagingDestinationKind) {
-      internalBuilder.setAttribute("messaging.destination_kind", messagingDestinationKind);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
       return this;
     }
 
@@ -373,7 +373,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      *     temporary.
      */
     public MessagingSpanBuilder setMessagingTempDestination(boolean messagingTempDestination) {
-      internalBuilder.setAttribute("messaging.temp_destination", messagingTempDestination);
+      internalBuilder.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
       return this;
     }
 
@@ -383,7 +383,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      * @param messagingProtocol The name of the transport protocol.
      */
     public MessagingSpanBuilder setMessagingProtocol(String messagingProtocol) {
-      internalBuilder.setAttribute("messaging.protocol", messagingProtocol);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
       return this;
     }
 
@@ -393,7 +393,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      * @param messagingProtocolVersion The version of the transport protocol.
      */
     public MessagingSpanBuilder setMessagingProtocolVersion(String messagingProtocolVersion) {
-      internalBuilder.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
       return this;
     }
 
@@ -403,7 +403,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      * @param messagingUrl Connection string.
      */
     public MessagingSpanBuilder setMessagingUrl(String messagingUrl) {
-      internalBuilder.setAttribute("messaging.url", messagingUrl);
+      internalBuilder.setAttribute(MESSAGING_URL, messagingUrl);
       return this;
     }
 
@@ -414,7 +414,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      *     message, represented as a string.
      */
     public MessagingSpanBuilder setMessagingMessageId(String messagingMessageId) {
-      internalBuilder.setAttribute("messaging.message_id", messagingMessageId);
+      internalBuilder.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
       return this;
     }
 
@@ -425,7 +425,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
      *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
     public MessagingSpanBuilder setMessagingConversationId(String messagingConversationId) {
-      internalBuilder.setAttribute("messaging.conversation_id", messagingConversationId);
+      internalBuilder.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
       return this;
     }
 
@@ -439,7 +439,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
     public MessagingSpanBuilder setMessagingMessagePayloadSizeBytes(
         long messagingMessagePayloadSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+          MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
       return this;
     }
 
@@ -452,7 +452,7 @@ public class MessagingSpan extends DelegatingSpan implements MessagingSemanticCo
     public MessagingSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
         long messagingMessagePayloadCompressedSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_compressed_size_bytes",
+          MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
           messagingMessagePayloadCompressedSizeBytes);
       return this;
     }

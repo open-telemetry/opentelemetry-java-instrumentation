@@ -59,7 +59,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbSystem(String dbSystem) {
-    delegate.setAttribute("db.system", dbSystem);
+    delegate.setAttribute(DB_SYSTEM, dbSystem);
     return this;
   }
 
@@ -71,7 +71,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbConnectionString(String dbConnectionString) {
-    delegate.setAttribute("db.connection_string", dbConnectionString);
+    delegate.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
     return this;
   }
 
@@ -82,7 +82,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbUser(String dbUser) {
-    delegate.setAttribute("db.user", dbUser);
+    delegate.setAttribute(DB_USER, dbUser);
     return this;
   }
 
@@ -95,7 +95,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+    delegate.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
     return this;
   }
 
@@ -109,7 +109,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbName(String dbName) {
-    delegate.setAttribute("db.name", dbName);
+    delegate.setAttribute(DB_NAME, dbName);
     return this;
   }
 
@@ -121,7 +121,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbStatement(String dbStatement) {
-    delegate.setAttribute("db.statement", dbStatement);
+    delegate.setAttribute(DB_STATEMENT, dbStatement);
     return this;
   }
 
@@ -137,7 +137,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbOperation(String dbOperation) {
-    delegate.setAttribute("db.operation", dbOperation);
+    delegate.setAttribute(DB_OPERATION, dbOperation);
     return this;
   }
 
@@ -194,7 +194,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setDbCassandraKeyspace(String dbCassandraKeyspace) {
-    delegate.setAttribute("db.cassandra.keyspace", dbCassandraKeyspace);
+    delegate.setAttribute(CASSANDRA_KEYSPACE, dbCassandraKeyspace);
     return this;
   }
 
@@ -240,7 +240,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     See below for a list of well-known identifiers.
      */
     public DbCassandraSpanBuilder setDbSystem(String dbSystem) {
-      internalBuilder.setAttribute("db.system", dbSystem);
+      internalBuilder.setAttribute(DB_SYSTEM, dbSystem);
       return this;
     }
 
@@ -251,7 +251,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     <p>It is recommended to remove embedded credentials.
      */
     public DbCassandraSpanBuilder setDbConnectionString(String dbConnectionString) {
-      internalBuilder.setAttribute("db.connection_string", dbConnectionString);
+      internalBuilder.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
       return this;
     }
 
@@ -261,7 +261,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      * @param dbUser Username for accessing the database.
      */
     public DbCassandraSpanBuilder setDbUser(String dbUser) {
-      internalBuilder.setAttribute("db.user", dbUser);
+      internalBuilder.setAttribute(DB_USER, dbUser);
       return this;
     }
 
@@ -273,7 +273,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     used to connect.
      */
     public DbCassandraSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+      internalBuilder.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
       return this;
     }
 
@@ -286,7 +286,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbCassandraSpanBuilder setDbName(String dbName) {
-      internalBuilder.setAttribute("db.name", dbName);
+      internalBuilder.setAttribute(DB_NAME, dbName);
       return this;
     }
 
@@ -297,7 +297,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbCassandraSpanBuilder setDbStatement(String dbStatement) {
-      internalBuilder.setAttribute("db.statement", dbStatement);
+      internalBuilder.setAttribute(DB_STATEMENT, dbStatement);
       return this;
     }
 
@@ -312,7 +312,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbCassandraSpanBuilder setDbOperation(String dbOperation) {
-      internalBuilder.setAttribute("db.operation", dbOperation);
+      internalBuilder.setAttribute(DB_OPERATION, dbOperation);
       return this;
     }
 
@@ -364,7 +364,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     generic `db.name` attribute.
      */
     public DbCassandraSpanBuilder setDbCassandraKeyspace(String dbCassandraKeyspace) {
-      internalBuilder.setAttribute("db.cassandra.keyspace", dbCassandraKeyspace);
+      internalBuilder.setAttribute(CASSANDRA_KEYSPACE, dbCassandraKeyspace);
       return this;
     }
   }

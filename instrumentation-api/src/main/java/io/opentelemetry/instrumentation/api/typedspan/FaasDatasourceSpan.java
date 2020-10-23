@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -57,7 +59,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasTrigger(String faasTrigger) {
-    delegate.setAttribute("faas.trigger", faasTrigger);
+    delegate.setAttribute(FAAS_TRIGGER, faasTrigger);
     return this;
   }
 
@@ -68,7 +70,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasExecution(String faasExecution) {
-    delegate.setAttribute("faas.execution", faasExecution);
+    delegate.setAttribute(FAAS_EXECUTION, faasExecution);
     return this;
   }
 
@@ -82,7 +84,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentCollection(String faasDocumentCollection) {
-    delegate.setAttribute("faas.document.collection", faasDocumentCollection);
+    delegate.setAttribute(FAAS_DOCUMENT_COLLECTION, faasDocumentCollection);
     return this;
   }
 
@@ -94,7 +96,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentOperation(String faasDocumentOperation) {
-    delegate.setAttribute("faas.document.operation", faasDocumentOperation);
+    delegate.setAttribute(FAAS_DOCUMENT_OPERATION, faasDocumentOperation);
     return this;
   }
 
@@ -107,7 +109,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentTime(String faasDocumentTime) {
-    delegate.setAttribute("faas.document.time", faasDocumentTime);
+    delegate.setAttribute(FAAS_DOCUMENT_TIME, faasDocumentTime);
     return this;
   }
 
@@ -120,7 +122,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentName(String faasDocumentName) {
-    delegate.setAttribute("faas.document.name", faasDocumentName);
+    delegate.setAttribute(FAAS_DOCUMENT_NAME, faasDocumentName);
     return this;
   }
 
@@ -165,7 +167,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasDatasourceSpanBuilder setFaasTrigger(String faasTrigger) {
-      internalBuilder.setAttribute("faas.trigger", faasTrigger);
+      internalBuilder.setAttribute(FAAS_TRIGGER, faasTrigger);
       return this;
     }
 
@@ -175,7 +177,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasDatasourceSpanBuilder setFaasExecution(String faasExecution) {
-      internalBuilder.setAttribute("faas.execution", faasExecution);
+      internalBuilder.setAttribute(FAAS_EXECUTION, faasExecution);
       return this;
     }
 
@@ -188,7 +190,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      *     to the database name.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentCollection(String faasDocumentCollection) {
-      internalBuilder.setAttribute("faas.document.collection", faasDocumentCollection);
+      internalBuilder.setAttribute(FAAS_DOCUMENT_COLLECTION, faasDocumentCollection);
       return this;
     }
 
@@ -199,7 +201,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      *     data.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentOperation(String faasDocumentOperation) {
-      internalBuilder.setAttribute("faas.document.operation", faasDocumentOperation);
+      internalBuilder.setAttribute(FAAS_DOCUMENT_OPERATION, faasDocumentOperation);
       return this;
     }
 
@@ -211,7 +213,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      *     [UTC](https://www.w3.org/TR/NOTE-datetime).
      */
     public FaasDatasourceSpanBuilder setFaasDocumentTime(String faasDocumentTime) {
-      internalBuilder.setAttribute("faas.document.time", faasDocumentTime);
+      internalBuilder.setAttribute(FAAS_DOCUMENT_TIME, faasDocumentTime);
       return this;
     }
 
@@ -223,7 +225,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
      *     table name.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentName(String faasDocumentName) {
-      internalBuilder.setAttribute("faas.document.name", faasDocumentName);
+      internalBuilder.setAttribute(FAAS_DOCUMENT_NAME, faasDocumentName);
       return this;
     }
   }

@@ -118,7 +118,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingSystem(String messagingSystem) {
-    delegate.setAttribute("messaging.system", messagingSystem);
+    delegate.setAttribute(MESSAGING_SYSTEM, messagingSystem);
     return this;
   }
 
@@ -130,7 +130,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingDestination(String messagingDestination) {
-    delegate.setAttribute("messaging.destination", messagingDestination);
+    delegate.setAttribute(MESSAGING_DESTINATION, messagingDestination);
     return this;
   }
 
@@ -142,7 +142,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSemanticConvention setMessagingDestinationKind(
       String messagingDestinationKind) {
-    delegate.setAttribute("messaging.destination_kind", messagingDestinationKind);
+    delegate.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
     return this;
   }
 
@@ -154,7 +154,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSemanticConvention setMessagingTempDestination(
       boolean messagingTempDestination) {
-    delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
+    delegate.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
     return this;
   }
 
@@ -165,7 +165,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingProtocol(String messagingProtocol) {
-    delegate.setAttribute("messaging.protocol", messagingProtocol);
+    delegate.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
     return this;
   }
 
@@ -177,7 +177,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSemanticConvention setMessagingProtocolVersion(
       String messagingProtocolVersion) {
-    delegate.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+    delegate.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
     return this;
   }
 
@@ -188,7 +188,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingUrl(String messagingUrl) {
-    delegate.setAttribute("messaging.url", messagingUrl);
+    delegate.setAttribute(MESSAGING_URL, messagingUrl);
     return this;
   }
 
@@ -200,7 +200,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingMessageId(String messagingMessageId) {
-    delegate.setAttribute("messaging.message_id", messagingMessageId);
+    delegate.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
     return this;
   }
 
@@ -213,7 +213,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSemanticConvention setMessagingConversationId(
       String messagingConversationId) {
-    delegate.setAttribute("messaging.conversation_id", messagingConversationId);
+    delegate.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
     return this;
   }
 
@@ -227,7 +227,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   @Override
   public MessagingConsumerSemanticConvention setMessagingMessagePayloadSizeBytes(
       long messagingMessagePayloadSizeBytes) {
-    delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+    delegate.setAttribute(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
     return this;
   }
 
@@ -241,7 +241,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
   public MessagingConsumerSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(
       long messagingMessagePayloadCompressedSizeBytes) {
     delegate.setAttribute(
-        "messaging.message_payload_compressed_size_bytes",
+        MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
@@ -372,7 +372,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param messagingSystem A string identifying the messaging system.
      */
     public MessagingConsumerSpanBuilder setMessagingSystem(String messagingSystem) {
-      internalBuilder.setAttribute("messaging.system", messagingSystem);
+      internalBuilder.setAttribute(MESSAGING_SYSTEM, messagingSystem);
       return this;
     }
 
@@ -383,7 +383,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      *     name but is required nevertheless.
      */
     public MessagingConsumerSpanBuilder setMessagingDestination(String messagingDestination) {
-      internalBuilder.setAttribute("messaging.destination", messagingDestination);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION, messagingDestination);
       return this;
     }
 
@@ -394,7 +394,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      */
     public MessagingConsumerSpanBuilder setMessagingDestinationKind(
         String messagingDestinationKind) {
-      internalBuilder.setAttribute("messaging.destination_kind", messagingDestinationKind);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
       return this;
     }
 
@@ -406,7 +406,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      */
     public MessagingConsumerSpanBuilder setMessagingTempDestination(
         boolean messagingTempDestination) {
-      internalBuilder.setAttribute("messaging.temp_destination", messagingTempDestination);
+      internalBuilder.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
       return this;
     }
 
@@ -416,7 +416,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param messagingProtocol The name of the transport protocol.
      */
     public MessagingConsumerSpanBuilder setMessagingProtocol(String messagingProtocol) {
-      internalBuilder.setAttribute("messaging.protocol", messagingProtocol);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
       return this;
     }
 
@@ -427,7 +427,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      */
     public MessagingConsumerSpanBuilder setMessagingProtocolVersion(
         String messagingProtocolVersion) {
-      internalBuilder.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
       return this;
     }
 
@@ -437,7 +437,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param messagingUrl Connection string.
      */
     public MessagingConsumerSpanBuilder setMessagingUrl(String messagingUrl) {
-      internalBuilder.setAttribute("messaging.url", messagingUrl);
+      internalBuilder.setAttribute(MESSAGING_URL, messagingUrl);
       return this;
     }
 
@@ -448,7 +448,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      *     message, represented as a string.
      */
     public MessagingConsumerSpanBuilder setMessagingMessageId(String messagingMessageId) {
-      internalBuilder.setAttribute("messaging.message_id", messagingMessageId);
+      internalBuilder.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
       return this;
     }
 
@@ -459,7 +459,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
     public MessagingConsumerSpanBuilder setMessagingConversationId(String messagingConversationId) {
-      internalBuilder.setAttribute("messaging.conversation_id", messagingConversationId);
+      internalBuilder.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
       return this;
     }
 
@@ -473,7 +473,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
     public MessagingConsumerSpanBuilder setMessagingMessagePayloadSizeBytes(
         long messagingMessagePayloadSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+          MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
       return this;
     }
 
@@ -486,7 +486,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
     public MessagingConsumerSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
         long messagingMessagePayloadCompressedSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_compressed_size_bytes",
+          MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
           messagingMessagePayloadCompressedSizeBytes);
       return this;
     }

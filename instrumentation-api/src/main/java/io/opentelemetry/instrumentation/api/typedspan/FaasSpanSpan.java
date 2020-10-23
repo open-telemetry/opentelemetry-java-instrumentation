@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -45,7 +47,7 @@ public class FaasSpanSpan extends DelegatingSpan implements FaasSpanSemanticConv
    */
   @Override
   public FaasSpanSemanticConvention setFaasTrigger(String faasTrigger) {
-    delegate.setAttribute("faas.trigger", faasTrigger);
+    delegate.setAttribute(FAAS_TRIGGER, faasTrigger);
     return this;
   }
 
@@ -56,7 +58,7 @@ public class FaasSpanSpan extends DelegatingSpan implements FaasSpanSemanticConv
    */
   @Override
   public FaasSpanSemanticConvention setFaasExecution(String faasExecution) {
-    delegate.setAttribute("faas.execution", faasExecution);
+    delegate.setAttribute(FAAS_EXECUTION, faasExecution);
     return this;
   }
 
@@ -101,7 +103,7 @@ public class FaasSpanSpan extends DelegatingSpan implements FaasSpanSemanticConv
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasSpanSpanBuilder setFaasTrigger(String faasTrigger) {
-      internalBuilder.setAttribute("faas.trigger", faasTrigger);
+      internalBuilder.setAttribute(FAAS_TRIGGER, faasTrigger);
       return this;
     }
 
@@ -111,7 +113,7 @@ public class FaasSpanSpan extends DelegatingSpan implements FaasSpanSemanticConv
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasSpanSpanBuilder setFaasExecution(String faasExecution) {
-      internalBuilder.setAttribute("faas.execution", faasExecution);
+      internalBuilder.setAttribute(FAAS_EXECUTION, faasExecution);
       return this;
     }
   }

@@ -59,7 +59,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbSystem(String dbSystem) {
-    delegate.setAttribute("db.system", dbSystem);
+    delegate.setAttribute(DB_SYSTEM, dbSystem);
     return this;
   }
 
@@ -71,7 +71,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbConnectionString(String dbConnectionString) {
-    delegate.setAttribute("db.connection_string", dbConnectionString);
+    delegate.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
     return this;
   }
 
@@ -82,7 +82,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbUser(String dbUser) {
-    delegate.setAttribute("db.user", dbUser);
+    delegate.setAttribute(DB_USER, dbUser);
     return this;
   }
 
@@ -95,7 +95,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+    delegate.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
     return this;
   }
 
@@ -109,7 +109,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbName(String dbName) {
-    delegate.setAttribute("db.name", dbName);
+    delegate.setAttribute(DB_NAME, dbName);
     return this;
   }
 
@@ -121,7 +121,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbStatement(String dbStatement) {
-    delegate.setAttribute("db.statement", dbStatement);
+    delegate.setAttribute(DB_STATEMENT, dbStatement);
     return this;
   }
 
@@ -137,7 +137,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbOperation(String dbOperation) {
-    delegate.setAttribute("db.operation", dbOperation);
+    delegate.setAttribute(DB_OPERATION, dbOperation);
     return this;
   }
 
@@ -197,7 +197,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
    */
   @Override
   public DbMssqlSemanticConvention setDbMssqlInstanceName(String dbMssqlInstanceName) {
-    delegate.setAttribute("db.mssql.instance_name", dbMssqlInstanceName);
+    delegate.setAttribute(MSSQL_SQL_SERVER, dbMssqlInstanceName);
     return this;
   }
 
@@ -243,7 +243,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     See below for a list of well-known identifiers.
      */
     public DbMssqlSpanBuilder setDbSystem(String dbSystem) {
-      internalBuilder.setAttribute("db.system", dbSystem);
+      internalBuilder.setAttribute(DB_SYSTEM, dbSystem);
       return this;
     }
 
@@ -254,7 +254,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     <p>It is recommended to remove embedded credentials.
      */
     public DbMssqlSpanBuilder setDbConnectionString(String dbConnectionString) {
-      internalBuilder.setAttribute("db.connection_string", dbConnectionString);
+      internalBuilder.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
       return this;
     }
 
@@ -264,7 +264,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      * @param dbUser Username for accessing the database.
      */
     public DbMssqlSpanBuilder setDbUser(String dbUser) {
-      internalBuilder.setAttribute("db.user", dbUser);
+      internalBuilder.setAttribute(DB_USER, dbUser);
       return this;
     }
 
@@ -276,7 +276,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     used to connect.
      */
     public DbMssqlSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+      internalBuilder.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
       return this;
     }
 
@@ -289,7 +289,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbMssqlSpanBuilder setDbName(String dbName) {
-      internalBuilder.setAttribute("db.name", dbName);
+      internalBuilder.setAttribute(DB_NAME, dbName);
       return this;
     }
 
@@ -300,7 +300,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbMssqlSpanBuilder setDbStatement(String dbStatement) {
-      internalBuilder.setAttribute("db.statement", dbStatement);
+      internalBuilder.setAttribute(DB_STATEMENT, dbStatement);
       return this;
     }
 
@@ -315,7 +315,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbMssqlSpanBuilder setDbOperation(String dbOperation) {
-      internalBuilder.setAttribute("db.operation", dbOperation);
+      internalBuilder.setAttribute(DB_OPERATION, dbOperation);
       return this;
     }
 
@@ -370,7 +370,7 @@ public class DbMssqlSpan extends DelegatingSpan implements DbMssqlSemanticConven
      *     still recommended if non-standard).
      */
     public DbMssqlSpanBuilder setDbMssqlInstanceName(String dbMssqlInstanceName) {
-      internalBuilder.setAttribute("db.mssql.instance_name", dbMssqlInstanceName);
+      internalBuilder.setAttribute(MSSQL_SQL_SERVER, dbMssqlInstanceName);
       return this;
     }
   }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -56,7 +58,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
    */
   @Override
   public FaasTimerSemanticConvention setFaasTrigger(String faasTrigger) {
-    delegate.setAttribute("faas.trigger", faasTrigger);
+    delegate.setAttribute(FAAS_TRIGGER, faasTrigger);
     return this;
   }
 
@@ -67,7 +69,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
    */
   @Override
   public FaasTimerSemanticConvention setFaasExecution(String faasExecution) {
-    delegate.setAttribute("faas.execution", faasExecution);
+    delegate.setAttribute(FAAS_EXECUTION, faasExecution);
     return this;
   }
 
@@ -80,7 +82,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
    */
   @Override
   public FaasTimerSemanticConvention setFaasTime(String faasTime) {
-    delegate.setAttribute("faas.time", faasTime);
+    delegate.setAttribute(FAAS_TIME, faasTime);
     return this;
   }
 
@@ -92,7 +94,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
    */
   @Override
   public FaasTimerSemanticConvention setFaasCron(String faasCron) {
-    delegate.setAttribute("faas.cron", faasCron);
+    delegate.setAttribute(FAAS_CRON, faasCron);
     return this;
   }
 
@@ -137,7 +139,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasTimerSpanBuilder setFaasTrigger(String faasTrigger) {
-      internalBuilder.setAttribute("faas.trigger", faasTrigger);
+      internalBuilder.setAttribute(FAAS_TRIGGER, faasTrigger);
       return this;
     }
 
@@ -147,7 +149,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasTimerSpanBuilder setFaasExecution(String faasExecution) {
-      internalBuilder.setAttribute("faas.execution", faasExecution);
+      internalBuilder.setAttribute(FAAS_EXECUTION, faasExecution);
       return this;
     }
 
@@ -159,7 +161,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
      *     [UTC](https://www.w3.org/TR/NOTE-datetime).
      */
     public FaasTimerSpanBuilder setFaasTime(String faasTime) {
-      internalBuilder.setAttribute("faas.time", faasTime);
+      internalBuilder.setAttribute(FAAS_TIME, faasTime);
       return this;
     }
 
@@ -170,7 +172,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
      *     Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
      */
     public FaasTimerSpanBuilder setFaasCron(String faasCron) {
-      internalBuilder.setAttribute("faas.cron", faasCron);
+      internalBuilder.setAttribute(FAAS_CRON, faasCron);
       return this;
     }
   }

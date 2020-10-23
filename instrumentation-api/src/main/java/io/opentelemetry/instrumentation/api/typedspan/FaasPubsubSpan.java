@@ -59,7 +59,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setFaasTrigger(String faasTrigger) {
-    delegate.setAttribute("faas.trigger", faasTrigger);
+    delegate.setAttribute(FAAS_TRIGGER, faasTrigger);
     return this;
   }
 
@@ -70,7 +70,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setFaasExecution(String faasExecution) {
-    delegate.setAttribute("faas.execution", faasExecution);
+    delegate.setAttribute(FAAS_EXECUTION, faasExecution);
     return this;
   }
 
@@ -81,7 +81,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingSystem(String messagingSystem) {
-    delegate.setAttribute("messaging.system", messagingSystem);
+    delegate.setAttribute(MESSAGING_SYSTEM, messagingSystem);
     return this;
   }
 
@@ -93,7 +93,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingDestination(String messagingDestination) {
-    delegate.setAttribute("messaging.destination", messagingDestination);
+    delegate.setAttribute(MESSAGING_DESTINATION, messagingDestination);
     return this;
   }
 
@@ -104,7 +104,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingDestinationKind(String messagingDestinationKind) {
-    delegate.setAttribute("messaging.destination_kind", messagingDestinationKind);
+    delegate.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
     return this;
   }
 
@@ -116,7 +116,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
   @Override
   public FaasPubsubSemanticConvention setMessagingTempDestination(
       boolean messagingTempDestination) {
-    delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
+    delegate.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
     return this;
   }
 
@@ -127,7 +127,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingProtocol(String messagingProtocol) {
-    delegate.setAttribute("messaging.protocol", messagingProtocol);
+    delegate.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
     return this;
   }
 
@@ -138,7 +138,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingProtocolVersion(String messagingProtocolVersion) {
-    delegate.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+    delegate.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
     return this;
   }
 
@@ -149,7 +149,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingUrl(String messagingUrl) {
-    delegate.setAttribute("messaging.url", messagingUrl);
+    delegate.setAttribute(MESSAGING_URL, messagingUrl);
     return this;
   }
 
@@ -161,7 +161,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingMessageId(String messagingMessageId) {
-    delegate.setAttribute("messaging.message_id", messagingMessageId);
+    delegate.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
     return this;
   }
 
@@ -173,7 +173,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingConversationId(String messagingConversationId) {
-    delegate.setAttribute("messaging.conversation_id", messagingConversationId);
+    delegate.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
     return this;
   }
 
@@ -187,7 +187,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
   @Override
   public FaasPubsubSemanticConvention setMessagingMessagePayloadSizeBytes(
       long messagingMessagePayloadSizeBytes) {
-    delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+    delegate.setAttribute(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
     return this;
   }
 
@@ -201,7 +201,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
   public FaasPubsubSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(
       long messagingMessagePayloadCompressedSizeBytes) {
     delegate.setAttribute(
-        "messaging.message_payload_compressed_size_bytes",
+        MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
@@ -325,7 +325,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasPubsubSpanBuilder setFaasTrigger(String faasTrigger) {
-      internalBuilder.setAttribute("faas.trigger", faasTrigger);
+      internalBuilder.setAttribute(FAAS_TRIGGER, faasTrigger);
       return this;
     }
 
@@ -335,7 +335,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasPubsubSpanBuilder setFaasExecution(String faasExecution) {
-      internalBuilder.setAttribute("faas.execution", faasExecution);
+      internalBuilder.setAttribute(FAAS_EXECUTION, faasExecution);
       return this;
     }
 
@@ -345,7 +345,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param messagingSystem A string identifying the messaging system.
      */
     public FaasPubsubSpanBuilder setMessagingSystem(String messagingSystem) {
-      internalBuilder.setAttribute("messaging.system", messagingSystem);
+      internalBuilder.setAttribute(MESSAGING_SYSTEM, messagingSystem);
       return this;
     }
 
@@ -356,7 +356,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      *     name but is required nevertheless.
      */
     public FaasPubsubSpanBuilder setMessagingDestination(String messagingDestination) {
-      internalBuilder.setAttribute("messaging.destination", messagingDestination);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION, messagingDestination);
       return this;
     }
 
@@ -366,7 +366,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param messagingDestinationKind The kind of message destination.
      */
     public FaasPubsubSpanBuilder setMessagingDestinationKind(String messagingDestinationKind) {
-      internalBuilder.setAttribute("messaging.destination_kind", messagingDestinationKind);
+      internalBuilder.setAttribute(MESSAGING_DESTINATION_KIND, messagingDestinationKind);
       return this;
     }
 
@@ -377,7 +377,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      *     temporary.
      */
     public FaasPubsubSpanBuilder setMessagingTempDestination(boolean messagingTempDestination) {
-      internalBuilder.setAttribute("messaging.temp_destination", messagingTempDestination);
+      internalBuilder.setAttribute(MESSAGING_TEMP_DESTINATION, messagingTempDestination);
       return this;
     }
 
@@ -387,7 +387,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param messagingProtocol The name of the transport protocol.
      */
     public FaasPubsubSpanBuilder setMessagingProtocol(String messagingProtocol) {
-      internalBuilder.setAttribute("messaging.protocol", messagingProtocol);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL, messagingProtocol);
       return this;
     }
 
@@ -397,7 +397,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param messagingProtocolVersion The version of the transport protocol.
      */
     public FaasPubsubSpanBuilder setMessagingProtocolVersion(String messagingProtocolVersion) {
-      internalBuilder.setAttribute("messaging.protocol_version", messagingProtocolVersion);
+      internalBuilder.setAttribute(MESSAGING_PROTOCOL_VERSION, messagingProtocolVersion);
       return this;
     }
 
@@ -407,7 +407,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      * @param messagingUrl Connection string.
      */
     public FaasPubsubSpanBuilder setMessagingUrl(String messagingUrl) {
-      internalBuilder.setAttribute("messaging.url", messagingUrl);
+      internalBuilder.setAttribute(MESSAGING_URL, messagingUrl);
       return this;
     }
 
@@ -418,7 +418,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      *     message, represented as a string.
      */
     public FaasPubsubSpanBuilder setMessagingMessageId(String messagingMessageId) {
-      internalBuilder.setAttribute("messaging.message_id", messagingMessageId);
+      internalBuilder.setAttribute(MESSAGING_MESSAGE_ID, messagingMessageId);
       return this;
     }
 
@@ -429,7 +429,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
      *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
     public FaasPubsubSpanBuilder setMessagingConversationId(String messagingConversationId) {
-      internalBuilder.setAttribute("messaging.conversation_id", messagingConversationId);
+      internalBuilder.setAttribute(MESSAGING_CONVERSATION_ID, messagingConversationId);
       return this;
     }
 
@@ -443,7 +443,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     public FaasPubsubSpanBuilder setMessagingMessagePayloadSizeBytes(
         long messagingMessagePayloadSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+          MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, messagingMessagePayloadSizeBytes);
       return this;
     }
 
@@ -456,7 +456,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     public FaasPubsubSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
         long messagingMessagePayloadCompressedSizeBytes) {
       internalBuilder.setAttribute(
-          "messaging.message_payload_compressed_size_bytes",
+          MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
           messagingMessagePayloadCompressedSizeBytes);
       return this;
     }

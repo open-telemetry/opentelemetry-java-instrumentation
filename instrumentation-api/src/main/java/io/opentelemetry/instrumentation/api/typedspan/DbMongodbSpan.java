@@ -59,7 +59,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbSystem(String dbSystem) {
-    delegate.setAttribute("db.system", dbSystem);
+    delegate.setAttribute(DB_SYSTEM, dbSystem);
     return this;
   }
 
@@ -71,7 +71,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbConnectionString(String dbConnectionString) {
-    delegate.setAttribute("db.connection_string", dbConnectionString);
+    delegate.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
     return this;
   }
 
@@ -82,7 +82,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbUser(String dbUser) {
-    delegate.setAttribute("db.user", dbUser);
+    delegate.setAttribute(DB_USER, dbUser);
     return this;
   }
 
@@ -95,7 +95,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+    delegate.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
     return this;
   }
 
@@ -109,7 +109,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbName(String dbName) {
-    delegate.setAttribute("db.name", dbName);
+    delegate.setAttribute(DB_NAME, dbName);
     return this;
   }
 
@@ -121,7 +121,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbStatement(String dbStatement) {
-    delegate.setAttribute("db.statement", dbStatement);
+    delegate.setAttribute(DB_STATEMENT, dbStatement);
     return this;
   }
 
@@ -137,7 +137,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbOperation(String dbOperation) {
-    delegate.setAttribute("db.operation", dbOperation);
+    delegate.setAttribute(DB_OPERATION, dbOperation);
     return this;
   }
 
@@ -194,7 +194,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
    */
   @Override
   public DbMongodbSemanticConvention setDbMongodbCollection(String dbMongodbCollection) {
-    delegate.setAttribute("db.mongodb.collection", dbMongodbCollection);
+    delegate.setAttribute(MONGODB_COLLECTION, dbMongodbCollection);
     return this;
   }
 
@@ -240,7 +240,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     See below for a list of well-known identifiers.
      */
     public DbMongodbSpanBuilder setDbSystem(String dbSystem) {
-      internalBuilder.setAttribute("db.system", dbSystem);
+      internalBuilder.setAttribute(DB_SYSTEM, dbSystem);
       return this;
     }
 
@@ -251,7 +251,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     <p>It is recommended to remove embedded credentials.
      */
     public DbMongodbSpanBuilder setDbConnectionString(String dbConnectionString) {
-      internalBuilder.setAttribute("db.connection_string", dbConnectionString);
+      internalBuilder.setAttribute(DB_CONNECTION_STRING, dbConnectionString);
       return this;
     }
 
@@ -261,7 +261,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      * @param dbUser Username for accessing the database.
      */
     public DbMongodbSpanBuilder setDbUser(String dbUser) {
-      internalBuilder.setAttribute("db.user", dbUser);
+      internalBuilder.setAttribute(DB_USER, dbUser);
       return this;
     }
 
@@ -273,7 +273,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     used to connect.
      */
     public DbMongodbSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
+      internalBuilder.setAttribute(JDBC_DRIVER_CLASSNAME, dbJdbcDriverClassname);
       return this;
     }
 
@@ -286,7 +286,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbMongodbSpanBuilder setDbName(String dbName) {
-      internalBuilder.setAttribute("db.name", dbName);
+      internalBuilder.setAttribute(DB_NAME, dbName);
       return this;
     }
 
@@ -297,7 +297,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbMongodbSpanBuilder setDbStatement(String dbStatement) {
-      internalBuilder.setAttribute("db.statement", dbStatement);
+      internalBuilder.setAttribute(DB_STATEMENT, dbStatement);
       return this;
     }
 
@@ -312,7 +312,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbMongodbSpanBuilder setDbOperation(String dbOperation) {
-      internalBuilder.setAttribute("db.operation", dbOperation);
+      internalBuilder.setAttribute(DB_OPERATION, dbOperation);
       return this;
     }
 
@@ -364,7 +364,7 @@ public class DbMongodbSpan extends DelegatingSpan implements DbMongodbSemanticCo
      *     `db.name`.
      */
     public DbMongodbSpanBuilder setDbMongodbCollection(String dbMongodbCollection) {
-      internalBuilder.setAttribute("db.mongodb.collection", dbMongodbCollection);
+      internalBuilder.setAttribute(MONGODB_COLLECTION, dbMongodbCollection);
       return this;
     }
   }
