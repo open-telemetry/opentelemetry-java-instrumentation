@@ -10,10 +10,8 @@ import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
@@ -22,7 +20,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String normalizeQuery(CommandWithArgs command) {
-    return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getStringArgs());
+    return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getArgs());
   }
 
   @Override
@@ -58,10 +56,8 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
       return command.name();
     }
 
-    private List<String> getStringArgs() {
-      return Arrays.stream(args)
-          .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
-          .collect(Collectors.toList());
+    private List<?> getArgs() {
+      return Arrays.asList(args);
     }
   }
 }

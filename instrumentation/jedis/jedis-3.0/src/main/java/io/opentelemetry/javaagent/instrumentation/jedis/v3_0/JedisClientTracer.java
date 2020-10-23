@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
@@ -23,7 +22,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String normalizeQuery(CommandWithArgs command) {
-    return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getStringArgs());
+    return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getArgs());
   }
 
   @Override
@@ -65,10 +64,8 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
       }
     }
 
-    private List<String> getStringArgs() {
-      return Arrays.stream(args)
-          .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
-          .collect(Collectors.toList());
+    private List<?> getArgs() {
+      return Arrays.asList(args);
     }
   }
 }

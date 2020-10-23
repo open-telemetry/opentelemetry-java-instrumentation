@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer.
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer.CommandNormalizer.Eval;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer.CommandNormalizer.KeepAllArgs;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer.CommandNormalizer.MultiKeyValue;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -311,21 +312,29 @@ public final class RedisCommandNormalizer {
     NORMALIZERS = unmodifiableMap(normalizers);
   }
 
-  public static String normalize(String command, List<String> args) {
+  public static String normalize(String command, List<?> args) {
     return NORMALIZERS.getOrDefault(command.toUpperCase(), DEFAULT).normalize(command, args);
   }
 
   public interface CommandNormalizer {
-    String normalize(String command, List<String> args);
+    String normalize(String command, List<?> args);
+
+    static String argToString(Object arg) {
+      if (arg instanceof byte[]) {
+        return new String((byte[]) arg, StandardCharsets.UTF_8);
+      } else {
+        return arg.toString();
+      }
+    }
 
     enum KeepAllArgs implements CommandNormalizer {
       INSTANCE;
 
       @Override
-      public String normalize(String command, List<String> args) {
+      public String normalize(String command, List<?> args) {
         StringBuilder normalised = new StringBuilder(command);
-        for (String arg : args) {
-          normalised.append(" ").append(arg);
+        for (Object arg : args) {
+          normalised.append(" ").append(argToString(arg));
         }
         return normalised.toString();
       }
@@ -341,10 +350,10 @@ public final class RedisCommandNormalizer {
       }
 
       @Override
-      public String normalize(String command, List<String> args) {
+      public String normalize(String command, List<?> args) {
         StringBuilder normalised = new StringBuilder(command);
         for (int i = 0; i < numOfArgsToKeep && i < args.size(); ++i) {
-          normalised.append(" ").append(args.get(i));
+          normalised.append(" ").append(argToString(args.get(i)));
         }
         for (int i = numOfArgsToKeep; i < args.size(); ++i) {
           normalised.append(" ?");
@@ -363,16 +372,16 @@ public final class RedisCommandNormalizer {
       }
 
       @Override
-      public String normalize(String command, List<String> args) {
+      public String normalize(String command, List<?> args) {
         StringBuilder normalised = new StringBuilder(command);
         // append all "initial" arguments before key-value pairs start
         for (int i = 0; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
-          normalised.append(" ").append(args.get(i));
+          normalised.append(" ").append(argToString(args.get(i)));
         }
 
         // loop over keys only
         for (int i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
-          normalised.append(" ").append(args.get(i)).append(" ?");
+          normalised.append(" ").append(argToString(args.get(i))).append(" ?");
         }
         return normalised.toString();
       }
@@ -382,14 +391,14 @@ public final class RedisCommandNormalizer {
       INSTANCE;
 
       @Override
-      public String normalize(String command, List<String> args) {
+      public String normalize(String command, List<?> args) {
         StringBuilder normalised = new StringBuilder(command);
 
         // get the number of keys passed from the command itself (second arg)
         int numberOfKeys = 0;
         if (args.size() > 2) {
           try {
-            numberOfKeys = Integer.parseInt(args.get(1));
+            numberOfKeys = Integer.parseInt(argToString(args.get(1)));
           } catch (NumberFormatException ignored) {
           }
         }
@@ -397,7 +406,7 @@ public final class RedisCommandNormalizer {
         int i = 0;
         // log the script, number of keys and all keys
         for (; i < (numberOfKeys + 2) && i < args.size(); ++i) {
-          normalised.append(" ").append(args.get(i));
+          normalised.append(" ").append(argToString(args.get(i)));
         }
         // mask the rest
         for (; i < args.size(); ++i) {

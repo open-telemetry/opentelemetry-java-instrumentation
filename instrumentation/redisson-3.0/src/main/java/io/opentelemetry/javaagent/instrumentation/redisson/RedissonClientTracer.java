@@ -11,9 +11,8 @@ import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
@@ -47,11 +46,12 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   private static String normalizeSingleCommand(CommandData<?, ?> command) {
-    List<String> args = new ArrayList<>();
+    Object[] commandParams = command.getParams();
+    List<Object> args = new ArrayList<>(commandParams.length + 1);
     if (command.getCommand().getSubName() != null) {
       args.add(command.getCommand().getSubName());
     }
-    args.addAll(Stream.of(command.getParams()).map(String::valueOf).collect(Collectors.toList()));
+    args.addAll(Arrays.asList(commandParams));
     return RedisCommandNormalizer.normalize(command.getCommand().getName(), args);
   }
 
