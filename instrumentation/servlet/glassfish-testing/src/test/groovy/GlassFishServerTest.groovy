@@ -29,7 +29,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
     return new URI("http://localhost:$port/$context/")
   }
 
-  String getSpanContext() {
+  String getContext() {
     "test-gf"
   }
 
