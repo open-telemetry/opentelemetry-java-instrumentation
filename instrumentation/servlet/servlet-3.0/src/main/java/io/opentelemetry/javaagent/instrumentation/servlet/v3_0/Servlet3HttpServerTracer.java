@@ -69,9 +69,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   In this case we have to put the span from the request into current context before continuing.
   */
   public static boolean needsRescoping(Context attachedContext) {
-    return !sameTrace(
-        Span.fromContext(Context.current()),
-        Span.fromContext(attachedContext));
+    return !sameTrace(Span.fromContext(Context.current()), Span.fromContext(attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {

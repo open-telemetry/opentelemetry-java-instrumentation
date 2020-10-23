@@ -98,9 +98,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       }
 
       Span servletSpan =
-          servletContext != null
-              ? Java8Bridge.spanFromContext(servletContext)
-              : null;
+          servletContext != null ? Java8Bridge.spanFromContext(servletContext) : null;
       Context parent;
       if (servletContext == null
           || (parentSpanContext.isValid()

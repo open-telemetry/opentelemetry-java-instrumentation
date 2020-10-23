@@ -43,8 +43,7 @@ public final class TracingHandler implements Handler {
             response -> {
               if (serverSpanContext != null) {
                 // Rename the netty span name with the ratpack route.
-                TRACER.onContext(
-                    Span.fromContext(serverSpanContext), ctx);
+                TRACER.onContext(Span.fromContext(serverSpanContext), ctx);
               }
               TRACER.onContext(ratpackSpan, ctx);
               TRACER.end(ratpackSpan);

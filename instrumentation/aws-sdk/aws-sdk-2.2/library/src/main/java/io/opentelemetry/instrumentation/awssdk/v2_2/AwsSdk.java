@@ -64,9 +64,7 @@ public class AwsSdk {
    */
   public static Span getSpanFromAttributes(ExecutionAttributes attributes) {
     Context context = getContextFromAttributes(attributes);
-    return context == null
-        ? Span.getInvalid()
-        : Span.fromContext(context);
+    return context == null ? Span.getInvalid() : Span.fromContext(context);
   }
 
   /**

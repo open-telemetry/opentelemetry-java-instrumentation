@@ -22,7 +22,8 @@ class ScalaConcurrentTests {
     */
   def traceWithFutureAndCallbacks() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
+    val parentScope =
+      Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(2)
       val goodFuture: Future[Integer] = Future {
@@ -55,7 +56,8 @@ class ScalaConcurrentTests {
 
   def tracedAcrossThreadsWithNoTrace() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
+    val parentScope =
+      Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(1)
       val goodFuture: Future[Integer] = Future {
@@ -85,7 +87,8 @@ class ScalaConcurrentTests {
     */
   def traceWithPromises() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
+    val parentScope =
+      Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
@@ -133,7 +136,8 @@ class ScalaConcurrentTests {
     */
   def tracedWithFutureFirstCompletions() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
+    val parentScope =
+      Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val completedVal = Future.firstCompletedOf(List(Future {
         tracedChild("timeout1")
@@ -157,7 +161,8 @@ class ScalaConcurrentTests {
     */
   def tracedTimeout(): Integer = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
+    val parentScope =
+      Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val f: Future[String] = Future {
         tracedChild("timeoutChild")

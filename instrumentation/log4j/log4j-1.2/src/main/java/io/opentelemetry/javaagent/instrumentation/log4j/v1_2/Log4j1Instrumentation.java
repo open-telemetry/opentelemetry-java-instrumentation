@@ -54,7 +54,8 @@ public class Log4j1Instrumentation extends Instrumenter.Default {
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
-      InstrumentationContext.get(LoggingEvent.class, Span.class).put(event, Java8Bridge.currentSpan());
+      InstrumentationContext.get(LoggingEvent.class, Span.class)
+          .put(event, Java8Bridge.currentSpan());
     }
   }
 }

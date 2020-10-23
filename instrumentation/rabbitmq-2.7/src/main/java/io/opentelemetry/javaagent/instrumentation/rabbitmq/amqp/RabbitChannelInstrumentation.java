@@ -173,9 +173,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         Context context = Java8Bridge.currentContext().with(span);
 
-        Java8Bridge.getGlobalPropagators()
-            .getTextMapPropagator()
-            .inject(context, headers, SETTER);
+        Java8Bridge.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(

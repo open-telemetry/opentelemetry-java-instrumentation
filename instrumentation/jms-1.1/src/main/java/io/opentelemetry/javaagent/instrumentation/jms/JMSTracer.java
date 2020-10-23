@@ -48,8 +48,7 @@ public class JMSTracer extends BaseTracer {
 
     if (message != null && "process".equals(operation)) {
       Context context = extract(message, GETTER);
-      SpanContext spanContext =
-          Span.fromContext(context).getSpanContext();
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
       if (spanContext.isValid()) {
         spanBuilder.setParent(context);
       }

@@ -55,7 +55,8 @@ public class LogbackInstrumentation extends Instrumenter.Default {
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {
-      InstrumentationContext.get(ILoggingEvent.class, Span.class).put(event, Java8Bridge.currentSpan());
+      InstrumentationContext.get(ILoggingEvent.class, Span.class)
+          .put(event, Java8Bridge.currentSpan());
     }
   }
 }
