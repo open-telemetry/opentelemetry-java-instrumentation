@@ -61,6 +61,8 @@ public class TracerInstaller {
   }
 
   private static synchronized void installExporters(List<String> exporters, Properties config) {
+    boolean isMetricExporterInstalled = false;
+
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {
@@ -71,7 +73,14 @@ public class TracerInstaller {
 
       MetricExporterFactory metricExporterFactory = findMetricExporterFactory(exporterName);
       if (metricExporterFactory != null) {
-        installExporter(metricExporterFactory, config);
+        if (!isMetricExporterInstalled) {
+          installExporter(metricExporterFactory, config);
+          isMetricExporterInstalled = true;
+        } else {
+          log.warn(
+              "Ignoring {} metric exporter. Only one metric exporter can be installed",
+              exporterName);
+        }
       } else {
         log.debug("No {} metric exporter found", exporterName);
       }
@@ -142,7 +151,7 @@ public class TracerInstaller {
     try {
       url = new File(exporterJar).toURI().toURL();
     } catch (MalformedURLException e) {
-      log.warn("Filename could not be parsed: " + exporterJar + ". Exporter is not installed");
+      log.warn("Filename could not be parsed: {}. Exporter is not installed", exporterJar);
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
     }
@@ -175,7 +184,7 @@ public class TracerInstaller {
         .setMetricProducers(
             Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
         .build();
-    log.info("Installed metric exporter: " + metricExporter.getClass().getName());
+    log.info("Installed metric exporter: {}", metricExporter.getClass().getName());
   }
 
   private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
@@ -183,13 +192,13 @@ public class TracerInstaller {
     BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.newBuilder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(spanProcessor);
-    log.info("Installed span exporter: " + spanExporter.getClass().getName());
+    log.info("Installed span exporter: {}", spanExporter.getClass().getName());
   }
 
   private static void installMetricServer(MetricServer metricServer, Properties config) {
     MetricProducer metricProducer = OpenTelemetrySdk.getMeterProvider().getMetricProducer();
     metricServer.start(metricProducer, config);
-    log.info("Installed metric server: " + metricServer.getClass().getName());
+    log.info("Installed metric server: {}", metricServer.getClass().getName());
   }
 
   private static <F> F getExporterFactory(Class<F> service, ExporterClassLoader exporterLoader) {
@@ -230,6 +239,6 @@ public class TracerInstaller {
   public static void logVersionInfo() {
     VersionLogger.logAllVersions();
     log.debug(
-        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
+        "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
   }
 }
