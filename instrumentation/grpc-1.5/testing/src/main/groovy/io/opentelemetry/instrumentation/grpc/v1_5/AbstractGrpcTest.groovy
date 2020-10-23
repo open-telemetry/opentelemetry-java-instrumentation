@@ -34,7 +34,6 @@ import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.StatusCode
-import io.opentelemetry.trace.TracingContextUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
