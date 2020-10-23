@@ -13,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -54,7 +54,7 @@ public class HttpHeadersInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      if (Span.current().isRecording()) {
+      if (Java8Bridge.currentSpan().isRecording()) {
         headers = TRACER.inject(headers);
       }
     }

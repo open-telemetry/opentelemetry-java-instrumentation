@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -120,7 +121,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
       if (sessionContext == null) {
         return;
       }
-      Span sessionSpan = Span.fromContext(sessionContext);
+      Span sessionSpan = Java8Bridge.spanFromContext(sessionContext);
 
       DECORATE.onError(sessionSpan, throwable);
       DECORATE.beforeFinish(sessionSpan);

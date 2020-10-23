@@ -79,7 +79,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   @Override
-  String getSpanContext() {
+  String getContext() {
     return "tomcat-context"
   }
 

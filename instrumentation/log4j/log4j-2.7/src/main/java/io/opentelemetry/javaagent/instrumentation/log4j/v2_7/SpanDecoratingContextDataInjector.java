@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.S
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.trace.SpanContext;
 import java.util.List;
 import org.apache.logging.log4j.core.ContextDataInjector;
@@ -34,7 +34,7 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
       return contextData;
     }
 
-    SpanContext currentContext = Span.current().getSpanContext();
+    SpanContext currentContext = Java8Bridge.currentSpan().getSpanContext();
     if (!currentContext.isValid()) {
       return contextData;
     }

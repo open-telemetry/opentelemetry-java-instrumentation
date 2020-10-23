@@ -26,7 +26,7 @@ class AddThreadDetailsSpanProcessorTest extends Specification {
     def currentThreadId = Thread.currentThread().id
 
     when:
-    processor.onStart(span, Context.root())
+    processor.onStart(Context.root(), span)
 
     then:
     1 * span.setAttribute(SemanticAttributes.THREAD_ID, currentThreadId)

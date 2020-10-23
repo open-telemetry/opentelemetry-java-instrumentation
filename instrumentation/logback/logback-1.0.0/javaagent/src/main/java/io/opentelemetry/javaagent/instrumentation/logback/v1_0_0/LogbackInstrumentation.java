@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class LogbackInstrumentation extends Instrumenter.Default {
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {
-      InstrumentationContext.get(ILoggingEvent.class, Span.class).put(event, Span.current());
+      InstrumentationContext.get(ILoggingEvent.class, Span.class).put(event, Java8Bridge.currentSpan());
     }
   }
 }

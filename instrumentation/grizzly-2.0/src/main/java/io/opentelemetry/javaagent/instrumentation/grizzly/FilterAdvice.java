@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServ
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -21,7 +21,7 @@ public class FilterAdvice {
       @Advice.This BaseFilter it,
       @Advice.Argument(0) FilterChainContext ctx,
       @Advice.Local("otelScope") Scope scope) {
-    if (Span.current().getSpanContext().isValid()) {
+    if (Java8Bridge.currentSpan().getSpanContext().isValid()) {
       return;
     }
 

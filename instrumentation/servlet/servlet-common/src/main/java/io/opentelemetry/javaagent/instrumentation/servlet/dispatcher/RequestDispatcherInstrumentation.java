@@ -90,7 +90,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       Context servletContext =
           servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      Span parentSpan = Span.fromContext(parentContext);
+      Span parentSpan = Java8Bridge.spanFromContext(parentContext);
       SpanContext parentSpanContext = parentSpan.getSpanContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
@@ -99,7 +99,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
       Span servletSpan =
           servletContext != null
-              ? Span.fromContext(servletContext)
+              ? Java8Bridge.spanFromContext(servletContext)
               : null;
       Context parent;
       if (servletContext == null

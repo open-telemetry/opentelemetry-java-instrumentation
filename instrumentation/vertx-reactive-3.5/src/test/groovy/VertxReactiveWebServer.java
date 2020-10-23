@@ -6,6 +6,7 @@
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -94,7 +95,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private void handleListProducts(RoutingContext routingContext) {
     Span span = tracer.spanBuilder("handleListProducts").startSpan();
-    try (Scope ignored = tracer.withSpan(span)) {
+    try (Scope ignored = Context.current().with(span).makeCurrent()) {
       HttpServerResponse response = routingContext.response();
       Single<JsonArray> jsonArraySingle = listProducts();
 
@@ -107,7 +108,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private Single<JsonArray> listProducts() {
     Span span = tracer.spanBuilder("listProducts").startSpan();
-    try (Scope ignored = tracer.withSpan(span)) {
+    try (Scope ignored = Context.current().with(span).makeCurrent()) {
       return client
           .rxQuery("SELECT id, name, price, weight FROM products")
           .flatMap(

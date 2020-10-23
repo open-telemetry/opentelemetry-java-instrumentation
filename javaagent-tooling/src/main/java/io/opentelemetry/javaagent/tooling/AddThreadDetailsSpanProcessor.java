@@ -14,7 +14,7 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   @Override
-  public void onStart(ReadWriteSpan span, Context context) {
+  public void onStart(Context context, ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
     span.setAttribute(SemanticAttributes.THREAD_ID, currentThread.getId());
     span.setAttribute(SemanticAttributes.THREAD_NAME, currentThread.getName());

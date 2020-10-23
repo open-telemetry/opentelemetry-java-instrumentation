@@ -30,7 +30,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 //  @Shared
 //  protected String pass = "password"
 
-  abstract String getSpanContext()
+  abstract String getContext()
 
   Class<Servlet> servlet = servlet()
 

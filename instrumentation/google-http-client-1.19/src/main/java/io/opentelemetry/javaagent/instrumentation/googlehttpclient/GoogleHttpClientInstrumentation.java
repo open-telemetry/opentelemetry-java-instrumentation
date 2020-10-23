@@ -93,7 +93,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         contextStore.put(request, Java8Bridge.currentContext());
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        span = Span.fromContext(context);
+        span = Java8Bridge.spanFromContext(context);
         scope = context.makeCurrent();
       }
     }

@@ -55,7 +55,7 @@ public class InMemoryExporter implements SpanProcessor {
   private volatile boolean forceFlushCalled;
 
   @Override
-  public void onStart(ReadWriteSpan readWriteSpan, Context context) {
+  public void onStart(Context context, ReadWriteSpan readWriteSpan) {
     SpanData sd = readWriteSpan.toSpanData();
     log.debug(
         ">>>{} SPAN START: {} id={} traceid={} parent={}, library={}",

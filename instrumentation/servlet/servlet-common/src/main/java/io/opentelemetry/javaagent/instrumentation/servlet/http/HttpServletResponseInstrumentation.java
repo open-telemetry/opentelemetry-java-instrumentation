@@ -17,6 +17,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -66,7 +67,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         @Advice.Local("otelCallDepth") Depth callDepth) {
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
       // Don't want to generate a new top-level span
-      if (callDepth.getAndIncrement() == 0 && Span.current().getSpanContext().isValid()) {
+      if (callDepth.getAndIncrement() == 0 && Java8Bridge.currentSpan().getSpanContext().isValid()) {
         span = TRACER.startSpan(method);
         scope = currentContextWith(span);
       }

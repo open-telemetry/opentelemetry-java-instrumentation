@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
@@ -82,7 +81,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       if (TRACER.shouldPropagate(apiVersions)) {
         try {
-          OpenTelemetry.getGlobalPropagators()
+          Java8Bridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         } catch (IllegalStateException e) {
@@ -96,7 +95,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          OpenTelemetry.getGlobalPropagators()
+          Java8Bridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         }

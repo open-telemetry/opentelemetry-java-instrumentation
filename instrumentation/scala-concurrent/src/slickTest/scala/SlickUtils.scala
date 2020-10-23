@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge
 import io.opentelemetry.trace.Tracer
 import slick.jdbc.H2Profile.api._
 
@@ -12,7 +13,7 @@ import scala.concurrent.{Await, Future}
 
 class SlickUtils {
   val TRACER: Tracer =
-    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+    Java8Bridge.getGlobalTracer("io.opentelemetry.auto")
 
   import SlickUtils._
 
@@ -34,7 +35,7 @@ class SlickUtils {
 
   def startQuery(query: String): Future[Vector[Int]] = {
     val span = TRACER.spanBuilder("run query").startSpan()
-    val scope = TRACER.withSpan(span)
+    val scope = Java8Bridge.currentContext().`with`(span).makeCurrent()
     try {
       return database.run(sql"#$query".as[Int])
     } finally {

@@ -28,7 +28,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
@@ -150,7 +149,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = Span.current();
+      Span span = Java8Bridge.currentSpan();
 
       if (span.getSpanContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);
@@ -174,7 +173,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         Context context = Java8Bridge.currentContext().with(span);
 
-        OpenTelemetry.getGlobalPropagators()
+        Java8Bridge.getGlobalPropagators()
             .getTextMapPropagator()
             .inject(context, headers, SETTER);
 

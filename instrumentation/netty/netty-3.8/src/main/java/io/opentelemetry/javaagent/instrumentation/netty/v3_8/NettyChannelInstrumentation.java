@@ -78,7 +78,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This Channel channel) {
       Context context = Java8Bridge.currentContext();
-      Span span = Span.fromContext(context);
+      Span span = Java8Bridge.spanFromContext(context);
       if (span.getSpanContext().isValid()) {
         ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);

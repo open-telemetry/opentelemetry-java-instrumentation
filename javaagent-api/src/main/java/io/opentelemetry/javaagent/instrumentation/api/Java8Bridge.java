@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
 /**
  * A helper for accessing methods that rely on Java 8 bytecode such as static interface methods. In
@@ -18,5 +22,24 @@ public final class Java8Bridge {
   /** Calls {@link Context#current()}. */
   public static Context currentContext() {
     return Context.current();
+  }
+
+  /** Calls {@link Span#current()}. */
+  public static Span currentSpan() {
+    return Span.current();
+  }
+
+  /** Calls {@link Span#fromContext(Context)}. */
+  public static Span spanFromContext(Context context) {
+    return Span.fromContext(context);
+  }
+
+  public static ContextPropagators getGlobalPropagators() {
+    return OpenTelemetry.getGlobalPropagators();
+  }
+
+  /** Calls {@link OpenTelemetry#getGlobalTracer(String)} */
+  public static Tracer getGlobalTracer(String name) {
+    return OpenTelemetry.getGlobalTracer(name);
   }
 }

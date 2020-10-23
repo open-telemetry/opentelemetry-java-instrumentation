@@ -6,6 +6,7 @@
 import java.util.concurrent.CountDownLatch
 
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge
 import io.opentelemetry.trace.Tracer
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -14,14 +15,14 @@ import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
   val TRACER: Tracer =
-    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+    Java8Bridge.getGlobalTracer("io.opentelemetry.auto")
 
   /**
     * @return Number of expected spans in the trace
     */
   def traceWithFutureAndCallbacks() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(2)
       val goodFuture: Future[Integer] = Future {
@@ -54,7 +55,7 @@ class ScalaConcurrentTests {
 
   def tracedAcrossThreadsWithNoTrace() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(1)
       val goodFuture: Future[Integer] = Future {
@@ -84,7 +85,7 @@ class ScalaConcurrentTests {
     */
   def traceWithPromises() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
@@ -132,7 +133,7 @@ class ScalaConcurrentTests {
     */
   def tracedWithFutureFirstCompletions() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val completedVal = Future.firstCompletedOf(List(Future {
         tracedChild("timeout1")
@@ -156,7 +157,7 @@ class ScalaConcurrentTests {
     */
   def tracedTimeout(): Integer = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope = Java8Bridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val f: Future[String] = Future {
         tracedChild("timeoutChild")

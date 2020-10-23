@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -62,7 +63,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
-      Span span = Span.current();
+      Span span = Java8Bridge.currentSpan();
       if (span != null && routeMatch != null) {
         span.updateName(routeMatch.getMatchUri());
       }

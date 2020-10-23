@@ -6,6 +6,7 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.Callable;
 
