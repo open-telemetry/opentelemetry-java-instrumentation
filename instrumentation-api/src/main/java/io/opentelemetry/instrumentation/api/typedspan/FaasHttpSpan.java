@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.opentelemetry.context.Context;
 import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
 
 import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
