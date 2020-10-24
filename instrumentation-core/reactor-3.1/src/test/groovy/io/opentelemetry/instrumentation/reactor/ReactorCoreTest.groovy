@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.reactor
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.trace.Tracer
@@ -236,7 +237,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
       def tracer = OpenTelemetry.getGlobalTracer("test")
       def intermediate = tracer.spanBuilder("intermediate").startSpan()
       // After this activation, the "add two" operations below should be children of this span
-      def scope = tracer.withSpan(intermediate)
+      def scope = Context.current().with(intermediate).makeCurrent()
       try {
         if (publisher instanceof Mono) {
           return ((Mono) publisher).map(addTwo)
@@ -274,7 +275,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
     TraceUtils.runUnderTrace("trace-parent") {
       def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
-      def scope = tracer.withSpan(span)
+      def scope = Context.current().with(span).makeCurrent()
       try {
         def publisher = publisherSupplier()
         // Read all data from publisher
@@ -296,7 +297,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
     TraceUtils.runUnderTrace("trace-parent") {
       def tracer = OpenTelemetry.getGlobalTracer("test")
       def span = tracer.spanBuilder("publisher-parent").startSpan()
-      def scope = tracer.withSpan(span)
+      def scope = Context.current().with(span).makeCurrent()
 
       def publisher = publisherSupplier()
       publisher.subscribe(new Subscriber<Integer>() {
