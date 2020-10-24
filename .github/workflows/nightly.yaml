@@ -7,11 +7,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Build
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+          remote-build-cache-proxy-enabled: false
+          arguments: build --stacktrace
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "PR / jdk11"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"
+
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11, 15]
+        java: [ 8, 15 ]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -22,12 +50,6 @@ jobs:
       - name: Set JDK ${{ matrix.java }} home
         run: echo JAVA_${{ matrix.java }}_HOME=${{ env.JAVA_HOME }} >> $GITHUB_ENV
 
-      - name: Set up JDK 11 for running Gradle
-        if: matrix.java != 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-
       - name: Test
         uses: burrunan/gradle-cache-action@v1.5
         env:
@@ -35,7 +57,8 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           job-id: jdk${{ matrix.java }}
-          arguments: testJava${{ matrix.java }} --stacktrace -Dorg.gradle.caching.debug=true
+          remote-build-cache-proxy-enabled: false
+          arguments: testJava${{ matrix.java }} --stacktrace
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -59,12 +82,13 @@ jobs:
 
       - name: Test
         uses: burrunan/gradle-cache-action@v1.5
-        with:
-          job-id: latestDepTest
-          arguments: test -PtestLatestDeps=true --stacktrace
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        with:
+          job-id: latestDepTest
+          remote-build-cache-proxy-enabled: false
+          arguments: test -PtestLatestDeps=true --stacktrace
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -79,7 +103,7 @@ jobs:
 
   issue:
     name: Open issue on failure
-    needs: [test, testLatestDep]
+    needs: [ test, testLatestDep ]
     runs-on: ubuntu-latest
     if: always()
     steps:
