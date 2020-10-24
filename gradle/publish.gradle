@@ -25,6 +25,10 @@ publishing {
           groupId = mavenGroupId
         }
         artifactId = artifactPrefix(project, archivesBaseName) + archivesBaseName
+
+        if (!groupId.startsWith("io.opentelemetry.")) {
+          throw new GradleException("groupId is not set for this project or its parent $project.parent")
+        }
       }
 
       pom {

@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.typedspan;
 
 import io.opentelemetry.context.Context;
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -135,7 +138,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
    */
   @Override
   public DbSemanticConvention setNetPeerName(String netPeerName) {
-    delegate.setAttribute("net.peer.name", netPeerName);
+    delegate.setAttribute(NET_PEER_NAME, netPeerName);
     return this;
   }
 
@@ -147,7 +150,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
    */
   @Override
   public DbSemanticConvention setNetPeerIp(String netPeerIp) {
-    delegate.setAttribute("net.peer.ip", netPeerIp);
+    delegate.setAttribute(NET_PEER_IP, netPeerIp);
     return this;
   }
 
@@ -158,7 +161,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
    */
   @Override
   public DbSemanticConvention setNetPeerPort(long netPeerPort) {
-    delegate.setAttribute("net.peer.port", netPeerPort);
+    delegate.setAttribute(NET_PEER_PORT, netPeerPort);
     return this;
   }
 
@@ -169,7 +172,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
    */
   @Override
   public DbSemanticConvention setNetTransport(String netTransport) {
-    delegate.setAttribute("net.transport", netTransport);
+    delegate.setAttribute(NET_TRANSPORT, netTransport);
     return this;
   }
 
@@ -297,7 +300,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbSpanBuilder setNetPeerName(String netPeerName) {
-      internalBuilder.setAttribute("net.peer.name", netPeerName);
+      internalBuilder.setAttribute(NET_PEER_NAME, netPeerName);
       return this;
     }
 
@@ -308,7 +311,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
      *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbSpanBuilder setNetPeerIp(String netPeerIp) {
-      internalBuilder.setAttribute("net.peer.ip", netPeerIp);
+      internalBuilder.setAttribute(NET_PEER_IP, netPeerIp);
       return this;
     }
 
@@ -318,7 +321,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
      * @param netPeerPort Remote port number.
      */
     public DbSpanBuilder setNetPeerPort(long netPeerPort) {
-      internalBuilder.setAttribute("net.peer.port", netPeerPort);
+      internalBuilder.setAttribute(NET_PEER_PORT, netPeerPort);
       return this;
     }
 
@@ -328,7 +331,7 @@ public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
      * @param netTransport Transport protocol used. See note below.
      */
     public DbSpanBuilder setNetTransport(String netTransport) {
-      internalBuilder.setAttribute("net.transport", netTransport);
+      internalBuilder.setAttribute(NET_TRANSPORT, netTransport);
       return this;
     }
   }

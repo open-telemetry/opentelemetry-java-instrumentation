@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import redis.clients.jedis.Connection;

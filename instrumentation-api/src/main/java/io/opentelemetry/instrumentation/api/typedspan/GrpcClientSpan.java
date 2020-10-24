@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.typedspan;
 
 import io.opentelemetry.context.Context;
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -56,7 +59,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetTransport(String netTransport) {
-    delegate.setAttribute("net.transport", netTransport);
+    delegate.setAttribute(NET_TRANSPORT, netTransport);
     return this;
   }
 
@@ -68,7 +71,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetPeerIp(String netPeerIp) {
-    delegate.setAttribute("net.peer.ip", netPeerIp);
+    delegate.setAttribute(NET_PEER_IP, netPeerIp);
     return this;
   }
 
@@ -79,7 +82,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetPeerPort(long netPeerPort) {
-    delegate.setAttribute("net.peer.port", netPeerPort);
+    delegate.setAttribute(NET_PEER_PORT, netPeerPort);
     return this;
   }
 
@@ -90,7 +93,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetPeerName(String netPeerName) {
-    delegate.setAttribute("net.peer.name", netPeerName);
+    delegate.setAttribute(NET_PEER_NAME, netPeerName);
     return this;
   }
 
@@ -101,7 +104,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetHostIp(String netHostIp) {
-    delegate.setAttribute("net.host.ip", netHostIp);
+    delegate.setAttribute(NET_HOST_IP, netHostIp);
     return this;
   }
 
@@ -112,7 +115,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetHostPort(long netHostPort) {
-    delegate.setAttribute("net.host.port", netHostPort);
+    delegate.setAttribute(NET_HOST_PORT, netHostPort);
     return this;
   }
 
@@ -123,7 +126,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setNetHostName(String netHostName) {
-    delegate.setAttribute("net.host.name", netHostName);
+    delegate.setAttribute(NET_HOST_NAME, netHostName);
     return this;
   }
 
@@ -134,7 +137,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
    */
   @Override
   public GrpcClientSemanticConvention setRpcService(String rpcService) {
-    delegate.setAttribute("rpc.service", rpcService);
+    delegate.setAttribute(RPC_SERVICE, rpcService);
     return this;
   }
 
@@ -179,7 +182,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netTransport Transport protocol used. See note below.
      */
     public GrpcClientSpanBuilder setNetTransport(String netTransport) {
-      internalBuilder.setAttribute("net.transport", netTransport);
+      internalBuilder.setAttribute(NET_TRANSPORT, netTransport);
       return this;
     }
 
@@ -190,7 +193,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public GrpcClientSpanBuilder setNetPeerIp(String netPeerIp) {
-      internalBuilder.setAttribute("net.peer.ip", netPeerIp);
+      internalBuilder.setAttribute(NET_PEER_IP, netPeerIp);
       return this;
     }
 
@@ -200,7 +203,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netPeerPort It describes the server port the client is connecting to.
      */
     public GrpcClientSpanBuilder setNetPeerPort(long netPeerPort) {
-      internalBuilder.setAttribute("net.peer.port", netPeerPort);
+      internalBuilder.setAttribute(NET_PEER_PORT, netPeerPort);
       return this;
     }
 
@@ -210,7 +213,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public GrpcClientSpanBuilder setNetPeerName(String netPeerName) {
-      internalBuilder.setAttribute("net.peer.name", netPeerName);
+      internalBuilder.setAttribute(NET_PEER_NAME, netPeerName);
       return this;
     }
 
@@ -220,7 +223,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public GrpcClientSpanBuilder setNetHostIp(String netHostIp) {
-      internalBuilder.setAttribute("net.host.ip", netHostIp);
+      internalBuilder.setAttribute(NET_HOST_IP, netHostIp);
       return this;
     }
 
@@ -230,7 +233,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public GrpcClientSpanBuilder setNetHostPort(long netHostPort) {
-      internalBuilder.setAttribute("net.host.port", netHostPort);
+      internalBuilder.setAttribute(NET_HOST_PORT, netHostPort);
       return this;
     }
 
@@ -240,7 +243,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param netHostName Local hostname or similar, see note below.
      */
     public GrpcClientSpanBuilder setNetHostName(String netHostName) {
-      internalBuilder.setAttribute("net.host.name", netHostName);
+      internalBuilder.setAttribute(NET_HOST_NAME, netHostName);
       return this;
     }
 
@@ -250,7 +253,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
      * @param rpcService The service name, must be equal to the $service part in the span name.
      */
     public GrpcClientSpanBuilder setRpcService(String rpcService) {
-      internalBuilder.setAttribute("rpc.service", rpcService);
+      internalBuilder.setAttribute(RPC_SERVICE, rpcService);
       return this;
     }
   }

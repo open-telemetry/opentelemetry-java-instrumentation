@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import redis.RedisCommand;
 
