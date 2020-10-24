@@ -17,10 +17,10 @@ jobs:
         with:
           java-version: 11
 
-   #   - name: Restore cache
-   #     uses: burrunan/gradle-cache-action@v1.5
-   #     with:
-   #       job-id: jdk11
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
 
       - name: Build
         uses: nick-invision/retry@v1
@@ -64,10 +64,10 @@ jobs:
         with:
           java-version: 11
 
-     # - name: Restore cache
-     #   uses: burrunan/gradle-cache-action@v1.5
-     #   with:
-     #     job-id: jdk${{ matrix.java }}
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk${{ matrix.java }}
 
       - name: Test
         uses: nick-invision/retry@v1
@@ -99,10 +99,10 @@ jobs:
         with:
           java-version: 11
 
-     # - name: Restore cache
-     #   uses: burrunan/gradle-cache-action@v1.5
-     #   with:
-     #     job-id: latestDepTest
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: latestDepTest
 
       - name: Test
         uses: nick-invision/retry@v1
