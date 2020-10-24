@@ -24,6 +24,9 @@ jobs:
 
       - name: Build
         uses: nick-invision/retry@v1
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
           command: ./gradlew build --stacktrace
           timeout_minutes: 90
