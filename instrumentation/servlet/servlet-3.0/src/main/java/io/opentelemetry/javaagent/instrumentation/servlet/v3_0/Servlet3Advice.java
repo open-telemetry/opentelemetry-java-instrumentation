@@ -38,6 +38,7 @@ public class Servlet3Advice {
       if (TRACER.needsRescoping(attachedContext)) {
         scope = attachedContext.makeCurrent();
       }
+
       // We are inside nested servlet/filter, don't create new span
       return;
     }

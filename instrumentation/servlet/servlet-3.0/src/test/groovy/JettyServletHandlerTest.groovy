@@ -44,7 +44,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  String getContext() {
+  String getContextPath() {
     ""
   }
 

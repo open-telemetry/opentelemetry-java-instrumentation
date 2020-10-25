@@ -41,7 +41,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
       it.setHost('localhost')
     }
 
-    ServletContextHandler servletContext = new ServletContextHandler(null, "/$context")
+    ServletContextHandler servletContext = new ServletContextHandler(null, contextPath)
     servletContext.errorHandler = new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
         Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
@@ -64,8 +64,8 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   }
 
   @Override
-  String getContext() {
-    return "jetty-context"
+  String getContextPath() {
+    return "/jetty-context"
   }
 
   @Override
@@ -240,6 +240,6 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
 abstract class JettyDispatchTest extends JettyServlet3Test {
   @Override
   URI buildAddress() {
-    return new URI("http://localhost:$port/$context/dispatch/")
+    return new URI("http://localhost:$port$contextPath/dispatch/")
   }
 }

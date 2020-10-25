@@ -27,10 +27,15 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   public Scope startScope(Span span, HttpServletRequest request) {
     String contextPath = request.getContextPath();
+    String servletPath = request.getServletPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      span.updateName(contextPath + servletPath);
       Context context = Context.current().with(CONTEXT_APPLICATION_ROOT_KEY, contextPath);
       return super.startScope(span, request, context);
     } else {
+      if (servletPath != null && !servletPath.isEmpty()) {
+        span.updateName(servletPath);
+      }
       return super.startScope(span, request);
     }
   }

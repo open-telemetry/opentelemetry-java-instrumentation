@@ -63,7 +63,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     port = PortUtils.randomOpenPort()
     address = buildAddress()
     server = startServer(port)
-    println getClass().name + " http server started at: http://localhost:$port/" + getContextPath()
+    println getClass().name + " http server started at: http://localhost:$port" + getContextPath()
   }
 
   URI buildAddress() {
