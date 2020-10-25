@@ -200,7 +200,7 @@ class AWS0ClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    !io.opentelemetry.trace.Span.current().getSpanContext().isValid()
+    !Span.current().getSpanContext().isValid()
     thrown RuntimeException
 
     assertTraces(1) {

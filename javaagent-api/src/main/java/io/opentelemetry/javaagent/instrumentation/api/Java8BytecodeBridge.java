@@ -12,12 +12,13 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
 /**
- * A helper for accessing methods that rely on Java 8 bytecode such as static interface methods. In
- * instrumentation, we may need to call these methods in code that is inlined into an instrumented
- * class, however many times the instrumented class has been compiled to a previous version of
- * bytecode and we cannot inline Java 8 method calls.
+ * A helper for accessing methods that rely on new Java 8 bytecode features such as calling a static
+ * interface methods. In instrumentation, we may need to call these methods in code that is inlined
+ * into an instrumented class, however many times the instrumented class has been compiled to a
+ * previous version of bytecode and so we cannot inline calls to static interface methods, as those
+ * were not supported prior to Java 8 and will lead to a class verification error.
  */
-public final class Java8Bridge {
+public final class Java8BytecodeBridge {
 
   /** Calls {@link Context#current()}. */
   public static Context currentContext() {

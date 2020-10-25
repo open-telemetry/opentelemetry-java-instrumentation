@@ -43,7 +43,7 @@ public class NettyHttpServerTracer
 
   @Override
   public Context getServerContext(ChannelTraceContext channelTraceContext) {
-    return channelTraceContext.getSpanContext();
+    return channelTraceContext.getContext();
   }
 
   @Override

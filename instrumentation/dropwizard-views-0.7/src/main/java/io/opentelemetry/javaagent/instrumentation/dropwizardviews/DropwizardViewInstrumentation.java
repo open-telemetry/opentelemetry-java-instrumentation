@@ -18,7 +18,7 @@ import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -69,7 +69,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
-      if (!Java8Bridge.currentSpan().getSpanContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return null;
       }
       Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();

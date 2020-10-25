@@ -147,7 +147,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setParent(application.io.opentelemetry.context.Context applicationContext) {
+    public Span.Builder setParent(Context applicationContext) {
       agentBuilder.setParent(contextStore.get(applicationContext));
       return this;
     }

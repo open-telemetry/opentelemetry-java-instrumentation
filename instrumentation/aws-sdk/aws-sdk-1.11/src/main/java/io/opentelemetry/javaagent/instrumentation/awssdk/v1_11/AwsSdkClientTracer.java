@@ -65,9 +65,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
    */
   @Override
   public Scope startScope(Span span, Request<?> request) {
-    Context context = Context.current().with(span);
-    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
-    return context.makeCurrent();
+    return Context.current().with(span).with(CONTEXT_CLIENT_SPAN_KEY, span).makeCurrent();
   }
 
   @Override

@@ -73,7 +73,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     then:
     assert internal.getSpanContext().isValid()
     assert Context.current().get(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == client
-    assert io.opentelemetry.trace.Span.fromContext(Context.current()) == internal
+    assert Span.fromContext(Context.current()) == internal
 
     cleanup:
     scope2.close()
@@ -89,7 +89,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
     then:
     assert context.get(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == span
-    assert io.opentelemetry.trace.Span.fromContext(context) == span
+    assert Span.fromContext(context) == span
   }
 
   @Override

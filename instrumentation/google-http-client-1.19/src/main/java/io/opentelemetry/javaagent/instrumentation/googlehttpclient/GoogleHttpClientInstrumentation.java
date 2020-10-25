@@ -20,7 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
@@ -90,10 +90,10 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         span = TRACER.startSpan(request);
         scope = TRACER.startScope(span, request.getHeaders());
         // TODO (trask) ideally we could pass current context into startScope to avoid extra lookup
-        contextStore.put(request, Java8Bridge.currentContext());
+        contextStore.put(request, Java8BytecodeBridge.currentContext());
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        span = Java8Bridge.spanFromContext(context);
+        span = Java8BytecodeBridge.spanFromContext(context);
         scope = context.makeCurrent();
       }
     }
@@ -135,7 +135,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       // the java-concurrent instrumentation
       ContextStore<HttpRequest, Context> contextStore =
           InstrumentationContext.get(HttpRequest.class, Context.class);
-      contextStore.put(request, Java8Bridge.currentContext());
+      contextStore.put(request, Java8BytecodeBridge.currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

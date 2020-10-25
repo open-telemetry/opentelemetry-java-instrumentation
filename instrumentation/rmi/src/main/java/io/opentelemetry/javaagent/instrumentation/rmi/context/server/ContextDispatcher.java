@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextProp
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -50,7 +51,7 @@ public class ContextDispatcher implements Dispatcher {
       ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
         Context context = extract(payload, GETTER);
-        SpanContext spanContext = io.opentelemetry.trace.Span.fromContext(context).getSpanContext();
+        SpanContext spanContext = Span.fromContext(context).getSpanContext();
         if (spanContext.isValid()) {
           THREAD_LOCAL_CONTEXT.set(context);
         } else {

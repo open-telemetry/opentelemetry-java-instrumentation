@@ -31,7 +31,7 @@ import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -149,7 +149,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = Java8Bridge.currentSpan();
+      Span span = Java8BytecodeBridge.currentSpan();
 
       if (span.getSpanContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);
@@ -171,9 +171,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        Context context = Java8Bridge.currentContext().with(span);
+        Context context = Java8BytecodeBridge.currentContext().with(span);
 
-        Java8Bridge.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+        Java8BytecodeBridge.getGlobalPropagators()
+            .getTextMapPropagator()
+            .inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(

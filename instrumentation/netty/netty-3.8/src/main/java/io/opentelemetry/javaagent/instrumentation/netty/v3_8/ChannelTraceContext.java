@@ -49,7 +49,7 @@ public class ChannelTraceContext {
     this.clientParentContext = clientParentContext;
   }
 
-  public Context getSpanContext() {
+  public Context getContext() {
     return context;
   }
 

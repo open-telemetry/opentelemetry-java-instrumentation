@@ -19,7 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -84,13 +84,13 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(0) ServletRequest request) {
 
-      Context parentContext = Java8Bridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
       Context servletContext =
           servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      Span parentSpan = Java8Bridge.spanFromContext(parentContext);
+      Span parentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
       SpanContext parentSpanContext = parentSpan.getSpanContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
@@ -98,7 +98,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       }
 
       Span servletSpan =
-          servletContext != null ? Java8Bridge.spanFromContext(servletContext) : null;
+          servletContext != null ? Java8BytecodeBridge.spanFromContext(servletContext) : null;
       Context parent;
       if (servletContext == null
           || (parentSpanContext.isValid()
@@ -123,7 +123,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
         // this tells the dispatched servlet to use the current span as the parent for its work
-        Context newContext = Java8Bridge.currentContext().with(span);
+        Context newContext = Java8BytecodeBridge.currentContext().with(span);
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
       scope = TRACER.startScope(span);

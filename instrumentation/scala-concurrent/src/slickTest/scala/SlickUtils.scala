@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.trace.Tracer
 import slick.jdbc.H2Profile.api._
 
@@ -12,8 +12,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 class SlickUtils {
+  // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
   val TRACER: Tracer =
-    Java8Bridge.getGlobalTracer("io.opentelemetry.auto")
+    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   import SlickUtils._
 
@@ -35,7 +36,7 @@ class SlickUtils {
 
   def startQuery(query: String): Future[Vector[Int]] = {
     val span = TRACER.spanBuilder("run query").startSpan()
-    val scope = Java8Bridge.currentContext().`with`(span).makeCurrent()
+    val scope = Java8BytecodeBridge.currentContext().`with`(span).makeCurrent()
     try {
       return database.run(sql"#$query".as[Int])
     } finally {

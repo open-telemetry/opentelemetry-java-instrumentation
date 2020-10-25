@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -70,7 +70,7 @@ public final class ScalaForkJoinPoolInstrumentation extends Instrumenter.Default
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8Bridge.currentContext());
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }

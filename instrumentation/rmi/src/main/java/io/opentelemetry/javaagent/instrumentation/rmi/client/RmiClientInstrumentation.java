@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -60,7 +60,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope) {
 
       // TODO replace with client span check
-      if (!Java8Bridge.currentSpan().getSpanContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return;
       }
       span = TRACER.startSpan(method);

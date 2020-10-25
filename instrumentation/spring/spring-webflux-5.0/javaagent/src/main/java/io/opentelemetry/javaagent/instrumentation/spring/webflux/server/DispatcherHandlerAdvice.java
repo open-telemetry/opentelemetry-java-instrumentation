@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.S
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
@@ -30,7 +30,7 @@ public class DispatcherHandlerAdvice {
 
     Span span = TRACER.startSpan("DispatcherHandler.handle", Kind.INTERNAL);
 
-    otelContext = Java8Bridge.currentContext().with(span);
+    otelContext = Java8BytecodeBridge.currentContext().with(span);
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store the context in request itself.
     exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, otelContext);

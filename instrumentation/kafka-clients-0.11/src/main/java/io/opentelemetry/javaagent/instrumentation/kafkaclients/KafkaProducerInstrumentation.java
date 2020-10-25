@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -72,7 +72,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parent = Java8Bridge.currentContext();
+      Context parent = Java8BytecodeBridge.currentContext();
 
       span = TRACER.startProducerSpan(record);
       Context newContext = parent.with(span);
@@ -81,7 +81,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       if (TRACER.shouldPropagate(apiVersions)) {
         try {
-          Java8Bridge.getGlobalPropagators()
+          Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         } catch (IllegalStateException e) {
@@ -95,7 +95,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          Java8Bridge.getGlobalPropagators()
+          Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         }

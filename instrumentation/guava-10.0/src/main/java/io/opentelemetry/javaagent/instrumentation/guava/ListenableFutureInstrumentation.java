@@ -13,7 +13,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
@@ -54,7 +54,7 @@ public class ListenableFutureInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State addListenerEnter(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final Context context = Java8Bridge.currentContext();
+      final Context context = Java8BytecodeBridge.currentContext();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
         task = newTask;

@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -69,7 +69,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       if (method != null && resourceClass != null) {
         context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
         Span serverSpan = BaseTracer.getCurrentServerSpan();
-        Span currentSpan = Java8Bridge.currentSpan();
+        Span currentSpan = Java8BytecodeBridge.currentSpan();
 
         // if there's no current span or it's the same as the server (servlet) span we need to start
         // a JAX-RS one

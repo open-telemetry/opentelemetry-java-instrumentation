@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
@@ -94,7 +94,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8Bridge.currentContext());
+            contextStore, newTask, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -115,7 +115,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, task, Java8Bridge.currentContext());
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -138,7 +138,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8Bridge.currentContext());
+            contextStore, newTask, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -168,7 +168,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8Bridge.currentContext());
+            contextStore, newTask, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -201,7 +201,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
             ContextStore<Callable, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             ExecutorInstrumentationUtils.setupState(
-                contextStore, newTask, Java8Bridge.currentContext());
+                contextStore, newTask, Java8BytecodeBridge.currentContext());
           }
         }
         tasks = wrappedTasks;

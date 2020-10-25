@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTrac
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -29,7 +29,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8Bridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
 
       span = TRACER.startSpan(request);
       scope = TRACER.startScope(span, request.getHeaders());

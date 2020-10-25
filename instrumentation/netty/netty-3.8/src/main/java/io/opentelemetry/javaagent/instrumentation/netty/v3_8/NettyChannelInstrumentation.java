@@ -15,7 +15,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8Bridge;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
@@ -77,8 +77,8 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This Channel channel) {
-      Context context = Java8Bridge.currentContext();
-      Span span = Java8Bridge.spanFromContext(context);
+      Context context = Java8BytecodeBridge.currentContext();
+      Span span = Java8BytecodeBridge.spanFromContext(context);
       if (span.getSpanContext().isValid()) {
         ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);

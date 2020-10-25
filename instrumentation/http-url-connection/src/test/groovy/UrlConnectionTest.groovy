@@ -9,6 +9,7 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class UrlConnectionTest extends AgentTestRunner {
@@ -19,7 +20,7 @@ class UrlConnectionTest extends AgentTestRunner {
       URLConnection connection = url.openConnection()
       connection.setConnectTimeout(10000)
       connection.setReadTimeout(10000)
-      assert io.opentelemetry.trace.Span.current() != null
+      assert Span.current() != null
       connection.inputStream
     }
 
