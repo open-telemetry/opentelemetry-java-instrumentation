@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -37,7 +36,7 @@ public class Servlet3Advice {
     Context attachedContext = TRACER.getServerContext(httpServletRequest);
     if (attachedContext != null) {
       if (TRACER.needsRescoping(attachedContext)) {
-        scope = withScopedContext(attachedContext);
+        scope = attachedContext.makeCurrent();
       }
       // We are inside nested servlet/filter, don't create new span
       return;

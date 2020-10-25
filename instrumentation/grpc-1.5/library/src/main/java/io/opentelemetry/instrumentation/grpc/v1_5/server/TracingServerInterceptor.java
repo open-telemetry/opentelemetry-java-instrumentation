@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.grpc.Context;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
@@ -18,12 +17,11 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.common.Attributes;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -65,9 +63,9 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
     GrpcHelper.prepareSpan(span, methodName);
 
-    Context context = TracingContextUtils.withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
-    try (Scope ignored = ContextUtils.withScopedContext(context)) {
+    try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
           next.startCall(new TracingServerCall<>(call, span, tracer), headers), span, tracer);
     } catch (Throwable e) {

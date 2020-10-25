@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -25,7 +23,7 @@ public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
 
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.rmi");
+  public static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.rmi");
 
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
@@ -41,8 +39,8 @@ public class ContextPayload {
 
   public static ContextPayload from(Span span) {
     ContextPayload payload = new ContextPayload();
-    Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, payload, SETTER);
+    Context context = Context.current().with(span);
+    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, payload, SETTER);
     return payload;
   }
 
@@ -59,7 +57,7 @@ public class ContextPayload {
     return null;
   }
 
-  public Map<String, String> getContext() {
+  public Map<String, String> getSpanContext() {
     return context;
   }
 
@@ -70,14 +68,14 @@ public class ContextPayload {
   public static class ExtractAdapter implements TextMapPropagator.Getter<ContextPayload> {
     @Override
     public String get(ContextPayload carrier, String key) {
-      return carrier.getContext().get(key);
+      return carrier.getSpanContext().get(key);
     }
   }
 
   public static class InjectAdapter implements TextMapPropagator.Setter<ContextPayload> {
     @Override
     public void set(ContextPayload carrier, String key, String value) {
-      carrier.getContext().put(key, value);
+      carrier.getSpanContext().put(key, value);
     }
   }
 }

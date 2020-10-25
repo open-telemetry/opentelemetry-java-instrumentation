@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @RestController
 class TestController {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {

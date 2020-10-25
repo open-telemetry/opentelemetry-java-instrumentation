@@ -18,7 +18,7 @@ import io.opentelemetry.common.Labels.Builder;
 public class LabelBridging {
 
   public static Labels toAgent(application.io.opentelemetry.common.Labels applicationLabels) {
-    io.opentelemetry.common.Labels.Builder builder = io.opentelemetry.common.Labels.newBuilder();
+    io.opentelemetry.common.Labels.Builder builder = io.opentelemetry.common.Labels.builder();
     applicationLabels.forEach(new Consumer(builder));
     return builder.build();
   }
@@ -33,7 +33,7 @@ public class LabelBridging {
 
     @Override
     public void consume(String key, String value) {
-      builder.setLabel(key, value);
+      builder.put(key, value);
     }
   }
 }

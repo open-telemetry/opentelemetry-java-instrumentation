@@ -11,7 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -52,16 +52,17 @@ public class WithSpanAspectTest {
   @Mock private Tracer tracer;
   @Mock private Span span;
   @Mock private Span.Builder spanBuilder;
-  @Mock private Scope scope;
 
   private WithSpanTester withSpanTester;
 
   @BeforeEach
   void setup() {
+    // TODO(anuraaga): Replace mocking with a real tracer, this is more fragile than it needs be.
     when(tracer.spanBuilder(any())).thenReturn(spanBuilder);
     when(spanBuilder.setSpanKind(any())).thenReturn(spanBuilder);
+    when(spanBuilder.setParent(any())).thenReturn(spanBuilder);
     when(spanBuilder.startSpan()).thenReturn(span);
-    when(tracer.withSpan(span)).thenReturn(scope);
+    when(span.storeInContext(any())).thenReturn(Context.root());
 
     AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
     WithSpanAspect aspect = new WithSpanAspect(tracer);

@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -77,7 +78,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         @Advice.This Filter filter,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

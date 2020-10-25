@@ -84,7 +84,7 @@ configure X-Ray along with the default W3C propagator like this in a static bloc
 class MyRequestHandler extends TracingRequestHandler<String, String> {
 
   static {
-    OpenTelemetry.setPropagators(
+    OpenTelemetry.setGlobalPropagators(
       DefaultContextPropagators.builder()
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .addTextMapPropagator(AwsXrayPropagator.getInstance())

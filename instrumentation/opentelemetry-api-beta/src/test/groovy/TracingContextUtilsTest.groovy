@@ -4,30 +4,28 @@
  */
 
 import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
-import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
-import static application.io.opentelemetry.trace.TracingContextUtils.getSpanWithoutDefault
 
-import application.io.grpc.Context
 import application.io.opentelemetry.OpenTelemetry
+import application.io.opentelemetry.context.Context
+import application.io.opentelemetry.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getCurrentSpan should return invalid"() {
     when:
-    def span = getCurrentSpan()
+    def span = Span.current()
 
     then:
-    !span.context.valid
+    !span.spanContext.valid
   }
 
   def "getCurrentSpan should return span"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
-    def span = getCurrentSpan()
+    def span = Span.current()
     scope.close()
 
     then:
@@ -36,18 +34,18 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getSpan should return invalid"() {
     when:
-    def span = getSpan(Context.current())
+    def span = Span.fromContext(Context.current())
 
     then:
-    !span.context.valid
+    !span.spanContext.valid
   }
 
   def "getSpan should return span"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
-    def span = getSpan(Context.current())
+    def span = Span.fromContext(Context.current())
     scope.close()
 
     then:
@@ -56,7 +54,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getSpanWithoutDefault should return null"() {
     when:
-    def span = getSpanWithoutDefault(Context.current())
+    def span = Span.fromContextOrNull(Context.current())
 
     then:
     span == null
@@ -64,10 +62,10 @@ class TracingContextUtilsTest extends AgentTestRunner {
 
   def "getSpanWithoutDefault should return span"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = currentContextWith(testSpan)
-    def span = getSpanWithoutDefault(Context.current())
+    def span = Span.fromContextOrNull(Context.current())
     scope.close()
 
     then:

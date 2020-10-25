@@ -3,20 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static application.io.opentelemetry.context.ContextUtils.withScopedContext
 import static application.io.opentelemetry.trace.Span.Kind.PRODUCER
 import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static application.io.opentelemetry.trace.TracingContextUtils.getCurrentSpan
-import static application.io.opentelemetry.trace.TracingContextUtils.getSpan
-import static application.io.opentelemetry.trace.TracingContextUtils.withSpan
 
-import application.io.grpc.Context
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.common.Attributes
+import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.context.Scope
-import application.io.opentelemetry.trace.DefaultSpan
 import application.io.opentelemetry.trace.Span
-import application.io.opentelemetry.trace.StatusCanonicalCode
+import application.io.opentelemetry.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
@@ -24,13 +19,13 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span, kind, attributes, and status"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.setAttribute("string", "1")
     testSpan.setAttribute("long", 2)
     testSpan.setAttribute("double", 3.0)
     testSpan.setAttribute("boolean", true)
-    testSpan.setStatus(StatusCanonicalCode.ERROR)
+    testSpan.setStatus(StatusCode.ERROR)
     testSpan.end()
 
     then:
@@ -40,7 +35,7 @@ class TracerTest extends AgentTestRunner {
           name "test"
           kind io.opentelemetry.trace.Span.Kind.PRODUCER
           hasNoParent()
-          status io.opentelemetry.trace.StatusCanonicalCode.ERROR
+          status io.opentelemetry.trace.StatusCode.ERROR
           attributes {
             "string" "1"
             "long" 2
@@ -54,9 +49,9 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with implicit parent using Tracer.withSpan()"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
-    Scope parentScope = tracer.withSpan(parentSpan)
+    Scope parentScope = Context.current().with(parentSpan).makeCurrent()
 
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.end()
@@ -85,7 +80,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with implicit parent using TracingContextUtils.currentContextWith()"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
     Scope parentScope = currentContextWith(parentSpan)
 
@@ -114,12 +109,12 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "capture span with implicit parent using TracingContextUtils.withSpan and ContextUtils.withScopedContext()"() {
+  def "capture span with implicit parent using TracingContextUtils.withSpan and makeCurrent"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
-    def parentContext = withSpan(parentSpan, Context.current())
-    Scope parentScope = withScopedContext(parentContext)
+    def parentContext = Context.current().with(parentSpan)
+    Scope parentScope = parentContext.makeCurrent()
 
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.end()
@@ -148,9 +143,9 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with explicit parent"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def context = withSpan(parentSpan, Context.ROOT)
+    def context = Context.root().with(parentSpan)
     def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
     testSpan.end()
     parentSpan.end()
@@ -176,7 +171,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with explicit no parent"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentScope = currentContextWith(parentSpan)
     def testSpan = tracer.spanBuilder("test").setNoParent().startSpan()
@@ -207,7 +202,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture name update"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.updateName("test2")
     testSpan.end()
@@ -227,7 +222,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture exception()"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.recordException(new IllegalStateException())
     testSpan.end()
@@ -253,11 +248,11 @@ class TracerTest extends AgentTestRunner {
 
   def "capture exception with Attributes()"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.recordException(
       new IllegalStateException(),
-      Attributes.newBuilder().setAttribute("dog", "bark").build())
+      Attributes.builder().put("dog", "bark").build())
     testSpan.end()
 
     then:
@@ -282,10 +277,10 @@ class TracerTest extends AgentTestRunner {
 
   def "capture name update using TracingContextUtils.getCurrentSpan()"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
-    def testScope = tracer.withSpan(testSpan)
-    getCurrentSpan().updateName("test2")
+    def testScope = Context.current().with(testSpan).makeCurrent()
+    Span.current().updateName("test2")
     testScope.close()
     testSpan.end()
 
@@ -302,12 +297,12 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "capture name update using TracingContextUtils.getSpan(Context.current())"() {
+  def "capture name update using TracingContextUtils.Span.fromContext(Context.current())"() {
     when:
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
-    def testScope = tracer.withSpan(testSpan)
-    getSpan(Context.current()).updateName("test2")
+    def testScope = Context.current().with(testSpan).makeCurrent()
+    Span.fromContext(Context.current()).updateName("test2")
     testScope.close()
     testSpan.end()
 
@@ -324,17 +319,17 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "add DefaultSpan to context"() {
+  def "add wrapped span to context"() {
     when:
     // Lazy way to get a span context
-    def tracer = OpenTelemetry.getTracer("test")
+    def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.end()
 
-    def span = DefaultSpan.create(testSpan.getContext())
-    def context = withSpan(span, Context.current())
+    def span = Span.wrap(testSpan.getSpanContext())
+    def context = Context.current().with(span)
 
     then:
-    getSpan(context).getContext().getSpanIdAsHexString() == span.getContext().getSpanIdAsHexString()
+    Span.fromContext(context).getSpanContext().getSpanIdAsHexString() == span.getSpanContext().getSpanIdAsHexString()
   }
 }

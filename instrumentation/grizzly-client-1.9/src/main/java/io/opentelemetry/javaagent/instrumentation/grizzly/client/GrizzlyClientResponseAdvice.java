@@ -10,8 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.grizzly.client.GrizzlyC
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -36,9 +35,7 @@ public class GrizzlyClientResponseAdvice {
     if (spanWithParent.hasRight()) {
       TRACER.end(spanWithParent.getRight(), response);
     }
-    return spanWithParent.hasLeft()
-        ? ContextUtils.withScopedContext(spanWithParent.getLeft())
-        : null;
+    return spanWithParent.hasLeft() ? spanWithParent.getLeft().makeCurrent() : null;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

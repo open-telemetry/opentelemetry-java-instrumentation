@@ -5,17 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -72,16 +68,16 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public Scope startScope(Span span, CARRIER carrier) {
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
-    OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-    return withScopedContext(context);
+    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
+    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return context.makeCurrent();
   }
 
   public void end(Span span, RESPONSE response) {
@@ -109,11 +105,11 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
    */
   private Span startSpan(REQUEST request, String name, long startTimeNanos) {
     Context context = Context.current();
-    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context);

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;

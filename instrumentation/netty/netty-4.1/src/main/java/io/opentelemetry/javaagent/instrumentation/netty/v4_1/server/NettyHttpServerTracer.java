@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
-import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;

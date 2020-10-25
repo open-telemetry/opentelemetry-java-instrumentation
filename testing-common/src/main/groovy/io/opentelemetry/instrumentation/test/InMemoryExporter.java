@@ -14,6 +14,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.opentelemetry.common.AttributeConsumer;
 import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -54,7 +55,7 @@ public class InMemoryExporter implements SpanProcessor {
   private volatile boolean forceFlushCalled;
 
   @Override
-  public void onStart(ReadWriteSpan readWriteSpan) {
+  public void onStart(Context context, ReadWriteSpan readWriteSpan) {
     SpanData sd = readWriteSpan.toSpanData();
     log.debug(
         ">>>{} SPAN START: {} id={} traceid={} parent={}, library={}",

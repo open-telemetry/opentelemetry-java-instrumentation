@@ -43,7 +43,7 @@ of the span which denotes accepting HTTP request.
 
 ## The solution
 Java auto instrumentation uses an obvious solution to the requirement above: we attach current execution
-context (represented in the code by `io.grpc.Context`) with each `Runnable`, `Callable` and `ForkJoinTask`.
+context (represented in the code by `Context`) with each `Runnable`, `Callable` and `ForkJoinTask`.
 "Current" means the context active on the thread which calls `Executor.execute` (and its analogues
 such as `submit`, `invokeAll` etc) at the moment of that call. Whenever some other thread starts
 actual execution of that `Runnable` (or `Callable` or `ForkJoinTask`), that context get restored
@@ -51,7 +51,7 @@ on that thread for the duration of the execution. This can be illustrated by the
 
 ```
     var job = () -> {
-        try(Scope scope = withScopedContext(this.context)) {
+        try(Scope scope = this.context.makeCurrent()) {
             return userRepository.queryShippingAddress(requet)
         }}
     job.context = Context.current()

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import io.grpc.Context;
 import io.netty.util.AttributeKey;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;

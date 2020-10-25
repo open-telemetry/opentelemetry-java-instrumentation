@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
 @SpringBootApplication
 class SpringWebFluxTestApplication {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {

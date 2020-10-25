@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.sparkjava;
 
-import static io.opentelemetry.javaagent.instrumentation.sparkjava.RoutesInstrumentation.TracerHolder.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -55,7 +55,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
 
   public static class TracerHolder {
     public static final Tracer TRACER =
-        OpenTelemetry.getTracer("io.opentelemetry.auto.sparkjava-2.3");
+        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.sparkjava-2.3");
   }
 
   public static class RoutesAdvice {
@@ -63,7 +63,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(@Advice.Return RouteMatch routeMatch) {
 
-      Span span = TRACER.getCurrentSpan();
+      Span span = Java8BytecodeBridge.currentSpan();
       if (span != null && routeMatch != null) {
         span.updateName(routeMatch.getMatchUri());
       }

@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import application.io.grpc.Context;
+import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
 import application.io.opentelemetry.metrics.MeterProvider;
 import com.google.auto.service.AutoService;
@@ -39,13 +39,13 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod().and(isPublic()).and(named("getTracerProvider")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalTracerProvider")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerProviderAdvice");
     transformers.put(
-        isMethod().and(isPublic()).and(named("getMeterProvider")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalMeterProvider")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetMeterProviderAdvice");
     transformers.put(
-        isMethod().and(isPublic()).and(named("getPropagators")).and(takesArguments(0)),
+        isMethod().and(isPublic()).and(named("getGlobalPropagators")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetPropagatorsAdvice");
     return transformers;
   }
@@ -56,8 +56,8 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     public static void methodExit(
         @Advice.Return(readOnly = false)
             application.io.opentelemetry.trace.TracerProvider applicationTracerProvider) {
-      ContextStore<Context, io.grpc.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.grpc.Context.class);
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
+          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
       applicationTracerProvider =
           new ApplicationTracerProvider(contextStore, applicationTracerProvider);
     }
@@ -77,8 +77,8 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false) ContextPropagators applicationContextPropagators) {
-      ContextStore<Context, io.grpc.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.grpc.Context.class);
+      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
+          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
       applicationContextPropagators = new ApplicationContextPropagators(contextStore);
     }
   }

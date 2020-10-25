@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.trace.Span;

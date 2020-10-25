@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
@@ -58,7 +57,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     Response response = builder.build();
     TRACER.end(span, response);
 
-    try (Scope ignored = withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       return delegate.onCompleted();
     }
   }
@@ -67,7 +66,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public void onThrowable(Throwable throwable) {
     TRACER.endExceptionally(span, throwable);
 
-    try (Scope ignored = withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

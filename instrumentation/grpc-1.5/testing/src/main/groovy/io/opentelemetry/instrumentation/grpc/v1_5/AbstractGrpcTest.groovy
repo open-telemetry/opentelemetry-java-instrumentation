@@ -33,8 +33,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.StatusCanonicalCode
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.trace.StatusCode
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -168,7 +167,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
@@ -180,7 +179,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           event(0) {
             eventName "message"
             attributes {
@@ -265,7 +264,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(0)
           errored true
-          status(StatusCanonicalCode.ERROR)
+          status(StatusCode.ERROR)
           event(0) {
             eventName "message"
             attributes {
@@ -312,7 +311,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           responseObserver.onError(new AssertionError((Object) "context not preserved"))
           return
         }
-        if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+        if (!io.opentelemetry.trace.Span.fromContext(io.opentelemetry.context.Context.current()).getSpanContext().isValid()) {
           responseObserver.onError(new AssertionError((Object) "span not attached"))
           return
         }
@@ -328,7 +327,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
       .intercept(new ServerInterceptor() {
         @Override
         <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
-          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+          if (!io.opentelemetry.trace.Span.fromContext(io.opentelemetry.context.Context.current()).getSpanContext().isValid()) {
             throw new AssertionError((Object) "span not attached in server interceptor")
           }
           def ctx = Context.current().withValue(key, "meow")
@@ -341,7 +340,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
       .intercept(new ClientInterceptor() {
         @Override
         <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
-          if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+          if (!io.opentelemetry.trace.Span.fromContext(io.opentelemetry.context.Context.current()).getSpanContext().isValid()) {
             throw new AssertionError((Object) "span not attached in client interceptor")
           }
           def ctx = Context.current().withValue(key, "meow")
@@ -377,7 +376,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               error.set(new AssertionError((Object) "context not preserved"))
               return
             }
-            if (!TracingContextUtils.getSpan(Context.current()).getContext().isValid()) {
+            if (!io.opentelemetry.trace.Span.fromContext(io.opentelemetry.context.Context.current()).getSpanContext().isValid()) {
               error.set(new AssertionError((Object) "span not attached"))
               return
             }

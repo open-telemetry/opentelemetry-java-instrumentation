@@ -181,7 +181,7 @@ public class TracerInstaller {
   private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     BatchSpanProcessor spanProcessor =
-        BatchSpanProcessor.newBuilder(spanExporter).readProperties(config).build();
+        BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }

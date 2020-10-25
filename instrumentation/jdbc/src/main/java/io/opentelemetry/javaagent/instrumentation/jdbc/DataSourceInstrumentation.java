@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -59,7 +60,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       // TODO this is very strange condition
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }

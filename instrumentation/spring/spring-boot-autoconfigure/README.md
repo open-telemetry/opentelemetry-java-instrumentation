@@ -195,7 +195,7 @@ public class TracedClass {
 
     @WithSpan(value="span name")
     public void tracedMethodWithName() {
-        Span currentSpan = tracer.getCurrentSpan();
+        Span currentSpan = Span.current();
         currentSpan.addEvent("ADD EVENT TO tracedMethodWithName SPAN");
         currentSpan.setAttribute("isTestAttribute", true);
     }

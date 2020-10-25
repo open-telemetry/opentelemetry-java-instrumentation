@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
@@ -34,7 +33,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   @Override
   public void call(Subscriber<? super T> subscriber) {
     // TODO pass Context into Tracer.startSpan() and then don't need this outer scoping
-    try (Scope ignored = ContextUtils.withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       Span span = tracer.startSpan(operationName, spanKind);
       decorateSpan(span);
       try (Scope ignored1 = tracer.startScope(span)) {

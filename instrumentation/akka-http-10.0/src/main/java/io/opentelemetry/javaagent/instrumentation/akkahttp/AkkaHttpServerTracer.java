@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp;
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 

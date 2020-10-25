@@ -44,9 +44,11 @@ class SpringBootSmokeTest extends SmokeTest {
       .collect(toSet())
 
     then: "correct traceIds are logged via MDC instrumentation"
-    getLoggedTraceIds(output) == getSpanStream(traces)
+    def loggedTraceIds = getLoggedTraceIds(output)
+    def spanTraceIds = getSpanStream(traces)
       .map({ TraceId.bytesToHex(it.getTraceId().toByteArray()) })
       .collect(toSet())
+    loggedTraceIds == spanTraceIds
 
     cleanup:
     stopTarget()

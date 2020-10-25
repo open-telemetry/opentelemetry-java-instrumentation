@@ -35,7 +35,7 @@ public class ZipkinSpanExporterAutoConfiguration {
   public ZipkinSpanExporter otelZipkinSpanExporter(
       ZipkinSpanExporterProperties zipkinSpanExporterProperties) {
 
-    return ZipkinSpanExporter.newBuilder()
+    return ZipkinSpanExporter.builder()
         .setServiceName(zipkinSpanExporterProperties.getServiceName())
         .setEndpoint(zipkinSpanExporterProperties.getEndpoint())
         .build();

@@ -7,19 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceArgSplitter.splitArgs;
 
-import io.grpc.Context;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -33,7 +33,7 @@ public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
   public static final io.opentelemetry.trace.Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.lettuce-5.1");
+      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -94,7 +94,7 @@ public enum OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    public Context getContext() {
+    public Context getSpanContext() {
       return context;
     }
   }
@@ -126,7 +126,7 @@ public enum OpenTelemetryTracing implements Tracing {
         return nextSpan();
       }
 
-      Context context = ((OpenTelemetryTraceContext) traceContext).getContext();
+      Context context = ((OpenTelemetryTraceContext) traceContext).getSpanContext();
 
       return new OpenTelemetrySpan(context);
     }
@@ -198,7 +198,7 @@ public enum OpenTelemetryTracing implements Tracing {
       }
 
       if (error != null) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
         span.recordException(error);
         error = null;
       }

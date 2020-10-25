@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AkkaAsyncChild extends ForkJoinTask implements Runnable, Callable {
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;

@@ -59,7 +59,9 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
                   TRACER.onCancel(span);
                   TRACER.end(span);
                 })
-            .subscribe(new TraceWebClientSubscriber(subscriber, span, io.grpc.Context.current()));
+            .subscribe(
+                new TraceWebClientSubscriber(
+                    subscriber, span, io.opentelemetry.context.Context.current()));
       }
     }
   }

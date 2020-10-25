@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -27,7 +25,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   protected final Tracer tracer;
 
   public DatabaseClientTracer() {
-    tracer = OpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
   public Span startSpan(CONNECTION connection, QUERY query) {
@@ -57,19 +55,19 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context clientSpanContext = Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-    Context newContext = withSpan(span, clientSpanContext);
-    return withScopedContext(newContext);
+    Context clientSpanContext = Context.current().with(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context newContext = clientSpanContext.with(span);
+    return newContext.makeCurrent();
   }
 
   @Override
   public Span getCurrentSpan() {
-    return tracer.getCurrentSpan();
+    return Span.current();
   }
 
   public Span getClientSpan() {
     Context context = Context.current();
-    return CONTEXT_CLIENT_SPAN_KEY.get(context);
+    return context.get(CONTEXT_CLIENT_SPAN_KEY);
   }
 
   @Override
@@ -94,7 +92,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   @Override
   protected void onError(Span span, Throwable throwable) {
     if (throwable != null) {
-      span.setStatus(StatusCanonicalCode.ERROR);
+      span.setStatus(StatusCode.ERROR);
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -13,7 +14,7 @@ import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   @Override
-  public void onStart(ReadWriteSpan span) {
+  public void onStart(Context context, ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
     span.setAttribute(SemanticAttributes.THREAD_ID, currentThread.getId());
     span.setAttribute(SemanticAttributes.THREAD_NAME, currentThread.getName());

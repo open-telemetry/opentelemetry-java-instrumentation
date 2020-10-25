@@ -7,13 +7,16 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.context.Context
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.trace.Tracer
 
 import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
-  val TRACER: Tracer = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  val TRACER: Tracer =
+    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   val system: ActorSystem = ActorSystem("helloAkka")
 
@@ -41,7 +44,8 @@ class AkkaActors {
 
   def basicTell(): Unit = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Akka")
       howdyGreeter ! Greet
@@ -53,7 +57,8 @@ class AkkaActors {
 
   def basicAsk(): Unit = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Akka")
       howdyGreeter ? Greet
@@ -65,7 +70,8 @@ class AkkaActors {
 
   def basicForward(): Unit = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       helloGreeter ! WhoToGreet("Akka")
       helloGreeter ? Greet
