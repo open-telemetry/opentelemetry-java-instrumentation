@@ -125,9 +125,32 @@ jobs:
           chmod +x cimate
           ./cimate -v "**/TEST-*.xml"
 
+  snapshot:
+    runs-on: ubuntu-latest
+    needs: [ build, test, testLatestDep ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+
+      - name: Publish snapshot
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        run: ./gradlew snapshot --stacktrace
+
+
   issue:
     name: Open issue on failure
-    needs: [ test, testLatestDep ]
+    needs: [ build, test, testLatestDep, snapshot ]
     runs-on: ubuntu-latest
     if: always()
     steps:
