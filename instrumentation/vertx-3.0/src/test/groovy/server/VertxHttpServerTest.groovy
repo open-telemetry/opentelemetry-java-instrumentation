@@ -71,7 +71,7 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> {
   }
 
   @Override
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.getPath()
   }
 

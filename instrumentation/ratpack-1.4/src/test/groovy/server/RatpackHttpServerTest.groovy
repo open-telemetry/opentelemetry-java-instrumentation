@@ -120,7 +120,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
   }
 
   @Override
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
   }
 }
