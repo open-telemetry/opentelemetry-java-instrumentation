@@ -77,24 +77,26 @@ public final class CouchbaseQueryNormalizer {
     if (query instanceof String) {
       return normalizeString((String) query);
     }
-    // Couchbase 2.0 uses Query, Couchbase 2.5+ uses Statement
+    // Query is present in Couchbase [2.0.0, 2.2.0)
+    // Statement is present starting from Couchbase 2.1.0
     if (QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass())
         || STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass())) {
       return normalizeString(query.toString());
     }
+    // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
     if (queryClassName.equals("com.couchbase.client.java.view.ViewQuery")
         || queryClassName.equals("com.couchbase.client.java.view.SpatialViewQuery")) {
       return query.toString();
     }
-    // available from Couchbase 2.5+
+    // N1qlQuery is present starting from Couchbase 2.2.0
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(N1QL_GET_STATEMENT, query);
       if (statement != null) {
         return normalizeString(statement);
       }
     }
-    // available from Couchbase 2.5+
+    // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(ANALYTICS_GET_STATEMENT, query);
       if (statement != null) {
