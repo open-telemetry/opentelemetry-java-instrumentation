@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -19,8 +22,6 @@ import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class RedissonClientTest extends AgentTestRunner {
 

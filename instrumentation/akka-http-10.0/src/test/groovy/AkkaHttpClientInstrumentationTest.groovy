@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import akka.actor.ActorSystem
@@ -11,8 +12,8 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 import spock.lang.Timeout
 

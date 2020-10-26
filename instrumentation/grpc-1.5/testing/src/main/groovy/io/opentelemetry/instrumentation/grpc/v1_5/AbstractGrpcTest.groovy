@@ -206,7 +206,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    paramName                      | grpcStatus
+    paramName                     | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))

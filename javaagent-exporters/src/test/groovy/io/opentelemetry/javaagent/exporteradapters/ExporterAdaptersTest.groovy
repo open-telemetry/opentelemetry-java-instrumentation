@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.javaagent.tooling.ExporterClassLoader
+
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
+import io.opentelemetry.javaagent.tooling.ExporterClassLoader
 import spock.lang.Shared
 import spock.lang.Specification
 

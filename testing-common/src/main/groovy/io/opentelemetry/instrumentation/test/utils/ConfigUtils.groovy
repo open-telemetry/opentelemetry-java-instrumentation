@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
 import java.util.function.Consumer

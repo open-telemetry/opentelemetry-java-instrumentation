@@ -3,19 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.TimeUnit
+import java.util.function.BiConsumer
 import org.redisson.Redisson
-import org.redisson.api.*
+import org.redisson.api.RBucket
+import org.redisson.api.RFuture
+import org.redisson.api.RList
+import org.redisson.api.RSet
+import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
-import java.util.function.BiConsumer
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class RedissonAsyncClientTest extends AgentTestRunner {
 

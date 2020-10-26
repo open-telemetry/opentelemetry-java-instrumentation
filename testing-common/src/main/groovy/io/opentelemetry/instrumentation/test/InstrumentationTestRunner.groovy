@@ -10,8 +10,8 @@ import com.google.common.base.Predicates
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.propagation.HttpTraceContext

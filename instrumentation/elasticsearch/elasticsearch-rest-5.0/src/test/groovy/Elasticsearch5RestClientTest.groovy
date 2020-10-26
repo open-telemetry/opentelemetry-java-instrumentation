@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig

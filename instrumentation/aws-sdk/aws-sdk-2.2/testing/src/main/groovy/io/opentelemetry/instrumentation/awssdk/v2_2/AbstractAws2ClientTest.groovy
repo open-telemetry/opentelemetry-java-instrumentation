@@ -153,20 +153,20 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
   static dynamoDbRequestDataTable(client) {
     [
-      ["DynamoDb" , "CreateTable" , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }],
-      ["DynamoDb" , "DeleteItem"  , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) }],
-      ["DynamoDb" , "DeleteTable" , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()) }],
-      ["DynamoDb" , "GetItem"     , "POST" , "/"   , "UNKNOWN"   , client ,
-        { c -> c.getItem(GetItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).attributesToGet("propertyOne", "propertyTwo").build()) }],
-      ["DynamoDb" , "PutItem"     , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.putItem(PutItemRequest.builder().tableName("sometable").item(of("key", val("value"), "attributeOne", val("one"), "attributeTwo", val("two"))).conditionExpression("attributeOne <> :someVal").build()) }],
-      ["DynamoDb" , "Query"       , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.query(QueryRequest.builder().tableName("sometable").select("ALL_ATTRIBUTES").keyConditionExpression("attribute = :aValue").filterExpression("anotherAttribute = :someVal").limit(10).build()) }],
-      ["DynamoDb" , "UpdateItem"  , "POST" , "/"   , "UNKNOWN"   , client,
-        { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) }]
+      ["DynamoDb", "CreateTable", "POST", "/", "UNKNOWN", client,
+       { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }],
+      ["DynamoDb", "DeleteItem", "POST", "/", "UNKNOWN", client,
+       { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) }],
+      ["DynamoDb", "DeleteTable", "POST", "/", "UNKNOWN", client,
+       { c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()) }],
+      ["DynamoDb", "GetItem", "POST", "/", "UNKNOWN", client,
+       { c -> c.getItem(GetItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).attributesToGet("propertyOne", "propertyTwo").build()) }],
+      ["DynamoDb", "PutItem", "POST", "/", "UNKNOWN", client,
+       { c -> c.putItem(PutItemRequest.builder().tableName("sometable").item(of("key", val("value"), "attributeOne", val("one"), "attributeTwo", val("two"))).conditionExpression("attributeOne <> :someVal").build()) }],
+      ["DynamoDb", "Query", "POST", "/", "UNKNOWN", client,
+       { c -> c.query(QueryRequest.builder().tableName("sometable").select("ALL_ATTRIBUTES").keyConditionExpression("attribute = :aValue").filterExpression("anotherAttribute = :someVal").limit(10).build()) }],
+      ["DynamoDb", "UpdateItem", "POST", "/", "UNKNOWN", client,
+       { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) }]
     ]
   }
 
@@ -229,17 +229,17 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service    | operation           | method | path                  | requestId                              | builder                  | call                                                                                             | body
-    "S3"       | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3Client.builder()       | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
-    "S3"       | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3Client.builder()       | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
-    "Kinesis"  | "DeleteStream"      | "POST" | ""                   | "UNKNOWN"                              | KinesisClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
-    "Sqs"      | "CreateQueue"       | "POST" | ""                   | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()      | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
+    service   | operation           | method | path                  | requestId                              | builder                 | call                                                                                             | body
+    "S3"      | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
+    "S3"      | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
+    "Kinesis" | "DeleteStream"      | "POST" | ""                    | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
+    "Sqs"     | "CreateQueue"       | "POST" | ""                    | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"      | "SendMessage"       | "POST" | ""                   | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()      | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
+    "Sqs"     | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsClient.builder()     | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) } | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -249,14 +249,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
         """
-    "Ec2"      | "AllocateAddress"   | "POST" | ""                   | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()      | { c -> c.allocateAddress() }                                                                     | """
+    "Ec2"     | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2Client.builder()     | { c -> c.allocateAddress() }                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
         """
-    "Rds"      | "DeleteOptionGroup" | "POST" | ""                   | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsClient.builder()      | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                         | """
+    "Rds"     | "DeleteOptionGroup" | "POST" | ""                    | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsClient.builder()     | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                         | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
@@ -317,18 +317,18 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service    | operation           | method | path                  | requestId                              | builder                       | call                                                                                                                             | body
-    "S3"       | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3AsyncClient.builder()       | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
-    "S3"       | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3AsyncClient.builder()       | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
+    service | operation           | method | path                  | requestId                              | builder                  | call                                                                                                                             | body
+    "S3"    | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
+    "S3"    | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
     // Kinesis seems to expect an http2 response which is incompatible with our test server.
     // "Kinesis"  | "DeleteStream"      | "POST" | "/"                   | "UNKNOWN"                              | KinesisAsyncClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }                                          | ""
-    "Sqs"      | "CreateQueue"       | "POST" | ""                   | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder()      | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
+    "Sqs"   | "CreateQueue"       | "POST" | ""                    | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"      | "SendMessage"       | "POST" | ""                   | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder()      | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
+    "Sqs"   | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -338,14 +338,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
         """
-    "Ec2"      | "AllocateAddress"   | "POST" | ""                   | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder()      | { c -> c.allocateAddress() }                                                                                                     | """
+    "Ec2"   | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
         """
-    "Rds"      | "DeleteOptionGroup" | "POST" | ""                   | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder()      | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
+    "Rds"   | "DeleteOptionGroup" | "POST" | ""                    | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder() | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>

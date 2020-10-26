@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import de.flapdoodle.embed.mongo.MongodExecutable
 import de.flapdoodle.embed.mongo.MongodProcess
 import de.flapdoodle.embed.mongo.MongodStarter
@@ -17,8 +20,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 /**
  * Testing needs to be in a centralized project.
