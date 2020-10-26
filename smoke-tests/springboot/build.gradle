@@ -11,11 +11,18 @@ version = '0.0.1-SNAPSHOT'
 repositories {
   mavenCentral()
   jcenter()
+  // this is only needed for the working against unreleased otel-java snapshots
+  maven {
+    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+    content {
+      includeGroup "io.opentelemetry"
+    }
+  }
 }
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0'
+  implementation 'io.opentelemetry:opentelemetry-extension-auto-annotations:0.10.0-SNAPSHOT'
 }
 
 compileJava {
