@@ -23,6 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.trace.Span.Kind;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -30,7 +31,8 @@ import org.apache.camel.Exchange;
 class InternalSpanDecorator extends BaseSpanDecorator {
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     // Internal communications use descriptive names, so suitable
     // as an operation name, but need to strip the scheme and any options
     return stripSchemeAndOptions(endpoint);

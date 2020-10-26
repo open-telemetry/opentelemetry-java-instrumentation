@@ -24,12 +24,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.trace.Span;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.slf4j.Logger;
@@ -62,43 +58,11 @@ class RestSpanDecorator extends HttpSpanDecorator {
     return path;
   }
 
-  protected static List<String> getParameters(String path) {
-    List<String> parameters = null;
-
-    int startIndex = path.indexOf('{');
-    while (startIndex != -1) {
-      int endIndex = path.indexOf('}', startIndex);
-      if (endIndex != -1) {
-        if (parameters == null) {
-          parameters = new ArrayList<>();
-        }
-        parameters.add(path.substring(startIndex + 1, endIndex));
-        startIndex = path.indexOf('{', endIndex);
-      } else {
-        // Break out of loop as no valid end token
-        startIndex = -1;
-      }
-    }
-
-    return parameters == null ? Collections.emptyList() : parameters;
-  }
-
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
-    return getPath(endpoint.getEndpointUri());
-  }
-
-  @Override
-  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    super.pre(span, exchange, endpoint, camelDirection);
-
-    getParameters(getPath(endpoint.getEndpointUri()))
-        .forEach(
-            param -> {
-              Object value = exchange.getIn().getHeader(param);
-              if (value != null) {
-                span.setAttribute(param, (String) value);
-              }
-            });
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    return (CamelDirection.INBOUND.equals(camelDirection)
+        ? getPath(endpoint.getEndpointUri())
+        : getHttpMethod(exchange, endpoint));
   }
 }

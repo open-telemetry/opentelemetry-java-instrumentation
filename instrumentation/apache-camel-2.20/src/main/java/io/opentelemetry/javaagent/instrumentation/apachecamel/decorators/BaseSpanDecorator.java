@@ -27,6 +27,7 @@ import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.StatusCanonicalCode;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,8 @@ import org.apache.camel.util.URISupport;
 
 /** An abstract base implementation of the {@link SpanDecorator} interface. */
 class BaseSpanDecorator implements SpanDecorator {
+
+  static final String DEFAULT_OPERATION_NAME = "CamelOperation";
 
   /**
    * This method removes the scheme, any leading slash characters and options from the supplied URI.
@@ -81,13 +84,10 @@ class BaseSpanDecorator implements SpanDecorator {
   }
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     String[] splitURI = StringHelper.splitOnCharacter(endpoint.getEndpointUri(), ":", 2);
-    if (splitURI.length > 0) {
-      return splitURI[0];
-    } else {
-      return null;
-    }
+    return (splitURI.length > 0 ? splitURI[0] : DEFAULT_OPERATION_NAME);
   }
 
   @Override
@@ -98,7 +98,7 @@ class BaseSpanDecorator implements SpanDecorator {
   @Override
   public void post(Span span, Exchange exchange, Endpoint endpoint) {
     if (exchange.isFailed()) {
-      span.setAttribute("error", true);
+      span.setStatus(StatusCanonicalCode.ERROR);
       if (exchange.getException() != null) {
         span.recordException(exchange.getException());
       }

@@ -14,13 +14,13 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class SimpleDirectCamelTest extends AgentTestRunner {
+class DirectCamelTest extends AgentTestRunner {
 
   @Shared
   ConfigurableApplicationContext server
 
   def setupSpec() {
-    def app = new SpringApplication(SimpleDirectConfig)
+    def app = new SpringApplication(DirectConfig)
     server = app.run()
   }
 

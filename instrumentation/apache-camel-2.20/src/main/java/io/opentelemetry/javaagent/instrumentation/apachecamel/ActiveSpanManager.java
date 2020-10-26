@@ -74,6 +74,7 @@ class ActiveSpanManager {
   public static void deactivate(Exchange exchange) {
 
     SpanWithScope spanWithScope = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
+
     if (spanWithScope != null) {
       spanWithScope.deactivate();
       exchange.setProperty(ACTIVE_SPAN_PROPERTY, spanWithScope.getParent());
@@ -84,9 +85,9 @@ class ActiveSpanManager {
   }
 
   public static class SpanWithScope {
-    @Nullable private SpanWithScope parent;
-    private Span span;
-    private Scope scope;
+    @Nullable private final SpanWithScope parent;
+    private final Span span;
+    private final Scope scope;
 
     public SpanWithScope(SpanWithScope parent, Span span, Scope scope) {
       this.parent = parent;
@@ -108,8 +109,8 @@ class ActiveSpanManager {
     }
 
     public void deactivate() {
-      scope.close();
       span.end();
+      scope.close();
     }
 
     @Override

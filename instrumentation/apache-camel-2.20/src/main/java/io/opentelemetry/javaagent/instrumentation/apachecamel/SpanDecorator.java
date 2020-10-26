@@ -46,7 +46,7 @@ public interface SpanDecorator {
    * @param endpoint The endpoint
    * @return The operation name
    */
-  String getOperationName(Exchange exchange, Endpoint endpoint);
+  String getOperationName(Exchange exchange, Endpoint endpoint, CamelDirection camelDirection);
 
   /**
    * This method adds appropriate details (tags/logs) to the supplied span based on the pre

@@ -37,8 +37,8 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private Span spanOnExchangeBegin(Route route, Exchange exchange, SpanDecorator sd) {
     Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
-    Span.Builder builder =
-        CamelTracer.TRACER.spanBuilder(sd.getOperationName(exchange, route.getEndpoint()));
+    String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
+    Span.Builder builder = CamelTracer.TRACER.spanBuilder(name);
     if (!activeSpan.getContext().isValid()) {
       // root operation, set kind, otherwise - INTERNAL
       builder.setSpanKind(sd.getReceiverSpanKind());

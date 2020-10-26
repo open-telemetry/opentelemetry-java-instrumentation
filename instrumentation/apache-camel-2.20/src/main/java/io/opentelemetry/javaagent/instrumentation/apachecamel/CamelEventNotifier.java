@@ -51,16 +51,15 @@ final class CamelEventNotifier extends EventNotifierSupport {
   }
 
   /** Camel about to send (outbound). */
-  private void onExchangeSending(ExchangeSendingEvent event) {
-    ExchangeSendingEvent ese = event;
+  private void onExchangeSending(ExchangeSendingEvent ese) {
     SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
     }
 
-    Span span =
-        CamelTracer.TRACER.startSpan(
-            sd.getOperationName(ese.getExchange(), ese.getEndpoint()), sd.getInitiatorSpanKind());
+    String name =
+        sd.getOperationName(ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
+    Span span = CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind());
     sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
     CamelPropagationUtil.injectParent(Context.current(), ese.getExchange().getIn().getHeaders());
     ActiveSpanManager.activate(ese.getExchange(), span);

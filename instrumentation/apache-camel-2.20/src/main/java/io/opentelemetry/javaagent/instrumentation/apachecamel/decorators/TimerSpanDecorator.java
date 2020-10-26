@@ -23,18 +23,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
 class TimerSpanDecorator extends BaseSpanDecorator {
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     Object name = exchange.getProperty(Exchange.TIMER_NAME);
     if (name instanceof String) {
       return (String) name;
     }
 
-    return super.getOperationName(exchange, endpoint);
+    return super.getOperationName(exchange, endpoint, camelDirection);
   }
 }

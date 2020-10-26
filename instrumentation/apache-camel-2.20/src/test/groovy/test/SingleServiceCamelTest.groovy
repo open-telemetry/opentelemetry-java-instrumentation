@@ -71,7 +71,7 @@ class SingleServiceCamelTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           kind SERVER
-          name "POST"
+          name "/camelService"
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "${address.resolve("/camelService")}"

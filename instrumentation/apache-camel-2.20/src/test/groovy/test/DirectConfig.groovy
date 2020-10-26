@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
-class SimpleDirectConfig {
+class DirectConfig {
 
   @Bean
   RouteBuilder receiverRoute() {

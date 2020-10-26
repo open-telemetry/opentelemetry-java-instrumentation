@@ -41,7 +41,8 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
 
     switch (component) {
       case "mqtt":

@@ -42,7 +42,8 @@ class DbSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
 
     switch (component) {
       case "mongodb":
@@ -54,7 +55,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
           }
         }
     }
-    return super.getOperationName(exchange, endpoint);
+    return super.getOperationName(exchange, endpoint, camelDirection);
   }
 
   private String getStatement(Exchange exchange, Endpoint endpoint) {

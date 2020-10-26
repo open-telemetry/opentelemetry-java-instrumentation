@@ -32,13 +32,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
 
-  public static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
+  protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
     // 1. Use method provided in header.
     Object method = exchange.getIn().getHeader(Exchange.HTTP_METHOD);
     if (method instanceof String) {
@@ -65,9 +66,14 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public String getOperationName(Exchange exchange, Endpoint endpoint) {
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     // Based on HTTP component documentation:
-    return getHttpMethod(exchange, endpoint);
+    String spanName = null;
+    if (shouldSetPathAsName(camelDirection)) {
+      spanName = getPath(getHttpURL(exchange, endpoint));
+    }
+    return (spanName == null ? getHttpMethod(exchange, endpoint) : spanName);
   }
 
   @Override
@@ -87,17 +93,28 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private boolean shouldUpdateServerSpanName(Span serverSpan, CamelDirection camelDirection) {
+  private boolean shouldSetPathAsName(CamelDirection camelDirection) {
+    return CamelDirection.INBOUND.equals(camelDirection);
+  }
 
-    return (serverSpan != null && CamelDirection.INBOUND.equals(camelDirection));
+  @Nullable
+  private String getPath(String httpUrl) {
+    try {
+      URL url = new URL(httpUrl);
+      return url.getPath();
+    } catch (MalformedURLException e) {
+      return null;
+    }
+  }
+
+  private boolean shouldUpdateServerSpanName(Span serverSpan, CamelDirection camelDirection) {
+    return (serverSpan != null && shouldSetPathAsName(camelDirection));
   }
 
   private void updateServerSpanName(Span serverSpan, String httpUrl) {
-    try {
-      URL url = new URL(httpUrl);
-      serverSpan.updateName(url.getPath());
-    } catch (MalformedURLException e) {
-      // ignored
+    String path = getPath(httpUrl);
+    if (path != null) {
+      serverSpan.updateName(path);
     }
   }
 

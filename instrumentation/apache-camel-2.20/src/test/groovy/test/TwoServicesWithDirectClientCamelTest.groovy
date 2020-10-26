@@ -108,7 +108,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
           }
         }
         it.span(3) {
-          name "POST"
+          name "/serviceOne"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
@@ -157,7 +157,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
           }
         }
         it.span(7) {
-          name "POST"
+          name "/serviceTwo"
           kind INTERNAL
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
