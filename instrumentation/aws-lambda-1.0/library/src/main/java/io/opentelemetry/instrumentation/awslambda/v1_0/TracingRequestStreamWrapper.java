@@ -27,7 +27,8 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 
     if (!(WRAPPED_LAMBDA.getTargetObject() instanceof RequestStreamHandler)) {
       throw new RuntimeException(
-          WRAPPED_LAMBDA.getTargetClass().getName() + " is not an instance of RequestStreamHandler");
+          WRAPPED_LAMBDA.getTargetClass().getName()
+              + " is not an instance of RequestStreamHandler");
     }
     ((RequestStreamHandler) WRAPPED_LAMBDA.getTargetObject()).handleRequest(input, output, context);
   }

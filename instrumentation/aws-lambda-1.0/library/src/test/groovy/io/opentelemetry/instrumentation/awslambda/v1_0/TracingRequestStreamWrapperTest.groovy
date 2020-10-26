@@ -33,6 +33,7 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
       if (line == "hello") {
         writer.write("world")
         writer.flush()
+        writer.close()
       } else {
         throw new IllegalArgumentException("bad argument")
       }

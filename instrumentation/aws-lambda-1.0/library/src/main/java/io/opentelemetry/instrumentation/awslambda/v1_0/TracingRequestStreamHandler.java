@@ -53,22 +53,53 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   public final void handleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
     Span span = tracer.startSpan(context, Kind.SERVER);
-    Throwable error = null;
     try (Scope ignored = tracer.startScope(span)) {
-      doHandleRequest(input, output, context);
+      doHandleRequest(input, new OutputStreamWrapper(output, span), context);
     } catch (Throwable t) {
-      error = t;
-      throw t;
-    } finally {
-      if (error != null) {
-        tracer.endExceptionally(span, error);
-      } else {
-        tracer.end(span);
-      }
+      tracer.endExceptionally(span, t);
       OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      throw t;
     }
   }
 
   protected abstract void doHandleRequest(InputStream input, OutputStream output, Context context)
       throws IOException;
+
+  private class OutputStreamWrapper extends OutputStream {
+
+    private final OutputStream delegate;
+    private final Span span;
+
+    OutputStreamWrapper(OutputStream delegate, Span span) {
+      this.delegate = delegate;
+      this.span = span;
+    }
+
+    @Override
+    public void write(byte[] b) throws IOException {
+      delegate.write(b);
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      delegate.write(b, off, len);
+    }
+
+    @Override
+    public void flush() throws IOException {
+      delegate.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+      tracer.end(span);
+      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      delegate.write(b);
+    }
+  }
 }
