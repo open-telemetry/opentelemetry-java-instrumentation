@@ -131,6 +131,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Get all git tags
+        run: git fetch --prune --unshallow --tags
+
       - name: Set up JDK 11 for running checks
         uses: actions/setup-java@v1
         with:
