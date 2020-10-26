@@ -1,0 +1,82 @@
+# Releases a patch by cherrypicking commits into a release branch based on the previous
+# release tag.
+name: Patch Release Build
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to tag the release with, e.g., 1.2.1, 1.2.2
+        required: true
+      commits:
+        description: Comma separated list of commit shas to cherrypick
+        required: true
+
+jobs:
+  prepare-release-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      release-branch-name: ${{ steps.parse-release-branch.outputs.release-branch-name }}
+    steps:
+      - id: parse-release-branch
+        name: Parse release branch name
+        run: |
+          # Sets the release-branch-name output to the version number with the last non-period element replaced with an 'x' and preprended with v.
+          echo "::set-output name=release-branch-name::$(echo '${{ github.event.inputs.version }}' | sed -E 's/([^.]+)\.([^.]+)\.([^.]+)/v\1.\2.x/')"
+          # Sets the release-tag-name output to the version number with the last non-period element replace with a '0' and prepended with v
+          echo "::set-output name=release-tag-name::$(echo '${{ github.event.inputs.version }}' | sed -E 's/([^.]+)\.([^.]+)\.([^.]+)/v\1.\2.0/')"
+      - id: checkout-release-branch
+        name: Check out release branch
+        continue-on-error: true
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.parse-release-branch.outputs.release-branch-name }}
+      - id: checkout-release-tag
+        name: Check out release tag
+        if: ${{ steps.checkout-release-branch.outcome == 'failure' }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.parse-release-branch.outputs.release-tag-name }}
+      - name: Create release branch
+        if: ${{ steps.checkout-release-tag.outcome == 'success' }}
+        run: |
+          git checkout -b ${{ steps.parse-release-branch.outputs.release-branch-name }}
+          git push --set-upstream origin ${{ steps.parse-release-branch.outputs.release-branch-name }}
+  build:
+    runs-on: ubuntu-latest
+    needs: prepare-release-branch
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup git name
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - name: Cherrypicks
+        if: ${{ github.event.inputs.commits != '' }}
+        run: |
+          git fetch origin master
+          echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
+              # Trim whitespaces and cherrypick
+              echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
+          done
+      - uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+          remote-build-cache-proxy-enabled: false
+          arguments: build --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+      - name: Publish artifacts
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+          remote-build-cache-proxy-enabled: false
+          arguments: final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+          GRGIT_USER: ${{ github.actor }}
+          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
