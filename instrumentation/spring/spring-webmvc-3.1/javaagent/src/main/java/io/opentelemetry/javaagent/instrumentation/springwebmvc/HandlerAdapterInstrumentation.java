@@ -72,7 +72,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       Span serverSpan = BaseTracer.getCurrentServerSpan(context);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        TRACER.onRequest(context, serverSpan, request);
+        TRACER.onRequest(serverSpan, request);
         // Now create a span for handler/controller execution.
         Span span = TRACER.startHandlerSpan(handler);
 
