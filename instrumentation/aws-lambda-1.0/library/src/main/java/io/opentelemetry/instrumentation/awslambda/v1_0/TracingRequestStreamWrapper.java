@@ -19,20 +19,16 @@ import java.io.OutputStream;
  */
 public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 
-  private WrappedLambda wrappedLambda;
+  private static final WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   @Override
   protected void doHandleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
 
-    if (wrappedLambda == null) {
-      wrappedLambda = WrappedLambda.fromConfiguration();
-    }
-
-    if (!(wrappedLambda.getTargetObject() instanceof RequestStreamHandler)) {
+    if (!(WRAPPED_LAMBDA.getTargetObject() instanceof RequestStreamHandler)) {
       throw new RuntimeException(
-          wrappedLambda.getTargetClass().getName() + " is not an instance of RequestStreamHandler");
+          WRAPPED_LAMBDA.getTargetClass().getName() + " is not an instance of RequestStreamHandler");
     }
-    ((RequestStreamHandler) wrappedLambda.getTargetObject()).handleRequest(input, output, context);
+    ((RequestStreamHandler) WRAPPED_LAMBDA.getTargetObject()).handleRequest(input, output, context);
   }
 }

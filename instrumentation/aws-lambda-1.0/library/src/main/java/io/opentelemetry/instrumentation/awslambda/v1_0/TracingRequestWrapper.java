@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
  */
 public final class TracingRequestWrapper extends TracingRequestHandler {
 
-  private WrappedLambda wrappedLambda;
+  private static final WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   private Object[] createParametersArray(Method targetMethod, Object input, Context context) {
 
@@ -42,16 +42,13 @@ public final class TracingRequestWrapper extends TracingRequestHandler {
 
   @Override
   protected Object doHandleRequest(Object input, Context context) {
-    if (wrappedLambda == null) {
-      wrappedLambda = WrappedLambda.fromConfiguration();
-    }
 
-    Method targetMethod = wrappedLambda.getRequestTargetMethod();
+    Method targetMethod = WRAPPED_LAMBDA.getRequestTargetMethod();
     Object[] parameters = createParametersArray(targetMethod, input, context);
 
     Object returnObj;
     try {
-      returnObj = targetMethod.invoke(wrappedLambda.getTargetObject(), parameters);
+      returnObj = targetMethod.invoke(WRAPPED_LAMBDA.getTargetObject(), parameters);
     } catch (IllegalAccessException e) {
       throw new RuntimeException("Method is inaccessible", e);
     } catch (InvocationTargetException e) {
