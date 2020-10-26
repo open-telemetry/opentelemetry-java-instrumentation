@@ -26,7 +26,7 @@ public class LettuceInstrumentationUtil {
    * @param command
    * @return false if the span should finish early (the command will not have a return value)
    */
-  public static boolean expectsResponse(RedisCommand command) {
+  public static boolean expectsResponse(RedisCommand<?, ?, ?> command) {
     String commandName = LettuceInstrumentationUtil.getCommandName(command);
     return !nonInstrumentingCommands.contains(commandName);
   }
@@ -37,7 +37,7 @@ public class LettuceInstrumentationUtil {
    * @param command the lettuce RedisCommand object
    * @return the redis command as a string
    */
-  public static String getCommandName(RedisCommand command) {
+  public static String getCommandName(RedisCommand<?, ?, ?> command) {
     String commandName = "Redis Command";
     if (command != null) {
 

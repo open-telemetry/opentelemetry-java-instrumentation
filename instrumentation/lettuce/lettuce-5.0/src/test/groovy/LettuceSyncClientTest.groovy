@@ -155,7 +155,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET TESTSETKEY ?"
+          name "SET"
           kind CLIENT
           errored false
           attributes {
@@ -176,7 +176,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET TESTKEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -197,7 +197,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET NON_EXISTENT_KEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -239,7 +239,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "LPUSH TESTLIST ?"
+          name "LPUSH"
           kind CLIENT
           errored false
           attributes {
@@ -260,7 +260,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "HMSET user firstname ? lastname ? age ?"
+          name "HMSET"
           kind CLIENT
           errored false
           attributes {
@@ -281,7 +281,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "HGETALL TESTHM"
+          name "HGETALL"
           kind CLIENT
           errored false
           attributes {
@@ -301,7 +301,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEBUG SEGFAULT"
+          name "DEBUG"
           kind CLIENT
           errored false
           attributes {
@@ -321,7 +321,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SHUTDOWN NOSAVE"
+          name "SHUTDOWN"
           kind CLIENT
           errored false
           attributes {

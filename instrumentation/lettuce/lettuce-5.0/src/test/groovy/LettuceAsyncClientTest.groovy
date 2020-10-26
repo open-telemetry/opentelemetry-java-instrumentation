@@ -179,7 +179,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET TESTSETKEY ?"
+          name "SET"
           kind CLIENT
           errored false
           attributes {
@@ -212,7 +212,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET TESTKEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -259,7 +259,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET NON_EXISTENT_KEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -343,7 +343,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "HMSET TESTHM firstname ? lastname ? age ?"
+          name "HMSET"
           kind CLIENT
           errored false
           attributes {
@@ -354,7 +354,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          name "HGETALL TESTHM"
+          name "HGETALL"
           kind CLIENT
           errored false
           attributes {
@@ -395,7 +395,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEL key1 key2"
+          name "DEL"
           kind CLIENT
           errored true
           errorEvent(IllegalStateException, "TestException")
@@ -431,7 +431,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SADD SKEY ? ?"
+          name "SADD"
           kind CLIENT
           errored false
           attributes {
@@ -452,7 +452,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEBUG SEGFAULT"
+          name "DEBUG"
           kind CLIENT
           errored false
           attributes {
@@ -473,7 +473,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SHUTDOWN NOSAVE"
+          name "SHUTDOWN"
           kind CLIENT
           errored false
           attributes {

@@ -95,7 +95,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET TESTSETKEY ?"
+          name "SET"
           kind CLIENT
           errored false
           attributes {
@@ -119,7 +119,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET TESTKEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -151,7 +151,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET NON_EXISTENT_KEY"
+          name "GET"
           kind CLIENT
           errored false
           attributes {
@@ -256,7 +256,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "DEBUG SEGFAULT"
+          name "DEBUG"
           kind CLIENT
           errored false
           attributes {
@@ -276,7 +276,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SHUTDOWN NOSAVE"
+          name "SHUTDOWN"
           kind CLIENT
           errored false
           attributes {
@@ -306,7 +306,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET a ?"
+          name "SET"
           kind CLIENT
           errored false
           childOf span(0)
@@ -316,7 +316,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          name "GET a"
+          name "GET"
           kind CLIENT
           errored false
           childOf span(0)
@@ -347,7 +347,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET a ?"
+          name "SET"
           kind CLIENT
           errored false
           childOf span(0)
@@ -357,7 +357,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          name "GET a"
+          name "GET"
           kind CLIENT
           errored false
           childOf span(0)
@@ -389,7 +389,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          name "SET a ?"
+          name "SET"
           kind CLIENT
           errored false
           childOf span(0)
@@ -399,7 +399,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          name "GET a"
+          name "GET"
           kind CLIENT
           errored false
           childOf span(0)

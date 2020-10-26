@@ -67,7 +67,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET foo ?"
+          name "SET"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -96,7 +96,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "SADD set1 ?"
+          name "SADD"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -110,7 +110,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          name "RPUSH list1 ?"
+          name "RPUSH"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"

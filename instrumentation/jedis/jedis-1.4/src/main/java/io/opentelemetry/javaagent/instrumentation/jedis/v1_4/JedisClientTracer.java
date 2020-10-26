@@ -19,6 +19,11 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   public static final JedisClientTracer TRACER = new JedisClientTracer();
 
   @Override
+  protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {
+    return query.getStringCommand();
+  }
+
+  @Override
   protected String normalizeQuery(CommandWithArgs command) {
     return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getArgs());
   }

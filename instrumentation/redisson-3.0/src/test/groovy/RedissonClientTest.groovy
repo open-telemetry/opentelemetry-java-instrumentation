@@ -70,7 +70,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "SET foo ?"
+          name "SET"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -84,7 +84,7 @@ class RedissonClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          name "GET foo"
+          name "GET"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -110,7 +110,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET batch1 ?;SET batch2 ?"
+          name "SET;SET"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -134,7 +134,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "RPUSH list1 ?"
+          name "RPUSH"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -156,11 +156,12 @@ class RedissonClientTest extends AgentTestRunner {
     rMap.get("key1")
 
     then:
-    def script = "local v = redis.call('hget', KEYS[1], ARGV[1]); redis.call('hset', KEYS[1], ARGV[1], ARGV[2]); return v"
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          name "EVAL $script 1 map1 ? ?"
+          def script = "local v = redis.call('hget', KEYS[1], ARGV[1]); redis.call('hset', KEYS[1], ARGV[1], ARGV[2]); return v"
+
+          name "EVAL"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -174,7 +175,7 @@ class RedissonClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          name "HGET map1 key1"
+          name "HGET"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -198,7 +199,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SADD set1 ?"
+          name "SADD"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -226,7 +227,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "ZADD sort_set1 ? ? ? ? ? ?"
+          name "ZADD"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -250,7 +251,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "INCR AtomicLong"
+          name "INCR"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -280,7 +281,7 @@ class RedissonClientTest extends AgentTestRunner {
             " if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1);" +
             " redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);"
 
-          name "EVAL $lockScript 1 lock ? ?"
+          name "EVAL"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -299,7 +300,7 @@ class RedissonClientTest extends AgentTestRunner {
             " local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); if (counter > 0) then redis.call('pexpire', KEYS[1], ARGV[2]);" +
             " return 0; else redis.call('del', KEYS[1]); redis.call('publish', KEYS[2], ARGV[1]); return 1; end; return nil;"
 
-          name "EVAL $unlockScript 2 lock redisson_lock__channel__{lock} ? ? ?"
+          name "EVAL"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"

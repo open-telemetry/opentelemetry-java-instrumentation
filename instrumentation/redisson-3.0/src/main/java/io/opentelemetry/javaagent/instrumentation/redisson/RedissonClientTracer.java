@@ -18,8 +18,28 @@ import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
 public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, Object> {
+  private static final String UNKNOWN_COMMAND = "Redis Command";
 
   public static final RedissonClientTracer TRACER = new RedissonClientTracer();
+
+  @Override
+  protected String spanName(RedisConnection connection, Object query, String normalizedQuery) {
+    if (query instanceof CommandsData) {
+      List<CommandData<?, ?>> commands = ((CommandsData) query).getCommands();
+      StringBuilder commandStrings = new StringBuilder();
+      for (CommandData<?, ?> commandData : commands) {
+        commandStrings.append(commandData.getCommand().getName()).append(";");
+      }
+      if (commandStrings.length() > 0) {
+        commandStrings.deleteCharAt(commandStrings.length() - 1);
+      }
+      return commandStrings.toString();
+    } else if (query instanceof CommandData) {
+      return ((CommandData<?, ?>) query).getCommand().getName();
+    }
+
+    return UNKNOWN_COMMAND;
+  }
 
   @Override
   protected String getInstrumentationName() {
@@ -42,7 +62,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
     } else if (command instanceof CommandData) {
       return normalizeSingleCommand((CommandData<?, ?>) command);
     }
-    return "Redis Command";
+    return UNKNOWN_COMMAND;
   }
 
   private static String normalizeSingleCommand(CommandData<?, ?> command) {

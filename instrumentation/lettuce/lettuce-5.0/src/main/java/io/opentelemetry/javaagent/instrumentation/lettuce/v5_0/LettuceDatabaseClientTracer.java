@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter;
@@ -14,6 +15,12 @@ import java.util.List;
 public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
   public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+
+  @Override
+  protected String spanName(
+      RedisURI connection, RedisCommand<?, ?, ?> query, String normalizedQuery) {
+    return LettuceInstrumentationUtil.getCommandName(query);
+  }
 
   @Override
   protected String normalizeQuery(RedisCommand<?, ?, ?> redisCommand) {
