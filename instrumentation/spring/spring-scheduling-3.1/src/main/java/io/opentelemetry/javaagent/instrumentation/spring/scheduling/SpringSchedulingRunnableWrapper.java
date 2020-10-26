@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -26,7 +25,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     }
     Span span = TRACER.startSpan(TRACER.spanNameOnRun(runnable), Kind.INTERNAL);
 
-    try (Scope ignored = currentContextWith(span)) {
+    try (Scope ignored = span.makeCurrent()) {
       runnable.run();
       TRACER.end(span);
     } catch (Throwable throwable) {

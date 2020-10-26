@@ -37,7 +37,7 @@ abstract class InstrumentationTestRunner extends Specification {
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .build())
     }
-    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER)
+    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER)
   }
 
   @Before

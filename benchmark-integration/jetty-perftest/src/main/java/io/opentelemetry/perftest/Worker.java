@@ -5,8 +5,6 @@
 
 package io.opentelemetry.perftest;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -20,7 +18,7 @@ public class Worker {
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMS) {
     Span span = TRACER.spanBuilder("work").startSpan();
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope scope = span.makeCurrent()) {
       if (span != null) {
         span.setAttribute("work-time", workTimeMS);
         span.setAttribute("info", "interesting stuff");

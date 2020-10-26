@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,7 +63,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
         return;
       }
       span = TRACER.startSpan(method);
-      scope = currentContextWith(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

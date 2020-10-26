@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServle
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -70,7 +69,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
       if (callDepth.getAndIncrement() == 0
           && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         span = TRACER.startSpan(method);
-        scope = currentContextWith(span);
+        scope = span.makeCurrent();
       }
     }
 

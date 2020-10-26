@@ -56,6 +56,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
       "io.opentelemetry.context", // OpenTelemetry API
       "io.opentelemetry.internal", // OpenTelemetry API
       "io.opentelemetry.metrics", // OpenTelemetry API
+      "io.opentelemetry.spi", // OpenTelemetry API
       "io.opentelemetry.trace", // OpenTelemetry API
       "org.slf4j",
       "ch.qos.logback",

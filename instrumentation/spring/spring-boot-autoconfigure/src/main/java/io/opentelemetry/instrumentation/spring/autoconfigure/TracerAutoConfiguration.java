@@ -57,16 +57,16 @@ public class TracerAutoConfiguration {
             .map(spanExporter -> SimpleSpanProcessor.builder(spanExporter).build())
             .collect(Collectors.toList());
 
-    OpenTelemetrySdk.getTracerManagement()
+    OpenTelemetrySdk.getGlobalTracerManagement()
         .addSpanProcessor(MultiSpanProcessor.create(spanProcessors));
   }
 
   private void setSampler(TracerProperties tracerProperties) {
     TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getTracerManagement().getActiveTraceConfig().toBuilder()
+        OpenTelemetrySdk.getGlobalTracerManagement().getActiveTraceConfig().toBuilder()
             .setSampler(Samplers.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
 
-    OpenTelemetrySdk.getTracerManagement().updateActiveTraceConfig(updatedTraceConfig);
+    OpenTelemetrySdk.getGlobalTracerManagement().updateActiveTraceConfig(updatedTraceConfig);
   }
 }

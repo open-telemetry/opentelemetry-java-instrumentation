@@ -114,7 +114,7 @@ public abstract class AgentTestRunner extends Specification {
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
     }
-    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
+    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 

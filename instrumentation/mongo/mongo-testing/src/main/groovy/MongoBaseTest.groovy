@@ -95,7 +95,7 @@ class MongoBaseTest extends AgentTestRunner {
         "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
         "$SemanticAttributes.DB_NAME.key" dbName
         "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
+        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
       }
     }
   }
