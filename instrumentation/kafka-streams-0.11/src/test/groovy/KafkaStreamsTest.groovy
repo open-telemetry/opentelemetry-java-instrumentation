@@ -7,8 +7,8 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.context.propagation.TextMapPropagator
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.opentelemetry.trace.propagation.HttpTraceContext

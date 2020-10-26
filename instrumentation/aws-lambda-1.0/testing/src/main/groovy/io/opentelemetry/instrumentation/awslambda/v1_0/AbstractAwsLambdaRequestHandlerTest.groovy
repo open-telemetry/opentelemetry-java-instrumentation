@@ -11,9 +11,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.opentelemetry.trace.propagation.HttpTraceContext
 

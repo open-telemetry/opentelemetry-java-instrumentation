@@ -63,7 +63,7 @@ class LettuceSyncClientAuthTest extends AgentTestRunner {
 
   def "auth command"() {
     setup:
-    def res =  redisClient.connect().sync().auth(password)
+    def res = redisClient.connect().sync().auth(password)
 
     expect:
     res == "OK"

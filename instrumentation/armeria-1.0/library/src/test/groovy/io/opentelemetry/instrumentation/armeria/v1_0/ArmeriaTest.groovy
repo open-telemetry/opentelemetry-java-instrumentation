@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.armeria.v1_0
 
 import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.server.ServerBuilder
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.opentelemetry.instrumentation.armeria.v1_0.client.OpenTelemetryClient
 import io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService
+import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
 class ArmeriaTest extends AbstractArmeriaTest implements InstrumentationTestTrait {
   @Override

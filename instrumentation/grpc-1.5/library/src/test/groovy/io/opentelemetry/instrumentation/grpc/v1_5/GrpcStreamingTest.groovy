@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.grpc.v1_5
 
 import io.grpc.ManagedChannelBuilder
 import io.grpc.ServerBuilder
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.opentelemetry.instrumentation.grpc.v1_5.client.TracingClientInterceptor
 import io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor
+import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
 class GrpcStreamingTest extends AbstractGrpcStreamingTest implements InstrumentationTestTrait {
   @Override

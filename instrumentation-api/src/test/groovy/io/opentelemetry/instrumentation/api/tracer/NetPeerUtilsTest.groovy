@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class NetPeerUtilsTest extends BaseTracerTest {

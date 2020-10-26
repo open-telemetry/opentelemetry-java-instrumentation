@@ -46,7 +46,7 @@ class WeakMapTest extends Specification {
 
   def "remove a value"() {
     given:
-    weakMap.put('key',  42)
+    weakMap.put('key', 42)
 
     when:
     def removed = weakMap.remove('key')

@@ -78,7 +78,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     spanNames.get(obj.class).size() == 1
 
     where:
-    paramName                 | obj
+    paramName            | obj
     "/a"                 | new Jax() {
       @Path("/a")
       void call() {

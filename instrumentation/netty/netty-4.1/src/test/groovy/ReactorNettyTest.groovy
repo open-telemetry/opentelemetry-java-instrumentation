@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -11,11 +16,6 @@ import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-
-import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class ReactorNettyTest extends AgentTestRunner {
   @AutoCleanup
