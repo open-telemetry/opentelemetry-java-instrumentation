@@ -130,7 +130,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
-    REDIRECT("redirect", 302, "/redirected"),
+    REDIRECT("redirect", 302, "redirected"),
     ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
