@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -10,12 +11,10 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -84,32 +83,9 @@ class JettyServlet2Test extends HttpServerTest<Server> {
     }
   }
 
-  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      name 'HttpServlet.service'
-      kind SERVER
-      errored endpoint.errored
-      if (parentID != null) {
-        traceId traceID
-        parentSpanId parentID
-      } else {
-        hasNoParent()
-      }
-      if (endpoint == EXCEPTION) {
-        errorEvent(Exception, EXCEPTION.body)
-      }
-      attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-        // No peer port
-        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
-        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-      }
-    }
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    "HttpServlet.service"
   }
 
   /**

@@ -3,17 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -110,30 +108,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      name "TestHandler.handle"
-      kind SERVER
-      errored endpoint.errored
-      if (endpoint == EXCEPTION) {
-        errorEvent(Exception, EXCEPTION.body)
-      }
-      if (parentID != null) {
-        traceId traceID
-        parentSpanId parentID
-      } else {
-        hasNoParent()
-      }
-      attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
-        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" TEST_CLIENT_IP
-      }
-    }
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    "TestHandler.handle"
   }
 }
