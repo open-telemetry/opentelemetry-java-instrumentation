@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 

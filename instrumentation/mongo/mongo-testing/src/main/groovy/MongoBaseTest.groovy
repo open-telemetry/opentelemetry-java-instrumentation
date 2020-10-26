@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 import de.flapdoodle.embed.mongo.MongodExecutable

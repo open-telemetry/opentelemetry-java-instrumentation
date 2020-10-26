@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID

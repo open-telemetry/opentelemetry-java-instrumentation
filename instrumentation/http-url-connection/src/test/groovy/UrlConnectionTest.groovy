@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
 import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
