@@ -17,15 +17,19 @@ import spock.lang.Unroll
 class CouchbaseQueryNormalizerTest extends Specification {
   @Unroll
   def "should normalize #desc query"() {
-    expect:
-    CouchbaseQueryNormalizer.normalize(query) == normalized
+    when:
+    def normalized = CouchbaseQueryNormalizer.normalize(query)
+
+    then:
+    // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing ';' in later couchbase version
+    normalized.replaceFirst(';$', '') == expected
 
     where:
-    desc           | query                                                                                          | normalized
+    desc           | query                                                                                          | expected
     "plain string" | "SELECT field1 FROM `test` WHERE field2 = 'asdf'"                                              | "SELECT field1 FROM `test` WHERE field2 = ?"
     "Statement"    | Select.select("field1").from("test").where(Expression.path("field2").eq(Expression.s("asdf"))) | "SELECT field1 FROM test WHERE field2 = ?"
     "N1QL"         | N1qlQuery.simple("SELECT field1 FROM `test` WHERE field2 = 'asdf'")                            | "SELECT field1 FROM `test` WHERE field2 = ?"
-    "Analytics"    | AnalyticsQuery.simple("SELECT field1 FROM `test` WHERE field2 = 'asdf'")                       | "SELECT field1 FROM `test` WHERE field2 = ?;"
+    "Analytics"    | AnalyticsQuery.simple("SELECT field1 FROM `test` WHERE field2 = 'asdf'")                       | "SELECT field1 FROM `test` WHERE field2 = ?"
     "View"         | ViewQuery.from("design", "view").skip(10)                                                      | 'ViewQuery(design/view){params="skip=10"}'
     "SpatialView"  | SpatialViewQuery.from("design", "view").skip(10)                                               | 'skip=10'
   }
