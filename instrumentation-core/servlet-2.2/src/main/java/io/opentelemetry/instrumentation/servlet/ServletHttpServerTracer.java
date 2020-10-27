@@ -25,20 +25,20 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
+  public Span startSpan(HttpServletRequest request) {
+    return startSpan(request, request, getSpanName(request));
+  }
+
   @Override
   public Scope startScope(Span span, HttpServletRequest request) {
+    Context context = Context.current();
+    // if we start returning Context from startSpan() then we can add ServletContextPath there
+    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1481)
     String contextPath = request.getContextPath();
-    String servletPath = request.getServletPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      span.updateName(contextPath + servletPath);
-      Context context = Context.current().with(ServletContextPath.CONTEXT_KEY, contextPath);
-      return super.startScope(span, request, context);
-    } else {
-      if (servletPath != null && !servletPath.isEmpty()) {
-        span.updateName(servletPath);
-      }
-      return super.startScope(span, request);
+      context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
     }
+    return super.startScope(span, request, context);
   }
 
   @Override
@@ -124,5 +124,14 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
     return httpServletRequest.getHeader(name);
+  }
+
+  private static String getSpanName(HttpServletRequest request) {
+    String spanName = request.getServletPath();
+    String contextPath = request.getContextPath();
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      spanName = contextPath + spanName;
+    }
+    return spanName;
   }
 }
