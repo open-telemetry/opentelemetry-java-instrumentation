@@ -43,7 +43,7 @@ class OkHttp3AsyncTest extends OkHttp3Test {
         latch.countDown()
       }
     })
-    latch.await(10, SECONDS)
+    latch.await(20, SECONDS)
     if (exRef.get() != null) {
       throw exRef.get()
     }
