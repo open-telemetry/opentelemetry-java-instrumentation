@@ -20,7 +20,7 @@ public class SystemMetricsTest extends AbstractMetricsTest {
     intervalMetricReader.shutdown();
 
     verify("system.memory.usage", "bytes", Type.NON_MONOTONIC_LONG, true);
-    verify("system.memory.utilization", "1", Type.NON_MONOTONIC_DOUBLE, true);
+    verify("system.memory.utilization", "1", Type.SUMMARY, true);
 
     verify("system.network.io", "bytes", Type.MONOTONIC_LONG, false);
     verify("system.network.packets", "packets", Type.MONOTONIC_LONG, false);

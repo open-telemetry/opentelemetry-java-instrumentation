@@ -21,6 +21,5 @@ public class ProcessMetricsTest extends AbstractMetricsTest {
 
     verify("runtime.java.memory", "bytes", Type.NON_MONOTONIC_LONG, true);
     verify("runtime.java.cpu_time", "seconds", Type.SUMMARY, true);
-    verify("runtime.java.gc_count", "counts", Type.SUMMARY, true);
   }
 }
