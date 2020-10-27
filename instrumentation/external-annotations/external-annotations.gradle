@@ -1,17 +1,12 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-// TODO(anuraaga): Reenable after SDK 0.10.0 is published
-/**
 muzzle {
   pass {
-    group = "io.opentelemetry"
-    module = "opentelemetry-extension-auto-annotations"
-    versions = "(,)"
-    extraDependency 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
+    group = "io.opentracing.contrib.dropwizard"
+    module = "dropwizard-opentracing"
+    versions = "[0.2.2,)"
   }
 }
-*/
-tasks.muzzle.enabled = false
 
 dependencies {
   testImplementation group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '5.14.0'
