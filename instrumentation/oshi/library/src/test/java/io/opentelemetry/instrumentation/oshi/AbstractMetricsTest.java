@@ -39,7 +39,8 @@ public class AbstractMetricsTest {
         .setExportIntervalMillis(100)
         .setMetricExporter(testMetricExporter)
         .setMetricProducers(
-            Collections.singletonList(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
+            Collections.singletonList(
+                OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer()))
         .build();
   }
 
@@ -63,6 +64,9 @@ public class AbstractMetricsTest {
             } else if (metricData.getType() == Type.SUMMARY) {
               SummaryPoint summaryPoint = (SummaryPoint) point;
               assertThat(summaryPoint.getSum()).isGreaterThan(0.0);
+            } else if (metricData.getType() == Type.GAUGE_DOUBLE) {
+              DoublePoint doublePoint = (DoublePoint) point;
+              assertThat(doublePoint.getValue()).isGreaterThan(0.0);
             } else {
               Assertions.fail("unexpected type " + metricData.getType());
             }

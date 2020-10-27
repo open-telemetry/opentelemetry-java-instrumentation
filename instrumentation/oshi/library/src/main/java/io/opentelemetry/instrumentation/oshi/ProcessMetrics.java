@@ -23,7 +23,7 @@ public class ProcessMetrics {
 
   /** Register observers for java runtime metrics */
   public static void registerObservers() {
-    Meter meter = OpenTelemetry.getMeterProvider().get(ProcessMetrics.class.getName());
+    Meter meter = OpenTelemetry.get().getMeterProvider().get(ProcessMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
