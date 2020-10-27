@@ -14,7 +14,6 @@ import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator;
-import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator.Builder;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +67,7 @@ public class PropagatorsInitializer {
       }
     }
     if (textPropagators.size() > 1) {
-      Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
+      TraceMultiPropagator.Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
       for (TextMapPropagator textPropagator : textPropagators) {
         traceMultiPropagatorBuilder.addPropagator(textPropagator);
       }

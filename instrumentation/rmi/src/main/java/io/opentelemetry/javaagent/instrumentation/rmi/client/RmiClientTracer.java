@@ -9,7 +9,6 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Builder;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 
@@ -20,7 +19,7 @@ public class RmiClientTracer extends RpcClientTracer {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
 
-    Builder spanBuilder = tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(CLIENT);
+    Span.Builder spanBuilder = tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(CLIENT);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "java_rmi");
     spanBuilder.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
     spanBuilder.setAttribute(SemanticAttributes.RPC_METHOD, methodName);

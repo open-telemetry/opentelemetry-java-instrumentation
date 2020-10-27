@@ -11,7 +11,6 @@ import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Builder;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
@@ -24,7 +23,7 @@ public class GrpcClientTracer extends RpcClientTracer {
   }
 
   public Span startSpan(String name) {
-    Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
+    Span.Builder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
     return spanBuilder.startSpan();
   }
