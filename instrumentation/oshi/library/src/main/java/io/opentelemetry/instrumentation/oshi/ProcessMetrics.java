@@ -18,14 +18,14 @@ import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 /** Java Runtime Metrics Utility */
-public class JavaMetrics {
+public class ProcessMetrics {
   private static final String TYPE_LABEL_KEY = "type";
 
-  private JavaMetrics() {}
+  private ProcessMetrics() {}
 
   /** Register observers for java runtime metrics */
   public static void registerObservers() {
-    Meter meter = OpenTelemetry.getMeterProvider().get(JavaMetrics.class.getName());
+    Meter meter = OpenTelemetry.getMeterProvider().get(ProcessMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());

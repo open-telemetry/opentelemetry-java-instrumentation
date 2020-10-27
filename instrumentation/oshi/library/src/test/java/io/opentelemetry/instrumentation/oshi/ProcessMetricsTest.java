@@ -9,11 +9,11 @@ import io.opentelemetry.sdk.metrics.data.MetricData.Type;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import org.junit.jupiter.api.Test;
 
-public class JavaMetricsTest extends AbstractMetricsTest {
+public class ProcessMetricsTest extends AbstractMetricsTest {
 
   @Test
   public void test() throws Exception {
-    JavaMetrics.registerObservers();
+    ProcessMetrics.registerObservers();
     IntervalMetricReader intervalMetricReader = createIntervalMetricReader();
 
     testMetricExporter.waitForData();
