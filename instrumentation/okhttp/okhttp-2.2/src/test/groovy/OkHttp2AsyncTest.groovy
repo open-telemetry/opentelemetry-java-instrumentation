@@ -41,7 +41,7 @@ class OkHttp2AsyncTest extends OkHttp2Test {
         latch.countDown()
       }
     })
-    latch.await(10, SECONDS)
+    latch.await(20, SECONDS)
     if (exRef.get() != null) {
       throw exRef.get()
     }
