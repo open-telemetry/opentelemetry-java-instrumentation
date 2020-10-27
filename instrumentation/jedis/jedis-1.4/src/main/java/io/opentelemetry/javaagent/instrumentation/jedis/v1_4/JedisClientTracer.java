@@ -49,12 +49,18 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   }
 
   public static final class CommandWithArgs {
+    private static final byte[][] NO_ARGS = new byte[0][];
+
     private final Command command;
     private final byte[][] args;
 
     public CommandWithArgs(Command command, byte[][] args) {
       this.command = command;
       this.args = args;
+    }
+
+    public CommandWithArgs(Command command) {
+      this(command, NO_ARGS);
     }
 
     private String getStringCommand() {

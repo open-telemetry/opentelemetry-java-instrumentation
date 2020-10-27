@@ -87,7 +87,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(connection, new CommandWithArgs(command, new byte[0][]));
+      span = TRACER.startSpan(connection, new CommandWithArgs(command));
       scope = TRACER.startScope(span);
     }
 
