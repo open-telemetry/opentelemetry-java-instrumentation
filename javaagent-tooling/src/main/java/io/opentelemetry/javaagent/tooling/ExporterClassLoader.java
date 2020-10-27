@@ -53,6 +53,7 @@ public class ExporterClassLoader extends URLClassLoader {
           rule(
               "#io.opentelemetry.metrics",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"),
+          rule("#io.opentelemetry.spi", "#io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"),
           rule(
               "#io.opentelemetry.trace",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"),

@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import application.io.opentelemetry.context.Context;
-import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -50,9 +49,6 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
     transformers.put(
         isMethod().and(isStatic()).and(named("getSpanWithoutDefault")).and(takesArguments(1)),
         TracingContextUtilsInstrumentation.class.getName() + "$GetSpanWithoutDefaultAdvice");
-    transformers.put(
-        isMethod().and(isStatic()).and(named("currentContextWith")).and(takesArguments(1)),
-        TracingContextUtilsInstrumentation.class.getName() + "$CurrentContextWithAdvice");
     return transformers;
   }
 
@@ -122,21 +118,6 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
       ContextStore<Context, io.opentelemetry.context.Context> contextStore =
           InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
       applicationSpan = TracingContextUtils.getSpanWithoutDefault(context, contextStore);
-    }
-  }
-
-  public static class CurrentContextWithAdvice {
-
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
-    public static Object onEnter() {
-      return null;
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Argument(0) Span applicationSpan,
-        @Advice.Return(readOnly = false) Scope applicationScope) {
-      applicationScope = TracingContextUtils.currentContextWith(applicationSpan);
     }
   }
 }

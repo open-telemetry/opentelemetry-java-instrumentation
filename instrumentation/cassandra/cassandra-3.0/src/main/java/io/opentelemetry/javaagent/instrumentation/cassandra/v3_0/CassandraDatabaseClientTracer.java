@@ -40,7 +40,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
 
   @Override
   protected Span onConnection(Span span, Session session) {
-    span.setAttribute(SemanticAttributes.CASSANDRA_KEYSPACE, session.getLoggedKeyspace());
+    span.setAttribute(SemanticAttributes.DB_CASSANDRA_KEYSPACE, session.getLoggedKeyspace());
     return super.onConnection(span, session);
   }
 

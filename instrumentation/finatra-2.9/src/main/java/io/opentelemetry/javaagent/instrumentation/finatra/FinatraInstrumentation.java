@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -81,7 +80,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
       Span span = TRACER.startSpan(clazz);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, span.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

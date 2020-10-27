@@ -37,7 +37,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
 
   @Override
   protected String normalizeQuery(String query) {
-    return query;
+    return GeodeQueryNormalizer.normalize(query);
   }
 
   @Override

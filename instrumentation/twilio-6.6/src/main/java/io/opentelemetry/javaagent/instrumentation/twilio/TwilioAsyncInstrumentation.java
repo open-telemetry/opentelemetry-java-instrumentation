@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -115,7 +114,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, span.makeCurrent());
     }
 
     /** Method exit instrumentation. */

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -49,7 +48,7 @@ public final class TracingHandler implements Handler {
               TRACER.end(ratpackSpan);
             });
 
-    try (Scope ignored = currentContextWith(ratpackSpan)) {
+    try (Scope ignored = ratpackSpan.makeCurrent()) {
       ctx.next();
       // exceptions are captured by ServerErrorHandlerInstrumentation
     }

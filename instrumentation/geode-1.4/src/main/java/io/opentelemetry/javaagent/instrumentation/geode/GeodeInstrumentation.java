@@ -40,7 +40,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GeodeTracer",
+      packageName + ".GeodeQueryNormalizer", packageName + ".GeodeTracer",
     };
   }
 

@@ -5,7 +5,6 @@
 
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.trace.Tracer
-import io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -146,7 +145,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   suspend fun a(iter: Long) {
     var span = tracer.spanBuilder("a").startSpan()
     span.setAttribute("iter", iter)
-    var scope = currentContextWith(span)
+    var scope = span.makeCurrent()
     delay(10)
     a2(iter)
     scope.close()
@@ -155,7 +154,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   suspend fun a2(iter: Long) {
     var span = tracer.spanBuilder("a2").startSpan()
     span.setAttribute("iter", iter)
-    var scope = currentContextWith(span)
+    var scope = span.makeCurrent()
     delay(10)
     scope.close()
     span.end()
@@ -163,7 +162,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   suspend fun b(iter: Long) {
     var span = tracer.spanBuilder("b").startSpan()
     span.setAttribute("iter", iter)
-    var scope = currentContextWith(span)
+    var scope = span.makeCurrent()
     delay(10)
     b2(iter)
     scope.close()
@@ -172,7 +171,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   suspend fun b2(iter: Long) {
     var span = tracer.spanBuilder("b2").startSpan()
     span.setAttribute("iter", iter)
-    var scope = currentContextWith(span)
+    var scope = span.makeCurrent()
     delay(10)
     scope.close()
     span.end()
@@ -184,7 +183,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
 
   private fun <T> runTest(block: suspend CoroutineScope.() -> T): T {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
-    val parentScope = currentContextWith(parentSpan)
+    val parentScope = parentSpan.makeCurrent()
     try {
       return runBlocking(dispatcher, block = block)
     } finally {

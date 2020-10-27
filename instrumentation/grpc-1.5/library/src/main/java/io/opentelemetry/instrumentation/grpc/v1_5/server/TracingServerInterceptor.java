@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
@@ -88,7 +86,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(Status status, Metadata trailers) {
       tracer.setStatus(span, status);
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().close(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -112,21 +110,22 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onMessage(ReqT message) {
+      // TODO(anuraaga): Restore
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.GRPC_MESSAGE_TYPE,
+              GrpcHelper.MESSAGE_TYPE,
               "RECEIVED",
-              SemanticAttributes.GRPC_MESSAGE_ID,
+              GrpcHelper.MESSAGE_ID,
               messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onMessage(message);
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onHalfClose();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -136,7 +135,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onCancel() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onCancel();
         span.setAttribute("canceled", true);
       } catch (Throwable e) {
@@ -148,7 +147,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onComplete() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onComplete();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -159,7 +158,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onReady() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);

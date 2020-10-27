@@ -8,11 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toApplication;
 
 import application.io.opentelemetry.context.Context;
-import application.io.opentelemetry.context.Scope;
 import application.io.opentelemetry.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.ApplicationScope;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.NoopScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,23 +73,5 @@ public class TracingContextUtils {
     io.opentelemetry.trace.Span agentSpan =
         io.opentelemetry.trace.Span.fromContextOrNull(agentContext);
     return agentSpan == null ? null : toApplication(agentSpan);
-  }
-
-  public static Scope currentContextWith(Span applicationSpan) {
-    if (!applicationSpan.getSpanContext().isValid()) {
-      // this supports direct usage of Span.getInvalid()
-      return new ApplicationScope(
-          io.opentelemetry.trace.TracingContextUtils.currentContextWith(
-              io.opentelemetry.trace.Span.getInvalid()));
-    }
-    if (applicationSpan instanceof ApplicationSpan) {
-      return new ApplicationScope(
-          io.opentelemetry.trace.TracingContextUtils.currentContextWith(
-              ((ApplicationSpan) applicationSpan).getAgentSpan()));
-    }
-    if (log.isDebugEnabled()) {
-      log.debug("unexpected span: {}", applicationSpan, new Exception("unexpected span"));
-    }
-    return NoopScope.getInstance();
   }
 }

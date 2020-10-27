@@ -11,7 +11,7 @@ class TracerSdkTest extends AgentTestRunner {
 
   def "direct access to sdk should not fail"() {
     when:
-    def provider = OpenTelemetrySdk.getTracerManagement()
+    def provider = OpenTelemetrySdk.getGlobalTracerManagement()
 
     then:
     provider instanceof TracerSdkProvider

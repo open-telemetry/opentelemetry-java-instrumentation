@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -66,7 +65,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
       }
 
       span = TRACER.startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
-      scope = currentContextWith(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
-
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -50,7 +48,7 @@ class TraceUtils {
       final Span span = TRACER.startSpan(rootOperationName, Span.Kind.INTERNAL)
 
       try {
-        def result = currentContextWith(span).withCloseable {
+        def result = span.makeCurrent().withCloseable {
           r.call()
         }
         TRACER.end(span)

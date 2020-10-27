@@ -13,7 +13,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaMessageTracer extends BaseTracer {
@@ -70,7 +69,7 @@ public class AwsLambdaMessageTracer extends BaseTracer {
   }
 
   public Scope startScope(Span span) {
-    return TracingContextUtils.currentContextWith(span);
+    return span.makeCurrent();
   }
 
   private void addLinkToMessageParent(SQSMessage message, Span.Builder span) {

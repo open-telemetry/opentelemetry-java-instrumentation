@@ -324,7 +324,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
         "$SemanticAttributes.DB_NAME.key" dbName
         "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
+        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
       }
     }
   }

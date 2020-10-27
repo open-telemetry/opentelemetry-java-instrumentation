@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0'
+  implementation 'io.opentelemetry:opentelemetry-extension-auto-annotations:0.9.1'
 }
 
 compileJava {

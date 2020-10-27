@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -59,7 +58,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       span = TRACER.startSpan(TRACER.spanNameOnCompile(jspCompilationContext), Kind.INTERNAL);
-      scope = currentContextWith(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

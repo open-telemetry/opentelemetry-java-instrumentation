@@ -6,11 +6,16 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.common;
 
 import io.grpc.Status.Code;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public final class GrpcHelper {
+
+  public static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
+  public static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
+
   public static void prepareSpan(Span span, String fullMethodName) {
 
     int slash = fullMethodName.indexOf('/');

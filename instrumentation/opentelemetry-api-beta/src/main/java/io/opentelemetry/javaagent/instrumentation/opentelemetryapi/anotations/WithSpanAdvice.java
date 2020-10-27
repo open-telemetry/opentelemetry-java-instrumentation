@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations.TraceAnnotationTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.context.Scope;
@@ -32,7 +31,7 @@ public class WithSpanAdvice {
         TRACER.startSpan(
             TRACER.spanNameForMethodWithAnnotation(applicationAnnotation, method),
             TRACER.extractSpanKind(applicationAnnotation));
-    scope = currentContextWith(span);
+    scope = span.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
