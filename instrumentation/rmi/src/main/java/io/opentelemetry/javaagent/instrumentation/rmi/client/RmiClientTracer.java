@@ -19,7 +19,8 @@ public class RmiClientTracer extends RpcClientTracer {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
 
-    Span.Builder spanBuilder = tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(CLIENT);
+    Span.Builder spanBuilder =
+        tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(CLIENT);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "java_rmi");
     spanBuilder.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
     spanBuilder.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
