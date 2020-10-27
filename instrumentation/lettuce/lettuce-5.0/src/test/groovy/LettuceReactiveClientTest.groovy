@@ -99,8 +99,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
           }
         }
       }
@@ -123,8 +123,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
           }
         }
       }
@@ -155,8 +155,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
           }
         }
       }
@@ -185,8 +185,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
           }
         }
       }
@@ -205,8 +205,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
             "db.command.results.count" 157
           }
         }
@@ -226,8 +226,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
             "db.command.cancelled" true
             "db.command.results.count" 2
           }
@@ -260,8 +260,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
           }
         }
       }
@@ -280,8 +280,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
           }
         }
       }
@@ -311,8 +311,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
@@ -321,8 +321,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }
@@ -352,8 +352,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
@@ -362,8 +362,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }
@@ -394,8 +394,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET a ?"
           }
         }
         span(2) {
@@ -404,8 +404,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET a"
           }
         }
       }

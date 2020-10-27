@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
+package io.opentelemetry.javaagent.instrumentation.lettuce
 
 import spock.lang.Specification
 import spock.lang.Unroll
