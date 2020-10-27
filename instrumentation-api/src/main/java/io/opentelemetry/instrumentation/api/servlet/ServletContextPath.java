@@ -15,7 +15,6 @@ public class ServletContextPath {
   public static final ContextKey<String> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-context-path-key");
 
-  /** Returns the servlet context path from the given context or <code>""</code> if not found. */
   public static String prepend(Context context, String spanName) {
     String value = context.get(CONTEXT_KEY);
     // checking isEmpty just to avoid unnecessary string concat / allocation
