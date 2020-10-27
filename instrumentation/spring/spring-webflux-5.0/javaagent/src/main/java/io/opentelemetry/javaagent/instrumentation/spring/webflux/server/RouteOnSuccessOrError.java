@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
-import org.springframework.http.server.PathContainer;
-import org.springframework.http.server.RequestPath;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -71,14 +69,5 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
                 .replaceAll(" ")
                 .trim())
         .replaceAll("");
-  }
-
-  private static String getContextPath(ServerRequest serverRequest) {
-    PathContainer pathContainer = serverRequest.pathContainer();
-    if (pathContainer instanceof RequestPath) {
-      return ((RequestPath) pathContainer).contextPath().value();
-    } else {
-      return "";
-    }
   }
 }
