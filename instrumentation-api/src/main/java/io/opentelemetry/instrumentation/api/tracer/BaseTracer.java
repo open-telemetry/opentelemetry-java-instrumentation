@@ -30,11 +30,6 @@ public abstract class BaseTracer {
   public static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
-  // Keeps track of the application root (e.g. servlet context path) that needs to be prepended
-  // to the route when updating the span name
-  protected static final ContextKey<String> CONTEXT_APPLICATION_ROOT_KEY =
-      ContextKey.named("opentelemetry-trace-application-root-key");
-
   protected final Tracer tracer;
 
   public BaseTracer() {
@@ -156,11 +151,5 @@ public abstract class BaseTracer {
   /** Returns span of type SERVER from the given context or <code>null</code> if not found. */
   public static Span getCurrentServerSpan(Context context) {
     return context.get(CONTEXT_SERVER_SPAN_KEY);
-  }
-
-  /** Returns the application root from the given context or <code>""</code> if not found. */
-  public static String getApplicationRoot(Context context) {
-    String value = context.get(CONTEXT_APPLICATION_ROOT_KEY);
-    return value != null ? value : "";
   }
 }

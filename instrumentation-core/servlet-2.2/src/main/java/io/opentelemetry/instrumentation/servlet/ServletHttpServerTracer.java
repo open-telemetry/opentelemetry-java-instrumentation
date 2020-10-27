@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -30,7 +31,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     String servletPath = request.getServletPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       span.updateName(contextPath + servletPath);
-      Context context = Context.current().with(CONTEXT_APPLICATION_ROOT_KEY, contextPath);
+      Context context = Context.current().with(ServletContextPath.CONTEXT_KEY, contextPath);
       return super.startScope(span, request, context);
     } else {
       if (servletPath != null && !servletPath.isEmpty()) {

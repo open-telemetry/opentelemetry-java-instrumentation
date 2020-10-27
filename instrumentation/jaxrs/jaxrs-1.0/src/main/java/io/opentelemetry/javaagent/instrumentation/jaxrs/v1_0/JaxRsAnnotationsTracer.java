@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
@@ -44,7 +45,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private void updateServerSpanName(Context context, Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(BaseTracer.getApplicationRoot(context) + spanName);
+      span.updateName(ServletContextPath.prepend(context, spanName));
     }
   }
 
