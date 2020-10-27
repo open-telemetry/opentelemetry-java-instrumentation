@@ -90,7 +90,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
           }
         }
       }
-      spanName = buildSpanName(httpMethod, classPath, methodPath);
+      spanName = buildSpanName(classPath, methodPath);
       classMap.put(method, spanName);
     }
 
@@ -149,13 +149,9 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
+  private String buildSpanName(Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
-    if (httpMethod != null) {
-      spanNameBuilder.append(httpMethod);
-      spanNameBuilder.append(" ");
-    }
     boolean skipSlash = false;
     if (classPath != null) {
       if (!classPath.value().startsWith("/")) {
