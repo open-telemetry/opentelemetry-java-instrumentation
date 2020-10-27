@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDeco
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,9 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -67,18 +67,18 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {
 
-      Context context = Context.current();
+      Context context = Java8BytecodeBridge.currentContext();
       Span span = TRACER.spanBuilder("Session").setParent(context).startSpan();
       DECORATE.afterStart(span);
 
       if (session instanceof Session) {
         ContextStore<Session, Context> contextStore =
             InstrumentationContext.get(Session.class, Context.class);
-        contextStore.putIfAbsent((Session) session, withSpan(span, context));
+        contextStore.putIfAbsent((Session) session, context.with(span));
       } else if (session instanceof StatelessSession) {
         ContextStore<StatelessSession, Context> contextStore =
             InstrumentationContext.get(StatelessSession.class, Context.class);
-        contextStore.putIfAbsent((StatelessSession) session, withSpan(span, context));
+        contextStore.putIfAbsent((StatelessSession) session, context.with(span));
       }
     }
   }

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -21,13 +21,13 @@ public class FilterAdvice {
       @Advice.This BaseFilter it,
       @Advice.Argument(0) FilterChainContext ctx,
       @Advice.Local("otelScope") Scope scope) {
-    if (TRACER.getCurrentSpan().getContext().isValid()) {
+    if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
       return;
     }
 
     Context context = TRACER.getServerContext(ctx);
     if (context != null) {
-      scope = withScopedContext(context);
+      scope = context.makeCurrent();
     }
   }
 

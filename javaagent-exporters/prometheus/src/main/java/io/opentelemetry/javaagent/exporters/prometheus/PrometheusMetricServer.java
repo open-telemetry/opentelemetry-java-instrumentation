@@ -33,7 +33,7 @@ public class PrometheusMetricServer implements MetricServer {
 
   @Override
   public void start(MetricProducer producer, Properties config) {
-    PrometheusCollector.newBuilder().setMetricProducer(producer).buildAndRegister();
+    PrometheusCollector.builder().setMetricProducer(producer).buildAndRegister();
     try {
       String portStr = config.getProperty(PORT_CONF_PROP_NAME, DEFAULT_PORT);
       String host = config.getProperty(HOST_CONF_PROP_NAME, DEFAULT_HOST);

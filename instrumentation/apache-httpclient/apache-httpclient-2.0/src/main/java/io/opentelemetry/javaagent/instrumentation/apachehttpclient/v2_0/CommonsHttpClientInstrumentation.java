@@ -73,7 +73,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(httpMethod);
-        if (span.getContext().isValid()) {
+        if (span.getSpanContext().isValid()) {
           scope = TRACER.startScope(span, httpMethod);
         }
       }

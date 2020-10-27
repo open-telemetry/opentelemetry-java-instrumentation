@@ -48,17 +48,16 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   static {
     String[] testBS = {
       "io.opentelemetry.instrumentation.api",
+      "io.opentelemetry.DefaultOpenTelemetry", // OpenTelemetry API
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
+      "io.opentelemetry.package-info", // OpenTelemetry API
       "io.opentelemetry.common", // OpenTelemetry API
       "io.opentelemetry.baggage", // OpenTelemetry API
-      "io.opentelemetry.context", // OpenTelemetry API (context prop)
+      "io.opentelemetry.context", // OpenTelemetry API
       "io.opentelemetry.internal", // OpenTelemetry API
       "io.opentelemetry.metrics", // OpenTelemetry API
+      "io.opentelemetry.spi", // OpenTelemetry API
       "io.opentelemetry.trace", // OpenTelemetry API
-      "io.grpc.Context", // OpenTelemetry API dependency
-      "io.grpc.Deadline", // OpenTelemetry API dependency
-      "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency
-      "io.grpc.ThreadLocalContextStorage", // OpenTelemetry API dependency
       "org.slf4j",
       "ch.qos.logback",
       // Tomcat's servlet classes must be on boostrap
@@ -76,8 +75,6 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
       TEST_BOOTSTRAP_PREFIXES[i] = TEST_BOOTSTRAP_PREFIXES[i].replace('.', '/');
     }
   }
-
-  private static final String[] NOT_BOOTSTRAP_PREFIXES = {"io/grpc/Contexts"};
 
   @Override
   public void apply(Project project) {
@@ -163,11 +160,6 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   }
 
   private static boolean isBootstrapClass(String filePath) {
-    for (String notBootstrapName : NOT_BOOTSTRAP_PREFIXES) {
-      if (filePath.startsWith(notBootstrapName)) {
-        return false;
-      }
-    }
     for (String testBootstrapPrefix : TEST_BOOTSTRAP_PREFIXES) {
       if (filePath.startsWith(testBootstrapPrefix)) {
         return true;

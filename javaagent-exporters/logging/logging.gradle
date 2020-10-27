@@ -15,6 +15,7 @@ dependencies {
 
   compileOnly deps.opentelemetrySdk
   compileOnly deps.opentelemetryApi
+  compileOnly deps.slf4j
 }
 
 jar.enabled = false

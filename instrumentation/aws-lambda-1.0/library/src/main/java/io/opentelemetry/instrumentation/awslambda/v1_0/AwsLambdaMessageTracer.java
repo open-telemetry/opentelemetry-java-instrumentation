@@ -13,7 +13,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaMessageTracer extends BaseTracer {
@@ -70,14 +69,14 @@ public class AwsLambdaMessageTracer extends BaseTracer {
   }
 
   public Scope startScope(Span span) {
-    return TracingContextUtils.currentContextWith(span);
+    return span.makeCurrent();
   }
 
   private void addLinkToMessageParent(SQSMessage message, Span.Builder span) {
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
     if (parentHeader != null) {
       SpanContext parentCtx =
-          TracingContextUtils.getSpan(AwsLambdaUtil.extractParent(parentHeader)).getContext();
+          Span.fromContext(AwsLambdaUtil.extractParent(parentHeader)).getSpanContext();
       if (parentCtx.isValid()) {
         span.addLink(parentCtx);
       }

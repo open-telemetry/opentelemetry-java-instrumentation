@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
@@ -33,7 +31,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 public class AwsSdk {
 
   private static final Tracer tracer =
-      OpenTelemetry.getTracer(AwsSdkHttpClientTracer.TRACER.getInstrumentationName());
+      OpenTelemetry.getGlobalTracer(AwsSdkHttpClientTracer.TRACER.getInstrumentationName());
 
   /** Returns the {@link Tracer} used to instrument the AWS SDK. */
   public static Tracer tracer() {
@@ -66,7 +64,7 @@ public class AwsSdk {
    */
   public static Span getSpanFromAttributes(ExecutionAttributes attributes) {
     Context context = getContextFromAttributes(attributes);
-    return context == null ? DefaultSpan.getInvalid() : getSpan(context);
+    return context == null ? Span.getInvalid() : Span.fromContext(context);
   }
 
   /**

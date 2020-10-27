@@ -87,6 +87,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
     }
   }
 
+  // this override is needed because dropwizard reports peer ip as the client ip
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {

@@ -29,7 +29,7 @@ public class KHttpAdvice {
     callDepth = TRACER.getCallDepth();
     if (callDepth.getAndIncrement() == 0) {
       span = TRACER.startSpan(new RequestWrapper(method, uri, headers));
-      if (span.getContext().isValid()) {
+      if (span.getSpanContext().isValid()) {
         headers = asWritable(headers);
         scope = TRACER.startScope(span, headers);
       }

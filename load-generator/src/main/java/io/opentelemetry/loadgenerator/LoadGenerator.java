@@ -5,8 +5,6 @@
 
 package io.opentelemetry.loadgenerator;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import com.google.common.util.concurrent.RateLimiter;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
@@ -24,7 +22,7 @@ import picocli.CommandLine.Option;
     description = "Generates traces and spans at a specified rate")
 public class LoadGenerator implements Callable<Integer> {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;
@@ -105,13 +103,13 @@ public class LoadGenerator implements Callable<Integer> {
         rateLimiter.acquire();
         Span parent = TRACER.spanBuilder("parentSpan").startSpan();
 
-        try (Scope scope = currentContextWith(parent)) {
+        try (Scope scope = parent.makeCurrent()) {
           for (int i = 0; i < width; i++) {
             Span widthSpan = TRACER.spanBuilder("span-" + i).startSpan();
-            try (Scope widthScope = currentContextWith(widthSpan)) {
+            try (Scope widthScope = widthSpan.makeCurrent()) {
               for (int j = 0; j < depth - 2; j++) {
                 Span depthSpan = TRACER.spanBuilder("span-" + i + "-" + j).startSpan();
-                try (Scope depthScope = currentContextWith(depthSpan)) {
+                try (Scope depthScope = depthSpan.makeCurrent()) {
                   // do nothing.  Maybe sleep? but that will mean we need more threads to keep the
                   // effective rate
                 } finally {

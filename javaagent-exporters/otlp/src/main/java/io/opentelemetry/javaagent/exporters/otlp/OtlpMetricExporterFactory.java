@@ -16,6 +16,6 @@ public class OtlpMetricExporterFactory implements MetricExporterFactory {
 
   @Override
   public MetricExporter fromConfig(Properties config) {
-    return OtlpGrpcMetricExporter.newBuilder().readProperties(config).build();
+    return OtlpGrpcMetricExporter.builder().readProperties(config).build();
   }
 }

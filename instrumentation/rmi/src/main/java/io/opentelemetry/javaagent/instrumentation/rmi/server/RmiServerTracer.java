@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Builder;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 
@@ -22,7 +21,7 @@ public class RmiServerTracer extends RpcServerTracer {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
 
-    Builder spanBuilder =
+    Span.Builder spanBuilder =
         tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(SERVER).setParent(context);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "java_rmi");
     spanBuilder.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);

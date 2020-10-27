@@ -159,6 +159,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     }
   }
 
+  // this override is needed because the exception is propagated up from the handler span
+  // to the server span, which is different from the the expectation of the super method
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
 

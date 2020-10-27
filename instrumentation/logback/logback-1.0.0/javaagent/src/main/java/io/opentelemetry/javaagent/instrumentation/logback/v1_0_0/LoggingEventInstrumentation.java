@@ -76,12 +76,12 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
       }
 
       Span currentSpan = InstrumentationContext.get(ILoggingEvent.class, Span.class).get(event);
-      if (currentSpan == null || !currentSpan.getContext().isValid()) {
+      if (currentSpan == null || !currentSpan.getSpanContext().isValid()) {
         return;
       }
 
       Map<String, String> spanContextData = new HashMap<>();
-      SpanContext spanContext = currentSpan.getContext();
+      SpanContext spanContext = currentSpan.getSpanContext();
       spanContextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
       spanContextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
       spanContextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));

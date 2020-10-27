@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +26,7 @@ public class ActionWrapper<T> implements Action<T> {
 
   @Override
   public void execute(T t) throws Exception {
-    try (Scope ignored = withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.execute(t);
     }
   }

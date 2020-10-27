@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
-import io.grpc.Context;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
@@ -18,12 +15,11 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.common.Attributes;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -65,9 +61,9 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
     GrpcHelper.prepareSpan(span, methodName);
 
-    Context context = TracingContextUtils.withSpan(span, Context.current());
+    Context context = Context.current().with(span);
 
-    try (Scope ignored = ContextUtils.withScopedContext(context)) {
+    try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
           next.startCall(new TracingServerCall<>(call, span, tracer), headers), span, tracer);
     } catch (Throwable e) {
@@ -90,7 +86,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(Status status, Metadata trailers) {
       tracer.setStatus(span, status);
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().close(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -114,21 +110,22 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onMessage(ReqT message) {
+      // TODO(anuraaga): Restore
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.GRPC_MESSAGE_TYPE,
+              GrpcHelper.MESSAGE_TYPE,
               "RECEIVED",
-              SemanticAttributes.GRPC_MESSAGE_ID,
+              GrpcHelper.MESSAGE_ID,
               messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onMessage(message);
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onHalfClose();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -138,7 +135,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onCancel() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onCancel();
         span.setAttribute("canceled", true);
       } catch (Throwable e) {
@@ -150,7 +147,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onComplete() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onComplete();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -161,7 +158,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onReady() {
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);

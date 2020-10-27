@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
-import java.util.Optional;
+import java.net.SocketAddress;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
   public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
@@ -47,8 +47,10 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   public void onResponse(Span span, ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
-      address.ifPresent(inetSocketAddress -> NetPeerUtils.setNetPeer(span, inetSocketAddress));
+      SocketAddress socketAddress = coordinator.getEndPoint().resolve();
+      if (socketAddress instanceof InetSocketAddress) {
+        NetPeerUtils.setNetPeer(span, ((InetSocketAddress) socketAddress));
+      }
     }
   }
 }

@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgent;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
-import application.io.grpc.Context;
 import application.io.opentelemetry.common.AttributeKey;
 import application.io.opentelemetry.common.Attributes;
+import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
-import application.io.opentelemetry.trace.StatusCanonicalCode;
+import application.io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,76 +32,90 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void setAttribute(String key, String value) {
+  public Span setAttribute(String key, String value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, long value) {
+  public Span setAttribute(String key, long value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, double value) {
+  public Span setAttribute(String key, double value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, boolean value) {
+  public Span setAttribute(String key, boolean value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public <T> void setAttribute(AttributeKey<T> applicationKey, T value) {
+  public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
     io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       agentSpan.setAttribute(agentKey, value);
     }
+    return this;
   }
 
   @Override
-  public void addEvent(String name) {
+  public Span addEvent(String name) {
     agentSpan.addEvent(name);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, long timestamp) {
+  public Span addEvent(String name, long timestamp) {
     agentSpan.addEvent(name, timestamp);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes applicationAttributes) {
+  public Span addEvent(String name, Attributes applicationAttributes) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes));
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes applicationAttributes, long timestamp) {
+  public Span addEvent(String name, Attributes applicationAttributes, long timestamp) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status) {
+  public Span setStatus(StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, String description) {
+  public Span setStatus(StatusCode status, String description) {
     agentSpan.setStatus(Bridging.toAgent(status), description);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable) {
+  public Span recordException(Throwable throwable) {
     agentSpan.recordException(throwable);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable, Attributes attributes) {
+  public Span recordException(Throwable throwable, Attributes attributes) {
     agentSpan.recordException(throwable, Bridging.toAgent(attributes));
+    return this;
   }
 
   @Override
-  public void updateName(String name) {
+  public Span updateName(String name) {
     agentSpan.updateName(name);
+    return this;
   }
 
   @Override
@@ -115,8 +129,8 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public SpanContext getContext() {
-    return Bridging.toApplication(agentSpan.getContext());
+  public SpanContext getSpanContext() {
+    return Bridging.toApplication(agentSpan.getSpanContext());
   }
 
   @Override
@@ -137,11 +151,11 @@ class ApplicationSpan implements Span {
     private static final Logger log = LoggerFactory.getLogger(Builder.class);
 
     private final io.opentelemetry.trace.Span.Builder agentBuilder;
-    private final ContextStore<Context, io.grpc.Context> contextStore;
+    private final ContextStore<Context, io.opentelemetry.context.Context> contextStore;
 
     Builder(
         io.opentelemetry.trace.Span.Builder agentBuilder,
-        ContextStore<Context, io.grpc.Context> contextStore) {
+        ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
       this.agentBuilder = agentBuilder;
       this.contextStore = contextStore;
     }

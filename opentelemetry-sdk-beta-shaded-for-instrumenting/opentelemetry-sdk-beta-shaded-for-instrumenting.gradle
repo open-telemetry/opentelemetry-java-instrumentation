@@ -18,5 +18,4 @@ shadowJar {
   mergeServiceFiles()
 
   relocate "io.opentelemetry", "application.io.opentelemetry"
-  relocate "io.grpc", "application.io.grpc"
 }

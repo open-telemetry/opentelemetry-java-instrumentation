@@ -110,7 +110,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName){
+        mongoSpan(it, 0, "create", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -324,7 +324,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
         "$SemanticAttributes.DB_NAME.key" dbName
         "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
+        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
       }
     }
   }

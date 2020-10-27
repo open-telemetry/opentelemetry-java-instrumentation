@@ -12,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -74,7 +74,8 @@ public final class AkkaForkJoinPoolInstrumentation extends Instrumenter.Default 
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, task, Context.current());
+        return ExecutorInstrumentationUtils.setupState(
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }

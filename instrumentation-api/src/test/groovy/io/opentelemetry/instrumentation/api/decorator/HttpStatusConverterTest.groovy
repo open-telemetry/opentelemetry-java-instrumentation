@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.opentelemetry.trace.StatusCanonicalCode
+import io.opentelemetry.trace.StatusCode
 import spock.lang.Specification
 
 class HttpStatusConverterTest extends Specification {
@@ -20,75 +20,75 @@ class HttpStatusConverterTest extends Specification {
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
     where:
     httpStatus | expectedStatus
-    100        | StatusCanonicalCode.UNSET
-    101        | StatusCanonicalCode.UNSET
-    102        | StatusCanonicalCode.UNSET
-    103        | StatusCanonicalCode.UNSET
+    100        | StatusCode.UNSET
+    101        | StatusCode.UNSET
+    102        | StatusCode.UNSET
+    103        | StatusCode.UNSET
 
-    200        | StatusCanonicalCode.UNSET
-    201        | StatusCanonicalCode.UNSET
-    202        | StatusCanonicalCode.UNSET
-    203        | StatusCanonicalCode.UNSET
-    204        | StatusCanonicalCode.UNSET
-    205        | StatusCanonicalCode.UNSET
-    206        | StatusCanonicalCode.UNSET
-    207        | StatusCanonicalCode.UNSET
-    208        | StatusCanonicalCode.UNSET
-    226        | StatusCanonicalCode.UNSET
+    200        | StatusCode.UNSET
+    201        | StatusCode.UNSET
+    202        | StatusCode.UNSET
+    203        | StatusCode.UNSET
+    204        | StatusCode.UNSET
+    205        | StatusCode.UNSET
+    206        | StatusCode.UNSET
+    207        | StatusCode.UNSET
+    208        | StatusCode.UNSET
+    226        | StatusCode.UNSET
 
-    300        | StatusCanonicalCode.UNSET
-    301        | StatusCanonicalCode.UNSET
-    302        | StatusCanonicalCode.UNSET
-    303        | StatusCanonicalCode.UNSET
-    304        | StatusCanonicalCode.UNSET
-    305        | StatusCanonicalCode.UNSET
-    306        | StatusCanonicalCode.UNSET
-    307        | StatusCanonicalCode.UNSET
-    308        | StatusCanonicalCode.UNSET
+    300        | StatusCode.UNSET
+    301        | StatusCode.UNSET
+    302        | StatusCode.UNSET
+    303        | StatusCode.UNSET
+    304        | StatusCode.UNSET
+    305        | StatusCode.UNSET
+    306        | StatusCode.UNSET
+    307        | StatusCode.UNSET
+    308        | StatusCode.UNSET
 
-    400        | StatusCanonicalCode.ERROR
-    401        | StatusCanonicalCode.ERROR
-    403        | StatusCanonicalCode.ERROR
-    404        | StatusCanonicalCode.ERROR
-    405        | StatusCanonicalCode.ERROR
-    406        | StatusCanonicalCode.ERROR
-    407        | StatusCanonicalCode.ERROR
-    408        | StatusCanonicalCode.ERROR
-    409        | StatusCanonicalCode.ERROR
-    410        | StatusCanonicalCode.ERROR
-    411        | StatusCanonicalCode.ERROR
-    412        | StatusCanonicalCode.ERROR
-    413        | StatusCanonicalCode.ERROR
-    414        | StatusCanonicalCode.ERROR
-    415        | StatusCanonicalCode.ERROR
-    416        | StatusCanonicalCode.ERROR
-    417        | StatusCanonicalCode.ERROR
-    418        | StatusCanonicalCode.ERROR
-    421        | StatusCanonicalCode.ERROR
-    422        | StatusCanonicalCode.ERROR
-    423        | StatusCanonicalCode.ERROR
-    424        | StatusCanonicalCode.ERROR
-    425        | StatusCanonicalCode.ERROR
-    426        | StatusCanonicalCode.ERROR
-    428        | StatusCanonicalCode.ERROR
-    429        | StatusCanonicalCode.ERROR
-    431        | StatusCanonicalCode.ERROR
-    451        | StatusCanonicalCode.ERROR
+    400        | StatusCode.ERROR
+    401        | StatusCode.ERROR
+    403        | StatusCode.ERROR
+    404        | StatusCode.ERROR
+    405        | StatusCode.ERROR
+    406        | StatusCode.ERROR
+    407        | StatusCode.ERROR
+    408        | StatusCode.ERROR
+    409        | StatusCode.ERROR
+    410        | StatusCode.ERROR
+    411        | StatusCode.ERROR
+    412        | StatusCode.ERROR
+    413        | StatusCode.ERROR
+    414        | StatusCode.ERROR
+    415        | StatusCode.ERROR
+    416        | StatusCode.ERROR
+    417        | StatusCode.ERROR
+    418        | StatusCode.ERROR
+    421        | StatusCode.ERROR
+    422        | StatusCode.ERROR
+    423        | StatusCode.ERROR
+    424        | StatusCode.ERROR
+    425        | StatusCode.ERROR
+    426        | StatusCode.ERROR
+    428        | StatusCode.ERROR
+    429        | StatusCode.ERROR
+    431        | StatusCode.ERROR
+    451        | StatusCode.ERROR
 
-    500        | StatusCanonicalCode.ERROR
-    501        | StatusCanonicalCode.ERROR
-    502        | StatusCanonicalCode.ERROR
-    503        | StatusCanonicalCode.ERROR
-    504        | StatusCanonicalCode.ERROR
-    505        | StatusCanonicalCode.ERROR
-    506        | StatusCanonicalCode.ERROR
-    507        | StatusCanonicalCode.ERROR
-    508        | StatusCanonicalCode.ERROR
-    510        | StatusCanonicalCode.ERROR
-    511        | StatusCanonicalCode.ERROR
+    500        | StatusCode.ERROR
+    501        | StatusCode.ERROR
+    502        | StatusCode.ERROR
+    503        | StatusCode.ERROR
+    504        | StatusCode.ERROR
+    505        | StatusCode.ERROR
+    506        | StatusCode.ERROR
+    507        | StatusCode.ERROR
+    508        | StatusCode.ERROR
+    510        | StatusCode.ERROR
+    511        | StatusCode.ERROR
 
     // Don't exist
-    99         | StatusCanonicalCode.ERROR
-    600        | StatusCanonicalCode.ERROR
+    99         | StatusCode.ERROR
+    600        | StatusCode.ERROR
   }
 }

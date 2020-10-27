@@ -13,13 +13,13 @@ public class ApplicationMeterProvider implements MeterProvider {
   @Override
   public Meter get(String instrumentationName) {
     return new ApplicationMeter(
-        io.opentelemetry.OpenTelemetry.getMeterProvider().get(instrumentationName));
+        io.opentelemetry.OpenTelemetry.getGlobalMeterProvider().get(instrumentationName));
   }
 
   @Override
   public Meter get(String instrumentationName, String instrumentationVersion) {
     return new ApplicationMeter(
-        io.opentelemetry.OpenTelemetry.getMeterProvider()
+        io.opentelemetry.OpenTelemetry.getGlobalMeterProvider()
             .get(instrumentationName, instrumentationVersion));
   }
 }

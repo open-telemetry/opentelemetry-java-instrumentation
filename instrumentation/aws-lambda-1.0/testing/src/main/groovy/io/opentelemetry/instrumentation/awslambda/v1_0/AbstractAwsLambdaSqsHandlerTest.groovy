@@ -12,9 +12,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.opentelemetry.trace.propagation.HttpTraceContext
 
@@ -26,7 +26,7 @@ abstract class AbstractAwsLambdaSqsHandlerTest extends InstrumentationSpecificat
       .addTextMapPropagator(HttpTraceContext.instance)
       .addTextMapPropagator(AwsXRayPropagator.instance)
       .build()
-    OpenTelemetry.setPropagators(propagators)
+    OpenTelemetry.setGlobalPropagators(propagators)
   }
 
   private static final String AWS_TRACE_HEADER = "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1"

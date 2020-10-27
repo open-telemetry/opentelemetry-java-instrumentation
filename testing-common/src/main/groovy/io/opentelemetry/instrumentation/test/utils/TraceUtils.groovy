@@ -5,13 +5,9 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
-import static io.opentelemetry.trace.TracingContextUtils.withSpan
-
-import io.grpc.Context
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import java.util.concurrent.Callable
@@ -30,11 +26,10 @@ class TraceUtils {
       //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
       def span = TRACER.startSpan(rootOperationName, Span.Kind.SERVER)
-      Context newContext = withSpan(span, Context.current().withValue(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span))
-
+      Context newContext = Context.current().with(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span).with(span)
 
       try {
-        def result = withScopedContext(newContext).withCloseable {
+        def result = newContext.makeCurrent().withCloseable {
           r.call()
         }
         TRACER.end(span)
@@ -53,7 +48,7 @@ class TraceUtils {
       final Span span = TRACER.startSpan(rootOperationName, Span.Kind.INTERNAL)
 
       try {
-        def result = currentContextWith(span).withCloseable {
+        def result = span.makeCurrent().withCloseable {
           r.call()
         }
         TRACER.end(span)

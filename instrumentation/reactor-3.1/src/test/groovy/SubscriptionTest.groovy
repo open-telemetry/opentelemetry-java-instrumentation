@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 class SubscriptionTest extends AgentTestRunner {
 
@@ -39,7 +39,7 @@ class SubscriptionTest extends AgentTestRunner {
 
   static class Connection {
     static int query() {
-      def span = OpenTelemetry.getTracer("test").spanBuilder("Connection.query").startSpan()
+      def span = OpenTelemetry.getGlobalTracer("test").spanBuilder("Connection.query").startSpan()
       span.end()
       return new Random().nextInt()
     }

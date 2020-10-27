@@ -14,7 +14,6 @@ import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator;
-import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator.Builder;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +35,7 @@ public class PropagatorsInitializer {
   private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
       ImmutableMap.<String, TextMapPropagator>builder()
           .put(TRACE_CONTEXT, HttpTraceContext.getInstance())
-          .put(B3, B3Propagator.getMultipleHeaderPropagator())
-          .put(B3_SINGLE, B3Propagator.getSingleHeaderPropagator())
+          .put(B3, B3Propagator.getInstance())
           .put(JAEGER, JaegerPropagator.getInstance())
           .put(OT_TRACER, OtTracerPropagator.getInstance())
           .put(XRAY, AwsXRayPropagator.getInstance())
@@ -49,7 +47,7 @@ public class PropagatorsInitializer {
     if (propagators.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      OpenTelemetry.setPropagators(
+      OpenTelemetry.setGlobalPropagators(
           DefaultContextPropagators.builder()
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
@@ -69,7 +67,7 @@ public class PropagatorsInitializer {
       }
     }
     if (textPropagators.size() > 1) {
-      Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
+      TraceMultiPropagator.Builder traceMultiPropagatorBuilder = TraceMultiPropagator.builder();
       for (TextMapPropagator textPropagator : textPropagators) {
         traceMultiPropagatorBuilder.addPropagator(textPropagator);
       }
@@ -78,6 +76,6 @@ public class PropagatorsInitializer {
       propagatorsBuilder.addTextMapPropagator(textPropagators.get(0));
     }
     // Register it in the global propagators:
-    OpenTelemetry.setPropagators(propagatorsBuilder.build());
+    OpenTelemetry.setGlobalPropagators(propagatorsBuilder.build());
   }
 }

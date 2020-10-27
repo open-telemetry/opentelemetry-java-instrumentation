@@ -5,8 +5,6 @@
 
 package io.opentelemetry.perftest.jetty;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.perftest.Worker;
@@ -27,7 +25,7 @@ public class JettyPerftest {
   private static final Server jettyServer = new Server(PORT);
   private static final ServletContextHandler servletContext = new ServletContextHandler();
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   public static void main(String[] args) throws Exception {
     servletContext.addServlet(PerfServlet.class, PATH);
@@ -68,7 +66,7 @@ public class JettyPerftest {
 
     private void scheduleWork(long workTimeMS) {
       Span span = TRACER.spanBuilder("work").startSpan();
-      try (Scope scope = currentContextWith(span)) {
+      try (Scope scope = span.makeCurrent()) {
         if (span != null) {
           span.setAttribute("work-time", workTimeMS);
           span.setAttribute("info", "interesting stuff");

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -71,7 +70,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
       span = TRACER.startSpan(TRACER.spanNameOnRender(req), Kind.INTERNAL);
       span.setAttribute("servlet.context", req.getContextPath());
       TRACER.onRender(span, req);
-      scope = currentContextWith(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

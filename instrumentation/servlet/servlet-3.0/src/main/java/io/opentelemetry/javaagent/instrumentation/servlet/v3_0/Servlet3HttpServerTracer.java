@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -53,7 +51,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   public void onTimeout(Span span, long timeout) {
-    span.setStatus(StatusCanonicalCode.ERROR);
+    span.setStatus(StatusCode.ERROR);
     span.setAttribute("timeout", timeout);
     span.end();
   }
@@ -71,13 +69,13 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   In this case we have to put the span from the request into current context before continuing.
   */
   public static boolean needsRescoping(Context attachedContext) {
-    return !sameTrace(getSpan(Context.current()), getSpan(attachedContext));
+    return !sameTrace(Span.fromContext(Context.current()), Span.fromContext(attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan
-        .getContext()
+        .getSpanContext()
         .getTraceIdAsHexString()
-        .equals(otherSpan.getContext().getTraceIdAsHexString());
+        .equals(otherSpan.getSpanContext().getTraceIdAsHexString());
   }
 }

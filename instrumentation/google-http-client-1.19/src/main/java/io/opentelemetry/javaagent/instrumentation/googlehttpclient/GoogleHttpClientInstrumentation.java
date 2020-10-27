@@ -16,15 +16,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
-import io.opentelemetry.trace.TracingContextUtils;
+import io.opentelemetry.trace.StatusCode;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -91,11 +90,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         span = TRACER.startSpan(request);
         scope = TRACER.startScope(span, request.getHeaders());
         // TODO (trask) ideally we could pass current context into startScope to avoid extra lookup
-        contextStore.put(request, Context.current());
+        contextStore.put(request, Java8BytecodeBridge.currentContext());
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        span = TracingContextUtils.getSpan(context);
-        scope = ContextUtils.withScopedContext(context);
+        span = Java8BytecodeBridge.spanFromContext(context);
+        scope = context.makeCurrent();
       }
     }
 
@@ -116,7 +115,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
       // for a failed request.  Thus, check the response code
       if (response != null && !response.isSuccessStatusCode()) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
       }
     }
   }
@@ -136,7 +135,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       // the java-concurrent instrumentation
       ContextStore<HttpRequest, Context> contextStore =
           InstrumentationContext.get(HttpRequest.class, Context.class);
-      contextStore.put(request, Context.current());
+      contextStore.put(request, Java8BytecodeBridge.currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

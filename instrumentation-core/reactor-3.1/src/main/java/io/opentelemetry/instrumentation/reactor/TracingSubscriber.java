@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
-import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -17,16 +16,18 @@ import reactor.util.context.Context;
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
 public class TracingSubscriber<T> implements CoreSubscriber<T> {
-  private final io.grpc.Context traceContext;
+  private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
 
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
-    this(subscriber, ctx, io.grpc.Context.current());
+    this(subscriber, ctx, io.opentelemetry.context.Context.current());
   }
 
   public TracingSubscriber(
-      Subscriber<? super T> subscriber, Context ctx, io.grpc.Context contextToPropagate) {
+      Subscriber<? super T> subscriber,
+      Context ctx,
+      io.opentelemetry.context.Context contextToPropagate) {
     this.subscriber = subscriber;
     this.traceContext = contextToPropagate;
     this.context = ctx;
@@ -59,7 +60,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
 
   private void withActiveSpan(Runnable runnable) {
     if (traceContext != null) {
-      try (Scope ignored = ContextUtils.withScopedContext(traceContext)) {
+      try (Scope ignored = traceContext.makeCurrent()) {
         runnable.run();
       }
     } else {

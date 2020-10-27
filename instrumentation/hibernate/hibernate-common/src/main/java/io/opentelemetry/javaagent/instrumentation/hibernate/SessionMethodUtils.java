@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
@@ -50,9 +48,9 @@ public class SessionMethodUtils {
               .setParent(sessionContext)
               .startSpan();
       DECORATE.afterStart(span);
-      return new SpanWithScope(span, withScopedContext(withSpan(span, sessionContext)));
+      return new SpanWithScope(span, sessionContext.with(span).makeCurrent());
     } else {
-      return new SpanWithScope(null, withScopedContext(sessionContext));
+      return new SpanWithScope(null, sessionContext.makeCurrent());
     }
   }
 

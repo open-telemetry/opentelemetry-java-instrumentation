@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -17,8 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -88,7 +88,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      Context parentContext = Context.current();
+      Context parentContext = Java8BytecodeBridge.currentContext();
       Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
@@ -187,7 +187,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         completeDelegate(result);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           completeDelegate(result);
         }
       }
@@ -201,7 +201,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         failDelegate(ex);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           failDelegate(ex);
         }
       }
@@ -215,7 +215,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContext == null) {
         cancelDelegate();
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           cancelDelegate();
         }
       }

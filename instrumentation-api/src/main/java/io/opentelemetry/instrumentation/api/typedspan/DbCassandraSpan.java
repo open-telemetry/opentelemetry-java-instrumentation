@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.grpc.Context;
+import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+
+import io.opentelemetry.context.Context;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -146,7 +148,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerName(String netPeerName) {
-    delegate.setAttribute("net.peer.name", netPeerName);
+    delegate.setAttribute(NET_PEER_NAME, netPeerName);
     return this;
   }
 
@@ -158,7 +160,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerIp(String netPeerIp) {
-    delegate.setAttribute("net.peer.ip", netPeerIp);
+    delegate.setAttribute(NET_PEER_IP, netPeerIp);
     return this;
   }
 
@@ -169,7 +171,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerPort(long netPeerPort) {
-    delegate.setAttribute("net.peer.port", netPeerPort);
+    delegate.setAttribute(NET_PEER_PORT, netPeerPort);
     return this;
   }
 
@@ -180,7 +182,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
    */
   @Override
   public DbCassandraSemanticConvention setNetTransport(String netTransport) {
-    delegate.setAttribute("net.transport", netTransport);
+    delegate.setAttribute(NET_TRANSPORT, netTransport);
     return this;
   }
 
@@ -320,7 +322,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbCassandraSpanBuilder setNetPeerName(String netPeerName) {
-      internalBuilder.setAttribute("net.peer.name", netPeerName);
+      internalBuilder.setAttribute(NET_PEER_NAME, netPeerName);
       return this;
     }
 
@@ -331,7 +333,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbCassandraSpanBuilder setNetPeerIp(String netPeerIp) {
-      internalBuilder.setAttribute("net.peer.ip", netPeerIp);
+      internalBuilder.setAttribute(NET_PEER_IP, netPeerIp);
       return this;
     }
 
@@ -341,7 +343,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      * @param netPeerPort Remote port number.
      */
     public DbCassandraSpanBuilder setNetPeerPort(long netPeerPort) {
-      internalBuilder.setAttribute("net.peer.port", netPeerPort);
+      internalBuilder.setAttribute(NET_PEER_PORT, netPeerPort);
       return this;
     }
 
@@ -351,7 +353,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
      * @param netTransport Transport protocol used. See note below.
      */
     public DbCassandraSpanBuilder setNetTransport(String netTransport) {
-      internalBuilder.setAttribute("net.transport", netTransport);
+      internalBuilder.setAttribute(NET_TRANSPORT, netTransport);
       return this;
     }
 

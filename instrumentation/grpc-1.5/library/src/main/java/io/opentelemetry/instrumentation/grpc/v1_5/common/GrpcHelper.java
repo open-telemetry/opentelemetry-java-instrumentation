@@ -6,11 +6,16 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.common;
 
 import io.grpc.Status.Code;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public final class GrpcHelper {
+
+  public static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
+  public static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
+
   public static void prepareSpan(Span span, String fullMethodName) {
 
     int slash = fullMethodName.indexOf('/');
@@ -23,12 +28,12 @@ public final class GrpcHelper {
     }
   }
 
-  public static StatusCanonicalCode statusFromGrpcStatus(io.grpc.Status grpcStatus) {
+  public static StatusCode statusFromGrpcStatus(io.grpc.Status grpcStatus) {
     return codeFromGrpcCode(grpcStatus.getCode());
   }
 
-  private static StatusCanonicalCode codeFromGrpcCode(Code grpcCode) {
-    return grpcCode.equals(Code.OK) ? StatusCanonicalCode.UNSET : StatusCanonicalCode.ERROR;
+  private static StatusCode codeFromGrpcCode(Code grpcCode) {
+    return grpcCode.equals(Code.OK) ? StatusCode.UNSET : StatusCode.ERROR;
   }
 
   private GrpcHelper() {}

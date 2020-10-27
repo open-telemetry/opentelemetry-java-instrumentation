@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
@@ -71,8 +71,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", span.getContext().getTraceIdAsHexString());
-    request.setAttribute("spanId", span.getContext().getSpanIdAsHexString());
+    request.setAttribute("traceId", span.getSpanContext().getTraceIdAsHexString());
+    request.setAttribute("spanId", span.getSpanContext().getSpanIdAsHexString());
 
     super.onRequest(span, request);
   }

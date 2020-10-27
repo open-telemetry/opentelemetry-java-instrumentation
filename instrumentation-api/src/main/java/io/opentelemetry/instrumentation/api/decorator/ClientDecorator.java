@@ -5,20 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import io.grpc.Context;
-import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 
 @Deprecated
 public abstract class ClientDecorator extends BaseDecorator {
 
   // Keeps track of the client span in a subtree corresponding to a client request.
   // Visible for testing
-  static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
-      Context.key("opentelemetry-trace-auto-client-span-key");
+  static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+      ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   /**
    * Returns a new {@link Context} forked from the {@linkplain Context#current()} current context}
@@ -26,10 +25,10 @@ public abstract class ClientDecorator extends BaseDecorator {
    */
   public static Context currentContextWith(Span clientSpan) {
     Context context = Context.current();
-    if (clientSpan.getContext().isValid()) {
-      context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+    if (clientSpan.getSpanContext().isValid()) {
+      context = context.with(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
-    return TracingContextUtils.withSpan(clientSpan, context);
+    return context.with(clientSpan);
   }
 
   /**
@@ -38,11 +37,11 @@ public abstract class ClientDecorator extends BaseDecorator {
    */
   public static Span getOrCreateSpan(String name, Tracer tracer) {
     Context context = Context.current();
-    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context).startSpan();

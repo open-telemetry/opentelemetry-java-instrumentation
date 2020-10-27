@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapIn
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -29,10 +28,10 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -150,9 +149,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = TRACER.getCurrentSpan();
+      Span span = Java8BytecodeBridge.currentSpan();
 
-      if (span.getContext().isValid()) {
+      if (span.getSpanContext().isValid()) {
         TRACER.onPublish(span, exchange, routingKey);
         if (body != null) {
           span.setAttribute(
@@ -172,9 +171,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        Context context = withSpan(span, Context.current());
+        Context context = Java8BytecodeBridge.currentContext().with(span);
 
-        OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+        Java8BytecodeBridge.getGlobalPropagators()
+            .getTextMapPropagator()
+            .inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(

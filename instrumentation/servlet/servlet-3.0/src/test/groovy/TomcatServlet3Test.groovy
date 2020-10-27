@@ -84,7 +84,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   @Override
-  protected String entryPointName() {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return 'ApplicationFilterChain.doFilter'
   }
 

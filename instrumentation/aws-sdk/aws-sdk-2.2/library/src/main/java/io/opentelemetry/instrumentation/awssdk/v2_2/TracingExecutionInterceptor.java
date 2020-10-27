@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAttributes;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.TRACER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -28,7 +27,7 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 /** AWS request execution interceptor */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  static final ExecutionAttribute<io.grpc.Context> CONTEXT_ATTRIBUTE =
+  static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
       new ExecutionAttribute<>("io.opentelemetry.auto.Context");
 
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
@@ -75,7 +74,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Span span = TRACER.getOrCreateSpan(spanName(executionAttributes), AwsSdk.tracer(), kind);
-    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, withSpan(span, io.grpc.Context.current()));
+    executionAttributes.putAttribute(
+        CONTEXT_ATTRIBUTE, io.opentelemetry.context.Context.current().with(span));
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
@@ -86,7 +86,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       TRACER.onRequest(span, context.httpRequest());
       SdkRequestDecorator decorator = decorator(executionAttributes);
       if (decorator != null) {
@@ -123,7 +123,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.afterExecution(span, context.httpRequest());
       onSdkResponse(span, context.response());
@@ -141,7 +141,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getContext().isValid()) {
+    if (span.getSpanContext().isValid()) {
       clearAttributes(executionAttributes);
       TRACER.endExceptionally(span, context.exception());
     }

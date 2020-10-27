@@ -16,6 +16,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -59,12 +60,12 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
 
   public static class CouchbaseCoreAdvice {
     public static final Tracer TRACER =
-        OpenTelemetry.getTracer("io.opentelemetry.auto.couchbase-2.6");
+        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.couchbase-2.6");
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
-      Span parentSpan = TRACER.getCurrentSpan();
+      Span parentSpan = Java8BytecodeBridge.currentSpan();
       if (parentSpan != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store

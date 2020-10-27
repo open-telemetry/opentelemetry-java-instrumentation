@@ -10,8 +10,7 @@ import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.StatusCanonicalCode;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import io.opentelemetry.trace.StatusCode;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
@@ -21,73 +20,87 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void setAttribute(String key, String value) {
+  public Span setAttribute(String key, String value) {
     delegate.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, long value) {
+  public Span setAttribute(String key, long value) {
     delegate.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, double value) {
+  public Span setAttribute(String key, double value) {
     delegate.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, boolean value) {
+  public Span setAttribute(String key, boolean value) {
     delegate.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public <T> void setAttribute(AttributeKey<T> attributeKey, T t) {
+  public <T> Span setAttribute(AttributeKey<T> attributeKey, T t) {
     delegate.setAttribute(attributeKey, t);
+    return this;
   }
 
   @Override
-  public void addEvent(String name) {
+  public Span addEvent(String name) {
     delegate.addEvent(name);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, long timestamp) {
+  public Span addEvent(String name, long timestamp) {
     delegate.addEvent(name, timestamp);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes attributes) {
+  public Span addEvent(String name, Attributes attributes) {
     delegate.addEvent(name, attributes);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes attributes, long timestamp) {
+  public Span addEvent(String name, Attributes attributes, long timestamp) {
     delegate.addEvent(name, attributes, timestamp);
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status) {
+  public Span setStatus(StatusCode status) {
     delegate.setStatus(status);
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCanonicalCode status, @Nullable String description) {
+  public Span setStatus(StatusCode status, String description) {
     delegate.setStatus(status, description);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable) {
+  public Span recordException(Throwable throwable) {
     delegate.recordException(throwable);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable, Attributes attributes) {
+  public Span recordException(Throwable throwable, Attributes attributes) {
     delegate.recordException(throwable, attributes);
+    return this;
   }
 
   @Override
-  public void updateName(String name) {
+  public Span updateName(String name) {
     delegate.updateName(name);
+    return this;
   }
 
   @Override
@@ -101,8 +114,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public SpanContext getContext() {
-    return delegate.getContext();
+  public SpanContext getSpanContext() {
+    return delegate.getSpanContext();
   }
 
   @Override

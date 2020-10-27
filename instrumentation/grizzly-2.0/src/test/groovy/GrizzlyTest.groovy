@@ -96,7 +96,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
   }
 
   @Override
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HttpCodecFilter.handleRead"
   }
 

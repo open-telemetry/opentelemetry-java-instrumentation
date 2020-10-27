@@ -95,7 +95,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(httpRequest);
-        if (span.getContext().isValid()) {
+        if (span.getSpanContext().isValid()) {
           scope = TRACER.startScope(span, httpRequest);
         }
       }
@@ -132,7 +132,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(httpRequest);
-        if (span.getContext().isValid()) {
+        if (span.getSpanContext().isValid()) {
           scope = TRACER.startScope(span, httpRequest);
         }
       }

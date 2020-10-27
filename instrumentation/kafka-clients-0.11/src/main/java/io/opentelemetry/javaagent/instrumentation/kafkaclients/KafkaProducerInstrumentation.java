@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.TRACER;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,9 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -74,16 +72,16 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parent = Context.current();
+      Context parent = Java8BytecodeBridge.currentContext();
 
       span = TRACER.startProducerSpan(record);
-      Context newContext = withSpan(span, parent);
+      Context newContext = parent.with(span);
 
       callback = new ProducerCallback(callback, parent, span);
 
       if (TRACER.shouldPropagate(apiVersions)) {
         try {
-          OpenTelemetry.getPropagators()
+          Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         } catch (IllegalStateException e) {
@@ -97,13 +95,13 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          OpenTelemetry.getPropagators()
+          Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
               .inject(newContext, record.headers(), SETTER);
         }
       }
 
-      scope = withScopedContext(newContext);
+      scope = newContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -142,7 +140,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       if (callback != null) {
         if (parent != null) {
-          try (Scope ignored = withScopedContext(parent)) {
+          try (Scope ignored = parent.makeCurrent()) {
             callback.onCompletion(metadata, exception);
           }
         } else {
