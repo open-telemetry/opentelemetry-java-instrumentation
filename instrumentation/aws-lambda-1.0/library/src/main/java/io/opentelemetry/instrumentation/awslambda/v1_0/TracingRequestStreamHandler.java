@@ -57,7 +57,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       doHandleRequest(input, new OutputStreamWrapper(output, span), context);
     } catch (Throwable t) {
       tracer.endExceptionally(span, t);
-      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
       throw t;
     }
   }
@@ -94,7 +94,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     public void close() throws IOException {
       delegate.close();
       tracer.end(span);
-      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
 
     @Override
