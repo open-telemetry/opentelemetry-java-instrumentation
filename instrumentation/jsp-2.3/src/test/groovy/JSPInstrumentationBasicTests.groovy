@@ -94,7 +94,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/$jspFileName"
           kind SERVER
           errored false
           attributes {
@@ -155,7 +155,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/getQuery.jsp"
           kind SERVER
           errored false
           attributes {
@@ -213,7 +213,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/post.jsp"
           kind SERVER
           errored false
           attributes {
@@ -268,7 +268,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/$jspFileName"
           kind SERVER
           errored true
           event(0) {
@@ -352,7 +352,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/includes/includeHtml.jsp"
           kind SERVER
           errored false
           attributes {
@@ -406,7 +406,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/includes/includeMulti.jsp"
           kind SERVER
           errored false
           attributes {
@@ -498,7 +498,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/$jspFileName"
           kind SERVER
           errored true
           errorEvent(JasperException, String)
@@ -551,11 +551,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           hasNoParent()
-          // serviceName jspWebappContext
-          name expectedOperationName()
+          name "/$jspWebappContext/$staticFile"
           kind SERVER
-          // FIXME: this is not a great span name for serving static content.
-          // spanName "GET /$jspWebappContext/$staticFile"
           errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
@@ -576,12 +573,5 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
 
     where:
     staticFile = "common/hello.html"
-  }
-
-  //Simple class name plus method name of the entry point of the given servlet container.
-  //"Entry point" here means the first filter or servlet that accepts incoming requests.
-  //This will serve as a default name of the SERVER span created for this request.
-  protected String expectedOperationName() {
-    'ApplicationFilterChain.doFilter'
   }
 }

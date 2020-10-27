@@ -29,7 +29,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
-    def url = HttpUrl.get(address.resolve("/async")).newBuilder()
+    def url = HttpUrl.get(address.resolve("async")).newBuilder()
       .addQueryParameter("action", action)
       .build()
     def request = request(url, "GET", null).build()
@@ -69,7 +69,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
     assumeTrue(shouldTestCompletableStageAsync())
 
     given:
-    def url = HttpUrl.get(address.resolve("/async-completion-stage")).newBuilder()
+    def url = HttpUrl.get(address.resolve("async-completion-stage")).newBuilder()
       .addQueryParameter("action", action)
       .build()
     def request = request(url, "GET", null).build()
@@ -130,7 +130,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS) {
     serverSpan(trace, index, traceID, parentID, method,
-      endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path,
+      endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.errored,
       endpoint.status,

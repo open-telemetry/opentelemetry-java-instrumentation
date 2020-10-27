@@ -63,11 +63,11 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     port = PortUtils.randomOpenPort()
     address = buildAddress()
     server = startServer(port)
-    println getClass().name + " http server started at: http://localhost:$port/"
+    println getClass().name + " http server started at: http://localhost:$port" + getContextPath()
   }
 
   URI buildAddress() {
-    return new URI("http://localhost:$port/")
+    return new URI("http://localhost:$port" + getContextPath() + "/")
   }
 
   abstract SERVER startServer(int port)
@@ -85,7 +85,11 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   abstract void stopServer(SERVER server)
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
+    return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
+  }
+
+  String getContextPath() {
+    return ""
   }
 
   boolean hasHandlerSpan() {
@@ -473,5 +477,4 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       }
     }
   }
-
 }

@@ -18,7 +18,7 @@ import okhttp3.RequestBody
 abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> {
   @Override
   URI buildAddress() {
-    return new URI("http://localhost:$port/$context/")
+    return new URI("http://localhost:$port$contextPath/")
   }
 
   // FIXME: Add authentication tests back in...
@@ -26,10 +26,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 //  protected String user = "user"
 //  @Shared
 //  protected String pass = "password"
-
-  abstract String getContext()
-
-  Class<Servlet> servlet = servlet()
 
   abstract Class<Servlet> servlet()
 
@@ -52,13 +48,5 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   Request.Builder request(ServerEndpoint uri, String method, RequestBody body) {
     lastRequest = uri
     super.request(uri, method, body)
-  }
-
-  // Simple class name plus method name of the entry point of the given servlet container.
-  // "Entry point" here means the first filter or servlet that accepts incoming requests.
-  // This will serve as a default name of the SERVER span created for this request.
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HttpServlet.service"
   }
 }

@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -22,6 +24,22 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+
+  public Span startSpan(HttpServletRequest request) {
+    return startSpan(request, request, getSpanName(request));
+  }
+
+  @Override
+  public Scope startScope(Span span, HttpServletRequest request) {
+    Context context = Context.current();
+    // if we start returning Context from startSpan() then we can add ServletContextPath there
+    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1481)
+    String contextPath = request.getContextPath();
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
+    }
+    return super.startScope(span, request, context);
+  }
 
   @Override
   protected String url(HttpServletRequest httpServletRequest) {
@@ -106,5 +124,14 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
     return httpServletRequest.getHeader(name);
+  }
+
+  private static String getSpanName(HttpServletRequest request) {
+    String spanName = request.getServletPath();
+    String contextPath = request.getContextPath();
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      spanName = contextPath + spanName;
+    }
+    return spanName;
   }
 }

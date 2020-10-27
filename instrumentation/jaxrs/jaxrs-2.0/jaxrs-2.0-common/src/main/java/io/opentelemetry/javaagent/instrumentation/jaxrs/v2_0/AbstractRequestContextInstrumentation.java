@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -64,12 +65,13 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
   public static class RequestFilterHelper {
     public static Span createOrUpdateAbortSpan(
-        ContainerRequestContext context, Class<?> resourceClass, Method method) {
+        ContainerRequestContext requestContext, Class<?> resourceClass, Method method) {
 
       if (method != null && resourceClass != null) {
-        context.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
-        Span serverSpan = BaseTracer.getCurrentServerSpan();
-        Span currentSpan = Java8BytecodeBridge.currentSpan();
+        requestContext.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
+        Context context = Java8BytecodeBridge.currentContext();
+        Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+        Span currentSpan = Java8BytecodeBridge.spanFromContext(context);
 
         // if there's no current span or it's the same as the server (servlet) span we need to start
         // a JAX-RS one
@@ -78,7 +80,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         if (currentSpan == null || currentSpan == serverSpan) {
           return TRACER.startSpan(resourceClass, method);
         } else {
-          TRACER.updateSpanNames(currentSpan, serverSpan, resourceClass, method);
+          TRACER.updateSpanNames(context, currentSpan, serverSpan, resourceClass, method);
         }
       }
       return null;

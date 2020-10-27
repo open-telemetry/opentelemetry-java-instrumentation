@@ -49,10 +49,10 @@ class JerseyTest extends AgentTestRunner {
     }
 
     where:
-    resource           | expectedSpanName           | controllerName | expectedResponse
-    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
-    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
-    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
+    resource           | expectedSpanName      | controllerName | expectedResponse
+    "/test/hello/bob"  | "/test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
+    "/test2/hello/bob" | "/test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
+    "/test3/hi/bob"    | "/test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
   }
 
   def "test nested call"() {
@@ -84,7 +84,7 @@ class JerseyTest extends AgentTestRunner {
     }
 
     where:
-    resource        | expectedSpanName     | controller1Name | expectedResponse
-    "/test3/nested" | "POST /test3/nested" | "Test3.nested"  | "Test3 nested!"
+    resource        | expectedSpanName | controller1Name | expectedResponse
+    "/test3/nested" | "/test3/nested"  | "Test3.nested"  | "Test3 nested!"
   }
 }
