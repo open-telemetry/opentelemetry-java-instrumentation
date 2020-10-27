@@ -63,7 +63,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
       case "mongodb":
         {
           Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          return queryParameters.get("database");
+          return queryParameters.toString();
         }
       case "cql":
         {
