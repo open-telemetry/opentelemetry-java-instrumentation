@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import java.util.Map;
@@ -16,13 +16,13 @@ final class CamelPropagationUtil {
   private CamelPropagationUtil() {}
 
   static Context extractParent(final Map<String, Object> exchangeHeaders) {
-    return OpenTelemetry.getPropagators()
+    return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .extract(Context.current(), exchangeHeaders, MapGetter.INSTANCE);
   }
 
   static void injectParent(Context context, final Map<String, Object> exchangeHeaders) {
-    OpenTelemetry.getPropagators()
+    OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, exchangeHeaders, MapSetter.INSTANCE);
   }

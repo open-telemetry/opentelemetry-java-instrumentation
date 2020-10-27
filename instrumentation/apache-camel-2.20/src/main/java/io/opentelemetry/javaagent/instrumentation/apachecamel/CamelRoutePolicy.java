@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.trace.Span;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -39,7 +39,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
     String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
     Span.Builder builder = CamelTracer.TRACER.spanBuilder(name);
-    if (!activeSpan.getContext().isValid()) {
+    if (!activeSpan.getSpanContext().isValid()) {
       // root operation, set kind, otherwise - INTERNAL
       builder.setSpanKind(sd.getReceiverSpanKind());
       Context parentContext = CamelPropagationUtil.extractParent(exchange.getIn().getHeaders());

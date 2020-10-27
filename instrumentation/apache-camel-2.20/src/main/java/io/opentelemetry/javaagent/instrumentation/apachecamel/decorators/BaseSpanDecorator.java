@@ -27,7 +27,7 @@ import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.trace.StatusCode;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,7 +98,7 @@ class BaseSpanDecorator implements SpanDecorator {
   @Override
   public void post(Span span, Exchange exchange, Endpoint endpoint) {
     if (exchange.isFailed()) {
-      span.setStatus(StatusCanonicalCode.ERROR);
+      span.setStatus(StatusCode.ERROR);
       if (exchange.getException() != null) {
         span.recordException(exchange.getException());
       }
