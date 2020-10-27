@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static java.util.Collections.singletonMap;
-
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Map;
 
 public abstract class AbstractInstrumentation extends Instrumenter.Default {
   public AbstractInstrumentation() {
@@ -18,8 +15,8 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".context.ApplicationScope",
-      packageName + ".context.NoopScope",
+      packageName + ".context.AgentContextStorage",
+      packageName + ".context.AgentContextStorage$AgentContextWrapper",
       packageName + ".context.propagation.ApplicationContextPropagators",
       packageName + ".context.propagation.ApplicationTextMapPropagator",
       packageName + ".context.propagation.ApplicationTextMapPropagator$AgentSetter",
@@ -83,11 +80,5 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".LabelBridging",
       packageName + ".LabelBridging$Consumer"
     };
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(
-        "application.io.opentelemetry.context.Context", "io.opentelemetry.context.Context");
   }
 }

@@ -13,8 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.trace.Span;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.TracingContextUtils;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
@@ -65,10 +63,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
         @Advice.Argument(1) Context applicationContext,
         @Advice.Return(readOnly = false) Context applicationUpdatedContext) {
 
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
-      applicationUpdatedContext =
-          TracingContextUtils.withSpan(applicationSpan, applicationContext, contextStore);
+      applicationUpdatedContext = TracingContextUtils.withSpan(applicationSpan, applicationContext);
     }
   }
 
@@ -97,9 +92,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
         @Advice.Argument(0) Context context,
         @Advice.Return(readOnly = false) Span applicationSpan) {
 
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
-      applicationSpan = TracingContextUtils.getSpan(context, contextStore);
+      applicationSpan = TracingContextUtils.getSpan(context);
     }
   }
 
@@ -115,9 +108,7 @@ public class TracingContextUtilsInstrumentation extends AbstractInstrumentation 
         @Advice.Argument(0) Context context,
         @Advice.Return(readOnly = false) Span applicationSpan) {
 
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
-      applicationSpan = TracingContextUtils.getSpanWithoutDefault(context, contextStore);
+      applicationSpan = TracingContextUtils.getSpanWithoutDefault(context);
     }
   }
 }

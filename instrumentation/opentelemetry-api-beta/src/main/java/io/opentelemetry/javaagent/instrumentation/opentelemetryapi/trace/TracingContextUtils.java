@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.
 
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +17,7 @@ public class TracingContextUtils {
 
   private static final Logger log = LoggerFactory.getLogger(TracingContextUtils.class);
 
-  public static Context withSpan(
-      Span applicationSpan,
-      Context applicationContext,
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
+  public static Context withSpan(Span applicationSpan, Context applicationContext) {
     io.opentelemetry.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
     if (agentSpan == null) {
       if (log.isDebugEnabled()) {
@@ -28,48 +25,25 @@ public class TracingContextUtils {
       }
       return applicationContext;
     }
-    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
-    if (agentContext == null) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
-      }
-      return applicationContext;
-    }
+    io.opentelemetry.context.Context agentContext =
+        AgentContextStorage.getAgentContext(applicationContext);
     io.opentelemetry.context.Context agentUpdatedContext = agentContext.with(agentSpan);
-    contextStore.put(applicationContext, agentUpdatedContext);
-    return applicationContext;
+    return new AgentContextStorage.AgentContextWrapper(agentUpdatedContext, applicationContext);
   }
 
   public static Span getCurrentSpan() {
     return toApplication(io.opentelemetry.trace.Span.current());
   }
 
-  public static Span getSpan(
-      Context applicationContext,
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
-    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
-    if (agentContext == null) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
-      }
-      return Span.getInvalid();
-    }
+  public static Span getSpan(Context applicationContext) {
+    io.opentelemetry.context.Context agentContext =
+        AgentContextStorage.getAgentContext(applicationContext);
     return toApplication(io.opentelemetry.trace.Span.fromContext(agentContext));
   }
 
-  public static Span getSpanWithoutDefault(
-      Context applicationContext,
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
-    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
-    if (agentContext == null) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
-      }
-      return null;
-    }
+  public static Span getSpanWithoutDefault(Context applicationContext) {
+    io.opentelemetry.context.Context agentContext =
+        AgentContextStorage.getAgentContext(applicationContext);
     io.opentelemetry.trace.Span agentSpan =
         io.opentelemetry.trace.Span.fromContextOrNull(agentContext);
     return agentSpan == null ? null : toApplication(agentSpan);

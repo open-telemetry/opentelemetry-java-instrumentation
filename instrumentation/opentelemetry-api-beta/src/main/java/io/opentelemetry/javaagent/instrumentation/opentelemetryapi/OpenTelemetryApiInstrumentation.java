@@ -10,12 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
 import application.io.opentelemetry.metrics.MeterProvider;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.ApplicationMeterProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
@@ -56,10 +53,7 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     public static void methodExit(
         @Advice.Return(readOnly = false)
             application.io.opentelemetry.trace.TracerProvider applicationTracerProvider) {
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
-      applicationTracerProvider =
-          new ApplicationTracerProvider(contextStore, applicationTracerProvider);
+      applicationTracerProvider = new ApplicationTracerProvider(applicationTracerProvider);
     }
   }
 
@@ -77,9 +71,7 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false) ContextPropagators applicationContextPropagators) {
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore =
-          InstrumentationContext.get(Context.class, io.opentelemetry.context.Context.class);
-      applicationContextPropagators = new ApplicationContextPropagators(contextStore);
+      applicationContextPropagators = new ApplicationContextPropagators();
     }
   }
 }
