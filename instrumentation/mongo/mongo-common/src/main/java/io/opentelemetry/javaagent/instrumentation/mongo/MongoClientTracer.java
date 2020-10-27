@@ -39,7 +39,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
     String collection = collectionName(event);
     if (collection != null) {
-      span.setAttribute(SemanticAttributes.MONGODB_COLLECTION, collection);
+      span.setAttribute(SemanticAttributes.DB_MONGODB_COLLECTION, collection);
     }
     return super.onConnection(span, event);
   }

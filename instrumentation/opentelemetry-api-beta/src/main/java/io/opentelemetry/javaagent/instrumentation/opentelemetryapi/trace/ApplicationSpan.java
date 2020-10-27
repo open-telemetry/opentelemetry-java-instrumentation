@@ -32,76 +32,90 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void setAttribute(String key, String value) {
+  public Span setAttribute(String key, String value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, long value) {
+  public Span setAttribute(String key, long value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, double value) {
+  public Span setAttribute(String key, double value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public void setAttribute(String key, boolean value) {
+  public Span setAttribute(String key, boolean value) {
     agentSpan.setAttribute(key, value);
+    return this;
   }
 
   @Override
-  public <T> void setAttribute(AttributeKey<T> applicationKey, T value) {
+  public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
     io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       agentSpan.setAttribute(agentKey, value);
     }
+    return this;
   }
 
   @Override
-  public void addEvent(String name) {
+  public Span addEvent(String name) {
     agentSpan.addEvent(name);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, long timestamp) {
+  public Span addEvent(String name, long timestamp) {
     agentSpan.addEvent(name, timestamp);
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes applicationAttributes) {
+  public Span addEvent(String name, Attributes applicationAttributes) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes));
+    return this;
   }
 
   @Override
-  public void addEvent(String name, Attributes applicationAttributes, long timestamp) {
+  public Span addEvent(String name, Attributes applicationAttributes, long timestamp) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCode status) {
+  public Span setStatus(StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
+    return this;
   }
 
   @Override
-  public void setStatus(StatusCode status, String description) {
+  public Span setStatus(StatusCode status, String description) {
     agentSpan.setStatus(Bridging.toAgent(status), description);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable) {
+  public Span recordException(Throwable throwable) {
     agentSpan.recordException(throwable);
+    return this;
   }
 
   @Override
-  public void recordException(Throwable throwable, Attributes attributes) {
+  public Span recordException(Throwable throwable, Attributes attributes) {
     agentSpan.recordException(throwable, Bridging.toAgent(attributes));
+    return this;
   }
 
   @Override
-  public void updateName(String name) {
+  public Span updateName(String name) {
     agentSpan.updateName(name);
+    return this;
   }
 
   @Override

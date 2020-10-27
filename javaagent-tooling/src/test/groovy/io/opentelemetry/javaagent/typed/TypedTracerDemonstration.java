@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.typed;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.typed.client.SampleHttpClientTypedSpan;
 import io.opentelemetry.javaagent.typed.client.SampleHttpClientTypedTracer;
@@ -21,7 +19,7 @@ class TypedTracerDemonstration {
     SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope scope = span.makeCurrent()) {
       // make request
       String response = "response instance";
 
@@ -38,7 +36,7 @@ class TypedTracerDemonstration {
     SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (Scope scope = currentContextWith(span)) {
+    try (Scope scope = span.makeCurrent()) {
       // make request
       String response = "response instance";
 

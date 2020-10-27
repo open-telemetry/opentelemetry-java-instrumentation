@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -73,7 +72,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
         return null;
       }
       Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, span.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

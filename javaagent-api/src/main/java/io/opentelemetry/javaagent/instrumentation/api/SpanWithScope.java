@@ -19,7 +19,7 @@ import io.opentelemetry.trace.Span;
  *     public static SpanWithScope onEnter(...) {
  *     ...
  *     Span span = ...
- *     return new SpanWithScope(span, currentContextWith(span));
+ *     return new SpanWithScope(span, span.makeCurrent());
  *   }
  *
  *   &#64;Advice.OnMethodExit(...)

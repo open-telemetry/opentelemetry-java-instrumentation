@@ -9,7 +9,6 @@ import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-import io.opentelemetry.trace.TracingContextUtils
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
@@ -68,7 +67,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
     when:
     def internal = TRACER.spanBuilder("internal").setSpanKind(Span.Kind.INTERNAL).startSpan()
-    def scope2 = TracingContextUtils.currentContextWith(internal)
+    def scope2 = internal.makeCurrent()
 
     then:
     assert internal.getSpanContext().isValid()

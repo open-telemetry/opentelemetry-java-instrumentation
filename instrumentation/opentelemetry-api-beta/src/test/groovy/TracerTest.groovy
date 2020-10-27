@@ -4,8 +4,6 @@
  */
 
 import static application.io.opentelemetry.trace.Span.Kind.PRODUCER
-import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.common.Attributes
 import application.io.opentelemetry.context.Context
@@ -78,11 +76,11 @@ class TracerTest extends AgentTestRunner {
     }
   }
 
-  def "capture span with implicit parent using TracingContextUtils.currentContextWith()"() {
+  def "capture span with implicit parent using makeCurrent"() {
     when:
     def tracer = OpenTelemetry.getGlobalTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
-    Scope parentScope = currentContextWith(parentSpan)
+    Scope parentScope = parentSpan.makeCurrent()
 
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.end()
@@ -173,7 +171,7 @@ class TracerTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getGlobalTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def parentScope = currentContextWith(parentSpan)
+    def parentScope = parentSpan.makeCurrent()
     def testSpan = tracer.spanBuilder("test").setNoParent().startSpan()
     testSpan.end()
     parentSpan.end()

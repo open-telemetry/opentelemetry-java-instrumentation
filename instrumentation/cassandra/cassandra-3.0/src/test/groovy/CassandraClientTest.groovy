@@ -141,7 +141,7 @@ class CassandraClientTest extends AgentTestRunner {
         "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
         "$SemanticAttributes.DB_NAME.key" keyspace
         "$SemanticAttributes.DB_STATEMENT.key" statement
-        "$SemanticAttributes.CASSANDRA_KEYSPACE.key" keyspace
+        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE.key" keyspace
       }
     }
   }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.play.v2_3;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
@@ -24,7 +23,7 @@ public class PlayAdvice {
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
     Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
 
-    return new SpanWithScope(span, currentContextWith(span));
+    return new SpanWithScope(span, span.makeCurrent());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

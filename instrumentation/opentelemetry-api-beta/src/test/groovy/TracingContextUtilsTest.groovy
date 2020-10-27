@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static application.io.opentelemetry.trace.TracingContextUtils.currentContextWith
-
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.trace.Span
@@ -24,7 +22,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
-    def scope = currentContextWith(testSpan)
+    def scope = testSpan.makeCurrent()
     def span = Span.current()
     scope.close()
 
@@ -44,7 +42,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
-    def scope = currentContextWith(testSpan)
+    def scope = testSpan.makeCurrent()
     def span = Span.fromContext(Context.current())
     scope.close()
 
@@ -64,7 +62,7 @@ class TracingContextUtilsTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getGlobalTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
-    def scope = currentContextWith(testSpan)
+    def scope = testSpan.makeCurrent()
     def span = Span.fromContextOrNull(Context.current())
     scope.close()
 

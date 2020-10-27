@@ -173,7 +173,7 @@ public class TracerInstaller {
         .readProperties(config)
         .setMetricExporter(metricExporter)
         .setMetricProducers(
-            Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
+            Collections.singleton(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer()))
         .build();
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
@@ -182,12 +182,12 @@ public class TracerInstaller {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
-    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(spanProcessor);
+    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
   private static void installMetricServer(MetricServer metricServer, Properties config) {
-    MetricProducer metricProducer = OpenTelemetrySdk.getMeterProvider().getMetricProducer();
+    MetricProducer metricProducer = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer();
     metricServer.start(metricProducer, config);
     log.info("Installed metric server: " + metricServer.getClass().getName());
   }
@@ -208,7 +208,7 @@ public class TracerInstaller {
   }
 
   private static void configure(Properties config) {
-    TracerSdkManagement tracerManagement = OpenTelemetrySdk.getTracerManagement();
+    TracerSdkManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
 
     // Register additional thread details logging span processor
     tracerManagement.addSpanProcessor(new AddThreadDetailsSpanProcessor());

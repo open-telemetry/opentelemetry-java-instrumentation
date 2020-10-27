@@ -11,10 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.10.0-20201023.035348-70',
-    opentelemetryOther  : '0.10.0-20201023.035348-70',
-    opentelemetryAnother: '0.10.0-20201023.035348-70',
-    opentelemetryContext: '0.10.0-20201023.035348-43',
+    opentelemetry       : '0.10.0-20201025.184226-80',
+    opentelemetryOther  : '0.10.0-20201025.184226-80',
+    opentelemetryAnother: '0.10.0-20201025.184226-80',
+    opentelemetryContext: '0.10.0-20201025.184226-53',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7

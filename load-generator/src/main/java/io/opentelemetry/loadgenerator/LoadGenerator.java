@@ -5,8 +5,6 @@
 
 package io.opentelemetry.loadgenerator;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import com.google.common.util.concurrent.RateLimiter;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
@@ -105,13 +103,13 @@ public class LoadGenerator implements Callable<Integer> {
         rateLimiter.acquire();
         Span parent = TRACER.spanBuilder("parentSpan").startSpan();
 
-        try (Scope scope = currentContextWith(parent)) {
+        try (Scope scope = parent.makeCurrent()) {
           for (int i = 0; i < width; i++) {
             Span widthSpan = TRACER.spanBuilder("span-" + i).startSpan();
-            try (Scope widthScope = currentContextWith(widthSpan)) {
+            try (Scope widthScope = widthSpan.makeCurrent()) {
               for (int j = 0; j < depth - 2; j++) {
                 Span depthSpan = TRACER.spanBuilder("span-" + i + "-" + j).startSpan();
-                try (Scope depthScope = currentContextWith(depthSpan)) {
+                try (Scope depthScope = depthSpan.makeCurrent()) {
                   // do nothing.  Maybe sleep? but that will mean we need more threads to keep the
                   // effective rate
                 } finally {

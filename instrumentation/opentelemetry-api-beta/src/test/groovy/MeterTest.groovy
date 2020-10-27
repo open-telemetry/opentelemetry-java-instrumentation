@@ -43,7 +43,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -94,7 +94,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -173,7 +173,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -222,7 +222,7 @@ class MeterTest extends AgentTestRunner {
       .put(doubleMeasure, 6.6)
       .record()
 
-    def allMetrics = OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics()
+    def allMetrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
 
     then:
     def metricData = findMetric(allMetrics, instrumentationName, "test")

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -74,7 +73,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         // Now create a span for handler/controller execution.
         Span span = TRACER.startHandlerSpan(handler);
 
-        return new SpanWithScope(span, currentContextWith(span));
+        return new SpanWithScope(span, span.makeCurrent());
       } else {
         return null;
       }
