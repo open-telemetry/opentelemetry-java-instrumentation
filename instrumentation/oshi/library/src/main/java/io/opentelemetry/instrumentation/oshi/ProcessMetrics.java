@@ -11,8 +11,6 @@ import io.opentelemetry.metrics.AsynchronousInstrument.Callback;
 import io.opentelemetry.metrics.AsynchronousInstrument.DoubleResult;
 import io.opentelemetry.metrics.AsynchronousInstrument.LongResult;
 import io.opentelemetry.metrics.Meter;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
@@ -57,25 +55,6 @@ public class ProcessMetrics {
                 processInfo.updateAttributes();
                 r.observe(processInfo.getUserTime() * 1000, Labels.of(TYPE_LABEL_KEY, "user"));
                 r.observe(processInfo.getKernelTime() * 1000, Labels.of(TYPE_LABEL_KEY, "system"));
-              }
-            });
-
-    meter
-        .longValueObserverBuilder("runtime.java.gc_count")
-        .setDescription("Runtime Java GC count")
-        .setUnit("counts")
-        .build()
-        .setCallback(
-            new Callback<LongResult>() {
-              @Override
-              public void update(LongResult r) {
-                long gcCount = 0;
-                for (final GarbageCollectorMXBean gcBean :
-                    ManagementFactory.getGarbageCollectorMXBeans()) {
-                  gcCount += gcBean.getCollectionCount();
-                }
-
-                r.observe(gcCount, Labels.of(TYPE_LABEL_KEY, "count"));
               }
             });
   }
