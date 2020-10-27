@@ -45,7 +45,7 @@ public class SystemMetrics {
             });
 
     meter
-        .doubleUpDownSumObserverBuilder("system.memory.utilization")
+        .doubleValueObserverBuilder("system.memory.utilization")
         .setDescription("System memory utilization")
         .setUnit("1")
         .build()
