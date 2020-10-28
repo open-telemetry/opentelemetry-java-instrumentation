@@ -9,6 +9,9 @@ import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.ContextKey;
 import application.io.opentelemetry.context.ContextStorage;
 import application.io.opentelemetry.context.Scope;
+import application.io.opentelemetry.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import java.lang.reflect.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,37 +92,68 @@ public class AgentContextStorage implements ContextStorage {
 
     @Override
     public <V> V get(ContextKey<V> key) {
+      if (key == SpanContextKeys.APPLICATION_SPAN_CONTEXT_KEY) {
+        io.opentelemetry.trace.Span agentSpan =
+            agentContext.get(SpanContextKeys.AGENT_SPAN_CONTEXT_KEY);
+        if (agentSpan == null) {
+          return null;
+        }
+        Span applicationSpan = Bridging.toApplication(agentSpan);
+        @SuppressWarnings("unchecked")
+        V value = (V) applicationSpan;
+        return value;
+      }
       return applicationContext.get(key);
     }
 
     @Override
     public <V> Context with(ContextKey<V> k1, V v1) {
+      if (k1 == SpanContextKeys.APPLICATION_SPAN_CONTEXT_KEY) {
+        Span applicationSpan = (Span) v1;
+        io.opentelemetry.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
+        if (agentSpan == null) {
+          return this;
+        }
+        return new AgentContextWrapper(
+            agentContext.with(SpanContextKeys.AGENT_SPAN_CONTEXT_KEY, agentSpan),
+            applicationContext);
+      }
       return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1));
     }
+  }
 
-    @Override
-    public <V1, V2> Context with(ContextKey<V1> k1, V1 v1, ContextKey<V2> k2, V2 v2) {
-      return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1, k2, v2));
-    }
+  static class SpanContextKeys {
+    static final io.opentelemetry.context.ContextKey<io.opentelemetry.trace.Span>
+        AGENT_SPAN_CONTEXT_KEY;
+    static final ContextKey<Span> APPLICATION_SPAN_CONTEXT_KEY;
 
-    @Override
-    public <V1, V2, V3> Context with(
-        ContextKey<V1> k1, V1 v1, ContextKey<V2> k2, V2 v2, ContextKey<V3> k3, V3 v3) {
-      return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1, k2, v2, k3, v3));
-    }
+    static {
+      io.opentelemetry.context.ContextKey<io.opentelemetry.trace.Span> agentSpanContextKey;
+      try {
+        Class<?> tracingContextUtils = Class.forName("io.opentelemetry.trace.TracingContextUtils");
+        Field contextSpanKeyField = tracingContextUtils.getDeclaredField("CONTEXT_SPAN_KEY");
+        contextSpanKeyField.setAccessible(true);
+        agentSpanContextKey =
+            (io.opentelemetry.context.ContextKey<io.opentelemetry.trace.Span>)
+                contextSpanKeyField.get(null);
+      } catch (Throwable t) {
+        agentSpanContextKey = null;
+        throw new Error(t);
+      }
+      AGENT_SPAN_CONTEXT_KEY = agentSpanContextKey;
 
-    @Override
-    public <V1, V2, V3, V4> Context with(
-        ContextKey<V1> k1,
-        V1 v1,
-        ContextKey<V2> k2,
-        V2 v2,
-        ContextKey<V3> k3,
-        V3 v3,
-        ContextKey<V4> k4,
-        V4 v4) {
-      return new AgentContextWrapper(
-          agentContext, applicationContext.with(k1, v1, k2, v2, k3, v3, k4, v4));
+      ContextKey<Span> applicationSpanContextKey;
+      try {
+        Class<?> tracingContextUtils =
+            Class.forName("application.io.opentelemetry.trace.TracingContextUtils");
+        Field contextSpanKeyField = tracingContextUtils.getDeclaredField("CONTEXT_SPAN_KEY");
+        contextSpanKeyField.setAccessible(true);
+        applicationSpanContextKey = (ContextKey<Span>) contextSpanKeyField.get(null);
+      } catch (Throwable t) {
+        applicationSpanContextKey = null;
+        throw new Error(t);
+      }
+      APPLICATION_SPAN_CONTEXT_KEY = applicationSpanContextKey;
     }
   }
 }

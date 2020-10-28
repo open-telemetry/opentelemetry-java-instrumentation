@@ -17,6 +17,7 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".context.AgentContextStorage",
       packageName + ".context.AgentContextStorage$AgentContextWrapper",
+      packageName + ".context.AgentContextStorage$SpanContextKeys",
       packageName + ".context.propagation.ApplicationContextPropagators",
       packageName + ".context.propagation.ApplicationTextMapPropagator",
       packageName + ".context.propagation.ApplicationTextMapPropagator$AgentSetter",
@@ -72,7 +73,6 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".trace.Bridging",
       packageName + ".trace.Bridging$1",
       packageName + ".trace.Bridging$2",
-      packageName + ".trace.TracingContextUtils",
       packageName + ".trace.ApplicationSpan",
       packageName + ".trace.ApplicationSpan$Builder",
       packageName + ".trace.ApplicationTracer",
