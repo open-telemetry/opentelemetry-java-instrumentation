@@ -90,11 +90,7 @@ public class TracerInstaller {
         ServiceLoader.load(MetricExporterFactory.class, TracerInstaller.class.getClassLoader());
 
     for (MetricExporterFactory metricExporterFactory : serviceLoader) {
-      if (metricExporterFactory
-          .getClass()
-          .getSimpleName()
-          .toLowerCase()
-          .startsWith(exporterName(exporterName).toLowerCase())) {
+      if (metricExporterFactory.getNames().contains(exporterName)) {
         return metricExporterFactory;
       }
     }
@@ -106,11 +102,7 @@ public class TracerInstaller {
         ServiceLoader.load(MetricServer.class, TracerInstaller.class.getClassLoader());
 
     for (MetricServer metricServer : serviceLoader) {
-      if (metricServer
-          .getClass()
-          .getSimpleName()
-          .toLowerCase()
-          .startsWith(exporterName(exporterName).toLowerCase())) {
+      if (metricServer.getNames().contains(exporterName)) {
         return metricServer;
       }
     }
@@ -122,19 +114,11 @@ public class TracerInstaller {
         ServiceLoader.load(SpanExporterFactory.class, TracerInstaller.class.getClassLoader());
 
     for (SpanExporterFactory spanExporterFactory : serviceLoader) {
-      if (spanExporterFactory
-          .getClass()
-          .getSimpleName()
-          .toLowerCase()
-          .startsWith(exporterName(exporterName).toLowerCase())) {
+      if (spanExporterFactory.getNames().contains(exporterName)) {
         return spanExporterFactory;
       }
     }
     return null;
-  }
-
-  private static String exporterName(String exporterName) {
-    return exporterName.replace("otlp_span", "otlpspan").replace("otlp_metric", "otlpmetric");
   }
 
   private static synchronized void installExportersFromJar(String exporterJar, Properties config) {
