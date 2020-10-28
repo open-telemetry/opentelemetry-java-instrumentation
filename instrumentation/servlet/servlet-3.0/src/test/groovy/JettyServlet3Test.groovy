@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import javax.servlet.Servlet
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
@@ -18,16 +17,6 @@ import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
-
-  //We want to test spans produced by servlet instrumentation, not those of jetty
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.jetty.enabled", "false")
-  }
-
-  @Override
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   @Override
   boolean testNotFound() {
@@ -41,7 +30,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
       it.setHost('localhost')
     }
 
-    ServletContextHandler servletContext = new ServletContextHandler(null, "/$context")
+    ServletContextHandler servletContext = new ServletContextHandler(null, contextPath)
     servletContext.errorHandler = new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
         Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
@@ -64,8 +53,8 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   }
 
   @Override
-  String getContext() {
-    return "jetty-context"
+  String getContextPath() {
+    return "/jetty-context"
   }
 
   @Override
@@ -240,6 +229,6 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
 abstract class JettyDispatchTest extends JettyServlet3Test {
   @Override
   URI buildAddress() {
-    return new URI("http://localhost:$port/$context/dispatch/")
+    return new URI("http://localhost:$port$contextPath/dispatch/")
   }
 }

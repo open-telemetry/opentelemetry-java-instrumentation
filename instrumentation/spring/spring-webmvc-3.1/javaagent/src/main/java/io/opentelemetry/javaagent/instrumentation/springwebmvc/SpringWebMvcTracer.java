@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -31,12 +33,12 @@ public class SpringWebMvcTracer extends BaseTracer {
     return span;
   }
 
-  public void onRequest(Span span, HttpServletRequest request) {
+  public void onRequest(Context context, Span span, HttpServletRequest request) {
     if (request != null) {
       Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestMatchingPattern != null) {
-        span.updateName(bestMatchingPattern.toString());
+        span.updateName(ServletContextPath.prepend(context, bestMatchingPattern.toString()));
       }
     }
   }

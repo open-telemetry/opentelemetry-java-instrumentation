@@ -20,10 +20,11 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
 
   @Override
   URI buildAddress() {
-    return new URI("http://localhost:$port/$context/")
+    return new URI("http://localhost:$port/$contextPath/")
   }
 
-  String getContext() {
+  @Override
+  String getContextPath() {
     "test-gf"
   }
 
@@ -34,7 +35,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
     assert testDir.exists() && testDir.directory
     def testResourcesDir = new File(TestServlets.getResource("error.jsp").path).parentFile
     assert testResourcesDir.exists() && testResourcesDir.directory
-    ScatteredArchive archive = new ScatteredArchive(context, ScatteredArchive.Type.WAR, testResourcesDir)
+    ScatteredArchive archive = new ScatteredArchive(contextPath, ScatteredArchive.Type.WAR, testResourcesDir)
     archive.addClassPath(testDir)
 
     // Initialize the server
@@ -61,13 +62,5 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   @Override
   boolean redirectHasBody() {
     true
-  }
-
-  // Simple class name plus method name of the entry point of the given servlet container.
-  // "Entry point" here means the first filter or servlet that accepts incoming requests.
-  // This will serve as a default name of the SERVER span created for this request.
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HttpServlet.service"
   }
 }

@@ -33,7 +33,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
     Span span =
         tracer
-            .spanBuilder(spanName(normalizedQuery, connection))
+            .spanBuilder(spanName(connection, query, normalizedQuery))
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .startSpan();
@@ -124,9 +124,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   protected abstract InetSocketAddress peerAddress(CONNECTION connection);
 
-  private String spanName(String query, CONNECTION connection) {
-    if (query != null) {
-      return query;
+  protected String spanName(CONNECTION connection, QUERY query, String normalizedQuery) {
+    if (normalizedQuery != null) {
+      return normalizedQuery;
     }
 
     String result = null;

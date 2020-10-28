@@ -69,7 +69,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
     public static void subscribeResult(
         @Advice.Enter int callDepth,
         @Advice.Origin Method method,
-        @Advice.Return(readOnly = false) Observable result) {
+        @Advice.Return(readOnly = false) Observable<?> result) {
       if (callDepth > 0) {
         return;
       }

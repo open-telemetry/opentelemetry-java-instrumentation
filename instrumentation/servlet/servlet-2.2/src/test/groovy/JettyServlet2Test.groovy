@@ -82,11 +82,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
     }
   }
 
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HttpServlet.service"
-  }
-
   /**
    * Setup simple authentication for tests
    * <p>

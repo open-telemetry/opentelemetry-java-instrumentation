@@ -32,7 +32,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "POST /a"
+          name "/a"
           attributes {
           }
         }
@@ -78,55 +78,55 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     spanNames.get(obj.class).size() == 1
 
     where:
-    paramName            | obj
-    "/a"                 | new Jax() {
+    paramName      | obj
+    "/a"           | new Jax() {
       @Path("/a")
       void call() {
       }
     }
-    "GET /b"             | new Jax() {
+    "/b"           | new Jax() {
       @GET
       @Path("/b")
       void call() {
       }
     }
-    "POST /interface/c"  | new InterfaceWithPath() {
+    "/interface/c" | new InterfaceWithPath() {
       @POST
       @Path("/c")
       void call() {
       }
     }
-    "HEAD /interface"    | new InterfaceWithPath() {
+    "/interface"   | new InterfaceWithPath() {
       @HEAD
       void call() {
       }
     }
-    "POST /abstract/d"   | new AbstractClassWithPath() {
+    "/abstract/d"  | new AbstractClassWithPath() {
       @POST
       @Path("/d")
       void call() {
       }
     }
-    "PUT /abstract"      | new AbstractClassWithPath() {
+    "/abstract"    | new AbstractClassWithPath() {
       @PUT
       void call() {
       }
     }
-    "OPTIONS /child/e"   | new ChildClassWithPath() {
+    "/child/e"     | new ChildClassWithPath() {
       @OPTIONS
       @Path("/e")
       void call() {
       }
     }
-    "DELETE /child/call" | new ChildClassWithPath() {
+    "/child/call"  | new ChildClassWithPath() {
       @DELETE
       void call() {
       }
     }
-    "POST /child/call"   | new ChildClassWithPath()
-    "GET /child/call"    | new JavaInterfaces.ChildClassOnInterface()
+    "/child/call"  | new ChildClassWithPath()
+    "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
-    // "GET /child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
+    // "/child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
 
     className = getClassName(obj.class)
 

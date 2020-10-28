@@ -53,12 +53,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -79,12 +79,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -93,12 +93,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "GET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -119,12 +119,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }
@@ -133,12 +133,12 @@ class Jedis30ClientTest extends AgentTestRunner {
           name "RANDOMKEY"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
           }
         }
       }

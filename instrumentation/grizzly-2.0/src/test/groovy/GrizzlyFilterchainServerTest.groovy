@@ -208,7 +208,4 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HttpCodecFilter.handleRead"
   }
-
 }
-
-

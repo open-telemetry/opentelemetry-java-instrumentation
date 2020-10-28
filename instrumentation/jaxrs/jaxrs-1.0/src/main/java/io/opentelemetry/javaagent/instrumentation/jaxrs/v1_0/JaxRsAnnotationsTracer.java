@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
@@ -26,7 +28,8 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   public Span startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
-    Span serverSpan = BaseTracer.getCurrentServerSpan();
+    Context context = Context.current();
+    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String spanName;
@@ -34,15 +37,15 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       spanName = pathBasedSpanName;
     } else {
       spanName = spanNameForMethod(target, method);
-      updateServerSpanName(serverSpan, pathBasedSpanName);
+      updateServerSpanName(context, serverSpan, pathBasedSpanName);
     }
 
     return tracer.spanBuilder(spanName).startSpan();
   }
 
-  private void updateServerSpanName(Span span, String spanName) {
+  private void updateServerSpanName(Context context, Span span, String spanName) {
     if (!spanName.isEmpty()) {
-      span.updateName(spanName);
+      span.updateName(ServletContextPath.prepend(context, spanName));
     }
   }
 
@@ -56,7 +59,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     Map<Method, String> classMap = spanNames.get(target);
 
     if (classMap == null) {
-      spanNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
+      spanNames.putIfAbsent(target, new ConcurrentHashMap<>());
       classMap = spanNames.get(target);
       // classMap should not be null at this point because we have a
       // strong reference to target and don't manually clear the map.
@@ -88,7 +91,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
           }
         }
       }
-      spanName = buildSpanName(httpMethod, classPath, methodPath);
+      spanName = buildSpanName(classPath, methodPath);
       classMap.put(method, spanName);
     }
 
@@ -147,13 +150,9 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(String httpMethod, Path classPath, Path methodPath) {
+  private String buildSpanName(Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
-    if (httpMethod != null) {
-      spanNameBuilder.append(httpMethod);
-      spanNameBuilder.append(" ");
-    }
     boolean skipSlash = false;
     if (classPath != null) {
       if (!classPath.value().startsWith("/")) {

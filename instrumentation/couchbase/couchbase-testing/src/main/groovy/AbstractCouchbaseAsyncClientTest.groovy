@@ -163,7 +163,7 @@ abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
         basicSpan(it, 0, "someTrace")
 
         assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 2, 'SimpleN1qlQuery{statement=SELECT mockrow}', bucketCouchbase.name(), span(1))
+        assertCouchbaseCall(it, 2, 'SELECT mockrow', bucketCouchbase.name(), span(1))
       }
     }
 

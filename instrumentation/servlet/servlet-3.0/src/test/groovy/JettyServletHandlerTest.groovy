@@ -11,11 +11,6 @@ import org.eclipse.jetty.servlet.ServletHandler
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 
-  static {
-    //We want to test spans produced by servlet instrumentation, not those of jetty
-    System.setProperty("otel.instrumentation.jetty.enabled", "false")
-  }
-
   @Override
   Server startServer(int port) {
     Server server = new Server(port)
@@ -44,7 +39,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  String getContext() {
+  String getContextPath() {
     ""
   }
 
