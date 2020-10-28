@@ -82,7 +82,7 @@ class MuzzlePlugin implements Plugin<Project> {
         println "Muzzle executing for $project"
       }
     }
-    def printReferences = project.task('printReferences') {
+    def printReferences = project.task('printMuzzleReferences') {
       group = 'Muzzle'
       description = "Print references created by instrumentation muzzle"
       doLast {
@@ -101,7 +101,7 @@ class MuzzlePlugin implements Plugin<Project> {
       }
     }
     project.tasks.muzzle.dependsOn(project.tasks.compileMuzzle)
-    project.tasks.printReferences.dependsOn(project.tasks.compileMuzzle)
+    project.tasks.printMuzzleReferences.dependsOn(project.tasks.compileMuzzle)
 
     def hasRelevantTask = project.gradle.startParameter.taskNames.any { taskName ->
       // removing leading ':' if present
