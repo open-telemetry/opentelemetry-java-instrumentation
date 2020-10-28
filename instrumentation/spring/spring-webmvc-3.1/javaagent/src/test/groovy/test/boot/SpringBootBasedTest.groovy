@@ -33,6 +33,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     app.setDefaultProperties(ImmutableMap.of(
       "server.port", port,
       "server.context-path", getContextPath(),
+      "server.servlet.contextPath", getContextPath(),
       "server.error.include-message", "always"))
     def context = app.run()
     return context
