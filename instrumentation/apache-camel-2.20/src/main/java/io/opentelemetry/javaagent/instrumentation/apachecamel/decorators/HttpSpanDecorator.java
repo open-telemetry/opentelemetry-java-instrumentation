@@ -71,7 +71,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     // Based on HTTP component documentation:
     String spanName = null;
     if (shouldSetPathAsName(camelDirection)) {
-      spanName = getPath(getHttpURL(exchange, endpoint));
+      spanName = getPath(exchange, endpoint);
     }
     return (spanName == null ? getHttpMethod(exchange, endpoint) : spanName);
   }
@@ -89,7 +89,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
     Span serverSpan = Context.current().get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
     if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
-      updateServerSpanName(serverSpan, httpUrl);
+      updateServerSpanName(serverSpan, exchange, endpoint);
     }
   }
 
@@ -98,7 +98,9 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Nullable
-  private String getPath(String httpUrl) {
+  protected String getPath(Exchange exchange, Endpoint endpoint) {
+
+    String httpUrl = getHttpURL(exchange, endpoint);
     try {
       URL url = new URL(httpUrl);
       return url.getPath();
@@ -111,8 +113,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     return (serverSpan != null && shouldSetPathAsName(camelDirection));
   }
 
-  private void updateServerSpanName(Span serverSpan, String httpUrl) {
-    String path = getPath(httpUrl);
+  private void updateServerSpanName(Span serverSpan, Exchange exchange, Endpoint endpoint) {
+    String path = getPath(exchange, endpoint);
     if (path != null) {
       serverSpan.updateName(path);
     }

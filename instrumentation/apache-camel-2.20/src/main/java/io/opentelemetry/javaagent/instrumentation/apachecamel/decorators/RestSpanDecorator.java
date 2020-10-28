@@ -23,7 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import org.apache.camel.Endpoint;
@@ -35,14 +34,16 @@ class RestSpanDecorator extends HttpSpanDecorator {
 
   private static final Logger LOG = LoggerFactory.getLogger(RestSpanDecorator.class);
 
-  protected static String getPath(String uri) {
+  @Override
+  protected String getPath(Exchange exchange, Endpoint endpoint) {
+    String endpointUri = endpoint.getEndpointUri();
     // Obtain the 'path' part of the URI format: rest://method:path[:uriTemplate]?[options]
     String path = null;
-    int index = uri.indexOf(':');
+    int index = endpointUri.indexOf(':');
     if (index != -1) {
-      index = uri.indexOf(':', index + 1);
+      index = endpointUri.indexOf(':', index + 1);
       if (index != -1) {
-        path = uri.substring(index + 1);
+        path = endpointUri.substring(index + 1);
         index = path.indexOf('?');
         if (index != -1) {
           path = path.substring(0, index);
@@ -56,13 +57,5 @@ class RestSpanDecorator extends HttpSpanDecorator {
       }
     }
     return path;
-  }
-
-  @Override
-  public String getOperationName(
-      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    return (CamelDirection.INBOUND.equals(camelDirection)
-        ? getPath(endpoint.getEndpointUri())
-        : getHttpMethod(exchange, endpoint));
   }
 }

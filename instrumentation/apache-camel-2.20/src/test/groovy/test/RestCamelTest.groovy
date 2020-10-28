@@ -82,7 +82,7 @@ class RestCamelTest extends AgentTestRunner {
           }
         }
         it.span(2) {
-          name "/api/firstModule/unit/unitOne"
+          name "/api/{module}/unit/{unitId}"
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
