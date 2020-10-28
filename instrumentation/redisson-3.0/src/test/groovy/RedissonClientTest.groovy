@@ -278,6 +278,8 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
+          // Use .* to match the actual script, since it changes between redisson versions
+          // everything that does not change is quoted so that it's matched literally
           def lockScriptPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 1 lock ? ?") + "\$")
 
           name "EVAL"
