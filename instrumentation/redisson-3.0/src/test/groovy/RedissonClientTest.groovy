@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static java.util.regex.Pattern.compile
+import static java.util.regex.Pattern.quote
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -276,10 +279,7 @@ class RedissonClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          def lockScript = "if (redis.call('exists', KEYS[1]) == 0) then redis.call('hset', KEYS[1], ARGV[2], 1);" +
-            " redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end;" +
-            " if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1);" +
-            " redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);"
+          def lockScriptPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 1 lock ? ?") + "\$")
 
           name "EVAL"
           kind CLIENT
@@ -289,16 +289,13 @@ class RedissonClientTest extends AgentTestRunner {
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "EVAL $lockScript 1 lock ? ?"
+            "$SemanticAttributes.DB_STATEMENT.key" { lockScriptPattern.matcher(it).matches() }
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          def unlockScript = "if (redis.call('exists', KEYS[1]) == 0) then redis.call('publish', KEYS[2], ARGV[1]);" +
-            " return 1; end;if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then return nil;end;" +
-            " local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); if (counter > 0) then redis.call('pexpire', KEYS[1], ARGV[2]);" +
-            " return 0; else redis.call('del', KEYS[1]); redis.call('publish', KEYS[2], ARGV[1]); return 1; end; return nil;"
+          def lockScriptPattern = compile("^" + quote("EVAL ") + ".*" + quote(" 2 lock ") + "\\S+" + quote(" ? ? ?") + "\$")
 
           name "EVAL"
           kind CLIENT
@@ -308,7 +305,7 @@ class RedissonClientTest extends AgentTestRunner {
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
-            "$SemanticAttributes.DB_STATEMENT.key" "EVAL $unlockScript 2 lock redisson_lock__channel__{lock} ? ? ?"
+            "$SemanticAttributes.DB_STATEMENT.key" { lockScriptPattern.matcher(it).matches() }
           }
         }
       }

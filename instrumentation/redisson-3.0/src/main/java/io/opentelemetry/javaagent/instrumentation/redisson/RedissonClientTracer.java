@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.CommandData;
@@ -71,7 +71,21 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
     if (command.getCommand().getSubName() != null) {
       args.add(command.getCommand().getSubName());
     }
-    args.addAll(Arrays.asList(commandParams));
+    for (Object param : commandParams) {
+      if (param instanceof ByteBuf) {
+        try {
+          // slice() does not copy the actual byte buffer, it only returns a readable/writable
+          // "view" of the original buffer (i.e. read and write marks are not shared)
+          ByteBuf buf = ((ByteBuf) param).slice();
+          // state can be null here: no Decoders used by Codecs use it
+          args.add(command.getCodec().getValueDecoder().decode(buf, null));
+        } catch (Exception ignored) {
+          args.add("?");
+        }
+      } else {
+        args.add(param);
+      }
+    }
     return RedisCommandNormalizer.normalize(command.getCommand().getName(), args);
   }
 
