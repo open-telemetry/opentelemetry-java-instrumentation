@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db;
 
+import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
@@ -312,7 +313,16 @@ public final class RedisCommandNormalizer {
     NORMALIZERS = unmodifiableMap(normalizers);
   }
 
-  public static String normalize(String command, List<?> args) {
+  private final boolean normalizationEnabled;
+
+  public RedisCommandNormalizer(String... instrumentationNames) {
+    this.normalizationEnabled = isQueryNormalizationEnabled(instrumentationNames);
+  }
+
+  public String normalize(String command, List<?> args) {
+    if (!normalizationEnabled) {
+      return KeepAllArgs.INSTANCE.normalize(command, args);
+    }
     return NORMALIZERS.getOrDefault(command.toUpperCase(), DEFAULT).normalize(command, args);
   }
 
@@ -416,6 +426,4 @@ public final class RedisCommandNormalizer {
       }
     }
   }
-
-  private RedisCommandNormalizer() {}
 }

@@ -20,6 +20,9 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs> {
   public static final JedisClientTracer TRACER = new JedisClientTracer();
 
+  private final RedisCommandNormalizer commandNormalizer =
+      new RedisCommandNormalizer("jedis", "redis");
+
   @Override
   protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {
     return query.getStringCommand();
@@ -27,7 +30,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String normalizeQuery(CommandWithArgs command) {
-    return RedisCommandNormalizer.normalize(command.getStringCommand(), command.getArgs());
+    return commandNormalizer.normalize(command.getStringCommand(), command.getArgs());
   }
 
   @Override

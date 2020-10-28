@@ -36,6 +36,9 @@ public enum OpenTelemetryTracing implements Tracing {
   public static final io.opentelemetry.trace.Tracer TRACER =
       OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
 
+  private static final RedisCommandNormalizer COMMAND_NORMALIZER =
+      new RedisCommandNormalizer("lettuce", "lettuce-5", "lettuce-5.1");
+
   @Override
   public TracerProvider getTracerProvider() {
     return OpenTelemetryTracerProvider.INSTANCE;
@@ -250,7 +253,7 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement = RedisCommandNormalizer.normalize(name, splitArgs(args));
+          String statement = COMMAND_NORMALIZER.normalize(name, splitArgs(args));
           span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
         }
         span.end();
