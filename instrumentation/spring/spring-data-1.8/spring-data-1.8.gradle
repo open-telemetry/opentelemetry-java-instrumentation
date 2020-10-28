@@ -27,14 +27,15 @@ dependencies {
 
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
   testLibrary group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
+  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
 
   // JPA dependencies
   testImplementation project(':instrumentation:jdbc')
-  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
   testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
 
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '(,2.4.0)'
   latestDepTestLibrary group: 'org.springframework', name: 'spring-context', version: '+'
 }
 
