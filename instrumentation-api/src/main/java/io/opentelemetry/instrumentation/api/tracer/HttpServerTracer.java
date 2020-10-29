@@ -55,9 +55,9 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Context startSpan(
       REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
-    Context extract = extract(request, getGetter());
+    Context parentContext = extract(request, getGetter());
     Span.Builder builder =
-        tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(extract);
+        tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
     if (startTimestamp >= 0) {
       builder.setStartTimestamp(startTimestamp);
@@ -68,7 +68,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     onRequest(span, request);
     onConnectionAndRequest(span, connection, request);
 
-    return extract.with(span);
+    return parentContext.with(span);
   }
 
   /**
