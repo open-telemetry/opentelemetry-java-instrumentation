@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.OkHttpClien
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.io.IOException;
 
 public class TracingInterceptor implements Interceptor {

@@ -10,14 +10,14 @@ import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEv
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.common.AttributeConsumer
-import io.opentelemetry.common.AttributeKey
-import io.opentelemetry.common.ReadableAttributes
+import io.opentelemetry.api.common.AttributeConsumer
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.ReadableAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.SpanId
-import io.opentelemetry.trace.StatusCode
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.regex.Pattern
 
 class SpanAssert {

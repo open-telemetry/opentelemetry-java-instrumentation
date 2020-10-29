@@ -9,8 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import application.io.opentelemetry.trace.Span;
-import application.io.opentelemetry.trace.SpanContext;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.api.trace.SpanContext;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpanInstrumentation extends AbstractInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.trace.PropagatedSpan");
+    return named("application.io.opentelemetry.api.trace.PropagatedSpan");
   }
 
   @Override
@@ -48,7 +48,7 @@ public class SpanInstrumentation extends AbstractInstrumentation {
         @Advice.Return(readOnly = false) Span applicationSpan) {
       applicationSpan =
           Bridging.toApplication(
-              io.opentelemetry.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
+              io.opentelemetry.api.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
     }
   }
 }

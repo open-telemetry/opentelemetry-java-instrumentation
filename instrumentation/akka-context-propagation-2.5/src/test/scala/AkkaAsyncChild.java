@@ -4,8 +4,8 @@
  */
 
 import akka.dispatch.forkjoin.ForkJoinTask;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;

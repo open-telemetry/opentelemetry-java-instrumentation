@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.Span.Kind.INTERNAL;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.S
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

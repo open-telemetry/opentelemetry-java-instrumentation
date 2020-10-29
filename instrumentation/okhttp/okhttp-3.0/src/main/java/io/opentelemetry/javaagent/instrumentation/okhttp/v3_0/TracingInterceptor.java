@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttpClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Request;

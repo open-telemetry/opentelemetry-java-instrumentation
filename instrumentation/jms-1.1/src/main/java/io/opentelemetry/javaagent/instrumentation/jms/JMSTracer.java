@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
-import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Destination;
 import javax.jms.JMSException;

@@ -45,7 +45,7 @@
   <Match>
     <Class name="io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils"/>
     <Method name="setNetPeer"
-      params="io.opentelemetry.trace.Span,java.lang.String,java.lang.String,int" returns="void"/>
+      params="io.opentelemetry.api.trace.Span,java.lang.String,java.lang.String,int" returns="void"/>
     <Bug pattern="UC_USELESS_VOID_METHOD"/>
   </Match>
 

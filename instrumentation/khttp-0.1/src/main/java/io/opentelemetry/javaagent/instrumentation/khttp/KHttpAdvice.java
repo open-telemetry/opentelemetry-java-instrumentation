@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.khttp;
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import khttp.responses.Response;
 import net.bytebuddy.asm.Advice;

@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.OpenTelemetry.getGlobalPropagators;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
+import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
+import io.opentelemetry.api.trace.EndSpanOptions;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
-import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
@@ -125,7 +125,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   /**
    * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
-   * and the {@link Span} status will be set to {@link io.opentelemetry.trace.StatusCode#ERROR}.
+   * and the {@link Span} status will be set to {@link io.opentelemetry.api.trace.StatusCode#ERROR}.
    */
   public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
     onError(span, unwrapThrowable(throwable));

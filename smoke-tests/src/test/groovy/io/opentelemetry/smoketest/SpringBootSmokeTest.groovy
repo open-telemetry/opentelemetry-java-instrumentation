@@ -8,7 +8,7 @@ package io.opentelemetry.smoketest
 import static java.util.stream.Collectors.toSet
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import io.opentelemetry.trace.TraceId
+import io.opentelemetry.api.trace.TraceId
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request

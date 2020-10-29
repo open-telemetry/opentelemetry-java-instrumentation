@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Response;

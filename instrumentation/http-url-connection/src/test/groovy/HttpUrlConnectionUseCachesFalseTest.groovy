@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.trace.Span
+import io.opentelemetry.api.trace.Span
 import spock.lang.Timeout
 
 @Timeout(5)

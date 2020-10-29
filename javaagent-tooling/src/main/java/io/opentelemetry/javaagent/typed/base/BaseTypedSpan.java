@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.typed.base;
 
-import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.EndSpanOptions;
+import io.opentelemetry.api.trace.Span;
 
 public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingSpan {
 

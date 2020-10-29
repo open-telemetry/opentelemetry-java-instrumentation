@@ -41,15 +41,15 @@ ext {
     // OpenTelemetry
     opentelemetryApi            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
     opentelemetryContextProp    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryAnother),
-    opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryOther),
+    opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryAnother),
     opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryAnother),
-    opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
+    opentelemetryJaeger         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetryAnother),
     opentelemetryOtlp           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetryAnother),
     opentelemetryZipkin         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
-    opentelemetryPrometheus     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-prometheus', version: versions.opentelemetry),
-    opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetry),
-    opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
+    opentelemetryPrometheus     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-prometheus', version: versions.opentelemetryAnother),
+    opentelemetryLogging        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-logging', version: versions.opentelemetryAnother),
+    opentelemetryProto          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryAnother),
 
     // General
     slf4j                       : "org.slf4j:slf4j-api:${versions.slf4j}",

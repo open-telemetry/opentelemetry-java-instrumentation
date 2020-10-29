@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.typed.client;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.typed.client.http.HttpClientTypedTracer;
-import io.opentelemetry.trace.Span;
 
 public class SampleHttpClientTypedTracer
     extends HttpClientTypedTracer<SampleHttpClientTypedSpan, String, String> {

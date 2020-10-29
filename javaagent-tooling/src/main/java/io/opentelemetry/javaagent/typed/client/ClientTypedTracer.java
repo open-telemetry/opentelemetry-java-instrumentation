@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.typed.client;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.typed.base.BaseTypedTracer;
-import io.opentelemetry.trace.Span;
 
 public abstract class ClientTypedTracer<
         T extends ClientTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>

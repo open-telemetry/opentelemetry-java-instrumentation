@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.DoubleValueRecorder;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.DoubleValueRecorder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 
-  private final io.opentelemetry.metrics.DoubleValueRecorder agentDoubleValueRecorder;
+  private final io.opentelemetry.api.metrics.DoubleValueRecorder agentDoubleValueRecorder;
 
   protected ApplicationDoubleValueRecorder(
-      io.opentelemetry.metrics.DoubleValueRecorder agentDoubleValueRecorder) {
+      io.opentelemetry.api.metrics.DoubleValueRecorder agentDoubleValueRecorder) {
     this.agentDoubleValueRecorder = agentDoubleValueRecorder;
   }
 
-  protected io.opentelemetry.metrics.DoubleValueRecorder getAgentDoubleValueRecorder() {
+  protected io.opentelemetry.api.metrics.DoubleValueRecorder getAgentDoubleValueRecorder() {
     return agentDoubleValueRecorder;
   }
 
@@ -39,11 +39,11 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 
   static class BoundInstrument implements DoubleValueRecorder.BoundDoubleValueRecorder {
 
-    private final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
+    private final io.opentelemetry.api.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
         agentBoundDoubleMeasure;
 
     public BoundInstrument(
-        io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
+        io.opentelemetry.api.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
             agentBoundDoubleMeasure) {
       this.agentBoundDoubleMeasure = agentBoundDoubleMeasure;
     }
@@ -61,9 +61,9 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 
   static class Builder implements DoubleValueRecorder.Builder {
 
-    private final io.opentelemetry.metrics.DoubleValueRecorder.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleValueRecorder.Builder agentBuilder;
 
-    public Builder(io.opentelemetry.metrics.DoubleValueRecorder.Builder agentBuilder) {
+    public Builder(io.opentelemetry.api.metrics.DoubleValueRecorder.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

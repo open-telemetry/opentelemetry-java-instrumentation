@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 /**
  * A helper for accessing methods that rely on new Java 8 bytecode features such as calling a static

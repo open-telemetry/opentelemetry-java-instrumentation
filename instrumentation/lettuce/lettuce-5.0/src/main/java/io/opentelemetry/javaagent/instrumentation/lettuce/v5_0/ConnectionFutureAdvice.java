@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceCon
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class ConnectionFutureAdvice {

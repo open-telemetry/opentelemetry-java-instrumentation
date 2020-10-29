@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import static io.opentelemetry.trace.attributes.SemanticAttributes.*;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 public class DbSpan extends DelegatingSpan implements DbSemanticConvention {
 

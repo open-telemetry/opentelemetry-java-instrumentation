@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;

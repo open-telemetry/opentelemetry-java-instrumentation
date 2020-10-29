@@ -68,7 +68,7 @@ WebMvcTracingFilter adds OpenTelemetry server spans to requests processed by req
 
 ```java
 import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Tracer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

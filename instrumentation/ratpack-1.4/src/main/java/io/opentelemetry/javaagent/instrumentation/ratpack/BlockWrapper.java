@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ratpack.func.Block;

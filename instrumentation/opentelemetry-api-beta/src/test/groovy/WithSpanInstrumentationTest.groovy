@@ -6,7 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
-import io.opentelemetry.trace.Span
+import io.opentelemetry.api.trace.Span
 
 /**
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extensions.auto.annotations.WithSpan} contrib annotation.

@@ -8,26 +8,26 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgent;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
-import application.io.opentelemetry.common.AttributeKey;
-import application.io.opentelemetry.common.Attributes;
+import application.io.opentelemetry.api.common.AttributeKey;
+import application.io.opentelemetry.api.common.Attributes;
+import application.io.opentelemetry.api.trace.EndSpanOptions;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.api.trace.SpanContext;
+import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
-import application.io.opentelemetry.trace.EndSpanOptions;
-import application.io.opentelemetry.trace.Span;
-import application.io.opentelemetry.trace.SpanContext;
-import application.io.opentelemetry.trace.StatusCode;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class ApplicationSpan implements Span {
 
-  private final io.opentelemetry.trace.Span agentSpan;
+  private final io.opentelemetry.api.trace.Span agentSpan;
 
-  ApplicationSpan(io.opentelemetry.trace.Span agentSpan) {
+  ApplicationSpan(io.opentelemetry.api.trace.Span agentSpan) {
     this.agentSpan = agentSpan;
   }
 
-  io.opentelemetry.trace.Span getAgentSpan() {
+  io.opentelemetry.api.trace.Span getAgentSpan() {
     return agentSpan;
   }
 
@@ -57,7 +57,7 @@ class ApplicationSpan implements Span {
 
   @Override
   public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
-    io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+    io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       agentSpan.setAttribute(agentKey, value);
     }
@@ -150,9 +150,9 @@ class ApplicationSpan implements Span {
 
     private static final Logger log = LoggerFactory.getLogger(Builder.class);
 
-    private final io.opentelemetry.trace.Span.Builder agentBuilder;
+    private final io.opentelemetry.api.trace.Span.Builder agentBuilder;
 
-    Builder(io.opentelemetry.trace.Span.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.trace.Span.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
@@ -207,7 +207,7 @@ class ApplicationSpan implements Span {
 
     @Override
     public <T> Span.Builder setAttribute(AttributeKey<T> applicationKey, T value) {
-      io.opentelemetry.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+      io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
       if (agentKey != null) {
         agentBuilder.setAttribute(agentKey, value);
       }
@@ -216,7 +216,7 @@ class ApplicationSpan implements Span {
 
     @Override
     public Span.Builder setSpanKind(Span.Kind applicationSpanKind) {
-      io.opentelemetry.trace.Span.Kind agentSpanKind = toAgentOrNull(applicationSpanKind);
+      io.opentelemetry.api.trace.Span.Kind agentSpanKind = toAgentOrNull(applicationSpanKind);
       if (agentSpanKind != null) {
         agentBuilder.setSpanKind(agentSpanKind);
       }

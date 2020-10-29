@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
 import com.google.common.collect.ImmutableMap
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert

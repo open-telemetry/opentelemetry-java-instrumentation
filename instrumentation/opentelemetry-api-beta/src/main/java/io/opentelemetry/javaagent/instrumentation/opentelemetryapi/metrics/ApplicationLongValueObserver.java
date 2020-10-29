@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.LongValueObserver;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.LongValueObserver;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationLongValueObserver implements LongValueObserver {
 
-  private final io.opentelemetry.metrics.LongValueObserver agentLongValueObserver;
+  private final io.opentelemetry.api.metrics.LongValueObserver agentLongValueObserver;
 
   public ApplicationLongValueObserver(
-      io.opentelemetry.metrics.LongValueObserver agentLongValueObserver) {
+      io.opentelemetry.api.metrics.LongValueObserver agentLongValueObserver) {
     this.agentLongValueObserver = agentLongValueObserver;
   }
 
@@ -24,8 +24,8 @@ class ApplicationLongValueObserver implements LongValueObserver {
   }
 
   public static class AgentResultLongValueObserver
-      implements io.opentelemetry.metrics.AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.LongValueObserver.LongResult> {
+      implements io.opentelemetry.api.metrics.AsynchronousInstrument.Callback<
+          io.opentelemetry.api.metrics.LongValueObserver.LongResult> {
 
     private final Callback<LongResult> metricUpdater;
 
@@ -34,18 +34,18 @@ class ApplicationLongValueObserver implements LongValueObserver {
     }
 
     @Override
-    public void update(io.opentelemetry.metrics.LongValueObserver.LongResult result) {
+    public void update(io.opentelemetry.api.metrics.LongValueObserver.LongResult result) {
       metricUpdater.update(new ApplicationResultLongValueObserver(result));
     }
   }
 
   public static class ApplicationResultLongValueObserver implements LongResult {
 
-    private final io.opentelemetry.metrics.LongValueObserver.LongResult
+    private final io.opentelemetry.api.metrics.LongValueObserver.LongResult
         agentResultLongValueObserver;
 
     public ApplicationResultLongValueObserver(
-        io.opentelemetry.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
+        io.opentelemetry.api.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
       this.agentResultLongValueObserver = agentResultLongValueObserver;
     }
 
@@ -57,9 +57,9 @@ class ApplicationLongValueObserver implements LongValueObserver {
 
   static class Builder implements LongValueObserver.Builder {
 
-    private final io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongValueObserver.Builder agentBuilder;
 
-    public Builder(io.opentelemetry.metrics.LongValueObserver.Builder agentBuilder) {
+    public Builder(io.opentelemetry.api.metrics.LongValueObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

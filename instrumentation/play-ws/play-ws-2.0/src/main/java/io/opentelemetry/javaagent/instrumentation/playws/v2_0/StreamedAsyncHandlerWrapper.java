@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import org.reactivestreams.Publisher;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import application.io.opentelemetry.OpenTelemetry
+import application.io.opentelemetry.api.OpenTelemetry
 import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.context.ContextKey
-import application.io.opentelemetry.trace.Span
+import application.io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicReference
 
@@ -46,35 +46,35 @@ class ContextBridgeTest extends AgentTestRunner {
   def "agent and application share span"() {
     when:
     def applicationTracer = OpenTelemetry.getGlobalTracer("test")
-    def agentTracer = io.opentelemetry.OpenTelemetry.getGlobalTracer("test")
+    def agentTracer = io.opentelemetry.api.OpenTelemetry.getGlobalTracer("test")
 
     then:
     !Span.current().spanContext.isValid()
-    !io.opentelemetry.trace.Span.current().spanContext.isValid()
+    !io.opentelemetry.api.trace.Span.current().spanContext.isValid()
 
     def applicationSpan = applicationTracer.spanBuilder("test1").startSpan()
     applicationSpan.spanContext.isValid()
     applicationSpan.makeCurrent().withCloseable {
       Span.current().spanContext.spanIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-      io.opentelemetry.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
+      io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
 
       def agentSpan = agentTracer.spanBuilder("test2").startSpan()
       agentSpan.makeCurrent().withCloseable {
         Span.current().spanContext.spanIdAsHexString == agentSpan.spanContext.spanIdAsHexString
         Span.current().spanContext.traceIdAsHexString == agentSpan.spanContext.spanIdAsHexString
         Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-        io.opentelemetry.trace.Span.current().spanContext.spanIdAsHexString == agentSpan.spanContext.spanIdAsHexString
-        io.opentelemetry.trace.Span.current().spanContext.traceIdAsHexString == agentSpan.spanContext.traceIdAsHexString
-        io.opentelemetry.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
+        io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == agentSpan.spanContext.spanIdAsHexString
+        io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == agentSpan.spanContext.traceIdAsHexString
+        io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
 
         def applicationSpan2 = applicationTracer.spanBuilder("test3").startSpan()
         applicationSpan2.makeCurrent().withCloseable {
           Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
           Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
           Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-          io.opentelemetry.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
-          io.opentelemetry.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.traceIdAsHexString
-          io.opentelemetry.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
+          io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
+          io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.traceIdAsHexString
+          io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
         }
       }
     }

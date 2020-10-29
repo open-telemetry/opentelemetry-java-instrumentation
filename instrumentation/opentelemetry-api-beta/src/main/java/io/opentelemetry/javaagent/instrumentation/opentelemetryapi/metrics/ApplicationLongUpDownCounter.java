@@ -5,19 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.LongUpDownCounter;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
-  private final io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter;
+  private final io.opentelemetry.api.metrics.LongUpDownCounter agentLongUpDownCounter;
 
-  ApplicationLongUpDownCounter(io.opentelemetry.metrics.LongUpDownCounter agentLongUpDownCounter) {
+  ApplicationLongUpDownCounter(
+      io.opentelemetry.api.metrics.LongUpDownCounter agentLongUpDownCounter) {
     this.agentLongUpDownCounter = agentLongUpDownCounter;
   }
 
-  io.opentelemetry.metrics.LongUpDownCounter getAgentLongUpDownCounter() {
+  io.opentelemetry.api.metrics.LongUpDownCounter getAgentLongUpDownCounter() {
     return agentLongUpDownCounter;
   }
 
@@ -38,11 +39,11 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
   static class BoundInstrument implements BoundLongUpDownCounter {
 
-    private final io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
+    private final io.opentelemetry.api.metrics.LongUpDownCounter.BoundLongUpDownCounter
         agentBoundLongUpDownCounter;
 
     BoundInstrument(
-        io.opentelemetry.metrics.LongUpDownCounter.BoundLongUpDownCounter
+        io.opentelemetry.api.metrics.LongUpDownCounter.BoundLongUpDownCounter
             agentBoundLongUpDownCounter) {
       this.agentBoundLongUpDownCounter = agentBoundLongUpDownCounter;
     }
@@ -60,9 +61,9 @@ class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
   static class Builder implements LongUpDownCounter.Builder {
 
-    private final io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongUpDownCounter.Builder agentBuilder;
 
-    Builder(io.opentelemetry.metrics.LongUpDownCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.LongUpDownCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

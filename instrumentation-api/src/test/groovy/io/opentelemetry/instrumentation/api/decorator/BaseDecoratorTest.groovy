@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.api.decorator
 
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.StatusCode
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Specification
 

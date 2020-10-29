@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
-import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;

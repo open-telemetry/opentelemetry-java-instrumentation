@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.DoubleUpDownSumObserver;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.DoubleUpDownSumObserver;
+import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
-import io.opentelemetry.metrics.AsynchronousInstrument;
 
 class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
-  private final io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver;
+  private final io.opentelemetry.api.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver;
 
   protected ApplicationDoubleUpDownSumObserver(
-      io.opentelemetry.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver) {
+      io.opentelemetry.api.metrics.DoubleUpDownSumObserver agentDoubleUpDownSumObserver) {
     this.agentDoubleUpDownSumObserver = agentDoubleUpDownSumObserver;
   }
 
@@ -26,7 +26,7 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
   static class AgentResultDoubleUpDownSumObserver
       implements AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult> {
+          io.opentelemetry.api.metrics.DoubleUpDownSumObserver.DoubleResult> {
 
     private final Callback<DoubleResult> metricUpdater;
 
@@ -35,18 +35,18 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
     }
 
     @Override
-    public void update(io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult result) {
+    public void update(io.opentelemetry.api.metrics.DoubleUpDownSumObserver.DoubleResult result) {
       metricUpdater.update(new ApplicationResultDoubleUpDownSumObserver(result));
     }
   }
 
   static class ApplicationResultDoubleUpDownSumObserver implements DoubleResult {
 
-    private final io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
+    private final io.opentelemetry.api.metrics.DoubleUpDownSumObserver.DoubleResult
         agentResultDoubleUpDownSumObserver;
 
     public ApplicationResultDoubleUpDownSumObserver(
-        io.opentelemetry.metrics.DoubleUpDownSumObserver.DoubleResult
+        io.opentelemetry.api.metrics.DoubleUpDownSumObserver.DoubleResult
             agentResultDoubleUpDownSumObserver) {
       this.agentResultDoubleUpDownSumObserver = agentResultDoubleUpDownSumObserver;
     }
@@ -59,9 +59,9 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
 
   static class Builder implements DoubleUpDownSumObserver.Builder {
 
-    private final io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleUpDownSumObserver.Builder agentBuilder;
 
-    protected Builder(io.opentelemetry.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.api.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

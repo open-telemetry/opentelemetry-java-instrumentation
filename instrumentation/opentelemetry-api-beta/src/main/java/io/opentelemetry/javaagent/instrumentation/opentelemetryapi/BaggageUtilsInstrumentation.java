@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import application.io.opentelemetry.context.Context;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.baggage.Baggage;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class BaggageUtilsInstrumentation extends AbstractInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.baggage.BaggageUtils");
+    return named("application.io.opentelemetry.api.baggage.BaggageUtils");
   }
 
   @Override

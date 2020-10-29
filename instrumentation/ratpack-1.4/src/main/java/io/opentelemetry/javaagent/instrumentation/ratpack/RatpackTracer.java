@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import ratpack.handling.Context;
 
 public class RatpackTracer extends BaseTracer {

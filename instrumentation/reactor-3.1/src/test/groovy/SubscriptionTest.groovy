@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
