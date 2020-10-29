@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
+
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
 import org.slf4j.Logger;
@@ -12,10 +14,12 @@ import org.slf4j.LoggerFactory;
 
 public final class GeodeQueryNormalizer {
   private static final Logger log = LoggerFactory.getLogger(GeodeQueryNormalizer.class);
+  private static final boolean NORMALIZATION_ENABLED =
+      isQueryNormalizationEnabled("geode", "geode-client");
 
   public static String normalize(String query) {
-    if (query == null) {
-      return null;
+    if (!NORMALIZATION_ENABLED || query == null) {
+      return query;
     }
     try {
       return SqlNormalizer.normalize(query);

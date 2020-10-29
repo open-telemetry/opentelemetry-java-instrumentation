@@ -5,14 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db
 
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class RedisCommandNormalizerTest extends Specification {
+  def normalizer = new RedisCommandNormalizer("redis")
+
+  def "should not normalize anything when turned off"() {
+    given:
+    def previousConfig = ConfigUtils.updateConfig({
+      it.setProperty("otel.instrumentation.redis.query.normalizer.enabled", "false")
+    })
+
+    def normalizer = new RedisCommandNormalizer("redis-instrumentation", "redis")
+
+    when:
+    def result = normalizer.normalize("AUTH", ["user", "password"])
+
+    then:
+    result == "AUTH user password"
+
+    cleanup:
+    ConfigUtils.setConfig(previousConfig)
+  }
+
   @Unroll
   def "should normalize #expected"() {
     when:
-    def normalised = RedisCommandNormalizer.normalize(command, args)
+    def normalised = normalizer.normalize(command, args)
 
     then:
     normalised == expected
@@ -90,7 +111,7 @@ class RedisCommandNormalizerTest extends Specification {
     def args = ["arg1", "arg 2"]
 
     when:
-    def normalised = RedisCommandNormalizer.normalize(command, args)
+    def normalised = normalizer.normalize(command, args)
 
     then:
     normalised == command + " " + args.join(" ")
@@ -140,7 +161,7 @@ class RedisCommandNormalizerTest extends Specification {
 
   def "should mask all arguments of an unknown command"() {
     when:
-    def normalised = RedisCommandNormalizer.normalize("NEWAUTH", ["password", "secret"])
+    def normalised = normalizer.normalize("NEWAUTH", ["password", "secret"])
 
     then:
     normalised == "NEWAUTH ? ?"

@@ -16,6 +16,9 @@ public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
   public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
 
+  private final RedisCommandNormalizer commandNormalizer =
+      new RedisCommandNormalizer("lettuce", "lettuce-5");
+
   @Override
   protected String spanName(
       RedisURI connection, RedisCommand<?, ?, ?> query, String normalizedQuery) {
@@ -29,6 +32,6 @@ public class LettuceDatabaseClientTracer
         redisCommand.getArgs() == null
             ? Collections.emptyList()
             : LettuceArgSplitter.splitArgs(redisCommand.getArgs().toCommandString());
-    return RedisCommandNormalizer.normalize(command, args);
+    return commandNormalizer.normalize(command, args);
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
+
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
 import org.slf4j.Logger;
@@ -12,8 +14,12 @@ import org.slf4j.LoggerFactory;
 
 public final class CassandraQueryNormalizer {
   private static final Logger log = LoggerFactory.getLogger(CassandraQueryNormalizer.class);
+  private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("cassandra");
 
   public static String normalize(String query) {
+    if (!NORMALIZATION_ENABLED) {
+      return query;
+    }
     try {
       return SqlNormalizer.normalize(query);
     } catch (ParseException e) {

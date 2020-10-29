@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import io.opentelemetry.instrumentation.api.config.Config;
+import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
+
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -17,8 +18,7 @@ public abstract class JDBCUtils {
 
   private static final Logger log = LoggerFactory.getLogger(JDBCUtils.class);
 
-  private static final boolean SQL_NORMALIZER_ENABLED =
-      Config.get().getBooleanProperty("sql.normalizer.enabled", true);
+  private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("jdbc");
 
   private static Field c3poField = null;
 
@@ -71,7 +71,7 @@ public abstract class JDBCUtils {
 
   /** @return null if the sql could not be normalized for any reason */
   public static String normalizeSql(String sql) {
-    if (!SQL_NORMALIZER_ENABLED) {
+    if (!NORMALIZATION_ENABLED) {
       return sql;
     }
     try {

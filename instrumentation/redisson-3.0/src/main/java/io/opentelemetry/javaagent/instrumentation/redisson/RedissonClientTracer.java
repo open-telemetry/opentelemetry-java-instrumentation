@@ -22,6 +22,9 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
 
   public static final RedissonClientTracer TRACER = new RedissonClientTracer();
 
+  private final RedisCommandNormalizer commandNormalizer =
+      new RedisCommandNormalizer("redisson", "redis");
+
   @Override
   protected String spanName(RedisConnection connection, Object query, String normalizedQuery) {
     if (query instanceof CommandsData) {
@@ -65,7 +68,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
     return UNKNOWN_COMMAND;
   }
 
-  private static String normalizeSingleCommand(CommandData<?, ?> command) {
+  private String normalizeSingleCommand(CommandData<?, ?> command) {
     Object[] commandParams = command.getParams();
     List<Object> args = new ArrayList<>(commandParams.length + 1);
     if (command.getCommand().getSubName() != null) {
@@ -86,7 +89,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
         args.add(param);
       }
     }
-    return RedisCommandNormalizer.normalize(command.getCommand().getName(), args);
+    return commandNormalizer.normalize(command.getCommand().getName(), args);
   }
 
   @Override
