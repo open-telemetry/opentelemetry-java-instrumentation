@@ -30,7 +30,8 @@ public class HttpCodecFilterOldAdvice {
       return;
     }
     HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
-    Span span = TRACER.startSpan(httpRequest, httpRequest, method);
+    Context extractedContext = TRACER.startSpan(httpRequest, httpRequest, method);
+    Span span = Span.fromContext(extractedContext);
 
     // We don't actually want to attach new context to this thread, as actual request will continue
     // on some other thread. But we do want to attach that new context to FilterChainContext

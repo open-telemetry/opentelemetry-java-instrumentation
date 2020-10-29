@@ -33,7 +33,8 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    span = TRACER.startSpan(request, request, method);
+    Context ctx = TRACER.startSpan(request, request, method);
+    span = Span.fromContext(ctx);
     scope = TRACER.startScope(span, request);
   }
 

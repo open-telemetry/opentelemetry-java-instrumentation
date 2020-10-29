@@ -13,6 +13,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -96,7 +97,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request");
+      Context ctx = TRACER.startSpan(request, request, "akka.request");
+      Span span = Span.fromContext(ctx);
       try (Scope ignored = TRACER.startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response);
@@ -121,7 +123,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request");
+      Context ctx = TRACER.startSpan(request, request, "akka.request");
+      Span span = Span.fromContext(ctx);
       try (Scope ignored = TRACER.startScope(span, null)) {
         return userHandler
             .apply(request)
