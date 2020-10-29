@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import application.io.opentelemetry.OpenTelemetry
 import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.context.ContextKey
 import application.io.opentelemetry.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
-import spock.lang.Shared
 
 class ContextBridgeTest extends AgentTestRunner {
 
@@ -21,17 +19,6 @@ class ContextBridgeTest extends AgentTestRunner {
     io.opentelemetry.context.ContextKey.named("food")
   private static final io.opentelemetry.context.ContextKey<String> COUNTRY =
     io.opentelemetry.context.ContextKey.named("country")
-
-  @Shared
-  ExecutorService otherThread
-
-  def setupSpec() {
-    otherThread = Executors.newSingleThreadExecutor()
-  }
-
-  def cleanupSpec() {
-    otherThread.shutdown()
-  }
 
   def "agent and application mix"() {
     expect:
@@ -109,11 +96,17 @@ class ContextBridgeTest extends AgentTestRunner {
           applicationValue.set(Context.current().get(ANIMAL))
         }
 
-        otherThread.submit(runnable).get()
+        runnable.run()
         agentValue.get() == null
         applicationValue.get() == null
 
-        otherThread.submit(io.opentelemetry.context.Context.current().wrap(runnable)).get()
+        def ctx = io.opentelemetry.context.Context.current()
+        // Simulate another thread by remounting root
+        Context.root().makeCurrent().withCloseable {
+          io.opentelemetry.context.Context.root().makeCurrent().withCloseable {
+            ctx.wrap(runnable).run()
+          }
+        }
         agentValue.get() == "japan"
         applicationValue.get() == "cat"
       }
@@ -135,12 +128,16 @@ class ContextBridgeTest extends AgentTestRunner {
           applicationValue.set(Context.current().get(ANIMAL))
         }
 
-        otherThread.submit(runnable).get()
         agentValue.get() == null
         applicationValue.get() == null
 
-        otherThread.submit(Context.current().wrap(runnable)).get()
-
+        def ctx = Context.current()
+        // Simulate another thread by remounting root
+        Context.root().makeCurrent().withCloseable {
+          io.opentelemetry.context.Context.root().makeCurrent().withCloseable {
+            ctx.wrap(runnable).run()
+          }
+        }
         agentValue.get() == "japan"
         applicationValue.get() == "cat"
       }
