@@ -64,14 +64,6 @@ shadowJar {
   relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
 
   // relocate OpenTelemetry API usage
-  relocate "io.opentelemetry.DefaultOpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.DefaultOpenTelemetry"
-  relocate "io.opentelemetry.api.OpenTelemetry", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.OpenTelemetry"
-  relocate "io.opentelemetry.package-info", "io.opentelemetry.javaagent.shaded.io.opentelemetry.package-info"
-  relocate "io.opentelemetry.api.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.common"
-  relocate "io.opentelemetry.api.baggage", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.baggage"
+  relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
-  relocate "io.opentelemetry.api.internal", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.internal"
-  relocate "io.opentelemetry.api.metrics", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.metrics"
-  relocate "io.opentelemetry.api.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.spi"
-  relocate "io.opentelemetry.api.trace", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace"
 }
