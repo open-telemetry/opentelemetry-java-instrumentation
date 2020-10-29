@@ -7,23 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.prop
 
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class ApplicationTextMapPropagator implements TextMapPropagator {
 
-  private static final Logger log = LoggerFactory.getLogger(ApplicationTextMapPropagator.class);
-
   private final io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator;
-  private final ContextStore<Context, io.opentelemetry.context.Context> contextStore;
 
   ApplicationTextMapPropagator(
-      io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator,
-      ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
+      io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator) {
     this.agentTextMapPropagator = agentTextMapPropagator;
-    this.contextStore = contextStore;
   }
 
   @Override
@@ -33,39 +26,22 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
 
   @Override
   public <C> Context extract(
-      application.io.opentelemetry.context.Context applicationContext,
-      C carrier,
-      TextMapPropagator.Getter<C> applicationGetter) {
-    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
-    if (agentContext == null) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
-      }
-      return applicationContext;
-    }
+      Context applicationContext, C carrier, TextMapPropagator.Getter<C> applicationGetter) {
+    io.opentelemetry.context.Context agentContext =
+        AgentContextStorage.getAgentContext(applicationContext);
     io.opentelemetry.context.Context agentUpdatedContext =
         agentTextMapPropagator.extract(agentContext, carrier, new AgentGetter<>(applicationGetter));
     if (agentUpdatedContext == agentContext) {
       return applicationContext;
     }
-    contextStore.put(applicationContext, agentUpdatedContext);
-    return applicationContext;
+    return new AgentContextStorage.AgentContextWrapper(agentUpdatedContext, applicationContext);
   }
 
   @Override
   public <C> void inject(
-      application.io.opentelemetry.context.Context applicationContext,
-      C carrier,
-      TextMapPropagator.Setter<C> applicationSetter) {
-    io.opentelemetry.context.Context agentContext = contextStore.get(applicationContext);
-    if (agentContext == null) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "unexpected context: {}", applicationContext, new Exception("unexpected context"));
-      }
-      return;
-    }
+      Context applicationContext, C carrier, TextMapPropagator.Setter<C> applicationSetter) {
+    io.opentelemetry.context.Context agentContext =
+        AgentContextStorage.getAgentContext(applicationContext);
     agentTextMapPropagator.inject(agentContext, carrier, new AgentSetter<>(applicationSetter));
   }
 

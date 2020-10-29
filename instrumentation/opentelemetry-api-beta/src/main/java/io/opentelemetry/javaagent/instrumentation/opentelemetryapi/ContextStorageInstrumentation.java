@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.ContextStorage;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -28,26 +27,29 @@ import net.bytebuddy.matcher.ElementMatcher;
  * it's required for instrumentation in the agent to work properly.
  */
 @AutoService(Instrumenter.class)
-public class ContextInstrumentation extends AbstractInstrumentation {
+public class ContextStorageInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.context.DefaultContext");
+    return named("application.io.opentelemetry.context.LazyStorage");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod().and(isStatic()).and(named("root")),
-        ContextInstrumentation.class.getName() + "$GetAdvice");
+        isMethod().and(isStatic()).and(named("get")),
+        ContextStorageInstrumentation.class.getName() + "$GetAdvice");
   }
 
   public static class GetAdvice {
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    public static Object onEnter() {
+      return null;
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) Context root) {
-      root =
-          new AgentContextStorage.AgentContextWrapper(
-              io.opentelemetry.context.Context.root(), root);
+    public static void methodExit(@Advice.Return(readOnly = false) ContextStorage storage) {
+      storage = AgentContextStorage.INSTANCE;
     }
   }
 }

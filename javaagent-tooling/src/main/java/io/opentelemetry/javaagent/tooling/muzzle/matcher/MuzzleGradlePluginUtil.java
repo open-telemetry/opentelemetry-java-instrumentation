@@ -147,7 +147,7 @@ public final class MuzzleGradlePluginUtil {
    * Prints all references from all instrumenters present in the passed {@code
    * instrumentationClassLoader}.
    *
-   * <p>Called by the {@code :printReferences} gradle task.
+   * <p>Called by the {@code printMuzzleReferences} gradle task.
    */
   public static void printMuzzleReferences(ClassLoader instrumentationClassLoader) {
     for (Instrumenter instrumenter :

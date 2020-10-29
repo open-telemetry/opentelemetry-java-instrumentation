@@ -15,7 +15,7 @@ import application.io.opentelemetry.trace.EndSpanOptions;
 import application.io.opentelemetry.trace.Span;
 import application.io.opentelemetry.trace.SpanContext;
 import application.io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,18 +151,14 @@ class ApplicationSpan implements Span {
     private static final Logger log = LoggerFactory.getLogger(Builder.class);
 
     private final io.opentelemetry.trace.Span.Builder agentBuilder;
-    private final ContextStore<Context, io.opentelemetry.context.Context> contextStore;
 
-    Builder(
-        io.opentelemetry.trace.Span.Builder agentBuilder,
-        ContextStore<Context, io.opentelemetry.context.Context> contextStore) {
+    Builder(io.opentelemetry.trace.Span.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
-      this.contextStore = contextStore;
     }
 
     @Override
     public Span.Builder setParent(Context applicationContext) {
-      agentBuilder.setParent(contextStore.get(applicationContext));
+      agentBuilder.setParent(AgentContextStorage.getAgentContext(applicationContext));
       return this;
     }
 

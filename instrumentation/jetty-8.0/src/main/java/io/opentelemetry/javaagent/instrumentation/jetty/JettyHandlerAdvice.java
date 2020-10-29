@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTr
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -33,7 +34,8 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    span = TRACER.startSpan(request, request, method);
+    Context ctx = TRACER.startSpan(request, request, method);
+    span = Java8BytecodeBridge.spanFromContext(ctx);
     scope = TRACER.startScope(span, request);
   }
 
