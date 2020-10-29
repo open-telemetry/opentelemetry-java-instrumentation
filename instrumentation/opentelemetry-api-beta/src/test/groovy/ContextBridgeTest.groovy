@@ -54,6 +54,9 @@ class ContextBridgeTest extends AgentTestRunner {
     }
   }
 
+  // The difference between "standard" context interop and our bridge is that with normal interop,
+  // keys are still isolated completely. We have special logic to share the same data for our known
+  // types like span.
   def "agent and application share span"() {
     when:
     def applicationTracer = OpenTelemetry.getGlobalTracer("test")
