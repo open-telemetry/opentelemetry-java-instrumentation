@@ -64,7 +64,6 @@ public class AgentContextStorage implements ContextStorage {
               contextSpanKeyField.get(null);
     } catch (Throwable t) {
       agentSpanContextKey = null;
-      throw new Error(t);
     }
     AGENT_SPAN_CONTEXT_KEY = agentSpanContextKey;
 
@@ -77,7 +76,6 @@ public class AgentContextStorage implements ContextStorage {
       applicationSpanContextKey = (ContextKey<Span>) contextSpanKeyField.get(null);
     } catch (Throwable t) {
       applicationSpanContextKey = null;
-      throw new Error(t);
     }
     APPLICATION_SPAN_CONTEXT_KEY = applicationSpanContextKey;
   }
