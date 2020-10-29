@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.Netty
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.trace.Span;
 import org.jboss.netty.channel.Channel;
@@ -46,7 +47,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     Context context = TRACER.startSpan(request, ctx.getChannel(), "netty.request");
-    Span span = Span.fromContext(context);
+    Span span = Java8BytecodeBridge.spanFromContext(context);
     try (Scope ignored = TRACER.startScope(span, channelTraceContext)) {
       ctx.sendUpstream(msg);
     } catch (Throwable throwable) {

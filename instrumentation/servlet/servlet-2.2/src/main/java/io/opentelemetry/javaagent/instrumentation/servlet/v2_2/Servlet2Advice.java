@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Ht
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.trace.Span;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -37,7 +38,7 @@ public class Servlet2Advice {
     }
 
     Context ctx = TRACER.startSpan(httpServletRequest);
-    span = Span.fromContext(ctx);
+    span = Java8BytecodeBridge.spanFromContext(ctx);
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

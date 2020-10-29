@@ -15,6 +15,7 @@ import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -98,7 +99,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     @Override
     public HttpResponse apply(HttpRequest request) {
       Context ctx = TRACER.startSpan(request, request, "akka.request");
-      Span span = Span.fromContext(ctx);
+      Span span = Java8BytecodeBridge.spanFromContext(ctx);
       try (Scope ignored = TRACER.startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response);
@@ -124,7 +125,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
       Context ctx = TRACER.startSpan(request, request, "akka.request");
-      Span span = Span.fromContext(ctx);
+      Span span = Java8BytecodeBridge.spanFromContext(ctx);
       try (Scope ignored = TRACER.startScope(span, null)) {
         return userHandler
             .apply(request)
