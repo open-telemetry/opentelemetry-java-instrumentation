@@ -25,7 +25,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
-  public Span startSpan(HttpServletRequest request) {
+  public Context startSpan(HttpServletRequest request) {
     return startSpan(request, request, getSpanName(request));
   }
 

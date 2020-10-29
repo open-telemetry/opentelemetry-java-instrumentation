@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2HttpServerTracer.TRACER;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.trace.Span;
@@ -35,7 +36,8 @@ public class Servlet2Advice {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest);
+    Context ctx = TRACER.startSpan(httpServletRequest);
+    span = Span.fromContext(ctx);
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

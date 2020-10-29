@@ -41,7 +41,8 @@ public class Servlet3Advice {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest);
+    Context ctx = TRACER.startSpan(httpServletRequest);
+    span = Span.fromContext(ctx);
     scope = TRACER.startScope(span, httpServletRequest);
   }
 
