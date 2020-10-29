@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -146,9 +147,11 @@ public class AgentInstaller {
     for (AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
+
+    int numInstrumenters = 0;
+
     Iterable<Instrumenter> instrumenters =
         SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader());
-    int numInstrumenters = 0;
     for (Instrumenter instrumenter : orderInstrumenters(instrumenters)) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       try {
@@ -158,6 +161,18 @@ public class AgentInstaller {
         log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);
       }
     }
+
+    for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
+      log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
+      try {
+        agentBuilder = instrumentationModule.instrument(agentBuilder);
+        numInstrumenters++;
+      } catch (Exception | LinkageError e) {
+        log.error(
+            "Unable to load instrumentation {}", instrumentationModule.getClass().getName(), e);
+      }
+    }
+
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
   }
@@ -167,6 +182,14 @@ public class AgentInstaller {
     instrumenters.forEach(orderedInstrumenters::add);
     Collections.sort(orderedInstrumenters, Comparator.comparingInt(Instrumenter::getOrder));
     return orderedInstrumenters;
+  }
+
+  private static List<InstrumentationModule> loadInstrumentationModules() {
+    return SafeServiceLoader.load(
+            InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+        .stream()
+        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+        .collect(Collectors.toList());
   }
 
   private static void addByteBuddyRawSetting() {

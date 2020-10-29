@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -13,8 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -27,19 +25,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
  * This instrumentation adds the HandlerMappingResourceNameFilter definition to the spring context
  * When the context is created, the filter will be added to the beginning of the filter chain
  */
-@AutoService(Instrumenter.class)
-public class WebApplicationContextInstrumentation extends Instrumenter.Default {
-  public WebApplicationContextInstrumentation() {
-    super("spring-web");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed(
-        "org.springframework.context.support.AbstractApplicationContext",
-        "org.springframework.web.context.WebApplicationContext");
-  }
+public final class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -48,17 +34,7 @@ public class WebApplicationContextInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebMvcTracer",
-      packageName + ".HandlerMappingResourceNameFilter",
-      packageName + ".HandlerMappingResourceNameFilter$BeanDefinition",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-
     return singletonMap(
         isMethod()
             .and(named("postProcessBeanFactory"))
