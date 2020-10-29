@@ -14,6 +14,7 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +59,8 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Span span = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
+    Context context = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
+    Span span = Span.fromContext(context);
 
     if (span.isRecording()) {
       ctx.log()

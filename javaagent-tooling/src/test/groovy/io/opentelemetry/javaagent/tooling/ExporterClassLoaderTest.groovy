@@ -47,12 +47,22 @@ class ExporterClassLoaderTest extends Specification {
     MetricExporter fromConfig(Properties config) {
       return null
     }
+
+    @Override
+    Set<String> getNames() {
+      return null
+    }
   }
 
   static class MetricExporterFactoryChild implements MetricExporterFactory {
 
     @Override
     MetricExporter fromConfig(Properties config) {
+      return null
+    }
+
+    @Override
+    Set<String> getNames() {
       return null
     }
   }
@@ -63,12 +73,22 @@ class ExporterClassLoaderTest extends Specification {
     SpanExporter fromConfig(Properties config) {
       return null
     }
+
+    @Override
+    Set<String> getNames() {
+      return null
+    }
   }
 
   static class SpanExporterFactoryChild implements SpanExporterFactory {
 
     @Override
     SpanExporter fromConfig(Properties config) {
+      return null
+    }
+
+    @Override
+    Set<String> getNames() {
       return null
     }
   }
