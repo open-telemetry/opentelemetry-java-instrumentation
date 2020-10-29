@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.spi.exporter;
 
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A {@link MetricExporterFactory} acts as the bootstrap for a {@link MetricExporter}
@@ -21,4 +22,14 @@ public interface MetricExporterFactory {
    * @return An implementation of a {@link MetricExporter}
    */
   MetricExporter fromConfig(Properties config);
+
+  /**
+   * Returns names of metric exporters supported by this factory.
+   *
+   * <p>Multiple names are useful for enabling a pair of span and metric exporters using the same
+   * name, while still having separate names for enabling them individually.
+   *
+   * @return The exporter names supported by this factory
+   */
+  Set<String> getNames();
 }
