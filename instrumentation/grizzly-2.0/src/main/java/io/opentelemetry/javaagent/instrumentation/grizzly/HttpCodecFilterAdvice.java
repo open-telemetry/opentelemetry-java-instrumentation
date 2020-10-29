@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -30,7 +31,8 @@ public class HttpCodecFilterAdvice {
       return;
     }
     HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
-    Span span = TRACER.startSpan(httpRequest, httpRequest, method);
+    Context extractedContext = TRACER.startSpan(httpRequest, httpRequest, method);
+    Span span = Java8BytecodeBridge.spanFromContext(extractedContext);
 
     // We don't actually want to attach new context to this thread, as actual request will continue
     // on some other thread. But we do want to attach that new context to FilterChainContext
