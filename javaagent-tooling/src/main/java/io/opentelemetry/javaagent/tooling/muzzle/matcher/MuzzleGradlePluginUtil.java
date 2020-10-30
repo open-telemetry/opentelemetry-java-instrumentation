@@ -64,14 +64,16 @@ public final class MuzzleGradlePluginUtil {
         // only default Instrumenters and modules use muzzle. Skip custom instrumenters.
         continue;
       }
-      Method m = null;
+      Method getMuzzleReferenceMatcher = null;
       try {
-        m = instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
-        m.setAccessible(true);
-        ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
+        getMuzzleReferenceMatcher =
+            instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
+        getMuzzleReferenceMatcher.setAccessible(true);
+        ReferenceMatcher muzzle = (ReferenceMatcher) getMuzzleReferenceMatcher.invoke(instrumenter);
         List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
         Method getClassLoaderMatcher = instrumenter.getClass().getMethod("classLoaderMatcher");
+        getClassLoaderMatcher.setAccessible(true);
         boolean classLoaderMatch =
             ((ElementMatcher<ClassLoader>) getClassLoaderMatcher.invoke(instrumenter))
                 .matches(userClassLoader);
@@ -97,8 +99,8 @@ public final class MuzzleGradlePluginUtil {
           throw new RuntimeException("Instrumentation failed Muzzle validation");
         }
       } finally {
-        if (null != m) {
-          m.setAccessible(false);
+        if (null != getMuzzleReferenceMatcher) {
+          getMuzzleReferenceMatcher.setAccessible(false);
         }
       }
     }
@@ -121,8 +123,9 @@ public final class MuzzleGradlePluginUtil {
         }
         try {
           // verify helper injector works
-          Method m = instrumenter.getClass().getMethod("helperClassNames");
-          String[] helperClassNames = (String[]) m.invoke(instrumenter);
+          Method getHelperClassNames = instrumenter.getClass().getMethod("helperClassNames");
+          getHelperClassNames.setAccessible(true);
+          String[] helperClassNames = (String[]) getHelperClassNames.invoke(instrumenter);
           if (helperClassNames.length > 0) {
             new HelperInjector(
                     MuzzleGradlePluginUtil.class.getSimpleName(),
