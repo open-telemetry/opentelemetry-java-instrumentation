@@ -71,8 +71,7 @@ public final class MuzzleGradlePluginUtil {
         ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
         List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
-        Method getClassLoaderMatcher =
-            instrumenter.getClass().getMethod("classLoaderMatcher");
+        Method getClassLoaderMatcher = instrumenter.getClass().getMethod("classLoaderMatcher");
         boolean classLoaderMatch =
             ((ElementMatcher<ClassLoader>) getClassLoaderMatcher.invoke(instrumenter))
                 .matches(userClassLoader);
