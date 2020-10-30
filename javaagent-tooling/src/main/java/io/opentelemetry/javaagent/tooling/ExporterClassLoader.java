@@ -29,34 +29,10 @@ public class ExporterClassLoader extends URLClassLoader {
   // with transitive dependencies down the line.
   private static final ShadingRemapper remapper =
       new ShadingRemapper(
-          rule(
-              "#io.opentelemetry.DefaultOpenTelemetry",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.DefaultOpenTelemetry"),
-          rule(
-              "#io.opentelemetry.OpenTelemetry",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.OpenTelemetry"),
-          rule(
-              "#io.opentelemetry.package-info",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.package-info"),
-          rule(
-              "#io.opentelemetry.common",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.common"),
-          rule(
-              "#io.opentelemetry.baggage",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.baggage"),
+          rule("#io.opentelemetry.api", "#io.opentelemetry.javaagent.shaded.io.opentelemetry.api"),
           rule(
               "#io.opentelemetry.context",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.context"),
-          rule(
-              "#io.opentelemetry.internal",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.internal"),
-          rule(
-              "#io.opentelemetry.metrics",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.metrics"),
-          rule("#io.opentelemetry.spi", "#io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"),
-          rule(
-              "#io.opentelemetry.trace",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.trace"),
           rule("#java.util.logging.Logger", "#io.opentelemetry.javaagent.bootstrap.PatchLogger"),
           rule("#org.slf4j", "#io.opentelemetry.javaagent.slf4j"));
 

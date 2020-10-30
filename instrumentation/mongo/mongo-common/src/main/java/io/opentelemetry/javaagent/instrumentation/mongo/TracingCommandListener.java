@@ -11,7 +11,7 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.net.ssl.SSLSession;

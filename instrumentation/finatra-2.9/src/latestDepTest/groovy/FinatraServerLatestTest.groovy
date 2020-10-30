@@ -4,7 +4,7 @@
  */
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
 import com.twitter.app.lifecycle.Event
 import com.twitter.app.lifecycle.Observer

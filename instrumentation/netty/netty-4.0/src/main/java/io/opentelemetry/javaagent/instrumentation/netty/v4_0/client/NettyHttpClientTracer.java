@@ -11,11 +11,11 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.Netty
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;

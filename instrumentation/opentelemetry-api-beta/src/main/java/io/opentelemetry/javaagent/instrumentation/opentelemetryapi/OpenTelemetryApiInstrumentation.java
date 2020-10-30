@@ -10,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.io.opentelemetry.api.metrics.MeterProvider;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
-import application.io.opentelemetry.metrics.MeterProvider;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.ApplicationMeterProvider;
@@ -29,7 +29,7 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.OpenTelemetry");
+    return named("application.io.opentelemetry.api.OpenTelemetry");
   }
 
   @Override
@@ -52,7 +52,7 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-            application.io.opentelemetry.trace.TracerProvider applicationTracerProvider) {
+            application.io.opentelemetry.api.trace.TracerProvider applicationTracerProvider) {
       applicationTracerProvider = new ApplicationTracerProvider(applicationTracerProvider);
     }
   }

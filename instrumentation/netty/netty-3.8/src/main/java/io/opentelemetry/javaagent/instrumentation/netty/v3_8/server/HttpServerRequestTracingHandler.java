@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
-import io.opentelemetry.trace.Span;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;

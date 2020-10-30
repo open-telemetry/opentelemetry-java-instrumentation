@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 

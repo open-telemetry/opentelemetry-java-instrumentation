@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 
 import static io.opentelemetry.instrumentation.spring.httpclients.RestTemplateTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;

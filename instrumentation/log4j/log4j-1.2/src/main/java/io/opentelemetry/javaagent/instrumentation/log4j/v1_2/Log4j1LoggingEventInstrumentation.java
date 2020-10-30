@@ -16,10 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;

@@ -18,10 +18,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.ws.rs.Path;

@@ -6,7 +6,7 @@
 package test
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.util.concurrent.ListenableFuture
@@ -20,7 +20,7 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import org.apache.http.HttpEntity

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 
 public class SpringSchedulingRunnableWrapper implements Runnable {
   private final Runnable runnable;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.OperationFuture;

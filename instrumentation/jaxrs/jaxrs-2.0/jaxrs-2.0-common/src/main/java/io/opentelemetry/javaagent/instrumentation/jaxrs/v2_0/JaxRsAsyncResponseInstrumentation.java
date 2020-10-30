@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;

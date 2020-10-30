@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
+import io.opentelemetry.api.trace.Span
 import java.util.concurrent.Callable
 
 class TraceUtils {

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 

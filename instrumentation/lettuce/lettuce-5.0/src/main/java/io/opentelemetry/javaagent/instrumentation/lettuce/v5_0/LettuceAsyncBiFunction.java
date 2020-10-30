@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 

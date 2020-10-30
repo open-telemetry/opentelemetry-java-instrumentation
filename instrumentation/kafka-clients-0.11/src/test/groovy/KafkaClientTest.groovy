@@ -7,12 +7,12 @@ import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
 import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig

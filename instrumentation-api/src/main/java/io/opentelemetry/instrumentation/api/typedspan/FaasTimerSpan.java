@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticConvention {
 

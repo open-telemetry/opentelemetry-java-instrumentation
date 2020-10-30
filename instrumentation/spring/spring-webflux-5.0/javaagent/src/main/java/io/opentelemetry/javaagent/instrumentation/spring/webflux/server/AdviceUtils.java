@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCode;
 import java.util.Map;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;

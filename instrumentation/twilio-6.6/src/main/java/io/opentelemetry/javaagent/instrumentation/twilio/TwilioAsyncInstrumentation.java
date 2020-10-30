@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -24,10 +24,10 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;

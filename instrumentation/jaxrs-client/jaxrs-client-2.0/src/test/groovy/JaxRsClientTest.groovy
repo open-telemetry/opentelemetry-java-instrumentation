@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder

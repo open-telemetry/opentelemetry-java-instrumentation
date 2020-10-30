@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.api.mvc.Result;

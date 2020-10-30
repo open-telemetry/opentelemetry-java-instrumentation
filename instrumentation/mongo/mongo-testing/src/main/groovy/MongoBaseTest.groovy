@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import de.flapdoodle.embed.mongo.MongodExecutable
 import de.flapdoodle.embed.mongo.MongodProcess
@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 /**

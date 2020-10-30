@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

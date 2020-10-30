@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 

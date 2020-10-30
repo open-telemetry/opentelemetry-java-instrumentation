@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import net.spy.memcached.MemcachedConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

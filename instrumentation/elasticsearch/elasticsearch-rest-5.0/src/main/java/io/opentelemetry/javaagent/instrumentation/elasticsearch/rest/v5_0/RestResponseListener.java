@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 

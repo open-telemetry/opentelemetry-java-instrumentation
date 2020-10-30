@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.FilterChainContext;

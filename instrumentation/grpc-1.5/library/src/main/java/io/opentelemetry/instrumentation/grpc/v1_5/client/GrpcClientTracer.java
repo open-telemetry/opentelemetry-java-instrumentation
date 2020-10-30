@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.grpc.Status;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class GrpcClientTracer extends RpcClientTracer {
 

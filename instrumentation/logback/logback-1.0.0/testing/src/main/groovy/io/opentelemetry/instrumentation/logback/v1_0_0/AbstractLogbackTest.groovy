@@ -9,8 +9,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.TracingContextUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared

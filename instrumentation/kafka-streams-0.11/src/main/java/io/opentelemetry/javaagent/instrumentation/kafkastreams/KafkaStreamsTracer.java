@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsTracer extends BaseTracer {

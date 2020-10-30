@@ -5,11 +5,11 @@
 
 package io.opentelemetry.perftest.jetty;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.perftest.Worker;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

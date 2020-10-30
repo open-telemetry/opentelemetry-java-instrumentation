@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;

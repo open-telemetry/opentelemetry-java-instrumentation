@@ -21,8 +21,8 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 
 public class TracingSession implements Session {

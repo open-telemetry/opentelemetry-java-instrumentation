@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.LongValueRecorder;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.LongValueRecorder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationLongValueRecorder implements LongValueRecorder {
 
-  private final io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder;
+  private final io.opentelemetry.api.metrics.LongValueRecorder agentLongValueRecorder;
 
   protected ApplicationLongValueRecorder(
-      io.opentelemetry.metrics.LongValueRecorder agentLongValueRecorder) {
+      io.opentelemetry.api.metrics.LongValueRecorder agentLongValueRecorder) {
     this.agentLongValueRecorder = agentLongValueRecorder;
   }
 
-  public io.opentelemetry.metrics.LongValueRecorder getAgentLongValueRecorder() {
+  public io.opentelemetry.api.metrics.LongValueRecorder getAgentLongValueRecorder() {
     return agentLongValueRecorder;
   }
 
@@ -39,11 +39,11 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
 
   static class BoundInstrument implements LongValueRecorder.BoundLongValueRecorder {
 
-    private final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
+    private final io.opentelemetry.api.metrics.LongValueRecorder.BoundLongValueRecorder
         agentBoundLongValueRecorder;
 
     protected BoundInstrument(
-        io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
+        io.opentelemetry.api.metrics.LongValueRecorder.BoundLongValueRecorder
             agentBoundLongValueRecorder) {
       this.agentBoundLongValueRecorder = agentBoundLongValueRecorder;
     }
@@ -61,9 +61,9 @@ class ApplicationLongValueRecorder implements LongValueRecorder {
 
   static class Builder implements LongValueRecorder.Builder {
 
-    private final io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongValueRecorder.Builder agentBuilder;
 
-    protected Builder(io.opentelemetry.metrics.LongValueRecorder.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.api.metrics.LongValueRecorder.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

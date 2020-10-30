@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.propagation.HttpTraceContext
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.propagation.HttpTraceContext
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord

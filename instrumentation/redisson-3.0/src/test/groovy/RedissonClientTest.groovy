@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static java.util.regex.Pattern.compile
 import static java.util.regex.Pattern.quote
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import org.redisson.Redisson
 import org.redisson.api.RAtomicLong
 import org.redisson.api.RBatch

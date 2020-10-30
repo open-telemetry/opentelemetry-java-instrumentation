@@ -5,8 +5,8 @@
 
 package server
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import java.time.Duration
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;

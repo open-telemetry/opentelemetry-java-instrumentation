@@ -11,10 +11,10 @@ import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayl
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.rmi.Remote;

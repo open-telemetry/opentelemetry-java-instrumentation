@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.Tracer;
 
 @Deprecated
 public abstract class ClientDecorator extends BaseDecorator {

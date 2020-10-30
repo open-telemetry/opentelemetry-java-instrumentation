@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import application.io.opentelemetry.OpenTelemetry
+import application.io.opentelemetry.api.OpenTelemetry
 import application.io.opentelemetry.context.Context
-import application.io.opentelemetry.trace.Span
+import application.io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class ContextTest extends AgentTestRunner {

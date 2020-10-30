@@ -4,11 +4,11 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings

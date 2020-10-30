@@ -17,13 +17,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;

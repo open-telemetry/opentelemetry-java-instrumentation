@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
@@ -14,7 +14,7 @@ import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfig
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.time.Duration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

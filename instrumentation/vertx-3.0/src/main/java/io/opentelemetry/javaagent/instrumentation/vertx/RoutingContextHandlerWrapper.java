@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.VertxTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;

@@ -70,7 +70,7 @@ interface. An example is shown below:
 ```java
 
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Tracer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

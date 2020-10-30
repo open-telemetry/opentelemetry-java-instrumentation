@@ -5,8 +5,8 @@
 
 package server
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest

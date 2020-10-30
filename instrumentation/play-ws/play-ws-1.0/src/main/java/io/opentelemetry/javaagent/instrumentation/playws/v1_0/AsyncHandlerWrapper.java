@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseHeaders;

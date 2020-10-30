@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import example.GreeterGrpc
 import example.Helloworld
@@ -18,7 +18,7 @@ import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference

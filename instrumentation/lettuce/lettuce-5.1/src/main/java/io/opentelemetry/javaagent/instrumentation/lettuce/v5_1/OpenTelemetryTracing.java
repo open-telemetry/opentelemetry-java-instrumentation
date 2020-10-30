@@ -12,16 +12,16 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
-  public static final io.opentelemetry.trace.Tracer TRACER =
+  public static final io.opentelemetry.api.trace.Tracer TRACER =
       OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
 
   private static final RedisCommandNormalizer commandNormalizer =

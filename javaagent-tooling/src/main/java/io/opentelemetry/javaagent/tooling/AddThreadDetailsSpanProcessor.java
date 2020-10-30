@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;

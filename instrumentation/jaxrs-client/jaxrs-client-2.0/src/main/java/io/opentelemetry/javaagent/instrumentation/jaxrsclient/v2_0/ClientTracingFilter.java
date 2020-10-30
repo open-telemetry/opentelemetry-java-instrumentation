@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;

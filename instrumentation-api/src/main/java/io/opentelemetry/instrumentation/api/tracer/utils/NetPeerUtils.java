@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.tracer.utils;
 
-import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;

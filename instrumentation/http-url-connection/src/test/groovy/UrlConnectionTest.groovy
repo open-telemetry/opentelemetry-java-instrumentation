@@ -5,12 +5,12 @@
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 
 class UrlConnectionTest extends AgentTestRunner {
 

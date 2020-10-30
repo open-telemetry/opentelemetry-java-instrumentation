@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;

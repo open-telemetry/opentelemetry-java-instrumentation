@@ -23,8 +23,8 @@ import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 

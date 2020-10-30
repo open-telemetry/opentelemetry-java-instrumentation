@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 
 /**
  * This is deprecated.

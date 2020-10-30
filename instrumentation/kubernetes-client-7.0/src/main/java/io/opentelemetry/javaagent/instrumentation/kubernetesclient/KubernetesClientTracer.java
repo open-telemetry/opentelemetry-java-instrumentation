@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;

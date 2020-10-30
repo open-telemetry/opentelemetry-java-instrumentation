@@ -5,26 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.metrics.BatchRecorder;
-import application.io.opentelemetry.metrics.DoubleCounter;
-import application.io.opentelemetry.metrics.DoubleSumObserver;
-import application.io.opentelemetry.metrics.DoubleUpDownCounter;
-import application.io.opentelemetry.metrics.DoubleUpDownSumObserver;
-import application.io.opentelemetry.metrics.DoubleValueObserver;
-import application.io.opentelemetry.metrics.DoubleValueRecorder;
-import application.io.opentelemetry.metrics.LongCounter;
-import application.io.opentelemetry.metrics.LongSumObserver;
-import application.io.opentelemetry.metrics.LongUpDownCounter;
-import application.io.opentelemetry.metrics.LongUpDownSumObserver;
-import application.io.opentelemetry.metrics.LongValueObserver;
-import application.io.opentelemetry.metrics.LongValueRecorder;
-import application.io.opentelemetry.metrics.Meter;
+import application.io.opentelemetry.api.metrics.BatchRecorder;
+import application.io.opentelemetry.api.metrics.DoubleCounter;
+import application.io.opentelemetry.api.metrics.DoubleSumObserver;
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounter;
+import application.io.opentelemetry.api.metrics.DoubleUpDownSumObserver;
+import application.io.opentelemetry.api.metrics.DoubleValueObserver;
+import application.io.opentelemetry.api.metrics.DoubleValueRecorder;
+import application.io.opentelemetry.api.metrics.LongCounter;
+import application.io.opentelemetry.api.metrics.LongSumObserver;
+import application.io.opentelemetry.api.metrics.LongUpDownCounter;
+import application.io.opentelemetry.api.metrics.LongUpDownSumObserver;
+import application.io.opentelemetry.api.metrics.LongValueObserver;
+import application.io.opentelemetry.api.metrics.LongValueRecorder;
+import application.io.opentelemetry.api.metrics.Meter;
 
 class ApplicationMeter implements Meter {
 
-  private final io.opentelemetry.metrics.Meter agentMeter;
+  private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  ApplicationMeter(io.opentelemetry.metrics.Meter agentMeter) {
+  ApplicationMeter(io.opentelemetry.api.metrics.Meter agentMeter) {
     this.agentMeter = agentMeter;
   }
 

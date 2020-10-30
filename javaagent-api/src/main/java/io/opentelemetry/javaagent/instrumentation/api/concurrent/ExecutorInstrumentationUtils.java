@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.trace.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

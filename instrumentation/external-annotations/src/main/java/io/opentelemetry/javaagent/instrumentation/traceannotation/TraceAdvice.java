@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.traceannotation;
 
 import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
