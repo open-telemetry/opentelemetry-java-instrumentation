@@ -6,6 +6,7 @@ on:
       - 'smoke-tests/fake-backend/**'
       - '.github/workflows/build-smoke-dist-fakebackend.yaml'
     branches: 'master'
+  workflow_dispatch:
 
 jobs:
   publish:
