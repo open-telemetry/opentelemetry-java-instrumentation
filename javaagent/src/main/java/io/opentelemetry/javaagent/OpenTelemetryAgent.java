@@ -71,9 +71,9 @@ public class OpenTelemetryAgent {
     try {
       // Call oshi.SystemInfo.getCurrentPlatformEnum() to activate SystemMetrics.
       // Oshi instrumentation will intercept this call and enable SystemMetrics.
-      Class<?> aClass = ClassLoader.getSystemClassLoader().loadClass("oshi.SystemInfo");
-      Method method = aClass.getMethod("getCurrentPlatformEnum");
-      method.invoke(null);
+      Class<?> oshiSystemInfoClass = ClassLoader.getSystemClassLoader().loadClass("oshi.SystemInfo");
+      Method getCurrentPlatformEnumMethod = oshiSystemInfoClass.getMethod("getCurrentPlatformEnum");
+      getCurrentPlatformEnumMethod.invoke(null);
     } catch (Throwable ex) {
       // OK
     }

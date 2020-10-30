@@ -13,6 +13,4 @@ dependencies {
   implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics'
 
   library group: 'com.github.oshi', name: 'oshi-core', version: '5.3.1'
-
-  //testImplementation project(':instrumentation:armeria-1.0:testing')
 }

@@ -37,10 +37,10 @@ public class OshiInstrumentation extends AbstractOshiInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
         isMethod().and(isPublic()).and(isStatic()).and(named("getCurrentPlatformEnum")),
-        OshiInstrumentation.class.getName() + "$HandleRequestAdvice");
+        OshiInstrumentation.class.getName() + "$OshiInstrumentationAdvice");
   }
 
-  public static class HandleRequestAdvice {
+  public static class OshiInstrumentationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
       OshiInstrumentationHelper.registerObservers();
