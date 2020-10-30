@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.api.db.normalizer
 
 import spock.lang.Specification
@@ -18,6 +23,7 @@ class SqlSimplifierTest extends Specification {
     'SELECT x, y, (select a from b) as z FROM table'               | 'SELECT FROM table'
     'select delete, insert into, merge, update from table'         | 'SELECT FROM table'
     'select col /* from table2 */ from table'                      | 'SELECT FROM table'
+    'select col from table join anotherTable'                      | 'SELECT FROM table'
     // Insert
     ' insert into table where lalala'                              | 'INSERT INTO table'
     'insert insert into table where lalala'                        | 'INSERT INTO table'
