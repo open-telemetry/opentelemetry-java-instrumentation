@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 

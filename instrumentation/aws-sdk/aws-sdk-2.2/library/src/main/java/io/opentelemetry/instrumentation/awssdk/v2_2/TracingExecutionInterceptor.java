@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAtt
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.TRACER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;

@@ -5,7 +5,7 @@
 
 package util
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig
@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 

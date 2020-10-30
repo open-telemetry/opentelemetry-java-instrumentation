@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.typed.server;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.javaagent.typed.server.http.HttpServerTypedSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCode;
 
 public class SampleHttpServerTypedSpan
     extends HttpServerTypedSpan<SampleHttpServerTypedSpan, String, String> {

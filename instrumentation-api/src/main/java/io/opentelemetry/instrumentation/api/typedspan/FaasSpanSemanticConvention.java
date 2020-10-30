@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 
 public interface FaasSpanSemanticConvention {
   void end();

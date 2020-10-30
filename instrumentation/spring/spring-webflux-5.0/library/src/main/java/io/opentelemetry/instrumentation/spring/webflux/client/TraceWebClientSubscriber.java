@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;

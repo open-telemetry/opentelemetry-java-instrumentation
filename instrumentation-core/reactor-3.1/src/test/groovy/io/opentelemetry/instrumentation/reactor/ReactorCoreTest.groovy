@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.reactor
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
-import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.trace.Tracer
 import java.time.Duration
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber

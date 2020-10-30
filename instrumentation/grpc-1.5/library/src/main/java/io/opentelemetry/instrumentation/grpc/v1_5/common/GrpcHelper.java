@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.common;
 
 import io.grpc.Status.Code;
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCode;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 
 public final class GrpcHelper {
 

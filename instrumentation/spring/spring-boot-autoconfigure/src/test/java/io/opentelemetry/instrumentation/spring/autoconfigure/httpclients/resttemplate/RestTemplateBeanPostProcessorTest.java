@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.restte
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
-import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -16,8 +16,8 @@
 
 package controllers
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import java.util.concurrent.TimeUnit
 
 object Worker {

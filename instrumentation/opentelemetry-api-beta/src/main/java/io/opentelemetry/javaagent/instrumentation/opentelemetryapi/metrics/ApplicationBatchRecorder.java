@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.metrics.BatchRecorder;
-import application.io.opentelemetry.metrics.DoubleCounter;
-import application.io.opentelemetry.metrics.DoubleUpDownCounter;
-import application.io.opentelemetry.metrics.DoubleValueRecorder;
-import application.io.opentelemetry.metrics.LongCounter;
-import application.io.opentelemetry.metrics.LongUpDownCounter;
-import application.io.opentelemetry.metrics.LongValueRecorder;
+import application.io.opentelemetry.api.metrics.BatchRecorder;
+import application.io.opentelemetry.api.metrics.DoubleCounter;
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounter;
+import application.io.opentelemetry.api.metrics.DoubleValueRecorder;
+import application.io.opentelemetry.api.metrics.LongCounter;
+import application.io.opentelemetry.api.metrics.LongUpDownCounter;
+import application.io.opentelemetry.api.metrics.LongValueRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +19,9 @@ class ApplicationBatchRecorder implements BatchRecorder {
 
   private static final Logger log = LoggerFactory.getLogger(ApplicationBatchRecorder.class);
 
-  private final io.opentelemetry.metrics.BatchRecorder agentBatchRecorder;
+  private final io.opentelemetry.api.metrics.BatchRecorder agentBatchRecorder;
 
-  ApplicationBatchRecorder(io.opentelemetry.metrics.BatchRecorder agentBatchRecorder) {
+  ApplicationBatchRecorder(io.opentelemetry.api.metrics.BatchRecorder agentBatchRecorder) {
     this.agentBatchRecorder = agentBatchRecorder;
   }
 

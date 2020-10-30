@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.DoubleCounter;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationDoubleCounter implements DoubleCounter {
 
-  private final io.opentelemetry.metrics.DoubleCounter agentDoubleCounter;
+  private final io.opentelemetry.api.metrics.DoubleCounter agentDoubleCounter;
 
-  ApplicationDoubleCounter(io.opentelemetry.metrics.DoubleCounter agentDoubleCounter) {
+  ApplicationDoubleCounter(io.opentelemetry.api.metrics.DoubleCounter agentDoubleCounter) {
     this.agentDoubleCounter = agentDoubleCounter;
   }
 
-  io.opentelemetry.metrics.DoubleCounter getAgentDoubleCounter() {
+  io.opentelemetry.api.metrics.DoubleCounter getAgentDoubleCounter() {
     return agentDoubleCounter;
   }
 
@@ -38,10 +38,11 @@ class ApplicationDoubleCounter implements DoubleCounter {
 
   static class BoundInstrument implements DoubleCounter.BoundDoubleCounter {
 
-    private final io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter;
+    private final io.opentelemetry.api.metrics.DoubleCounter.BoundDoubleCounter
+        agentBoundDoubleCounter;
 
     BoundInstrument(
-        io.opentelemetry.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
+        io.opentelemetry.api.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
       this.agentBoundDoubleCounter = agentBoundDoubleCounter;
     }
 
@@ -58,9 +59,9 @@ class ApplicationDoubleCounter implements DoubleCounter {
 
   static class Builder implements DoubleCounter.Builder {
 
-    private final io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleCounter.Builder agentBuilder;
 
-    Builder(io.opentelemetry.metrics.DoubleCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.DoubleCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

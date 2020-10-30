@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
-import io.opentelemetry.trace.Span;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;

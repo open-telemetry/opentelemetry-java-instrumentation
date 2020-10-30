@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.typed.server.http;
 
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.typed.server.ServerTypedTracer;
-import io.opentelemetry.trace.Span;
 
 public abstract class HttpServerTypedTracer<
         T extends HttpServerTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>

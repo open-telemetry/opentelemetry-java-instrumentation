@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 
 public class HystrixTracer extends BaseTracer {
   public static final HystrixTracer TRACER = new HystrixTracer();

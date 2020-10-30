@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseClientTracer.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import rx.Observable;
 

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.common.Labels;
-import io.opentelemetry.metrics.AsynchronousInstrument.Callback;
-import io.opentelemetry.metrics.AsynchronousInstrument.DoubleResult;
-import io.opentelemetry.metrics.AsynchronousInstrument.LongResult;
-import io.opentelemetry.metrics.Meter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.metrics.AsynchronousInstrument.Callback;
+import io.opentelemetry.api.metrics.AsynchronousInstrument.DoubleResult;
+import io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult;
+import io.opentelemetry.api.metrics.Meter;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;

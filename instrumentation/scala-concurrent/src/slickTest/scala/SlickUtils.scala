@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.trace.Tracer
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration

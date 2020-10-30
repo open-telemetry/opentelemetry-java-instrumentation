@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 
 public class RmiClientTracer extends RpcClientTracer {

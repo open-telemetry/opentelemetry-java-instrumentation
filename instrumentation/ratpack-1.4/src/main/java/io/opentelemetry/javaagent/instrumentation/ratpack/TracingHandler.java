@@ -9,9 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.T
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 

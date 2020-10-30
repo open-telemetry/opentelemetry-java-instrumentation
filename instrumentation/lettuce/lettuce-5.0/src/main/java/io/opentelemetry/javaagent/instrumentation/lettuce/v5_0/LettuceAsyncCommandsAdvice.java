@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceIns
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {

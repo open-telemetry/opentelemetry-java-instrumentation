@@ -48,16 +48,8 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
   static {
     String[] testBS = {
       "io.opentelemetry.instrumentation.api",
-      "io.opentelemetry.DefaultOpenTelemetry", // OpenTelemetry API
-      "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
-      "io.opentelemetry.package-info", // OpenTelemetry API
-      "io.opentelemetry.common", // OpenTelemetry API
-      "io.opentelemetry.baggage", // OpenTelemetry API
+      "io.opentelemetry.api", // OpenTelemetry API
       "io.opentelemetry.context", // OpenTelemetry API
-      "io.opentelemetry.internal", // OpenTelemetry API
-      "io.opentelemetry.metrics", // OpenTelemetry API
-      "io.opentelemetry.spi", // OpenTelemetry API
-      "io.opentelemetry.trace", // OpenTelemetry API
       "org.slf4j",
       "ch.qos.logback",
       // Tomcat's servlet classes must be on boostrap

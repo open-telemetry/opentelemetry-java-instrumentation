@@ -11,11 +11,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
-import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {

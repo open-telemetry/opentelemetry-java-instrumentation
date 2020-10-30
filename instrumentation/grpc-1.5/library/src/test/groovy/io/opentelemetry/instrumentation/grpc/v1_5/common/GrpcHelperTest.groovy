@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.common
 
 import io.grpc.Status
-import io.opentelemetry.trace.StatusCode
+import io.opentelemetry.api.trace.StatusCode
 import spock.lang.Specification
 
 class GrpcHelperTest extends Specification {

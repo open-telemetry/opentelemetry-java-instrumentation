@@ -5,8 +5,8 @@
 
 package io.opentelemetry.benchmark.classes;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 
 public class TracedClass extends UntracedClass {
   private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;

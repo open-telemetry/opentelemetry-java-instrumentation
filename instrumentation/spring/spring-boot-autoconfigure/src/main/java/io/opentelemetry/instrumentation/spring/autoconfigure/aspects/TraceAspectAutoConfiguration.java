@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
-import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

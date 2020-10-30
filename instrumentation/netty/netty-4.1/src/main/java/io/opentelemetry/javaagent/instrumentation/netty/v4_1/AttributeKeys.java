@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.netty.util.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
-import io.opentelemetry.trace.Span;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

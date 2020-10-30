@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.typed.base;
 
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.common.Attributes;
-import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.StatusCode;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.EndSpanOptions;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
 
 // TODO: This should be moved into the API.
 public class DelegatingSpan implements Span {

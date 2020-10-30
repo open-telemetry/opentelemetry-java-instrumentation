@@ -5,9 +5,9 @@
 
 package io.opentelemetry.test.annotation;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import java.util.concurrent.Callable;
 
 public class SayTracedHello {

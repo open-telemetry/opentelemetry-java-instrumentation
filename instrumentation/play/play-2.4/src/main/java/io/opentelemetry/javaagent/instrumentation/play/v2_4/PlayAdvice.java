@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Headers;

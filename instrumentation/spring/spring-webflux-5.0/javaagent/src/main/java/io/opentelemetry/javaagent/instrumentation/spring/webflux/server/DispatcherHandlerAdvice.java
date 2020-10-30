@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;

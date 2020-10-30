@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import io.opentelemetry.trace.StatusCode;
+import io.opentelemetry.api.trace.StatusCode;
 
 public final class HttpStatusConverter {
 

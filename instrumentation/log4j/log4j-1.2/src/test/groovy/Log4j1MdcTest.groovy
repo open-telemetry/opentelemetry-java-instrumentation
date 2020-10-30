@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.api.trace.TracingContextUtils
 import org.apache.log4j.LogManager
 
 class Log4j1MdcTest extends AgentTestRunner {

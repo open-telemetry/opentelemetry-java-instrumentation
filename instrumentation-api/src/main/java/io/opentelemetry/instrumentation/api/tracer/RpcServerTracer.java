@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.OpenTelemetry.getGlobalPropagators;
+import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.trace.Tracer;
 
 public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
 

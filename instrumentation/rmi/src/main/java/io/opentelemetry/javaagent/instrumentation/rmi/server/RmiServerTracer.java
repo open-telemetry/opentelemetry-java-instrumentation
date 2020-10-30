@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 
 public class RmiServerTracer extends RpcServerTracer {

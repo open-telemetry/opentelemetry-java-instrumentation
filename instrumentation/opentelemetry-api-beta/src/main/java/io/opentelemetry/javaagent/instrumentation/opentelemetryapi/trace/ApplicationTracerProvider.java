@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.opentelemetry.internal.Obfuscated;
-import application.io.opentelemetry.trace.Tracer;
-import application.io.opentelemetry.trace.TracerProvider;
+import application.io.opentelemetry.api.internal.Obfuscated;
+import application.io.opentelemetry.api.trace.Tracer;
+import application.io.opentelemetry.api.trace.TracerProvider;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +27,13 @@ public class ApplicationTracerProvider implements TracerProvider, Obfuscated {
   @Override
   public Tracer get(String instrumentationName) {
     return new ApplicationTracer(
-        io.opentelemetry.OpenTelemetry.getGlobalTracer(instrumentationName));
+        io.opentelemetry.api.OpenTelemetry.getGlobalTracer(instrumentationName));
   }
 
   @Override
   public Tracer get(String instrumentationName, String instrumentationVersion) {
     return new ApplicationTracer(
-        io.opentelemetry.OpenTelemetry.getGlobalTracerProvider()
+        io.opentelemetry.api.OpenTelemetry.getGlobalTracerProvider()
             .get(instrumentationName, instrumentationVersion));
   }
 
