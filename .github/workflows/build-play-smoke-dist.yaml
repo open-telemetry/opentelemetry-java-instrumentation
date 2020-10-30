@@ -6,6 +6,7 @@ on:
       - 'smoke-tests/play/**'
       - '.github/workflows/build-play-smoke-dist.yaml'
     branches: 'master'
+  workflow_dispatch:
 
 jobs:
   publish:

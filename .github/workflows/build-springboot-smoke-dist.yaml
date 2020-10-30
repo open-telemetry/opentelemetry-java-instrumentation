@@ -6,6 +6,7 @@ on:
       - 'smoke-tests/springboot/**'
       - '.github/workflows/build-springboot-smoke-dist.yaml'
     branches: 'master'
+  workflow_dispatch:
 
 jobs:
   publish:
