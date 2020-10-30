@@ -22,7 +22,7 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
   private static final WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   @Override
-  protected void doHandleRequest(InputStream input, OutputStream output, Context context)
+  protected void doHandleRequest(InputStream inputStream, OutputStream output, Context context)
       throws IOException {
 
     if (!(WRAPPED_LAMBDA.getTargetObject() instanceof RequestStreamHandler)) {
@@ -30,6 +30,8 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
           WRAPPED_LAMBDA.getTargetClass().getName()
               + " is not an instance of RequestStreamHandler");
     }
-    ((RequestStreamHandler) WRAPPED_LAMBDA.getTargetObject()).handleRequest(input, output, context);
+
+    ((RequestStreamHandler) WRAPPED_LAMBDA.getTargetObject())
+        .handleRequest(inputStream, output, context);
   }
 }

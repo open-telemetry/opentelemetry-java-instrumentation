@@ -17,7 +17,11 @@ apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
   library group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
+  library group: 'com.amazonaws.serverless', name: 'aws-serverless-java-container-core', version: '1.5.2'
+
   compileOnly deps.opentelemetrySdk
+
+  compile('com.fasterxml.jackson.core:jackson-databind:2.10.3', 'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10')
 
   // First version to includes support for SQSEvent, currently the most popular message queue used
   // with lambda.

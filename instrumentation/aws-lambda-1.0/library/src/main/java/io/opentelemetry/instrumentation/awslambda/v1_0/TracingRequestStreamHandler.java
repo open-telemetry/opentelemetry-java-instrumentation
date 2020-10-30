@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
+import com.amazonaws.serverless.proxy.model.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import io.opentelemetry.api.trace.Span;
@@ -50,11 +51,16 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   }
 
   @Override
-  public final void handleRequest(InputStream input, OutputStream output, Context context)
+  public void handleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
-    Span span = tracer.startSpan(context, Kind.SERVER);
+
+    InputStreamFactory streamFactory = InputStreamFactory.forStream(input);
+    Headers headers =
+        ApiGatewayProxyRequest.ofInputStream(streamFactory.freshStream()).getHeaders();
+    Span span = tracer.startSpan(context, Kind.SERVER, headers);
+
     try (Scope ignored = tracer.startScope(span)) {
-      doHandleRequest(input, new OutputStreamWrapper(output, span), context);
+      doHandleRequest(streamFactory.freshStream(), new OutputStreamWrapper(output, span), context);
     } catch (Throwable t) {
       tracer.endExceptionally(span, t);
       OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
