@@ -13,23 +13,33 @@ PARSER_BEGIN(SqlSimplifier)
 
 package io.opentelemetry.javaagent.instrumentation.api.db.normalizer;
 
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.io.StringReader;
 
 public class SqlSimplifier {
-  public static String simplify(String s) throws ParseException {
+  public static SqlStatementInfo simplify(String s) throws ParseException {
     SqlSimplifier parser = new SqlSimplifier(new StringReader(s.trim()));
-    return parser.Input();
+    parser.Input();
+    return parser.getResult();
   }
 
-  private Kind kind = null;
-  private boolean identifierIsTable = false;
-  private int parenLevel = 0;
-  private boolean insideComment = false;
+  private Operation operation = null;
+  private String mainTable = null;
 
-  private void setKind(Kind kind) {
-    if (this.kind == null) {
-      this.kind = kind;
+  private int parenLevel = 0;
+  private boolean identifierIsTable = false;
+  private boolean insideComment = false;
+  private boolean mainTableSetAlready = false;
+
+  private void setOperation(Operation operation) {
+    if (this.operation == null) {
+      this.operation = operation;
     }
+  }
+
+  private void setMainTable(String table) {
+    this.mainTable = table;
+    mainTableSetAlready = true;
   }
 
   private void nextIdentifierIsTable() {
@@ -40,18 +50,11 @@ public class SqlSimplifier {
     return parenLevel == 0 && !insideComment;
   }
 
-  private String getResult(String mainTable) {
-    switch (kind) {
-      case SELECT: return "SELECT FROM " + mainTable;
-      case INSERT: return "INSERT INTO " + mainTable;
-      case DELETE: return "DELETE FROM " + mainTable;
-      case UPDATE: return "UPDATE " + mainTable;
-      case MERGE:  return "MERGE " + mainTable;
-      default:     return null;
-    }
+  private SqlStatementInfo getResult() {
+    return new SqlStatementInfo(operation.name(), mainTable);
   }
 
-  private enum Kind {
+  private enum Operation {
     SELECT,
     INSERT,
     DELETE,
@@ -61,61 +64,88 @@ public class SqlSimplifier {
 }
 PARSER_END(SqlSimplifier)
 
-String Input() : {
+void Input() : {
   Token t;
 } {
   (
     <Select> {
       if (isMainStatement()) {
-        setKind(Kind.SELECT);
+        setOperation(Operation.SELECT);
       }
     }
     |
     <Insert> {
       if (isMainStatement()) {
-        setKind(Kind.INSERT);
+        setOperation(Operation.INSERT);
       }
     }
     |
     <Delete> {
       if (isMainStatement()) {
-        setKind(Kind.DELETE);
+        setOperation(Operation.DELETE);
       }
     }
     |
     <Update> {
       if (isMainStatement()) {
-        setKind(Kind.UPDATE);
+        setOperation(Operation.UPDATE);
         nextIdentifierIsTable();
       }
     }
     |
     <Merge> {
       if (isMainStatement()) {
-        setKind(Kind.MERGE);
+        setOperation(Operation.MERGE);
         nextIdentifierIsTable();
       }
     }
     |
     <From> {
-      if (isMainStatement() && (kind == Kind.SELECT || kind == Kind.DELETE)) {
+      if (isMainStatement() && (operation == Operation.SELECT || operation == Operation.DELETE)) {
         nextIdentifierIsTable();
       }
     }
     |
     <Into> {
-      if (isMainStatement() && kind == Kind.INSERT) {
+      if (isMainStatement() && operation == Operation.INSERT) {
         nextIdentifierIsTable();
+      }
+    }
+    |
+    <Join> {
+      // TODO: also comma-separated table list in FROM! if possible
+      // for SELECT statements with joined tables there's no main table
+      if (isMainStatement() && operation == Operation.SELECT) {
+        setMainTable(null);
+        return;
       }
     }
     |
     t = <Identifier> {
       if (isMainStatement() && identifierIsTable) {
-        return getResult(t.image);
+        // for SELECT statements, whenever >1 table is used there is no main table (e.g. unions)
+        if (operation == Operation.SELECT && mainTableSetAlready) {
+          setMainTable(null);
+          return;
+        }
+
+        setMainTable(t.image);
+
+        // in case of SELECT continue scanning the query, there may be more than one table (e.g. joins)
+        if (operation == Operation.SELECT) {
+          identifierIsTable = false;
+        } else {
+          return;
+        }
       }
     }
     |
     <OpenParen> {
+      // was expecting table name, not subquery; ending without main table name
+      if (operation == Operation.SELECT && identifierIsTable) {
+        setMainTable(null);
+        return;
+      }
       parenLevel += 1;
     }
     |
@@ -136,9 +166,7 @@ String Input() : {
     <Other>
   ) *
 
-  <EOF> {
-    return null;
-  }
+  <EOF>
 }
 
 TOKEN : {
@@ -155,6 +183,8 @@ TOKEN : {
   <From: "FROM">
   |
   <Into: "INTO">
+  |
+  <Join: "JOIN">
   |
   <OpenParen: "(">
   |
