@@ -118,7 +118,6 @@ dependencies {
     // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
     implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetryContext
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-context-prop', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryAnother
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-baggage', version: versions.opentelemetry
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: versions.opentelemetry
