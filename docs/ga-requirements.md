@@ -1,10 +1,10 @@
 ### P1 (e.g. cannot GA without these):
 * End-to-end tests ([#298](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/298#issuecomment-664162169))
-  * OTLP, Jaeger and Zipkin
+  * OTLP, Jaeger and Zipkin ([#1541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1541))
   * ✅Spring Boot and Wildfly
     * (Wildfly chosen due to common javaagent issues around jboss modules and jboss logging)
   * ✅Java 8, 11, and the latest Java version
-* Benchmarking
+* Benchmarking ([#595](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/595))
   * Runtime overhead benchmark
   * Startup overhead benchmark
 * All captured span attributes must either be from semantic attributes or be instrumentation-specific
