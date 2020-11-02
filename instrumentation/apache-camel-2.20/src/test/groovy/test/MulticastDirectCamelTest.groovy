@@ -5,7 +5,7 @@
 
 package test
 
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.camel.CamelContext

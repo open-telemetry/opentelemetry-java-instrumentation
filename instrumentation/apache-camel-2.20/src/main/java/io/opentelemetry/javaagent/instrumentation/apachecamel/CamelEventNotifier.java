@@ -23,8 +23,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.trace.Span;
 import java.util.EventObject;
 import org.apache.camel.management.event.ExchangeSendingEvent;
 import org.apache.camel.management.event.ExchangeSentEvent;

@@ -23,10 +23,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;

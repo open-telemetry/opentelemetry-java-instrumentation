@@ -23,8 +23,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.trace.Span.Kind;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 

@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
