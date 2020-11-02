@@ -1,6 +1,6 @@
 ### P1 (e.g. cannot GA without these):
-* End-to-end tests ([#298](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/298#issuecomment-664162169))
-  * OTLP, Jaeger and Zipkin
+* ✅End-to-end tests ([#298](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/298#issuecomment-664162169))
+  * ✅OTLP, Jaeger and Zipkin
   * ✅Spring Boot and Wildfly
     * (Wildfly chosen due to common javaagent issues around jboss modules and jboss logging)
   * ✅Java 8, 11, and the latest Java version
