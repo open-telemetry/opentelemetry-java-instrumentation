@@ -20,7 +20,11 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 final class AwsSdkHttpClientTracer
     extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
 
-  static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
+  private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
+
+  static AwsSdkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   // Certain headers in the request like User-Agent are only available after execution.
   Span afterExecution(Span span, SdkHttpRequest request) {

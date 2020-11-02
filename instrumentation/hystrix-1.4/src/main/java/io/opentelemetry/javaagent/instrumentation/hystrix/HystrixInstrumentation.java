@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
-import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -102,7 +102,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
     public HystrixOnSubscribe(
         Observable originalObservable, HystrixInvokableInfo<?> command, String methodName) {
-      super(originalObservable, OPERATION_NAME, TRACER, INTERNAL);
+      super(originalObservable, OPERATION_NAME, tracer(), INTERNAL);
 
       this.command = command;
       this.methodName = methodName;
@@ -110,7 +110,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
     @Override
     protected void decorateSpan(Span span) {
-      TRACER.onCommand(span, command, methodName);
+      tracer().onCommand(span, command, methodName);
     }
   }
 }

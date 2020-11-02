@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -66,11 +66,11 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(statement);
+        span = tracer().startSpan(statement);
         if (span != null) {
-          scope = TRACER.startScope(span);
+          scope = tracer().startScope(span);
         }
       }
     }
@@ -84,9 +84,9 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {
-          TRACER.end(span);
+          tracer().end(span);
         } else {
-          TRACER.endExceptionally(span, throwable);
+          tracer().endExceptionally(span, throwable);
         }
       }
     }

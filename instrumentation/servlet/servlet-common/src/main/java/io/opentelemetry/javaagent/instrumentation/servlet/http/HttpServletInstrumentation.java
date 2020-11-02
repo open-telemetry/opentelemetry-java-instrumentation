@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -85,8 +85,8 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(method);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(method);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -100,9 +100,9 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

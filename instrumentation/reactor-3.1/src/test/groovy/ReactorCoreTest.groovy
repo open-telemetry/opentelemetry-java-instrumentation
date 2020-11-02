@@ -344,12 +344,12 @@ class ReactorCoreTest extends AgentTestRunner {
   }
 
   static addOneFunc(int i) {
-    TEST_TRACER.spanBuilder("add one").startSpan().end()
+    getTestTracer().spanBuilder("add one").startSpan().end()
     return i + 1
   }
 
   static addTwoFunc(int i) {
-    TEST_TRACER.spanBuilder("add two").startSpan().end()
+    getTestTracer().spanBuilder("add two").startSpan().end()
     return i + 2
   }
 }

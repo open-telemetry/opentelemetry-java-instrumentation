@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -87,8 +87,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(connection, new CommandWithArgs(command));
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, new CommandWithArgs(command));
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -103,9 +103,9 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(Connection.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -124,8 +124,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(connection, new CommandWithArgs(command, args));
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, new CommandWithArgs(command, args));
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -140,9 +140,9 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(Connection.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

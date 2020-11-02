@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -74,12 +74,12 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       Context parent = Java8BytecodeBridge.currentContext();
 
-      span = TRACER.startProducerSpan(record);
+      span = tracer().startProducerSpan(record);
       Context newContext = parent.with(span);
 
       callback = new ProducerCallback(callback, parent, span);
 
-      if (TRACER.shouldPropagate(apiVersions)) {
+      if (tracer().shouldPropagate(apiVersions)) {
         try {
           Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
@@ -113,7 +113,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
       // span finished by ProducerCallback
     }
@@ -133,9 +133,9 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     @Override
     public void onCompletion(RecordMetadata metadata, Exception exception) {
       if (exception != null) {
-        TRACER.endExceptionally(span, exception);
+        tracer().endExceptionally(span, exception);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
 
       if (callback != null) {

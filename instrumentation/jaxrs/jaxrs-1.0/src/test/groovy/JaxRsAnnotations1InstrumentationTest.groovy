@@ -131,7 +131,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     className = getClassName(obj.class)
 
     // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
-    decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsTracer.name).getField("TRACER").get(null)
+    decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsTracer.name).getMethod("tracer").invoke(null)
     spanNames = (WeakMap<Class, Map<Method, String>>) decorator.spanNames
   }
 

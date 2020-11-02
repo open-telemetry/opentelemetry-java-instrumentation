@@ -104,8 +104,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       }
       // TODO pass Context into Tracer.startSpan() and then don't need this scoping
       Scope parentScope = parentContext.makeCurrent();
-      Span errorSpan = NettyHttpClientTracer.TRACER.startSpan("CONNECT", Kind.CLIENT);
-      NettyHttpClientTracer.TRACER.endExceptionally(errorSpan, cause);
+      Span errorSpan = NettyHttpClientTracer.tracer().startSpan("CONNECT", Kind.CLIENT);
+      NettyHttpClientTracer.tracer().endExceptionally(errorSpan, cause);
       return parentScope;
     }
 

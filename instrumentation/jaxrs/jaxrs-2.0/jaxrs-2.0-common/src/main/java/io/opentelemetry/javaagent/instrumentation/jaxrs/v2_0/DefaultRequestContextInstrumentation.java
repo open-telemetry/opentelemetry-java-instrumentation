@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
@@ -44,8 +44,8 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        span = TRACER.startSpan(filterClass, method);
-        scope = TRACER.startScope(span);
+        span = tracer().startSpan(filterClass, method);
+        scope = tracer().startScope(span);
       }
     }
 

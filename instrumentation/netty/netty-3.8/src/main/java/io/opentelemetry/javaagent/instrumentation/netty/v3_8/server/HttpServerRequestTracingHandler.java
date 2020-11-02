@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -33,7 +33,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      Context serverContext = TRACER.getServerContext(channelTraceContext);
+      Context serverContext = tracer().getServerContext(channelTraceContext);
       if (serverContext == null) {
         ctx.sendUpstream(msg);
       } else {
@@ -46,12 +46,12 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Context context = TRACER.startSpan(request, ctx.getChannel(), "netty.request");
+    Context context = tracer().startSpan(request, ctx.getChannel(), "netty.request");
     Span span = Java8BytecodeBridge.spanFromContext(context);
-    try (Scope ignored = TRACER.startScope(span, channelTraceContext)) {
+    try (Scope ignored = tracer().startScope(span, channelTraceContext)) {
       ctx.sendUpstream(msg);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
   }

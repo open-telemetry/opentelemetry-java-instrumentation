@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -18,8 +18,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class ApacheHttpClientHelper {
 
   public static SpanWithScope doMethodEnter(HttpUriRequest request) {
-    Span span = TRACER.startSpan(request);
-    Scope scope = TRACER.startScope(span, request);
+    Span span = tracer().startSpan(request);
+    Scope scope = tracer().startScope(span, request);
     return new SpanWithScope(span, scope);
   }
 
@@ -37,12 +37,12 @@ public class ApacheHttpClientHelper {
     try {
       Span span = spanWithScope.getSpan();
       if (result instanceof HttpResponse) {
-        TRACER.onResponse(span, (HttpResponse) result);
+        tracer().onResponse(span, (HttpResponse) result);
       } // else they probably provided a ResponseHandler
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     } finally {
       spanWithScope.closeScope();

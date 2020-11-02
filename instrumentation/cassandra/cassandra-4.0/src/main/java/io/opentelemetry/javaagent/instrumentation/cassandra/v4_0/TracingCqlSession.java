@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraDatabaseClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraDatabaseClientTracer.tracer;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -175,17 +175,17 @@ public class TracingCqlSession implements CqlSession {
   public ResultSet execute(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Span span = TRACER.startSpan(session, query);
-    try (Scope ignored = TRACER.startScope(span)) {
+    Span span = tracer().startSpan(session, query);
+    try (Scope ignored = tracer().startScope(span)) {
       try {
         ResultSet resultSet = session.execute(statement);
-        TRACER.onResponse(span, resultSet.getExecutionInfo());
+        tracer().onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        TRACER.endExceptionally(span, e);
+        tracer().endExceptionally(span, e);
         throw e;
       } finally {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -194,17 +194,17 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public ResultSet execute(@NonNull String query) {
 
-    Span span = TRACER.startSpan(session, query);
-    try (Scope ignored = TRACER.startScope(span)) {
+    Span span = tracer().startSpan(session, query);
+    try (Scope ignored = tracer().startScope(span)) {
       try {
         ResultSet resultSet = session.execute(query);
-        TRACER.onResponse(span, resultSet.getExecutionInfo());
+        tracer().onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        TRACER.endExceptionally(span, e);
+        tracer().endExceptionally(span, e);
         throw e;
       } finally {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -214,16 +214,16 @@ public class TracingCqlSession implements CqlSession {
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Span span = TRACER.startSpan(session, query);
-    try (Scope ignored = TRACER.startScope(span)) {
+    Span span = tracer().startSpan(session, query);
+    try (Scope ignored = tracer().startScope(span)) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              TRACER.endExceptionally(span, throwable);
+              tracer().endExceptionally(span, throwable);
             } else {
-              TRACER.onResponse(span, asyncResultSet.getExecutionInfo());
-              TRACER.end(span);
+              tracer().onResponse(span, asyncResultSet.getExecutionInfo());
+              tracer().end(span);
             }
           });
     }
@@ -232,16 +232,16 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    Span span = TRACER.startSpan(session, query);
-    try (Scope ignored = TRACER.startScope(span)) {
+    Span span = tracer().startSpan(session, query);
+    try (Scope ignored = tracer().startScope(span)) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              TRACER.endExceptionally(span, throwable);
+              tracer().endExceptionally(span, throwable);
             } else {
-              TRACER.onResponse(span, asyncResultSet.getExecutionInfo());
-              TRACER.end(span);
+              tracer().onResponse(span, asyncResultSet.getExecutionInfo());
+              tracer().end(span);
             }
           });
     }

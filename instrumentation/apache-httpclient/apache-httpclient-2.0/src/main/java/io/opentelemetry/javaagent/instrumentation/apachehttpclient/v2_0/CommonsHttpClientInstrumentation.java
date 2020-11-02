@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -70,11 +70,11 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(httpMethod);
+        span = tracer().startSpan(httpMethod);
         if (span.getSpanContext().isValid()) {
-          scope = TRACER.startScope(span, httpMethod);
+          scope = tracer().startScope(span, httpMethod);
         }
       }
     }
@@ -90,9 +90,9 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {
-          TRACER.end(span, httpMethod);
+          tracer().end(span, httpMethod);
         } else {
-          TRACER.endExceptionally(span, httpMethod, throwable);
+          tracer().endExceptionally(span, httpMethod, throwable);
         }
       }
     }

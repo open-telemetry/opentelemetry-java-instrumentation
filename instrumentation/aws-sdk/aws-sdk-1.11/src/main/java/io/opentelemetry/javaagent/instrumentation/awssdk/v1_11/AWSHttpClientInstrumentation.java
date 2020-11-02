@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -67,7 +67,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
         if (scope != null) {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-          TRACER.endExceptionally(scope.getSpan(), throwable);
+          tracer().endExceptionally(scope.getSpan(), throwable);
           scope.closeScope();
         }
       }
@@ -101,7 +101,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (scope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-            TRACER.endExceptionally(scope.getSpan(), throwable);
+            tracer().endExceptionally(scope.getSpan(), throwable);
             scope.closeScope();
           }
         }

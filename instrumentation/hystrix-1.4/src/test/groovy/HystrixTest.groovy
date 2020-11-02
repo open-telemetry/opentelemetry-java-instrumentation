@@ -40,7 +40,7 @@ class HystrixTest extends AgentTestRunner {
       }
 
       private String tracedMethod() {
-        TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
+        getTestTracer().spanBuilder("tracedMethod").startSpan().end()
         return "Hello!"
       }
     }

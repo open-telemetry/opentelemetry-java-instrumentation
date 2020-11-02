@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -21,7 +21,7 @@ public class ErrorHandlerAdvice {
     if (span.isPresent()) {
       // TODO this emulates old behaviour of BaseDecorator. Has to review
       span.get().setStatus(StatusCode.ERROR);
-      TRACER.addThrowable(span.get(), throwable);
+      tracer().addThrowable(span.get(), throwable);
     }
   }
 }

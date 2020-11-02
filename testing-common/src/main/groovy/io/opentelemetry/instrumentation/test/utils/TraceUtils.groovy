@@ -14,7 +14,7 @@ import java.util.concurrent.Callable
 
 class TraceUtils {
 
-  private static final BaseTracer TRACER = new BaseTracer() {
+  private static final BaseTracer tracer = new BaseTracer() {
     @Override
     protected String getInstrumentationName() {
       return "io.opentelemetry.auto"
@@ -25,17 +25,17 @@ class TraceUtils {
     try {
       //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
-      def span = TRACER.startSpan(rootOperationName, Span.Kind.SERVER)
+      def span = tracer.startSpan(rootOperationName, Span.Kind.SERVER)
       Context newContext = Context.current().with(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span).with(span)
 
       try {
         def result = newContext.makeCurrent().withCloseable {
           r.call()
         }
-        TRACER.end(span)
+        tracer.end(span)
         return result
       } catch (final Exception e) {
-        TRACER.endExceptionally(span, e)
+        tracer.endExceptionally(span, e)
         throw e
       }
     } catch (Throwable t) {
@@ -45,16 +45,16 @@ class TraceUtils {
 
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      final Span span = TRACER.startSpan(rootOperationName, Span.Kind.INTERNAL)
+      final Span span = tracer.startSpan(rootOperationName, Span.Kind.INTERNAL)
 
       try {
         def result = span.makeCurrent().withCloseable {
           r.call()
         }
-        TRACER.end(span)
+        tracer.end(span)
         return result
       } catch (final Exception e) {
-        TRACER.endExceptionally(span, e)
+        tracer.endExceptionally(span, e)
         throw e
       }
     } catch (Throwable t) {

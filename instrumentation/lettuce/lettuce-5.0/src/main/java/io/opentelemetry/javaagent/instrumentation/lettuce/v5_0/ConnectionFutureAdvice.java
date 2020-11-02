@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.tracer;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
@@ -20,8 +20,8 @@ public class ConnectionFutureAdvice {
       @Advice.Argument(1) RedisURI redisURI,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = TRACER.startSpan(redisURI, "CONNECT");
-    scope = TRACER.startScope(span);
+    span = tracer().startSpan(redisURI, "CONNECT");
+    scope = tracer().startScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -33,7 +33,7 @@ public class ConnectionFutureAdvice {
     scope.close();
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       return;
     }
     connectionFuture.handleAsync(new LettuceAsyncBiFunction<>(span));

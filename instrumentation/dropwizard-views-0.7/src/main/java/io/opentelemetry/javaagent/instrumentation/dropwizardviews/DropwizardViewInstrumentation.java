@@ -75,7 +75,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return null;
       }
-      Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
+      Span span = tracer().spanBuilder("Render " + view.getTemplateName()).startSpan();
       return new SpanWithScope(span, span.makeCurrent());
     }
 

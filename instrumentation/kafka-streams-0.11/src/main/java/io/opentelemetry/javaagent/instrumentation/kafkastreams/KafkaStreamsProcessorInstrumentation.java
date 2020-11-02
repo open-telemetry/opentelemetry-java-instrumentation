@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -89,7 +89,7 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        Span span = TRACER.startSpan(record);
+        Span span = tracer().startSpan(record);
 
         holder.setSpanWithScope(new SpanWithScope(span, span.makeCurrent()));
       }
@@ -144,9 +144,9 @@ public class KafkaStreamsProcessorInstrumentation {
           Span span = spanWithScope.getSpan();
 
           if (throwable != null) {
-            TRACER.endExceptionally(span, throwable);
+            tracer().endExceptionally(span, throwable);
           } else {
-            TRACER.end(span);
+            tracer().end(span);
           }
         }
       }

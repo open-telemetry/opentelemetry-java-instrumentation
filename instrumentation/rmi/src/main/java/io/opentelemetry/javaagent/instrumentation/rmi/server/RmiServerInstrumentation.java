@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.javaagent.instrumentation.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -66,7 +66,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       // TODO review and unify with all other SERVER instrumentation
       Context context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      span = TRACER.startSpan(method, context);
+      span = tracer().startSpan(method, context);
       scope = span.makeCurrent();
     }
 
@@ -82,9 +82,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
       CallDepthThreadLocalMap.reset(RemoteServer.class);
       if (throwable != null) {
-        RmiServerTracer.TRACER.endExceptionally(span, throwable);
+        RmiServerTracer.tracer().endExceptionally(span, throwable);
       } else {
-        RmiServerTracer.TRACER.end(span);
+        RmiServerTracer.tracer().end(span);
       }
     }
   }

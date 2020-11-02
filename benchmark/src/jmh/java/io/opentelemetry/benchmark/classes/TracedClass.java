@@ -9,35 +9,35 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 
 public class TracedClass extends UntracedClass {
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   @Override
   public void f() {
-    TRACER.spanBuilder("f").startSpan().end();
+    tracer.spanBuilder("f").startSpan().end();
   }
 
   @Override
   public void e() {
-    TRACER.spanBuilder("e").startSpan().end();
+    tracer.spanBuilder("e").startSpan().end();
   }
 
   @Override
   public void d() {
-    TRACER.spanBuilder("d").startSpan().end();
+    tracer.spanBuilder("d").startSpan().end();
   }
 
   @Override
   public void c() {
-    TRACER.spanBuilder("c").startSpan().end();
+    tracer.spanBuilder("c").startSpan().end();
   }
 
   @Override
   public void b() {
-    TRACER.spanBuilder("b").startSpan().end();
+    tracer.spanBuilder("b").startSpan().end();
   }
 
   @Override
   public void a() {
-    TRACER.spanBuilder("a").startSpan().end();
+    tracer.spanBuilder("a").startSpan().end();
   }
 }
