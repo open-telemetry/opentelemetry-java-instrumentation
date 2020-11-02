@@ -22,7 +22,11 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
-  public static final MongoClientTracer TRACER = new MongoClientTracer();
+  private static final MongoClientTracer TRACER = new MongoClientTracer();
+
+  public static MongoClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

@@ -13,7 +13,11 @@ import play.api.mvc.Request;
 import scala.Option;
 
 public class PlayTracer extends BaseTracer {
-  public static final PlayTracer TRACER = new PlayTracer();
+  private static final PlayTracer TRACER = new PlayTracer();
+
+  public static PlayTracer tracer() {
+    return TRACER;
+  }
 
   public Span updateSpanName(Span span, Request<?> request) {
     Option<String> pathOption = request.tags().get("ROUTE_PATTERN");

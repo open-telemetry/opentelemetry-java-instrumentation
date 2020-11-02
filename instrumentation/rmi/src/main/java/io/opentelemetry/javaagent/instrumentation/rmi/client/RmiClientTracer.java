@@ -13,7 +13,11 @@ import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import java.lang.reflect.Method;
 
 public class RmiClientTracer extends RpcClientTracer {
-  public static final RmiClientTracer TRACER = new RmiClientTracer();
+  private static final RmiClientTracer TRACER = new RmiClientTracer();
+
+  public static RmiClientTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(Method method) {
     String serviceName = method.getDeclaringClass().getName();

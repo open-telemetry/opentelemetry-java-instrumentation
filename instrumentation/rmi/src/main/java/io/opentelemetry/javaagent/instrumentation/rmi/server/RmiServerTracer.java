@@ -15,7 +15,11 @@ import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import java.lang.reflect.Method;
 
 public class RmiServerTracer extends RpcServerTracer {
-  public static final RmiServerTracer TRACER = new RmiServerTracer();
+  private static final RmiServerTracer TRACER = new RmiServerTracer();
+
+  public static RmiServerTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(Method method, Context context) {
     String serviceName = method.getDeclaringClass().getName();

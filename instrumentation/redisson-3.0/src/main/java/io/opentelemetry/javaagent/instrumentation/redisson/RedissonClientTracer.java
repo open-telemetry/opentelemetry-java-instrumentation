@@ -20,7 +20,11 @@ import org.redisson.client.protocol.CommandsData;
 public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, Object> {
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
-  public static final RedissonClientTracer TRACER = new RedissonClientTracer();
+  private static final RedissonClientTracer TRACER = new RedissonClientTracer();
+
+  public static RedissonClientTracer tracer() {
+    return TRACER;
+  }
 
   private final RedisCommandNormalizer commandNormalizer =
       new RedisCommandNormalizer("redisson", "redis");

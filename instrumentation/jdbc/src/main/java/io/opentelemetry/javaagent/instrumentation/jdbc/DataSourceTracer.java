@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class DataSourceTracer extends BaseTracer {
-  public static final DataSourceTracer TRACER = new DataSourceTracer();
+  private static final DataSourceTracer TRACER = new DataSourceTracer();
+
+  public static DataSourceTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

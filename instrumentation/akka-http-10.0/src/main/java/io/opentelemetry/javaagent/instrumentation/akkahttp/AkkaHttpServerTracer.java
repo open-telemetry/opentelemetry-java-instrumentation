@@ -14,7 +14,11 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 
 public class AkkaHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
-  public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
+  private static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
+
+  public static AkkaHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {

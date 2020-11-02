@@ -24,7 +24,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ApacheHttpAsyncClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
 
-  public static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
+  private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
+
+  public static ApacheHttpAsyncClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest request) {

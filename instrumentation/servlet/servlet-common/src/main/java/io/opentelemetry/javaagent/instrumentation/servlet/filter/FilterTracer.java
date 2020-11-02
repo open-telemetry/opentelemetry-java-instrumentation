@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.filter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class FilterTracer extends BaseTracer {
-  public static final FilterTracer TRACER = new FilterTracer();
+  private static final FilterTracer TRACER = new FilterTracer();
+
+  public static FilterTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

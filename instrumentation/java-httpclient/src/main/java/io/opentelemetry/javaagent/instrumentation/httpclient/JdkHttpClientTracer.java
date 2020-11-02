@@ -27,7 +27,11 @@ import java.util.concurrent.CompletionException;
 
 public class JdkHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
-  public static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
+  private static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
+
+  public static JdkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);

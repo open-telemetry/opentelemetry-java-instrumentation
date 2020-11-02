@@ -17,8 +17,12 @@ public class HibernateDecorator extends ClientDecorator {
   public static final HibernateDecorator DECORATE = new HibernateDecorator();
   // TODO use tracer names *.hibernate-3.3, *.hibernate-4.0, *.hibernate-4.3 respectively in each
   // module
-  public static final Tracer TRACER =
+  private static final Tracer TRACER =
       OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.hibernate");
+
+  public static Tracer tracer() {
+    return TRACER;
+  }
 
   public String spanNameForOperation(String operationName, Object entity) {
     if (entity != null) {

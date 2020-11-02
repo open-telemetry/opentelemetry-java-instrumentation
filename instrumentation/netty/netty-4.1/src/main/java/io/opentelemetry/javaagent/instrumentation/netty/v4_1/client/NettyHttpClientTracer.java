@@ -19,7 +19,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
-  public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
+  private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
+
+  public static NettyHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {

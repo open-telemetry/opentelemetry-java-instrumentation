@@ -63,8 +63,12 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
   }
 
   public static class RenderAdvice {
-    public static final Tracer TRACER =
+    private static final Tracer TRACER =
         OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.dropwizard-views-0.7");
+
+    public static Tracer tracer() {
+      return TRACER;
+    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {

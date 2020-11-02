@@ -13,8 +13,12 @@ import org.elasticsearch.action.Action;
 
 public class ElasticsearchTransportClientTracer
     extends DatabaseClientTracer<Void, Action<?, ?, ?>> {
-  public static final ElasticsearchTransportClientTracer TRACER =
+  private static final ElasticsearchTransportClientTracer TRACER =
       new ElasticsearchTransportClientTracer();
+
+  public static ElasticsearchTransportClientTracer tracer() {
+    return TRACER;
+  }
 
   public Span onRequest(Span span, Class action, Class request) {
     span.setAttribute("elasticsearch.action", action.getSimpleName());

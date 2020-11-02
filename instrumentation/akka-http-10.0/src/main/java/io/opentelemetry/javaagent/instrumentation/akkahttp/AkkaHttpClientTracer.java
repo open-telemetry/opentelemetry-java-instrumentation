@@ -21,7 +21,11 @@ import java.net.URISyntaxException;
 
 public class AkkaHttpClientTracer
     extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
-  public static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+  private static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+
+  public static AkkaHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpExt.class);

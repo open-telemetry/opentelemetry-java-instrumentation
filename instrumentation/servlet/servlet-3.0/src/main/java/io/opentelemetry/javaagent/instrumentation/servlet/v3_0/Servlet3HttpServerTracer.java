@@ -14,7 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 
 public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServletResponse> {
 
-  public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
+  private static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
+
+  public static Servlet3HttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

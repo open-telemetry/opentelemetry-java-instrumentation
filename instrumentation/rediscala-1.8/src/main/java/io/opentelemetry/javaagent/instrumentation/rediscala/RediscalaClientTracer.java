@@ -13,7 +13,11 @@ import redis.RedisCommand;
 public class RediscalaClientTracer
     extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>> {
 
-  public static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
+  private static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
+
+  public static RediscalaClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String normalizeQuery(RedisCommand redisCommand) {

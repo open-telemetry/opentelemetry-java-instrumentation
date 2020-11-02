@@ -9,7 +9,11 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 public class SpringSchedulingTracer extends BaseTracer {
-  public static final SpringSchedulingTracer TRACER = new SpringSchedulingTracer();
+  private static final SpringSchedulingTracer TRACER = new SpringSchedulingTracer();
+
+  public static SpringSchedulingTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {
