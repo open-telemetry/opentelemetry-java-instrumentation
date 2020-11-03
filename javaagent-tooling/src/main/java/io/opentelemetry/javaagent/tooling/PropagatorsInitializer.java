@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -31,6 +32,7 @@ public class PropagatorsInitializer {
   private static final String JAEGER = "jaeger";
   private static final String OT_TRACER = "ottracer";
   private static final String XRAY = "xray";
+  private static final String BAGGAGE = "baggage";
 
   private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
       ImmutableMap.<String, TextMapPropagator>builder()
@@ -39,6 +41,7 @@ public class PropagatorsInitializer {
           .put(JAEGER, JaegerPropagator.getInstance())
           .put(OT_TRACER, OtTracerPropagator.getInstance())
           .put(XRAY, AwsXRayPropagator.getInstance())
+          .put(BAGGAGE, W3CBaggagePropagator.getInstance())
           .build();
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
@@ -49,7 +52,11 @@ public class PropagatorsInitializer {
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
       OpenTelemetry.setGlobalPropagators(
           DefaultContextPropagators.builder()
-              .addTextMapPropagator(HttpTraceContext.getInstance())
+              .addTextMapPropagator(
+                  TraceMultiPropagator.builder()
+                      .addPropagator(HttpTraceContext.getInstance())
+                      .addPropagator(W3CBaggagePropagator.getInstance())
+                      .build())
               .build());
       return;
     }

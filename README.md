@@ -155,9 +155,9 @@ If this is set to a comma-delimited list of the values, the multi-propagator wil
 The multi-propagator will try to extract the context from incoming requests using each of the configured propagator formats (in order), stopping after the first successful context extraction.
 The multi-propagator will inject the context into outgoing requests using all the configured propagator formats.
 
-| System property  | Environment variable | Purpose                                                                                                     |
-|------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger", "ottracer", "xray". |
+| System property  | Environment variable | Purpose                                                                                                            |
+|------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|
+| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext,baggage" (W3C). Other supported values are "b3", "b3single", "jaeger", "ottracer", "xray".|
 
 #### OpenTelemetry Resource
 
