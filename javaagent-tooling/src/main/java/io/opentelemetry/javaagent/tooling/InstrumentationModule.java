@@ -88,7 +88,7 @@ public abstract class InstrumentationModule {
       return parentAgentBuilder;
     }
 
-    ElementMatcher<ClassLoader> classLoaderMatcher = classLoaderMatcher();
+    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
     HelperInjector helperInjector =
         new HelperInjector(
@@ -104,7 +104,7 @@ public abstract class InstrumentationModule {
                       typeInstrumentation.typeMatcher(),
                       "Instrumentation type matcher unexpected exception: " + getClass().getName()),
                   failSafe(
-                      classLoaderMatcher,
+                      moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderMatcher()),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
               .and(NOT_DECORATOR_MATCHER)
@@ -225,11 +225,22 @@ public abstract class InstrumentationModule {
     return EMPTY;
   }
 
-  /** @return A type matcher used to match the classloader under transform */
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  /**
+   * An instrumentation module can implement this method to make sure that the classloader contains
+   * the particular library version. It is useful to implement that if the muzzle check does not
+   * fail for versions out of the instrumentation's scope.
+   *
+   * <p>E.g. supposing version 1.0 has class {@code A}, but it was removed in version 2.0; A is not
+   * used in the helper classes at all; this module is instrumenting 2.0: this method will return
+   * {@code not(hasClassesNamed("A"))}.
+   *
+   * @return A type matcher used to match the classloader under transform
+   */
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return any();
   }
 
+  /** @return A list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**

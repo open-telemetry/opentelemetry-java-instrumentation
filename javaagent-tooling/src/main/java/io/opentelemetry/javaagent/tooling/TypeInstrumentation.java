@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static net.bytebuddy.matcher.ElementMatchers.any;
+
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -14,6 +17,17 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Interface representing a single type instrumentation. Part of an {@link InstrumentationModule}.
  */
 public interface TypeInstrumentation {
+  /**
+   * A type instrumentation can implement this method to optimize an expensive {@link
+   * #typeMatcher()} - usually {@link AgentElementMatchers#implementsInterface(ElementMatcher)} or
+   * {@link AgentElementMatchers#extendsClass(ElementMatcher)}. In that case it's useful to check
+   * that the classloader contains the class/interface that is being extended.
+   *
+   * @return A type matcher used to match the classloader under transform
+   */
+  default ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return any();
+  }
 
   /**
    * @return A type matcher defining which classes should undergo transformations defined by advices

@@ -5,28 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.Arrays;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public final class SpringMvcInstrumentationModule extends InstrumentationModule {
   public SpringMvcInstrumentationModule() {
     super("spring-mvc");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatchers.
-    return hasClassesNamed(
-        "org.springframework.context.support.AbstractApplicationContext",
-        "org.springframework.web.context.WebApplicationContext",
-        "org.springframework.web.servlet.HandlerAdapter");
   }
 
   @Override
@@ -40,7 +29,7 @@ public final class SpringMvcInstrumentationModule extends InstrumentationModule 
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new WebApplicationContextInstrumentation(),
         new DispatcherServletInstrumentation(),
         new HandlerAdapterInstrumentation());

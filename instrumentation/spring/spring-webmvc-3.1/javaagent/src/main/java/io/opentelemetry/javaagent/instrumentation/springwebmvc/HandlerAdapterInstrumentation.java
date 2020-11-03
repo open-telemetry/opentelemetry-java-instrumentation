@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -28,7 +29,13 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public final class HandlerAdapterInstrumentation implements TypeInstrumentation {
+final class HandlerAdapterInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.springframework.web.servlet.HandlerAdapter");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

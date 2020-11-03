@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -25,7 +26,15 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
  * This instrumentation adds the HandlerMappingResourceNameFilter definition to the spring context
  * When the context is created, the filter will be added to the beginning of the filter chain
  */
-public final class WebApplicationContextInstrumentation implements TypeInstrumentation {
+final class WebApplicationContextInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed(
+        "org.springframework.context.support.AbstractApplicationContext",
+        "org.springframework.web.context.WebApplicationContext");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
