@@ -9,6 +9,10 @@ receivers:
   otlp:
     protocols:
       grpc:
+  zipkin:
+  jaeger:
+    protocols:
+      grpc:
 
 processors:
   batch:
@@ -24,7 +28,7 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [otlp]
+      receivers: [otlp, zipkin, jaeger]
       processors: [batch, queued_retry]
       exporters: [logging, otlp]
 
