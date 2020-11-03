@@ -11,7 +11,11 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class HystrixTracer extends BaseTracer {
-  public static final HystrixTracer TRACER = new HystrixTracer();
+  private static final HystrixTracer TRACER = new HystrixTracer();
+
+  public static HystrixTracer tracer() {
+    return TRACER;
+  }
 
   private final boolean extraTags;
 

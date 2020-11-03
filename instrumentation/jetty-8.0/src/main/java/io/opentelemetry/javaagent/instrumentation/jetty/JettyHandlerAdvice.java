@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -28,15 +28,15 @@ public class JettyHandlerAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    Context attachedContext = TRACER.getServerContext(request);
+    Context attachedContext = tracer().getServerContext(request);
     if (attachedContext != null) {
       // We are inside nested handler, don't create new span
       return;
     }
 
-    Context ctx = TRACER.startSpan(request, request, method);
+    Context ctx = tracer().startSpan(request, request, method);
     span = Java8BytecodeBridge.spanFromContext(ctx);
-    scope = TRACER.startScope(span, request);
+    scope = tracer().startScope(span, request);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -56,10 +56,10 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    TRACER.setPrincipal(span, request);
+    tracer().setPrincipal(span, request);
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable, response);
+      tracer().endExceptionally(span, throwable, response);
       return;
     }
 
@@ -77,7 +77,7 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      TRACER.end(span, response);
+      tracer().end(span, response);
     }
   }
 }

@@ -40,7 +40,7 @@ class HystrixObservableTest extends AgentTestRunner {
     def result = runUnderTrace("parent") {
       def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
         private String tracedMethod() {
-          TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
+          getTestTracer().spanBuilder("tracedMethod").startSpan().end()
           return "Hello!"
         }
 

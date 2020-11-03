@@ -26,7 +26,11 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   public static final String ABORT_HANDLED =
       "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.handled";
 
-  public static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
+  private static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
+
+  public static JaxRsAnnotationsTracer tracer() {
+    return TRACER;
+  }
 
   private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
@@ -47,7 +51,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       updateSpanName(span, pathBasedSpanName);
     } else {
       updateSpanName(serverSpan, pathBasedSpanName);
-      updateSpanName(span, TRACER.spanNameForMethod(target, method));
+      updateSpanName(span, tracer().spanNameForMethod(target, method));
     }
   }
 

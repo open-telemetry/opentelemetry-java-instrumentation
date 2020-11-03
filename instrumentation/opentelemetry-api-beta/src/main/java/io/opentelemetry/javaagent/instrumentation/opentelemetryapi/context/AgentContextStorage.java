@@ -56,9 +56,8 @@ public class AgentContextStorage implements ContextStorage {
   static {
     io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span> agentSpanContextKey;
     try {
-      Class<?> tracingContextUtils =
-          Class.forName("io.opentelemetry.api.trace.TracingContextUtils");
-      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("CONTEXT_SPAN_KEY");
+      Class<?> tracingContextUtils = Class.forName("io.opentelemetry.api.trace.SpanContextKey");
+      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("KEY");
       contextSpanKeyField.setAccessible(true);
       agentSpanContextKey =
           (io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span>)
@@ -71,8 +70,8 @@ public class AgentContextStorage implements ContextStorage {
     ContextKey<Span> applicationSpanContextKey;
     try {
       Class<?> tracingContextUtils =
-          Class.forName("application.io.opentelemetry.api.trace.TracingContextUtils");
-      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("CONTEXT_SPAN_KEY");
+          Class.forName("application.io.opentelemetry.api.trace.SpanContextKey");
+      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("KEY");
       contextSpanKeyField.setAccessible(true);
       applicationSpanContextKey = (ContextKey<Span>) contextSpanKeyField.get(null);
     } catch (Throwable t) {

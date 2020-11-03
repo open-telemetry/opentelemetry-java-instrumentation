@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -107,7 +107,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
       // Don't automatically close the span with the scope if we're executing an async method
       Span span =
-          TRACER
+          tracer()
               .spanBuilder(DECORATE.spanNameOnServiceExecution(that, methodName))
               .setSpanKind(CLIENT)
               .startSpan();

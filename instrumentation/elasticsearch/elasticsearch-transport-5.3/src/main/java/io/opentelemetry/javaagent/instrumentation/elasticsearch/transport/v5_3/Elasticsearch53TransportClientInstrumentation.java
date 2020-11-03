@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -76,10 +76,10 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      span = TRACER.startSpan(null, action);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(null, action);
+      scope = tracer().startScope(span);
 
-      TRACER.onRequest(span, action.getClass(), actionRequest.getClass());
+      tracer().onRequest(span, action.getClass(), actionRequest.getClass());
       actionListener = new TransportActionListener<>(actionRequest, actionListener, span);
     }
 
@@ -91,7 +91,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

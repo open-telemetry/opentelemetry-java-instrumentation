@@ -15,7 +15,11 @@ import java.net.URISyntaxException;
 
 public class GoogleHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
-  public static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
+  private static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
+
+  public static GoogleHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

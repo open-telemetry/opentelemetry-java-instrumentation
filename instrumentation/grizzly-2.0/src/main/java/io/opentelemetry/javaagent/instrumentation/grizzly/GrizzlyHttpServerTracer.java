@@ -22,7 +22,11 @@ public class GrizzlyHttpServerTracer
 
   private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
 
-  public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+  private static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+
+  public static GrizzlyHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequestPacket httpRequest) {

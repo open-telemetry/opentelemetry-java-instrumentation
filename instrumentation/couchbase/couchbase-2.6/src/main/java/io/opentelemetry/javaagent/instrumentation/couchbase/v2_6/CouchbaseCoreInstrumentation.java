@@ -59,8 +59,12 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   }
 
   public static class CouchbaseCoreAdvice {
-    public static final Tracer TRACER =
+    private static final Tracer TRACER =
         OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.couchbase-2.6");
+
+    public static Tracer tracer() {
+      return TRACER;
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {

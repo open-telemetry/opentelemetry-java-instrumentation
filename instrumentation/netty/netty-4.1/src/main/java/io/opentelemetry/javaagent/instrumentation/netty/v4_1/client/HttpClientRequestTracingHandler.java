@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer.tracer;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -39,14 +39,14 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(Context.current());
 
-    Span span = TRACER.startSpan(request);
+    Span span = tracer().startSpan(request);
     NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
     ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
 
-    try (Scope ignored = TRACER.startScope(span, request.headers())) {
+    try (Scope ignored = tracer().startScope(span, request.headers())) {
       ctx.write(msg, prm);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     } finally {
       if (null != parentScope) {

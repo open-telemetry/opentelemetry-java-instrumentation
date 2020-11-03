@@ -63,15 +63,19 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
   }
 
   public static class RenderAdvice {
-    public static final Tracer TRACER =
+    private static final Tracer TRACER =
         OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.dropwizard-views-0.7");
+
+    public static Tracer tracer() {
+      return TRACER;
+    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return null;
       }
-      Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
+      Span span = tracer().spanBuilder("Render " + view.getTemplateName()).startSpan();
       return new SpanWithScope(span, span.makeCurrent());
     }
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
@@ -93,7 +93,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         if (!state.hasSpan() && !state.isFinished()) {
           Span span = state.start(thiz);
           if (!connected) {
-            scope = TRACER.startScope(span, thiz);
+            scope = tracer().startScope(span, thiz);
           }
         }
         return state;
@@ -142,7 +142,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile boolean finished = false;
 
     public Span start(HttpURLConnection connection) {
-      span = TRACER.startSpan(connection);
+      span = tracer().startSpan(connection);
       return span;
     }
 
@@ -155,7 +155,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       span = null;
       finished = true;
     }
@@ -169,7 +169,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       if (responseCode > 0) {
         // Need to explicitly cast to boxed type to make sure correct method is called.
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
-        TRACER.end(span, (Integer) responseCode);
+        tracer().end(span, (Integer) responseCode);
         span = null;
         finished = true;
       }

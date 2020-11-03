@@ -21,7 +21,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+  private static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+
+  public static AwsSdkClientTracer tracer() {
+    return TRACER;
+  }
 
   private final NamesCache namesCache = new NamesCache();
 

@@ -19,7 +19,11 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class NettyHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, Channel, ChannelTraceContext> {
-  public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+  private static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+
+  public static NettyHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {

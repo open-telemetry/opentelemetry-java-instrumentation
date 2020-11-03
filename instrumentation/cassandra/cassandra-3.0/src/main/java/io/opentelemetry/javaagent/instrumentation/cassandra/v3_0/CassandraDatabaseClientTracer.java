@@ -16,7 +16,11 @@ import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session, String> {
-  public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+  private static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  public static CassandraDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

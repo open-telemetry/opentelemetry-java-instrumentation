@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
 @SpringBootApplication
 class SpringWebFluxTestApplication {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
@@ -122,7 +122,7 @@ class SpringWebFluxTestApplication {
   }
 
   private static FooModel tracedMethod(long id) {
-    TRACER.spanBuilder("tracedMethod").startSpan().end()
+    tracer.spanBuilder("tracedMethod").startSpan().end()
     return new FooModel(id, "tracedMethod")
   }
 }

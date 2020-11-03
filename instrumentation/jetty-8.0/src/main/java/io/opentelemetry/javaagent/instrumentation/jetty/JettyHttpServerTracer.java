@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.jetty;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 
 public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
-  public static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();
+  private static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();
+
+  public static JettyHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

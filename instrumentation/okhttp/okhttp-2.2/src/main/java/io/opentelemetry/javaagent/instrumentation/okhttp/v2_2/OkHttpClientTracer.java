@@ -15,7 +15,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
-  public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
+  private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
+
+  public static OkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request request) {

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @RestController
 class TestController {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {
@@ -64,7 +64,7 @@ class TestController {
   }
 
   private FooModel tracedMethod(long id) {
-    TRACER.spanBuilder("tracedMethod").startSpan().end()
+    tracer.spanBuilder("tracedMethod").startSpan().end()
     return new FooModel(id, "tracedMethod")
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import org.elasticsearch.client.Response;
@@ -24,16 +24,16 @@ public class RestResponseListener implements ResponseListener {
   @Override
   public void onSuccess(Response response) {
     if (response.getHost() != null) {
-      TRACER.onResponse(span, response);
+      tracer().onResponse(span, response);
     }
-    TRACER.end(span);
+    tracer().end(span);
 
     listener.onSuccess(response);
   }
 
   @Override
   public void onFailure(Exception e) {
-    TRACER.endExceptionally(span, e);
+    tracer().endExceptionally(span, e);
     listener.onFailure(e);
   }
 }

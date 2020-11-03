@@ -35,7 +35,11 @@ public class JMSTracer extends BaseTracer {
   // From the spec
   public static final String TEMP_DESTINATION_NAME = "(temporary)";
 
-  public static final JMSTracer TRACER = new JMSTracer();
+  private static final JMSTracer TRACER = new JMSTracer();
+
+  public static JMSTracer tracer() {
+    return TRACER;
+  }
 
   public Span startConsumerSpan(
       MessageDestination destination, String operation, Message message, long startTime) {

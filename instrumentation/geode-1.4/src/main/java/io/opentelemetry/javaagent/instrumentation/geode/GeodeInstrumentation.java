@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -81,8 +81,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
-      span = TRACER.startSpan(method.getName(), thiz, null);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(method.getName(), thiz, null);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -97,9 +97,9 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
       CallDepthThreadLocalMap.reset(Region.class);
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -115,8 +115,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
-      span = TRACER.startSpan(method.getName(), thiz, query);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(method.getName(), thiz, query);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -131,9 +131,9 @@ public class GeodeInstrumentation extends Instrumenter.Default {
 
       CallDepthThreadLocalMap.reset(Region.class);
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

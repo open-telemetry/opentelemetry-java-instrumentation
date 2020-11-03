@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -78,9 +78,9 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         // in other case, DefaultRequestContextInstrumentation must have already run so it's enough
         // to just update the names
         if (currentSpan == null || currentSpan == serverSpan) {
-          return TRACER.startSpan(resourceClass, method);
+          return tracer().startSpan(resourceClass, method);
         } else {
-          TRACER.updateSpanNames(context, currentSpan, serverSpan, resourceClass, method);
+          tracer().updateSpanNames(context, currentSpan, serverSpan, resourceClass, method);
         }
       }
       return null;
@@ -92,9 +92,9 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       }
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
 
       scope.close();

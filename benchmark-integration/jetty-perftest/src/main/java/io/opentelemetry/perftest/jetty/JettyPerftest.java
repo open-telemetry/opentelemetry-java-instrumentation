@@ -25,7 +25,7 @@ public class JettyPerftest {
   private static final Server jettyServer = new Server(PORT);
   private static final ServletContextHandler servletContext = new ServletContextHandler();
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   public static void main(String[] args) throws Exception {
     servletContext.addServlet(PerfServlet.class, PATH);
@@ -65,7 +65,7 @@ public class JettyPerftest {
     }
 
     private void scheduleWork(long workTimeMS) {
-      Span span = TRACER.spanBuilder("work").startSpan();
+      Span span = tracer.spanBuilder("work").startSpan();
       try (Scope scope = span.makeCurrent()) {
         if (span != null) {
           span.setAttribute("work-time", workTimeMS);

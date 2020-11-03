@@ -7,8 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 public class LettuceConnectionDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<String> {
-  public static final LettuceConnectionDatabaseClientTracer TRACER =
+  private static final LettuceConnectionDatabaseClientTracer TRACER =
       new LettuceConnectionDatabaseClientTracer();
+
+  public static LettuceConnectionDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String normalizeQuery(String query) {

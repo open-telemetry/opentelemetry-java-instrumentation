@@ -26,7 +26,7 @@ class CompletableFutureTest extends AgentTestRunner {
     def supplier = new Supplier<String>() {
       @Override
       String get() {
-        TEST_TRACER.spanBuilder("supplier").startSpan().end()
+        getTestTracer().spanBuilder("supplier").startSpan().end()
         sleep(1000)
         return "a"
       }
@@ -35,7 +35,7 @@ class CompletableFutureTest extends AgentTestRunner {
     def function = new Function<String, String>() {
       @Override
       String apply(String s) {
-        TEST_TRACER.spanBuilder("function").startSpan().end()
+        getTestTracer().spanBuilder("function").startSpan().end()
         return s + "c"
       }
     }
@@ -237,7 +237,7 @@ class CompletableFutureTest extends AgentTestRunner {
 
     @Override
     String get() {
-      TEST_TRACER.spanBuilder("appendingSupplier").startSpan().end()
+      getTestTracer().spanBuilder("appendingSupplier").startSpan().end()
       return letter + "b"
     }
   }

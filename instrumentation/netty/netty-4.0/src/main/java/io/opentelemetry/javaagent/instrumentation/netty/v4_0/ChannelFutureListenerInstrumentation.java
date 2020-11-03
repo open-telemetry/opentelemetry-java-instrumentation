@@ -93,8 +93,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         return null;
       }
       Scope parentScope = parentContext.makeCurrent();
-      Span span = NettyHttpClientTracer.TRACER.startSpan("CONNECT", Kind.CLIENT);
-      NettyHttpClientTracer.TRACER.endExceptionally(span, cause);
+      Span span = NettyHttpClientTracer.tracer().startSpan("CONNECT", Kind.CLIENT);
+      NettyHttpClientTracer.tracer().endExceptionally(span, cause);
       return parentScope;
     }
 

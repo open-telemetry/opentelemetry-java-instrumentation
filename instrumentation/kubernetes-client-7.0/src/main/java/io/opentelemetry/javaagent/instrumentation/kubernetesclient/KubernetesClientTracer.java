@@ -15,7 +15,11 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
-  public static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+  private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+
+  public static KubernetesClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request httpRequest) {

@@ -11,7 +11,11 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
 public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
-  public static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
+  private static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
+
+  public static CouchbaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String normalizeQuery(Method method) {

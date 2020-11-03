@@ -18,7 +18,11 @@ import org.springframework.http.client.ClientHttpResponse;
 
 class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
 
-  public static final RestTemplateTracer TRACER = new RestTemplateTracer();
+  private static final RestTemplateTracer TRACER = new RestTemplateTracer();
+
+  public static RestTemplateTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {

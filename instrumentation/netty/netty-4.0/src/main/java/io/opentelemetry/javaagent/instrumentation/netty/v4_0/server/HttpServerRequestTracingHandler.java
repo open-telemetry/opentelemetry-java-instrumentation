@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,7 +23,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     Channel channel = ctx.channel();
 
     if (!(msg instanceof HttpRequest)) {
-      Context serverContext = TRACER.getServerContext(channel);
+      Context serverContext = tracer().getServerContext(channel);
       if (serverContext == null) {
         ctx.fireChannelRead(msg);
       } else {
@@ -34,12 +34,12 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    Context context = TRACER.startSpan((HttpRequest) msg, channel, "netty.request");
+    Context context = tracer().startSpan((HttpRequest) msg, channel, "netty.request");
     Span span = Java8BytecodeBridge.spanFromContext(context);
-    try (Scope ignored = TRACER.startScope(span, channel)) {
+    try (Scope ignored = tracer().startScope(span, channel)) {
       ctx.fireChannelRead(msg);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
   }

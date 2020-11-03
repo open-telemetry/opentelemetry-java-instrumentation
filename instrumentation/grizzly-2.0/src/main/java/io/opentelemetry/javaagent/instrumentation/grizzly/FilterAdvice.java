@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -25,7 +25,7 @@ public class FilterAdvice {
       return;
     }
 
-    Context context = TRACER.getServerContext(ctx);
+    Context context = tracer().getServerContext(ctx);
     if (context != null) {
       scope = context.makeCurrent();
     }

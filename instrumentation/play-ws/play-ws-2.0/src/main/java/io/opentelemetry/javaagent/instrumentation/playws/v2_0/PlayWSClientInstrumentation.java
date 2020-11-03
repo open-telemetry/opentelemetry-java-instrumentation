@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
@@ -27,9 +27,9 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler,
         @Advice.Local("otelSpan") Span span) {
 
-      span = TRACER.startSpan(request);
+      span = tracer().startSpan(request);
       // TODO (trask) expose inject separate from startScope, e.g. for async cases
-      Scope scope = TRACER.startScope(span, request.getHeaders());
+      Scope scope = tracer().startScope(span, request.getHeaders());
       scope.close();
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
@@ -45,7 +45,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Thrown Throwable throwable, @Advice.Local("otelSpan") Span span) {
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

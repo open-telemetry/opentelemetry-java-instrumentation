@@ -21,7 +21,11 @@ import org.springframework.web.servlet.mvc.Controller;
 
 public class SpringWebMvcTracer extends BaseTracer {
 
-  public static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
+  private static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
+
+  public static SpringWebMvcTracer tracer() {
+    return TRACER;
+  }
 
   public Span startHandlerSpan(Object handler) {
     return tracer.spanBuilder(spanNameOnHandle(handler)).startSpan();

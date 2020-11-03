@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly.client;
 
-import static io.opentelemetry.javaagent.instrumentation.grizzly.client.GrizzlyClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.client.GrizzlyClientTracer.tracer;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
@@ -33,7 +33,7 @@ public class GrizzlyClientResponseAdvice {
       contextStore.put(handler, null);
     }
     if (spanWithParent.hasRight()) {
-      TRACER.end(spanWithParent.getRight(), response);
+      tracer().end(spanWithParent.getRight(), response);
     }
     return spanWithParent.hasLeft() ? spanWithParent.getLeft().makeCurrent() : null;
   }

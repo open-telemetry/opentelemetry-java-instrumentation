@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,7 +64,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
+      span = tracer().startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
       scope = span.makeCurrent();
     }
 
@@ -79,9 +79,9 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

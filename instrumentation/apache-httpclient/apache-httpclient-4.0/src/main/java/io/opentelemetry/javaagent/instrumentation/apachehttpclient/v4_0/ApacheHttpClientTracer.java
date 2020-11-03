@@ -20,7 +20,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 class ApacheHttpClientTracer
     extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
-  public static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
+  private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
+
+  public static ApacheHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpUriRequest httpRequest) {

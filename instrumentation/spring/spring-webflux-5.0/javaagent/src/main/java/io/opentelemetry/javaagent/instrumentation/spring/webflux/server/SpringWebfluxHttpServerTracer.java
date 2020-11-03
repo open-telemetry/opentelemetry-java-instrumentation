@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class SpringWebfluxHttpServerTracer extends BaseTracer {
-  public static final SpringWebfluxHttpServerTracer TRACER = new SpringWebfluxHttpServerTracer();
+  private static final SpringWebfluxHttpServerTracer TRACER = new SpringWebfluxHttpServerTracer();
+
+  public static SpringWebfluxHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

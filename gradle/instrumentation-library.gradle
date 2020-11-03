@@ -12,7 +12,7 @@ dependencies {
   api project(':instrumentation-api')
 
   api deps.opentelemetryApi
-  api deps.opentelemetryContextProp
+  api deps.opentelemetryContext
 
   testImplementation project(':testing-common')
 }

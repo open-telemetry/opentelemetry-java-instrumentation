@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -106,14 +106,14 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      Span span = TRACER.startSpan(invokedMethod);
+      Span span = tracer().startSpan(invokedMethod);
 
       Object result;
       try (Scope ignored = span.makeCurrent()) {
         result = methodInvocation.proceed();
-        TRACER.end(span);
+        tracer().end(span);
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
       return result;

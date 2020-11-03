@@ -15,7 +15,11 @@ import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
 
 public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
-  public static final GeodeTracer TRACER = new GeodeTracer();
+  private static final GeodeTracer TRACER = new GeodeTracer();
+
+  public static GeodeTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(String operation, Region<?, ?> connection, String query) {
     String normalizedQuery = normalizeQuery(query);

@@ -16,10 +16,10 @@ import reactor.core.publisher.Mono
 @Component
 class EchoHandler {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   Mono<ServerResponse> echo(ServerRequest request) {
-    TRACER.spanBuilder("echo").startSpan().end()
+    tracer.spanBuilder("echo").startSpan().end()
     return ServerResponse.accepted().contentType(MediaType.TEXT_PLAIN)
       .body(request.bodyToMono(String), String)
   }

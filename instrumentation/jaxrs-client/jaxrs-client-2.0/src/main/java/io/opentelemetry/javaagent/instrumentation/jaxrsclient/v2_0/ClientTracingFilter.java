@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -22,9 +22,9 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    Span span = TRACER.startSpan(requestContext);
+    Span span = tracer().startSpan(requestContext);
     // TODO (trask) expose inject separate from startScope, e.g. for async cases
-    Scope scope = TRACER.startScope(span, requestContext);
+    Scope scope = tracer().startScope(span, requestContext);
     scope.close();
     requestContext.setProperty(SPAN_PROPERTY_NAME, span);
   }
@@ -34,7 +34,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
     Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
       Span span = (Span) spanObj;
-      TRACER.end(span, responseContext);
+      tracer().end(span, responseContext);
     }
   }
 }

@@ -14,7 +14,11 @@ import java.util.List;
 
 public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
-  public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+  private static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+
+  public static LettuceDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   private final RedisCommandNormalizer commandNormalizer =
       new RedisCommandNormalizer("lettuce", "lettuce-5");

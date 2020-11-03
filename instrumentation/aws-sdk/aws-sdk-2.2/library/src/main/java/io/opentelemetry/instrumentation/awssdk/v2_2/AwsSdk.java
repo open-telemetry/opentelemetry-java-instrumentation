@@ -31,7 +31,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 public class AwsSdk {
 
   private static final Tracer tracer =
-      OpenTelemetry.getGlobalTracer(AwsSdkHttpClientTracer.TRACER.getInstrumentationName());
+      OpenTelemetry.getGlobalTracer(AwsSdkHttpClientTracer.tracer().getInstrumentationName());
 
   /** Returns the {@link Tracer} used to instrument the AWS SDK. */
   public static Tracer tracer() {

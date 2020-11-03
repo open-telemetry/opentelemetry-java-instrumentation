@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.TRACER;
+import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -49,15 +49,15 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
-      Span span = TRACER.startSpan(request);
+      Span span = tracer().startSpan(request);
       ClientRequest.Builder builder = ClientRequest.from(request);
-      try (Scope ignored = TRACER.startScope(span, builder)) {
+      try (Scope ignored = tracer().startScope(span, builder)) {
         this.next
             .exchange(builder.build())
             .doOnCancel(
                 () -> {
-                  TRACER.onCancel(span);
-                  TRACER.end(span);
+                  tracer().onCancel(span);
+                  tracer().end(span);
                 })
             .subscribe(
                 new TraceWebClientSubscriber(

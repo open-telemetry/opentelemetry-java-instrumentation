@@ -15,7 +15,11 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 public class ResteasyClientTracer
     extends HttpClientTracer<ClientInvocation, ClientInvocation, Response> {
-  public static final ResteasyClientTracer TRACER = new ResteasyClientTracer();
+  private static final ResteasyClientTracer TRACER = new ResteasyClientTracer();
+
+  public static ResteasyClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(ClientInvocation httpRequest) {

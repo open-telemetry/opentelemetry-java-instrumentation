@@ -5,7 +5,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   api deps.opentelemetryApi
-  api deps.opentelemetryContextProp
+  api deps.opentelemetryContext
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations

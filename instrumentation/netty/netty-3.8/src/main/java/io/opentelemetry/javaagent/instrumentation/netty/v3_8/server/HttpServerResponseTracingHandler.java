@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -31,7 +31,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    Context context = TRACER.getServerContext(channelTraceContext);
+    Context context = tracer().getServerContext(channelTraceContext);
     if (context == null || !(msg.getMessage() instanceof HttpResponse)) {
       ctx.sendDownstream(msg);
       return;
@@ -41,9 +41,9 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, (HttpResponse) msg.getMessage());
+    tracer().end(span, (HttpResponse) msg.getMessage());
   }
 }

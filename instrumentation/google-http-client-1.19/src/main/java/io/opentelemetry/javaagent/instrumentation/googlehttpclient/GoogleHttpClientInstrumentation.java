@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -87,8 +87,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       Context context = contextStore.get(request);
 
       if (context == null) {
-        span = TRACER.startSpan(request);
-        scope = TRACER.startScope(span, request.getHeaders());
+        span = tracer().startSpan(request);
+        scope = tracer().startScope(span, request.getHeaders());
         // TODO (trask) ideally we could pass current context into startScope to avoid extra lookup
         contextStore.put(request, Java8BytecodeBridge.currentContext());
       } else {
@@ -108,9 +108,9 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable == null) {
-        TRACER.end(span, response);
+        tracer().end(span, response);
       } else {
-        TRACER.endExceptionally(span, response, throwable);
+        tracer().endExceptionally(span, response, throwable);
       }
       // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
       // for a failed request.  Thus, check the response code
@@ -128,8 +128,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      span = TRACER.startSpan(request);
-      scope = TRACER.startScope(span, request.getHeaders());
+      span = tracer().startSpan(request);
+      scope = tracer().startScope(span, request.getHeaders());
 
       // propagating the context manually here so this instrumentation will work with and without
       // the java-concurrent instrumentation
@@ -146,7 +146,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
       scope.close();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

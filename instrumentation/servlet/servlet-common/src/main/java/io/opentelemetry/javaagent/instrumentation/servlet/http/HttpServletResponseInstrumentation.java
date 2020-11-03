@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -68,7 +68,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
       // Don't want to generate a new top-level span
       if (callDepth.getAndIncrement() == 0
           && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        span = TRACER.startSpan(method);
+        span = tracer().startSpan(method);
         scope = span.makeCurrent();
       }
     }
@@ -85,9 +85,9 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         scope.close();
 
         if (throwable != null) {
-          TRACER.endExceptionally(span, throwable);
+          tracer().endExceptionally(span, throwable);
         } else {
-          TRACER.end(span);
+          tracer().end(span);
         }
       }
     }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -28,7 +28,7 @@ public class AdviceUtils {
       "io.opentelemetry.javaagent.instrumentation.springwebflux.Context";
 
   public static String parseOperationName(Object handler) {
-    String className = TRACER.spanNameForClass(handler.getClass());
+    String className = tracer().spanNameForClass(handler.getClass());
     String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
 

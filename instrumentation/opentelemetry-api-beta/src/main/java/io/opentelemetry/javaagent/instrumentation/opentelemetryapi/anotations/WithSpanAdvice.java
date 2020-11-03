@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 
-import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations.TraceAnnotationTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations.TraceAnnotationTracer.tracer;
 
 import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
@@ -28,9 +28,10 @@ public class WithSpanAdvice {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
     span =
-        TRACER.startSpan(
-            TRACER.spanNameForMethodWithAnnotation(applicationAnnotation, method),
-            TRACER.extractSpanKind(applicationAnnotation));
+        tracer()
+            .startSpan(
+                tracer().spanNameForMethodWithAnnotation(applicationAnnotation, method),
+                tracer().extractSpanKind(applicationAnnotation));
     scope = span.makeCurrent();
   }
 
@@ -42,9 +43,9 @@ public class WithSpanAdvice {
     scope.close();
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
     } else {
-      TRACER.end(span);
+      tracer().end(span);
     }
   }
 }
