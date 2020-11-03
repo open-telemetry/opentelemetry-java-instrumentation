@@ -19,7 +19,8 @@ import java.io.OutputStream;
  */
 public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 
-  private static final WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
+  // visible for testing
+  static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   @Override
   protected void doHandleRequest(InputStream inputStream, OutputStream output, Context context)
