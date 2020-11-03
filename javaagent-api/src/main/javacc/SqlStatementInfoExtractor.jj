@@ -9,143 +9,278 @@ options {
   STATIC = false;
 }
 
-PARSER_BEGIN(SqlSimplifier)
+PARSER_BEGIN(SqlStatementInfoExtractor)
 
 package io.opentelemetry.javaagent.instrumentation.api.db.normalizer;
 
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.io.StringReader;
 
-public class SqlSimplifier {
-  public static SqlStatementInfo simplify(String s) throws ParseException {
-    SqlSimplifier parser = new SqlSimplifier(new StringReader(s.trim()));
+public class SqlStatementInfoExtractor {
+  public static SqlStatementInfo extract(String statement) throws ParseException {
+    SqlStatementInfoExtractor parser = new SqlStatementInfoExtractor(new StringReader(statement.trim()));
     parser.Input();
-    return parser.getResult();
+    return parser.operation.getResult();
   }
 
-  private Operation operation = null;
-  private String mainTable = null;
+  private Operation operation = NoOp.INSTANCE;
 
   private int parenLevel = 0;
-  private boolean identifierIsTable = false;
   private boolean insideComment = false;
-  private boolean mainTableSetAlready = false;
 
   private void setOperation(Operation operation) {
-    if (this.operation == null) {
+    if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
     }
   }
 
-  private void setMainTable(String table) {
-    this.mainTable = table;
-    mainTableSetAlready = true;
+  private static abstract class Operation {
+    String mainTable = null;
+
+    /** @return true if all statement info is gathered */
+    boolean handleFrom() {
+      return false;
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleInto() {
+      return false;
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleJoin() {
+      return false;
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleIdentifier(String identifier) {
+      return false;
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleComma() {
+      return false;
+    }
+
+    SqlStatementInfo getResult() {
+      return new SqlStatementInfo(getClass().getSimpleName().toUpperCase(), mainTable);
+    }
   }
 
-  private void nextIdentifierIsTable() {
-    identifierIsTable = true;
+  private static class NoOp extends Operation {
+    static final Operation INSTANCE = new NoOp();
+
+    SqlStatementInfo getResult() {
+      return null;
+    }
   }
 
-  private boolean isMainStatement() {
-    return parenLevel == 0 && !insideComment;
+  private class Select extends Operation {
+    // you can reference a table in the FROM clause in one of the following ways:
+    //   table
+    //   table t
+    //   table as t
+    // in other words, you need max 3 identifiers to reference a table
+    private static final int FROM_TABLE_REF_MAX_IDENTIFIERS = 3;
+
+    boolean expectingTableName = false;
+    boolean mainTableSetAlready = false;
+    int identifiersAfterMainFromClause = 0;
+
+    boolean handleFrom() {
+      if (parenLevel == 0) {
+        // main query FROM clause
+        expectingTableName = true;
+        return false;
+      } else {
+        // subquery in WITH or SELECT clause, before main FROM clause; skipping
+        mainTable = null;
+        return true;
+      }
+    }
+
+    boolean handleJoin() {
+      // for SELECT statements with joined tables there's no main table
+      mainTable = null;
+      return true;
+    }
+
+    boolean handleIdentifier(String identifier) {
+      if (identifiersAfterMainFromClause > 0) {
+        ++identifiersAfterMainFromClause;
+      }
+
+      if (!expectingTableName) {
+        return false;
+      }
+
+      // SELECT FROM (subquery) case
+      if (parenLevel != 0) {
+        mainTable = null;
+        return true;
+      }
+
+      // whenever >1 table is used there is no main table (e.g. unions)
+      if (mainTableSetAlready) {
+        mainTable = null;
+        return true;
+      }
+
+      mainTable = identifier;
+      mainTableSetAlready = true;
+      expectingTableName = false;
+      // start counting identifiers after encountering main from clause
+      identifiersAfterMainFromClause = 1;
+
+      // continue scanning the query, there may be more than one table (e.g. joins)
+      return false;
+    }
+
+    boolean handleComma() {
+      // comma was encountered in the FROM clause, i.e. implicit join
+      // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
+      // any other list that can appear later needs at least 4 idents)
+      if (identifiersAfterMainFromClause > 0
+          && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+        mainTable = null;
+        return true;
+      }
+      return false;
+    }
   }
 
-  private SqlStatementInfo getResult() {
-    return new SqlStatementInfo(operation.name(), mainTable);
+  private static class Insert extends Operation {
+    boolean expectingTableName = false;
+
+    boolean handleInto() {
+      expectingTableName = true;
+      return false;
+    }
+
+    boolean handleIdentifier(String identifier) {
+      if (!expectingTableName) {
+        return false;
+      }
+
+      mainTable = identifier;
+      return true;
+    }
   }
 
-  private enum Operation {
-    SELECT,
-    INSERT,
-    DELETE,
-    UPDATE,
-    MERGE;
+  private static class Delete extends Operation {
+    boolean expectingTableName = false;
+
+    boolean handleFrom() {
+      expectingTableName = true;
+      return false;
+    }
+
+    boolean handleIdentifier(String identifier) {
+      if (!expectingTableName) {
+        return false;
+      }
+
+      mainTable = identifier;
+      return true;
+    }
+  }
+
+  private static class Update extends Operation {
+    boolean handleIdentifier(String identifier) {
+      mainTable = identifier;
+      return true;
+    }
+  }
+
+  private static class Merge extends Operation {
+    boolean handleIdentifier(String identifier) {
+      mainTable = identifier;
+      return true;
+    }
   }
 }
-PARSER_END(SqlSimplifier)
+PARSER_END(SqlStatementInfoExtractor)
 
 void Input() : {
   Token t;
 } {
   (
     <Select> {
-      if (isMainStatement()) {
-        setOperation(Operation.SELECT);
+      if (!insideComment) {
+        setOperation(new Select());
       }
     }
     |
     <Insert> {
-      if (isMainStatement()) {
-        setOperation(Operation.INSERT);
+      if (!insideComment) {
+        setOperation(new Insert());
       }
     }
     |
     <Delete> {
-      if (isMainStatement()) {
-        setOperation(Operation.DELETE);
+      if (!insideComment) {
+        setOperation(new Delete());
       }
     }
     |
     <Update> {
-      if (isMainStatement()) {
-        setOperation(Operation.UPDATE);
-        nextIdentifierIsTable();
+      if (!insideComment) {
+        setOperation(new Update());
       }
     }
     |
     <Merge> {
-      if (isMainStatement()) {
-        setOperation(Operation.MERGE);
-        nextIdentifierIsTable();
+      if (!insideComment) {
+        setOperation(new Merge());
       }
     }
     |
     <From> {
-      if (isMainStatement() && (operation == Operation.SELECT || operation == Operation.DELETE)) {
-        nextIdentifierIsTable();
+      if (!insideComment) {
+        boolean done = operation.handleFrom();
+        if (done) {
+          return;
+        }
       }
     }
     |
     <Into> {
-      if (isMainStatement() && operation == Operation.INSERT) {
-        nextIdentifierIsTable();
+      if (!insideComment) {
+        boolean done = operation.handleInto();
+        if (done) {
+          return;
+        }
       }
     }
     |
     <Join> {
-      // TODO: also comma-separated table list in FROM! if possible
-      // for SELECT statements with joined tables there's no main table
-      if (isMainStatement() && operation == Operation.SELECT) {
-        setMainTable(null);
-        return;
+      if (!insideComment) {
+        boolean done = operation.handleJoin();
+        if (done) {
+          return;
+        }
       }
     }
     |
     t = <Identifier> {
-      if (isMainStatement() && identifierIsTable) {
-        // for SELECT statements, whenever >1 table is used there is no main table (e.g. unions)
-        if (operation == Operation.SELECT && mainTableSetAlready) {
-          setMainTable(null);
+      if (!insideComment) {
+        boolean done = operation.handleIdentifier(t.image);
+        if (done) {
           return;
         }
-
-        setMainTable(t.image);
-
-        // in case of SELECT continue scanning the query, there may be more than one table (e.g. joins)
-        if (operation == Operation.SELECT) {
-          identifierIsTable = false;
-        } else {
+      }
+    }
+    |
+    <Comma> {
+      if (!insideComment) {
+        boolean done = operation.handleComma();
+        if (done) {
           return;
         }
       }
     }
     |
     <OpenParen> {
-      // was expecting table name, not subquery; ending without main table name
-      if (operation == Operation.SELECT && identifierIsTable) {
-        setMainTable(null);
-        return;
-      }
       parenLevel += 1;
     }
     |
@@ -185,6 +320,8 @@ TOKEN : {
   <Into: "INTO">
   |
   <Join: "JOIN">
+  |
+  <Comma: ",">
   |
   <OpenParen: "(">
   |

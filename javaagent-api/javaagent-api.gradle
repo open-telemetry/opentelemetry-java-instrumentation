@@ -17,8 +17,8 @@ javacc {
       packageName = 'io.opentelemetry.javaagent.instrumentation.api.db.normalizer'
       outputDir = file("${project.buildDir}/generated/javacc/sql")
     }
-    simplifier {
-      inputFile = file('src/main/javacc/SqlSimplifier.jj')
+    statmentInfoExtractor {
+      inputFile = file('src/main/javacc/SqlStatementInfoExtractor.jj')
       packageName = 'io.opentelemetry.javaagent.instrumentation.api.db.normalizer'
       outputDir = file("${project.buildDir}/generated/javacc/sql")
     }
