@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.oshi.SystemMetrics;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class OshiInstrumentation extends AbstractOshiInstrumentation {
   public static class OshiInstrumentationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      OshiInstrumentationHelper.registerObservers();
+      SystemMetrics.registerObservers();
     }
   }
 }

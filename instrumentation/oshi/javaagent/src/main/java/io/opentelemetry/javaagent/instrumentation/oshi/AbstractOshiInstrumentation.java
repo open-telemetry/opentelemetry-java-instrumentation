@@ -16,7 +16,6 @@ public abstract class AbstractOshiInstrumentation extends Instrumenter.Default {
   @Override
   public final String[] helperClassNames() {
     return new String[] {
-      packageName + ".OshiInstrumentationHelper",
       "io.opentelemetry.instrumentation.oshi.SystemMetrics",
       "io.opentelemetry.instrumentation.oshi.SystemMetrics$1",
       "io.opentelemetry.instrumentation.oshi.SystemMetrics$2",
