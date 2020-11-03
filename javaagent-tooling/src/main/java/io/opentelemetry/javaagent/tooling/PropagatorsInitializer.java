@@ -52,11 +52,8 @@ public class PropagatorsInitializer {
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
       OpenTelemetry.setGlobalPropagators(
           DefaultContextPropagators.builder()
-              .addTextMapPropagator(
-                  TraceMultiPropagator.builder()
-                      .addPropagator(HttpTraceContext.getInstance())
-                      .addPropagator(W3CBaggagePropagator.getInstance())
-                      .build())
+              .addTextMapPropagator(HttpTraceContext.getInstance())
+              .addTextMapPropagator(W3CBaggagePropagator.getInstance())
               .build());
       return;
     }
