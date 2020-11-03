@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,10 +64,10 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      span = TRACER.startSpan(null, request.getMethod() + " " + request.getEndpoint());
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(null, request.getMethod() + " " + request.getEndpoint());
+      scope = tracer().startScope(span);
 
-      TRACER.onRequest(span, request.getMethod(), request.getEndpoint());
+      tracer().onRequest(span, request.getMethod(), request.getEndpoint());
       responseListener = new RestResponseListener(responseListener, span);
     }
 
@@ -78,7 +78,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

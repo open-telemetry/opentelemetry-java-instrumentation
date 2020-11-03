@@ -26,7 +26,11 @@ import java.util.concurrent.TimeUnit;
 
 public class RabbitTracer extends BaseTracer {
 
-  public static final RabbitTracer TRACER = new RabbitTracer();
+  private static final RabbitTracer TRACER = new RabbitTracer();
+
+  public static RabbitTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(String method, Connection connection) {
     Span.Kind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;

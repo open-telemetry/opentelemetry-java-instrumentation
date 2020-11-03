@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer.tracer;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -27,7 +27,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     boolean finishSpan = msg instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      TRACER.end(span, (HttpResponse) msg);
+      tracer().end(span, (HttpResponse) msg);
     }
 
     // We want the callback in the scope of the parent, not the client span

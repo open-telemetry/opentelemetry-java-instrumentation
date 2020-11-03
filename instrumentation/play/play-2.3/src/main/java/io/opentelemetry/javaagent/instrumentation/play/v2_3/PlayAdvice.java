@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_3;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
@@ -21,7 +21,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
-    Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
+    Span span = tracer().startSpan("play.request", Kind.INTERNAL);
 
     return new SpanWithScope(span, span.makeCurrent());
   }
@@ -40,13 +40,13 @@ public class PlayAdvice {
           new RequestCompleteCallback(playControllerSpan),
           ((Action<?>) thisAction).executionContext());
     } else {
-      TRACER.endExceptionally(playControllerSpan, throwable);
+      tracer().endExceptionally(playControllerSpan, throwable);
     }
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
     // set the span name on the upstream akka/netty span
-    TRACER.updateSpanName(BaseTracer.getCurrentServerSpan(), req);
+    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 
   // With this muzzle prevents this instrumentation from applying on Play 2.4+

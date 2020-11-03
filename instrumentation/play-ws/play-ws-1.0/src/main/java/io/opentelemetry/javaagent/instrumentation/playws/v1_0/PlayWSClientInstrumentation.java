@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
@@ -31,8 +31,8 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
 
-      span = TRACER.startSpan(request);
-      scope = TRACER.startScope(span, request.getHeaders());
+      span = tracer().startSpan(request);
+      scope = tracer().startScope(span, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
@@ -52,7 +52,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

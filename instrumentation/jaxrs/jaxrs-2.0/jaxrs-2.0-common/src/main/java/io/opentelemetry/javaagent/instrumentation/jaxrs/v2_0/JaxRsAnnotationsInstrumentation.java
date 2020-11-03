@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -119,13 +119,13 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return;
       }
 
-      span = TRACER.startSpan(target.getClass(), method);
+      span = tracer().startSpan(target.getClass(), method);
 
       if (contextStore != null && asyncResponse != null) {
         contextStore.put(asyncResponse, span);
       }
 
-      scope = TRACER.startScope(span);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -141,7 +141,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       CallDepthThreadLocalMap.reset(Path.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
         scope.close();
         return;
       }
@@ -158,7 +158,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(span));
       }
       if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
-        TRACER.end(span);
+        tracer().end(span);
       }
       // else span finished by AsyncResponseAdvice
 

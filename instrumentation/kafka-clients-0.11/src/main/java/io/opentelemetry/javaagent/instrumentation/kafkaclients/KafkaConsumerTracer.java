@@ -18,7 +18,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 public class KafkaConsumerTracer extends BaseTracer {
-  public static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
+  private static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
+
+  public static KafkaConsumerTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(ConsumerRecord<?, ?> record) {
     long now = System.currentTimeMillis();

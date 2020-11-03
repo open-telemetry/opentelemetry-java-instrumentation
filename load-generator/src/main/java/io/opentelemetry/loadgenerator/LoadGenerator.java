@@ -22,7 +22,7 @@ import picocli.CommandLine.Option;
     description = "Generates traces and spans at a specified rate")
 public class LoadGenerator implements Callable<Integer> {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;
@@ -101,14 +101,14 @@ public class LoadGenerator implements Callable<Integer> {
 
       while (true) {
         rateLimiter.acquire();
-        Span parent = TRACER.spanBuilder("parentSpan").startSpan();
+        Span parent = tracer.spanBuilder("parentSpan").startSpan();
 
         try (Scope scope = parent.makeCurrent()) {
           for (int i = 0; i < width; i++) {
-            Span widthSpan = TRACER.spanBuilder("span-" + i).startSpan();
+            Span widthSpan = tracer.spanBuilder("span-" + i).startSpan();
             try (Scope widthScope = widthSpan.makeCurrent()) {
               for (int j = 0; j < depth - 2; j++) {
-                Span depthSpan = TRACER.spanBuilder("span-" + i + "-" + j).startSpan();
+                Span depthSpan = tracer.spanBuilder("span-" + i + "-" + j).startSpan();
                 try (Scope depthScope = depthSpan.makeCurrent()) {
                   // do nothing.  Maybe sleep? but that will mean we need more threads to keep the
                   // effective rate

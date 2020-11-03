@@ -22,7 +22,11 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class NettyHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
-  public static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
+  private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
+
+  public static NettyHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   public Scope startScope(Span span, HttpHeaders headers) {

@@ -25,8 +25,8 @@ object Worker {
     OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   def doWork(workTimeMS: Long) = {
-    val span = TRACER.spanBuilder("work").startSpan()
-    val scope = TRACER.withSpan(span)
+    val span = tracer().spanBuilder("work").startSpan()
+    val scope = tracer().withSpan(span)
     try {
       if (span != null) {
         span.setAttribute("work-time", workTimeMS)

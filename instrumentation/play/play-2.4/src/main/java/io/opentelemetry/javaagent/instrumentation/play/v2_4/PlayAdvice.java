@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
@@ -21,7 +21,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
-    Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
+    Span span = tracer().startSpan("play.request", Kind.INTERNAL);
     return new SpanWithScope(span, span.makeCurrent());
   }
 
@@ -35,21 +35,21 @@ public class PlayAdvice {
     Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.
-    TRACER.updateSpanName(playControllerSpan, req);
+    tracer().updateSpanName(playControllerSpan, req);
 
     if (throwable == null) {
       responseFuture.onComplete(
           new RequestCompleteCallback(playControllerSpan),
           ((Action<?>) thisAction).executionContext());
     } else {
-      TRACER.endExceptionally(playControllerSpan, throwable);
+      tracer().endExceptionally(playControllerSpan, throwable);
     }
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
     Span rootSpan = BaseTracer.getCurrentServerSpan();
     // set the span name on the upstream akka/netty span
-    TRACER.updateSpanName(rootSpan, req);
+    tracer().updateSpanName(rootSpan, req);
   }
 
   // Unused method for muzzle

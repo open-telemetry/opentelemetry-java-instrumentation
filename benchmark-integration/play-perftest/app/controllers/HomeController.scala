@@ -48,8 +48,8 @@ class HomeController @Inject()(cc: ControllerComponents)
   }
 
   private def scheduleWork(workTimeMS: Long) {
-    val span = TRACER.spanBuilder("work").startSpan()
-    val scope = TRACER.withSpan(span)
+    val span = tracer().spanBuilder("work").startSpan()
+    val scope = tracer().withSpan(span)
     try {
       if (span != null) {
         span.setAttribute("work-time", workTimeMS)

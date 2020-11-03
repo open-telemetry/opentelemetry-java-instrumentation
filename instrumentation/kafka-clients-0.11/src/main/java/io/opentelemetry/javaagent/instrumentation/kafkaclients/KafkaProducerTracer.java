@@ -15,7 +15,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
 
 public class KafkaProducerTracer extends BaseTracer {
-  public static final KafkaProducerTracer TRACER = new KafkaProducerTracer();
+  private static final KafkaProducerTracer TRACER = new KafkaProducerTracer();
+
+  public static KafkaProducerTracer tracer() {
+    return TRACER;
+  }
 
   public Span startProducerSpan(ProducerRecord<?, ?> record) {
     Span span = startSpan(spanNameOnProduce(record), PRODUCER);

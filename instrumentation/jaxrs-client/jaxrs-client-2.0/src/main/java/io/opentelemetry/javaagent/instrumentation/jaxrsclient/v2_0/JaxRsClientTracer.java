@@ -15,7 +15,11 @@ import javax.ws.rs.client.ClientResponseContext;
 
 public class JaxRsClientTracer
     extends HttpClientTracer<ClientRequestContext, ClientRequestContext, ClientResponseContext> {
-  public static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
+  private static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
+
+  public static JaxRsClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(ClientRequestContext httpRequest) {

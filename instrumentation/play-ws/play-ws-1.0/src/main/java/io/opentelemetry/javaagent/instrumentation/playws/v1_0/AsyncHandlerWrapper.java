@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -51,7 +51,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   @Override
   public Object onCompleted() throws Exception {
     Response response = builder.build();
-    TRACER.end(span, response);
+    tracer().end(span, response);
 
     try (Scope scope = invocationContext.makeCurrent()) {
       return delegate.onCompleted();
@@ -60,7 +60,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public void onThrowable(Throwable throwable) {
-    TRACER.endExceptionally(span, throwable);
+    tracer().endExceptionally(span, throwable);
     span.end();
 
     try (Scope scope = invocationContext.makeCurrent()) {

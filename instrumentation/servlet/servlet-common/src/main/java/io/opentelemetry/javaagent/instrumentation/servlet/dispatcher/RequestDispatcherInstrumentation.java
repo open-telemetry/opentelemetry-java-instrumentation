@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.dispatcher;
 
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -115,7 +115,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       }
 
       try (Scope ignored = parent.makeCurrent()) {
-        span = TRACER.startSpan(method);
+        span = tracer().startSpan(method);
 
         // save the original servlet span before overwriting the request attribute, so that it can
         // be
@@ -126,7 +126,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         Context newContext = Java8BytecodeBridge.currentContext().with(span);
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
-      scope = TRACER.startScope(span);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -150,9 +150,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
       if (throwable != null) {
-        HttpServletResponseTracer.TRACER.endExceptionally(span, throwable);
+        HttpServletResponseTracer.tracer().endExceptionally(span, throwable);
       } else {
-        HttpServletResponseTracer.TRACER.end(span);
+        HttpServletResponseTracer.tracer().end(span);
       }
     }
   }

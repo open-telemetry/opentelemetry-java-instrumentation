@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -19,7 +19,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
-    Context context = TRACER.getServerContext(ctx.channel());
+    Context context = tracer().getServerContext(ctx.channel());
     if (context == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
       return;
@@ -29,9 +29,9 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, (HttpResponse) msg);
+    tracer().end(span, (HttpResponse) msg);
   }
 }

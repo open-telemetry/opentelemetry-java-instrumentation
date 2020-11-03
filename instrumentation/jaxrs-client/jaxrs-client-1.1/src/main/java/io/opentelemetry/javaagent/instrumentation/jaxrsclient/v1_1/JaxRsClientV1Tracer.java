@@ -15,7 +15,11 @@ import java.net.URI;
 
 public class JaxRsClientV1Tracer
     extends HttpClientTracer<ClientRequest, ClientRequest, ClientResponse> {
-  public static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
+  private static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
+
+  public static JaxRsClientV1Tracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(ClientRequest httpRequest) {

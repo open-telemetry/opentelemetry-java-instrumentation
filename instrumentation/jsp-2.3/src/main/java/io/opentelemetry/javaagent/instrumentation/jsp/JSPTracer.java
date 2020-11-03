@@ -18,7 +18,11 @@ import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
 public class JSPTracer extends BaseTracer {
-  public static final JSPTracer TRACER = new JSPTracer();
+  private static final JSPTracer TRACER = new JSPTracer();
+
+  public static JSPTracer tracer() {
+    return TRACER;
+  }
 
   public String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null

@@ -10,7 +10,11 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import ratpack.handling.Context;
 
 public class RatpackTracer extends BaseTracer {
-  public static final RatpackTracer TRACER = new RatpackTracer();
+  private static final RatpackTracer TRACER = new RatpackTracer();
+
+  public static RatpackTracer tracer() {
+    return TRACER;
+  }
 
   public Span onContext(Span span, Context ctx) {
     String description = ctx.getPathBinding().getDescription();

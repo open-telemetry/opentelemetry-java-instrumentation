@@ -12,7 +12,11 @@ import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnection, String> {
-  public static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
+  private static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
+
+  public static MemcacheClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String dbSystem(MemcachedConnection memcachedConnection) {

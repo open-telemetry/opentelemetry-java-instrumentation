@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -72,9 +72,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       Span serverSpan = BaseTracer.getCurrentServerSpan(context);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        TRACER.onRequest(context, serverSpan, request);
+        tracer().onRequest(context, serverSpan, request);
         // Now create a span for handler/controller execution.
-        Span span = TRACER.startHandlerSpan(handler);
+        Span span = tracer().startHandlerSpan(handler);
 
         return new SpanWithScope(span, context.with(span).makeCurrent());
       } else {
@@ -90,9 +90,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       }
       Span span = spanWithScope.getSpan();
       if (throwable == null) {
-        TRACER.end(span);
+        tracer().end(span);
       } else {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
       spanWithScope.closeScope();
     }

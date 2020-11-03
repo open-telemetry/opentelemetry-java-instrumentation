@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class WrappingStatusSettingResponseHandler implements ResponseHandler {
   @Override
   public Object handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
     if (null != span) {
-      TRACER.onResponse(span, response);
+      tracer().onResponse(span, response);
     }
     return handler.handleResponse(response);
   }

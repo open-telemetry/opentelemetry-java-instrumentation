@@ -14,7 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TraceAnnotationTracer extends BaseTracer {
-  public static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+
+  public static TraceAnnotationTracer tracer() {
+    return TRACER;
+  }
 
   private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
 

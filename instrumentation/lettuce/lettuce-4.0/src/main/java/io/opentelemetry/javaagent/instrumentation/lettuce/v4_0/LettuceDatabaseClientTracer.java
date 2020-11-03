@@ -10,7 +10,11 @@ import com.lambdaworks.redis.protocol.RedisCommand;
 public class LettuceDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
 
-  public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+  private static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+
+  public static LettuceDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String normalizeQuery(RedisCommand<?, ?, ?> command) {

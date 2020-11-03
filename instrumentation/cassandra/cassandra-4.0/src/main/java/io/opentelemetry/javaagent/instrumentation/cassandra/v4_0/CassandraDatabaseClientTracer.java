@@ -17,7 +17,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
-  public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+  private static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  public static CassandraDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

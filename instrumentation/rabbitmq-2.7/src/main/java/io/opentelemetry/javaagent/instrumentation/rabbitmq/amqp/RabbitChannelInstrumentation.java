@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -117,9 +117,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(method, channel.getConnection());
+      span = tracer().startSpan(method, channel.getConnection());
       CURRENT_RABBIT_SPAN.set(span);
-      scope = TRACER.startScope(span);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -135,9 +135,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       CURRENT_RABBIT_SPAN.remove();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -152,7 +152,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       Span span = Java8BytecodeBridge.currentSpan();
 
       if (span.getSpanContext().isValid()) {
-        TRACER.onPublish(span, exchange, routingKey);
+        tracer().onPublish(span, exchange, routingKey);
         if (body != null) {
           span.setAttribute(
               SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
@@ -220,11 +220,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Span span = TRACER.startGetSpan(queue, startTime, response, channel.getConnection());
+      Span span = tracer().startGetSpan(queue, startTime, response, channel.getConnection());
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

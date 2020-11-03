@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
@@ -46,7 +46,7 @@ public class Resteasy30RequestContextInstrumentation extends AbstractRequestCont
 
         span = RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
         if (span != null) {
-          scope = TRACER.startScope(span);
+          scope = tracer().startScope(span);
         }
       }
     }

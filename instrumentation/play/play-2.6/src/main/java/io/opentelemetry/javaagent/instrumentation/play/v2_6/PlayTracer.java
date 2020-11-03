@@ -17,7 +17,11 @@ import play.routing.Router;
 import scala.Option;
 
 public class PlayTracer extends BaseTracer {
-  public static final PlayTracer TRACER = new PlayTracer();
+  private static final PlayTracer TRACER = new PlayTracer();
+
+  public static PlayTracer tracer() {
+    return TRACER;
+  }
 
   private static final Method typedKeyGetUnderlying;
 

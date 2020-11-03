@@ -23,7 +23,11 @@ public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
 
-  public static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.rmi");
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.rmi");
+
+  public static Tracer tracer() {
+    return TRACER;
+  }
 
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();

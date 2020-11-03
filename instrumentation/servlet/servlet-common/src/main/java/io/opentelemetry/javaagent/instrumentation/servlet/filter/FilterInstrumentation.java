@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.filter;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.filter.FilterTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.filter.FilterTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -84,8 +84,8 @@ public final class FilterInstrumentation extends Instrumenter.Default {
       }
 
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
-      span = TRACER.startSpan(filter.getClass().getSimpleName() + ".doFilter", Kind.INTERNAL);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(filter.getClass().getSimpleName() + ".doFilter", Kind.INTERNAL);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -97,9 +97,9 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         return;
       }
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

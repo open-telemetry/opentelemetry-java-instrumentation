@@ -15,14 +15,14 @@ import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
   // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
-  val TRACER: Tracer =
+  val tracer: Tracer =
     Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   /**
     * @return Number of expected spans in the trace
     */
   def traceWithFutureAndCallbacks() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
@@ -56,7 +56,7 @@ class ScalaConcurrentTests {
   }
 
   def tracedAcrossThreadsWithNoTrace() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
@@ -87,7 +87,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def traceWithPromises() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
@@ -136,7 +136,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def tracedWithFutureFirstCompletions() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
@@ -161,7 +161,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def tracedTimeout(): Integer = {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
       Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
@@ -186,6 +186,6 @@ class ScalaConcurrentTests {
   }
 
   def tracedChild(opName: String): Unit = {
-    TRACER.spanBuilder(opName).startSpan().end()
+    tracer.spanBuilder(opName).startSpan().end()
   }
 }

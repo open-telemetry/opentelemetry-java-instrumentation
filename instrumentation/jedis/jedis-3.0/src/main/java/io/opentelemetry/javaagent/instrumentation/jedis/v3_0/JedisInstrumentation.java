@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -66,8 +66,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) byte[][] args,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(connection, new CommandWithArgs(command, args));
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, new CommandWithArgs(command, args));
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -81,9 +81,9 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

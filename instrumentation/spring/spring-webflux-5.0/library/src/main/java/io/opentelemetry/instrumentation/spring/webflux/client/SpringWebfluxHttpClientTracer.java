@@ -22,7 +22,11 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 public class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
-  public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+  private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+
+  public static SpringWebfluxHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 

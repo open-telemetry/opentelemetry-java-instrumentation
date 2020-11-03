@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -98,14 +98,14 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Context ctx = TRACER.startSpan(request, request, "akka.request");
+      Context ctx = tracer().startSpan(request, request, "akka.request");
       Span span = Java8BytecodeBridge.spanFromContext(ctx);
-      try (Scope ignored = TRACER.startScope(span, null)) {
+      try (Scope ignored = tracer().startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
-        TRACER.end(span, response);
+        tracer().end(span, response);
         return response;
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
     }
@@ -124,29 +124,29 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Context ctx = TRACER.startSpan(request, request, "akka.request");
+      Context ctx = tracer().startSpan(request, request, "akka.request");
       Span span = Java8BytecodeBridge.spanFromContext(ctx);
-      try (Scope ignored = TRACER.startScope(span, null)) {
+      try (Scope ignored = tracer().startScope(span, null)) {
         return userHandler
             .apply(request)
             .transform(
                 new AbstractFunction1<HttpResponse, HttpResponse>() {
                   @Override
                   public HttpResponse apply(HttpResponse response) {
-                    TRACER.end(span, response);
+                    tracer().end(span, response);
                     return response;
                   }
                 },
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
                   public Throwable apply(Throwable t) {
-                    TRACER.endExceptionally(span, t);
+                    tracer().endExceptionally(span, t);
                     return t;
                   }
                 },
                 executionContext);
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
     }

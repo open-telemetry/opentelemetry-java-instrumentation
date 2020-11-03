@@ -30,7 +30,7 @@ import org.eclipse.jetty.server.handler.HandlerList
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 
@@ -247,7 +247,7 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
-        final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
+        final Span.Builder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         spanBuilder.setParent(BaseDecorator.extract(req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()

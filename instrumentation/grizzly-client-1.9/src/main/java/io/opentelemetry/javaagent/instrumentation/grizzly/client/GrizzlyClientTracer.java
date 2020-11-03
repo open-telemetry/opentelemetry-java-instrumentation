@@ -14,7 +14,11 @@ import java.net.URISyntaxException;
 
 public class GrizzlyClientTracer extends HttpClientTracer<Request, Request, Response> {
 
-  public static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
+  private static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
+
+  public static GrizzlyClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request request) {

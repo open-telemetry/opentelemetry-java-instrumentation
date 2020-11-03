@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -78,7 +78,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         serverSpan.updateName(routeInfo.path());
       }
 
-      Span span = TRACER.startSpan(clazz);
+      Span span = tracer().startSpan(clazz);
 
       return new SpanWithScope(span, span.makeCurrent());
     }
@@ -95,7 +95,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
         spanWithScope.closeScope();
         return;
       }
@@ -114,14 +114,14 @@ public class FinatraInstrumentation extends Instrumenter.Default {
     @Override
     public void onSuccess(Response response) {
       Span span = spanWithScope.getSpan();
-      TRACER.end(span);
+      tracer().end(span);
       spanWithScope.closeScope();
     }
 
     @Override
     public void onFailure(Throwable cause) {
       Span span = spanWithScope.getSpan();
-      TRACER.endExceptionally(span, cause);
+      tracer().endExceptionally(span, cause);
       spanWithScope.closeScope();
     }
   }

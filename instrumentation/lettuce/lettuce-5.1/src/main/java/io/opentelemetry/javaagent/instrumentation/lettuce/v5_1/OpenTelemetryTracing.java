@@ -33,8 +33,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
-  public static final io.opentelemetry.api.trace.Tracer TRACER =
+  private static final io.opentelemetry.api.trace.Tracer TRACER =
       OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
+
+  public static io.opentelemetry.api.trace.Tracer tracer() {
+    return TRACER;
+  }
 
   private static final RedisCommandNormalizer commandNormalizer =
       new RedisCommandNormalizer("lettuce", "lettuce-5", "lettuce-5.1");

@@ -16,7 +16,11 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
 public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs> {
-  public static final JedisClientTracer TRACER = new JedisClientTracer();
+  private static final JedisClientTracer TRACER = new JedisClientTracer();
+
+  public static JedisClientTracer tracer() {
+    return TRACER;
+  }
 
   private final RedisCommandNormalizer commandNormalizer =
       new RedisCommandNormalizer("jedis", "redis");

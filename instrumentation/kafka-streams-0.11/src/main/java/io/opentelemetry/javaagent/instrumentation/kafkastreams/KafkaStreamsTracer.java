@@ -15,7 +15,11 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsTracer extends BaseTracer {
-  public static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
+  private static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
+
+  public static KafkaStreamsTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(StampedRecord record) {
     Span span =

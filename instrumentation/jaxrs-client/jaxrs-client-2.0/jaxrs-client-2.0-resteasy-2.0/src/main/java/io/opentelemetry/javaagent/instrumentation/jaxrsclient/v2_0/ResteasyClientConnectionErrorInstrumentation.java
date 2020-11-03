@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -69,8 +69,8 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
         @Advice.This ClientInvocation invocation,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(invocation);
-      scope = TRACER.startScope(span, invocation);
+      span = tracer().startSpan(invocation);
+      scope = tracer().startScope(span, invocation);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -83,9 +83,9 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span, response);
+        tracer().end(span, response);
       }
     }
   }

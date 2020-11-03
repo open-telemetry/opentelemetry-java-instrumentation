@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -98,7 +98,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) ModelAndView mv) {
-      Span span = TRACER.startSpan(mv);
+      Span span = tracer().startSpan(mv);
       return new SpanWithScope(span, span.makeCurrent());
     }
 
@@ -107,9 +107,9 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
         @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
       Span span = spanWithScope.getSpan();
       if (throwable == null) {
-        TRACER.end(span);
+        tracer().end(span);
       } else {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
       spanWithScope.closeScope();
     }
@@ -122,7 +122,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       if (span.getSpanContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        TRACER.addThrowable(span, exception);
+        tracer().addThrowable(span, exception);
       }
     }
   }
