@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.struts"
+    module = "struts2-core"
+    // range [7.0.0,7.0.19) and version 8.0.9 missing from maven
+    versions = "[2.3.20,)"
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
+}
