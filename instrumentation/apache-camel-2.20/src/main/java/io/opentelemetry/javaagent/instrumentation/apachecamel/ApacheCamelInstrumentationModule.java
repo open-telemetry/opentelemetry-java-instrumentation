@@ -27,9 +27,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.camel.CamelContext;
 
 @AutoService(InstrumentationModule.class)
-public class CamelContextInstrumentationModule extends InstrumentationModule {
+public class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
-  public CamelContextInstrumentationModule() {
+  public ApacheCamelInstrumentationModule() {
     super("apachecamel", "apache-camel");
   }
 
@@ -81,7 +81,7 @@ public class CamelContextInstrumentationModule extends InstrumentationModule {
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return Collections.singletonMap(
           named("start").and(isPublic()).and(takesArguments(0)),
-          CamelContextInstrumentationModule.class.getName() + "$ContextAdvice");
+          ApacheCamelInstrumentationModule.class.getName() + "$ContextAdvice");
     }
   }
 

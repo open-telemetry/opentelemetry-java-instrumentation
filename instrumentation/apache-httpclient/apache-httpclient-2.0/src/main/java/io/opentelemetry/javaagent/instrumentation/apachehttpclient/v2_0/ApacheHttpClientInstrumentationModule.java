@@ -30,9 +30,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.httpclient.HttpMethod;
 
 @AutoService(InstrumentationModule.class)
-public class CommonsHttpClientInstrumentationModule extends InstrumentationModule {
+public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
-  public CommonsHttpClientInstrumentationModule() {
+  public ApacheHttpClientInstrumentationModule() {
     super("apache-httpclient");
   }
 
@@ -67,7 +67,7 @@ public class CommonsHttpClientInstrumentationModule extends InstrumentationModul
               .and(named("executeMethod"))
               .and(takesArguments(3))
               .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
-          CommonsHttpClientInstrumentationModule.class.getName() + "$ExecAdvice");
+          ApacheHttpClientInstrumentationModule.class.getName() + "$ExecAdvice");
     }
   }
 

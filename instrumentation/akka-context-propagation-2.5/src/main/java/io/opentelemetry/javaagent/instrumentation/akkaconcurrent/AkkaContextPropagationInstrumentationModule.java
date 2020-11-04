@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaForkJoinPoolInstrumentationModule extends InstrumentationModule {
-  public AkkaForkJoinPoolInstrumentationModule() {
+public class AkkaContextPropagationInstrumentationModule extends InstrumentationModule {
+  public AkkaContextPropagationInstrumentationModule() {
     super("akka_context_propagation");
   }
 
