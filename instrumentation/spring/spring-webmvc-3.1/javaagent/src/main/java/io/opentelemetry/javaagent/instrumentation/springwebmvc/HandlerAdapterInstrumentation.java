@@ -16,13 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -30,12 +29,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
-
-  public HandlerAdapterInstrumentation() {
-    super("spring-web");
-  }
+final class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -46,11 +40,6 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.springframework.web.servlet.HandlerAdapter"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".SpringWebMvcTracer"};
   }
 
   @Override
