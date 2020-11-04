@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,7 +19,9 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,22 +29,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.httpclient.HttpMethod;
 
-@AutoService(Instrumenter.class)
-public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class CommonsHttpClientInstrumentationModule extends InstrumentationModule {
 
-  public CommonsHttpClientInstrumentation() {
+  public CommonsHttpClientInstrumentationModule() {
     super("apache-httpclient");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.apache.commons.httpclient.HttpClient");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("org.apache.commons.httpclient.HttpClient"));
   }
 
   @Override
@@ -52,14 +44,31 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpClientInstrumentation());
+  }
 
-    return singletonMap(
-        isMethod()
-            .and(named("executeMethod"))
-            .and(takesArguments(3))
-            .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
-        CommonsHttpClientInstrumentation.class.getName() + "$ExecAdvice");
+  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("org.apache.commons.httpclient.HttpClient");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return extendsClass(named("org.apache.commons.httpclient.HttpClient"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("executeMethod"))
+              .and(takesArguments(3))
+              .and(takesArgument(1, named("org.apache.commons.httpclient.HttpMethod"))),
+          CommonsHttpClientInstrumentationModule.class.getName() + "$ExecAdvice");
+    }
   }
 
   public static class ExecAdvice {

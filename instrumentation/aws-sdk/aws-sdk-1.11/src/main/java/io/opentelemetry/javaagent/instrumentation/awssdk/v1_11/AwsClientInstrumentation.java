@@ -12,9 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.handlers.RequestHandler2;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -26,12 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation might work with versions before 1.11.0, but this was the first version that
  * is tested. It could possibly be extended earlier.
  */
-@AutoService(Instrumenter.class)
-public final class AWSClientInstrumentation extends Instrumenter.Default {
-
-  public AWSClientInstrumentation() {
-    super("aws-sdk");
-  }
+final class AwsClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,24 +34,9 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AwsSdkClientTracer",
-      packageName + ".AwsSdkClientTracer$NamesCache",
-      packageName + ".RequestMeta",
-      packageName + ".TracingRequestHandler",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isConstructor(), AWSClientInstrumentation.class.getName() + "$AWSClientAdvice");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.amazonaws.AmazonWebServiceRequest", packageName + ".RequestMeta");
+        isConstructor(), AwsClientInstrumentation.class.getName() + "$AWSClientAdvice");
   }
 
   public static class AWSClientAdvice {

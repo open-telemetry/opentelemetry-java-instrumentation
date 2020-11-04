@@ -12,40 +12,24 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
-
-  public CouchbaseCoreInstrumentation() {
-    super("couchbase");
-  }
+final class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("com.couchbase.client.core.CouchbaseCore");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$CouchbaseCoreAdvice"};
   }
 
   @Override

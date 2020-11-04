@@ -84,19 +84,31 @@ public abstract class InstrumentationModule {
    */
   public final AgentBuilder instrument(AgentBuilder parentAgentBuilder) {
     if (!enabled) {
-      log.debug("Instrumentation {} is disabled", instrumentationNames.iterator().next());
+      log.debug("Instrumentation {} is disabled", mainInstrumentationName());
+      return parentAgentBuilder;
+    }
+
+    List<String> helperClassNames = asList(helperClassNames());
+    List<String> helperResourceNames = asList(helperResourceNames());
+    List<TypeInstrumentation> typeInstrumentations = typeInstrumentations();
+    if (typeInstrumentations.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
+        log.warn(
+            "Helper classes and resources won't be injected if no types are instrumented: {}",
+            mainInstrumentationName());
+      }
+
       return parentAgentBuilder;
     }
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
     HelperInjector helperInjector =
-        new HelperInjector(
-            getClass().getSimpleName(), asList(helperClassNames()), asList(helperResourceNames()));
+        new HelperInjector(mainInstrumentationName(), helperClassNames, helperResourceNames);
     InstrumentationContextProvider contextProvider = getContextProvider();
 
     AgentBuilder agentBuilder = parentAgentBuilder;
-    for (TypeInstrumentation typeInstrumentation : typeInstrumentations()) {
+    for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           agentBuilder
               .type(
@@ -172,7 +184,7 @@ public abstract class InstrumentationModule {
           if (!isMatch) {
             log.debug(
                 "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
-                instrumentationNames.iterator().next(),
+                mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
             List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
@@ -182,7 +194,7 @@ public abstract class InstrumentationModule {
           } else {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
-                instrumentationNames.iterator().next(),
+                mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
           }
@@ -192,6 +204,10 @@ public abstract class InstrumentationModule {
       }
       return true;
     }
+  }
+
+  private String mainInstrumentationName() {
+    return instrumentationNames.iterator().next();
   }
 
   /**

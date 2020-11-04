@@ -5,19 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkaconcurrent;
 
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.forkjoin.ForkJoinTask;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -25,27 +23,12 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class AkkaForkJoinPoolInstrumentation extends Instrumenter.Default {
-
-  public AkkaForkJoinPoolInstrumentation() {
-    super("akka_context_propagation");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
+final class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // This might need to be an extendsClass matcher...
     return named("akka.dispatch.forkjoin.ForkJoinPool");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
   }
 
   @Override

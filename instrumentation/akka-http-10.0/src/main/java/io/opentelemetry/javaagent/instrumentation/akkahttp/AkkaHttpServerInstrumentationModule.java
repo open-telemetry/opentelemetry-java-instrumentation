@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.tracer;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,8 +18,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,45 +32,52 @@ import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 
-@AutoService(Instrumenter.class)
-public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
-  public AkkaHttpServerInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public final class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
+  public AkkaHttpServerInstrumentationModule() {
     super("akka-http", "akka-http-server");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("akka.http.scaladsl.HttpExt");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      AkkaHttpServerInstrumentation.class.getName() + "$SyncWrapper",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
+      AkkaHttpServerInstrumentationModule.class.getName() + "$SyncWrapper",
+      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper",
+      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper$1",
+      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper$2",
       packageName + ".AkkaHttpServerHeaders",
       packageName + ".AkkaHttpServerTracer",
     };
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    // Instrumenting akka-streams bindAndHandle api was previously attempted.
-    // This proved difficult as there was no clean way to close the async scope
-    // in the graph logic after the user's request handler completes.
-    //
-    // Instead, we're instrumenting the bindAndHandle function helpers by
-    // wrapping the scala functions with our own handlers.
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
-        AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpSyncAdvice");
-    transformers.put(
-        named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
-        AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpAsyncAdvice");
-    return transformers;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpExtInstrumentation());
+  }
+
+  private static final class HttpExtInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("akka.http.scaladsl.HttpExt");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      // Instrumenting akka-streams bindAndHandle api was previously attempted.
+      // This proved difficult as there was no clean way to close the async scope
+      // in the graph logic after the user's request handler completes.
+      //
+      // Instead, we're instrumenting the bindAndHandle function helpers by
+      // wrapping the scala functions with our own handlers.
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
+          AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpSyncAdvice");
+      transformers.put(
+          named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
+          AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpAsyncAdvice");
+      return transformers;
+    }
   }
 
   public static class AkkaHttpSyncAdvice {

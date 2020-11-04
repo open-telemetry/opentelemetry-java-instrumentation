@@ -15,13 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.io.IOException;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -39,12 +38,7 @@ import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
-@AutoService(Instrumenter.class)
-public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
-
-  public ApacheHttpAsyncClientInstrumentation() {
-    super("httpasyncclient", "apache-httpasyncclient");
-  }
+final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -55,16 +49,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.apache.http.nio.client.HttpAsyncClient"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpHeadersInjectAdapter",
-      getClass().getName() + "$DelegatingRequestProducer",
-      getClass().getName() + "$TraceContinuedFutureCallback",
-      packageName + ".ApacheHttpAsyncClientTracer"
-    };
   }
 
   @Override
@@ -93,7 +77,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
-          new TraceContinuedFutureCallback(parentContext, clientSpan, context, futureCallback);
+          new TraceContinuedFutureCallback<>(parentContext, clientSpan, context, futureCallback);
 
       return clientSpan;
     }
