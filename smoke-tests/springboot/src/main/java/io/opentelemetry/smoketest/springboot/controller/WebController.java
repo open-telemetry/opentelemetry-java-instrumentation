@@ -34,7 +34,7 @@ public class WebController {
 
   @WithSpan
   public String withSpan() {
-    return "Yolo!";
+    return "Hi!";
   }
 
 }
