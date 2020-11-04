@@ -16,7 +16,7 @@
 
 package io.opentelemetry.smoketest.springboot.controller;
 
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.extension.auto.annotations.WithSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +34,7 @@ public class WebController {
 
   @WithSpan
   public String withSpan() {
-    return "Hi!";
+    return "Yolo!";
   }
+
 }

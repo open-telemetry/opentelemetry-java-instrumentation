@@ -40,5 +40,7 @@ def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
   to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-play-jdk$targetJDK"
+  to.tags = [new Date().format("yyyyMMdd.HHmmSS")]
+  container.creationTime = 'USE_CURRENT_TIMESTAMP'
   container.mainClass = "play.core.server.ProdServerStart"
 }
