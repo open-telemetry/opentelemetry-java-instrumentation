@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -23,26 +24,20 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
-  public GoogleHttpClientInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class GoogleHttpClientInstrumentationModule extends InstrumentationModule {
+  public GoogleHttpClientInstrumentationModule() {
     super("google-http-client");
-  }
-
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    // HttpRequest is a final class.  Only need to instrument it exactly
-    // Note: the rest of com.google.api is ignored in AdditionalLibraryIgnoresMatcher to speed
-    // things up
-    return named("com.google.api.client.http.HttpRequest");
   }
 
   @Override
@@ -58,21 +53,36 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
-        GoogleHttpClientInstrumentation.class.getName() + "$GoogleHttpClientAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpRequestInstrumentation());
+  }
 
-    transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(named("executeAsync"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, (named("java.util.concurrent.Executor")))),
-        GoogleHttpClientInstrumentation.class.getName() + "$GoogleHttpClientAsyncAdvice");
+  private static final class HttpRequestInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      // HttpRequest is a final class.  Only need to instrument it exactly
+      // Note: the rest of com.google.api is ignored in AdditionalLibraryIgnoresMatcher to speed
+      // things up
+      return named("com.google.api.client.http.HttpRequest");
+    }
 
-    return transformers;
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
+          GoogleHttpClientInstrumentationModule.class.getName() + "$GoogleHttpClientAdvice");
+
+      transformers.put(
+          isMethod()
+              .and(isPublic())
+              .and(named("executeAsync"))
+              .and(takesArguments(1))
+              .and(takesArgument(0, (named("java.util.concurrent.Executor")))),
+          GoogleHttpClientInstrumentationModule.class.getName() + "$GoogleHttpClientAsyncAdvice");
+
+      return transformers;
+    }
   }
 
   public static class GoogleHttpClientAdvice {

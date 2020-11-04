@@ -5,16 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_5;
 
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import static java.util.Arrays.asList;
 
-abstract class AbstractGrpcInstrumentation extends Instrumenter.Default {
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 
-  public AbstractGrpcInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class GrpcInstrumentationModule extends InstrumentationModule {
+  public GrpcInstrumentationModule() {
     super("grpc");
   }
 
   @Override
-  public final String[] helperClassNames() {
+  public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper",
       "io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcClientTracer",
@@ -28,5 +33,11 @@ abstract class AbstractGrpcInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor$TracingServerCall",
       "io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor$TracingServerCallListener",
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new GrpcClientBuilderBuildInstrumentation(), new GrpcServerBuilderInstrumentation());
   }
 }

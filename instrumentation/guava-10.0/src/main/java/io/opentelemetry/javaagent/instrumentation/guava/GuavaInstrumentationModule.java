@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -17,7 +18,9 @@ import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
@@ -26,16 +29,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
-@AutoService(Instrumenter.class)
-public class ListenableFutureInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class GuavaInstrumentationModule extends InstrumentationModule {
 
-  public ListenableFutureInstrumentation() {
+  public GuavaInstrumentationModule() {
     super("guava");
   }
 
   @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.google.common.util.concurrent.AbstractFuture");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ListenableFutureInstrumentation());
   }
 
   @Override
@@ -43,11 +46,18 @@ public class ListenableFutureInstrumentation extends Instrumenter.Default {
     return singletonMap(Runnable.class.getName(), State.class.getName());
   }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
-        ListenableFutureInstrumentation.class.getName() + "$AddListenerAdvice");
+  private static final class ListenableFutureInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("com.google.common.util.concurrent.AbstractFuture");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
+          GuavaInstrumentationModule.class.getName() + "$AddListenerAdvice");
+    }
   }
 
   public static class AddListenerAdvice {

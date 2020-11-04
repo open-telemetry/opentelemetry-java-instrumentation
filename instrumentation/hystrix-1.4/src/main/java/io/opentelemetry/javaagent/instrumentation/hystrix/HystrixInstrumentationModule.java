@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.t
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -17,8 +18,10 @@ import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,26 +29,13 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-@AutoService(Instrumenter.class)
-public class HystrixInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class HystrixInstrumentationModule extends InstrumentationModule {
 
   private static final String OPERATION_NAME = "hystrix.cmd";
 
-  public HystrixInstrumentation() {
+  public HystrixInstrumentationModule() {
     super("hystrix");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("com.netflix.hystrix.HystrixCommand");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(
-        namedOneOf(
-            "com.netflix.hystrix.HystrixCommand", "com.netflix.hystrix.HystrixObservableCommand"));
   }
 
   @Override
@@ -56,20 +46,42 @@ public class HystrixInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
       "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".HystrixTracer",
-      packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
+      getClass().getName() + "$HystrixOnSubscribe",
     };
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        HystrixInstrumentation.class.getName() + "$ExecuteAdvice");
-    transformers.put(
-        named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        HystrixInstrumentation.class.getName() + "$FallbackAdvice");
-    return transformers;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HystrixCommandInstrumentation());
+  }
+
+  private static final class HystrixCommandInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed(
+          "com.netflix.hystrix.HystrixCommand", "com.netflix.hystrix.HystrixObservableCommand");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return extendsClass(
+          namedOneOf(
+              "com.netflix.hystrix.HystrixCommand",
+              "com.netflix.hystrix.HystrixObservableCommand"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          named("getExecutionObservable").and(returns(named("rx.Observable"))),
+          HystrixInstrumentationModule.class.getName() + "$ExecuteAdvice");
+      transformers.put(
+          named("getFallbackObservable").and(returns(named("rx.Observable"))),
+          HystrixInstrumentationModule.class.getName() + "$FallbackAdvice");
+      return transformers;
+    }
   }
 
   public static class ExecuteAdvice {
@@ -77,10 +89,10 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return(readOnly = false) Observable result,
+        @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Thrown Throwable throwable) {
 
-      result = Observable.create(new HystrixOnSubscribe(result, command, "execute"));
+      result = Observable.create(new HystrixOnSubscribe<>(result, command, "execute"));
     }
   }
 
@@ -92,16 +104,16 @@ public class HystrixInstrumentation extends Instrumenter.Default {
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Thrown Throwable throwable) {
 
-      result = Observable.create(new HystrixOnSubscribe(result, command, "fallback"));
+      result = Observable.create(new HystrixOnSubscribe<>(result, command, "fallback"));
     }
   }
 
-  public static class HystrixOnSubscribe extends TracedOnSubscribe {
+  public static class HystrixOnSubscribe<T> extends TracedOnSubscribe<T> {
     private final HystrixInvokableInfo<?> command;
     private final String methodName;
 
     public HystrixOnSubscribe(
-        Observable originalObservable, HystrixInvokableInfo<?> command, String methodName) {
+        Observable<T> originalObservable, HystrixInvokableInfo<?> command, String methodName) {
       super(originalObservable, OPERATION_NAME, tracer(), INTERNAL);
 
       this.command = command;

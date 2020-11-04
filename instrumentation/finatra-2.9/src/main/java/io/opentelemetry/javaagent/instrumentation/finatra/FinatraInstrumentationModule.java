@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -23,7 +24,9 @@ import com.twitter.util.FutureEventListener;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -31,47 +34,54 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Some;
 
-@AutoService(Instrumenter.class)
-public class FinatraInstrumentation extends Instrumenter.Default {
-  public FinatraInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class FinatraInstrumentationModule extends InstrumentationModule {
+  public FinatraInstrumentationModule() {
     super("finatra");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".FinatraTracer", FinatraInstrumentation.class.getName() + "$Listener"
+      packageName + ".FinatraTracer", FinatraInstrumentationModule.class.getName() + "$Listener"
     };
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RouteInstrumentation());
   }
 
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return nameStartsWith("com.twitter.finatra.")
-        .<TypeDescription>and(
-            extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
-  }
+  private static final class RouteInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");
+    }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("handleMatch"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
-        FinatraInstrumentation.class.getName() + "$RouteAdvice");
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return nameStartsWith("com.twitter.finatra.")
+          .<TypeDescription>and(
+              extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("handleMatch"))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
+          FinatraInstrumentationModule.class.getName() + "$RouteAdvice");
+    }
   }
 
   public static class RouteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") Class clazz) {
+        @Advice.FieldValue("clazz") Class<?> clazz) {
 
       Span serverSpan = BaseTracer.getCurrentServerSpan();
       if (serverSpan != null) {

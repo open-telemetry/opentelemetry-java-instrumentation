@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -25,19 +28,14 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 
-/** Beginning in version 5.3.0, DocumentRequest was renamed to DocWriteRequest. */
-@AutoService(Instrumenter.class)
-public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.Default {
-
-  public Elasticsearch53TransportClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-5");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    // If we want to be more generic, we could instrument the interface instead:
-    // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
-    return named("org.elasticsearch.client.support.AbstractClient");
+/**
+ * Most of this class is identical to version 5's instrumentation, but they changed an interface to
+ * an abstract class, so the bytecode isn't directly compatible.
+ */
+@AutoService(InstrumentationModule.class)
+public class Elasticsearch6TransportClientInstrumentationModule extends InstrumentationModule {
+  public Elasticsearch6TransportClientInstrumentationModule() {
+    super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-6");
   }
 
   @Override
@@ -54,18 +52,32 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("execute"))
-            .and(takesArgument(0, named("org.elasticsearch.action.Action")))
-            .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
-            .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
-        Elasticsearch53TransportClientInstrumentation.class.getName()
-            + "$ElasticsearchTransportClientAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new AbstractClientInstrumentation());
   }
 
-  public static class ElasticsearchTransportClientAdvice {
+  private static final class AbstractClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      // If we want to be more generic, we could instrument the interface instead:
+      // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
+      return named("org.elasticsearch.client.support.AbstractClient");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("execute"))
+              .and(takesArgument(0, named("org.elasticsearch.action.Action")))
+              .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
+              .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
+          Elasticsearch6TransportClientInstrumentationModule.class.getName()
+              + "$Elasticsearch6TransportClientAdvice");
+    }
+  }
+
+  public static class Elasticsearch6TransportClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -78,7 +90,6 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
 
       span = tracer().startSpan(null, action);
       scope = tracer().startScope(span);
-
       tracer().onRequest(span, action.getClass(), actionRequest.getClass());
       actionListener = new TransportActionListener<>(actionRequest, actionListener, span);
     }

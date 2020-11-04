@@ -50,15 +50,6 @@ public final class MuzzleGradlePluginUtil {
       throws Exception {
     // muzzle validate all instrumenters
     for (Object instrumenter : loadAllInstrumenters(agentClassLoader)) {
-      if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
-        // TraceConfigInstrumentation doesn't do muzzle checks
-        // check on TracerClassInstrumentation instead
-        instrumenter =
-            agentClassLoader
-                .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
-                .getDeclaredConstructor()
-                .newInstance();
-      }
       if (!(instrumenter instanceof Instrumenter.Default
           || instrumenter instanceof InstrumentationModule)) {
         // only default Instrumenters and modules use muzzle. Skip custom instrumenters.
@@ -107,15 +98,6 @@ public final class MuzzleGradlePluginUtil {
     // run helper injector on all instrumenters
     if (assertPass) {
       for (Object instrumenter : loadAllInstrumenters(agentClassLoader)) {
-        if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
-          // TraceConfigInstrumentation doesn't do muzzle checks
-          // check on TracerClassInstrumentation instead
-          instrumenter =
-              agentClassLoader
-                  .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
-                  .getDeclaredConstructor()
-                  .newInstance();
-        }
         if (!(instrumenter instanceof Instrumenter.Default
             || instrumenter instanceof InstrumentationModule)) {
           // only default Instrumenters and modules use muzzle. Skip custom instrumenters.
