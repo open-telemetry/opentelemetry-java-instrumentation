@@ -30,8 +30,8 @@ dependencies {
 }
 
 jib {
-  container.creationTime = 'USE_CURRENT_TIMESTAMP'
   from.image = "gcr.io/distroless/java-debian10:11"
   to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend"
   to.tags = [new Date().format("yyyyMMdd.HHmmSS")]
+  container.creationTime = 'USE_CURRENT_TIMESTAMP'
 }
