@@ -15,6 +15,12 @@ muzzle {
 dependencies {
   library group: 'org.apache.camel', name: 'camel-core', version: '2.20.1'
 
+  testLibrary group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.20.1'
+  testLibrary group: 'org.apache.camel', name: 'camel-jetty-starter', version: '2.20.1'
+  testLibrary group: 'org.apache.camel', name: 'camel-http-starter', version: '2.20.1'
+  testLibrary group: 'org.apache.camel', name: 'camel-jaxb-starter', version: '2.20.1'
+  testLibrary group: 'org.apache.camel', name: 'camel-undertow', version: '2.20.1'
+
   testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-2.0')
   testImplementation project(':instrumentation:servlet:servlet-3.0')
 
@@ -23,13 +29,12 @@ dependencies {
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '1.5.17.RELEASE'
 
-  testImplementation group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.20.1'
-  testImplementation group: 'org.apache.camel', name: 'camel-jetty-starter', version: '2.20.1'
-  testImplementation group: 'org.apache.camel', name: 'camel-http-starter', version: '2.20.1'
-  testImplementation group: 'org.apache.camel', name: 'camel-jaxb-starter', version: '2.20.1'
-  testImplementation group: 'org.apache.camel', name: 'camel-undertow', version: '2.20.1'
-
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
 
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-core', version: '2.+'
+  latestDepTestLibrary group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.+'
+  latestDepTestLibrary group: 'org.apache.camel', name: 'camel-jetty-starter', version: '2.+'
+  latestDepTestLibrary group: 'org.apache.camel', name: 'camel-http-starter', version: '2.+'
+  latestDepTestLibrary group: 'org.apache.camel', name: 'camel-jaxb-starter', version: '2.+'
+  latestDepTestLibrary group: 'org.apache.camel', name: 'camel-undertow', version: '2.+'
 }
