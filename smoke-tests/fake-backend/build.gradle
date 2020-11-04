@@ -30,10 +30,7 @@ dependencies {
 }
 
 jib {
-  to {
-    image = "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend"
-  }
-  from {
-    image = "gcr.io/distroless/java-debian10:11"
-  }
+  from.image = "gcr.io/distroless/java-debian10:11"
+  to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend"
+  to.tags = [new Date().format("yyyyMMdd.HHmmSS")]
 }
