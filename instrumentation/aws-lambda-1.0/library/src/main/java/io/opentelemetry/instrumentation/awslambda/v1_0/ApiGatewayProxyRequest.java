@@ -5,32 +5,28 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
+import static io.opentelemetry.instrumentation.awslambda.v1_0.HeadersFactory.ofStream;
+
 import com.amazonaws.serverless.proxy.model.Headers;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.opentelemetry.api.OpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 abstract class ApiGatewayProxyRequest {
 
-  private static final Logger log = LoggerFactory.getLogger(ApiGatewayProxyRequest.class);
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  static {
-    OBJECT_MAPPER.registerModule(new AfterburnerModule());
+  private static boolean noHttpPropagationNeeded() {
+    List<String> fields = OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
+    return (fields.isEmpty() || xRayPropagationFieldsOnly(fields));
   }
 
-  private static boolean noHttpPropagationNeeded() {
-    return OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields().isEmpty();
+  private static boolean xRayPropagationFieldsOnly(List<String> fields) {
+    // ugly but faster than typical convert-to-set-and-check-contains-only
+    return (fields.size() == 1)
+        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equals(fields.get(0)));
   }
 
   static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
@@ -47,22 +43,8 @@ abstract class ApiGatewayProxyRequest {
   }
 
   @Nullable
-  Headers getHeaders() {
-    try (JsonParser jParser = new JsonFactory().createParser(freshStream())) {
-
-      Headers headers = null;
-      while (jParser.nextToken() != null && headers == null) {
-        String name = jParser.getCurrentName();
-        if ("multiValueHeaders".equalsIgnoreCase(name)) {
-          jParser.nextToken();
-          return OBJECT_MAPPER.readValue(jParser, Headers.class);
-        }
-      }
-
-    } catch (Exception e) {
-      log.debug("Could not get headers from request, ", e);
-    }
-    return null;
+  Headers getHeaders() throws IOException {
+    return ofStream(freshStream());
   }
 
   abstract InputStream freshStream() throws IOException;
