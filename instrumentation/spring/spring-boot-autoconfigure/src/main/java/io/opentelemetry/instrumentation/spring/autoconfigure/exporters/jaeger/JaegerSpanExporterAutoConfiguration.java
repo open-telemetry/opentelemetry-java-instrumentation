@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
 import io.grpc.ManagedChannel;
-import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

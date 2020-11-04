@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.exporters.otlp;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
+import io.opentelemetry.exporter.otlp.OtlpGrpcMetricExporter;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Arrays;
