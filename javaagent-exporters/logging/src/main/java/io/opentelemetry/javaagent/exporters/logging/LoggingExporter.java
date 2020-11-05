@@ -42,7 +42,7 @@ public class LoggingExporter implements SpanExporter {
           .forEach(
               new AttributeConsumer() {
                 @Override
-                public <T> void consume(AttributeKey<T> key, T value) {
+                public <T> void accept(AttributeKey<T> key, T value) {
 
                   stringBuilder.append(key.getKey()).append('=');
 

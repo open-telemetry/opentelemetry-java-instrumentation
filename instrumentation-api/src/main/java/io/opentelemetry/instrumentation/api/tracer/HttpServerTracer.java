@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.tracer;
 import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
-import io.opentelemetry.api.trace.EndSpanOptions;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
@@ -289,7 +288,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static void endSpan(Span span, long timestamp) {
     if (timestamp >= 0) {
-      span.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
+      span.end(timestamp);
     } else {
       span.end();
     }

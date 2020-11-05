@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 import application.io.opentelemetry.api.common.AttributeConsumer;
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.trace.EndSpanOptions;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
@@ -94,7 +93,7 @@ public class Bridging {
     applicationAttributes.forEach(
         new AttributeConsumer() {
           @Override
-          public <T> void consume(AttributeKey<T> key, T value) {
+          public <T> void accept(AttributeKey<T> key, T value) {
             io.opentelemetry.api.common.AttributeKey<T> agentKey = toAgent(key);
             if (agentKey != null) {
               agentAttributes.put(agentKey, value);
@@ -160,27 +159,16 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.api.trace.EndSpanOptions toAgent(
-      EndSpanOptions applicationEndSpanOptions) {
-    return io.opentelemetry.api.trace.EndSpanOptions.builder()
-        .setEndTimestamp(applicationEndSpanOptions.getEndTimestamp())
-        .build();
-  }
-
   private static TraceState toApplication(io.opentelemetry.api.trace.TraceState agentTraceState) {
     TraceState.Builder applicationTraceState = TraceState.builder();
-    for (io.opentelemetry.api.trace.TraceState.Entry entry : agentTraceState.getEntries()) {
-      applicationTraceState.set(entry.getKey(), entry.getValue());
-    }
+    agentTraceState.forEach(applicationTraceState::set);
     return applicationTraceState.build();
   }
 
   private static io.opentelemetry.api.trace.TraceState toAgent(TraceState applicationTraceState) {
     io.opentelemetry.api.trace.TraceState.Builder agentTraceState =
         io.opentelemetry.api.trace.TraceState.builder();
-    for (TraceState.Entry entry : applicationTraceState.getEntries()) {
-      agentTraceState.set(entry.getKey(), entry.getValue());
-    }
+    applicationTraceState.forEach(agentTraceState::set);
     return agentTraceState.build();
   }
 

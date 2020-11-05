@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
+import application.io.opentelemetry.extension.auto.annotations.WithSpan;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Map;
@@ -34,7 +34,7 @@ public final class WithSpanAnnotationInstrumentation
   public WithSpanAnnotationInstrumentation() {
     super("trace", "with-span-annotation");
     annotatedMethodMatcher =
-        isAnnotatedWith(named("application.io.opentelemetry.extensions.auto.annotations.WithSpan"));
+        isAnnotatedWith(named("application.io.opentelemetry.extension.auto.annotations.WithSpan"));
     excludedMethodsMatcher = configureExcludedMethods();
   }
 

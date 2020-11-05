@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.EndSpanOptions;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -115,7 +114,7 @@ public abstract class BaseTracer {
 
   public void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
-      span.end(EndSpanOptions.builder().setEndTimestamp(endTimeNanos).build());
+      span.end(endTimeNanos);
     } else {
       span.end();
     }

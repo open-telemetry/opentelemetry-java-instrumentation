@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations.TraceAnnotationTracer.tracer;
 
-import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
+import application.io.opentelemetry.extension.auto.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;

@@ -177,7 +177,7 @@ class SpanAssert {
     def map = new HashMap()
     attributes.forEach(new AttributeConsumer() {
       @Override
-      <T> void consume(AttributeKey<T> key, T value) {
+      <T> void accept(AttributeKey<T> key, T value) {
         map.put(key.key, value)
       }
     })
