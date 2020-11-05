@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.github.oshi"
+    module = "oshi-core"
+    versions = "[5.3.1,)"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:oshi:library')
+  implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics'
+
+  library group: 'com.github.oshi', name: 'oshi-core', version: '5.3.1'
+}
