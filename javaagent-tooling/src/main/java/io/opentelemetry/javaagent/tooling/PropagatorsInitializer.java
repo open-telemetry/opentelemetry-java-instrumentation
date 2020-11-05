@@ -62,7 +62,13 @@ public class PropagatorsInitializer {
 
     List<TextMapPropagator> textPropagators = new ArrayList<>(propagators.size());
     for (String propagatorId : propagators) {
-      TextMapPropagator textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
+      String propagatorIdLowerCase = propagatorId.trim().toLowerCase();
+      if (BAGGAGE.equals(propagatorIdLowerCase)) {
+        propagatorsBuilder.addTextMapPropagator(W3CBaggagePropagator.getInstance());
+        log.info("Added " + W3CBaggagePropagator.getInstance() + " propagator");
+        continue;
+      }
+      TextMapPropagator textPropagator = TEXTMAP_PROPAGATORS.get(propagatorIdLowerCase);
       if (textPropagator != null) {
         textPropagators.add(textPropagator);
         log.info("Added " + textPropagator + " propagator");
