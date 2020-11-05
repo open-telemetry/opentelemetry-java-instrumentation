@@ -28,7 +28,8 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=${{ github.sha }}
-          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=${{ github.sha }}
-          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=${{ github.sha }}
+          TAG=$(date '+%Y%m%d.%H%M%S')
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
         working-directory: smoke-tests/grpc
