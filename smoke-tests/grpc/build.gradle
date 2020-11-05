@@ -37,8 +37,10 @@ compileJava {
 
 def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 
+def tag = findProperty("tag") ?: new Date().format("yyyyMMdd.HHmmSS")
+
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
   to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-grpc-jdk$targetJDK"
-  to.tags = [new Date().format("yyyyMMdd.HHmmSS")]
+  to.tags = [tag]
 }
