@@ -41,7 +41,10 @@ import org.slf4j.LoggerFactory;
  *
  * <p>It is strongly recommended to extend {@link Default} rather than implement this interface
  * directly.
+ *
+ * @deprecated Use {@link InstrumentationModule} and {@link TypeInstrumentation} instead.
  */
+@Deprecated
 public interface Instrumenter {
   /**
    * Add this instrumentation to an AgentBuilder.
@@ -59,6 +62,8 @@ public interface Instrumenter {
    */
   int getOrder();
 
+  /** @deprecated Use {@link InstrumentationModule} and {@link TypeInstrumentation} instead. */
+  @Deprecated
   abstract class Default implements Instrumenter {
 
     private static final Logger log = LoggerFactory.getLogger(Default.class);
@@ -86,7 +91,7 @@ public interface Instrumenter {
       enabled = Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
       Map<String, String> contextStore = contextStore();
       if (!contextStore.isEmpty()) {
-        contextProvider = new FieldBackedProvider(this, contextStore);
+        contextProvider = new FieldBackedProvider(getClass(), contextStore);
       } else {
         contextProvider = NoopContextProvider.INSTANCE;
       }

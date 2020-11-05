@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
@@ -15,7 +16,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.matcher.ElementMatcher;
 
 /** Entry point for the muzzle gradle plugin. */
 public final class MuzzleGradlePluginUtil {
@@ -44,30 +49,34 @@ public final class MuzzleGradlePluginUtil {
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
     // muzzle validate all instrumenters
-    for (Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class, agentClassLoader)) {
+    for (Object instrumenter : loadAllInstrumenters(agentClassLoader)) {
       if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
         // TraceConfigInstrumentation doesn't do muzzle checks
         // check on TracerClassInstrumentation instead
         instrumenter =
-            (Instrumenter)
-                agentClassLoader
-                    .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
-                    .getDeclaredConstructor()
-                    .newInstance();
+            agentClassLoader
+                .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
+                .getDeclaredConstructor()
+                .newInstance();
       }
-      if (!(instrumenter instanceof Instrumenter.Default)) {
-        // only default Instrumenters use muzzle. Skip custom instrumenters.
+      if (!(instrumenter instanceof Instrumenter.Default
+          || instrumenter instanceof InstrumentationModule)) {
+        // only default Instrumenters and modules use muzzle. Skip custom instrumenters.
         continue;
       }
-      Method m = null;
+      Method getMuzzleReferenceMatcher = null;
       try {
-        m = instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
-        m.setAccessible(true);
-        ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
+        getMuzzleReferenceMatcher =
+            instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
+        getMuzzleReferenceMatcher.setAccessible(true);
+        ReferenceMatcher muzzle = (ReferenceMatcher) getMuzzleReferenceMatcher.invoke(instrumenter);
         List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
+        Method getClassLoaderMatcher = instrumenter.getClass().getMethod("classLoaderMatcher");
+        getClassLoaderMatcher.setAccessible(true);
         boolean classLoaderMatch =
-            ((Instrumenter.Default) instrumenter).classLoaderMatcher().matches(userClassLoader);
+            ((ElementMatcher<ClassLoader>) getClassLoaderMatcher.invoke(instrumenter))
+                .matches(userClassLoader);
         boolean passed = mismatches.isEmpty() && classLoaderMatch;
 
         if (passed && !assertPass) {
@@ -90,36 +99,37 @@ public final class MuzzleGradlePluginUtil {
           throw new RuntimeException("Instrumentation failed Muzzle validation");
         }
       } finally {
-        if (null != m) {
-          m.setAccessible(false);
+        if (null != getMuzzleReferenceMatcher) {
+          getMuzzleReferenceMatcher.setAccessible(false);
         }
       }
     }
     // run helper injector on all instrumenters
     if (assertPass) {
-      for (Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class, agentClassLoader)) {
+      for (Object instrumenter : loadAllInstrumenters(agentClassLoader)) {
         if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
           // TraceConfigInstrumentation doesn't do muzzle checks
           // check on TracerClassInstrumentation instead
           instrumenter =
-              (Instrumenter)
-                  agentClassLoader
-                      .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
-                      .getDeclaredConstructor()
-                      .newInstance();
+              agentClassLoader
+                  .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
+                  .getDeclaredConstructor()
+                  .newInstance();
         }
-        if (!(instrumenter instanceof Instrumenter.Default)) {
-          // only default Instrumenters use muzzle. Skip custom instrumenters.
+        if (!(instrumenter instanceof Instrumenter.Default
+            || instrumenter instanceof InstrumentationModule)) {
+          // only default Instrumenters and modules use muzzle. Skip custom instrumenters.
           continue;
         }
-        Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
         try {
           // verify helper injector works
-          String[] helperClassNames = defaultInstrumenter.helperClassNames();
+          Method getHelperClassNames = instrumenter.getClass().getMethod("helperClassNames");
+          getHelperClassNames.setAccessible(true);
+          String[] helperClassNames = (String[]) getHelperClassNames.invoke(instrumenter);
           if (helperClassNames.length > 0) {
             new HelperInjector(
                     MuzzleGradlePluginUtil.class.getSimpleName(),
-                    createHelperMap(defaultInstrumenter))
+                    createHelperMap(helperClassNames, agentClassLoader))
                 .transform(null, null, userClassLoader, null);
           }
         } catch (Exception e) {
@@ -131,12 +141,11 @@ public final class MuzzleGradlePluginUtil {
     }
   }
 
-  private static Map<String, byte[]> createHelperMap(Instrumenter.Default instrumenter)
-      throws IOException {
-    Map<String, byte[]> helperMap = new LinkedHashMap<>(instrumenter.helperClassNames().length);
-    for (String helperName : instrumenter.helperClassNames()) {
-      ClassFileLocator locator =
-          ClassFileLocator.ForClassLoader.of(instrumenter.getClass().getClassLoader());
+  private static Map<String, byte[]> createHelperMap(
+      String[] helperClassNames, ClassLoader agentClassLoader) throws IOException {
+    Map<String, byte[]> helperMap = new LinkedHashMap<>(helperClassNames.length);
+    for (String helperName : helperClassNames) {
+      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(agentClassLoader);
       byte[] classBytes = locator.locate(helperName).resolve();
       helperMap.put(helperName, classBytes);
     }
@@ -150,9 +159,9 @@ public final class MuzzleGradlePluginUtil {
    * <p>Called by the {@code printMuzzleReferences} gradle task.
    */
   public static void printMuzzleReferences(ClassLoader instrumentationClassLoader) {
-    for (Instrumenter instrumenter :
-        ServiceLoader.load(Instrumenter.class, instrumentationClassLoader)) {
-      if (instrumenter instanceof Instrumenter.Default) {
+    for (Object instrumenter : loadAllInstrumenters(instrumentationClassLoader)) {
+      if (instrumenter instanceof Instrumenter.Default
+          || instrumenter instanceof InstrumentationModule) {
         try {
           Method getMuzzleMethod =
               instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
@@ -179,6 +188,18 @@ public final class MuzzleGradlePluginUtil {
                 + " is not a default instrumenter. No refs to print.");
       }
     }
+  }
+
+  private static List<Object> loadAllInstrumenters(ClassLoader instrumentationClassLoader) {
+    return Stream.concat(
+            StreamSupport.stream(
+                ServiceLoader.load(Instrumenter.class, instrumentationClassLoader).spliterator(),
+                false),
+            StreamSupport.stream(
+                ServiceLoader.load(InstrumentationModule.class, instrumentationClassLoader)
+                    .spliterator(),
+                false))
+        .collect(Collectors.toList());
   }
 
   private static String prettyPrint(String prefix, Reference ref) {

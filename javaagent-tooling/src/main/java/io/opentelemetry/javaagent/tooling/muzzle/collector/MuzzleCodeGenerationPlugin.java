@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
 import java.util.Collections;
 import java.util.WeakHashMap;
 import net.bytebuddy.build.Plugin;
@@ -18,7 +18,7 @@ import net.bytebuddy.dynamic.DynamicType;
 
 /**
  * This class is a ByteBuddy build plugin that is responsible for generating actual implementation
- * of the {@link Default#getMuzzleReferenceMatcher()} method.
+ * of the {@link InstrumentationModule#getMuzzleReferenceMatcher()} method.
  *
  * <p>This class is used in the gradle build scripts, referenced by each instrumentation module.
  */
@@ -34,8 +34,10 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
         });
   }
 
-  private static final TypeDescription DefaultInstrumenterTypeDesc =
+  private static final TypeDescription defaultInstrumenterType =
       new TypeDescription.ForLoadedType(Instrumenter.Default.class);
+  private static final TypeDescription instrumentationModuleType =
+      new TypeDescription.ForLoadedType(InstrumentationModule.class);
 
   @Override
   public boolean matches(TypeDescription target) {
@@ -46,7 +48,8 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
     boolean isInstrumenter = false;
     TypeDefinition instrumenter = target.getSuperClass();
     while (instrumenter != null) {
-      if (instrumenter.equals(DefaultInstrumenterTypeDesc)) {
+      if (instrumenter.equals(defaultInstrumenterType)
+          || instrumenter.equals(instrumentationModuleType)) {
         isInstrumenter = true;
         break;
       }

@@ -13,11 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,23 +28,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-@AutoService(Instrumenter.class)
-public final class DispatcherServletInstrumentation extends Instrumenter.Default {
-
-  public DispatcherServletInstrumentation() {
-    super("spring-web");
-  }
+final class DispatcherServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.web.servlet.DispatcherServlet");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebMvcTracer", packageName + ".HandlerMappingResourceNameFilter"
-    };
   }
 
   @Override

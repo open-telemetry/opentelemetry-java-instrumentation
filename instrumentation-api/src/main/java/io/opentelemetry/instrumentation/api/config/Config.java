@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -137,7 +136,7 @@ public abstract class Config {
   }
 
   public boolean isInstrumentationEnabled(
-      SortedSet<String> instrumentationNames, boolean defaultEnabled) {
+      Iterable<String> instrumentationNames, boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
