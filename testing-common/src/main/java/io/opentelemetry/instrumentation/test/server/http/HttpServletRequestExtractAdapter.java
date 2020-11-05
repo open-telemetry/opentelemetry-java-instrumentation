@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.test.server.http;
 
-import java.util.Collections;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
 /**
