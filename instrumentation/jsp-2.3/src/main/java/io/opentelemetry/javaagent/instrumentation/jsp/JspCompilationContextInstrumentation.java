@@ -11,11 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -23,12 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.jasper.JspCompilationContext;
 
-@AutoService(Instrumenter.class)
-public final class JasperJSPCompilationContextInstrumentation extends Instrumenter.Default {
-
-  public JasperJSPCompilationContextInstrumentation() {
-    super("jsp", "jsp-compile");
-  }
+final class JspCompilationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,18 +30,10 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JSPTracer",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("compile").and(takesArguments(0)).and(isPublic()),
-        JasperJSPCompilationContextInstrumentation.class.getName()
-            + "$JasperJspCompilationContext");
+        JspCompilationContextInstrumentation.class.getName() + "$JasperJspCompilationContext");
   }
 
   public static class JasperJspCompilationContext {

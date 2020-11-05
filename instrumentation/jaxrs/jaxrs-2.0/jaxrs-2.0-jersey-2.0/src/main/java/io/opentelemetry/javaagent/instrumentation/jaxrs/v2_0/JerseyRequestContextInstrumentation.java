@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
@@ -27,8 +25,12 @@ import net.bytebuddy.asm.Advice.Local;
  * <p>In the Jersey implementation, <code>UriInfo</code> implements <code>ResourceInfo</code>. The
  * matched resource method can be retrieved from that object
  */
-@AutoService(Instrumenter.class)
-public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+final class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+  @Override
+  protected String abortAdviceName() {
+    return ContainerRequestContextAdvice.class.getName();
+  }
+
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
@@ -44,7 +46,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         Method method = resourceInfo.getResourceMethod();
         Class<?> resourceClass = resourceInfo.getResourceClass();
 
-        span = RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
+        span = RequestContextHelper.createOrUpdateAbortSpan(context, resourceClass, method);
         if (span != null) {
           scope = tracer().startScope(span);
         }
@@ -56,7 +58,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         @Local("otelSpan") Span span,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      RequestFilterHelper.closeSpanAndScope(span, scope, throwable);
+      RequestContextHelper.closeSpanAndScope(span, scope, throwable);
     }
   }
 }

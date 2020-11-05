@@ -13,8 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
@@ -23,12 +22,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class DriverInstrumentation extends Instrumenter.Default {
-
-  public DriverInstrumentation() {
-    super("jdbc");
-  }
+final class DriverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -38,34 +32,6 @@ public final class DriverInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("java.sql.Driver"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".DBInfo",
-      packageName + ".DBInfo$Builder",
-      packageName + ".JDBCConnectionUrlParser",
-      packageName + ".JDBCConnectionUrlParser$1",
-      packageName + ".JDBCConnectionUrlParser$2",
-      packageName + ".JDBCConnectionUrlParser$3",
-      packageName + ".JDBCConnectionUrlParser$4",
-      packageName + ".JDBCConnectionUrlParser$5",
-      packageName + ".JDBCConnectionUrlParser$6",
-      packageName + ".JDBCConnectionUrlParser$7",
-      packageName + ".JDBCConnectionUrlParser$8",
-      packageName + ".JDBCConnectionUrlParser$9",
-      packageName + ".JDBCConnectionUrlParser$10",
-      packageName + ".JDBCConnectionUrlParser$11",
-      packageName + ".JDBCConnectionUrlParser$12",
-      packageName + ".JDBCConnectionUrlParser$13",
-      packageName + ".JDBCConnectionUrlParser$14",
-      packageName + ".JDBCConnectionUrlParser$15",
-      packageName + ".JDBCConnectionUrlParser$16",
-      packageName + ".JDBCConnectionUrlParser$17",
-      packageName + ".JDBCMaps",
-      packageName + ".JDBCUtils",
-    };
   }
 
   @Override

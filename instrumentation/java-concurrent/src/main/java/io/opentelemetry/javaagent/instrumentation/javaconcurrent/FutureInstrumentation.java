@@ -10,11 +10,10 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,9 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AutoService(Instrumenter.class)
-public final class FutureInstrumentation extends Instrumenter.Default {
-
+final class FutureInstrumentation implements TypeInstrumentation {
   private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
@@ -76,10 +73,6 @@ public final class FutureInstrumentation extends Instrumenter.Default {
     ALLOWED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(allowed)));
   }
 
-  public FutureInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
-  }
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
@@ -94,11 +87,6 @@ public final class FutureInstrumentation extends Instrumenter.Default {
         return allowed;
       }
     }.and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(Future.class.getName(), State.class.getName());
   }
 
   @Override
