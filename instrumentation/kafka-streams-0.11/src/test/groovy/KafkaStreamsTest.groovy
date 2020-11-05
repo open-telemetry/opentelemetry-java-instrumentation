@@ -208,6 +208,11 @@ class KafkaStreamsTest extends AgentTestRunner {
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
     Context context = new HttpTraceContext().extract(Context.root(), "", new TextMapPropagator.Getter<String>() {
       @Override
+      Iterable<String> keys(String carrier) {
+        return Collections.singleton("traceparent")
+      }
+
+      @Override
       String get(String carrier, String key) {
         if (key == "traceparent") {
           return traceparent
