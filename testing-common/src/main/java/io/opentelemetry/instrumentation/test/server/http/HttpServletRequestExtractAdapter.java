@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.server.http;
 
+import java.util.Collections;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,6 +20,11 @@ public class HttpServletRequestExtractAdapter
 
   public static final HttpServletRequestExtractAdapter GETTER =
       new HttpServletRequestExtractAdapter();
+
+  @Override
+  public Iterable<String> keys(HttpServletRequest carrier) {
+    return Collections.list(carrier.getHeaderNames());
+  }
 
   @Override
   public String get(HttpServletRequest carrier, String key) {

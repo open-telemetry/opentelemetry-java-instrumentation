@@ -13,6 +13,11 @@ public class NettyRequestExtractAdapter implements TextMapPropagator.Getter<Http
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 
   @Override
+  public Iterable<String> keys(HttpRequest request) {
+    return request.headers().names();
+  }
+
+  @Override
   public String get(HttpRequest request, String key) {
     return request.headers().get(key);
   }

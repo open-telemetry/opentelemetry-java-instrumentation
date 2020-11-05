@@ -13,6 +13,11 @@ final class GrpcExtractAdapter implements TextMapPropagator.Getter<Metadata> {
   static final GrpcExtractAdapter GETTER = new GrpcExtractAdapter();
 
   @Override
+  public Iterable<String> keys(Metadata metadata) {
+    return metadata.keys();
+  }
+
+  @Override
   public String get(Metadata carrier, String key) {
     return carrier.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
   }

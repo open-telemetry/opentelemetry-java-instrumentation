@@ -32,6 +32,11 @@ final class CamelPropagationUtil {
     private static final MapGetter INSTANCE = new MapGetter();
 
     @Override
+    public Iterable<String> keys(Map<String, Object> map) {
+      return map.keySet();
+    }
+
+    @Override
     public String get(Map<String, Object> map, String s) {
       return (map.containsKey(s) ? map.get(s).toString() : null);
     }

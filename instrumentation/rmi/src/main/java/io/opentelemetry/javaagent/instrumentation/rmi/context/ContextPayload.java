@@ -71,6 +71,11 @@ public class ContextPayload {
 
   public static class ExtractAdapter implements TextMapPropagator.Getter<ContextPayload> {
     @Override
+    public Iterable<String> keys(ContextPayload contextPayload) {
+      return contextPayload.getSpanContext().keySet();
+    }
+
+    @Override
     public String get(ContextPayload carrier, String key) {
       return carrier.getSpanContext().get(key);
     }
