@@ -10,33 +10,17 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
-
-  public LettuceAsyncCommandsInstrumentation() {
-    super("lettuce", "lettuce-4", "lettuce-4-async");
-  }
+final class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.lambdaworks.redis.AbstractRedisAsyncCommands");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".LettuceAbstractDatabaseClientTracer",
-      packageName + ".LettuceConnectionDatabaseClientTracer",
-      packageName + ".LettuceDatabaseClientTracer",
-      packageName + ".InstrumentationPoints"
-    };
   }
 
   @Override
@@ -45,7 +29,6 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("dispatch"))
             .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".LettuceAsyncCommandsAdvice");
+        LettuceAsyncCommandsAdvice.class.getName());
   }
 }

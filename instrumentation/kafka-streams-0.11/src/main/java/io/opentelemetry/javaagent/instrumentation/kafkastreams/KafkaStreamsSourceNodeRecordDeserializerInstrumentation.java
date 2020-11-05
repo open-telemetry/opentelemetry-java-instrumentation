@@ -12,8 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -23,12 +22,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
-@AutoService(Instrumenter.class)
-public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Instrumenter.Default {
-
-  public KafkaStreamsSourceNodeRecordDeserializerInstrumentation() {
-    super("kafka", "kafka-streams");
-  }
+final class KafkaStreamsSourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -51,8 +45,8 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void saveHeaders(
-        @Advice.Argument(0) ConsumerRecord incoming,
-        @Advice.Return(readOnly = false) ConsumerRecord result) {
+        @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
+        @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
       result =
           new ConsumerRecord<>(
               result.topic(),

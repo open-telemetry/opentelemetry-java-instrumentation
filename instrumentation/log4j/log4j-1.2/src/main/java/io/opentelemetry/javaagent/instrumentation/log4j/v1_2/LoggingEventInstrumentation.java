@@ -8,18 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.log4j.v1_2;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -30,20 +28,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
 
-@AutoService(Instrumenter.class)
-public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
-  public Log4j1LoggingEventInstrumentation() {
-    super("log4j1", "log4j");
-  }
-
+final class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("org.apache.log4j.spi.LoggingEvent");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("org.apache.log4j.spi.LoggingEvent", Span.class.getName());
   }
 
   @Override
@@ -56,11 +44,11 @@ public class Log4j1LoggingEventInstrumentation extends Instrumenter.Default {
             .and(named("getMDC"))
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        Log4j1LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
+        LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
 
     transformers.put(
         isMethod().and(isPublic()).and(named("getMDCCopy")).and(takesArguments(0)),
-        Log4j1LoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
+        LoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
 
     return transformers;
   }

@@ -12,11 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -24,20 +23,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
 
-@AutoService(Instrumenter.class)
-public class Log4j1Instrumentation extends Instrumenter.Default {
-  public Log4j1Instrumentation() {
-    super("log4j1", "log4j");
-  }
-
+final class CategoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("org.apache.log4j.Category");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("org.apache.log4j.spi.LoggingEvent", Span.class.getName());
   }
 
   @Override
@@ -48,7 +37,7 @@ public class Log4j1Instrumentation extends Instrumenter.Default {
             .and(named("callAppenders"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.log4j.spi.LoggingEvent"))),
-        Log4j1Instrumentation.class.getName() + "$CallAppendersAdvice");
+        CategoryInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
   public static class CallAppendersAdvice {

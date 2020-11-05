@@ -7,12 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.kubernetes.client.openapi.ApiClient;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -22,22 +24,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import okhttp3.Interceptor;
 
-@AutoService(Instrumenter.class)
-public class KubernetesClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class KubernetesClientInstrumentationModule extends InstrumentationModule {
 
-  public KubernetesClientInstrumentation() {
+  public KubernetesClientInstrumentationModule() {
     super("kubernetes-client");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("io.kubernetes.client.openapi.ApiClient");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("io.kubernetes.client.openapi.ApiClient"));
   }
 
   @Override
@@ -54,13 +45,31 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        ElementMatchers.isMethod()
-            .and(named("initHttpClient"))
-            .and(ElementMatchers.takesArguments(1))
-            .and(ElementMatchers.takesArgument(0, named("java.util.List"))),
-        KubernetesClientInstrumentation.class.getName() + "$KubernetesAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ApiClientInstrumentation());
+  }
+
+  private static final class ApiClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("io.kubernetes.client.openapi.ApiClient");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return extendsClass(named("io.kubernetes.client.openapi.ApiClient"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          ElementMatchers.isMethod()
+              .and(named("initHttpClient"))
+              .and(ElementMatchers.takesArguments(1))
+              .and(ElementMatchers.takesArgument(0, named("java.util.List"))),
+          KubernetesClientInstrumentationModule.class.getName() + "$KubernetesAdvice");
+    }
   }
 
   public static class KubernetesAdvice {
