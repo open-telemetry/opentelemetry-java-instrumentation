@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import application.io.opentelemetry.api.common.LabelConsumer;
 import io.opentelemetry.api.common.Labels;
 
 /**
@@ -18,21 +17,7 @@ public class LabelBridging {
 
   public static Labels toAgent(application.io.opentelemetry.api.common.Labels applicationLabels) {
     Labels.Builder builder = Labels.builder();
-    applicationLabels.forEach(new Consumer(builder));
+    applicationLabels.forEach(builder::put);
     return builder.build();
-  }
-
-  static class Consumer implements LabelConsumer {
-
-    private final Labels.Builder builder;
-
-    public Consumer(Labels.Builder builder) {
-      this.builder = builder;
-    }
-
-    @Override
-    public void consume(String key, String value) {
-      builder.put(key, value);
-    }
   }
 }

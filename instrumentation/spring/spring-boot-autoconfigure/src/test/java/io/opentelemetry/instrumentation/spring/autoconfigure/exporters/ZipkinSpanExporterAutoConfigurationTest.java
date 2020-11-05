@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterProperties;

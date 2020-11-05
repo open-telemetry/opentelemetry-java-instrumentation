@@ -77,8 +77,7 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".trace.ApplicationSpan$Builder",
       packageName + ".trace.ApplicationTracer",
       packageName + ".trace.ApplicationTracerProvider",
-      packageName + ".LabelBridging",
-      packageName + ".LabelBridging$Consumer"
+      packageName + ".LabelBridging"
     };
   }
 }

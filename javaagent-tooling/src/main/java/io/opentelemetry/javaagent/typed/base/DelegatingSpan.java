@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.typed.base;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.EndSpanOptions;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -110,8 +109,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void end(EndSpanOptions endOptions) {
-    delegate.end(endOptions);
+  public void end(long timestamp) {
+    delegate.end(timestamp);
   }
 
   @Override

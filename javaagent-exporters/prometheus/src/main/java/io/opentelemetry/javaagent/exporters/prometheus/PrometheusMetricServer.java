@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.exporters.prometheus;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.exporters.prometheus.PrometheusCollector;
+import io.opentelemetry.exporter.prometheus.PrometheusCollector;
 import io.opentelemetry.javaagent.spi.exporter.MetricServer;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.prometheus.client.exporter.HTTPServer;

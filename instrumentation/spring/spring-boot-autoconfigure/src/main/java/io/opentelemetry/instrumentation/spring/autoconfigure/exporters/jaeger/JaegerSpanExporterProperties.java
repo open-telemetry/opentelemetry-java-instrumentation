@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
-import static io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter.DEFAULT_DEADLINE_MS;
-import static io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter.DEFAULT_ENDPOINT;
-import static io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter.DEFAULT_SERVICE_NAME;
+import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_DEADLINE_MS;
+import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_ENDPOINT;
+import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_SERVICE_NAME;
 
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter}
+ * Configuration for {@link io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter}
  *
  * <p>Get Exporter Service Name
  *

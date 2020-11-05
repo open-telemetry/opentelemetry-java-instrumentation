@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.typed.base;
 
-import io.opentelemetry.api.trace.EndSpanOptions;
 import io.opentelemetry.api.trace.Span;
 
 public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingSpan {
@@ -29,8 +28,8 @@ public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingS
   /** The end(Throwable), or end(RESPONSE) methods should be used instead. */
   @Deprecated
   @Override
-  public void end(EndSpanOptions endOptions) {
-    super.end(endOptions);
+  public void end(long timestamp) {
+    super.end(timestamp);
   }
 
   protected abstract T self();
