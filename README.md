@@ -151,8 +151,8 @@ attributes to stdout. It's mainly used for testing and debugging.
 The propagator controls which distributed tracing header format is used.
 
 If set to a comma-separated list of the values, the multi-propagator is used. The multi-propagator attempts
-to extract the context from incoming requests using each of the configured propagator formats (in order), 
-stopping after the first successful context extraction. The multi-propagator injects the context into 
+to extract the context from incoming requests using each of the configured propagator formats (in order),
+stopping after the first successful context extraction. The multi-propagator injects the context into
 outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Description                                                                                                     |
@@ -391,7 +391,7 @@ and you want to suppress some of them without modifying the code.
 
 | System property                 | Environment variable            | Purpose                                                                                                                                  |
 |---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods. 
+| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
 Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 
