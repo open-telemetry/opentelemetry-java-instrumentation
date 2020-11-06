@@ -30,9 +30,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 final class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
-  // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.ws.rs.Path");
   }
 
