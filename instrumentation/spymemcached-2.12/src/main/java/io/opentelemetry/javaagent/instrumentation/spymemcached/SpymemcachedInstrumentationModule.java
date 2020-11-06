@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,8 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,18 +29,11 @@ import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 
-@AutoService(Instrumenter.class)
-public final class MemcachedClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
-  private static final String MEMCACHED_PACKAGE = "net.spy.memcached";
-
-  public MemcachedClientInstrumentation() {
+  public SpymemcachedInstrumentationModule() {
     super("spymemcached");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(MEMCACHED_PACKAGE + ".MemcachedClient");
   }
 
   @Override
@@ -53,28 +49,40 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        isMethod()
-            .and(isPublic())
-            .and(returns(named(MEMCACHED_PACKAGE + ".internal.OperationFuture")))
-            /*
-            Flush seems to have a bug when listeners may not be always called.
-            Also tracing flush is probably of a very limited value.
-            */
-            .and(not(named("flush"))),
-        MemcachedClientInstrumentation.class.getName() + "$AsyncOperationAdvice");
-    transformers.put(
-        isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.GetFuture"))),
-        MemcachedClientInstrumentation.class.getName() + "$AsyncGetAdvice");
-    transformers.put(
-        isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.BulkFuture"))),
-        MemcachedClientInstrumentation.class.getName() + "$AsyncBulkAdvice");
-    transformers.put(
-        isMethod().and(isPublic()).and(namedOneOf("incr", "decr")),
-        MemcachedClientInstrumentation.class.getName() + "$SyncOperationAdvice");
-    return transformers;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new MemcachedClientInstrumentation());
+  }
+
+  private static final class MemcachedClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("net.spy.memcached.MemcachedClient");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          isMethod()
+              .and(isPublic())
+              .and(returns(named("net.spy.memcached.internal.OperationFuture")))
+              /*
+              Flush seems to have a bug when listeners may not be always called.
+              Also tracing flush is probably of a very limited value.
+              */
+              .and(not(named("flush"))),
+          SpymemcachedInstrumentationModule.class.getName() + "$AsyncOperationAdvice");
+      transformers.put(
+          isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.GetFuture"))),
+          SpymemcachedInstrumentationModule.class.getName() + "$AsyncGetAdvice");
+      transformers.put(
+          isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
+          SpymemcachedInstrumentationModule.class.getName() + "$AsyncBulkAdvice");
+      transformers.put(
+          isMethod().and(isPublic()).and(namedOneOf("incr", "decr")),
+          SpymemcachedInstrumentationModule.class.getName() + "$SyncOperationAdvice");
+      return transformers;
+    }
   }
 
   public static class AsyncOperationAdvice {
@@ -89,7 +97,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter int callDepth,
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
-        @Advice.Return OperationFuture future) {
+        @Advice.Return OperationFuture<?> future) {
       if (callDepth > 0) {
         return;
       }
@@ -115,7 +123,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter int callDepth,
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
-        @Advice.Return GetFuture future) {
+        @Advice.Return GetFuture<?> future) {
       if (callDepth > 0) {
         return;
       }
@@ -141,7 +149,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter int callDepth,
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
-        @Advice.Return BulkFuture future) {
+        @Advice.Return BulkFuture<?> future) {
       if (callDepth > 0) {
         return;
       }

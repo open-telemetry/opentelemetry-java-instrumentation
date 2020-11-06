@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.sparkjava;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,11 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -24,41 +25,32 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import spark.routematch.RouteMatch;
 
-@AutoService(Instrumenter.class)
-public class RoutesInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class SparkInstrumentationModule extends InstrumentationModule {
 
-  public RoutesInstrumentation() {
+  public SparkInstrumentationModule() {
     super("sparkjava", "sparkjava-2.4");
   }
 
   @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("spark.route.Routes");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RoutesInstrumentation());
   }
 
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      RoutesInstrumentation.class.getName() + "$TracerHolder",
-    };
-  }
+  private static final class RoutesInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("spark.route.Routes");
+    }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        named("find")
-            .and(takesArgument(0, named("spark.route.HttpMethod")))
-            .and(returns(named("spark.routematch.RouteMatch")))
-            .and(isPublic()),
-        RoutesInstrumentation.class.getName() + "$RoutesAdvice");
-  }
-
-  public static class TracerHolder {
-    private static final Tracer TRACER =
-        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.sparkjava-2.3");
-
-    public static Tracer tracer() {
-      return TRACER;
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("find")
+              .and(takesArgument(0, named("spark.route.HttpMethod")))
+              .and(returns(named("spark.routematch.RouteMatch")))
+              .and(isPublic()),
+          SparkInstrumentationModule.class.getName() + "$RoutesAdvice");
     }
   }
 

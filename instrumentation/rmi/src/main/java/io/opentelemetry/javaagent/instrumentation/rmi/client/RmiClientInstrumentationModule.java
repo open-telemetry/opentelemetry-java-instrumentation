@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,24 +17,21 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class RmiClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class RmiClientInstrumentationModule extends InstrumentationModule {
 
-  public RmiClientInstrumentation() {
+  public RmiClientInstrumentationModule() {
     super("rmi", "rmi-client");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("sun.rmi.server.UnicastRef"));
   }
 
   @Override
@@ -42,13 +40,25 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("invoke"))
-            .and(takesArgument(0, named("java.rmi.Remote")))
-            .and(takesArgument(1, named("java.lang.reflect.Method"))),
-        getClass().getName() + "$RmiClientAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ClientInstrumentation());
+  }
+
+  private static final class ClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return extendsClass(named("sun.rmi.server.UnicastRef"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("invoke"))
+              .and(takesArgument(0, named("java.rmi.Remote")))
+              .and(takesArgument(1, named("java.lang.reflect.Method"))),
+          RmiClientInstrumentationModule.class.getName() + "$RmiClientAdvice");
+    }
   }
 
   public static class RmiClientAdvice {

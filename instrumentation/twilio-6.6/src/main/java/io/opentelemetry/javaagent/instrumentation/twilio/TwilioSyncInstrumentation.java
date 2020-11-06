@@ -17,24 +17,18 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.google.auto.service.AutoService;
 import com.twilio.Twilio;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/** Instrument the Twilio SDK to identify calls as a seperate service. */
-@AutoService(Instrumenter.class)
-public class TwilioSyncInstrumentation extends Instrumenter.Default {
-
-  public TwilioSyncInstrumentation() {
-    super("twilio-sdk");
-  }
+/** Instrument the Twilio SDK to identify calls as a separate service. */
+final class TwilioSyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -54,14 +48,6 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
             "com.twilio.base.Fetcher",
             "com.twilio.base.Reader",
             "com.twilio.base.Updater"));
-  }
-
-  /** Return the helper classes which will be available for use in instrumentation. */
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TwilioClientDecorator",
-    };
   }
 
   /** Return bytebuddy transformers for instrumenting the Twilio SDK. */

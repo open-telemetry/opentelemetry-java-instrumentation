@@ -8,15 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletRequest;
@@ -38,16 +35,10 @@ import net.bytebuddy.matcher.ElementMatcher;
  * ServletResponse, Throwable, Span, Scope)} can get it from context and set required span
  * attribute.
  */
-@AutoService(Instrumenter.class)
-public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.Default {
-  public Servlet2ResponseStatusInstrumentation() {
-    super("servlet", "servlet-2");
-  }
-
-  // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
+final class HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
+    return hasClassesNamed("javax.servlet.http.HttpServletResponse");
   }
 
   @Override
@@ -56,19 +47,14 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
   }
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         namedOneOf("sendError", "setStatus"),
-        Servlet2ResponseStatusInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");
+        HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");
     transformers.put(
         named("sendRedirect"),
-        Servlet2ResponseStatusInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
+        HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
     return transformers;
   }
 

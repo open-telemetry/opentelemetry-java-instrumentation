@@ -16,19 +16,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrumentation {
-
-  public RouterFunctionInstrumentation() {
-    super("spring-webflux-functional");
-  }
+final class RouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -56,7 +50,6 @@ public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrume
                 takesArgument(
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".RouterFunctionAdvice");
+        RouterFunctionAdvice.class.getName());
   }
 }
