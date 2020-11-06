@@ -76,7 +76,6 @@ public class TraceConfigInstrumentationModule extends InstrumentationModule {
     return typeInstrumentations;
   }
 
-  // Not Using AutoService to hook up this instrumentation
   private static final class TracerClassInstrumentation implements TypeInstrumentation {
     private final String className;
     private final Set<String> methodNames;
