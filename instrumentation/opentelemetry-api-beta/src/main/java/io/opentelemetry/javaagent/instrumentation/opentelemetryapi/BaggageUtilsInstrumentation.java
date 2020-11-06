@@ -12,9 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import application.io.opentelemetry.context.Context;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -25,8 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 // TODO: Actually bridge correlation context. We currently just stub out withBaggage
 // to have minimum functionality with SDK shim implementations.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/973
-@AutoService(Instrumenter.class)
-public class BaggageUtilsInstrumentation extends AbstractInstrumentation {
+final class BaggageUtilsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.baggage.BaggageUtils");

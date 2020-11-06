@@ -5,10 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import static java.util.Arrays.asList;
 
-public abstract class AbstractInstrumentation extends Instrumenter.Default {
-  public AbstractInstrumentation() {
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
+
+@AutoService(InstrumentationModule.class)
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
+  public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api");
   }
 
@@ -79,5 +85,15 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".trace.ApplicationTracerProvider",
       packageName + ".LabelBridging"
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new BaggageUtilsInstrumentation(),
+        new ContextInstrumentation(),
+        new ContextStorageInstrumentation(),
+        new OpenTelemetryInstrumentation(),
+        new SpanInstrumentation());
   }
 }

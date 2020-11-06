@@ -11,14 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -27,13 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.Channel;
 
-@AutoService(Instrumenter.class)
-public class NettyChannelInstrumentation extends Instrumenter.Default {
-  public NettyChannelInstrumentation() {
-    super(
-        NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
-        NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
-  }
+final class NettyChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -47,17 +39,6 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".server.NettyHttpServerTracer",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".AbstractNettyAdvice",
-      packageName + ".ChannelTraceContext",
-      packageName + ".ChannelTraceContext$Factory",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
@@ -66,12 +47,6 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
             .and(returns(named("org.jboss.netty.channel.ChannelFuture"))),
         NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
     return transformers;
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {

@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -32,7 +31,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTr
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -40,15 +39,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
-
-  static final String INSTRUMENTATION_NAME = "netty";
-  static final String[] ADDITIONAL_INSTRUMENTATION_NAMES = {"netty-4.1"};
-
-  public NettyChannelPipelineInstrumentation() {
-    super(INSTRUMENTATION_NAME, ADDITIONAL_INSTRUMENTATION_NAMES);
-  }
+final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -59,26 +50,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("io.netty.channel.ChannelPipeline"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AttributeKeys",
-      packageName + ".AttributeKeys$1",
-      // client helpers
-      packageName + ".client.NettyHttpClientTracer",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".client.HttpClientRequestTracingHandler",
-      packageName + ".client.HttpClientResponseTracingHandler",
-      packageName + ".client.HttpClientTracingHandler",
-      // server helpers
-      packageName + ".server.NettyHttpServerTracer",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".server.HttpServerRequestTracingHandler",
-      packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler"
-    };
   }
 
   @Override
