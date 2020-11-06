@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.DefaultContextPropagators
-import io.opentelemetry.extensions.trace.propagation.B3Propagator
+import io.opentelemetry.extension.trace.propagation.B3Propagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import java.nio.charset.Charset

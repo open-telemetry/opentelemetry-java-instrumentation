@@ -26,6 +26,11 @@ public class ParentContextExtractor {
     private static final HeadersGetter INSTANCE = new HeadersGetter();
 
     @Override
+    public Iterable<String> keys(Headers map) {
+      return map.keySet();
+    }
+
+    @Override
     public String get(Headers headers, String s) {
       return headers.getFirst(s);
     }
@@ -45,6 +50,11 @@ public class ParentContextExtractor {
   private static class MapGetter implements TextMapPropagator.Getter<Map<String, String>> {
 
     private static final MapGetter INSTANCE = new MapGetter();
+
+    @Override
+    public Iterable<String> keys(Map<String, String> map) {
+      return map.keySet();
+    }
 
     @Override
     public String get(Map<String, String> map, String s) {

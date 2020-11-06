@@ -15,8 +15,8 @@ import static org.mockito.Mockito.never;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
-import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator;
-import io.opentelemetry.extensions.trace.propagation.B3Propagator;
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
