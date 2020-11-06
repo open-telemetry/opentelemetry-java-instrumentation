@@ -119,7 +119,7 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currentl
 | otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
-A simple wrapper for the Zipkin exporter of opentelemetry-java. It posts JSON in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
+A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
 | System property                   | Environment variable              | Description                                                                                                               |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
