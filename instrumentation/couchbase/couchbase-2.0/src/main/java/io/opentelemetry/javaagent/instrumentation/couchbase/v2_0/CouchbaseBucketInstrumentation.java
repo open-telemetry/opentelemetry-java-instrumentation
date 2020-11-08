@@ -48,6 +48,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
+      packageName + ".CouchbaseQueryNormalizer"
     };
   }
 

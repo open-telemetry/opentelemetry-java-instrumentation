@@ -107,8 +107,14 @@ public final class ReferenceMatcher {
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
     try {
-      // helper classes get their own check: whether they implement all abstract methods
       if (isInstrumentationClass(reference.getClassName())) {
+        // make sure helper class is registered
+        if (!helperClassNames.contains(reference.getClassName())) {
+          return Collections.singletonList(
+              new Mismatch.MissingClass(
+                  reference.getSources().toArray(new Source[0]), reference.getClassName()));
+        }
+        // helper classes get their own check: whether they implement all abstract methods
         return checkHelperClassMatch(reference, typePool);
       } else if (helperClassNames.contains(reference.getClassName())) {
         // skip muzzle check for those helper classes that are not in instrumentation packages; e.g.
