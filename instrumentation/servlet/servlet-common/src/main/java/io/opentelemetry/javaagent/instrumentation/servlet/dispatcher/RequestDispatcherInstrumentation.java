@@ -22,7 +22,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -150,9 +149,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
       if (throwable != null) {
-        HttpServletResponseTracer.tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        HttpServletResponseTracer.tracer().end(span);
+        tracer().end(span);
       }
     }
   }
