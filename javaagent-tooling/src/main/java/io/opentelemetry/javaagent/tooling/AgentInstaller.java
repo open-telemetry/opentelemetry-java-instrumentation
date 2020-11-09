@@ -16,7 +16,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess.ForceFlusher;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -30,7 +29,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -65,7 +63,7 @@ public class AgentInstaller {
 
   public static void installBytebuddyAgent(Instrumentation inst) {
     if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
-      installBytebuddyAgent(inst, false, new AgentBuilder.Listener[0]);
+      installBytebuddyAgent(inst, false);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
     }
@@ -102,12 +100,7 @@ public class AgentInstaller {
     }
 
     OpenTelemetrySdkAccess.internalSetForceFlush(
-        new ForceFlusher() {
-          @Override
-          public void run(int timeout, TimeUnit unit) {
-            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit);
-          }
-        });
+        (timeout, unit) -> OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
 
     INSTRUMENTATION = inst;
 
@@ -180,7 +173,7 @@ public class AgentInstaller {
   private static Iterable<Instrumenter> orderInstrumenters(Iterable<Instrumenter> instrumenters) {
     List<Instrumenter> orderedInstrumenters = new ArrayList<>();
     instrumenters.forEach(orderedInstrumenters::add);
-    Collections.sort(orderedInstrumenters, Comparator.comparingInt(Instrumenter::getOrder));
+    orderedInstrumenters.sort(Comparator.comparingInt(Instrumenter::getOrder));
     return orderedInstrumenters;
   }
 
@@ -341,11 +334,7 @@ public class AgentInstaller {
    */
   public static void registerClassLoadCallback(String className, Runnable callback) {
     synchronized (CLASS_LOAD_CALLBACKS) {
-      List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(className);
-      if (callbacks == null) {
-        callbacks = new ArrayList<>();
-        CLASS_LOAD_CALLBACKS.put(className, callbacks);
-      }
+      List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.computeIfAbsent(className, k -> new ArrayList<>());
       callbacks.add(callback);
     }
   }
