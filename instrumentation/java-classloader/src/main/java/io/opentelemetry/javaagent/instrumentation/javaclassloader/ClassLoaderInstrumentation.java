@@ -18,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Constants;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
@@ -90,7 +89,12 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
       }
 
       try {
-        for (String prefix : BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()) {
+        // TODO (trask) need to load BootstrapPackagePrefixesHolder itself from the bootstrap class
+        //  loader, but at the same time need to be careful about re-entry due to comment above,
+        //  so for now using the old constant, which works because Constants is injected into the
+        //  class loader
+        // for (String prefix : BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()) {
+        for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
