@@ -11,3 +11,4 @@ muzzle {
 dependencies {
   compileOnly group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
 }
+

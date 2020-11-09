@@ -1,10 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.typedspan.HttpServerSpan;
 
 public class Struts2Tracer extends BaseTracer {
 
@@ -28,20 +32,16 @@ public class Struts2Tracer extends BaseTracer {
       strutsSpan.setAttribute("code.function", method);
     }
 
-
     return strutsSpan;
   }
 
   private void updateHttpRouteInServerSpan(ActionInvocation actionInvocation) {
+    ActionProxy proxy = actionInvocation.getProxy();
+    String method = proxy.getMethod();
+    String httpRoute =
+        proxy.getNamespace() + proxy.getActionName() + (method != null ? "." + method : "");
     Span serverSpan = getCurrentServerSpan();
-    if (serverSpan instanceof HttpServerSpan) {
-      ActionProxy proxy = actionInvocation.getProxy();
-      String method = proxy.getMethod();
-      ((HttpServerSpan)serverSpan).setHttpRoute(proxy.getNamespace() + proxy.getActionName() + (method != null ? "." + method : ""));
-    }
-    else {
-      System.out.println("========== MY SERVER SPAN IS NOT HTTP!!!!! " + serverSpan.getClass().getName());
-    }
+    serverSpan.setAttribute("http.route", httpRoute);
   }
 
   @Override
