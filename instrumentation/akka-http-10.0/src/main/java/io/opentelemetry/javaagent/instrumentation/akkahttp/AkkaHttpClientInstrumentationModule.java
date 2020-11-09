@@ -18,8 +18,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,40 +32,48 @@ import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-@AutoService(Instrumenter.class)
-public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
-  public AkkaHttpClientInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public final class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
+  public AkkaHttpClientInstrumentationModule() {
     super("akka-http", "akka-http-client");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("akka.http.scaladsl.HttpExt");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
-      AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-      AkkaHttpClientInstrumentation.class.getName() + "$InjectAdapter",
+      AkkaHttpClientInstrumentationModule.class.getName() + "$OnCompleteHandler",
+      AkkaHttpClientInstrumentationModule.class.getName() + "$AkkaHttpHeaders",
+      AkkaHttpClientInstrumentationModule.class.getName() + "$InjectAdapter",
       packageName + ".AkkaHttpClientTracer",
     };
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    // This is mainly for compatibility with 10.0
-    transformers.put(
-        named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        AkkaHttpClientInstrumentation.class.getName() + "$SingleRequestAdvice");
-    // This is for 10.1+
-    transformers.put(
-        named("singleRequestImpl")
-            .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        AkkaHttpClientInstrumentation.class.getName() + "$SingleRequestAdvice");
-    return transformers;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return Collections.singletonList(new HttpExtInstrumentation());
+  }
+
+  private static final class HttpExtInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("akka.http.scaladsl.HttpExt");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      // This is mainly for compatibility with 10.0
+      transformers.put(
+          named("singleRequest")
+              .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
+          AkkaHttpClientInstrumentationModule.class.getName() + "$SingleRequestAdvice");
+      // This is for 10.1+
+      transformers.put(
+          named("singleRequestImpl")
+              .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
+          AkkaHttpClientInstrumentationModule.class.getName() + "$SingleRequestAdvice");
+      return transformers;
+    }
   }
 
   public static class SingleRequestAdvice {

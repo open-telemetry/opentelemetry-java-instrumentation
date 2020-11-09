@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
@@ -13,25 +14,19 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class CassandraClientInstrumentation extends Instrumenter.Default {
-
-  public CassandraClientInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class CassandraClientInstrumentationModule extends InstrumentationModule {
+  public CassandraClientInstrumentationModule() {
     super("cassandra");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    // Note: Cassandra has a large driver and we instrument single class in it.
-    // The rest is ignored in AdditionalLibraryIgnoresMatcher
-    return named("com.datastax.driver.core.Cluster$Manager");
   }
 
   @Override
@@ -46,10 +41,24 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-        CassandraClientInstrumentation.class.getName() + "$CassandraClientAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ClusterManagerInstrumentation());
+  }
+
+  private static final class ClusterManagerInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      // Note: Cassandra has a large driver and we instrument single class in it.
+      // The rest is ignored in AdditionalLibraryIgnoresMatcher
+      return named("com.datastax.driver.core.Cluster$Manager");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
+          CassandraClientInstrumentationModule.class.getName() + "$CassandraClientAdvice");
+    }
   }
 
   public static class CassandraClientAdvice {

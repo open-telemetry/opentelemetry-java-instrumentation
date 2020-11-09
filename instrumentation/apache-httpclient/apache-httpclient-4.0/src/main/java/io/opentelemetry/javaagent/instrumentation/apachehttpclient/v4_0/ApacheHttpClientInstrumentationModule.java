@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,8 +18,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -31,22 +34,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
-@AutoService(Instrumenter.class)
-public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
-  public ApacheHttpClientInstrumentation() {
+  public ApacheHttpClientInstrumentationModule() {
     super("httpclient", "apache-httpclient", "apache-http-client");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.apache.http.client.HttpClient");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.apache.http.client.HttpClient"));
   }
 
   @Override
@@ -61,90 +53,108 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    // There are 8 execute(...) methods.  Depending on the version, they may or may not delegate to
-    // eachother. Thus, all methods need to be instrumented.  Because of argument position and type,
-    // some methods can share the same advice class.  The call depth tracking ensures only 1 span is
-    // created
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpClientInstrumentation());
+  }
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestAdvice");
+  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("org.apache.http.client.HttpClient");
+    }
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.protocol.HttpContext"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestAdvice");
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return implementsInterface(named("org.apache.http.client.HttpClient"));
+    }
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestWithHandlerAdvice");
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      // There are 8 execute(...) methods.  Depending on the version, they may or may not delegate
+      // to eachother. Thus, all methods need to be instrumented.  Because of argument position and
+      // type, some methods can share the same advice class.  The call depth tracking ensures only 1
+      // span is created
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestWithHandlerAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(1))
+              .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$UriRequestAdvice");
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$RequestAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
+              .and(takesArgument(1, named("org.apache.http.protocol.HttpContext"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$UriRequestAdvice");
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$RequestAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
+              .and(takesArgument(1, named("org.apache.http.client.ResponseHandler"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$UriRequestWithHandlerAdvice");
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$RequestWithHandlerAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(3))
+              .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
+              .and(takesArgument(1, named("org.apache.http.client.ResponseHandler")))
+              .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$UriRequestWithHandlerAdvice");
 
-    transformers.put(
-        isMethod()
-            .and(named("execute"))
-            .and(not(isAbstract()))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(3, named("org.apache.http.protocol.HttpContext"))),
-        ApacheHttpClientInstrumentation.class.getName() + "$RequestWithHandlerAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("org.apache.http.HttpHost")))
+              .and(takesArgument(1, named("org.apache.http.HttpRequest"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$RequestAdvice");
 
-    return transformers;
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(3))
+              .and(takesArgument(0, named("org.apache.http.HttpHost")))
+              .and(takesArgument(1, named("org.apache.http.HttpRequest")))
+              .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$RequestAdvice");
+
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(3))
+              .and(takesArgument(0, named("org.apache.http.HttpHost")))
+              .and(takesArgument(1, named("org.apache.http.HttpRequest")))
+              .and(takesArgument(2, named("org.apache.http.client.ResponseHandler"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHandlerAdvice");
+
+      transformers.put(
+          isMethod()
+              .and(named("execute"))
+              .and(not(isAbstract()))
+              .and(takesArguments(4))
+              .and(takesArgument(0, named("org.apache.http.HttpHost")))
+              .and(takesArgument(1, named("org.apache.http.HttpRequest")))
+              .and(takesArgument(2, named("org.apache.http.client.ResponseHandler")))
+              .and(takesArgument(3, named("org.apache.http.protocol.HttpContext"))),
+          ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHandlerAdvice");
+
+      return transformers;
+    }
   }
 
   public static class UriRequestAdvice {

@@ -5,16 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import static java.util.Collections.singletonList;
 
-public abstract class AbstractAwsLambdaInstrumentation extends Instrumenter.Default {
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 
-  public AbstractAwsLambdaInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class AwsLambdaInstrumentationModule extends InstrumentationModule {
+  public AwsLambdaInstrumentationModule() {
     super("aws-lambda");
   }
 
   @Override
-  public final String[] helperClassNames() {
+  public String[] helperClassNames() {
     return new String[] {
       packageName + ".AwsLambdaInstrumentationHelper",
       "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer",
@@ -23,5 +28,10 @@ public abstract class AbstractAwsLambdaInstrumentation extends Instrumenter.Defa
       "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$MapGetter",
       "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$HeadersGetter"
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new AwsLambdaRequestHandlerInstrumentation());
   }
 }
