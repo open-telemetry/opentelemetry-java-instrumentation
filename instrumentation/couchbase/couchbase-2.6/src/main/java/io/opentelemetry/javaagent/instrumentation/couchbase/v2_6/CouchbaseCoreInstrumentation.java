@@ -12,9 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -43,13 +41,6 @@ final class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   }
 
   public static class CouchbaseCoreAdvice {
-    private static final Tracer TRACER =
-        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.couchbase-2.6");
-
-    public static Tracer tracer() {
-      return TRACER;
-    }
-
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
