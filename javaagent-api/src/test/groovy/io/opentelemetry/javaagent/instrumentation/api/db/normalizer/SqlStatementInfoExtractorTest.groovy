@@ -36,6 +36,8 @@ class SqlStatementInfoExtractorTest extends Specification {
     'select col from table order by col, col2'                        | new SqlStatementInfo(sql, 'SELECT', 'table')
     'select ąś∂ń© from źćļńĶ order by col, col2'                      | new SqlStatementInfo(sql, 'SELECT', 'źćļńĶ')
     'select 12345678'                                                 | new SqlStatementInfo(sql, 'SELECT', null)
+    '/* update comment */ select * from table1'                       | new SqlStatementInfo(sql, 'SELECT', 'table1')
+    'select /*((*/abc from table'                                     | new SqlStatementInfo(sql, 'SELECT', 'table')
     // Insert
     ' insert into table where lalala'                                 | new SqlStatementInfo(sql.trim(), 'INSERT', 'table')
     'insert insert into table where lalala'                           | new SqlStatementInfo(sql, 'INSERT', 'table')

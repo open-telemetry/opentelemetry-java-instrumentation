@@ -285,11 +285,15 @@ void Input() : {
     }
     |
     <OpenParen> {
-      parenLevel += 1;
+      if (!insideComment) {
+        parenLevel += 1;
+      }
     }
     |
     <CloseParen> {
-      parenLevel -= 1;
+      if (!insideComment) {
+        parenLevel -= 1;
+      }
     }
     |
     <OpenComment> {
