@@ -1,25 +1,28 @@
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
-import io.opentelemetry.trace.Span;
+import com.opensymphony.xwork2.ActionInvocation;
+import io.opentelemetry.api.trace.Span;
 import net.bytebuddy.asm.Advice;
-import org.apache.struts2.dispatcher.mapper.ActionMapping;
 
-public class ExecuteActionAdvice {
+public class ActionInvocationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Argument(2) ActionMapping actionMapping,
+      @Advice.This ActionInvocation actionProxy,
       @Advice.Local("otelSpan") Span span) {
-    span = Struts2Tracer.TRACER.startSpan(actionMapping);
+    span = Struts2Tracer.TRACER.startSpan(actionProxy);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelSpan") Span span) {
+
     if (throwable != null) {
-      span.recordException(throwable);
+      Struts2Tracer.TRACER.endExceptionally(span, throwable);
     }
-    span.end();
+    else {
+      Struts2Tracer.TRACER.end(span);
+    }
   }
 }
