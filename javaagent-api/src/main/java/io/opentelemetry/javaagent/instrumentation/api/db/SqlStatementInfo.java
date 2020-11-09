@@ -9,14 +9,23 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SqlStatementInfo {
-  private final String operation;
+  @Nullable private final String fullStatement;
+  @Nullable private final String operation;
   @Nullable private final String table;
 
-  public SqlStatementInfo(String operation, @Nullable String table) {
+  public SqlStatementInfo(
+      @Nullable String fullStatement, @Nullable String operation, @Nullable String table) {
+    this.fullStatement = fullStatement;
     this.operation = operation;
     this.table = table;
   }
 
+  @Nullable
+  public String getFullStatement() {
+    return fullStatement;
+  }
+
+  @Nullable
   public String getOperation() {
     return operation;
   }
@@ -31,11 +40,13 @@ public final class SqlStatementInfo {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     SqlStatementInfo that = (SqlStatementInfo) o;
-    return Objects.equals(operation, that.operation) && Objects.equals(table, that.table);
+    return Objects.equals(fullStatement, that.fullStatement)
+        && Objects.equals(operation, that.operation)
+        && Objects.equals(table, that.table);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(operation, table);
+    return Objects.hash(fullStatement, operation, table);
   }
 }

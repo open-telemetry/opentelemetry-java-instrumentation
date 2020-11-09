@@ -18,9 +18,13 @@ import java.io.StringReader;
 
 public class SqlStatementInfoExtractor {
   public static SqlStatementInfo extract(String statement) throws ParseException {
-    SqlStatementInfoExtractor parser = new SqlStatementInfoExtractor(new StringReader(statement.trim()));
+    if (statement == null) {
+      return new SqlStatementInfo(null, null, null);
+    }
+    statement = statement.trim();
+    SqlStatementInfoExtractor parser = new SqlStatementInfoExtractor(new StringReader(statement));
     parser.Input();
-    return parser.operation.getResult();
+    return parser.operation.getResult(statement);
   }
 
   private Operation operation = NoOp.INSTANCE;
@@ -62,16 +66,16 @@ public class SqlStatementInfoExtractor {
       return false;
     }
 
-    SqlStatementInfo getResult() {
-      return new SqlStatementInfo(getClass().getSimpleName().toUpperCase(), mainTable);
+    SqlStatementInfo getResult(String fullStatement) {
+      return new SqlStatementInfo(fullStatement, getClass().getSimpleName().toUpperCase(), mainTable);
     }
   }
 
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult() {
-      return null;
+    SqlStatementInfo getResult(String fullStatement) {
+      return new SqlStatementInfo(fullStatement, null, null);
     }
   }
 

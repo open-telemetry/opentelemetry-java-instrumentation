@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils.normalizeAndExtractInfo;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -18,7 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
+public class JdbcTracer extends DatabaseClientTracer<DBInfo, SqlStatementInfo> {
   private static final JdbcTracer TRACER = new JdbcTracer();
 
   public static JdbcTracer tracer() {
@@ -69,6 +71,10 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   public Span startSpan(Statement statement, String query) {
+    return startSpan(statement, normalizeAndExtractInfo(query));
+  }
+
+  public Span startSpan(Statement statement, SqlStatementInfo queryInfo) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
@@ -76,12 +82,33 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
 
     DBInfo dbInfo = extractDbInfo(connection);
 
-    return startSpan(dbInfo, query);
+    return startSpan(dbInfo, queryInfo);
   }
 
   @Override
-  protected String normalizeQuery(String query) {
-    return JDBCUtils.normalizeSql(query);
+  protected String normalizeQuery(SqlStatementInfo query) {
+    return query.getFullStatement();
+  }
+
+  @Override
+  protected String spanName(DBInfo connection, SqlStatementInfo query, String normalizedQuery) {
+    String dbName = dbName(connection);
+    if (query.getOperation() == null && query.getTable() == null) {
+      return dbName == null ? DB_QUERY : dbName;
+    }
+
+    StringBuilder name = new StringBuilder();
+    name.append(query.getOperation()).append(' ');
+    if (dbName != null) {
+      name.append(dbName);
+      if (query.getTable() != null) {
+        name.append('.');
+      }
+    }
+    if (query.getTable() != null) {
+      name.append(query.getTable());
+    }
+    return name.toString();
   }
 
   private DBInfo extractDbInfo(Connection connection) {
