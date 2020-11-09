@@ -12,11 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import application.io.opentelemetry.api.metrics.MeterProvider;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.ApplicationMeterProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -24,8 +23,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
+final class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
@@ -37,13 +35,13 @@ public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isPublic()).and(named("getGlobalTracerProvider")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerProviderAdvice");
+        OpenTelemetryInstrumentation.class.getName() + "$GetTracerProviderAdvice");
     transformers.put(
         isMethod().and(isPublic()).and(named("getGlobalMeterProvider")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetMeterProviderAdvice");
+        OpenTelemetryInstrumentation.class.getName() + "$GetMeterProviderAdvice");
     transformers.put(
         isMethod().and(isPublic()).and(named("getGlobalPropagators")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetPropagatorsAdvice");
+        OpenTelemetryInstrumentation.class.getName() + "$GetPropagatorsAdvice");
     return transformers;
   }
 

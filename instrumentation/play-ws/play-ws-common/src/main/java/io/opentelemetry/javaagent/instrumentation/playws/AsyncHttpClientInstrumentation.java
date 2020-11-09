@@ -15,15 +15,17 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Default {
-  public BasePlayWSClientInstrumentation() {
-    super("play-ws");
+public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
+  private final String adviceName;
+
+  public AsyncHttpClientInstrumentation(String adviceName) {
+    this.adviceName = adviceName;
   }
 
   @Override
@@ -50,16 +52,6 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
             .and(takesArguments(2))
             .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
             .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
-        getClass().getName() + "$ClientAdvice");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter",
-      packageName + ".AsyncHandlerWrapper",
-      packageName + ".StreamedAsyncHandlerWrapper"
-    };
+        adviceName);
   }
 }
