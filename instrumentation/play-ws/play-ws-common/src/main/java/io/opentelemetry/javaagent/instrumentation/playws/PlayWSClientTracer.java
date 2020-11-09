@@ -16,7 +16,11 @@ import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class PlayWSClientTracer extends HttpClientTracer<Request, HttpHeaders, Response> {
-  public static final PlayWSClientTracer TRACER = new PlayWSClientTracer();
+  private static final PlayWSClientTracer TRACER = new PlayWSClientTracer();
+
+  public static PlayWSClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request request) {
@@ -50,6 +54,6 @@ public class PlayWSClientTracer extends HttpClientTracer<Request, HttpHeaders, R
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play-ws-2.1";
+    return "io.opentelemetry.auto.play-ws";
   }
 }

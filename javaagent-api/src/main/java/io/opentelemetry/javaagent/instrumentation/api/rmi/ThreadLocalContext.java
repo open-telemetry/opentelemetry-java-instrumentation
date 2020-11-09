@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.rmi;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 
 public class ThreadLocalContext {
   public static final ThreadLocalContext THREAD_LOCAL_CONTEXT = new ThreadLocalContext();

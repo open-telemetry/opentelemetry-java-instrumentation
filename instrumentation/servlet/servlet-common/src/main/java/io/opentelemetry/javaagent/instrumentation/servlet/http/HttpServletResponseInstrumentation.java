@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
@@ -66,9 +66,10 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         @Advice.Local("otelCallDepth") Depth callDepth) {
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
       // Don't want to generate a new top-level span
-      if (callDepth.getAndIncrement() == 0 && TRACER.getCurrentSpan().getContext().isValid()) {
-        span = TRACER.startSpan(method);
-        scope = currentContextWith(span);
+      if (callDepth.getAndIncrement() == 0
+          && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
+        span = tracer().startSpan(method);
+        scope = span.makeCurrent();
       }
     }
 
@@ -84,9 +85,9 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         scope.close();
 
         if (throwable != null) {
-          TRACER.endExceptionally(span, throwable);
+          tracer().endExceptionally(span, throwable);
         } else {
-          TRACER.end(span);
+          tracer().end(span);
         }
       }
     }

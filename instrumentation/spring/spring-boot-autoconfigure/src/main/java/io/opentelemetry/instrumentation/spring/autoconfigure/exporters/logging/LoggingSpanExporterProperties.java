@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for {@link io.opentelemetry.exporters.logging.LoggingSpanExporter} */
+/** Configuration for {@link io.opentelemetry.exporter.logging.LoggingSpanExporter} */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.logging")
 public final class LoggingSpanExporterProperties {
   private boolean enabled = true;

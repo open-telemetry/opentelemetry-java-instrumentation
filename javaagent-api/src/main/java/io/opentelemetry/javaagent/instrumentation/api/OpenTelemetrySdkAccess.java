@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * agent classloader will register implementations of needed SDK functions that can be called from
  * instrumentation.
  */
-public class OpenTelemetrySdkAccess {
+public final class OpenTelemetrySdkAccess {
 
   /**
    * Interface matching {@link io.opentelemetry.sdk.trace.TracerSdkProvider#forceFlush()} to allow
@@ -44,4 +44,6 @@ public class OpenTelemetrySdkAccess {
     }
     FORCE_FLUSH = forceFlush;
   }
+
+  private OpenTelemetrySdkAccess() {}
 }

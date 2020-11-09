@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.tracer;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 
 public class SpringSchedulingRunnableWrapper implements Runnable {
   private final Runnable runnable;
@@ -24,13 +23,13 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     if (runnable == null) {
       return;
     }
-    Span span = TRACER.startSpan(TRACER.spanNameOnRun(runnable), Kind.INTERNAL);
+    Span span = tracer().startSpan(tracer().spanNameOnRun(runnable), Kind.INTERNAL);
 
-    try (Scope ignored = currentContextWith(span)) {
+    try (Scope ignored = span.makeCurrent()) {
       runnable.run();
-      TRACER.end(span);
+      tracer().end(span);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
   }

@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -75,7 +75,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       if (throwable != null) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, throwable);
+          tracer().endExceptionally((Span) prop, throwable);
         }
       }
     }
@@ -125,7 +125,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, e.getCause());
+          tracer().endExceptionally((Span) prop, e.getCause());
         }
         throw e;
       }
@@ -139,7 +139,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       } catch (ExecutionException e) {
         Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          TRACER.endExceptionally((Span) prop, e.getCause());
+          tracer().endExceptionally((Span) prop, e.getCause());
         }
         throw e;
       }

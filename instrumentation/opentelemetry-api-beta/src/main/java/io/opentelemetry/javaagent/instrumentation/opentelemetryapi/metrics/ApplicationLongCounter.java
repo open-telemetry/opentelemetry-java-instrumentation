@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
-import application.io.opentelemetry.common.Labels;
-import application.io.opentelemetry.metrics.LongCounter;
+import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationLongCounter implements LongCounter {
 
-  private final io.opentelemetry.metrics.LongCounter agentLongCounter;
+  private final io.opentelemetry.api.metrics.LongCounter agentLongCounter;
 
-  ApplicationLongCounter(io.opentelemetry.metrics.LongCounter agentLongCounter) {
+  ApplicationLongCounter(io.opentelemetry.api.metrics.LongCounter agentLongCounter) {
     this.agentLongCounter = agentLongCounter;
   }
 
-  io.opentelemetry.metrics.LongCounter getAgentLongCounter() {
+  io.opentelemetry.api.metrics.LongCounter getAgentLongCounter() {
     return agentLongCounter;
   }
 
@@ -38,9 +38,10 @@ class ApplicationLongCounter implements LongCounter {
 
   static class BoundInstrument implements LongCounter.BoundLongCounter {
 
-    private final io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter;
+    private final io.opentelemetry.api.metrics.LongCounter.BoundLongCounter agentBoundLongCounter;
 
-    BoundInstrument(io.opentelemetry.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
+    BoundInstrument(
+        io.opentelemetry.api.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
       this.agentBoundLongCounter = agentBoundLongCounter;
     }
 
@@ -57,9 +58,9 @@ class ApplicationLongCounter implements LongCounter {
 
   static class Builder implements LongCounter.Builder {
 
-    private final io.opentelemetry.metrics.LongCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongCounter.Builder agentBuilder;
 
-    Builder(io.opentelemetry.metrics.LongCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.LongCounter.Builder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 

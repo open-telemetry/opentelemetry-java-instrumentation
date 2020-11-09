@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.grpc.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 
 public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConvention {
 
@@ -46,7 +48,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
    */
   @Override
   public IdentitySemanticConvention setEnduserId(String enduserId) {
-    delegate.setAttribute("enduser.id", enduserId);
+    delegate.setAttribute(ENDUSER_ID, enduserId);
     return this;
   }
 
@@ -58,7 +60,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
    */
   @Override
   public IdentitySemanticConvention setEnduserRole(String enduserRole) {
-    delegate.setAttribute("enduser.role", enduserRole);
+    delegate.setAttribute(ENDUSER_ROLE, enduserRole);
     return this;
   }
 
@@ -71,7 +73,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
    */
   @Override
   public IdentitySemanticConvention setEnduserScope(String enduserScope) {
-    delegate.setAttribute("enduser.scope", enduserScope);
+    delegate.setAttribute(ENDUSER_SCOPE, enduserScope);
     return this;
   }
 
@@ -117,7 +119,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
      *     header in the inbound request from outside the system.
      */
     public IdentitySpanBuilder setEnduserId(String enduserId) {
-      internalBuilder.setAttribute("enduser.id", enduserId);
+      internalBuilder.setAttribute(ENDUSER_ID, enduserId);
       return this;
     }
 
@@ -128,7 +130,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
      *     token or application security context.
      */
     public IdentitySpanBuilder setEnduserRole(String enduserRole) {
-      internalBuilder.setAttribute("enduser.role", enduserRole);
+      internalBuilder.setAttribute(ENDUSER_ROLE, enduserRole);
       return this;
     }
 
@@ -140,7 +142,7 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
      *     associated with an OAuth 2.0 Access Token or an attribute value in a SAML 2.0 Assertion.
      */
     public IdentitySpanBuilder setEnduserScope(String enduserScope) {
-      internalBuilder.setAttribute("enduser.scope", enduserScope);
+      internalBuilder.setAttribute(ENDUSER_SCOPE, enduserScope);
       return this;
     }
   }

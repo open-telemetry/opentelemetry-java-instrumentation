@@ -21,7 +21,11 @@ import java.net.URISyntaxException;
 
 public class AkkaHttpClientTracer
     extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
-  public static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+  private static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+
+  public static AkkaHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpExt.class);
@@ -64,6 +68,6 @@ public class AkkaHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.akka-http-10.0";
+    return "io.opentelemetry.auto.akka-http";
   }
 }

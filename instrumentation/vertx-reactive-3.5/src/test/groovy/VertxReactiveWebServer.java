@@ -5,10 +5,11 @@
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -33,7 +34,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
 
-  private static final Tracer tracer = OpenTelemetry.getTracer("test");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("test");
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
@@ -94,7 +95,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private void handleListProducts(RoutingContext routingContext) {
     Span span = tracer.spanBuilder("handleListProducts").startSpan();
-    try (Scope ignored = tracer.withSpan(span)) {
+    try (Scope ignored = Context.current().with(span).makeCurrent()) {
       HttpServerResponse response = routingContext.response();
       Single<JsonArray> jsonArraySingle = listProducts();
 
@@ -107,7 +108,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private Single<JsonArray> listProducts() {
     Span span = tracer.spanBuilder("listProducts").startSpan();
-    try (Scope ignored = tracer.withSpan(span)) {
+    try (Scope ignored = Context.current().with(span).makeCurrent()) {
       return client
           .rxQuery("SELECT id, name, price, weight FROM products")
           .flatMap(

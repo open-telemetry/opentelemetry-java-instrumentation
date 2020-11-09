@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonClientTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,8 +52,8 @@ public final class RedissonInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) Object arg,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(connection, arg);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, arg);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -64,9 +64,9 @@ public final class RedissonInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

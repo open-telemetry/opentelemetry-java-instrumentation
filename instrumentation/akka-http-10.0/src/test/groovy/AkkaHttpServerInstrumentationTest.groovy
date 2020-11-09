@@ -24,7 +24,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
 //  }
 
   @Override
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return "akka.request"
   }
 }

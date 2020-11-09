@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -107,14 +106,14 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      Span span = TRACER.startSpan(invokedMethod);
+      Span span = tracer().startSpan(invokedMethod);
 
       Object result;
-      try (Scope ignored = currentContextWith(span)) {
+      try (Scope ignored = span.makeCurrent()) {
         result = methodInvocation.proceed();
-        TRACER.end(span);
+        tracer().end(span);
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
       return result;

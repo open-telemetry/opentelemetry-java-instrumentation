@@ -35,7 +35,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
     def result = runUnderTrace("parent") {
       def val = new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
         private String tracedMethod() {
-          TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
+          getTestTracer().spanBuilder("tracedMethod").startSpan().end()
           return "Hello"
         }
 
@@ -53,7 +53,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }.flatMap { str ->
         new HystrixObservableCommand<String>(asKey("OtherGroup")) {
           private String anotherTracedMethod() {
-            TEST_TRACER.spanBuilder("anotherTracedMethod").startSpan().end()
+            getTestTracer().spanBuilder("anotherTracedMethod").startSpan().end()
             return "$str!"
           }
 

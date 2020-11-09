@@ -9,9 +9,14 @@ import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer
 class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
   @Override
+  String getContextPath() {
+    "/resteasy-context"
+  }
+
+  @Override
   UndertowJaxrsServer startServer(int port) {
     def server = new UndertowJaxrsServer()
-    server.deploy(JaxRsTestApplication)
+    server.deploy(JaxRsTestApplication, getContextPath())
     server.start(Undertow.builder()
       .addHttpListener(port, "localhost"))
     return server

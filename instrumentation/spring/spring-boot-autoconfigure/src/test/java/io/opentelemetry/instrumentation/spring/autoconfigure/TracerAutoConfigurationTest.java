@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -22,7 +22,7 @@ class TracerAutoConfigurationTest {
   static class CustomTracerConfiguration {
     @Bean
     public Tracer customTestTracer() {
-      return OpenTelemetry.getTracer("customTestTracer");
+      return OpenTelemetry.getGlobalTracer("customTestTracer");
     }
   }
 
@@ -61,7 +61,7 @@ class TracerAutoConfigurationTest {
         .run(
             (context) -> {
               assertThat(context.getBean("otelTracer", Tracer.class))
-                  .isEqualTo(OpenTelemetry.getTracer("testTracer"));
+                  .isEqualTo(OpenTelemetry.getGlobalTracer("testTracer"));
             });
   }
 }

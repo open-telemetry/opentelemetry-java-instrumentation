@@ -7,7 +7,7 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -46,7 +46,7 @@ class PlayServerTest extends HttpServerTest<TestServer> {
   }
 
   @Override
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint) {
     return "netty.request"
   }
 }

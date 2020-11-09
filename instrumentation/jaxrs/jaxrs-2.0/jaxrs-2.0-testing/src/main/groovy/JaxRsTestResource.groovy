@@ -22,7 +22,9 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Application
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriInfo
 import javax.ws.rs.ext.ExceptionMapper
 
 @Path("")
@@ -45,10 +47,10 @@ class JaxRsTestResource {
 
   @Path("redirect")
   @GET
-  Response redirect() {
+  Response redirect(@Context UriInfo uriInfo) {
     HttpServerTest.controller(REDIRECT) {
       Response.status(Response.Status.FOUND)
-        .location(new URI(REDIRECT.body))
+        .location(uriInfo.relativize(new URI(REDIRECT.body)))
         .build()
     }
   }

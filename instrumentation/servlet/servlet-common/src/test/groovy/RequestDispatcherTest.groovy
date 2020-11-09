@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
-import static io.opentelemetry.trace.TracingContextUtils.getSpan
-import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
-import io.grpc.Context
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.Span
+import io.opentelemetry.api.trace.Span
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -20,7 +18,7 @@ class RequestDispatcherTest extends AgentTestRunner {
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
-  def mockContext = withSpan(Mock(Span), Context.ROOT)
+  def mockContext = Context.root().with(Mock(Span))
   def dispatcher = new RequestDispatcherUtils(request, response)
 
   def "test dispatch no-parent"() {
@@ -65,7 +63,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     then:
     1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
     then:
     1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _
@@ -110,8 +108,8 @@ class RequestDispatcherTest extends AgentTestRunner {
 
     then:
     1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "parent" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "parent" })
     0 * _
 
     where:
@@ -155,7 +153,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     then:
     1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
     then:
     1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _

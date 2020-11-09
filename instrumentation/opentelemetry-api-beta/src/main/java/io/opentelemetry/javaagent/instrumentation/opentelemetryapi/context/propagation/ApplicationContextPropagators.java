@@ -5,20 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation;
 
-import application.io.grpc.Context;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
 import application.io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.api.OpenTelemetry;
 
 public class ApplicationContextPropagators implements ContextPropagators {
 
   private final ApplicationTextMapPropagator applicationTextMapPropagator;
 
-  public ApplicationContextPropagators(ContextStore<Context, io.grpc.Context> contextStore) {
+  public ApplicationContextPropagators() {
     applicationTextMapPropagator =
         new ApplicationTextMapPropagator(
-            OpenTelemetry.getPropagators().getTextMapPropagator(), contextStore);
+            OpenTelemetry.getGlobalPropagators().getTextMapPropagator());
   }
 
   @Override

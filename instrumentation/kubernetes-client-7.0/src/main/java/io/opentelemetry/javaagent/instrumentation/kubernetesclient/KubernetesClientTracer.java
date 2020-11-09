@@ -5,17 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
-  public static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+  private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+
+  public static KubernetesClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request httpRequest) {
@@ -50,7 +54,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kubernetes-client-7.0";
+    return "io.opentelemetry.auto.kubernetes-client";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */

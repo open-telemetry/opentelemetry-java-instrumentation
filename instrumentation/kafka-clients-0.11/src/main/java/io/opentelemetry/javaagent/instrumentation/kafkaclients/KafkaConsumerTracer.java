@@ -5,20 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 public class KafkaConsumerTracer extends BaseTracer {
-  public static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
+  private static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
+
+  public static KafkaConsumerTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(ConsumerRecord<?, ?> record) {
     long now = System.currentTimeMillis();
@@ -74,6 +78,6 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kafka-clients-0.11";
+    return "io.opentelemetry.auto.kafka-clients";
   }
 }

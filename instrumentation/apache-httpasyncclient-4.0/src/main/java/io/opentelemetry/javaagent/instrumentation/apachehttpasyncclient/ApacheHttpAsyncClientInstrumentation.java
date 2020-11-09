@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -17,11 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.io.IOException;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -88,8 +88,8 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      Context parentContext = Context.current();
-      Span clientSpan = TRACER.startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      Span clientSpan = tracer().startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
@@ -102,7 +102,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     public static void methodExit(
         @Advice.Enter Span span, @Advice.Return Object result, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }
@@ -124,11 +124,11 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      span.updateName(TRACER.spanNameForRequest(request));
-      TRACER.onRequest(span, request);
+      span.updateName(tracer().spanNameForRequest(request));
+      tracer().onRequest(span, request);
 
       // TODO (trask) expose inject separate from startScope, e.g. for async cases
-      Scope scope = TRACER.startScope(span, request);
+      Scope scope = tracer().startScope(span, request);
       scope.close();
 
       return request;
@@ -182,12 +182,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void completed(T result) {
-      TRACER.end(clientSpan, getResponse(context));
+      tracer().end(clientSpan, getResponse(context));
 
       if (parentContext == null) {
         completeDelegate(result);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           completeDelegate(result);
         }
       }
@@ -196,12 +196,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     @Override
     public void failed(Exception ex) {
       // end span before calling delegate
-      TRACER.endExceptionally(clientSpan, getResponse(context), ex);
+      tracer().endExceptionally(clientSpan, getResponse(context), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           failDelegate(ex);
         }
       }
@@ -210,12 +210,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     @Override
     public void cancelled() {
       // end span before calling delegate
-      TRACER.end(clientSpan, getResponse(context));
+      tracer().end(clientSpan, getResponse(context));
 
       if (parentContext == null) {
         cancelDelegate();
       } else {
-        try (Scope scope = withScopedContext(parentContext)) {
+        try (Scope scope = parentContext.makeCurrent()) {
           cancelDelegate();
         }
       }

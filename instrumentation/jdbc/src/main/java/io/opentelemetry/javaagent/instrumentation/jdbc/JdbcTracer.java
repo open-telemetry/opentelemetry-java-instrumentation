@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -19,7 +19,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
-  public static final JdbcTracer TRACER = new JdbcTracer();
+  private static final JdbcTracer TRACER = new JdbcTracer();
+
+  public static JdbcTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

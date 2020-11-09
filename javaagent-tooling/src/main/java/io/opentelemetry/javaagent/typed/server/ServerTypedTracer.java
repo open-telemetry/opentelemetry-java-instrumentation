@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.typed.server;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.typed.base.BaseTypedTracer;
-import io.opentelemetry.trace.Span;
 
 public abstract class ServerTypedTracer<
         T extends ServerTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>

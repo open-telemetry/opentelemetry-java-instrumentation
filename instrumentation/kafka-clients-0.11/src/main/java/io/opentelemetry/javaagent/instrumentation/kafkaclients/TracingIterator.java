@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -60,7 +58,7 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
       if (next != null) {
         Span span = tracer.startSpan(next);
 
-        currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));
+        currentSpanWithScope = new SpanWithScope(span, span.makeCurrent());
       }
     } catch (Exception e) {
       log.debug("Error during decoration", e);

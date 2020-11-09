@@ -15,11 +15,15 @@ import java.net.URISyntaxException;
 
 public class GoogleHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
-  public static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
+  private static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
+
+  public static GoogleHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.google-http-client-1.19";
+    return "io.opentelemetry.auto.google-http-client";
   }
 
   @Override

@@ -5,35 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyHttpServerTracer.tracer;
 
-import io.grpc.Context;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
-    Context context = TRACER.getServerContext(ctx.channel());
+    Context context = tracer().getServerContext(ctx.channel());
     if (context == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
       return;
     }
 
-    Span span = TracingContextUtils.getSpan(context);
-    try (Scope ignored = ContextUtils.withScopedContext(context)) {
+    Span span = Span.fromContext(context);
+    try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, (HttpResponse) msg);
+    tracer().end(span, (HttpResponse) msg);
   }
 }

@@ -9,7 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -146,7 +147,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
       implements CoroutineContext, CoroutineContext.Element {
     private final CoroutineContext proxy;
     private Context myTracingContext;
-    private Context prevTracingContext;
+    private Scope scope;
 
     public CoroutineContextWrapper(CoroutineContext proxy) {
       this.proxy = proxy;
@@ -192,12 +193,14 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
     // Actual tracing context-switch logic
     public void tracingSuspend() {
+      // TODO(anuraaga): Investigate why test passes only with this call here. Conceptually it seems
+      // weird to overwrite current context like this.
       myTracingContext = Context.current();
-      myTracingContext.detach(prevTracingContext);
+      scope.close();
     }
 
     public void tracingResume() {
-      prevTracingContext = myTracingContext.attach();
+      scope = myTracingContext.makeCurrent();
     }
   }
 }

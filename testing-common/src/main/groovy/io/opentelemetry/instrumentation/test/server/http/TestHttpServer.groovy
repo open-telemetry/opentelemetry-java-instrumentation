@@ -6,16 +6,16 @@
 package io.opentelemetry.instrumentation.test.server.http
 
 import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.Tracer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.servlet.ServletException
@@ -30,7 +30,7 @@ import org.eclipse.jetty.server.handler.HandlerList
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 
@@ -247,7 +247,7 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
-        final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
+        final Span.Builder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         spanBuilder.setParent(BaseDecorator.extract(req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()

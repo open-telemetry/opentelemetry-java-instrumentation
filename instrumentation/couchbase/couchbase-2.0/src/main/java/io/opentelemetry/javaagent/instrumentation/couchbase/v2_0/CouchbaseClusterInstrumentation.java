@@ -48,6 +48,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
+      packageName + ".CouchbaseQueryNormalizer"
     };
   }
 
@@ -69,7 +70,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
     public static void subscribeResult(
         @Advice.Enter int callDepth,
         @Advice.Origin Method method,
-        @Advice.Return(readOnly = false) Observable result) {
+        @Advice.Return(readOnly = false) Observable<?> result) {
       if (callDepth > 0) {
         return;
       }

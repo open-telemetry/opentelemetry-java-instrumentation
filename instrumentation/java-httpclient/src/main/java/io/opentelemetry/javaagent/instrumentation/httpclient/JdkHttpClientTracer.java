@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Version;
@@ -27,7 +27,11 @@ import java.util.concurrent.CompletionException;
 
 public class JdkHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
-  public static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
+  private static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
+
+  public static JdkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
@@ -92,7 +96,7 @@ public class JdkHttpClientTracer
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 
-    OpenTelemetry.getPropagators()
+    OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(
             Context.current(),

@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ratpack.func.Block;
@@ -19,7 +17,8 @@ public class BlockWrapper implements Block {
 
   private static final Logger log = LoggerFactory.getLogger(BlockWrapper.class);
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
+  private static final Tracer TRACER =
+      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
   private final Context parentContext;
@@ -32,7 +31,7 @@ public class BlockWrapper implements Block {
 
   @Override
   public void execute() throws Exception {
-    try (Scope ignored = withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.execute();
     }
   }

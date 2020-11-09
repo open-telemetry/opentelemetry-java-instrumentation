@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.spi.exporter;
 
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A {@link SpanExporterFactory} acts as the bootstrap for a {@link SpanExporter} implementation. An
@@ -21,4 +22,14 @@ public interface SpanExporterFactory {
    * @return An implementation of a {@link SpanExporter}
    */
   SpanExporter fromConfig(Properties config);
+
+  /**
+   * Returns names of span exporters supported by this factory.
+   *
+   * <p>Multiple names are useful for enabling a pair of span and metric exporters using the same
+   * name, while still having separate names for enabling them individually.
+   *
+   * @return The exporter names supported by this factory
+   */
+  Set<String> getNames();
 }

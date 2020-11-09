@@ -5,11 +5,12 @@
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 
 class UrlConnectionTest extends AgentTestRunner {
 
@@ -19,7 +20,7 @@ class UrlConnectionTest extends AgentTestRunner {
       URLConnection connection = url.openConnection()
       connection.setConnectTimeout(10000)
       connection.setReadTimeout(10000)
-      assert TEST_TRACER.getCurrentSpan() != null
+      assert Span.current() != null
       connection.inputStream
     }
 

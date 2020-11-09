@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_3;
 
-import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.tracer;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Headers;
@@ -22,9 +21,9 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request<?> req) {
-    Span span = TRACER.startSpan("play.request", Kind.INTERNAL);
+    Span span = tracer().startSpan("play.request", Kind.INTERNAL);
 
-    return new SpanWithScope(span, currentContextWith(span));
+    return new SpanWithScope(span, span.makeCurrent());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -41,13 +40,13 @@ public class PlayAdvice {
           new RequestCompleteCallback(playControllerSpan),
           ((Action<?>) thisAction).executionContext());
     } else {
-      TRACER.endExceptionally(playControllerSpan, throwable);
+      tracer().endExceptionally(playControllerSpan, throwable);
     }
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
     // set the span name on the upstream akka/netty span
-    TRACER.updateSpanName(BaseTracer.getCurrentServerSpan(), req);
+    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 
   // With this muzzle prevents this instrumentation from applying on Play 2.4+

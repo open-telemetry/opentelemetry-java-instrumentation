@@ -6,15 +6,15 @@
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
 import okhttp3.Call
 import okhttp3.Callback
@@ -29,7 +29,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
-    def url = HttpUrl.get(address.resolve("/async")).newBuilder()
+    def url = HttpUrl.get(address.resolve("async")).newBuilder()
       .addQueryParameter("action", action)
       .build()
     def request = request(url, "GET", null).build()
@@ -69,7 +69,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
     assumeTrue(shouldTestCompletableStageAsync())
 
     given:
-    def url = HttpUrl.get(address.resolve("/async-completion-stage")).newBuilder()
+    def url = HttpUrl.get(address.resolve("async-completion-stage")).newBuilder()
       .addQueryParameter("action", action)
       .build()
     def request = request(url, "GET", null).build()
@@ -130,7 +130,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   Long responseContentLength = null,
                   ServerEndpoint endpoint = SUCCESS) {
     serverSpan(trace, index, traceID, parentID, method,
-      endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path,
+      endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path,
       endpoint.resolve(address),
       endpoint.errored,
       endpoint.status,
@@ -161,7 +161,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
                   int statusCode,
                   String query) {
     trace.span(index) {
-      name method + " /" + path
+      name path
       kind SERVER
       errored isError
       if (parentID != null) {

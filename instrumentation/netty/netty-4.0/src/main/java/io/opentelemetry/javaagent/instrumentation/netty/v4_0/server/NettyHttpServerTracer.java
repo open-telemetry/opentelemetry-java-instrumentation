@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
@@ -19,7 +19,11 @@ import java.net.SocketAddress;
 
 public class NettyHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Channel> {
-  public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+  private static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+
+  public static NettyHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {
@@ -48,7 +52,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.netty-4.0";
+    return "io.opentelemetry.auto.netty";
   }
 
   @Override

@@ -3,9 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
+import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -24,16 +33,6 @@ import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Unroll
-
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"

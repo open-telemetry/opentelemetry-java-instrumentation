@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.FUNCTION_TRACER;
-import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.MESSAGE_TRACER;
+import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.functionTracer;
+import static io.opentelemetry.javaagent.instrumentation.awslambda.v1_0.AwsLambdaInstrumentationHelper.messageTracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,11 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -63,11 +63,11 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
         @Advice.Local("otelFunctionScope") Scope functionScope,
         @Advice.Local("otelMessageSpan") Span messageSpan,
         @Advice.Local("otelMessageScope") Scope messageScope) {
-      functionSpan = FUNCTION_TRACER.startSpan(context, Kind.SERVER);
-      functionScope = FUNCTION_TRACER.startScope(functionSpan);
+      functionSpan = functionTracer().startSpan(context, Kind.SERVER);
+      functionScope = functionTracer().startScope(functionSpan);
       if (arg instanceof SQSEvent) {
-        messageSpan = MESSAGE_TRACER.startSpan(context, (SQSEvent) arg);
-        messageScope = MESSAGE_TRACER.startScope(messageSpan);
+        messageSpan = messageTracer().startSpan(context, (SQSEvent) arg);
+        messageScope = messageTracer().startScope(messageSpan);
       }
     }
 
@@ -82,17 +82,17 @@ public class AwsLambdaRequestHandlerInstrumentation extends AbstractAwsLambdaIns
       if (messageScope != null) {
         messageScope.close();
         if (throwable != null) {
-          MESSAGE_TRACER.endExceptionally(messageSpan, throwable);
+          messageTracer().endExceptionally(messageSpan, throwable);
         } else {
-          MESSAGE_TRACER.end(messageSpan);
+          messageTracer().end(messageSpan);
         }
       }
 
       functionScope.close();
       if (throwable != null) {
-        FUNCTION_TRACER.endExceptionally(functionSpan, throwable);
+        functionTracer().endExceptionally(functionSpan, throwable);
       } else {
-        FUNCTION_TRACER.end(functionSpan);
+        functionTracer().end(functionSpan);
       }
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
     }

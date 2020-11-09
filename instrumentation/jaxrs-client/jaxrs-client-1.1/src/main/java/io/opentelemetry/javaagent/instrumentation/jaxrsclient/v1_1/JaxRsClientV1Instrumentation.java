@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -19,9 +19,9 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -74,8 +74,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
-        span = TRACER.startSpan(request);
-        scope = TRACER.startScope(span, request);
+        span = tracer().startSpan(request);
+        scope = tracer().startScope(span, request);
       }
     }
 
@@ -90,9 +90,9 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       }
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span, response);
+        tracer().end(span, response);
       }
     }
   }

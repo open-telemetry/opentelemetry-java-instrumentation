@@ -4,10 +4,11 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import spock.lang.Ignore
 import spock.lang.Requires
 import spock.lang.Timeout
@@ -28,9 +29,9 @@ class HttpUrlConnectionTest extends HttpClientTest {
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      def parentSpan = TEST_TRACER.getCurrentSpan()
+      def parentSpan = Span.current()
       def stream = connection.inputStream
-      assert TEST_TRACER.getCurrentSpan() == parentSpan
+      assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
-import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +17,12 @@ public class HibernateDecorator extends ClientDecorator {
   public static final HibernateDecorator DECORATE = new HibernateDecorator();
   // TODO use tracer names *.hibernate-3.3, *.hibernate-4.0, *.hibernate-4.3 respectively in each
   // module
-  public static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto.hibernate");
+  private static final Tracer TRACER =
+      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.hibernate");
+
+  public static Tracer tracer() {
+    return TRACER;
+  }
 
   public String spanNameForOperation(String operationName, Object entity) {
     if (entity != null) {

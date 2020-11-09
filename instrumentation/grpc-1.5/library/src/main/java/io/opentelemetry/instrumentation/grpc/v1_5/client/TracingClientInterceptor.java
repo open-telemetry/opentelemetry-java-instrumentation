@@ -5,30 +5,27 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcInjectAdapter.SETTER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientCall.Listener;
 import io.grpc.ClientInterceptor;
-import io.grpc.Context;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.common.Attributes;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
@@ -59,9 +56,9 @@ public class TracingClientInterceptor implements ClientInterceptor {
     String methodName = method.getFullMethodName();
     Span span = tracer.startSpan(methodName);
     GrpcHelper.prepareSpan(span, methodName);
-    Context context = withSpan(span, Context.current());
+    Context context = Context.current().with(span);
     final ClientCall<ReqT, RespT> result;
-    try (Scope ignored = withScopedContext(context)) {
+    try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);
@@ -97,8 +94,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(Listener<RespT> responseListener, Metadata headers) {
-      OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
-      try {
+      OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+      try (Scope ignored = span.makeCurrent()) {
         super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -108,7 +105,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(ReqT message) {
-      try {
+      try (Scope ignored = span.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -134,12 +131,9 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onMessage(RespT message) {
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.GRPC_MESSAGE_TYPE,
-              "SENT",
-              SemanticAttributes.GRPC_MESSAGE_ID,
-              messageId.incrementAndGet());
+              GrpcHelper.MESSAGE_TYPE, "SENT", GrpcHelper.MESSAGE_ID, messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onMessage(message);
       } catch (Throwable e) {
         tracer.addThrowable(span, e);
@@ -148,7 +142,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onClose(Status status, Metadata trailers) {
-      try {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onClose(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
@@ -159,7 +153,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try {
+      try (Scope ignored = span.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);

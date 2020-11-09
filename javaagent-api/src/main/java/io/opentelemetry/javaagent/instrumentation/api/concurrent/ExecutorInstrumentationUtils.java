@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import static io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils.TRACER;
-
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.trace.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -28,11 +26,11 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
-    Span span = TRACER.getCurrentSpan();
+    Span span = Span.current();
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    return span.getContext().isValid()
+    return span.getSpanContext().isValid()
         // TODO Workaround for
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
         && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")

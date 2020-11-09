@@ -6,10 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,11 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -57,13 +57,13 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return SharedSessionContract session) {
 
-      Context context = Context.current();
-      Span span = TRACER.spanBuilder("Session").setParent(context).startSpan();
+      Context context = Java8BytecodeBridge.currentContext();
+      Span span = tracer().spanBuilder("Session").setParent(context).startSpan();
       DECORATE.afterStart(span);
 
       ContextStore<SharedSessionContract, Context> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Context.class);
-      contextStore.putIfAbsent(session, withSpan(span, context));
+      contextStore.putIfAbsent(session, context.with(span));
     }
   }
 }

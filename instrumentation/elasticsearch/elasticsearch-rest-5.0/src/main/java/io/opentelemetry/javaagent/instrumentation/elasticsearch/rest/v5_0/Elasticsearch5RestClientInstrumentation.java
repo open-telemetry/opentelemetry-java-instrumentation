@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,9 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -66,10 +66,10 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      span = TRACER.startSpan(null, method + " " + endpoint);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(null, method + " " + endpoint);
+      scope = tracer().startScope(span);
 
-      TRACER.onRequest(span, method, endpoint);
+      tracer().onRequest(span, method, endpoint);
       responseListener = new RestResponseListener(responseListener, span);
     }
 
@@ -80,7 +80,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }

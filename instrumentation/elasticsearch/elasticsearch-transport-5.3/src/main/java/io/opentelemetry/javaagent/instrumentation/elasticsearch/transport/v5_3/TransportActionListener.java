@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
-import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
 
 import com.google.common.base.Joiner;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -109,13 +109,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
     }
 
-    TRACER.end(span);
+    tracer().end(span);
     listener.onResponse(response);
   }
 
   @Override
   public void onFailure(Exception e) {
-    TRACER.endExceptionally(span, e);
+    tracer().endExceptionally(span, e);
     listener.onFailure(e);
   }
 }

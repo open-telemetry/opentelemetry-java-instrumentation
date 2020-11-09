@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.tracer;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
@@ -27,14 +28,15 @@ public class JettyHandlerAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    Context attachedContext = TRACER.getServerContext(request);
+    Context attachedContext = tracer().getServerContext(request);
     if (attachedContext != null) {
       // We are inside nested handler, don't create new span
       return;
     }
 
-    span = TRACER.startSpan(request, request, method);
-    scope = TRACER.startScope(span, request);
+    Context ctx = tracer().startSpan(request, request, method);
+    span = Java8BytecodeBridge.spanFromContext(ctx);
+    scope = tracer().startScope(span, request);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -54,10 +56,10 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    TRACER.setPrincipal(span, request);
+    tracer().setPrincipal(span, request);
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable, response);
+      tracer().endExceptionally(span, throwable, response);
       return;
     }
 
@@ -75,7 +77,7 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      TRACER.end(span, response);
+      tracer().end(span, response);
     }
   }
 }

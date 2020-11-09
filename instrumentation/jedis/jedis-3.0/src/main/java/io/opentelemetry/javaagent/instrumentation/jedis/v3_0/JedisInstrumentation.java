@@ -5,17 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.tracer;
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.CommandWithArgs;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -39,7 +41,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JedisClientTracer",
+      packageName + ".JedisClientTracer$CommandWithArgs", packageName + ".JedisClientTracer",
     };
   }
 
@@ -48,7 +50,9 @@ public final class JedisInstrumentation extends Instrumenter.Default {
     return singletonMap(
         isMethod()
             .and(named("sendCommand"))
-            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand"))),
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
+            .and(takesArgument(1, is(byte[][].class))),
         JedisInstrumentation.class.getName() + "$JedisAdvice");
     // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
@@ -59,15 +63,11 @@ public final class JedisInstrumentation extends Instrumenter.Default {
     public static void onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) ProtocolCommand command,
+        @Advice.Argument(1) byte[][] args,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
-      if (callDepth > 0) {
-        return;
-      }
-
-      span = TRACER.startSpan(connection, command);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, new CommandWithArgs(command, args));
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -79,12 +79,11 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         return;
       }
       scope.close();
-      CallDepthThreadLocalMap.reset(Connection.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

@@ -16,7 +16,11 @@ import java.net.URISyntaxException;
 public class HttpUrlConnectionTracer
     extends HttpClientTracer<HttpURLConnection, HttpURLConnection, Integer> {
 
-  public static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
+  private static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
+
+  public static HttpUrlConnectionTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpURLConnection connection) {

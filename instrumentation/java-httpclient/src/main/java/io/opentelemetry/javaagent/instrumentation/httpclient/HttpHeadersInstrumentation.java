@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.net.http.HttpHeaders;
 import java.util.Map;
@@ -53,8 +54,8 @@ public class HttpHeadersInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      if (TRACER.getCurrentSpan().isRecording()) {
-        headers = TRACER.inject(headers);
+      if (Java8BytecodeBridge.currentSpan().isRecording()) {
+        headers = tracer().inject(headers);
       }
     }
   }

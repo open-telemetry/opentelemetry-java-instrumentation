@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -16,9 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -79,13 +80,13 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }
 
-      span = TRACER.startSpan(method);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(method);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -99,9 +100,9 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

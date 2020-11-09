@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils

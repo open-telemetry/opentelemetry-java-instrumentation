@@ -5,17 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
 
 public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
-  public static final GeodeTracer TRACER = new GeodeTracer();
+  private static final GeodeTracer TRACER = new GeodeTracer();
+
+  public static GeodeTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(String operation, Region<?, ?> connection, String query) {
     String normalizedQuery = normalizeQuery(query);
@@ -37,7 +41,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
 
   @Override
   protected String normalizeQuery(String query) {
-    return query;
+    return GeodeQueryNormalizer.normalize(query);
   }
 
   @Override
@@ -57,6 +61,6 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.geode-1.7";
+    return "io.opentelemetry.auto.geode";
   }
 }

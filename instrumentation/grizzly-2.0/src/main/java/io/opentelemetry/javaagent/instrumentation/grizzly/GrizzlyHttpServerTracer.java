@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
@@ -22,7 +22,11 @@ public class GrizzlyHttpServerTracer
 
   private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
 
-  public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+  private static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+
+  public static GrizzlyHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequestPacket httpRequest) {
@@ -86,7 +90,7 @@ public class GrizzlyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.grizzly-2.0";
+    return "io.opentelemetry.auto.grizzly";
   }
 
   @Override

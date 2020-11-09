@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -14,11 +14,11 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -78,12 +78,12 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(request);
+        span = tracer().startSpan(request);
         // Request is immutable, so we have to assign new value once we update headers
         AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        scope = TRACER.startScope(span, headers);
+        scope = tracer().startScope(span, headers);
         request = headers.getRequest();
       }
     }
@@ -102,7 +102,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         if (throwable == null) {
           responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
         } else {
-          TRACER.endExceptionally(span, throwable);
+          tracer().endExceptionally(span, throwable);
         }
       }
     }
@@ -118,9 +118,9 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Override
     public Void apply(Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        TRACER.end(span, result.get());
+        tracer().end(span, result.get());
       } else {
-        TRACER.endExceptionally(span, result.failed().get());
+        tracer().endExceptionally(span, result.failed().get());
       }
       return null;
     }

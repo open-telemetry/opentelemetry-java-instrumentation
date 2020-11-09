@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
@@ -16,12 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.net.HttpURLConnection;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -41,6 +41,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
         .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
+        // In WebLogic, URL.openConnection() returns its own internal implementation of
+        // HttpURLConnection, which does not delegate the methods that have to be instrumented to
+        // the JDK superclass. Therefore it needs to be instrumented directly.
+        .or(named("weblogic.net.http.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
         .and(extendsClass(named("java.net.HttpURLConnection")));
@@ -89,7 +93,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         if (!state.hasSpan() && !state.isFinished()) {
           Span span = state.start(thiz);
           if (!connected) {
-            scope = TRACER.startScope(span, thiz);
+            scope = tracer().startScope(span, thiz);
           }
         }
         return state;
@@ -138,7 +142,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile boolean finished = false;
 
     public Span start(HttpURLConnection connection) {
-      span = TRACER.startSpan(connection);
+      span = tracer().startSpan(connection);
       return span;
     }
 
@@ -151,7 +155,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       span = null;
       finished = true;
     }
@@ -165,7 +169,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       if (responseCode > 0) {
         // Need to explicitly cast to boxed type to make sure correct method is called.
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
-        TRACER.end(span, (Integer) responseCode);
+        tracer().end(span, (Integer) responseCode);
         span = null;
         finished = true;
       }

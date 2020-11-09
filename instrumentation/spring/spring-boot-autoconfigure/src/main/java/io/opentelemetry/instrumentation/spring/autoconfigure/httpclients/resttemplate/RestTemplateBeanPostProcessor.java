@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
-import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;

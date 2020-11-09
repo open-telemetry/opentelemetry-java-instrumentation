@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_DOUBLE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_DOUBLE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_DOUBLE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.SUMMARY
 
-import application.io.opentelemetry.OpenTelemetry
-import application.io.opentelemetry.common.Labels
-import application.io.opentelemetry.metrics.AsynchronousInstrument
+import application.io.opentelemetry.api.OpenTelemetry
+import application.io.opentelemetry.api.common.Labels
+import application.io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.data.MetricData
@@ -24,7 +26,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -41,7 +43,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -51,9 +53,9 @@ class MeterTest extends AgentTestRunner {
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
     if (bind) {
-      point.labels == io.opentelemetry.common.Labels.of("w", "x", "y", "z")
+      point.labels == io.opentelemetry.api.common.Labels.of("w", "x", "y", "z")
     } else {
-      point.labels == io.opentelemetry.common.Labels.of("q", "r")
+      point.labels == io.opentelemetry.api.common.Labels.of("q", "r")
     }
     point.value == expectedValue
 
@@ -75,7 +77,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -92,7 +94,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -102,12 +104,10 @@ class MeterTest extends AgentTestRunner {
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
     if (bind) {
-      point.labels == io.opentelemetry.common.Labels.of("w", "x", "y", "z")
+      point.labels == io.opentelemetry.api.common.Labels.of("w", "x", "y", "z")
     } else {
-      point.labels == io.opentelemetry.common.Labels.of("q", "r")
+      point.labels == io.opentelemetry.api.common.Labels.of("q", "r")
     }
-    point.count == 2
-    point.sum == sum
 
     where:
     builderMethod                | bind  | value1 | value2 | sum
@@ -123,7 +123,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -173,7 +173,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -182,21 +182,21 @@ class MeterTest extends AgentTestRunner {
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
-    point.labels == io.opentelemetry.common.Labels.of("q", "r")
+    point.labels == io.opentelemetry.api.common.Labels.of("q", "r")
     if (builderMethod.startsWith("long")) {
-      point."$valueMethod" == 123
+      point.value == 123
     } else {
-      point."$valueMethod" == 1.23
+      point.value == 1.23
     }
 
     where:
     builderMethod                    | valueMethod | expectedType
     "longSumObserverBuilder"         | "value"     | MONOTONIC_LONG
     "longUpDownSumObserverBuilder"   | "value"     | NON_MONOTONIC_LONG
-    "longValueObserverBuilder"       | "sum"       | SUMMARY
+    "longValueObserverBuilder"       | "sum"       | GAUGE_LONG
     "doubleSumObserverBuilder"       | "value"     | MONOTONIC_DOUBLE
     "doubleUpDownSumObserverBuilder" | "value"     | NON_MONOTONIC_DOUBLE
-    "doubleValueObserverBuilder"     | "sum"       | SUMMARY
+    "doubleValueObserverBuilder"     | "sum"       | GAUGE_DOUBLE
   }
 
   def "test batch recorder"() {
@@ -205,7 +205,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")
@@ -222,7 +222,7 @@ class MeterTest extends AgentTestRunner {
       .put(doubleMeasure, 6.6)
       .record()
 
-    def allMetrics = OpenTelemetrySdk.getMeterProvider().getMetricProducer().collectAllMetrics()
+    def allMetrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
 
     then:
     def metricData = findMetric(allMetrics, instrumentationName, "test")
@@ -234,7 +234,7 @@ class MeterTest extends AgentTestRunner {
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
-    point.labels == io.opentelemetry.common.Labels.of("q", "r")
+    point.labels == io.opentelemetry.api.common.Labels.of("q", "r")
     point.value == 11
 
     def metricData2 = findMetric(allMetrics, instrumentationName, "test2")
@@ -246,7 +246,7 @@ class MeterTest extends AgentTestRunner {
     metricData2.instrumentationLibraryInfo.version == "1.2.3"
     metricData2.points.size() == 1
     def point2 = metricData2.points.iterator().next()
-    point2.labels == io.opentelemetry.common.Labels.of("q", "r")
+    point2.labels == io.opentelemetry.api.common.Labels.of("q", "r")
     point2.count == 2
     point2.sum == 12.1
   }

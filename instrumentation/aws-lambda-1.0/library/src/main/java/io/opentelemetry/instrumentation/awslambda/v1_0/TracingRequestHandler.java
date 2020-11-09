@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,7 +57,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(span);
       }
-      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
   }
 

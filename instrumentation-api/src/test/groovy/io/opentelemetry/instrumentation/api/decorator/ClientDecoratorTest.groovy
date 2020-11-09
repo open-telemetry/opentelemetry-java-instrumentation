@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.grpc.Context
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.context.ContextUtils
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Tracer
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.Context
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.Tracer
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   def "test afterStart"() {
     setup:
@@ -41,22 +39,22 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def "test getOrCreateSpan when no existing client span"() {
     when:
-    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+    def span = ClientDecorator.getOrCreateSpan("test", tracer)
 
     then:
-    assert span.getContext().isValid()
+    assert span.getSpanContext().isValid()
   }
 
   def "test getOrCreateSpan when existing client span"() {
     setup:
-    def existing = ClientDecorator.getOrCreateSpan("existing", TRACER)
-    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(existing))
+    def existing = ClientDecorator.getOrCreateSpan("existing", tracer)
+    def scope = ClientDecorator.currentContextWith(existing).makeCurrent()
 
     when:
-    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+    def span = ClientDecorator.getOrCreateSpan("test", tracer)
 
     then:
-    assert !span.getContext().isValid()
+    assert !span.getSpanContext().isValid()
 
     cleanup:
     scope.close()
@@ -64,17 +62,17 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def "test getOrCreateSpan internal after client span"() {
     setup:
-    def client = ClientDecorator.getOrCreateSpan("existing", TRACER)
-    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(client))
+    def client = ClientDecorator.getOrCreateSpan("existing", tracer)
+    def scope = ClientDecorator.currentContextWith(client).makeCurrent()
 
     when:
-    def internal = TRACER.spanBuilder("internal").setSpanKind(Span.Kind.INTERNAL).startSpan()
-    def scope2 = TracingContextUtils.currentContextWith(internal)
+    def internal = tracer.spanBuilder("internal").setSpanKind(Span.Kind.INTERNAL).startSpan()
+    def scope2 = internal.makeCurrent()
 
     then:
-    assert internal.getContext().isValid()
-    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(Context.current()) == client
-    assert TracingContextUtils.getSpan(Context.current()) == internal
+    assert internal.getSpanContext().isValid()
+    assert Context.current().get(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == client
+    assert Span.fromContext(Context.current()) == internal
 
     cleanup:
     scope2.close()
@@ -83,14 +81,14 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def "test currentContextWith"() {
     setup:
-    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+    def span = ClientDecorator.getOrCreateSpan("test", tracer)
 
     when:
     def context = ClientDecorator.currentContextWith(span)
 
     then:
-    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context) == span
-    assert TracingContextUtils.getSpan(context) == span
+    assert context.get(ClientDecorator.CONTEXT_CLIENT_SPAN_KEY) == span
+    assert Span.fromContext(context) == span
   }
 
   @Override

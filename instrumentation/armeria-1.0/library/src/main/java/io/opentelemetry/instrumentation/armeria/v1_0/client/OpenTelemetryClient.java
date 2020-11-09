@@ -11,10 +11,10 @@ import com.linecorp.armeria.client.SimpleDecoratingHttpClient;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 

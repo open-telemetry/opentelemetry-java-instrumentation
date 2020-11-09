@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import ratpack.handling.Context;
 
 public class RatpackTracer extends BaseTracer {
-  public static final RatpackTracer TRACER = new RatpackTracer();
+  private static final RatpackTracer TRACER = new RatpackTracer();
+
+  public static RatpackTracer tracer() {
+    return TRACER;
+  }
 
   public Span onContext(Span span, Context ctx) {
     String description = ctx.getPathBinding().getDescription();
@@ -27,7 +31,7 @@ public class RatpackTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.ratpack-1.4";
+    return "io.opentelemetry.auto.ratpack";
   }
 
   @Override

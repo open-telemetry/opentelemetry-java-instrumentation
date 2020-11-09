@@ -41,6 +41,7 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      "io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter",
       packageName + ".OpenTelemetryTracing",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTracerProvider",
       packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContextProvider",

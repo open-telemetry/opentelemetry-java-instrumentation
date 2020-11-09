@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -30,7 +29,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   @Override
   public void accept(Handler<AsyncResult<?>> asyncResultHandler) {
     if (executionContext != null) {
-      try (Scope ignored = ContextUtils.withScopedContext(executionContext)) {
+      try (Scope ignored = executionContext.makeCurrent()) {
         delegate.accept(asyncResultHandler);
       }
     } else {

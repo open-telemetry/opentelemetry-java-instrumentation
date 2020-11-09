@@ -9,8 +9,8 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST
 import static org.springframework.web.reactive.function.server.RouterFunctions.route
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import java.time.Duration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
 @SpringBootApplication
 class SpringWebFluxTestApplication {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
@@ -122,7 +122,7 @@ class SpringWebFluxTestApplication {
   }
 
   private static FooModel tracedMethod(long id) {
-    TRACER.spanBuilder("tracedMethod").startSpan().end()
+    tracer.spanBuilder("tracedMethod").startSpan().end()
     return new FooModel(id, "tracedMethod")
   }
 }

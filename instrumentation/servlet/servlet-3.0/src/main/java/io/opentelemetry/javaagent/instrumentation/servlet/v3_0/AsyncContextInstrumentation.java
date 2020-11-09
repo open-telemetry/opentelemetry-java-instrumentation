@@ -8,17 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
@@ -76,9 +76,9 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       ServletRequest request = context.getRequest();
 
-      Context currentContext = Context.current();
-      Span currentSpan = getSpan(currentContext);
-      if (currentSpan.getContext().isValid()) {
+      Context currentContext = Java8BytecodeBridge.currentContext();
+      Span currentSpan = Java8BytecodeBridge.spanFromContext(currentContext);
+      if (currentSpan.getSpanContext().isValid()) {
         // this tells the dispatched servlet to use the current span as the parent for its work
         // (if the currentSpan is not valid for some reason, the original servlet span should still
         // be present in the same request attribute, and so that will be used)

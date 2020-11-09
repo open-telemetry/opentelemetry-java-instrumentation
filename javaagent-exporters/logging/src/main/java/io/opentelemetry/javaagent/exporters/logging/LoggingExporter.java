@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.exporters.logging;
 
-import io.opentelemetry.common.AttributeConsumer;
-import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeConsumer;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoggingExporter implements SpanExporter {
+  private static final Logger log = LoggerFactory.getLogger(LoggingExporter.class);
   private final String prefix;
 
   public LoggingExporter(String prefix) {
@@ -21,28 +25,37 @@ public class LoggingExporter implements SpanExporter {
 
   @Override
   public CompletableResultCode export(Collection<SpanData> list) {
+    StringBuilder stringBuilder = new StringBuilder();
     for (SpanData span : list) {
-      System.out.print(
-          prefix + " " + span.getName() + " " + span.getTraceId() + " " + span.getSpanId() + " ");
+
+      stringBuilder
+          .append(prefix)
+          .append(" ")
+          .append(span.getName())
+          .append(" ")
+          .append(span.getTraceId())
+          .append(" ")
+          .append(span.getSpanId())
+          .append(" ");
+
       span.getAttributes()
           .forEach(
               new AttributeConsumer() {
                 @Override
-                public <T> void consume(AttributeKey<T> key, T value) {
-                  System.out.print(key + "=");
-                  switch (key.getType()) {
-                    case STRING:
-                      System.out.print('"' + String.valueOf(value) + '"');
-                      break;
-                    default:
-                      System.out.print(value);
-                      break;
+                public <T> void accept(AttributeKey<T> key, T value) {
+
+                  stringBuilder.append(key.getKey()).append('=');
+
+                  if (key.getType() == AttributeType.STRING) {
+                    stringBuilder.append('"').append(value).append('"');
+                  } else {
+                    stringBuilder.append(value);
                   }
-                  System.out.print(" ");
+                  stringBuilder.append(' ');
                 }
               });
     }
-    System.out.println();
+    log.info(stringBuilder.toString());
     return CompletableResultCode.ofSuccess();
   }
 

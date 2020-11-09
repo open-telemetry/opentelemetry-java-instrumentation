@@ -14,8 +14,8 @@ import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -25,8 +25,8 @@ public final class InstrumentationPoints {
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
   public static SpanWithScope beforeCommand(RedisCommand<?, ?, ?> command) {
-    Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
-    return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
+    Span span = LettuceDatabaseClientTracer.tracer().startSpan(null, command);
+    return new SpanWithScope(span, LettuceDatabaseClientTracer.tracer().startScope(span));
   }
 
   public static void afterCommand(
@@ -36,38 +36,38 @@ public final class InstrumentationPoints {
       AsyncCommand<?, ?, ?> asyncCommand) {
     Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
+      LettuceDatabaseClientTracer.tracer().endExceptionally(span, throwable);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
             if (ex == null) {
-              LettuceDatabaseClientTracer.TRACER.end(span);
+              LettuceDatabaseClientTracer.tracer().end(span);
             } else if (ex instanceof CancellationException) {
               span.setAttribute("db.command.cancelled", true);
-              LettuceDatabaseClientTracer.TRACER.end(span);
+              LettuceDatabaseClientTracer.tracer().end(span);
             } else {
-              LettuceDatabaseClientTracer.TRACER.endExceptionally(span, ex);
+              LettuceDatabaseClientTracer.tracer().endExceptionally(span, ex);
             }
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      LettuceDatabaseClientTracer.TRACER.end(span);
+      LettuceDatabaseClientTracer.tracer().end(span);
     }
     spanWithScope.closeScope();
   }
 
   public static SpanWithScope beforeConnect(RedisURI redisURI) {
-    Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
-    return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
+    Span span = LettuceConnectionDatabaseClientTracer.tracer().startSpan(redisURI, "CONNECT");
+    return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.tracer().startScope(span));
   }
 
   public static void afterConnect(SpanWithScope spanWithScope, Throwable throwable) {
     Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceConnectionDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
+      LettuceConnectionDatabaseClientTracer.tracer().endExceptionally(span, throwable);
     } else {
-      LettuceConnectionDatabaseClientTracer.TRACER.end(span);
+      LettuceConnectionDatabaseClientTracer.tracer().end(span);
     }
     spanWithScope.closeScope();
   }

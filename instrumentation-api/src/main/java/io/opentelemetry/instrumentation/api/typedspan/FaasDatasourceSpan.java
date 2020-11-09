@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.grpc.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 
 public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasourceSemanticConvention {
 

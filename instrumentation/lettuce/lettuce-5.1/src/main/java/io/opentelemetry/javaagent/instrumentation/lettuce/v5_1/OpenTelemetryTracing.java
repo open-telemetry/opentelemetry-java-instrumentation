@@ -5,31 +5,43 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
-import io.grpc.Context;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter.splitArgs;
+
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.StatusCanonicalCode;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import reactor.util.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
-  public static final io.opentelemetry.trace.Tracer TRACER =
-      OpenTelemetry.getTracer("io.opentelemetry.auto.lettuce-5.1");
+  private static final io.opentelemetry.api.trace.Tracer TRACER =
+      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
+
+  public static io.opentelemetry.api.trace.Tracer tracer() {
+    return TRACER;
+  }
+
+  private static final RedisCommandNormalizer commandNormalizer =
+      new RedisCommandNormalizer("lettuce", "lettuce-5", "lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -57,8 +69,8 @@ public enum OpenTelemetryTracing implements Tracing {
     if (socketAddress instanceof InetSocketAddress) {
       InetSocketAddress address = (InetSocketAddress) socketAddress;
 
-      return new OpenTelemetryEndpoint(
-          address.getAddress().getHostAddress(), address.getPort(), address.getHostString());
+      String ip = address.getAddress() == null ? null : address.getAddress().getHostAddress();
+      return new OpenTelemetryEndpoint(ip, address.getPort(), address.getHostString());
     }
     return null;
   }
@@ -90,24 +102,20 @@ public enum OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    public Context getContext() {
+    public Context getSpanContext() {
       return context;
     }
   }
 
   private static class OpenTelemetryEndpoint implements Endpoint {
-    final String ip;
+    @Nullable final String ip;
     final int port;
     @Nullable final String name;
 
-    OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
+    OpenTelemetryEndpoint(@Nullable String ip, int port, @Nullable String name) {
       this.ip = ip;
       this.port = port;
-      if (!ip.equals(name)) {
-        this.name = name;
-      } else {
-        this.name = null;
-      }
+      this.name = name;
     }
   }
 
@@ -126,7 +134,7 @@ public enum OpenTelemetryTracing implements Tracing {
         return nextSpan();
       }
 
-      Context context = ((OpenTelemetryTraceContext) traceContext).getContext();
+      Context context = ((OpenTelemetryTraceContext) traceContext).getSpanContext();
 
       return new OpenTelemetrySpan(context);
     }
@@ -175,9 +183,9 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         if (span != null) {
-          fillEndpoint(span, (OpenTelemetryEndpoint) endpoint);
+          fillEndpoint(span::setAttribute, (OpenTelemetryEndpoint) endpoint);
         } else {
-          fillEndpoint(spanBuilder, (OpenTelemetryEndpoint) endpoint);
+          fillEndpoint(spanBuilder::setAttribute, (OpenTelemetryEndpoint) endpoint);
         }
       }
       return this;
@@ -198,7 +206,7 @@ public enum OpenTelemetryTracing implements Tracing {
       }
 
       if (error != null) {
-        span.setStatus(StatusCanonicalCode.ERROR);
+        span.setStatus(StatusCode.ERROR);
         span.recordException(error);
         error = null;
       }
@@ -249,50 +257,20 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement =
-              (args != null && !args.isEmpty()) && !name.equals("AUTH") ? name + " " + args : name;
+          String statement = commandNormalizer.normalize(name, splitArgs(args));
           span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
         }
         span.end();
       }
     }
 
-    private static void fillEndpoint(Span.Builder span, OpenTelemetryEndpoint endpoint) {
+    private static void fillEndpoint(SpanAttributeSetter span, OpenTelemetryEndpoint endpoint) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.NET_PEER_IP, endpoint.ip);
+      NetPeerUtils.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
 
-      StringBuilder redisUrl = new StringBuilder("redis://");
-
-      if (endpoint.name != null) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME, endpoint.name);
-        redisUrl.append(endpoint.name);
-      } else {
-        redisUrl.append(endpoint.ip);
-      }
-
-      if (endpoint.port != 0) {
-        span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) endpoint.port);
-        redisUrl.append(":").append(endpoint.port);
-      }
-
-      span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, redisUrl.toString());
-    }
-
-    private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.NET_PEER_IP, endpoint.ip);
-
-      StringBuilder redisUrl = new StringBuilder("redis://");
-
-      if (endpoint.name != null) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME, endpoint.name);
-        redisUrl.append(endpoint.name);
-      } else {
-        redisUrl.append(endpoint.ip);
-      }
-
-      if (endpoint.port != 0) {
-        span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) endpoint.port);
+      StringBuilder redisUrl =
+          new StringBuilder("redis://").append(endpoint.name != null ? endpoint.name : endpoint.ip);
+      if (endpoint.port > 0) {
         redisUrl.append(":").append(endpoint.port);
       }
 

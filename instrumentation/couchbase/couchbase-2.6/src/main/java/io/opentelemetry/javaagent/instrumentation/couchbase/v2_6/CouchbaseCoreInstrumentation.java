@@ -13,12 +13,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -58,13 +59,17 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   }
 
   public static class CouchbaseCoreAdvice {
-    public static final Tracer TRACER =
-        OpenTelemetry.getTracer("io.opentelemetry.auto.couchbase-2.6");
+    private static final Tracer TRACER =
+        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.couchbase-2.6");
+
+    public static Tracer tracer() {
+      return TRACER;
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
-      Span parentSpan = TRACER.getCurrentSpan();
+      Span parentSpan = Java8BytecodeBridge.currentSpan();
       if (parentSpan != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store

@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -83,17 +84,19 @@ public class AgentInstaller {
 
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      // calling (shaded) OpenTelemetry.getTracerProvider() with context class loader set to the
+      // calling (shaded) OpenTelemetry.getGlobalTracerProvider() with context class loader set to
+      // the
       // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
       // OpenTelemetry registers it, and then when instrumentation calls (shaded)
-      // OpenTelemetry.getTracerProvider() later, they get back the agent's (isolated) SDK
+      // OpenTelemetry.getGlobalTracerProvider() later, they get back the agent's (isolated) SDK
       //
       // but if we don't trigger this early registration, then if instrumentation is the first to
-      // call (shaded) OpenTelemetry.getTracerProvider(), then SPI can't see the agent class loader,
+      // call (shaded) OpenTelemetry.getGlobalTracerProvider(), then SPI can't see the agent class
+      // loader,
       // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
       // later
       Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
-      OpenTelemetry.getTracerProvider();
+      OpenTelemetry.getGlobalTracerProvider();
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);
     }
@@ -102,7 +105,7 @@ public class AgentInstaller {
         new ForceFlusher() {
           @Override
           public void run(int timeout, TimeUnit unit) {
-            OpenTelemetrySdk.getTracerManagement().forceFlush().join(timeout, unit);
+            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit);
           }
         });
 
@@ -144,9 +147,11 @@ public class AgentInstaller {
     for (AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
+
+    int numInstrumenters = 0;
+
     Iterable<Instrumenter> instrumenters =
         SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader());
-    int numInstrumenters = 0;
     for (Instrumenter instrumenter : orderInstrumenters(instrumenters)) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       try {
@@ -156,8 +161,19 @@ public class AgentInstaller {
         log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);
       }
     }
-    log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
+    for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
+      log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
+      try {
+        agentBuilder = instrumentationModule.instrument(agentBuilder);
+        numInstrumenters++;
+      } catch (Exception | LinkageError e) {
+        log.error(
+            "Unable to load instrumentation {}", instrumentationModule.getClass().getName(), e);
+      }
+    }
+
+    log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
   }
 
@@ -166,6 +182,14 @@ public class AgentInstaller {
     instrumenters.forEach(orderedInstrumenters::add);
     Collections.sort(orderedInstrumenters, Comparator.comparingInt(Instrumenter::getOrder));
     return orderedInstrumenters;
+  }
+
+  private static List<InstrumentationModule> loadInstrumentationModules() {
+    return SafeServiceLoader.load(
+            InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+        .stream()
+        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+        .collect(Collectors.toList());
   }
 
   private static void addByteBuddyRawSetting() {

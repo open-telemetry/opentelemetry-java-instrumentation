@@ -5,20 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
-import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -68,10 +67,10 @@ public final class JSPInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) HttpServletRequest req,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(TRACER.spanNameOnRender(req), Kind.INTERNAL);
+      span = tracer().startSpan(tracer().spanNameOnRender(req), Kind.INTERNAL);
       span.setAttribute("servlet.context", req.getContextPath());
-      TRACER.onRender(span, req);
-      scope = currentContextWith(span);
+      tracer().onRender(span, req);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -82,9 +81,9 @@ public final class JSPInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

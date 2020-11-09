@@ -48,6 +48,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
+      packageName + ".CouchbaseQueryNormalizer"
     };
   }
 
@@ -75,7 +76,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
         @Advice.Enter int callDepth,
         @Advice.Origin Method method,
         @Advice.FieldValue("bucket") String bucket,
-        @Advice.Return(readOnly = false) Observable result) {
+        @Advice.Return(readOnly = false) Observable<?> result) {
       if (callDepth > 0) {
         return;
       }
@@ -97,7 +98,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
         @Advice.Origin Method method,
         @Advice.FieldValue("bucket") String bucket,
         @Advice.Argument(value = 0, optional = true) Object query,
-        @Advice.Return(readOnly = false) Observable result) {
+        @Advice.Return(readOnly = false) Observable<?> result) {
       if (callDepth > 0) {
         return;
       }
@@ -108,7 +109,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
         // rewind back to when they were created from a string, but for now we rely on toString()
         // returning something useful. That seems to be the case. If we're starting to see strange
         // query texts, this is the place to look!
-        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, query.toString()));
+        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, query));
       } else {
         result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
       }

@@ -5,7 +5,7 @@ plugins {
 
   id "com.jfrog.artifactory" version "4.15.2" apply false
   id 'com.jfrog.bintray' version '1.8.5' apply false
-  id "nebula.release" version "15.0.1"
+  id "nebula.release" version "15.1.0"
 
   id 'org.gradle.test-retry' version '1.1.8' apply false
 
@@ -38,8 +38,8 @@ allprojects {
 
 repositories {
   mavenLocal()
-  jcenter()
   mavenCentral()
+  jcenter()
 }
 
 description = 'OpenTelemetry instrumentations for Java'

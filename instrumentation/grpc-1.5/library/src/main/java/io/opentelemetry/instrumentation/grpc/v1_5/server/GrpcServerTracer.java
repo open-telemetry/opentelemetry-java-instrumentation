@@ -5,17 +5,16 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Builder;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class GrpcServerTracer extends RpcServerTracer<Metadata> {
 
@@ -26,7 +25,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   }
 
   public Span startSpan(String name, Metadata headers) {
-    Builder spanBuilder =
+    Span.Builder spanBuilder =
         tracer.spanBuilder(name).setSpanKind(SERVER).setParent(extract(headers, getGetter()));
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
     return spanBuilder.startSpan();
@@ -48,7 +47,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.grpc-1.5";
+    return "io.opentelemetry.auto.grpc";
   }
 
   @Override

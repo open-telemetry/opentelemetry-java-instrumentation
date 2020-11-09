@@ -6,14 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import redis.RedisCommand;
 
 public class RediscalaClientTracer
     extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>> {
 
-  public static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
+  private static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
+
+  public static RediscalaClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String normalizeQuery(RedisCommand redisCommand) {
@@ -32,6 +36,6 @@ public class RediscalaClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.rediscala-1.8";
+    return "io.opentelemetry.auto.rediscala";
   }
 }

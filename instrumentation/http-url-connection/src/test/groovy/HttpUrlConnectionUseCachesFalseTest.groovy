@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.api.trace.Span
 import spock.lang.Timeout
 
 @Timeout(5)
@@ -18,9 +19,9 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      def parentSpan = TEST_TRACER.getCurrentSpan()
+      def parentSpan = Span.current()
       def stream = connection.inputStream
-      assert TEST_TRACER.getCurrentSpan() == parentSpan
+      assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

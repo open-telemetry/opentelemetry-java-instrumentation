@@ -35,6 +35,7 @@ dependencies {
   testLibrary group: 'io.projectreactor.netty', name: 'reactor-netty', version: '0.8.0.RELEASE'
 
   latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
+  latestDepTestLibrary group: 'io.projectreactor.netty', name: 'reactor-netty', version: '(,1.0.0)'
   // latest async-http-client incompatable with 5.0+ netty
 
 }

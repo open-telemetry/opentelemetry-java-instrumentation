@@ -25,7 +25,7 @@ public class SafeServiceLoader {
    * this should not happen. Please read CONTRIBUTING.md, section "Testing - Java versions" for a
    * background info why this is Ok.
    */
-  public static <T> Iterable<T> load(Class<T> serviceClass, ClassLoader classLoader) {
+  public static <T> List<T> load(Class<T> serviceClass, ClassLoader classLoader) {
     List<T> result = new ArrayList<>();
     java.util.ServiceLoader<T> services = ServiceLoader.load(serviceClass, classLoader);
     for (Iterator<T> iter = services.iterator(); iter.hasNext(); ) {

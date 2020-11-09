@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
-import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -35,7 +35,7 @@ public class ZipkinSpanExporterAutoConfiguration {
   public ZipkinSpanExporter otelZipkinSpanExporter(
       ZipkinSpanExporterProperties zipkinSpanExporterProperties) {
 
-    return ZipkinSpanExporter.newBuilder()
+    return ZipkinSpanExporter.builder()
         .setServiceName(zipkinSpanExporterProperties.getServiceName())
         .setEndpoint(zipkinSpanExporterProperties.getEndpoint())
         .build();

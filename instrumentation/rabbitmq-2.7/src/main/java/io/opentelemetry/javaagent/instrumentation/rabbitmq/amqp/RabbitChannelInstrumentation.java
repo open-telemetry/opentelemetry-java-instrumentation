@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -29,13 +28,13 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -118,9 +117,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(method, channel.getConnection());
+      span = tracer().startSpan(method, channel.getConnection());
       CURRENT_RABBIT_SPAN.set(span);
-      scope = TRACER.startScope(span);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -136,9 +135,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       CURRENT_RABBIT_SPAN.remove();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -150,10 +149,10 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = TRACER.getCurrentSpan();
+      Span span = Java8BytecodeBridge.currentSpan();
 
-      if (span.getContext().isValid()) {
-        TRACER.onPublish(span, exchange, routingKey);
+      if (span.getSpanContext().isValid()) {
+        tracer().onPublish(span, exchange, routingKey);
         if (body != null) {
           span.setAttribute(
               SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
@@ -172,9 +171,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        Context context = withSpan(span, Context.current());
+        Context context = Java8BytecodeBridge.currentContext().with(span);
 
-        OpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+        Java8BytecodeBridge.getGlobalPropagators()
+            .getTextMapPropagator()
+            .inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(
@@ -219,11 +220,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Span span = TRACER.startGetSpan(queue, startTime, response, channel.getConnection());
+      Span span = tracer().startGetSpan(queue, startTime, response, channel.getConnection());
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

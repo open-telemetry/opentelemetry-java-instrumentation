@@ -4,7 +4,7 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.mongodb.ConnectionString
 import com.mongodb.async.SingleResultCallback
@@ -18,7 +18,7 @@ import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
@@ -110,7 +110,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName){
+        mongoSpan(it, 0, "create", collectionName, dbName) {
           assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
@@ -324,7 +324,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
         "$SemanticAttributes.DB_NAME.key" dbName
         "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.MONGODB_COLLECTION.key" collection
+        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
       }
     }
   }

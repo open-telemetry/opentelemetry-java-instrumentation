@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 
 /**
  * This is deprecated.
@@ -19,7 +19,7 @@ import io.opentelemetry.trace.Span;
  *     public static SpanWithScope onEnter(...) {
  *     ...
  *     Span span = ...
- *     return new SpanWithScope(span, currentContextWith(span));
+ *     return new SpanWithScope(span, span.makeCurrent());
  *   }
  *
  *   &#64;Advice.OnMethodExit(...)

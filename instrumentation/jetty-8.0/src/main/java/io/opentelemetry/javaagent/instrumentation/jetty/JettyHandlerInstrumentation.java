@@ -35,7 +35,15 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // skipping built-in handlers, so that for servlets there will be no span started by jetty.
+    // this is so that the servlet instrumentation will capture contextPath and servletPath
+    // normally, which the jetty instrumentation does not capture since jetty doesn't populate
+    // contextPath and servletPath until right before calling the servlet
+    // (another option is to instrument ServletHolder.handle() to capture those fields)
     return not(named("org.eclipse.jetty.server.handler.HandlerWrapper"))
+        .and(not(named("org.eclipse.jetty.server.handler.ScopedHandler")))
+        .and(not(named("org.eclipse.jetty.server.handler.ContextHandler")))
+        .and(not(named("org.eclipse.jetty.servlet.ServletHandler")))
         .and(implementsInterface(named("org.eclipse.jetty.server.Handler")));
   }
 
@@ -56,6 +64,8 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("handle")
+            // need to capture doHandle() for handlers that extend built-in handlers excluded above
+            .or(named("doHandle"))
             .and(takesArgument(0, named("java.lang.String")))
             .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
             .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))

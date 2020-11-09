@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils.tracer;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
@@ -70,6 +72,6 @@ public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   }
 
   private void asyncChild() {
-    TRACER.spanBuilder("asyncChild").startSpan().end();
+    tracer().spanBuilder("asyncChild").startSpan().end();
   }
 }

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -92,7 +92,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/$forwardFromFileName"
           kind SERVER
           errored false
           attributes {
@@ -171,7 +171,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/forwards/forwardToHtml.jsp"
           kind SERVER
           errored false
           attributes {
@@ -225,7 +225,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 9) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
           kind SERVER
           errored false
           attributes {
@@ -339,7 +339,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/forwards/forwardToJspForward.jsp"
           kind SERVER
           errored false
           attributes {
@@ -433,7 +433,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/forwards/forwardToCompileError.jsp"
           kind SERVER
           errored true
           errorEvent(JasperException, String)
@@ -500,7 +500,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           hasNoParent()
-          name expectedOperationName()
+          name "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
           kind SERVER
           errored true
           attributes {
@@ -539,12 +539,5 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     cleanup:
     res.close()
-  }
-
-  //Simple class name plus method name of the entry point of the given servlet container.
-  //"Entry point" here means the first filter or servlet that accepts incoming requests.
-  //This will serve as a default name of the SERVER span created for this request.
-  protected String expectedOperationName() {
-    'ApplicationFilterChain.doFilter'
   }
 }

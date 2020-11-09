@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseHeaders;
@@ -52,19 +51,19 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   @Override
   public Object onCompleted() throws Exception {
     Response response = builder.build();
-    TRACER.end(span, response);
+    tracer().end(span, response);
 
-    try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {
+    try (Scope scope = invocationContext.makeCurrent()) {
       return delegate.onCompleted();
     }
   }
 
   @Override
   public void onThrowable(Throwable throwable) {
-    TRACER.endExceptionally(span, throwable);
+    tracer().endExceptionally(span, throwable);
     span.end();
 
-    try (Scope scope = ContextUtils.withScopedContext(invocationContext)) {
+    try (Scope scope = invocationContext.makeCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

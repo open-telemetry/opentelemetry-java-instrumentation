@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheClientTracer.tracer;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
@@ -22,7 +22,7 @@ public abstract class CompletionListener<T> {
   private final Span span;
 
   public CompletionListener(MemcachedConnection connection, String methodName) {
-    span = TRACER.startSpan(connection, methodName);
+    span = tracer().startSpan(connection, methodName);
   }
 
   protected void closeAsyncSpan(T future) {
@@ -36,22 +36,22 @@ public abstract class CompletionListener<T> {
         // ExecutionException
         span.setAttribute(DB_COMMAND_CANCELLED, true);
       } else {
-        TRACER.endExceptionally(span, e);
+        tracer().endExceptionally(span, e);
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
-      TRACER.endExceptionally(span, e);
+      tracer().endExceptionally(span, e);
       Thread.currentThread().interrupt();
     } catch (Exception e) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      TRACER.endExceptionally(span, e);
+      tracer().endExceptionally(span, e);
     } finally {
-      TRACER.end(span);
+      tracer().end(span);
     }
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    TRACER.endExceptionally(span, thrown);
+    tracer().endExceptionally(span, thrown);
   }
 
   protected abstract void processResult(Span span, T future)

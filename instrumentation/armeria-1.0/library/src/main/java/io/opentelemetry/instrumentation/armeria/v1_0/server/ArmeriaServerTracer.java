@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.armeria.v1_0.server;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.grpc.Context;
+import io.netty.util.AsciiString;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaServerTracer
@@ -33,7 +35,7 @@ public class ArmeriaServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.armeria-1.0";
+    return "io.opentelemetry.armeria";
   }
 
   @Override
@@ -97,8 +99,18 @@ public class ArmeriaServerTracer
     private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 
     @Override
+    public Iterable<String> keys(HttpRequest httpRequest) {
+      return httpRequest.headers().names().stream()
+          .map(AsciiString::toString)
+          .collect(Collectors.toList());
+    }
+
+    @Override
     @Nullable
-    public String get(HttpRequest carrier, String key) {
+    public String get(@Nullable HttpRequest carrier, String key) {
+      if (carrier == null) {
+        return null;
+      }
       return carrier.headers().get(key);
     }
   }

@@ -67,9 +67,9 @@ The gradle plugin defines two tasks:
     ```
     If a new, incompatible version of the instrumented library is published it fails the build.
 
-* `printReferences` task prints all API references in a given module:
+* `printMuzzleReferences` task prints all API references in a given module:
     ```sh
-    ./gradlew :instrumentation:google-http-client-1.19:printReferences
+    ./gradlew :instrumentation:google-http-client-1.19:printMuzzleReferences
     ```
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;
@@ -84,7 +84,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -101,7 +101,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       }
     }
   }
@@ -118,7 +118,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       if (span != null) {
         contextStore.put(asyncResponse, null);
         span.setAttribute("canceled", true);
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -21,10 +20,10 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -79,9 +78,9 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         serverSpan.updateName(routeInfo.path());
       }
 
-      Span span = TRACER.startSpan(clazz);
+      Span span = tracer().startSpan(clazz);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, span.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -96,7 +95,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
       Span span = spanWithScope.getSpan();
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
         spanWithScope.closeScope();
         return;
       }
@@ -115,14 +114,14 @@ public class FinatraInstrumentation extends Instrumenter.Default {
     @Override
     public void onSuccess(Response response) {
       Span span = spanWithScope.getSpan();
-      TRACER.end(span);
+      tracer().end(span);
       spanWithScope.closeScope();
     }
 
     @Override
     public void onFailure(Throwable cause) {
       Span span = spanWithScope.getSpan();
-      TRACER.endExceptionally(span, cause);
+      tracer().endExceptionally(span, cause);
       spanWithScope.closeScope();
     }
   }

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -28,14 +27,14 @@ public class HandlerAdapterAdvice {
     SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
     if (handler != null && context != null) {
-      Span span = TracingContextUtils.getSpan(context);
+      Span span = Span.fromContext(context);
       String handlerType;
       String operationName;
 
       if (handler instanceof HandlerMethod) {
         // Special case for requests mapped with annotations
         HandlerMethod handlerMethod = (HandlerMethod) handler;
-        operationName = TRACER.spanNameForMethod(handlerMethod.getMethod());
+        operationName = tracer().spanNameForMethod(handlerMethod.getMethod());
         handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
       } else {
         operationName = AdviceUtils.parseOperationName(handler);
@@ -45,15 +44,16 @@ public class HandlerAdapterAdvice {
       span.updateName(operationName);
       span.setAttribute("handler.type", handlerType);
 
-      spanWithScope = new SpanWithScope(span, withScopedContext(context));
+      spanWithScope = new SpanWithScope(span, context.makeCurrent());
     }
 
     if (context != null) {
-      Span serverSpan = BaseTracer.CONTEXT_SERVER_SPAN_KEY.get(context);
+      Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
       PathPattern bestPattern =
           exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (serverSpan != null && bestPattern != null) {
-        serverSpan.updateName(bestPattern.getPatternString());
+        serverSpan.updateName(
+            ServletContextPath.prepend(Context.current(), bestPattern.toString()));
       }
     }
 

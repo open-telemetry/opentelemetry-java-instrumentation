@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
@@ -22,8 +22,8 @@ public class LettuceAsyncCommandsAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    span = TRACER.startSpan(null, command);
-    scope = TRACER.startScope(span);
+    span = tracer().startSpan(null, command);
+    scope = tracer().startScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -36,7 +36,7 @@ public class LettuceAsyncCommandsAdvice {
     scope.close();
 
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       return;
     }
 
@@ -44,7 +44,7 @@ public class LettuceAsyncCommandsAdvice {
     if (expectsResponse(command)) {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     } else {
-      TRACER.end(span);
+      tracer().end(span);
     }
   }
 }

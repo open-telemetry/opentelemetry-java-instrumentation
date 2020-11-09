@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.dispatcher;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class RequestDispatcherTracer extends BaseTracer {
-  public static final RequestDispatcherTracer TRACER = new RequestDispatcherTracer();
+  private static final RequestDispatcherTracer TRACER = new RequestDispatcherTracer();
+
+  public static RequestDispatcherTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

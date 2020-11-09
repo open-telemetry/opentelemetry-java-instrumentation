@@ -7,17 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,9 +77,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This Channel channel) {
-      Context context = Context.current();
-      Span span = getSpan(context);
-      if (span.getContext().isValid()) {
+      Context context = Java8BytecodeBridge.currentContext();
+      Span span = Java8BytecodeBridge.spanFromContext(context);
+      if (span.getSpanContext().isValid()) {
         ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 

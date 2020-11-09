@@ -21,8 +21,8 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -63,11 +63,11 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     port = PortUtils.randomOpenPort()
     address = buildAddress()
     server = startServer(port)
-    println getClass().name + " http server started at: http://localhost:$port/"
+    println getClass().name + " http server started at: http://localhost:$port" + getContextPath()
   }
 
   URI buildAddress() {
-    return new URI("http://localhost:$port/")
+    return new URI("http://localhost:$port" + getContextPath() + "/")
   }
 
   abstract SERVER startServer(int port)
@@ -84,8 +84,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   abstract void stopServer(SERVER server)
 
-  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
+  }
+
+  String getContextPath() {
+    return ""
   }
 
   boolean hasHandlerSpan() {
@@ -204,7 +208,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
-    assert TEST_TRACER.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
+    assert io.opentelemetry.api.trace.Span.current().getSpanContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
@@ -442,7 +446,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name expectedServerSpanName(method, endpoint)
+      name expectedServerSpanName(endpoint)
       kind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
@@ -473,5 +477,4 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       }
     }
   }
-
 }

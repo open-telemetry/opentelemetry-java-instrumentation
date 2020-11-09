@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_3;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import play.api.mvc.Request;
 import scala.Option;
 
 public class PlayTracer extends BaseTracer {
-  public static final PlayTracer TRACER = new PlayTracer();
+  private static final PlayTracer TRACER = new PlayTracer();
+
+  public static PlayTracer tracer() {
+    return TRACER;
+  }
 
   public Span updateSpanName(Span span, Request<?> request) {
     Option<String> pathOption = request.tags().get("ROUTE_PATTERN");
@@ -26,7 +30,7 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play-2.3";
+    return "io.opentelemetry.auto.play";
   }
 
   @Override

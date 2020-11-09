@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 
@@ -21,9 +21,9 @@ public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> 
   @Override
   public void accept(HttpResponse<?> httpResponse, Throwable throwable) {
     if (throwable == null) {
-      TRACER.end(span, httpResponse);
+      tracer().end(span, httpResponse);
     } else {
-      TRACER.endExceptionally(span, httpResponse, throwable);
+      tracer().endExceptionally(span, httpResponse, throwable);
     }
   }
 }

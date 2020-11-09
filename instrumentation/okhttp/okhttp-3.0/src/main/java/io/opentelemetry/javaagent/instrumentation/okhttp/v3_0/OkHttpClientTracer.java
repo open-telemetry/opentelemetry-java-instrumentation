@@ -14,7 +14,11 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
-  public static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
+  private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
+
+  public static OkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(Request httpRequest) {
@@ -48,6 +52,6 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.okhttp-3.0";
+    return "io.opentelemetry.auto.okhttp";
   }
 }

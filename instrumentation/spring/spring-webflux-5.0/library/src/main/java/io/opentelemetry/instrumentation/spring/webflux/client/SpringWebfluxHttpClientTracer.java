@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -22,7 +22,11 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 public class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
-  public static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+  private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+
+  public static SpringWebfluxHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
@@ -73,7 +77,7 @@ public class SpringWebfluxHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-webflux-5.0";
+    return "io.opentelemetry.auto.spring-webflux";
   }
 
   public Tracer getTracer() {

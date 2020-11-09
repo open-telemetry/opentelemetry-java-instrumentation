@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -17,7 +17,11 @@ import play.routing.Router;
 import scala.Option;
 
 public class PlayTracer extends BaseTracer {
-  public static final PlayTracer TRACER = new PlayTracer();
+  private static final PlayTracer TRACER = new PlayTracer();
+
+  public static PlayTracer tracer() {
+    return TRACER;
+  }
 
   private static final Method typedKeyGetUnderlying;
 
@@ -63,7 +67,7 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play-2.6";
+    return "io.opentelemetry.auto.play";
   }
 
   @Override

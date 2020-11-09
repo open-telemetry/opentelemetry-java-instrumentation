@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import static io.opentelemetry.javaagent.instrumentation.api.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -17,11 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.rmi.server.RemoteServer;
 import java.util.Map;
@@ -67,8 +66,8 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       // TODO review and unify with all other SERVER instrumentation
       Context context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      span = TRACER.startSpan(method, context);
-      scope = currentContextWith(span);
+      span = tracer().startSpan(method, context);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -83,9 +82,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
       CallDepthThreadLocalMap.reset(RemoteServer.class);
       if (throwable != null) {
-        RmiServerTracer.TRACER.endExceptionally(span, throwable);
+        RmiServerTracer.tracer().endExceptionally(span, throwable);
       } else {
-        RmiServerTracer.TRACER.end(span);
+        RmiServerTracer.tracer().end(span);
       }
     }
   }

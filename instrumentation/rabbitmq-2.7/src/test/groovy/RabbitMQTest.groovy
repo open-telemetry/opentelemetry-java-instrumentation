@@ -4,9 +4,9 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
@@ -17,11 +17,11 @@ import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.common.AttributeKey
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.time.Duration
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.filter;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.filter.FilterTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.filter.FilterTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -14,10 +14,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
 import java.util.Map;
 import javax.servlet.Filter;
 import net.bytebuddy.asm.Advice;
@@ -77,14 +78,14 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         @Advice.This Filter filter,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         // Don't want to generate a new top-level span
         return;
       }
 
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
-      span = TRACER.startSpan(filter.getClass().getSimpleName() + ".doFilter", Kind.INTERNAL);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(filter.getClass().getSimpleName() + ".doFilter", Kind.INTERNAL);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -96,9 +97,9 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         return;
       }
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

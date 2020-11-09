@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 
 class NetPeerUtilsTest extends BaseTracerTest {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {

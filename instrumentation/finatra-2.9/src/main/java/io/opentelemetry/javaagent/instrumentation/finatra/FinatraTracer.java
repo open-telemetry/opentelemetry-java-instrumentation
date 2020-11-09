@@ -8,10 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.finatra;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class FinatraTracer extends BaseTracer {
-  public static final FinatraTracer TRACER = new FinatraTracer();
+  private static final FinatraTracer TRACER = new FinatraTracer();
+
+  public static FinatraTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.finatra-2.9";
+    return "io.opentelemetry.auto.finatra";
   }
 }

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
@@ -21,7 +20,11 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 final class AwsSdkHttpClientTracer
     extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
 
-  static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
+  private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
+
+  static AwsSdkHttpClientTracer tracer() {
+    return TRACER;
+  }
 
   // Certain headers in the request like User-Agent are only available after execution.
   Span afterExecution(Span span, SdkHttpRequest request) {
@@ -65,7 +68,7 @@ final class AwsSdkHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.aws-sdk-2.2";
+    return "io.opentelemetry.auto.aws-sdk";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */
@@ -75,12 +78,12 @@ final class AwsSdkHttpClientTracer
   }
 
   public Span getOrCreateSpan(String name, Tracer tracer, Kind kind) {
-    io.grpc.Context context = io.grpc.Context.current();
-    Span clientSpan = BaseTracer.CONTEXT_CLIENT_SPAN_KEY.get(context);
+    io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
+    Span clientSpan = context.get(BaseTracer.CONTEXT_CLIENT_SPAN_KEY);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
-      return DefaultSpan.getInvalid();
+      return Span.getInvalid();
     }
 
     return tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();

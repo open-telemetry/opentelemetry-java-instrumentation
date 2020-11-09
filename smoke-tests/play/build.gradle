@@ -19,8 +19,8 @@ play {
 
 repositories {
   mavenLocal()
-  jcenter()
   mavenCentral()
+  jcenter()
   maven {
     name "lightbend-maven-releases"
     url "https://repo.lightbend.com/lightbend/maven-release"
@@ -37,8 +37,11 @@ dependencies {
 
 def targetJDK = project.hasProperty("targetJDK") ? project.targetJDK : 11
 
+def tag = findProperty("tag") ?: new Date().format("yyyyMMdd.HHmmSS")
+
 jib {
   from.image = "bellsoft/liberica-openjdk-alpine:$targetJDK"
   to.image = "open-telemetry-docker-dev.bintray.io/java/smoke-play-jdk$targetJDK"
+  to.tags = [tag]
   container.mainClass = "play.core.server.ProdServerStart"
 }

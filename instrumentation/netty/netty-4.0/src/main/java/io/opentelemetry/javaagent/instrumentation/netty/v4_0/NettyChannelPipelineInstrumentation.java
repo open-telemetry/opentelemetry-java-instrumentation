@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -24,7 +23,9 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientTracingHandler;
@@ -151,7 +152,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Context context = Context.current();
+      Context context = Java8BytecodeBridge.currentContext();
       Attribute<Context> attribute =
           pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
       attribute.compareAndSet(null, context);

@@ -10,14 +10,14 @@ import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEv
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.common.AttributeConsumer
-import io.opentelemetry.common.AttributeKey
-import io.opentelemetry.common.ReadableAttributes
+import io.opentelemetry.api.common.AttributeConsumer
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.ReadableAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.SpanId
-import io.opentelemetry.trace.StatusCanonicalCode
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.regex.Pattern
 
 class SpanAssert {
@@ -122,7 +122,7 @@ class SpanAssert {
     assert found
   }
 
-  def status(StatusCanonicalCode status) {
+  def status(StatusCode status) {
     assert span.status.canonicalCode == status
     checked.status = true
   }
@@ -130,9 +130,9 @@ class SpanAssert {
   def errored(boolean errored) {
     if (errored) {
       // comparing only canonical code, since description may be different
-      assert span.status.canonicalCode == StatusCanonicalCode.ERROR
+      assert span.status.canonicalCode == StatusCode.ERROR
     } else {
-      assert span.status.canonicalCode == StatusCanonicalCode.UNSET
+      assert span.status.canonicalCode == StatusCode.UNSET
     }
     checked.status = true
   }
@@ -177,7 +177,7 @@ class SpanAssert {
     def map = new HashMap()
     attributes.forEach(new AttributeConsumer() {
       @Override
-      <T> void consume(AttributeKey<T> key, T value) {
+      <T> void accept(AttributeKey<T> key, T value) {
         map.put(key.key, value)
       }
     })

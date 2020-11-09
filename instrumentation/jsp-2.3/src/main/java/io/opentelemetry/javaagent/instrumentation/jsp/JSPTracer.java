@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
@@ -18,7 +18,11 @@ import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
 public class JSPTracer extends BaseTracer {
-  public static final JSPTracer TRACER = new JSPTracer();
+  private static final JSPTracer TRACER = new JSPTracer();
+
+  public static JSPTracer tracer() {
+    return TRACER;
+  }
 
   public String spanNameOnCompile(JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null
@@ -72,6 +76,6 @@ public class JSPTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jsp-2.3";
+    return "io.opentelemetry.auto.jsp";
   }
 }

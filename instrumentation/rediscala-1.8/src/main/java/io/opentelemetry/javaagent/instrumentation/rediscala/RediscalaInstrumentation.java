@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
-import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -17,9 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -79,8 +79,8 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) RedisCommand cmd,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = TRACER.startSpan(cmd, cmd);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(cmd, cmd);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -93,7 +93,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
         responseFuture.onComplete(new OnCompleteHandler(span), ctx);
       }
@@ -110,9 +110,9 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
     @Override
     public Void apply(Try<Object> result) {
       if (result.isFailure()) {
-        TRACER.endExceptionally(span, result.failed().get());
+        tracer().endExceptionally(span, result.failed().get());
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
       return null;
     }

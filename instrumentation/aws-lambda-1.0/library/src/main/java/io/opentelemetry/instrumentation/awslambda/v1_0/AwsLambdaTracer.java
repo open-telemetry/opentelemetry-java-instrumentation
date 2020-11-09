@@ -5,16 +5,13 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import com.amazonaws.services.lambda.runtime.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaTracer extends BaseTracer {
 
@@ -45,13 +42,13 @@ public class AwsLambdaTracer extends BaseTracer {
   /** Creates new scoped context with the given span. */
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    io.grpc.Context newContext =
-        withSpan(span, io.grpc.Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span));
-    return withScopedContext(newContext);
+    io.opentelemetry.context.Context newContext =
+        io.opentelemetry.context.Context.current().with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    return newContext.makeCurrent();
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.aws-lambda-1.0";
+    return "io.opentelemetry.aws-lambda";
   }
 }

@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.mongo;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -22,9 +22,12 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
-  public static final MongoClientTracer TRACER = new MongoClientTracer();
+  private static final MongoClientTracer TRACER = new MongoClientTracer();
 
-  // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
+  public static MongoClientTracer tracer() {
+    return TRACER;
+  }
+
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.mongo";
@@ -40,7 +43,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
     String collection = collectionName(event);
     if (collection != null) {
-      span.setAttribute(SemanticAttributes.MONGODB_COLLECTION, collection);
+      span.setAttribute(SemanticAttributes.DB_MONGODB_COLLECTION, collection);
     }
     return super.onConnection(span, event);
   }

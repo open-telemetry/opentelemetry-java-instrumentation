@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import org.springframework.web.reactive.function.server.HandlerFunction;
@@ -37,12 +37,12 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
       if (predicateString != null) {
         Context context = (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
         if (context != null) {
-          Span span = TracingContextUtils.getSpan(context);
+          Span span = Span.fromContext(context);
           span.setAttribute("request.predicate", predicateString);
 
-          Span serverSpan = BaseTracer.CONTEXT_SERVER_SPAN_KEY.get(context);
+          Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
           if (serverSpan != null) {
-            serverSpan.updateName(parseRoute(predicateString));
+            serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));
           }
         }
       }
@@ -61,7 +61,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     }
   }
 
-  private String parseRoute(String routerString) {
+  private static String parseRoute(String routerString) {
     return METHOD_REGEX
         .matcher(
             SPACES_REGEX

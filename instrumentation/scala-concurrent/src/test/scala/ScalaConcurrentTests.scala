@@ -5,23 +5,26 @@
 
 import java.util.concurrent.CountDownLatch
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+import io.opentelemetry.api.trace.Tracer
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
-  val TRACER: Tracer =
-    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+  // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
+  val tracer: Tracer =
+    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   /**
     * @return Number of expected spans in the trace
     */
   def traceWithFutureAndCallbacks() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(2)
       val goodFuture: Future[Integer] = Future {
@@ -53,8 +56,9 @@ class ScalaConcurrentTests {
   }
 
   def tracedAcrossThreadsWithNoTrace() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val latch = new CountDownLatch(1)
       val goodFuture: Future[Integer] = Future {
@@ -83,8 +87,9 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def traceWithPromises() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
@@ -131,8 +136,9 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def tracedWithFutureFirstCompletions() {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val completedVal = Future.firstCompletedOf(List(Future {
         tracedChild("timeout1")
@@ -155,8 +161,9 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   def tracedTimeout(): Integer = {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       val f: Future[String] = Future {
         tracedChild("timeoutChild")
@@ -179,6 +186,6 @@ class ScalaConcurrentTests {
   }
 
   def tracedChild(opName: String): Unit = {
-    TRACER.spanBuilder(opName).startSpan().end()
+    tracer.spanBuilder(opName).startSpan().end()
   }
 }

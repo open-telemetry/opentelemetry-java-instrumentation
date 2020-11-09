@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -17,9 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -90,9 +89,9 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        Span span = TRACER.startSpan(record);
+        Span span = tracer().startSpan(record);
 
-        holder.setSpanWithScope(new SpanWithScope(span, currentContextWith(span)));
+        holder.setSpanWithScope(new SpanWithScope(span, span.makeCurrent()));
       }
     }
   }
@@ -145,9 +144,9 @@ public class KafkaStreamsProcessorInstrumentation {
           Span span = spanWithScope.getSpan();
 
           if (throwable != null) {
-            TRACER.endExceptionally(span, throwable);
+            tracer().endExceptionally(span, throwable);
           } else {
-            TRACER.end(span);
+            tracer().end(span);
           }
         }
       }

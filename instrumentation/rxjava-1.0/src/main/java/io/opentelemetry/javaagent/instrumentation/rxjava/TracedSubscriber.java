@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
@@ -33,7 +30,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onStart() {
     Context context = contextRef.get();
     if (context != null) {
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onStart();
       }
     } else {
@@ -45,7 +42,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onNext(T value) {
     Context context = contextRef.get();
     if (context != null) {
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onNext(value);
       }
     } else {
@@ -58,13 +55,13 @@ public class TracedSubscriber<T> extends Subscriber<T> {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
       Throwable error = null;
-      try (Scope ignored = withScopedContext(context)) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.onCompleted();
       } catch (Throwable t) {
         error = t;
         throw t;
       } finally {
-        Span span = getSpan(context);
+        Span span = Span.fromContext(context);
         if (error != null) {
           tracer.endExceptionally(span, error);
         } else {
@@ -80,7 +77,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      tracer.endExceptionally(getSpan(context), e);
+      tracer.endExceptionally(Span.fromContext(context), e);
     }
     // TODO (trask) should this be wrapped in parent of context(?)
     delegate.onError(e);

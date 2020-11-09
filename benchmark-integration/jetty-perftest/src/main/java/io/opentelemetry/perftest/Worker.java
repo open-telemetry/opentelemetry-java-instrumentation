@@ -5,22 +5,20 @@
 
 package io.opentelemetry.perftest;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
 
 public class Worker {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
 
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMS) {
-    Span span = TRACER.spanBuilder("work").startSpan();
-    try (Scope scope = currentContextWith(span)) {
+    Span span = tracer.spanBuilder("work").startSpan();
+    try (Scope scope = span.makeCurrent()) {
       if (span != null) {
         span.setAttribute("work-time", workTimeMS);
         span.setAttribute("info", "interesting stuff");

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,10 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
@@ -92,11 +92,11 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(httpRequest);
-        if (span.getContext().isValid()) {
-          scope = TRACER.startScope(span, httpRequest);
+        span = tracer().startSpan(httpRequest);
+        if (span.getSpanContext().isValid()) {
+          scope = tracer().startScope(span, httpRequest);
         }
       }
     }
@@ -112,9 +112,9 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {
-          TRACER.end(span, result);
+          tracer().end(span, result);
         } else {
-          TRACER.endExceptionally(span, result, throwable);
+          tracer().endExceptionally(span, result, throwable);
         }
       }
     }
@@ -129,11 +129,11 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(httpRequest);
-        if (span.getContext().isValid()) {
-          scope = TRACER.startScope(span, httpRequest);
+        span = tracer().startSpan(httpRequest);
+        if (span.getSpanContext().isValid()) {
+          scope = tracer().startScope(span, httpRequest);
         }
       }
     }
@@ -149,7 +149,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable != null) {
-          TRACER.endExceptionally(span, null, throwable);
+          tracer().endExceptionally(span, null, throwable);
         } else {
           future = future.whenComplete(new ResponseConsumer(span));
         }

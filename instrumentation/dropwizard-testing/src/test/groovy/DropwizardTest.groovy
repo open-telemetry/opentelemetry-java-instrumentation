@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.dropwizard.Application
 import io.dropwizard.Configuration
@@ -22,7 +22,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -87,10 +87,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
     }
   }
 
+  // this override is needed because dropwizard reports peer ip as the client ip
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
+      name "${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
       kind SERVER
       errored endpoint.errored
       if (parentID != null) {

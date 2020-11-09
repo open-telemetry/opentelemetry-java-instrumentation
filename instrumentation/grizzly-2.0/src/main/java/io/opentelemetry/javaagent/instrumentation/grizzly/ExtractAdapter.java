@@ -12,6 +12,11 @@ public class ExtractAdapter implements TextMapPropagator.Getter<HttpRequestPacke
   public static final ExtractAdapter GETTER = new ExtractAdapter();
 
   @Override
+  public Iterable<String> keys(HttpRequestPacket request) {
+    return request.getHeaders().names();
+  }
+
+  @Override
   public String get(HttpRequestPacket request, String key) {
     return request.getHeader(key);
   }

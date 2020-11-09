@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
-import io.opentelemetry.trace.Tracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

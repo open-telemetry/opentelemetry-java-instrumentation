@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static java.util.Collections.singletonMap;
-
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Map;
 
 public abstract class AbstractInstrumentation extends Instrumenter.Default {
   public AbstractInstrumentation() {
@@ -18,9 +15,9 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".context.ContextUtils",
-      packageName + ".context.ApplicationScope",
-      packageName + ".context.NoopScope",
+      packageName + ".context.AgentContextStorage",
+      packageName + ".context.AgentContextStorage$AgentContextWrapper",
+      packageName + ".context.AgentContextStorage$SpanContextKeys",
       packageName + ".context.propagation.ApplicationContextPropagators",
       packageName + ".context.propagation.ApplicationTextMapPropagator",
       packageName + ".context.propagation.ApplicationTextMapPropagator$AgentSetter",
@@ -76,18 +73,11 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".trace.Bridging",
       packageName + ".trace.Bridging$1",
       packageName + ".trace.Bridging$2",
-      packageName + ".trace.TracingContextUtils",
       packageName + ".trace.ApplicationSpan",
       packageName + ".trace.ApplicationSpan$Builder",
       packageName + ".trace.ApplicationTracer",
       packageName + ".trace.ApplicationTracerProvider",
-      packageName + ".LabelBridging",
-      packageName + ".LabelBridging$Consumer"
+      packageName + ".LabelBridging"
     };
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("application.io.grpc.Context", "io.grpc.Context");
   }
 }

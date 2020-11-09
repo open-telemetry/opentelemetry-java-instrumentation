@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.javaagent.instrumentation.jms.JMSTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jms.JMSTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,10 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Destination;
@@ -92,9 +92,9 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       }
 
       MessageDestination messageDestination =
-          TRACER.extractDestination(message, defaultDestination);
-      span = TRACER.startProducerSpan(messageDestination, message);
-      scope = TRACER.startProducerScope(span, message);
+          tracer().extractDestination(message, defaultDestination);
+      span = tracer().startProducerSpan(messageDestination, message);
+      scope = tracer().startProducerScope(span, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -109,9 +109,9 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }
@@ -129,9 +129,9 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         return;
       }
 
-      MessageDestination messageDestination = TRACER.extractDestination(message, destination);
-      span = TRACER.startProducerSpan(messageDestination, message);
-      scope = TRACER.startScope(span);
+      MessageDestination messageDestination = tracer().extractDestination(message, destination);
+      span = tracer().startProducerSpan(messageDestination, message);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -145,9 +145,9 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

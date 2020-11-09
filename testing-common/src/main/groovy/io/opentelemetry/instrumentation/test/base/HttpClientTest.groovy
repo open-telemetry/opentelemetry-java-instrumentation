@@ -9,15 +9,15 @@ import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.h
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import static org.junit.Assume.assumeTrue
 
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.ExecutionException
 import spock.lang.AutoCleanup
 import spock.lang.Requires
@@ -27,7 +27,7 @@ import spock.lang.Unroll
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
-  protected static final CONNECT_TIMEOUT_MS = 1000
+  protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 

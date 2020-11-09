@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
-import static io.opentelemetry.trace.TracingContextUtils.getSpan
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
-import io.grpc.Context
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.propagation.HttpTraceContext
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.propagation.HttpTraceContext
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -67,7 +67,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     consumerContainer.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        getTestTracer().getCurrentSpan().setAttribute("testing", 123)
+        Span.current().setAttribute("testing", 123)
         records.add(record)
       }
     })
@@ -91,7 +91,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       .mapValues(new ValueMapper<String, String>() {
         @Override
         String apply(String textLine) {
-          getTestTracer().getCurrentSpan().setAttribute("asdf", "testing")
+          Span.current().setAttribute("asdf", "testing")
           return textLine.toLowerCase()
         }
       })
@@ -206,7 +206,12 @@ class KafkaStreamsTest extends AgentTestRunner {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    Context context = new HttpTraceContext().extract(Context.ROOT, "", new TextMapPropagator.Getter<String>() {
+    Context context = new HttpTraceContext().extract(Context.root(), "", new TextMapPropagator.Getter<String>() {
+      @Override
+      Iterable<String> keys(String carrier) {
+        return Collections.singleton("traceparent")
+      }
+
       @Override
       String get(String carrier, String key) {
         if (key == "traceparent") {
@@ -215,7 +220,7 @@ class KafkaStreamsTest extends AgentTestRunner {
         return null
       }
     })
-    def spanContext = getSpan(context).getContext()
+    def spanContext = Span.fromContext(context).getSpanContext()
     spanContext.traceIdAsHexString == TEST_WRITER.traces[0][3].traceId
     spanContext.spanIdAsHexString == TEST_WRITER.traces[0][3].spanId
 

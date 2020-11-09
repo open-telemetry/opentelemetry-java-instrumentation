@@ -95,11 +95,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.exporters.logging.*;
 
@@ -108,7 +108,7 @@ public class OtelConfig {
    private static final String tracerName = "fooTracer";
    @Bean
    public Tracer otelTracer() throws Exception {
-      Tracer tracer = OpenTelemetry.getTracer(tracerName);
+      Tracer tracer = OpenTelemetry.getGlobalTracer(tracerName);
 
       SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
       OpenTelemetrySdk.getTracerManagement().addSpanProcessor(logProcessor);
@@ -171,8 +171,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 
 import HttpUtils;
 
@@ -221,12 +221,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.Tracer;
 
 @Component
 public class HttpUtils {
@@ -293,8 +293,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 
 @RestController
 @RequestMapping(value = "/time")
@@ -504,7 +504,7 @@ Include the two classes below to your MainService project to add this functional
 
 import java.io.IOException;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
 
@@ -512,10 +512,10 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 
 @Component
 public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
@@ -713,8 +713,8 @@ import org.springframework.web.client.RestTemplate;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 
 @SpringBootApplication
 public class TimeServiceApplication {

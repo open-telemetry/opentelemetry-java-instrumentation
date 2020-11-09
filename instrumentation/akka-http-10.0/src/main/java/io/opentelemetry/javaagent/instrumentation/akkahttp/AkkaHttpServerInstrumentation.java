@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -13,9 +13,11 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -96,13 +98,14 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request");
-      try (Scope ignored = TRACER.startScope(span, null)) {
+      Context ctx = tracer().startSpan(request, request, "akka.request");
+      Span span = Java8BytecodeBridge.spanFromContext(ctx);
+      try (Scope ignored = tracer().startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
-        TRACER.end(span, response);
+        tracer().end(span, response);
         return response;
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
     }
@@ -121,28 +124,29 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request");
-      try (Scope ignored = TRACER.startScope(span, null)) {
+      Context ctx = tracer().startSpan(request, request, "akka.request");
+      Span span = Java8BytecodeBridge.spanFromContext(ctx);
+      try (Scope ignored = tracer().startScope(span, null)) {
         return userHandler
             .apply(request)
             .transform(
                 new AbstractFunction1<HttpResponse, HttpResponse>() {
                   @Override
                   public HttpResponse apply(HttpResponse response) {
-                    TRACER.end(span, response);
+                    tracer().end(span, response);
                     return response;
                   }
                 },
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
                   public Throwable apply(Throwable t) {
-                    TRACER.endExceptionally(span, t);
+                    tracer().endExceptionally(span, t);
                     return t;
                   }
                 },
                 executionContext);
       } catch (Throwable t) {
-        TRACER.endExceptionally(span, t);
+        tracer().endExceptionally(span, t);
         throw t;
       }
     }

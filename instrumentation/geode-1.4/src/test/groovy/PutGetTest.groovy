@@ -4,11 +4,12 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import org.apache.geode.DataSerializable
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
 import spock.lang.Shared
@@ -27,11 +28,10 @@ class PutGetTest extends AgentTestRunner {
 
   def "test put and get"() {
     when:
-    def cacheValue
-    runUnderTrace("someTrace") {
+    def cacheValue = runUnderTrace("someTrace") {
       region.clear()
       region.put(key, value)
-      cacheValue = region.get(key)
+      region.get(key)
     }
 
     then:
@@ -68,11 +68,10 @@ class PutGetTest extends AgentTestRunner {
 
   def "test query"() {
     when:
-    def cacheValue
-    runUnderTrace("someTrace") {
+    def cacheValue = runUnderTrace("someTrace") {
       region.clear()
       region.put(key, value)
-      cacheValue = region.query("SELECT * FROM /test-region")
+      region.query("SELECT * FROM /test-region")
     }
 
     then:
@@ -89,11 +88,10 @@ class PutGetTest extends AgentTestRunner {
 
   def "test existsValue"() {
     when:
-    def exists
-    runUnderTrace("someTrace") {
+    def exists = runUnderTrace("someTrace") {
       region.clear()
       region.put(key, value)
-      exists = region.existsValue("SELECT * FROM /test-region")
+      region.existsValue("SELECT * FROM /test-region")
     }
 
     then:
@@ -121,9 +119,9 @@ class PutGetTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
-            "${SemanticAttributes.DB_NAME.key()}" "test-region"
-            "${SemanticAttributes.DB_OPERATION.key()}" "clear"
+            "$SemanticAttributes.DB_SYSTEM.key" "geode"
+            "$SemanticAttributes.DB_NAME.key" "test-region"
+            "$SemanticAttributes.DB_OPERATION.key" "clear"
           }
         }
         span(2) {
@@ -131,9 +129,9 @@ class PutGetTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
-            "${SemanticAttributes.DB_NAME.key()}" "test-region"
-            "${SemanticAttributes.DB_OPERATION.key()}" "put"
+            "$SemanticAttributes.DB_SYSTEM.key" "geode"
+            "$SemanticAttributes.DB_NAME.key" "test-region"
+            "$SemanticAttributes.DB_OPERATION.key" "put"
           }
         }
         span(3) {
@@ -141,16 +139,65 @@ class PutGetTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "geode"
-            "${SemanticAttributes.DB_NAME.key()}" "test-region"
-            "${SemanticAttributes.DB_OPERATION.key()}" verb
+            "$SemanticAttributes.DB_SYSTEM.key" "geode"
+            "$SemanticAttributes.DB_NAME.key" "test-region"
+            "$SemanticAttributes.DB_OPERATION.key" verb
             if (query != null) {
-              "${SemanticAttributes.DB_STATEMENT.key()}" query
+              "$SemanticAttributes.DB_STATEMENT.key" query
             }
           }
         }
       }
     }
     return true
+  }
+
+  def "should sanitize geode query"() {
+    given:
+    def value = new Card(cardNumber: '1234432156788765', expDate: '10/2020')
+
+    region.clear()
+    region.put(1, value)
+    TEST_WRITER.waitForTraces(2)
+    TEST_WRITER.clear()
+
+    when:
+    def results = region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'")
+
+    then:
+    results.toList() == [value]
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "query"
+          kind CLIENT
+          errored false
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM.key" "geode"
+            "$SemanticAttributes.DB_NAME.key" "test-region"
+            "$SemanticAttributes.DB_OPERATION.key" "query"
+            "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM /test-region p WHERE p.expDate = ?"
+          }
+        }
+      }
+    }
+  }
+
+  static class Card implements DataSerializable {
+    String cardNumber
+    String expDate
+
+    @Override
+    void toData(DataOutput dataOutput) throws IOException {
+      dataOutput.writeUTF(cardNumber)
+      dataOutput.writeUTF(expDate)
+    }
+
+    @Override
+    void fromData(DataInput dataInput) throws IOException, ClassNotFoundException {
+      cardNumber = dataInput.readUTF()
+      expDate = dataInput.readUTF()
+    }
   }
 }

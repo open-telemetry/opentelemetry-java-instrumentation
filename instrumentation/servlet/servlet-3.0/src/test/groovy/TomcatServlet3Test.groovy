@@ -48,7 +48,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
       applicationDir.mkdirs()
       applicationDir.deleteOnExit()
     }
-    Context servletContext = tomcatServer.addWebapp("/$context", applicationDir.getAbsolutePath())
+    Context servletContext = tomcatServer.addWebapp(contextPath, applicationDir.getAbsolutePath())
     // Speed up startup by disabling jar scanning:
     servletContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
       @Override
@@ -79,13 +79,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   @Override
-  String getContext() {
-    return "tomcat-context"
-  }
-
-  @Override
-  protected String entryPointName() {
-    return 'ApplicationFilterChain.doFilter'
+  String getContextPath() {
+    return "/tomcat-context"
   }
 
   @Override
@@ -94,7 +89,6 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     Tomcat.addServlet(servletContext, name, servlet.newInstance())
     servletContext.addServletMappingDecoded(path, name)
   }
-
 
   def "access log has ids for #count requests"() {
     given:
@@ -375,6 +369,6 @@ class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
 abstract class TomcatDispatchTest extends TomcatServlet3Test {
   @Override
   URI buildAddress() {
-    return new URI("http://localhost:$port/$context/dispatch/")
+    return new URI("http://localhost:$port$contextPath/dispatch/")
   }
 }

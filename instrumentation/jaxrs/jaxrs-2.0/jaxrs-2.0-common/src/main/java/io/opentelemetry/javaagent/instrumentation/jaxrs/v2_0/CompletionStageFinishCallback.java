@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.function.BiFunction;
 
 public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable, T> {
@@ -20,9 +20,9 @@ public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable
   @Override
   public T apply(T result, Throwable throwable) {
     if (throwable == null) {
-      TRACER.end(span);
+      tracer().end(span);
     } else {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
     }
     return result;
   }

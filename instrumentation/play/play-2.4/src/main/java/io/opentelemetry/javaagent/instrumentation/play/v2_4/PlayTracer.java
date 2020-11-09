@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import play.api.mvc.Request;
 import scala.Option;
 
 public class PlayTracer extends BaseTracer {
-  public static final PlayTracer TRACER = new PlayTracer();
+  private static final PlayTracer TRACER = new PlayTracer();
+
+  public static PlayTracer tracer() {
+    return TRACER;
+  }
 
   public void updateSpanName(Span span, Request<?> request) {
     if (request != null) {
@@ -27,7 +31,7 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play-2.4";
+    return "io.opentelemetry.auto.play";
   }
 
   @Override

@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnection, String> {
-  public static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
+  private static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
+
+  public static MemcacheClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String dbSystem(MemcachedConnection memcachedConnection) {
@@ -46,6 +50,6 @@ public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnecti
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spymemcached-2.12";
+    return "io.opentelemetry.auto.spymemcached";
   }
 }

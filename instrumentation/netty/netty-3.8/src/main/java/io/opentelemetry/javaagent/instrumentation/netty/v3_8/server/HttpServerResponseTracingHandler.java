@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TracingContextUtils;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -33,19 +31,19 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    Context context = TRACER.getServerContext(channelTraceContext);
+    Context context = tracer().getServerContext(channelTraceContext);
     if (context == null || !(msg.getMessage() instanceof HttpResponse)) {
       ctx.sendDownstream(msg);
       return;
     }
 
-    Span span = TracingContextUtils.getSpan(context);
-    try (Scope ignored = ContextUtils.withScopedContext(context)) {
+    Span span = Span.fromContext(context);
+    try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
       throw throwable;
     }
-    TRACER.end(span, (HttpResponse) msg.getMessage());
+    tracer().end(span, (HttpResponse) msg.getMessage());
   }
 }

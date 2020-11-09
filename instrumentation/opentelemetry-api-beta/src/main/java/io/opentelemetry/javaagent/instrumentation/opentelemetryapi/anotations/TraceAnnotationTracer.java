@@ -5,16 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 
-import application.io.opentelemetry.extensions.auto.annotations.WithSpan;
-import application.io.opentelemetry.trace.Span;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span.Kind;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TraceAnnotationTracer extends BaseTracer {
-  public static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+
+  public static TraceAnnotationTracer tracer() {
+    return TRACER;
+  }
 
   private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
 

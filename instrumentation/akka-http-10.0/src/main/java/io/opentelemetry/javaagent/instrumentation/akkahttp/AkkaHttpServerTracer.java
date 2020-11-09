@@ -8,13 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp;
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 
 public class AkkaHttpServerTracer
     extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
-  public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
+  private static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
+
+  public static AkkaHttpServerTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String method(HttpRequest httpRequest) {
@@ -61,7 +65,7 @@ public class AkkaHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.akka-http-10.0";
+    return "io.opentelemetry.auto.akka-http";
   }
 
   @Override

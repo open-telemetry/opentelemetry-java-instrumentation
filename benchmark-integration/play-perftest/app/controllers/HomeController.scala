@@ -16,8 +16,8 @@
 
 package controllers
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import javax.inject.Inject
 
 import play.api.mvc._
@@ -48,8 +48,8 @@ class HomeController @Inject()(cc: ControllerComponents)
   }
 
   private def scheduleWork(workTimeMS: Long) {
-    val span = TRACER.spanBuilder("work").startSpan()
-    val scope = TRACER.withSpan(span)
+    val span = tracer().spanBuilder("work").startSpan()
+    val scope = tracer().withSpan(span)
     try {
       if (span != null) {
         span.setAttribute("work-time", workTimeMS)

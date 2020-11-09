@@ -3,11 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.jms.JMSTracer
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Connection
+import javax.jms.Message
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.command.ActiveMQTextMessage
 import org.slf4j.Logger
@@ -16,17 +26,6 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Requires
 import spock.lang.Shared
-
-import javax.jms.Connection
-import javax.jms.Message
-import javax.jms.MessageListener
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
-
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 @Requires({ "true" != System.getenv("CIRCLECI") })
 class JMS1Test extends AgentTestRunner {

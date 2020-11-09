@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -71,7 +71,8 @@ abstract class JdkHttpClientTest extends HttpClientTest {
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
-            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" }
+            // Optional
             "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
             "${SemanticAttributes.HTTP_METHOD.key()}" method

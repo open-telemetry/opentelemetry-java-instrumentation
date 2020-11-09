@@ -5,19 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
+import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -47,21 +50,31 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JedisClientTracer",
+      packageName + ".JedisClientTracer$CommandWithArgs", packageName + ".JedisClientTracer",
     };
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
+    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+    transformers.put(
         isMethod()
             .and(named("sendCommand"))
+            .and(takesArguments(1))
             .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
-        JedisInstrumentation.class.getName() + "$JedisAdvice");
-    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
+        JedisInstrumentation.class.getName() + "$JedisNoArgsAdvice");
+    transformers.put(
+        isMethod()
+            .and(named("sendCommand"))
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
+            .and(takesArgument(1, is(byte[][].class))),
+        JedisInstrumentation.class.getName() + "$JedisArgsAdvice");
+    return transformers;
   }
 
-  public static class JedisAdvice {
+  public static class JedisNoArgsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -74,8 +87,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      span = TRACER.startSpan(connection, command);
-      scope = TRACER.startScope(span);
+      span = tracer().startSpan(connection, new CommandWithArgs(command));
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -90,9 +103,46 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(Connection.class);
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        TRACER.end(span);
+        tracer().end(span);
+      }
+    }
+  }
+
+  public static class JedisArgsAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This Connection connection,
+        @Advice.Argument(0) Command command,
+        @Advice.Argument(1) byte[][] args,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
+      if (callDepth > 0) {
+        return;
+      }
+
+      span = tracer().startSpan(connection, new CommandWithArgs(command, args));
+      scope = tracer().startScope(span);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      CallDepthThreadLocalMap.reset(Connection.class);
+
+      if (throwable != null) {
+        tracer().endExceptionally(span, throwable);
+      } else {
+        tracer().end(span);
       }
     }
   }

@@ -5,24 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava;
 
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
 import rx.Observable;
 import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
-  private final Observable.OnSubscribe<?> delegate;
+  private final Observable.OnSubscribe<T> delegate;
   private final String operationName;
   private final Context parentContext;
   private final BaseTracer tracer;
   private final Span.Kind spanKind;
 
   public TracedOnSubscribe(
-      Observable originalObservable, String operationName, BaseTracer tracer, Span.Kind spanKind) {
+      Observable<T> originalObservable,
+      String operationName,
+      BaseTracer tracer,
+      Span.Kind spanKind) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
     this.tracer = tracer;
@@ -34,11 +36,11 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   @Override
   public void call(Subscriber<? super T> subscriber) {
     // TODO pass Context into Tracer.startSpan() and then don't need this outer scoping
-    try (Scope ignored = ContextUtils.withScopedContext(parentContext)) {
+    try (Scope ignored = parentContext.makeCurrent()) {
       Span span = tracer.startSpan(operationName, spanKind);
       decorateSpan(span);
       try (Scope ignored1 = tracer.startScope(span)) {
-        delegate.call(new TracedSubscriber(Context.current(), subscriber, tracer));
+        delegate.call(new TracedSubscriber<>(Context.current(), subscriber, tracer));
       }
     }
   }

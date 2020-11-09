@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+import io.opentelemetry.api.trace.Tracer
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 class SlickUtils {
-  val TRACER: Tracer =
-    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+  // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
+  val tracer: Tracer =
+    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   import SlickUtils._
 
@@ -33,8 +35,8 @@ class SlickUtils {
   )
 
   def startQuery(query: String): Future[Vector[Int]] = {
-    val span = TRACER.spanBuilder("run query").startSpan()
-    val scope = TRACER.withSpan(span)
+    val span = tracer.spanBuilder("run query").startSpan()
+    val scope = Java8BytecodeBridge.currentContext().`with`(span).makeCurrent()
     try {
       return database.run(sql"#$query".as[Int])
     } finally {

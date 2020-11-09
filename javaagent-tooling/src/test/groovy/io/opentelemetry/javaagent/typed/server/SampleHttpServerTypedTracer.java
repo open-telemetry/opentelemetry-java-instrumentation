@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.typed.server;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.typed.server.http.HttpServerTypedTracer;
-import io.opentelemetry.trace.Span;
 
 public class SampleHttpServerTypedTracer
     extends HttpServerTypedTracer<SampleHttpServerTypedSpan, String, String> {
@@ -34,6 +34,11 @@ public class SampleHttpServerTypedTracer
   @Override
   protected TextMapPropagator.Getter<String> getGetter() {
     return new TextMapPropagator.Getter<String>() {
+      @Override
+      public Iterable<String> keys(String s) {
+        return null;
+      }
+
       @Override
       public String get(String carrier, String key) {
         return null;

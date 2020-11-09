@@ -9,24 +9,28 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.javaagent.instrumentation.api.jdbc.DbSystem;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
-import java.util.Optional;
+import java.net.SocketAddress;
 
 public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
-  public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+  private static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  public static CassandraDatabaseClientTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.cassandra-4.0";
+    return "io.opentelemetry.auto.cassandra";
   }
 
   @Override
   protected String normalizeQuery(String query) {
-    return query;
+    return CassandraQueryNormalizer.normalize(query);
   }
 
   @Override
@@ -47,8 +51,10 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   public void onResponse(Span span, ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
-      address.ifPresent(inetSocketAddress -> NetPeerUtils.setNetPeer(span, inetSocketAddress));
+      SocketAddress socketAddress = coordinator.getEndPoint().resolve();
+      if (socketAddress instanceof InetSocketAddress) {
+        NetPeerUtils.setNetPeer(span, ((InetSocketAddress) socketAddress));
+      }
     }
   }
 }

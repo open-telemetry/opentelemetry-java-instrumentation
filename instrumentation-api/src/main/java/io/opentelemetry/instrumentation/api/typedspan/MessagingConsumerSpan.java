@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import io.grpc.Context;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 
 public class MessagingConsumerSpan extends DelegatingSpan
     implements MessagingConsumerSemanticConvention {
@@ -60,7 +63,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetPeerIp(String netPeerIp) {
-    delegate.setAttribute("net.peer.ip", netPeerIp);
+    delegate.setAttribute(NET_PEER_IP, netPeerIp);
     return this;
   }
 
@@ -71,7 +74,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetPeerName(String netPeerName) {
-    delegate.setAttribute("net.peer.name", netPeerName);
+    delegate.setAttribute(NET_PEER_NAME, netPeerName);
     return this;
   }
 
@@ -82,7 +85,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetHostIp(String netHostIp) {
-    delegate.setAttribute("net.host.ip", netHostIp);
+    delegate.setAttribute(NET_HOST_IP, netHostIp);
     return this;
   }
 
@@ -93,7 +96,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetHostPort(long netHostPort) {
-    delegate.setAttribute("net.host.port", netHostPort);
+    delegate.setAttribute(NET_HOST_PORT, netHostPort);
     return this;
   }
 
@@ -104,7 +107,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetHostName(String netHostName) {
-    delegate.setAttribute("net.host.name", netHostName);
+    delegate.setAttribute(NET_HOST_NAME, netHostName);
     return this;
   }
 
@@ -250,7 +253,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetPeerPort(long netPeerPort) {
-    delegate.setAttribute("net.peer.port", netPeerPort);
+    delegate.setAttribute(NET_PEER_PORT, netPeerPort);
     return this;
   }
 
@@ -261,7 +264,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setNetTransport(String netTransport) {
-    delegate.setAttribute("net.transport", netTransport);
+    delegate.setAttribute(NET_TRANSPORT, netTransport);
     return this;
   }
 
@@ -273,7 +276,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingOperation(String messagingOperation) {
-    delegate.setAttribute("messaging.operation", messagingOperation);
+    delegate.setAttribute(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
     return this;
   }
 
@@ -319,7 +322,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public MessagingConsumerSpanBuilder setNetPeerIp(String netPeerIp) {
-      internalBuilder.setAttribute("net.peer.ip", netPeerIp);
+      internalBuilder.setAttribute(NET_PEER_IP, netPeerIp);
       return this;
     }
 
@@ -329,7 +332,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public MessagingConsumerSpanBuilder setNetPeerName(String netPeerName) {
-      internalBuilder.setAttribute("net.peer.name", netPeerName);
+      internalBuilder.setAttribute(NET_PEER_NAME, netPeerName);
       return this;
     }
 
@@ -339,7 +342,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public MessagingConsumerSpanBuilder setNetHostIp(String netHostIp) {
-      internalBuilder.setAttribute("net.host.ip", netHostIp);
+      internalBuilder.setAttribute(NET_HOST_IP, netHostIp);
       return this;
     }
 
@@ -349,7 +352,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public MessagingConsumerSpanBuilder setNetHostPort(long netHostPort) {
-      internalBuilder.setAttribute("net.host.port", netHostPort);
+      internalBuilder.setAttribute(NET_HOST_PORT, netHostPort);
       return this;
     }
 
@@ -359,7 +362,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netHostName Local hostname or similar, see note below.
      */
     public MessagingConsumerSpanBuilder setNetHostName(String netHostName) {
-      internalBuilder.setAttribute("net.host.name", netHostName);
+      internalBuilder.setAttribute(NET_HOST_NAME, netHostName);
       return this;
     }
 
@@ -494,7 +497,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netPeerPort Remote port number.
      */
     public MessagingConsumerSpanBuilder setNetPeerPort(long netPeerPort) {
-      internalBuilder.setAttribute("net.peer.port", netPeerPort);
+      internalBuilder.setAttribute(NET_PEER_PORT, netPeerPort);
       return this;
     }
 
@@ -504,7 +507,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      * @param netTransport Strongly recommended for in-process queueing systems.
      */
     public MessagingConsumerSpanBuilder setNetTransport(String netTransport) {
-      internalBuilder.setAttribute("net.transport", netTransport);
+      internalBuilder.setAttribute(NET_TRANSPORT, netTransport);
       return this;
     }
 
@@ -515,7 +518,7 @@ public class MessagingConsumerSpan extends DelegatingSpan
      *     this span describes.
      */
     public MessagingConsumerSpanBuilder setMessagingOperation(String messagingOperation) {
-      internalBuilder.setAttribute("messaging.operation", messagingOperation);
+      internalBuilder.setAttribute(SemanticAttributes.MESSAGING_OPERATION, messagingOperation);
       return this;
     }
   }

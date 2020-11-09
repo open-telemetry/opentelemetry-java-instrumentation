@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_0
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder
@@ -17,7 +17,7 @@ import com.linecorp.armeria.common.HttpStatus
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.testing.junit4.server.ServerRule
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
 

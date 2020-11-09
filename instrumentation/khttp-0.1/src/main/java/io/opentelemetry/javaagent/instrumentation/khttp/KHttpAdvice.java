@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.khttp;
 
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
-import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpTracer.tracer;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import khttp.responses.Response;
 import net.bytebuddy.asm.Advice;
@@ -26,12 +26,12 @@ public class KHttpAdvice {
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") Depth callDepth) {
 
-    callDepth = TRACER.getCallDepth();
+    callDepth = tracer().getCallDepth();
     if (callDepth.getAndIncrement() == 0) {
-      span = TRACER.startSpan(new RequestWrapper(method, uri, headers));
-      if (span.getContext().isValid()) {
+      span = tracer().startSpan(new RequestWrapper(method, uri, headers));
+      if (span.getSpanContext().isValid()) {
         headers = asWritable(headers);
-        scope = TRACER.startScope(span, headers);
+        scope = tracer().startScope(span, headers);
       }
     }
   }
@@ -46,9 +46,9 @@ public class KHttpAdvice {
     if (callDepth.decrementAndGet() == 0 && scope != null) {
       scope.close();
       if (throwable == null) {
-        TRACER.end(span, response);
+        tracer().end(span, response);
       } else {
-        TRACER.endExceptionally(span, response, throwable);
+        tracer().endExceptionally(span, response, throwable);
       }
     }
   }

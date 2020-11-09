@@ -3,19 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import java.util.concurrent.TimeUnit
 import org.redisson.Redisson
-import org.redisson.api.*
+import org.redisson.api.RBucket
+import org.redisson.api.RFuture
+import org.redisson.api.RList
+import org.redisson.api.RSet
+import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
-import java.util.function.BiConsumer
-
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class RedissonAsyncClientTest extends AgentTestRunner {
 
@@ -55,11 +57,12 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     TEST_WRITER.clear()
   }
 
-  def "test future get"() {
+  def "test future set"() {
     when:
     RBucket<String> keyObject = redisson.getBucket("foo")
     RFuture future = keyObject.setAsync("bar")
     future.get(3, TimeUnit.SECONDS)
+
     then:
     assertTraces(1) {
       trace(0, 1) {
@@ -67,12 +70,12 @@ class RedissonAsyncClientTest extends AgentTestRunner {
           name "SET"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
           }
         }
       }
@@ -83,13 +86,11 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     when:
     RSet<String> rSet = redisson.getSet("set1")
     RFuture<Boolean> result = rSet.addAsync("s1")
-    result.whenComplete(new BiConsumer<Boolean, Throwable>() {
-      @Override
-      void accept(Boolean res, Throwable throwable) {
-        RList<String> strings = redisson.getList("list1")
-        strings.add("a")
-      }
+    result.whenComplete({ res, throwable ->
+      RList<String> strings = redisson.getList("list1")
+      strings.add("a")
     })
+
     then:
     result.get(3, TimeUnit.SECONDS)
     assertTraces(2) {
@@ -98,12 +99,12 @@ class RedissonAsyncClientTest extends AgentTestRunner {
           name "SADD"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SADD"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_STATEMENT.key" "SADD set1 ?"
           }
         }
       }
@@ -112,12 +113,12 @@ class RedissonAsyncClientTest extends AgentTestRunner {
           name "RPUSH"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "localhost:$port"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RPUSH"
+            "$SemanticAttributes.DB_SYSTEM.key" "redis"
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
+            "$SemanticAttributes.NET_PEER_PORT.key" port
+            "$SemanticAttributes.DB_STATEMENT.key" "RPUSH list1 ?"
           }
         }
       }

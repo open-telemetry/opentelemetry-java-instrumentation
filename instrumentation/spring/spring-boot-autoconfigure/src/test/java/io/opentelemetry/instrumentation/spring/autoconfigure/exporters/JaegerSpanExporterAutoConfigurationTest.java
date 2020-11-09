@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterProperties;

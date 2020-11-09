@@ -40,8 +40,8 @@
 This project provides a Java agent JAR that can be attached to any Java 8+
 application and dynamically injects bytecode to capture telemetry from a
 number of popular libraries and frameworks.
-The telemetry data can be exported in a variety of formats.
-In addition, the agent and exporter can be configured via command line arguments
+You can export the telemetry data in a variety of formats.
+You can also configure the agent and exporter via command line arguments
 or environment variables. The net result is the ability to gather telemetry
 data from a Java application without code changes.
 
@@ -49,30 +49,30 @@ data from a Java application without code changes.
 
 Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
 
-This package includes the instrumentation agent,
+This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
-This provides completely automatic out of the box experience.
+The package provides a completely automatic, out-of-the-box experience.
 
-The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
+Enable the instrumentation agent using the `-javaagent` flag to the JVM.
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
-By default OpenTelemetry Java agent uses
+By default, the OpenTelemetry Java agent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
 configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
 at `localhost:55680`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
-as environment variables (see below for full list). For example:
+as environment variables. See below for a full list of environment variables. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dotel.exporter=zipkin \
      -jar myapp.jar
 ```
 
-External exporter jar can be specified via `otel.exporter.jar` system property:
+Specify the external exporter JAR file using the `otel.exporter.jar` system property:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dotel.exporter.jar=path/to/external-exporter.jar \
@@ -83,7 +83,7 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
 
 Note: These parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please report any bugs or unexpected
-behavior you may find.
+behavior you find.
 
 #### Exporters
 
@@ -91,129 +91,127 @@ The following configuration properties are common to all exporters:
 
 | System property | Environment variable | Purpose                                                                                                                                                 |
 |-----------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.exporter   | OTEL_EXPORTER        | Exporter to be used, can be a comma-separated list to use multiple exporters. Currently does not support multiple metric exporters. Defaults to `otlp`. |
+| otel.exporter   | OTEL_EXPORTER        | The exporter to be used. Use a comma-separated list for multiple exporters. Currently does not support multiple metric exporters. Default is `otlp`. |
 
 ##### OTLP exporter (both span and metric exporters)
 
-A simple wrapper for the OTLP span and metric exporters of opentelemetry-java.
+A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters of opentelemetry-java.
 
-| System property              | Environment variable        | Purpose                                                               |
-|------------------------------|-----------------------------|-----------------------------------------------------------------------|
-| otel.exporter=otlp (default) | OTEL_EXPORTER=otlp          | To select OpenTelemetry exporter (default)                            |
-| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to, default is "localhost:55680"         |
-| otel.exporter.otlp.insecure  | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection        |
-| otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | The key-value pairs separated by semicolon to pass as request headers |
-| otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The max waiting time allowed to send each batch, default is 1000      |
+| System property              | Environment variable        | Description                                                               |
+|------------------------------|-----------------------------|---------------------------------------------------------------------------|
+| otel.exporter=otlp (default) | OTEL_EXPORTER=otlp          | Select the OpenTelemetry exporter (default)                                   |
+| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to. Default is `localhost:55680`.            |
+| otel.exporter.otlp.insecure  | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection            |
+| otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | Key-value pairs separated by semicolons to pass as request headers        |
+| otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The maximum waiting time allowed to send each batch. Default is `1000`.   |
 
-In order to configure the service name for the OTLP exporter, you must add `service.name` key
+To configure the service name for the OTLP exporter, add the `service.name` key
 to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
 ##### Jaeger exporter
 
-A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
-only supports gRPC as its communications protocol.
+A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currently the only supported communications protocol.
 
-| System property                   | Environment variable              | Purpose                                                                                            |
+| System property                   | Environment variable              | Description                                                                                            |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | To select Jaeger exporter                                                                          |
-| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to, default is "localhost:14250", currently only gRPC is supported. |
-| otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                       |
+| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                          |
+| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Default is `localhost:14250`. Currently only gRPC is supported. |
+| otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
-A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
+A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
-| System property                   | Environment variable              | Purpose                                                                                                               |
+| System property                   | Environment variable              | Description                                                                                                               |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| otel.exporter=zipkin              | OTEL_EXPORTER=zipkin              | To select Zipkin exporter                                                                                             |
-| otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to, default is "http://localhost:9411/api/v2/spans". Currently only HTTP is supported. |
-| otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance, default is "unknown".                                                          |
+| otel.exporter=zipkin              | OTEL_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                             |
+| otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Default is `http://localhost:9411/api/v2/spans`. Currently only HTTP is supported. |
+| otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                                          |
 
 ##### Prometheus exporter
 A simple wrapper for the Prometheus exporter of opentelemetry-java.
 
-| System property               | Environment variable          | Purpose                                                                            |
+| System property               | Environment variable          | Description                                                                        |
 |-------------------------------|-------------------------------|------------------------------------------------------------------------------------|
-| otel.exporter=prometheus      | OTEL_EXPORTER=prometheus      | To select Prometheus exporter                                                      |
-| otel.exporter.prometheus.port | OTEL_EXPORTER_PROMETHEUS_PORT | The local port used to bind the prometheus metric server, defaults to 9464         |
-| otel.exporter.prometheus.host | OTEL_EXPORTER_PROMETHEUS_HOST | The local address used to bind the prometheus metric server, defaults to "0.0.0.0" |
+| otel.exporter=prometheus      | OTEL_EXPORTER=prometheus      | Select the Prometheus exporter                                                     |
+| otel.exporter.prometheus.port | OTEL_EXPORTER_PROMETHEUS_PORT | The local port used to bind the prometheus metric server. Default is `9464`.       |
+| otel.exporter.prometheus.host | OTEL_EXPORTER_PROMETHEUS_HOST | The local address used to bind the prometheus metric server. Default is `0.0.0.0`. |
 
 ##### Logging exporter
 
-The logging exporter simply prints the name of the span along with its
-attributes to stdout. It is used mainly for testing and debugging.
+The logging exporter prints the name of the span along with its
+attributes to stdout. It's mainly used for testing and debugging.
 
-| System property              | Environment variable         | Purpose                                                                      |
+| System property              | Environment variable         | Description                                                                  |
 |------------------------------|------------------------------|------------------------------------------------------------------------------|
-| otel.exporter=logging        | OTEL_EXPORTER=logging        | To select logging exporter                                                   |
-| otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+| otel.exporter=logging        | OTEL_EXPORTER=logging        | Select the logging exporter                                                  |
+| otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string printed in front of the span name and attributes.         |
 
 #### Propagator
 
 The propagator controls which distributed tracing header format is used.
 
-If this is set to a comma-delimited list of the values, the multi-propagator will be used.
-The multi-propagator will try to extract the context from incoming requests using each of the configured propagator formats (in order), stopping after the first successful context extraction.
-The multi-propagator will inject the context into outgoing requests using all the configured propagator formats.
+If set to a comma-separated list of the values, the multi-propagator is used. The multi-propagator attempts
+to extract the context from incoming requests using each of the configured propagator formats (in order),
+stopping after the first successful context extraction. The multi-propagator injects the context into
+outgoing requests using all the configured propagator formats.
 
-| System property  | Environment variable | Purpose                                                                                                     |
-|------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger", "ottracer", "xray". |
+| System property  | Environment variable | Description                                                                                                     |
+|------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
+| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
 
 #### OpenTelemetry Resource
 
 The [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md)
 is a representation of the entity producing telemetry.
 
-| System property          | Environment variable     | Purpose                                                                      |
-|--------------------------|--------------------------|------------------------------------------------------------------------------|
-| otel.resource.attributes | OTEL_RESOURCE_ATTRIBUTES | Used to specify resource attributes in format: key1=val1,key2=val2,key3=val3 |
+| System property          | Environment variable     | Description                                                                        |
+|--------------------------|--------------------------|------------------------------------------------------------------------------------|
+| otel.resource.attributes | OTEL_RESOURCE_ATTRIBUTES | Specify resource attributes in the following format: key1=val1,key2=val2,key3=val3 |
 
 #### Peer service name
 
-The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes) is
-the name of a remote service that is being connected to. It corresponds to `service.name` in the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service) for the local service.
+The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes) is the name of a remote service being connected to. It corresponds to `service.name` in the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service) for the local service.
 
-| System property                     | Environment variable              | Purpose                                                                      |
-|------------------------------------|------------------------------------|------------------------------------------------------------------------------|
-| otel.endpoint.peer.service.mapping | OTEL_ENDPOINT_PEER_SERVICE_MAPPING | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma separated list of host=name pairs. The peer service name will be added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have one of `dogs-api` |
+| System property                     | Environment variable              | Description                                                                      |
+|------------------------------------|------------------------------------|----------------------------------------------------------------------------------|
+| otel.endpoint.peer.service.mapping | OTEL_ENDPOINT_PEER_SERVICE_MAPPING | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma-separated list of host=name pairs. The peer service is added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
 
 #### Batch span processor
 
-| System property           | Environment variable      | Purpose                                                                      |
-|---------------------------|---------------------------|------------------------------------------------------------------------------|
-| otel.bsp.schedule.delay   | OTEL_BSP_SCHEDULE_DELAY   | The interval in milliseconds between two consecutive exports (default: 5000) |
-| otel.bsp.max.queue        | OTEL_BSP_MAX_QUEUE        | Maximum queue size (default: 2048)                                           |
-| otel.bsp.max.export.batch | OTEL_BSP_MAX_EXPORT_BATCH | Maximum batch size (default: 512)                                            |
-| otel.bsp.export.timeout   | OTEL_BSP_EXPORT_TIMEOUT   | Maximum allowed time in milliseconds to export data (default: 30000)         |
-| otel.bsp.export.sampled   | OTEL_BSP_EXPORT_SAMPLED   | Whether only sampled spans should be exported (default: true)                |
+| System property           | Environment variable      | Description                                                                        |
+|---------------------------|---------------------------|------------------------------------------------------------------------------------|
+| otel.bsp.schedule.delay   | OTEL_BSP_SCHEDULE_DELAY   | The interval, in milliseconds, between two consecutive exports. Default is `5000`. |
+| otel.bsp.max.queue        | OTEL_BSP_MAX_QUEUE        | The maximum queue size. Default is `2048`.                                             |
+| otel.bsp.max.export.batch | OTEL_BSP_MAX_EXPORT_BATCH | The maximum batch size. Default is `512`.                                              |
+| otel.bsp.export.timeout   | OTEL_BSP_EXPORT_TIMEOUT   | The maximum allowed time, in milliseconds, to export data. Default is `30000`.         |
+| otel.bsp.export.sampled   | OTEL_BSP_EXPORT_SAMPLED   | Whether only sampled spans should be exported. Default is `true`.                  |
 
 #### Trace config
 
-| System property                 | Environment variable            | Purpose                                              |
-|---------------------------------|---------------------------------|------------------------------------------------------|
-| otel.config.sampler.probability | OTEL_CONFIG_SAMPLER_PROBABILITY | Sampling probability between 0 and 1 (default: 1)    |
-| otel.config.max.attrs           | OTEL_CONFIG_MAX_ATTRS           | Maximum number of attributes per span (default: 32)  |
-| otel.config.max.events          | OTEL_CONFIG_MAX_EVENTS          | Maximum number of events per span (default: 128)     |
-| otel.config.max.links           | OTEL_CONFIG_MAX_LINKS           | Maximum number of links per span (default: 32)       |
-| otel.config.max.event.attrs     | OTEL_CONFIG_MAX_EVENT_ATTRS     | Maximum number of attributes per event (default: 32) |
-| otel.config.max.link.attrs      | OTEL_CONFIG_MAX_LINK_ATTRS      | Maximum number of attributes per link (default: 32)  |
+| System property                 | Environment variable            | Description                                                  |
+|---------------------------------|---------------------------------|--------------------------------------------------------------|
+| otel.config.sampler.probability | OTEL_CONFIG_SAMPLER_PROBABILITY | Sampling probability between 0 and 1. Default is `1`.        |
+| otel.config.max.attrs           | OTEL_CONFIG_MAX_ATTRS           | The maximum number of attributes per span. Default is `32`.  |
+| otel.config.max.events          | OTEL_CONFIG_MAX_EVENTS          | The maximum number of events per span. Default is `128`.     |
+| otel.config.max.links           | OTEL_CONFIG_MAX_LINKS           | The maximum number of links per span. Default is `32`        |
+| otel.config.max.event.attrs     | OTEL_CONFIG_MAX_EVENT_ATTRS     | The maximum number of attributes per event. Default is `32`. |
+| otel.config.max.link.attrs      | OTEL_CONFIG_MAX_LINK_ATTRS      | The maximum number of attributes per link. Default is `32`.  |
 
 #### Interval metric reader
 
-| System property          | Environment variable     | Purpose                                                                      |
-|--------------------------|--------------------------|------------------------------------------------------------------------------|
-| otel.imr.export.interval | OTEL_IMR_EXPORT_INTERVAL | The interval in milliseconds between pushes to the exporter (default: 60000) |
+| System property          | Environment variable     | Description                                                                       |
+|--------------------------|--------------------------|-----------------------------------------------------------------------------------|
+| otel.imr.export.interval | OTEL_IMR_EXPORT_INTERVAL | The interval, in milliseconds, between pushes to the exporter. Default is `60000`.|
 
 ##### Customizing the OpenTelemetry SDK
 
-*This is highly advanced behavior and still in the prototyping phase. It may change drastically or be removed completely. Use
+*Customizing the SDK is highly advanced behavior and is still in the prototyping phase. It may change drastically or be removed completely. Use
 with caution*
 
 The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/trace/spi/TracerProviderFactory.java)
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
-Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
-provide the path to a JAR file including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+Because the automatic instrumentation runs in a different classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can provide the path to a JAR file, including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you must specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
 ## Supported Java libraries and frameworks
 
@@ -262,6 +260,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
+| [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
 | [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+                           |
@@ -278,22 +277,22 @@ provide the path to a JAR file including an SPI implementation using the system 
 ### Disabled instrumentations
 
 Some instrumentations can produce too many spans and make traces very noisy.
-For this reason the following instrumentations are disabled by default:
-- `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
+For this reason, the following instrumentations are disabled by default:
+- `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
 - `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
-To enable them, add `otel.instrumentation.<name>.enabled` system property:
+To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 `-Dotel.instrumentation.jdbc-datasource.enabled=true`
 
 #### Grizzly instrumentation
 
-Whenever you use
+When you use
 [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html) for
 Servlet-based applications, you get better experience from Servlet-specific
 support. As these two instrumentations conflict with each other, more generic
-instrumentation for Grizzly http server is disabled by default. If needed,
-you can enable it by add the following system property:
+instrumentation for Grizzly HTTP server is disabled by default. If needed,
+you can enable it by adding the following system property:
 `-Dotel.instrumentation.grizzly.enabled=true`
 
 ### Suppressing specific auto-instrumentation
@@ -341,7 +340,7 @@ manually instrument your Java application.
 OpenTelemetry offers a tracer to easily enable custom instrumentation
 throughout your application. See the [OpenTelemetry Java
 QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
-for an example of how to configure it.
+for an example of how to configure the tracer.
 
 ### Configure a WithSpan annotation
 
@@ -387,12 +386,13 @@ that denote its duration and provides any thrown exceptions.
 
 #### Suppressing `@WithSpan` instrumentation
 
-This is useful in case you have code that is over-instrumented using `@WithSpan`,
+Suppressing `@WithSpan` is useful if you have code that is over-instrumented using `@WithSpan`
 and you want to suppress some of them without modifying the code.
 
 | System property                 | Environment variable            | Purpose                                                                                                                                  |
 |---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods, format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
+Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 
 ## Troubleshooting
@@ -401,7 +401,7 @@ To turn on the agent's internal debug logging:
 
 `-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
 
-Note these logs are extremely verbose. Enable debug logging only when needed.
+**Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
 
 ## Roadmap to 1.0 (GA)

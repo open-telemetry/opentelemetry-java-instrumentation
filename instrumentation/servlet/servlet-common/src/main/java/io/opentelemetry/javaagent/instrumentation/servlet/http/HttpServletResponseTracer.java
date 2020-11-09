@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.http;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class HttpServletResponseTracer extends BaseTracer {
-  public static final HttpServletResponseTracer TRACER = new HttpServletResponseTracer();
+  private static final HttpServletResponseTracer TRACER = new HttpServletResponseTracer();
+
+  public static HttpServletResponseTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

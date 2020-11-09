@@ -13,11 +13,17 @@ jobs:
         with:
           java-version: 11
 
-      - name: Build
+      - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk11
-          arguments: build --stacktrace -x :smoke-tests:test
+
+      - name: Build
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew check --stacktrace -x :smoke-tests:test
+          timeout_minutes: 90
+          max_attempts: 3
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -50,11 +56,17 @@ jobs:
         with:
           java-version: 11
 
-      - name: Test
+      - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk${{ matrix.java }}
-          arguments: testJava${{ matrix.java }} --stacktrace -x :smoke-tests:test
+
+      - name: Test
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew testJava${{ matrix.java }} --stacktrace -x :smoke-tests:test
+          timeout_minutes: 90
+          max_attempts: 3
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -77,11 +89,17 @@ jobs:
         with:
           java-version: 11
 
-      - name: Test
+      - name: Restore cache
         uses: burrunan/gradle-cache-action@v1.5
         with:
-          job-id: jdk11
-          arguments: :smoke-tests:test
+          job-id: smokeTests
+
+      - name: Test
+        uses: nick-invision/retry@v1
+        with:
+          command: ./gradlew :smoke-tests:test
+          timeout_minutes: 90
+          max_attempts: 3
 
       - name: Aggregate test reports with ciMate
         if: always()
@@ -127,6 +145,11 @@ jobs:
   accept-pr:
     needs: [ build, test, smoke-test, muzzle ]
     runs-on: ubuntu-latest
+    if: always()
     steps:
-      - name: Success
-        run: echo Build successful
+      # run this action to get workflow conclusion
+      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v1
+      - name: Fail build
+        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+        run: exit 1

@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.tracer;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import java.lang.reflect.Method;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -23,7 +22,6 @@ public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Origin Method method,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelSpan") Span span,
@@ -34,17 +32,19 @@ public class Servlet3Advice {
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    Context attachedContext = TRACER.getServerContext(httpServletRequest);
+    Context attachedContext = tracer().getServerContext(httpServletRequest);
     if (attachedContext != null) {
-      if (TRACER.needsRescoping(attachedContext)) {
-        scope = withScopedContext(attachedContext);
+      if (tracer().needsRescoping(attachedContext)) {
+        scope = attachedContext.makeCurrent();
       }
+
       // We are inside nested servlet/filter, don't create new span
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
-    scope = TRACER.startScope(span, httpServletRequest);
+    Context ctx = tracer().startSpan(httpServletRequest);
+    span = Java8BytecodeBridge.spanFromContext(ctx);
+    scope = tracer().startScope(span, httpServletRequest);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -64,9 +64,9 @@ public class Servlet3Advice {
       return;
     }
 
-    TRACER.setPrincipal(span, (HttpServletRequest) request);
+    tracer().setPrincipal(span, (HttpServletRequest) request);
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable, (HttpServletResponse) response);
+      tracer().endExceptionally(span, throwable, (HttpServletResponse) response);
       return;
     }
 
@@ -84,7 +84,7 @@ public class Servlet3Advice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      TRACER.end(span, (HttpServletResponse) response);
+      tracer().end(span, (HttpServletResponse) response);
     }
   }
 }

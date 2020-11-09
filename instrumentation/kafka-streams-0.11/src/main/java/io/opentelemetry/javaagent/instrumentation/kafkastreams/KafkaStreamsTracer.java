@@ -8,14 +8,18 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Kind;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsTracer extends BaseTracer {
-  public static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
+  private static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
+
+  public static KafkaStreamsTracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(StampedRecord record) {
     Span span =
@@ -48,6 +52,6 @@ public class KafkaStreamsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kafka-streams-0.11";
+    return "io.opentelemetry.auto.kafka-streams";
   }
 }

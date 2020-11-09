@@ -9,8 +9,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.api.trace.Span
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
@@ -63,7 +62,7 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     when:
     Span span1
     TraceUtils.runUnderTrace("test") {
-      span1 = TracingContextUtils.currentSpan
+      span1 = Span.current()
       logger.info("log message 1")
     }
 
@@ -71,7 +70,7 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
 
     Span span2
     TraceUtils.runUnderTrace("test 2") {
-      span2 = TracingContextUtils.currentSpan
+      span2 = Span.current()
       logger.info("log message 3")
     }
 
@@ -80,8 +79,8 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDCPropertyMap().get("traceId") == span1.context.traceIdAsHexString
-    events[0].getMDCPropertyMap().get("spanId") == span1.context.spanIdAsHexString
+    events[0].getMDCPropertyMap().get("traceId") == span1.spanContext.traceIdAsHexString
+    events[0].getMDCPropertyMap().get("spanId") == span1.spanContext.spanIdAsHexString
     events[0].getMDCPropertyMap().get("sampled") == "true"
 
     events[1].message == "log message 2"
@@ -90,8 +89,8 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[1].getMDCPropertyMap().get("sampled") == null
 
     events[2].message == "log message 3"
-    events[2].getMDCPropertyMap().get("traceId") == span2.context.traceIdAsHexString
-    events[2].getMDCPropertyMap().get("spanId") == span2.context.spanIdAsHexString
+    events[2].getMDCPropertyMap().get("traceId") == span2.spanContext.traceIdAsHexString
+    events[2].getMDCPropertyMap().get("spanId") == span2.spanContext.spanIdAsHexString
     events[2].getMDCPropertyMap().get("sampled") == "true"
   }
 }

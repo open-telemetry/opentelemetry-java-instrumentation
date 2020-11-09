@@ -7,11 +7,10 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.S
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID
 
+import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
-import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.TracingContextUtils
+import io.opentelemetry.api.trace.Span
 import org.apache.logging.log4j.LogManager
 
 abstract class Log4j2Test extends InstrumentationSpecification {
@@ -49,14 +48,14 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     when:
     Span span1 = TraceUtils.runUnderTrace("test") {
       logger.info("log message 1")
-      TracingContextUtils.currentSpan
+      Span.current()
     }
 
     logger.info("log message 2")
 
     Span span2 = TraceUtils.runUnderTrace("test 2") {
       logger.info("log message 3")
-      TracingContextUtils.currentSpan
+      Span.current()
     }
 
     def events = ListAppender.get().getEvents()
@@ -64,8 +63,8 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue(TRACE_ID) == span1.context.traceIdAsHexString
-    events[0].getContextData().getValue(SPAN_ID) == span1.context.spanIdAsHexString
+    events[0].getContextData().getValue(TRACE_ID) == span1.spanContext.traceIdAsHexString
+    events[0].getContextData().getValue(SPAN_ID) == span1.spanContext.spanIdAsHexString
     events[0].getContextData().getValue(SAMPLED) == "true"
 
     events[1].message.formattedMessage == "log message 2"
@@ -74,8 +73,8 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     events[1].getContextData().getValue(SAMPLED) == null
 
     events[2].message.formattedMessage == "log message 3"
-    events[2].getContextData().getValue(TRACE_ID) == span2.context.traceIdAsHexString
-    events[2].getContextData().getValue(SPAN_ID) == span2.context.spanIdAsHexString
+    events[2].getContextData().getValue(TRACE_ID) == span2.spanContext.traceIdAsHexString
+    events[2].getContextData().getValue(SPAN_ID) == span2.spanContext.spanIdAsHexString
     events[2].getContextData().getValue(SAMPLED) == "true"
   }
 }

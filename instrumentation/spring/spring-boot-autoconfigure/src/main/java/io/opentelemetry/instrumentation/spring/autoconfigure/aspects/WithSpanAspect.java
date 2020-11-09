@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.extension.auto.annotations.WithSpan;
 import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -18,7 +19,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 
 /**
  * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link
- * io.opentelemetry.trace.Span}.
+ * io.opentelemetry.api.trace.Span}.
  *
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.
@@ -35,18 +36,23 @@ public class WithSpanAspect {
     this.tracer = tracer;
   }
 
-  @Around("@annotation(io.opentelemetry.extensions.auto.annotations.WithSpan)")
+  @Around("@annotation(io.opentelemetry.extension.auto.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
     MethodSignature signature = (MethodSignature) pjp.getSignature();
     Method method = signature.getMethod();
     WithSpan withSpan = method.getAnnotation(WithSpan.class);
 
+    Context parent = Context.current();
     Span span =
-        tracer.spanBuilder(getSpanName(withSpan, method)).setSpanKind(withSpan.kind()).startSpan();
-    try (Scope scope = tracer.withSpan(span)) {
+        tracer
+            .spanBuilder(getSpanName(withSpan, method))
+            .setSpanKind(withSpan.kind())
+            .setParent(parent)
+            .startSpan();
+    try (Scope ignored = parent.with(span).makeCurrent()) {
       return pjp.proceed();
     } catch (Throwable t) {
-      span.setStatus(StatusCanonicalCode.ERROR);
+      span.setStatus(StatusCode.ERROR);
       span.recordException(t);
       throw t;
     } finally {

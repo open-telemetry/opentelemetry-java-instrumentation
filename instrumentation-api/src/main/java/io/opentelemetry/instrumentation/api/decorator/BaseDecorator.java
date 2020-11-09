@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.decorator;
 
-import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.ENDPOINT_PEER_SERVICE_MAPPING;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.StatusCanonicalCode;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -45,12 +45,12 @@ public abstract class BaseDecorator {
   public Span onError(Span span, Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      onComplete(span, StatusCanonicalCode.ERROR, throwable);
+      onComplete(span, StatusCode.ERROR, throwable);
     }
     return span;
   }
 
-  public Span onComplete(Span span, StatusCanonicalCode status, Throwable throwable) {
+  public Span onComplete(Span span, StatusCode status, Throwable throwable) {
     assert span != null;
     span.setStatus(status);
     if (throwable != null) {
@@ -180,7 +180,7 @@ public abstract class BaseDecorator {
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return getPropagators().getTextMapPropagator().extract(Context.ROOT, carrier, getter);
+    return getGlobalPropagators().getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   protected static String mapToPeer(String endpoint) {

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
-import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.beans.factory.config.BeanPostProcessor;

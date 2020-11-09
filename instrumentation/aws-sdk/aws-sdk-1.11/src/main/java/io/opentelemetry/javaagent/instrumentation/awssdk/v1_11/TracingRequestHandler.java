@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
 
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
@@ -35,8 +35,8 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    Span span = TRACER.startSpan(request, requestMeta);
-    Scope scope = TRACER.startScope(span, request);
+    Span span = tracer().startSpan(request, requestMeta);
+    Scope scope = tracer().startScope(span, request);
     request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, scope));
   }
 
@@ -46,7 +46,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      TRACER.end(scope.getSpan(), response);
+      tracer().end(scope.getSpan(), response);
     }
   }
 
@@ -56,7 +56,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      TRACER.endExceptionally(scope.getSpan(), response, e);
+      tracer().endExceptionally(scope.getSpan(), response, e);
     }
   }
 }

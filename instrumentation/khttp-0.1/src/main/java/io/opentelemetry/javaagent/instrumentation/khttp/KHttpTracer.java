@@ -18,7 +18,11 @@ import khttp.KHttp;
 import khttp.responses.Response;
 
 public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
-  public static final KHttpTracer TRACER = new KHttpTracer();
+  private static final KHttpTracer TRACER = new KHttpTracer();
+
+  public static KHttpTracer tracer() {
+    return TRACER;
+  }
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(KHttp.class);
@@ -56,6 +60,6 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, St
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.khttp-0.1";
+    return "io.opentelemetry.auto.khttp";
   }
 }

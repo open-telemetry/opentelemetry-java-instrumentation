@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
@@ -18,7 +18,7 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
@@ -152,12 +152,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "SET key<TESTSETKEY> value<TESTSETVAL>"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "SET TESTSETKEY ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -195,12 +195,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<TESTKEY>"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "GET TESTKEY"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -252,12 +252,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "GET key<NON_EXISTENT_KEY>"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "GET NON_EXISTENT_KEY"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -295,12 +295,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -356,12 +356,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET key<TESTHM> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "HMSET TESTHM firstname ? lastname ? age ?"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -377,12 +377,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           kind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "redis://127.0.0.1:$port"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL key<TESTHM>"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL TESTHM"
           }
           event(0) {
             eventName "redis.encode.start"

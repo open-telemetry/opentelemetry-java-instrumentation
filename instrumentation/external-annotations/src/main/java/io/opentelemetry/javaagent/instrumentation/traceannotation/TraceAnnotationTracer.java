@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.traceannotation;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class TraceAnnotationTracer extends BaseTracer {
-  public static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+
+  public static TraceAnnotationTracer tracer() {
+    return TRACER;
+  }
 
   @Override
   protected String getInstrumentationName() {

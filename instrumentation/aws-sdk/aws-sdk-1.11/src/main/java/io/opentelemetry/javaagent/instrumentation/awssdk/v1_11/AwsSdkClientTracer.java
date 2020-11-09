@@ -5,18 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
-
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,7 +21,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  public static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+  private static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
+
+  public static AwsSdkClientTracer tracer() {
+    return TRACER;
+  }
 
   private final NamesCache namesCache = new NamesCache();
 
@@ -68,9 +69,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
    */
   @Override
   public Scope startScope(Span span, Request<?> request) {
-    Context context = withSpan(span, Context.current());
-    context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, span);
-    return withScopedContext(context);
+    return Context.current().with(span).with(CONTEXT_CLIENT_SPAN_KEY, span).makeCurrent();
   }
 
   @Override
@@ -127,7 +126,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.aws-sdk-1.11";
+    return "io.opentelemetry.auto.aws-sdk";
   }
 
   static final class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {

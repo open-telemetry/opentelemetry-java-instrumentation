@@ -17,11 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -76,12 +76,12 @@ public class LoggingEventInstrumentation extends Instrumenter.Default {
       }
 
       Span currentSpan = InstrumentationContext.get(ILoggingEvent.class, Span.class).get(event);
-      if (currentSpan == null || !currentSpan.getContext().isValid()) {
+      if (currentSpan == null || !currentSpan.getSpanContext().isValid()) {
         return;
       }
 
       Map<String, String> spanContextData = new HashMap<>();
-      SpanContext spanContext = currentSpan.getContext();
+      SpanContext spanContext = currentSpan.getSpanContext();
       spanContextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
       spanContextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
       spanContextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));

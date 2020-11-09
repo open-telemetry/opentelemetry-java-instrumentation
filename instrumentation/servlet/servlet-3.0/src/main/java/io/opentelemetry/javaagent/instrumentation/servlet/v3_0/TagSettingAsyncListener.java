@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;

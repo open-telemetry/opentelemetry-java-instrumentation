@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
-import io.opentelemetry.context.propagation.DefaultContextPropagators
-import io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator
-import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.trace.propagation.HttpTraceContext
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.propagation.HttpTraceContext
 
 class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implements InstrumentationTestTrait {
 
@@ -26,7 +26,7 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
       .addTextMapPropagator(HttpTraceContext.instance)
       .addTextMapPropagator(AwsXRayPropagator.instance)
       .build()
-    OpenTelemetry.setPropagators(propagators)
+    OpenTelemetry.setGlobalPropagators(propagators)
   }
 
   private static final String AWS_TRACE_HEADER1 = "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1"

@@ -14,7 +14,10 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
@@ -23,8 +26,6 @@ import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -103,18 +104,18 @@ public abstract class AgentTestRunner extends Specification {
     //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
     //  currently checking against no-op implementation so that it won't override aws-lambda
     //  propagator configuration
-    if (OpenTelemetry.getPropagators()
+    if (OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .getClass()
         .getSimpleName()
         .equals("NoopTextMapPropagator")) {
-      OpenTelemetry.setPropagators(
+      OpenTelemetry.setGlobalPropagators(
           DefaultContextPropagators.builder()
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
     }
-    OpenTelemetrySdk.getTracerManagement().addSpanProcessor(TEST_WRITER);
-    TEST_TRACER = OpenTelemetry.getTracer("io.opentelemetry.auto");
+    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER);
+    TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {
@@ -176,8 +177,8 @@ public abstract class AgentTestRunner extends Specification {
 
   @Before
   public void beforeTest() {
-    assert !getTestTracer().getCurrentSpan().getContext().isValid()
-        : "Span is active before test has started: " + getTestTracer().getCurrentSpan();
+    assert !Span.current().getSpanContext().isValid()
+        : "Span is active before test has started: " + Span.current();
     TEST_WRITER.clear();
   }
 

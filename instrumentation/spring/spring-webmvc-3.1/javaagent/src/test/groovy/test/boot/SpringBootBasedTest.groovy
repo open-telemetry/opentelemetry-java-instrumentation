@@ -11,14 +11,14 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.google.common.collect.ImmutableMap
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.RequestBody
 import org.springframework.boot.SpringApplication
@@ -30,7 +30,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(AppConfig, SecurityConfig, AuthServerConfig)
-    app.setDefaultProperties(ImmutableMap.of("server.port", port, "server.error.include-message", "always"))
+    app.setDefaultProperties(ImmutableMap.of(
+      "server.port", port,
+      "server.context-path", getContextPath(),
+      "server.servlet.contextPath", getContextPath(),
+      "server.error.include-message", "always"))
     def context = app.run()
     return context
   }
@@ -38,6 +42,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void stopServer(ConfigurableApplicationContext ctx) {
     ctx.close()
+  }
+
+  @Override
+  String getContextPath() {
+    return "/xyz"
   }
 
   @Override
@@ -159,11 +168,13 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     }
   }
 
+  // this override is needed because the exception is propagated up from the handler span
+  // to the server span, which is different from the the expectation of the super method
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
 
     trace.span(index) {
-      name endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
+      name endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
       kind SERVER
       errored endpoint.errored
       if (parentID != null) {

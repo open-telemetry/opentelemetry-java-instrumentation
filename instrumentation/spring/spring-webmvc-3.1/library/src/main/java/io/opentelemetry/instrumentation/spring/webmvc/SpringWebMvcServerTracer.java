@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
-import io.opentelemetry.trace.Tracer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -74,6 +74,6 @@ class SpringWebMvcServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return null;
+    return "io.opentelemetry.auto.spring-web";
   }
 }

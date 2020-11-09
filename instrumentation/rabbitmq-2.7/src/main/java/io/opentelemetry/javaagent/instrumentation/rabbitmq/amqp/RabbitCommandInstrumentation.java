@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -15,8 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.Command;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -69,7 +69,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
       Span span = CURRENT_RABBIT_SPAN.get();
       if (span != null && command.getMethod() != null) {
-        TRACER.onCommand(span, command);
+        tracer().onCommand(span, command);
       }
     }
 

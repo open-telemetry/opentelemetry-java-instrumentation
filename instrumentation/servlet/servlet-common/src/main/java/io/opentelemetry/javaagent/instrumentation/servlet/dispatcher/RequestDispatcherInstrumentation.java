@@ -6,12 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.dispatcher;
 
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,13 +17,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletResponseTracer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
@@ -86,25 +83,26 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(0) ServletRequest request) {
 
-      Context parentContext = Context.current();
+      Context parentContext = Java8BytecodeBridge.currentContext();
 
       Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
       Context servletContext =
           servletContextObject instanceof Context ? (Context) servletContextObject : null;
 
-      Span parentSpan = getSpan(parentContext);
-      SpanContext parentSpanContext = parentSpan.getContext();
+      Span parentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
+      SpanContext parentSpanContext = parentSpan.getSpanContext();
       if (!parentSpanContext.isValid() && servletContext == null) {
         // Don't want to generate a new top-level span
         return;
       }
 
-      Span servletSpan = servletContext != null ? getSpan(servletContext) : null;
+      Span servletSpan =
+          servletContext != null ? Java8BytecodeBridge.spanFromContext(servletContext) : null;
       Context parent;
       if (servletContext == null
           || (parentSpanContext.isValid()
               && servletSpan
-                  .getContext()
+                  .getSpanContext()
                   .getTraceIdAsHexString()
                   .equals(parentSpanContext.getTraceIdAsHexString()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.
@@ -115,8 +113,8 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletContext;
       }
 
-      try (Scope ignored = ContextUtils.withScopedContext(parent)) {
-        span = TRACER.startSpan(method);
+      try (Scope ignored = parent.makeCurrent()) {
+        span = tracer().startSpan(method);
 
         // save the original servlet span before overwriting the request attribute, so that it can
         // be
@@ -124,10 +122,10 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
         // this tells the dispatched servlet to use the current span as the parent for its work
-        Context newContext = withSpan(span, Context.current());
+        Context newContext = Java8BytecodeBridge.currentContext().with(span);
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
-      scope = TRACER.startScope(span);
+      scope = tracer().startScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -151,9 +149,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
       if (throwable != null) {
-        HttpServletResponseTracer.TRACER.endExceptionally(span, throwable);
+        tracer().endExceptionally(span, throwable);
       } else {
-        HttpServletResponseTracer.TRACER.end(span);
+        tracer().end(span);
       }
     }
   }

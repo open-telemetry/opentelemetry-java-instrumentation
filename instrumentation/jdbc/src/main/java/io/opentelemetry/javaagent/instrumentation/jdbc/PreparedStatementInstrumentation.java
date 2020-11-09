@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -15,10 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
 import java.sql.PreparedStatement;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -46,16 +46,30 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".normalizer.Token",
-      packageName + ".normalizer.ParseException",
-      packageName + ".normalizer.SimpleCharStream",
-      packageName + ".normalizer.SqlNormalizerConstants",
-      packageName + ".normalizer.TokenMgrError",
-      packageName + ".normalizer.SqlNormalizerTokenManager",
-      packageName + ".normalizer.SqlNormalizer",
-      packageName + ".JDBCUtils",
+      packageName + ".DataSourceTracer",
+      packageName + ".DBInfo",
+      packageName + ".DBInfo$Builder",
+      packageName + ".JDBCConnectionUrlParser",
+      packageName + ".JDBCConnectionUrlParser$1",
+      packageName + ".JDBCConnectionUrlParser$2",
+      packageName + ".JDBCConnectionUrlParser$3",
+      packageName + ".JDBCConnectionUrlParser$4",
+      packageName + ".JDBCConnectionUrlParser$5",
+      packageName + ".JDBCConnectionUrlParser$6",
+      packageName + ".JDBCConnectionUrlParser$7",
+      packageName + ".JDBCConnectionUrlParser$8",
+      packageName + ".JDBCConnectionUrlParser$9",
+      packageName + ".JDBCConnectionUrlParser$10",
+      packageName + ".JDBCConnectionUrlParser$11",
+      packageName + ".JDBCConnectionUrlParser$12",
+      packageName + ".JDBCConnectionUrlParser$13",
+      packageName + ".JDBCConnectionUrlParser$14",
+      packageName + ".JDBCConnectionUrlParser$15",
+      packageName + ".JDBCConnectionUrlParser$16",
+      packageName + ".JDBCConnectionUrlParser$17",
       packageName + ".JDBCMaps",
       packageName + ".JdbcTracer",
+      packageName + ".JDBCUtils",
     };
   }
 
@@ -75,11 +89,11 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      callDepth = TRACER.getCallDepth();
+      callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(statement);
+        span = tracer().startSpan(statement);
         if (span != null) {
-          scope = TRACER.startScope(span);
+          scope = tracer().startScope(span);
         }
       }
     }
@@ -93,9 +107,9 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {
-          TRACER.end(span);
+          tracer().end(span);
         } else {
-          TRACER.endExceptionally(span, throwable);
+          tracer().endExceptionally(span, throwable);
         }
       }
     }

@@ -2,8 +2,14 @@
 
 This package contains libraries to help instrument AWS lambda functions in your code.
 
-To use the instrumentation, replace your function classes that implement `RequestHandler` with those
-that extend `TracingRequestHandler`. You will need to change the method name to `doHandleRequest`.
+## Using wrappers
+To use the instrumentation, configure `OTEL_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
+and use `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestWrapper` (or `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapper`) as
+your `Handler`.
+
+## Using handlers
+To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
+that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`.
 
 ```java
 public class MyRequestHandler extends TracingRequestHandler<String, String> {
@@ -20,7 +26,7 @@ public class MyRequestHandler extends TracingRequestHandler<String, String> {
 
 A `SERVER` span will be created with the name you specify for the function when deploying it.
 
-In addition to the code change, it is recommended to setup X-Ray trace propagation to be able to
+In addition, it is recommended to setup X-Ray trace propagation to be able to
 link to tracing information provided by Lambda itself. To do so, add a dependency on
 `opentelemetry-extension-tracepropagators`. Make sure the version matches the version of the SDK
 you use.
@@ -84,7 +90,7 @@ configure X-Ray along with the default W3C propagator like this in a static bloc
 class MyRequestHandler extends TracingRequestHandler<String, String> {
 
   static {
-    OpenTelemetry.setPropagators(
+    OpenTelemetry.setGlobalPropagators(
       DefaultContextPropagators.builder()
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .addTextMapPropagator(AwsXrayPropagator.getInstance())

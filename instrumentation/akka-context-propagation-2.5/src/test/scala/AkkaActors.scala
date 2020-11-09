@@ -6,14 +6,17 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.trace.Tracer
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.Context
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+import io.opentelemetry.api.trace.Tracer
 
 import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
-  val TRACER: Tracer = OpenTelemetry.getTracer("io.opentelemetry.auto")
+  val tracer: Tracer =
+    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   val system: ActorSystem = ActorSystem("helloAkka")
 
@@ -28,7 +31,7 @@ object AkkaActors {
     system.actorOf(Greeter.props("Hello", forwarder), "helloGreeter")
 
   def tracedChild(opName: String): Unit = {
-    TRACER.spanBuilder(opName).startSpan().end()
+    tracer.spanBuilder(opName).startSpan().end()
   }
 }
 
@@ -40,8 +43,9 @@ class AkkaActors {
   implicit val timeout: Timeout = 5.minutes
 
   def basicTell(): Unit = {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Akka")
       howdyGreeter ! Greet
@@ -52,8 +56,9 @@ class AkkaActors {
   }
 
   def basicAsk(): Unit = {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Akka")
       howdyGreeter ? Greet
@@ -64,8 +69,9 @@ class AkkaActors {
   }
 
   def basicForward(): Unit = {
-    val parentSpan = TRACER.spanBuilder("parent").startSpan()
-    val parentScope = TRACER.withSpan(parentSpan)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
     try {
       helloGreeter ! WhoToGreet("Akka")
       helloGreeter ? Greet

@@ -35,6 +35,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".CassandraQueryNormalizer",
       packageName + ".CassandraDatabaseClientTracer",
       packageName + ".TracingCqlSession",
       packageName + ".CompletionStageFunction"

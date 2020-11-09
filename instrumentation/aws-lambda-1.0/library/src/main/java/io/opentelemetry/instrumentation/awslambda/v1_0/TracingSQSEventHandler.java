@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.TimeUnit;
 
 public abstract class TracingSQSEventHandler extends TracingRequestHandler<SQSEvent, Void> {
@@ -53,7 +53,7 @@ public abstract class TracingSQSEventHandler extends TracingRequestHandler<SQSEv
       } else {
         tracer.end(span);
       }
-      OpenTelemetrySdk.getTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
     return null;
   }
