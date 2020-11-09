@@ -26,6 +26,10 @@ release {
   defaultVersionStrategy = Strategies.SNAPSHOT
 }
 
+nebulaRelease {
+  addReleaseBranchPattern(/v\d+\.\d+\.x/)
+}
+
 allprojects {
   ext.isCI = System.getenv("CI") != null
   if (isCI) {
