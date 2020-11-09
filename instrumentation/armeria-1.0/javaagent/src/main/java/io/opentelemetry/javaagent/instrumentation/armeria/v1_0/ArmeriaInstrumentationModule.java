@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_0;
 
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import static java.util.Arrays.asList;
 
-public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Default {
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 
-  private static final String INSTRUMENTATION_NAME = "armeria";
-
-  public AbstractArmeriaInstrumentation() {
-    super(INSTRUMENTATION_NAME);
+@AutoService(InstrumentationModule.class)
+public class ArmeriaInstrumentationModule extends InstrumentationModule {
+  public ArmeriaInstrumentationModule() {
+    super("armeria");
   }
 
   @Override
@@ -32,5 +35,13 @@ public abstract class AbstractArmeriaInstrumentation extends Instrumenter.Defaul
       // Corresponds to lambda when calling .thenAccept(log -> ...
       "io.opentelemetry.instrumentation.armeria.v1_0.server.OpenTelemetryService$1",
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new ArmeriaWebClientBuilderInstrumentation(),
+        new ArmeriaServerInstrumentation(),
+        new ArmeriaServerBuilderInstrumentation());
   }
 }

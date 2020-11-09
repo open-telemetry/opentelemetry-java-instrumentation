@@ -16,9 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,12 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link AmazonClientException} (for example an error thrown by another handler). In these cases
  * {@link RequestHandler2#afterError} is not called.
  */
-@AutoService(Instrumenter.class)
-public class AWSHttpClientInstrumentation extends Instrumenter.Default {
-
-  public AWSHttpClientInstrumentation() {
-    super("aws-sdk");
-  }
+final class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -43,19 +37,10 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AwsSdkClientTracer",
-      packageName + ".AwsSdkClientTracer$NamesCache",
-      packageName + ".RequestMeta",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(not(isAbstract())).and(named("doExecute")),
-        AWSHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
+        AwsHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
   }
 
   public static class HttpClientAdvice {
@@ -69,41 +54,6 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
           tracer().endExceptionally(scope.getSpan(), throwable);
           scope.closeScope();
-        }
-      }
-    }
-  }
-
-  /**
-   * Due to a change in the AmazonHttpClient class, this instrumentation is needed to support newer
-   * versions. The above class should cover older versions.
-   */
-  @AutoService(Instrumenter.class)
-  public static final class RequestExecutorInstrumentation extends AWSHttpClientInstrumentation {
-
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.amazonaws.http.AmazonHttpClient$RequestExecutor");
-    }
-
-    @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
-          isMethod().and(not(isAbstract())).and(named("doExecute")),
-          RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
-    }
-
-    public static class RequestExecutorAdvice {
-      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-      public static void methodExit(
-          @Advice.FieldValue("request") Request<?> request, @Advice.Thrown Throwable throwable) {
-        if (throwable != null) {
-          SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-          if (scope != null) {
-            request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-            tracer().endExceptionally(scope.getSpan(), throwable);
-            scope.closeScope();
-          }
         }
       }
     }

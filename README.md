@@ -40,8 +40,8 @@
 This project provides a Java agent JAR that can be attached to any Java 8+
 application and dynamically injects bytecode to capture telemetry from a
 number of popular libraries and frameworks.
-The telemetry data can be exported in a variety of formats.
-In addition, the agent and exporter can be configured via command line arguments
+You can export the telemetry data in a variety of formats.
+You can also configure the agent and exporter via command line arguments
 or environment variables. The net result is the ability to gather telemetry
 data from a Java application without code changes.
 
