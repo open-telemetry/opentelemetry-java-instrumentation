@@ -37,7 +37,7 @@ import org.gradle.api.tasks.compile.AbstractCompile;
  * of the compile task.
  */
 public class ByteBuddyPluginConfigurator {
-  private static final List<String> LANGUAGES = Arrays.asList("java", "groovy", "kotlin");
+  private static final List<String> LANGUAGES = Arrays.asList("java", "scala", "kotlin");
 
   private final Project project;
   private final SourceSet sourceSet;
