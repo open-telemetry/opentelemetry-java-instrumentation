@@ -35,6 +35,11 @@ public class SampleHttpServerTypedTracer
   protected TextMapPropagator.Getter<String> getGetter() {
     return new TextMapPropagator.Getter<String>() {
       @Override
+      public Iterable<String> keys(String s) {
+        return null;
+      }
+
+      @Override
       public String get(String carrier, String key) {
         return null;
       }

@@ -77,6 +77,6 @@ jobs:
           arguments: final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           GRGIT_USER: ${{ github.actor }}
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}

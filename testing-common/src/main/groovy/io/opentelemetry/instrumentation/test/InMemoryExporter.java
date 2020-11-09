@@ -121,7 +121,7 @@ public class InMemoryExporter implements SpanProcessor {
         .forEach(
             new AttributeConsumer() {
               @Override
-              public <T> void consume(AttributeKey<T> key, T value) {
+              public <T> void accept(AttributeKey<T> key, T value) {
                 attributes.append(String.format("Attribute %s=%s", key, value));
               }
             });

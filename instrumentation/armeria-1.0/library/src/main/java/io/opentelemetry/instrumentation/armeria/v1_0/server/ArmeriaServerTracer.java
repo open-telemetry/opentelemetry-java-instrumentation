@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.armeria.v1_0.server;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
+import io.netty.util.AsciiString;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaServerTracer
@@ -95,6 +97,13 @@ public class ArmeriaServerTracer
   private static class ArmeriaGetter implements Getter<HttpRequest> {
 
     private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
+
+    @Override
+    public Iterable<String> keys(HttpRequest httpRequest) {
+      return httpRequest.headers().names().stream()
+          .map(AsciiString::toString)
+          .collect(Collectors.toList());
+    }
 
     @Override
     @Nullable

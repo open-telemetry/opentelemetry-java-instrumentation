@@ -28,6 +28,11 @@ final class AwsLambdaUtil {
     private static final MapGetter INSTANCE = new MapGetter();
 
     @Override
+    public Iterable<String> keys(Map<String, String> map) {
+      return map.keySet();
+    }
+
+    @Override
     public String get(Map<String, String> map, String s) {
       return map.get(s);
     }

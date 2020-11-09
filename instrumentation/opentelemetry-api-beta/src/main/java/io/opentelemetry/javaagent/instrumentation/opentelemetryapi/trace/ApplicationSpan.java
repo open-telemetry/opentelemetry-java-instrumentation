@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgent;
 import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging.toAgentOrNull;
 
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.trace.EndSpanOptions;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
@@ -124,8 +122,8 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void end(EndSpanOptions applicationEndOptions) {
-    agentSpan.end(toAgent(applicationEndOptions));
+  public void end(long timestamp) {
+    agentSpan.end(timestamp);
   }
 
   @Override

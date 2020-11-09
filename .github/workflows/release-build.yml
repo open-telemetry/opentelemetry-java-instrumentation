@@ -22,9 +22,9 @@ jobs:
           remote-build-cache-proxy-enabled: false
           arguments: build --stacktrace -Prelease.version=${{ github.event.inputs.version }}
       - name: Publish artifacts
-        run: ./gradlew final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+        run: ./gradlew final --stacktrace -Prelease.version=${{ github.event.inputs.version }} --info
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           GRGIT_USER: ${{ github.actor }}
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}

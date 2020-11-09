@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
 import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
@@ -107,7 +106,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private static final boolean FIELD_INJECTION_ENABLED =
       Config.get().getBooleanProperty("otel.trace.runtime.context.field.injection", true);
 
-  private final Instrumenter.Default instrumenter;
+  private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
   private final Map<String, String> contextStore;
 
@@ -121,8 +120,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private final AgentBuilder.Transformer contextStoreImplementationsInjector;
 
-  public FieldBackedProvider(Instrumenter.Default instrumenter, Map<String, String> contextStore) {
-    this.instrumenter = instrumenter;
+  public FieldBackedProvider(Class<?> instrumenterClass, Map<String, String> contextStore) {
+    this.instrumenterClass = instrumenterClass;
     this.contextStore = contextStore;
     byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
@@ -199,7 +198,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                         .equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  log.debug("Found context-store access in {}", instrumenter.getClass().getName());
+                  log.debug("Found context-store access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -217,7 +216,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     if (log.isDebugEnabled()) {
                       log.debug(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
-                          instrumenter.getClass().getName(),
+                          instrumenterClass.getName(),
                           keyClassName,
                           contextClassName);
                     }
@@ -225,7 +224,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                       throw new IllegalStateException(
                           String.format(
                               "Incorrect Context Api Usage detected. Cannot find map holder class for %s context %s. Was that class defined in contextStore for instrumentation %s?",
-                              keyClassName, contextClassName, instrumenter.getClass().getName()));
+                              keyClassName, contextClassName, instrumenterClass.getName()));
                     }
                     if (!contextClassName.equals(contextStore.get(keyClassName))) {
                       throw new IllegalStateException(
@@ -233,7 +232,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                               "Incorrect Context Api Usage detected. Incorrect context class %s, expected %s for instrumentation %s",
                               contextClassName,
                               contextStore.get(keyClassName),
-                              instrumenter.getClass().getName()));
+                              instrumenterClass.getName()));
                     }
                     // stack: contextClass | keyClass
                     mv.visitMethodInsn(
@@ -374,11 +373,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
-            log.debug("Skipping builder for {} {}", instrumenter.getClass().getName(), entry);
+            log.debug("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          log.debug("Making builder for {} {}", instrumenter.getClass().getName(), entry);
+          log.debug("Making builder for {} {}", instrumenterClass.getName(), entry);
           INSTALLED_CONTEXT_MATCHERS.add(entry);
 
           /*

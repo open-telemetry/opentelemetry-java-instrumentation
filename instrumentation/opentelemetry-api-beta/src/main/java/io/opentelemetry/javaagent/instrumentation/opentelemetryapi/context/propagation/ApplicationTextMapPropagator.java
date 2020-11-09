@@ -55,6 +55,11 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
     }
 
     @Override
+    public Iterable<String> keys(C c) {
+      return applicationGetter.keys(c);
+    }
+
+    @Override
     public String get(C carrier, String key) {
       return applicationGetter.get(carrier, key);
     }

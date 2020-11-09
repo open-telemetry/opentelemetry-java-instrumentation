@@ -88,7 +88,7 @@ class RestCamelTest extends AgentTestRunner {
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
             "$SemanticAttributes.HTTP_CLIENT_IP.key" "127.0.0.1"
-            "$SemanticAttributes.HTTP_USER_AGENT.key" "Jetty/9.3.21.v20170918"
+            "$SemanticAttributes.HTTP_USER_AGENT.key" String
             "$SemanticAttributes.HTTP_FLAVOR.key" "HTTP/1.1"
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
