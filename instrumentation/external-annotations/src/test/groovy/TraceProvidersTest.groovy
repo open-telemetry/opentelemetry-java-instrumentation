@@ -13,6 +13,7 @@ import io.opentelemetry.test.annotation.SayTracedHello
 class TraceProvidersTest extends AgentTestRunner {
   //Don't bother to instrument inner closures of this test class
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    it.remove("otel.trace.annotations")
     it.setProperty("otel.trace.classes.exclude", TraceProvidersTest.name + "*")
   }
 

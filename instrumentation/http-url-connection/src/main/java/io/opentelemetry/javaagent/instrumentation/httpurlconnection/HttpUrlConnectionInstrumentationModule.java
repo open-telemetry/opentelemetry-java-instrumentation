@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -21,8 +22,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.HttpURLConnection;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,24 +33,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
-@AutoService(Instrumenter.class)
-public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class HttpUrlConnectionInstrumentationModule extends InstrumentationModule {
 
-  public HttpUrlConnectionInstrumentation() {
+  public HttpUrlConnectionInstrumentationModule() {
     super("httpurlconnection");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return nameStartsWith("java.net.")
-        .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
-        // In WebLogic, URL.openConnection() returns its own internal implementation of
-        // HttpURLConnection, which does not delegate the methods that have to be instrumented to
-        // the JDK superclass. Therefore it needs to be instrumented directly.
-        .or(named("weblogic.net.http.HttpURLConnection"))
-        // This class is a simple delegator. Skip because it does not update its `connected` field.
-        .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
-        .and(extendsClass(named("java.net.HttpURLConnection")));
   }
 
   @Override
@@ -55,9 +45,14 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".HttpUrlConnectionTracer",
       packageName + ".HeadersInjectAdapter",
-      HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState",
-      HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState$1",
+      HttpUrlConnectionInstrumentationModule.class.getName() + "$HttpUrlState",
+      HttpUrlConnectionInstrumentationModule.class.getName() + "$HttpUrlState$1",
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpUrlConnectionInstrumentation());
   }
 
   @Override
@@ -65,11 +60,29 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod().and(isPublic()).and(namedOneOf("connect", "getOutputStream", "getInputStream")),
-        HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlConnectionAdvice");
+  private static final class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return nameStartsWith("java.net.")
+          .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
+          // In WebLogic, URL.openConnection() returns its own internal implementation of
+          // HttpURLConnection, which does not delegate the methods that have to be instrumented to
+          // the JDK superclass. Therefore it needs to be instrumented directly.
+          .or(named("weblogic.net.http.HttpURLConnection"))
+          // This class is a simple delegator. Skip because it does not update its `connected`
+          // field.
+          .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
+          .and(extendsClass(named("java.net.HttpURLConnection")));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(isPublic())
+              .and(namedOneOf("connect", "getOutputStream", "getInputStream")),
+          HttpUrlConnectionInstrumentationModule.class.getName() + "$HttpUrlConnectionAdvice");
+    }
   }
 
   public static class HttpUrlConnectionAdvice {

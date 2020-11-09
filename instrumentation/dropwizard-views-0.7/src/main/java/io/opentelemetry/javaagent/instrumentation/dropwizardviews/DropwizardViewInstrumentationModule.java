@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -22,44 +23,47 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class DropwizardViewInstrumentation extends Instrumenter.Default {
-
-  public DropwizardViewInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public final class DropwizardViewInstrumentationModule extends InstrumentationModule {
+  public DropwizardViewInstrumentationModule() {
     super("dropwizard", "dropwizard-view");
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("io.dropwizard.views.ViewRenderer");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ViewRendererInstrumentation());
   }
 
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.dropwizard.views.ViewRenderer"));
-  }
+  private static final class ViewRendererInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("io.dropwizard.views.ViewRenderer");
+    }
 
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$RenderAdvice"};
-  }
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return implementsInterface(named("io.dropwizard.views.ViewRenderer"));
+    }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("render"))
-            .and(takesArgument(0, named("io.dropwizard.views.View")))
-            .and(isPublic()),
-        DropwizardViewInstrumentation.class.getName() + "$RenderAdvice");
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("render"))
+              .and(takesArgument(0, named("io.dropwizard.views.View")))
+              .and(isPublic()),
+          DropwizardViewInstrumentationModule.class.getName() + "$RenderAdvice");
+    }
   }
 
   public static class RenderAdvice {
