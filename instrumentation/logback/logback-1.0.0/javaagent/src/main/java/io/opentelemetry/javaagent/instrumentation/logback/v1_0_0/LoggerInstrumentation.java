@@ -13,32 +13,21 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class LogbackInstrumentation extends Instrumenter.Default {
-
-  public LogbackInstrumentation() {
-    super("logback");
-  }
+final class LoggerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("ch.qos.logback.classic.Logger");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("ch.qos.logback.classic.spi.ILoggingEvent", Span.class.getName());
   }
 
   @Override
@@ -49,7 +38,7 @@ public class LogbackInstrumentation extends Instrumenter.Default {
             .and(named("callAppenders"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
-        LogbackInstrumentation.class.getName() + "$CallAppendersAdvice");
+        LoggerInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
   public static class CallAppendersAdvice {

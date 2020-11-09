@@ -13,8 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,28 +24,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-@AutoService(Instrumenter.class)
-public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
-
-  public KafkaConsumerInstrumentation() {
-    super("kafka");
-  }
+final class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.clients.consumer.ConsumerRecords");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KafkaClientConfiguration",
-      packageName + ".KafkaConsumerTracer",
-      packageName + ".TextMapExtractAdapter",
-      packageName + ".TracingIterable",
-      packageName + ".TracingIterator",
-      packageName + ".TracingList"
-    };
   }
 
   @Override

@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlincoroutines;
 
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
@@ -24,8 +27,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@AutoService(Instrumenter.class)
-public class KotlinProbeInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule {
   /*
   Kotlin coroutines with suspend functions are a form of cooperative "userland" threading
   (you might also know this pattern as "fibers" or "green threading", where the OS/kernel-level thread
@@ -49,53 +52,58 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
      it passes with concurrency=200.
   */
 
-  public KotlinProbeInstrumentation() {
+  public KotlinCoroutinesInstrumentationModule() {
     super("kotlin-coroutines");
-  }
-
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("kotlin.coroutines.jvm.internal.DebugProbesKt");
-  }
-
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        named("probeCoroutineCreated").and(takesArguments(1)),
-        CoroutineCreatedAdvice.class.getName());
-    transformers.put(
-        named("probeCoroutineResumed").and(takesArguments(1)),
-        CoroutineResumedAdvice.class.getName());
-    transformers.put(
-        named("probeCoroutineSuspended").and(takesArguments(1)),
-        CoroutineSuspendedAdvice.class.getName());
-    return transformers;
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$CoroutineWrapper",
-      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$TraceScopeKey",
-      "io.opentelemetry.javaagent.instrumentation.kotlincoroutines.KotlinProbeInstrumentation$CoroutineContextWrapper",
+      getClass().getName() + "$CoroutineWrapper",
+      getClass().getName() + "$TraceScopeKey",
+      getClass().getName() + "$CoroutineContextWrapper",
     };
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new KotlinDebugProbeInstrumentation());
+  }
+
+  private static final class KotlinDebugProbeInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named("kotlin.coroutines.jvm.internal.DebugProbesKt");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          named("probeCoroutineCreated").and(takesArguments(1)),
+          CoroutineCreatedAdvice.class.getName());
+      transformers.put(
+          named("probeCoroutineResumed").and(takesArguments(1)),
+          CoroutineResumedAdvice.class.getName());
+      transformers.put(
+          named("probeCoroutineSuspended").and(takesArguments(1)),
+          CoroutineSuspendedAdvice.class.getName());
+      return transformers;
+    }
   }
 
   public static class CoroutineCreatedAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(
-        @Advice.Return(readOnly = false) kotlin.coroutines.Continuation retVal) {
+    public static void exit(@Advice.Return(readOnly = false) Continuation<?> retVal) {
       if (!(retVal instanceof CoroutineWrapper)) {
-        retVal = new CoroutineWrapper(retVal);
+        retVal = new CoroutineWrapper<>(retVal);
       }
     }
   }
 
   public static class CoroutineResumedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(
-        @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
+    public static void enter(@Advice.Argument(0) final Continuation<?> continuation) {
       CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
       if (w != null) {
         w.tracingResume();
@@ -105,8 +113,7 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
 
   public static class CoroutineSuspendedAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(
-        @Advice.Argument(0) final kotlin.coroutines.Continuation continuation) {
+    public static void enter(@Advice.Argument(0) final Continuation<?> continuation) {
       CoroutineContextWrapper w = continuation.getContext().get(TraceScopeKey.INSTANCE);
       if (w != null) {
         w.tracingSuspend();
@@ -118,11 +125,11 @@ public class KotlinProbeInstrumentation extends Instrumenter.Default {
     public static final TraceScopeKey INSTANCE = new TraceScopeKey();
   }
 
-  public static class CoroutineWrapper implements kotlin.coroutines.Continuation {
-    private final Continuation proxy;
+  public static class CoroutineWrapper<T> implements Continuation<T> {
+    private final Continuation<T> proxy;
     private final CoroutineContextWrapper contextWrapper;
 
-    public CoroutineWrapper(Continuation proxy) {
+    public CoroutineWrapper(Continuation<T> proxy) {
       this.proxy = proxy;
       this.contextWrapper = new CoroutineContextWrapper(proxy.getContext());
     }

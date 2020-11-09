@@ -16,12 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -30,29 +29,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class LoggingEventInstrumentation extends Instrumenter.Default {
-  public LoggingEventInstrumentation() {
-    super("logback");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap$ConcatenatedSet",
-      "io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap$ConcatenatedSet$ConcatenatedSetIterator"
-    };
-  }
-
+final class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return implementsInterface(named("ch.qos.logback.classic.spi.ILoggingEvent"));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("ch.qos.logback.classic.spi.ILoggingEvent", Span.class.getName());
   }
 
   @Override
