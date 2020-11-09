@@ -49,21 +49,21 @@ public final class ReactorHttpClientInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        ReactorHttpClientInstrumentation.class.getName() + "$MapConnect",
-        ReactorHttpClientInstrumentation.class.getName() + "$OnRequest",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1",
-        // these below a transitive dependencies of AttributeKeys from above
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyHttpServerTracer",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyRequestExtractAdapter",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler",
-        "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler"
+      ReactorHttpClientInstrumentation.class.getName() + "$MapConnect",
+      ReactorHttpClientInstrumentation.class.getName() + "$OnRequest",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1",
+      // these below a transitive dependencies of AttributeKeys from above
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyHttpServerTracer",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyRequestExtractAdapter",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler"
     };
   }
 
@@ -75,19 +75,17 @@ public final class ReactorHttpClientInstrumentation extends Instrumenter.Default
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Thrown Throwable throwable,
-        @Advice.Return(readOnly = false) HttpClient client) {
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable, @Advice.Return(readOnly = false) HttpClient client) {
 
       if (throwable == null && CallDepthThreadLocalMap.decrementCallDepth(HttpClient.class) == 0) {
-        client = client
-            .doOnRequest(new OnRequest())
-            .mapConnect(new MapConnect());
+        client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
     }
   }
 
-  public static class MapConnect implements
-      BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
+  public static class MapConnect
+      implements BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
     @Override
     public Mono<? extends Connection> apply(Mono<? extends Connection> m, Bootstrap b) {
       return m.subscriberContext(s -> s.put("otel_context", Context.current()));
