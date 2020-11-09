@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -18,10 +17,8 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.CallableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -31,18 +28,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
-
-  @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> map = new HashMap<>();
-    map.put(Runnable.class.getName(), State.class.getName());
-    map.put(Callable.class.getName(), State.class.getName());
-    map.put(ForkJoinTask.class.getName(), State.class.getName());
-    map.put(Future.class.getName(), State.class.getName());
-    return Collections.unmodifiableMap(map);
-  }
+final class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {

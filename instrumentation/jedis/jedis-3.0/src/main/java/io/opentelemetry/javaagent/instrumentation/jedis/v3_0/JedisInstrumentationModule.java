@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.tracer;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,7 +18,9 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.CommandWithArgs;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,16 +29,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.commands.ProtocolCommand;
 
-@AutoService(Instrumenter.class)
-public final class JedisInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class JedisInstrumentationModule extends InstrumentationModule {
 
-  public JedisInstrumentation() {
+  public JedisInstrumentationModule() {
     super("jedis", "redis");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Connection");
   }
 
   @Override
@@ -46,15 +44,28 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("sendCommand"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
-            .and(takesArgument(1, is(byte[][].class))),
-        JedisInstrumentation.class.getName() + "$JedisAdvice");
-    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ConnectionInstrumentation());
+  }
+
+  private static final class ConnectionInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("redis.clients.jedis.Connection");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(named("sendCommand"))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
+              .and(takesArgument(1, is(byte[][].class))),
+          JedisInstrumentationModule.class.getName() + "$JedisAdvice");
+      // FIXME: This instrumentation only incorporates sending the command, not processing the
+      // result.
+    }
   }
 
   public static class JedisAdvice {

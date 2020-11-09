@@ -13,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
@@ -24,12 +23,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JMSMessageListenerInstrumentation extends Instrumenter.Default {
-
-  public JMSMessageListenerInstrumentation() {
-    super("jms", "jms-1", "jms-2");
-  }
+final class JMSMessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -40,16 +34,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("javax.jms.MessageListener"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".MessageDestination",
-      packageName + ".JMSTracer",
-      packageName + ".MessageExtractAdapter",
-      packageName + ".MessageInjectAdapter"
-    };
   }
 
   @Override

@@ -13,11 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -25,12 +24,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JSPInstrumentation extends Instrumenter.Default {
-
-  public JSPInstrumentation() {
-    super("jsp", "jsp-render");
-  }
+final class HttpJspPageInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -44,20 +38,13 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JSPTracer",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("_jspService")
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        JSPInstrumentation.class.getName() + "$HttpJspPageAdvice");
+        HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
   }
 
   public static class HttpJspPageAdvice {

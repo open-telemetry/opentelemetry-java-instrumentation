@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsC
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -21,29 +22,20 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class JaxRsClientInstrumentationModule extends InstrumentationModule {
 
-  public JaxRsClientV1Instrumentation() {
+  public JaxRsClientInstrumentationModule() {
     super("jax-rs", "jaxrs", "jax-rs-client");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("com.sun.jersey.api.client.ClientHandler");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.sun.jersey.api.client.ClientHandler"));
   }
 
   @Override
@@ -54,12 +46,30 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        named("handle")
-            .and(takesArgument(0, extendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
-            .and(returns(extendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
-        JaxRsClientV1Instrumentation.class.getName() + "$HandleAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ClientHandlerInstrumentation());
+  }
+
+  private static final class ClientHandlerInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("com.sun.jersey.api.client.ClientHandler");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return implementsInterface(named("com.sun.jersey.api.client.ClientHandler"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("handle")
+              .and(takesArgument(0, extendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
+              .and(returns(extendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
+          JaxRsClientInstrumentationModule.class.getName() + "$HandleAdvice");
+    }
   }
 
   public static class HandleAdvice {

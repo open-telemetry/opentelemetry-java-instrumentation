@@ -13,8 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,16 +33,11 @@ import org.glassfish.jersey.client.ClientRequest;
  * JAX-RS Client API doesn't define a good point where we can handle connection failures, so we must
  * handle these errors at the implementation level.
  */
-@AutoService(Instrumenter.class)
-public final class JerseyClientConnectionErrorInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class JerseyClientInstrumentationModule extends InstrumentationModule {
 
-  public JerseyClientConnectionErrorInstrumentation() {
+  public JerseyClientInstrumentationModule() {
     super("jax-rs", "jaxrs", "jax-rs-client");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.glassfish.jersey.client.JerseyInvocation");
   }
 
   @Override
@@ -52,18 +50,31 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return Collections.singletonList(new JerseyClientConnectionErrorInstrumentation());
+  }
 
-    transformers.put(
-        isMethod().and(isPublic()).and(named("invoke")),
-        JerseyClientConnectionErrorInstrumentation.class.getName() + "$InvokeAdvice");
+  private static final class JerseyClientConnectionErrorInstrumentation
+      implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("org.glassfish.jersey.client.JerseyInvocation");
+    }
 
-    transformers.put(
-        isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),
-        JerseyClientConnectionErrorInstrumentation.class.getName() + "$SubmitAdvice");
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
-    return transformers;
+      transformers.put(
+          isMethod().and(isPublic()).and(named("invoke")),
+          JerseyClientInstrumentationModule.class.getName() + "$InvokeAdvice");
+
+      transformers.put(
+          isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),
+          JerseyClientInstrumentationModule.class.getName() + "$SubmitAdvice");
+
+      return transformers;
+    }
   }
 
   public static class InvokeAdvice {

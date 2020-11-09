@@ -17,10 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Constants;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -37,11 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This instrumentation forces all class loaders to delegate to the bootstrap class loader
  * for the classes that we have put in the bootstrap class loader.
  */
-@AutoService(Instrumenter.class)
-public final class ClassLoaderInstrumentation extends Instrumenter.Default {
-  public ClassLoaderInstrumentation() {
-    super("class-loader");
-  }
+final class ClassLoaderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -52,11 +47,6 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
             "com.ibm.oti.vm.BootstrapClassLoader",
             "io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader")
         .and(extendsClass(named("java.lang.ClassLoader")));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {Constants.class.getName()};
   }
 
   @Override

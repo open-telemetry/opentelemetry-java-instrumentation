@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,8 +20,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,22 +32,17 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
-@AutoService(Instrumenter.class)
-public final class JedisInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class JedisInstrumentationModule extends InstrumentationModule {
 
-  public JedisInstrumentation() {
+  public JedisInstrumentationModule() {
     super("jedis", "redis");
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // Avoid matching 3.x
     return not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand"));
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Connection");
   }
 
   @Override
@@ -55,23 +53,36 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
-    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
-        isMethod()
-            .and(named("sendCommand"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
-        JedisInstrumentation.class.getName() + "$JedisNoArgsAdvice");
-    transformers.put(
-        isMethod()
-            .and(named("sendCommand"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
-            .and(takesArgument(1, is(byte[][].class))),
-        JedisInstrumentation.class.getName() + "$JedisArgsAdvice");
-    return transformers;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ConnectionInstrumentation());
+  }
+
+  private static final class ConnectionInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("redis.clients.jedis.Connection");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      // FIXME: This instrumentation only incorporates sending the command, not processing the
+      // result.
+      Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+      transformers.put(
+          isMethod()
+              .and(named("sendCommand"))
+              .and(takesArguments(1))
+              .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
+          JedisInstrumentationModule.class.getName() + "$JedisNoArgsAdvice");
+      transformers.put(
+          isMethod()
+              .and(named("sendCommand"))
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
+              .and(takesArgument(1, is(byte[][].class))),
+          JedisInstrumentationModule.class.getName() + "$JedisArgsAdvice");
+      return transformers;
+    }
   }
 
   public static class JedisNoArgsAdvice {
