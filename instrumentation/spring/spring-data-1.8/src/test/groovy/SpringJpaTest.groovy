@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -66,7 +67,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          name ~/^select /
+          name "SELECT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -97,7 +98,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // insert
-          name ~/^insert /
+          name "INSERT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -128,7 +129,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          name ~/^select /
+          name "SELECT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -140,7 +141,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // update
-          name ~/^update /
+          name "UPDATE test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -169,7 +170,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          name ~/^select /
+          name "SELECT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -198,7 +199,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          name ~/^select /
+          name "SELECT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -210,7 +211,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // delete
-          name ~/^delete /
+          name "DELETE test.JpaCustomer"
           kind CLIENT
           childOf span(0)
           attributes {
