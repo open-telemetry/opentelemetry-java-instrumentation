@@ -26,7 +26,7 @@ public abstract class Config {
   private static final Config DEFAULT = Config.create(Collections.emptyMap());
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
-  // getMuzzleReferenceMatcher() and the Instrumenter.Default constructor uses Config
+  // getMuzzleReferenceMatcher() and the InstrumentationModule constructor uses Config
   private static volatile Config INSTANCE = DEFAULT;
 
   /**
