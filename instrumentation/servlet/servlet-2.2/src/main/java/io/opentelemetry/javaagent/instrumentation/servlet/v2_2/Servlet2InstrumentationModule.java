@@ -42,7 +42,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
-        new HttpServletResponseInstrumentation(), new ServletAndFilterChainInstrumentation());
+        new HttpServletResponseInstrumentation(), new ServletAndFilterInstrumentation());
   }
 
   @Override
