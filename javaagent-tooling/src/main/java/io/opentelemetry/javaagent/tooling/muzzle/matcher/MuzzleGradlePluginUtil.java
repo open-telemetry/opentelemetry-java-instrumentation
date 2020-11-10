@@ -143,10 +143,11 @@ public final class MuzzleGradlePluginUtil {
           System.out.println(prettyPrint("  ", ref));
         }
       } catch (Exception e) {
-        System.out.println(
+        String message =
             "Unexpected exception printing references for "
-                + instrumentationModule.getClass().getName());
-        throw new RuntimeException(e);
+                + instrumentationModule.getClass().getName();
+        System.out.println(message);
+        throw new RuntimeException(message, e);
       }
     }
   }
