@@ -64,6 +64,7 @@ jobs:
               # Trim whitespaces and cherrypick
               echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
           done
+          git push
       - uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk11
