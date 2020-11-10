@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor_netty;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +15,9 @@ import io.netty.bootstrap.Bootstrap;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -37,8 +40,8 @@ public final class ReactorHttpClientInstrumentationModule extends Instrumentatio
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      ReactorHttpClientInstrumentation.class.getName() + "$MapConnect",
-      ReactorHttpClientInstrumentation.class.getName() + "$OnRequest",
+      ReactorHttpClientInstrumentationModule.class.getName() + "$MapConnect",
+      ReactorHttpClientInstrumentationModule.class.getName() + "$OnRequest",
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1",
       // these below a transitive dependencies of AttributeKeys from above
@@ -54,12 +57,12 @@ public final class ReactorHttpClientInstrumentationModule extends Instrumentatio
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler"
     };
   }
-  
+
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpClientInstrumentation());
   }
-  
+
   private static final class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
@@ -70,7 +73,7 @@ public final class ReactorHttpClientInstrumentationModule extends Instrumentatio
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isStatic().and(named("create")),
-          ReactorHttpClientInstrumentation.class.getName() + "$CreateAdvice");
+          ReactorHttpClientInstrumentationModule.class.getName() + "$CreateAdvice");
     }
   }
 
