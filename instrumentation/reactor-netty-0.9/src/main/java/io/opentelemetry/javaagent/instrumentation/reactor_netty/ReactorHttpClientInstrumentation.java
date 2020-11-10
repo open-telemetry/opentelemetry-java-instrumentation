@@ -27,23 +27,11 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 
-@AutoService(Instrumenter.class)
-public final class ReactorHttpClientInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class ReactorHttpClientInstrumentationModule extends InstrumentationModule {
 
-  public ReactorHttpClientInstrumentation() {
+  public ReactorHttpClientInstrumentationModule() {
     super("reactor-httpclient");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("reactor.netty.http.client.HttpClient");
-  }
-
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isStatic().and(named("create")),
-        ReactorHttpClientInstrumentation.class.getName() + "$CreateAdvice");
   }
 
   @Override
@@ -65,6 +53,25 @@ public final class ReactorHttpClientInstrumentation extends Instrumenter.Default
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler",
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler"
     };
+  }
+  
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpClientInstrumentation());
+  }
+  
+  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("reactor.netty.http.client.HttpClient");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isStatic().and(named("create")),
+          ReactorHttpClientInstrumentation.class.getName() + "$CreateAdvice");
+    }
   }
 
   public static class CreateAdvice {
