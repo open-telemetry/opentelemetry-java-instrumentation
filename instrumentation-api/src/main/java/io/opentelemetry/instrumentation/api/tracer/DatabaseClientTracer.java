@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
 
-  private static final String DB_QUERY = "DB Query";
+  protected static final String DB_QUERY = "DB Query";
 
   protected final Tracer tracer;
 
