@@ -70,7 +70,8 @@ public class AgentInstaller {
   }
 
   /**
-   * Install the core bytebuddy agent along with all implementations of {@link Instrumenter}.
+   * Install the core bytebuddy agent along with all implementations of {@link
+   * InstrumentationModule}.
    *
    * @param inst Java Instrumentation used to install bytebuddy
    * @return the agent's class transformer
@@ -144,18 +145,6 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
-    Iterable<Instrumenter> instrumenters =
-        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader());
-    for (Instrumenter instrumenter : orderInstrumenters(instrumenters)) {
-      log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
-      try {
-        agentBuilder = instrumenter.instrument(agentBuilder);
-        numInstrumenters++;
-      } catch (Exception | LinkageError e) {
-        log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);
-      }
-    }
-
     for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
       log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
       try {
@@ -169,13 +158,6 @@ public class AgentInstaller {
 
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
-  }
-
-  private static Iterable<Instrumenter> orderInstrumenters(Iterable<Instrumenter> instrumenters) {
-    List<Instrumenter> orderedInstrumenters = new ArrayList<>();
-    instrumenters.forEach(orderedInstrumenters::add);
-    orderedInstrumenters.sort(Comparator.comparingInt(Instrumenter::getOrder));
-    return orderedInstrumenters;
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {

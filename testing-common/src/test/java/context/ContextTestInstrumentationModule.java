@@ -5,23 +5,26 @@
 
 package context;
 
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class ContextTestInstrumentation extends Instrumenter.Default {
-  public ContextTestInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public class ContextTestInstrumentationModule extends InstrumentationModule {
+  public ContextTestInstrumentationModule() {
     super("context-test-instrumentation");
   }
 
@@ -34,32 +37,13 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return nameStartsWith(getClass().getName() + "$");
-  }
-
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
-    transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
-    transformers.put(
-        named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
-    transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
-    transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
-    transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
-    transformers.put(
-        named("incorrectKeyClassUsage"), IncorrectKeyClassContextApiUsageAdvice.class.getName());
-    transformers.put(
-        named("incorrectContextClassUsage"),
-        IncorrectContextClassContextApiUsageAdvice.class.getName());
-    transformers.put(
-        named("incorrectCallUsage"), IncorrectCallContextApiUsageAdvice.class.getName());
-    return transformers;
-  }
-
-  @Override
   public String[] helperClassNames() {
     return new String[] {getClass().getName() + "$Context", getClass().getName() + "$Context$1"};
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new ContextTestInstrumentation());
   }
 
   @Override
@@ -69,6 +53,32 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     store.put(getClass().getName() + "$UntransformableKeyClass", getClass().getName() + "$Context");
     store.put(getClass().getName() + "$DisabledKeyClass", getClass().getName() + "$Context");
     return store;
+  }
+
+  private static final class ContextTestInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return nameStartsWith(ContextTestInstrumentationModule.class.getName() + "$");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
+      transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
+      transformers.put(
+          named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
+      transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
+      transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
+      transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
+      transformers.put(
+          named("incorrectKeyClassUsage"), IncorrectKeyClassContextApiUsageAdvice.class.getName());
+      transformers.put(
+          named("incorrectContextClassUsage"),
+          IncorrectContextClassContextApiUsageAdvice.class.getName());
+      transformers.put(
+          named("incorrectCallUsage"), IncorrectCallContextApiUsageAdvice.class.getName());
+      return transformers;
+    }
   }
 
   public static class MarkInstrumentedAdvice {
