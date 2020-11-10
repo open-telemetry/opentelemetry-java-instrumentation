@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import javax.servlet.DispatcherType
-import org.apache.struts2.components.template.JspTemplateEngine
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
@@ -30,11 +31,11 @@ class Struts2ActionSpanTest extends AgentTestRunner {
 
     then:
     greeting == "hello"
-    TEST_WRITER.traces
     assertTraces(1, {
       trace(0, 1, {
         span(0, {
           name "GreetingAction.execute"
+          kind Span.Kind.INTERNAL
           attributes {
             "code.namespace" "GreetingAction"
             "code.function" "execute"
@@ -46,15 +47,14 @@ class Struts2ActionSpanTest extends AgentTestRunner {
 
   void setup() {
     port = PortUtils.randomOpenPort()
-    server = startServer(port)
+    server = startServerWithStrutsApp(port)
   }
 
   void cleanup() {
     stopServer(server)
   }
 
-  Server startServer(int port) {
-    println JspTemplateEngine.getDeclaredConstructors()
+  Server startServerWithStrutsApp(int port) {
     def server = new Server(port)
     ServletContextHandler context = new ServletContextHandler(0);
     context.setContextPath("/")
