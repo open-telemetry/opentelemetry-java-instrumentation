@@ -19,6 +19,7 @@ import io.opentelemetry.extension.trace.propagation.TraceMultiPropagator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,14 +62,23 @@ public class PropagatorsInitializer {
     DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
 
     List<TextMapPropagator> textPropagators = new ArrayList<>(propagators.size());
-    for (String propagatorId : propagators) {
-      String propagatorIdLowerCase = propagatorId.trim().toLowerCase();
-      if (BAGGAGE.equals(propagatorIdLowerCase)) {
-        propagatorsBuilder.addTextMapPropagator(W3CBaggagePropagator.getInstance());
-        log.info("Added " + W3CBaggagePropagator.getInstance() + " propagator");
-        continue;
-      }
-      TextMapPropagator textPropagator = TEXTMAP_PROPAGATORS.get(propagatorIdLowerCase);
+    List<String> propagatorIds =
+        propagators.stream()
+            .map(propagator -> propagator.trim().toLowerCase())
+            .collect(Collectors.toList());
+
+    if (propagatorIds.remove(JAEGER)) {
+      // Jaeger handles both tracing and baggage
+      propagatorsBuilder.addTextMapPropagator(JaegerPropagator.getInstance());
+      log.info("Added " + JaegerPropagator.getInstance() + " propagator");
+    }
+    if (propagatorIds.remove(BAGGAGE)) {
+      propagatorsBuilder.addTextMapPropagator(W3CBaggagePropagator.getInstance());
+      log.info("Added " + W3CBaggagePropagator.getInstance() + " propagator");
+    }
+
+    for (String propagatorId : propagatorIds) {
+      TextMapPropagator textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId);
       if (textPropagator != null) {
         textPropagators.add(textPropagator);
         log.info("Added " + textPropagator + " propagator");
