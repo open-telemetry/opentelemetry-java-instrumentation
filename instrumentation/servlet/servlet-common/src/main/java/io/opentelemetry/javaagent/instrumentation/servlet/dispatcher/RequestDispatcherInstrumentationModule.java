@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.Requ
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,8 +23,10 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
@@ -32,21 +35,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class RequestDispatcherInstrumentation extends Instrumenter.Default {
-  public RequestDispatcherInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public final class RequestDispatcherInstrumentationModule extends InstrumentationModule {
+  public RequestDispatcherInstrumentationModule() {
     super("servlet", "servlet-dispatcher");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("javax.servlet.RequestDispatcher");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("javax.servlet.RequestDispatcher"));
   }
 
   @Override
@@ -57,19 +49,37 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   }
 
   @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RequestDispatcherInstrumentation());
+  }
+
+  @Override
   public Map<String, String> contextStore() {
     return singletonMap("javax.servlet.RequestDispatcher", String.class.getName());
   }
 
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        namedOneOf("forward", "include")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("javax.servlet.ServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.ServletResponse")))
-            .and(isPublic()),
-        getClass().getName() + "$RequestDispatcherAdvice");
+  private static final class RequestDispatcherInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("javax.servlet.RequestDispatcher");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return implementsInterface(named("javax.servlet.RequestDispatcher"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          namedOneOf("forward", "include")
+              .and(takesArguments(2))
+              .and(takesArgument(0, named("javax.servlet.ServletRequest")))
+              .and(takesArgument(1, named("javax.servlet.ServletResponse")))
+              .and(isPublic()),
+          RequestDispatcherInstrumentationModule.class.getName() + "$RequestDispatcherAdvice");
+    }
   }
 
   public static class RequestDispatcherAdvice {

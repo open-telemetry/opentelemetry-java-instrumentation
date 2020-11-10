@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.http;
 import static io.opentelemetry.javaagent.instrumentation.servlet.http.HttpServletTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,18 +20,21 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-// Please read README.md of this subproject to understand what is this instrumentation.
-@AutoService(Instrumenter.class)
-public final class HttpServletInstrumentation extends Instrumenter.Default {
-  public HttpServletInstrumentation() {
+// Please read README.md of this subproject to understand what this instrumentation is and why it
+// requires a separate module.
+@AutoService(InstrumentationModule.class)
+public final class HttpServletInstrumentationModule extends InstrumentationModule {
+  public HttpServletInstrumentationModule() {
     super("servlet-service");
   }
 
@@ -40,36 +44,44 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return hasClassesNamed("javax.servlet.http.HttpServlet");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("javax.servlet.http.HttpServlet"));
-  }
-
-  @Override
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".HttpServletTracer",
     };
   }
 
-  /**
-   * Here we are instrumenting the protected method for HttpServlet. This should ensure that this
-   * advice is always called after Servlet3Instrumentation which is instrumenting the public method.
-   */
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        named("service")
-            .or(nameStartsWith("do")) // doGet, doPost, etc
-            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
-            .and(isProtected().or(isPublic())),
-        getClass().getName() + "$HttpServletAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new HttpServletInstrumentation());
+  }
+
+  private static final class HttpServletInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("javax.servlet.http.HttpServlet");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return extendsClass(named("javax.servlet.http.HttpServlet"));
+    }
+
+    /**
+     * Here we are instrumenting the protected method for HttpServlet. This should ensure that this
+     * advice is always called after Servlet3Instrumentation which is instrumenting the public
+     * method.
+     */
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("service")
+              .or(nameStartsWith("do")) // doGet, doPost, etc
+              .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
+              .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
+              .and(isProtected().or(isPublic())),
+          HttpServletInstrumentationModule.class.getName() + "$HttpServletAdvice");
+    }
   }
 
   public static class HttpServletAdvice {

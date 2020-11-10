@@ -4,7 +4,12 @@ muzzle {
   pass {
     group = "javax.servlet"
     module = "servlet-api"
-    versions = "[2.2,)"
+    versions = "(0,)"
+  }
+  pass {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
     assertInverse = true
   }
 }

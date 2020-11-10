@@ -13,19 +13,13 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class Servlet3Instrumentation extends Instrumenter.Default {
-  public Servlet3Instrumentation() {
-    super("servlet", "servlet-3");
-  }
-
+final class ServletAndFilterChainInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
@@ -36,17 +30,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(
         namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
-      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      packageName + ".Servlet3Advice",
-      packageName + ".Servlet3HttpServerTracer",
-      packageName + ".TagSettingAsyncListener"
-    };
   }
 
   /**
@@ -61,6 +44,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        packageName + ".Servlet3Advice");
+        Servlet3Advice.class.getName());
   }
 }

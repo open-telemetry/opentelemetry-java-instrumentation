@@ -5,29 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class SpringSchedulingInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class SpringSchedulingInstrumentationModule extends InstrumentationModule {
 
-  public SpringSchedulingInstrumentation() {
+  public SpringSchedulingInstrumentationModule() {
     super("spring-scheduling");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.springframework.scheduling.config.Task");
   }
 
   @Override
@@ -38,10 +36,22 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isConstructor().and(takesArgument(0, Runnable.class)),
-        SpringSchedulingInstrumentation.class.getName() + "$SpringSchedulingAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new TaskInstrumentation());
+  }
+
+  private static final class TaskInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("org.springframework.scheduling.config.Task");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isConstructor().and(takesArgument(0, Runnable.class)),
+          SpringSchedulingInstrumentationModule.class.getName() + "$SpringSchedulingAdvice");
+    }
   }
 
   public static class SpringSchedulingAdvice {

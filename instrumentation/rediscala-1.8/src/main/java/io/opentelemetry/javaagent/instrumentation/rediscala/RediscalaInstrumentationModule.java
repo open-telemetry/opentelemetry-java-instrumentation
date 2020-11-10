@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClie
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,7 +20,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -31,52 +34,59 @@ import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-@AutoService(Instrumenter.class)
-public final class RediscalaInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class RediscalaInstrumentationModule extends InstrumentationModule {
 
-  public RediscalaInstrumentation() {
+  public RediscalaInstrumentationModule() {
     super("rediscala", "redis");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("redis.Request");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-        namedOneOf(
-            "redis.ActorRequest",
-            "redis.Request",
-            "redis.BufferedRequest",
-            "redis.RoundRobinPoolRequest"));
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      RediscalaInstrumentation.class.getName() + "$OnCompleteHandler",
+      RediscalaInstrumentationModule.class.getName() + "$OnCompleteHandler",
       packageName + ".RediscalaClientTracer",
     };
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(isPublic())
-            .and(named("send"))
-            .and(takesArgument(0, named("redis.RedisCommand")))
-            .and(returns(named("scala.concurrent.Future"))),
-        RediscalaInstrumentation.class.getName() + "$RediscalaAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RequestInstrumentation());
+  }
+
+  private static final class RequestInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      return hasClassesNamed("redis.Request");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return safeHasSuperType(
+          namedOneOf(
+              "redis.ActorRequest",
+              "redis.Request",
+              "redis.BufferedRequest",
+              "redis.RoundRobinPoolRequest"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(isPublic())
+              .and(named("send"))
+              .and(takesArgument(0, named("redis.RedisCommand")))
+              .and(returns(named("scala.concurrent.Future"))),
+          RediscalaInstrumentationModule.class.getName() + "$RediscalaAdvice");
+    }
   }
 
   public static class RediscalaAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) RedisCommand cmd,
+        @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       span = tracer().startSpan(cmd, cmd);

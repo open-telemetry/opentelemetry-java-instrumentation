@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.filter;
 import static io.opentelemetry.javaagent.instrumentation.servlet.filter.FilterTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,7 +19,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.Filter;
 import net.bytebuddy.asm.Advice;
@@ -31,27 +34,15 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * <p>See README.md for more information about different servlet instrumentations.
  */
-@AutoService(Instrumenter.class)
-public final class FilterInstrumentation extends Instrumenter.Default {
-  public FilterInstrumentation() {
+@AutoService(InstrumentationModule.class)
+public final class FilterInstrumentationModule extends InstrumentationModule {
+  public FilterInstrumentationModule() {
     super("servlet-filter");
   }
 
   @Override
   public boolean defaultEnabled() {
     return false;
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    // return hasClassesNamed("javax.servlet.Filter"); // Not available in 2.2
-    return hasClassesNamed("javax.servlet.http.HttpServlet");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("javax.servlet.Filter"));
   }
 
   @Override
@@ -62,13 +53,31 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        named("doFilter")
-            .and(takesArgument(0, named("javax.servlet.ServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.ServletResponse")))
-            .and(isPublic()),
-        getClass().getName() + "$FilterAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new FilterInstrumentation());
+  }
+
+  private static final class FilterInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed("javax.servlet.Filter");
+    }
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return implementsInterface(named("javax.servlet.Filter"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("doFilter")
+              .and(takesArgument(0, named("javax.servlet.ServletRequest")))
+              .and(takesArgument(1, named("javax.servlet.ServletResponse")))
+              .and(isPublic()),
+          FilterInstrumentationModule.class.getName() + "$FilterAdvice");
+    }
   }
 
   public static class FilterAdvice {

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataTracer.tracer;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,8 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -28,16 +31,11 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 
-@AutoService(Instrumenter.class)
-public final class SpringRepositoryInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class SpringDataInstrumentationModule extends InstrumentationModule {
 
-  public SpringRepositoryInstrumentation() {
+  public SpringDataInstrumentationModule() {
     super("spring-data");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.springframework.data.repository.core.support.RepositoryFactorySupport");
   }
 
   @Override
@@ -50,10 +48,23 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isConstructor(),
-        SpringRepositoryInstrumentation.class.getName() + "$RepositoryFactorySupportAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RepositoryFactorySupportInstrumentation());
+  }
+
+  private static final class RepositoryFactorySupportInstrumentation
+      implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("org.springframework.data.repository.core.support.RepositoryFactorySupport");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isConstructor(),
+          SpringDataInstrumentationModule.class.getName() + "$RepositoryFactorySupportAdvice");
+    }
   }
 
   public static class RepositoryFactorySupportAdvice {

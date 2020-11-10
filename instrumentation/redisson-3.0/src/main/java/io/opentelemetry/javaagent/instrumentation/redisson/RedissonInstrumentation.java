@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonClientTracer.tracer;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -21,16 +24,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
-@AutoService(Instrumenter.class)
-public final class RedissonInstrumentation extends Instrumenter.Default {
+@AutoService(InstrumentationModule.class)
+public final class RedissonInstrumentation extends InstrumentationModule {
 
   public RedissonInstrumentation() {
     super("redisson", "redis");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.redisson.client.RedisConnection");
   }
 
   @Override
@@ -39,9 +37,22 @@ public final class RedissonInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod().and(named("send")), RedissonInstrumentation.class.getName() + "$RedissonAdvice");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return singletonList(new RedisConnectionInstrumentation());
+  }
+
+  private static final class RedisConnectionInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("org.redisson.client.RedisConnection");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod().and(named("send")),
+          RedissonInstrumentation.class.getName() + "$RedissonAdvice");
+    }
   }
 
   public static class RedissonAdvice {
