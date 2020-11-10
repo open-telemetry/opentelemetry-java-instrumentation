@@ -15,7 +15,7 @@ public class Struts2Tracer extends BaseTracer {
   public static final Struts2Tracer TRACER = new Struts2Tracer();
 
   public Span startSpan(ActionInvocation actionInvocation) {
-    updateHttpRouteInServerSpan(actionInvocation);
+//    updateHttpRouteInServerSpan(actionInvocation);
 
     Object action = actionInvocation.getAction();
     String namespace = action.getClass().getName();
@@ -26,7 +26,6 @@ public class Struts2Tracer extends BaseTracer {
 
     Span strutsSpan = tracer.spanBuilder(spanName).startSpan();
 
-    strutsSpan.setAttribute("action.name", actionInvocation.getProxy().getActionName());
     strutsSpan.setAttribute("code.namespace", namespace);
     if (method != null) {
       strutsSpan.setAttribute("code.function", method);

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+  "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+  "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+
+  <constant name="struts.devMode" value="true" />
+
+  <package name="basic-struts2" extends="struts-default">
+    <action name="greeting" class="GreetingAction">
+      <result type="freemarker" name="greeting">greeting.ftl</result>
+    </action>
+  </package>
+
+</struts>
