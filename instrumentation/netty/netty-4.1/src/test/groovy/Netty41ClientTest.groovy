@@ -89,7 +89,7 @@ class Netty41ClientTest extends HttpClientTest {
     EventLoopGroup group = new NioEventLoopGroup()
     Bootstrap b = new Bootstrap()
     b.group(group)
-      .channel(NioSocketChannel.class)
+      .channel(NioSocketChannel)
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
