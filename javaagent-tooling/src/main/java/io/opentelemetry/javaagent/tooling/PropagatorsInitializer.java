@@ -58,7 +58,8 @@ public class PropagatorsInitializer {
    *       Context and Baggage. Otherwise in TraceMultiPropagator it may not get a chance to extract
    *       any existing Baggage.
    *   <li>W3CBaggagePropagator comes after JaegerPropagator, as it can have more complex/complete
-   *       values that Jaeger baggage lacks, e.g. metadata.
+   *       values that Jaeger baggage lacks, e.g. metadata. Baggage extraction can enrich the
+   *       previous one.
    * </ul>
    */
   public static void initializePropagators(List<String> propagators) {
