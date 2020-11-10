@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
+import static io.opentelemetry.javaagent.instrumentation.dropwizardviews.DropwizardTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;
@@ -16,11 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -41,6 +38,11 @@ public final class DropwizardViewInstrumentationModule extends InstrumentationMo
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ViewRendererInstrumentation());
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {packageName + ".DropwizardTracer"};
   }
 
   private static final class ViewRendererInstrumentation implements TypeInstrumentation {
@@ -67,19 +69,13 @@ public final class DropwizardViewInstrumentationModule extends InstrumentationMo
   }
 
   public static class RenderAdvice {
-    private static final Tracer TRACER =
-        OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.dropwizard-views-0.7");
-
-    public static Tracer tracer() {
-      return TRACER;
-    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return null;
       }
-      Span span = tracer().spanBuilder("Render " + view.getTemplateName()).startSpan();
+      Span span = tracer().startSpan("Render " + view.getTemplateName());
       return new SpanWithScope(span, span.makeCurrent());
     }
 
@@ -90,11 +86,11 @@ public final class DropwizardViewInstrumentationModule extends InstrumentationMo
         return;
       }
       Span span = spanWithScope.getSpan();
-      if (throwable != null) {
-        span.setStatus(StatusCode.ERROR);
-        BaseDecorator.addThrowable(span, throwable);
+      if (throwable == null) {
+        tracer().end(span);
+      } else {
+        tracer().endExceptionally(span, throwable);
       }
-      span.end();
       spanWithScope.closeScope();
     }
   }

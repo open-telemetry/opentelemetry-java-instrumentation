@@ -39,7 +39,8 @@ public class NettyInstrumentationModule extends InstrumentationModule {
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",
       packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler"
+      packageName + ".server.HttpServerTracingHandler",
+      packageName + ".AbstractNettyAdvice"
     };
   }
 

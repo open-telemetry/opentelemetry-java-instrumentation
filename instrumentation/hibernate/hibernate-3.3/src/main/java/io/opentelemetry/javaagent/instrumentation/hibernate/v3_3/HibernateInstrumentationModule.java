@@ -28,6 +28,7 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
     return new String[] {
       "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
       "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
+      packageName + ".V3Advice",
     };
   }
 
