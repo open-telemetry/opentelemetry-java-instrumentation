@@ -5,11 +5,11 @@
 
 package context
 
-import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
-import static context.ContextTestInstrumentation.IncorrectContextClassUsageKeyClass
-import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
-import static context.ContextTestInstrumentation.KeyClass
-import static context.ContextTestInstrumentation.UntransformableKeyClass
+import static ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
+import static ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
+import static ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
+import static ContextTestInstrumentationModule.KeyClass
+import static ContextTestInstrumentationModule.UntransformableKeyClass
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
@@ -41,7 +41,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
     final boolean loaded,
     final Throwable throwable) {
     // Incorrect* classes assert on incorrect api usage. Error expected.
-    return !(typeName.startsWith(ContextTestInstrumentation.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+    return !(typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
   }
 
   @Override
@@ -232,12 +232,12 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     final boolean loaded,
     final Throwable throwable) {
     // Incorrect* classes assert on incorrect api usage. Error expected.
-    return !(typeName.startsWith(ContextTestInstrumentation.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+    return !(typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
   }
 
   def "Check that structure is not modified when structure modification is disabled"() {
     setup:
-    def keyClass = ContextTestInstrumentation.DisabledKeyClass
+    def keyClass = ContextTestInstrumentationModule.DisabledKeyClass
     boolean hasField = false
     for (Field field : keyClass.getDeclaredFields()) {
       if (field.getName().startsWith("__opentelemetry")) {
