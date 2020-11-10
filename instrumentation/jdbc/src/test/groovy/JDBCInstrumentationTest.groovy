@@ -618,7 +618,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   }
 
   @Unroll
-  def "should produce proper span name for #query"() {
+  def "should produce proper span name #spanName"() {
     setup:
     def driver = new TestDriver()
 
@@ -640,7 +640,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
-            "$SemanticAttributes.DB_NAME.key" "test"
+            "$SemanticAttributes.DB_NAME.key" databaseName
             "$SemanticAttributes.DB_STATEMENT.key" JDBCUtils.normalizeSql(query)
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
           }
@@ -649,12 +649,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    url                                         | query                 | spanName
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT test.table"
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT test"
-    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT table"
-    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "test"
-    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "DB Query"
+    url                                         | query                 | spanName            | databaseName
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT test.table" | "test"
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT test"       | "test"
+    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT table"      | null
+    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "test"              | "test"
+    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "DB Query"          | null
   }
 
   @Unroll
