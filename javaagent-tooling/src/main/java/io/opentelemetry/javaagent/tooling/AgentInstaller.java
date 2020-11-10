@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.spi.AgentBuilderCustomizer;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
@@ -29,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -156,8 +158,18 @@ public class AgentInstaller {
       }
     }
 
+    customizeAgentBuilder(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
+  }
+
+  private static AgentBuilder customizeAgentBuilder(AgentBuilder agentBuilder) {
+    Iterable<AgentBuilderCustomizer> agentCustomizers = loadAgentCustomizers();
+    for (AgentBuilderCustomizer agentCustomizer : agentCustomizers) {
+      log.debug("Applying agent customizer {}", agentCustomizer.getClass().getName());
+      agentBuilder = agentCustomizer.customize(agentBuilder);
+    }
+    return agentBuilder;
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {
@@ -209,6 +221,10 @@ public class AgentInstaller {
       matcher = matcher.or(nameStartsWith(prefix));
     }
     return matcher;
+  }
+
+  private static Iterable<AgentBuilderCustomizer> loadAgentCustomizers() {
+    return ServiceLoader.load(AgentBuilderCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<String> loadBootstrapPackagePrefixes() {
