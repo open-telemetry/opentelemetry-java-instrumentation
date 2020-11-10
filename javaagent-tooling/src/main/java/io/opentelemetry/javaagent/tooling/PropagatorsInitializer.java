@@ -52,11 +52,11 @@ public class PropagatorsInitializer {
    * extraction next rules applied:
    *
    * <ul>
-   *   <li>W3CBaggagePropagator is added to DefaultContextPropagators to allow another propagator
-   *       extract Context.
-   *   <li>JaegerPropagator is added to DefaultContextPropagators because it extracts both Context
-   *       and Baggage. Otherwise in TraceMultiPropagator it may not get a chance to extract any
-   *       existing Baggage.
+   *   <li>W3CBaggagePropagator can be added to DefaultContextPropagators only to allow another
+   *       propagator extract Context.
+   *   <li>JaegerPropagator can be added to DefaultContextPropagators only because it extracts both
+   *       Context and Baggage. Otherwise in TraceMultiPropagator it may not get a chance to extract
+   *       any existing Baggage.
    *   <li>W3CBaggagePropagator comes after JaegerPropagator, as it can have more complex/complete
    *       values that Jaeger baggage lacks, e.g. metadata.
    * </ul>
