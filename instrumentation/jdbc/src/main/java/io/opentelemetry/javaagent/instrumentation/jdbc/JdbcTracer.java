@@ -93,7 +93,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, SqlStatementInfo> {
   @Override
   protected String spanName(DBInfo connection, SqlStatementInfo query, String normalizedQuery) {
     String dbName = dbName(connection);
-    if (query.getOperation() == null && query.getTable() == null) {
+    if (query.getOperation() == null) {
       return dbName == null ? DB_QUERY : dbName;
     }
 
