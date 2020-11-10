@@ -45,7 +45,22 @@ public class PropagatorsInitializer {
           .put(BAGGAGE, W3CBaggagePropagator.getInstance())
           .build();
 
-  /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
+  /**
+   * Initialize OpenTelemetry global Propagators with propagator list, if any.
+   *
+   * <p>Because TraceMultiPropagator returns first successful extracted Context and stops further
+   * extraction next rules applied:
+   *
+   * <ul>
+   *   <li>W3CBaggagePropagator is added to DefaultContextPropagators to allow another propagator
+   *       extract Context.
+   *   <li>JaegerPropagator is added to DefaultContextPropagators because it extracts both Context
+   *       and Baggage. Otherwise in TraceMultiPropagator it may not get a chance to extract any
+   *       existing Baggage.
+   *   <li>W3CBaggagePropagator comes after JaegerPropagator, as it can have more complex/complete
+   *       values that Jaeger baggage lacks, e.g. metadata.
+   * </ul>
+   */
   public static void initializePropagators(List<String> propagators) {
     /* Only override the default propagators *if* the user specified any. */
     if (propagators.size() == 0) {
