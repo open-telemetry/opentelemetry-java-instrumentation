@@ -44,8 +44,8 @@ actual application classpath types the whole instrumentation is discarded.
 
 It is worth noting that because the muzzle check is expensive, it is only performed after a match
 has been made by the `InstrumentationModule#classLoaderMatcher()` and `TypeInstrumentation#typeMatcher()`
-matchers. The result of muzzle matcher is cached per each classloader, so that it is only executed
-once fo the whole instrumentation module.
+matchers. The result of muzzle matcher is cached per classloader, so that it is only executed
+once for the whole instrumentation module.
 
 The source code of the runtime muzzle matcher is located in the `javaagent-tooling` module,
 in the class `Instrumenter.Default` and under the package `io.opentelemetry.javaagent.tooling.muzzle`.
