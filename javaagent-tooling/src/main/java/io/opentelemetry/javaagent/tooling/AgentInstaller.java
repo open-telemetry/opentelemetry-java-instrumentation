@@ -100,7 +100,8 @@ public class AgentInstaller {
     }
 
     OpenTelemetrySdkAccess.internalSetForceFlush(
-        (timeout, unit) -> OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
+        (timeout, unit) ->
+            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
 
     INSTRUMENTATION = inst;
 
@@ -334,7 +335,8 @@ public class AgentInstaller {
    */
   public static void registerClassLoadCallback(String className, Runnable callback) {
     synchronized (CLASS_LOAD_CALLBACKS) {
-      List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.computeIfAbsent(className, k -> new ArrayList<>());
+      List<Runnable> callbacks =
+          CLASS_LOAD_CALLBACKS.computeIfAbsent(className, k -> new ArrayList<>());
       callbacks.add(callback);
     }
   }
