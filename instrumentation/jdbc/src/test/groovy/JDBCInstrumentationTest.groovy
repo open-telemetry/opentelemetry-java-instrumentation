@@ -28,6 +28,7 @@ import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 import test.TestConnection
+import test.TestDriver
 
 class JDBCInstrumentationTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
@@ -614,6 +615,46 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
     where:
     query = "testing 123"
+  }
+
+  @Unroll
+  def "should produce proper span name for #query"() {
+    setup:
+    def driver = new TestDriver()
+
+    when:
+    def connection = driver.connect(url, null)
+    runUnderTrace("parent") {
+      def statement = connection.createStatement()
+      return statement.executeQuery(query)
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name spanName
+          kind CLIENT
+          childOf span(0)
+          errored false
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
+            "$SemanticAttributes.DB_NAME.key" "test"
+            "$SemanticAttributes.DB_STATEMENT.key" JDBCUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
+          }
+        }
+      }
+    }
+
+    where:
+    url                                         | query                 | spanName
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT test.table"
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT test"
+    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT table"
+    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "test"
+    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "DB Query"
   }
 
   @Unroll
