@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.spi.AgentInstallerExtension;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
@@ -29,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -62,7 +64,7 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
-    
+    runExtensionProviders();
 
     if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
       installBytebuddyAgent(inst, false);
@@ -160,6 +162,18 @@ public class AgentInstaller {
 
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
+  }
+
+  private static void runExtensionProviders() {
+    Iterable<AgentInstallerExtension> agentInstallerExtensions = loadExtensionsProviders();
+    for (AgentInstallerExtension extension : agentInstallerExtensions) {
+      log.debug("Running agent installer extension {}", extension.getClass().getName());
+      extension.run();
+    }
+  }
+
+  private static Iterable<AgentInstallerExtension> loadExtensionsProviders() {
+    return ServiceLoader.load(AgentInstallerExtension.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {
