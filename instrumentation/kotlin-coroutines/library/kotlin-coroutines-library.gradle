@@ -1,0 +1,10 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-kotlin.gradle"
+
+dependencies {
+  compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72'
+  compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7'
+
+  testImplementation 'org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72'
+  testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7'
+}
