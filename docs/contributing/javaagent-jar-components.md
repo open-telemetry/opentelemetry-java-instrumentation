@@ -63,7 +63,7 @@ and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the
 instrumentations with the help of ByteBuddy. Instead of using agent classloader all agent classes
 could be shaded and used from the bootstrap classloader. However, this opens de-serialization
-security vulnerability and in addition to that the shaded classes are harder to debug. 
+security vulnerability and in addition to that the shaded classes are harder to debug.
 
 The complicated process above ensures that the majority of
 auto-instrumentation agent's classes are totally isolated from application
