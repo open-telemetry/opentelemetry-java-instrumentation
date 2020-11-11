@@ -33,10 +33,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(isPublic())
-            .and(named("invokeActionOnly")),
+        isMethod().and(isPublic()).and(named("invokeActionOnly")),
         ActionInvocationAdvice.class.getName());
   }
-
 }
