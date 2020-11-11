@@ -12,6 +12,7 @@
       <result name="exception" type="httpheader">
         <param name="error">500</param>
       </result>
+      <result type="freemarker" name="greeting">greeting.ftl</result>
     </global-results>
 
     <global-exception-mappings>
@@ -19,13 +20,10 @@
     </global-exception-mappings>
 
     <action name="success" class="GreetingAction" method="success">
-      <result type="freemarker" name="greeting">greeting.ftl</result>
     </action>
     <action name="query" class="GreetingAction" method="query">
-      <result type="freemarker" name="query">query.ftl</result>
     </action>
     <action name="exception" class="GreetingAction" method="exception">
-      <result type="freemarker" name="success">greeting.ftl</result>
     </action>
   </package>
 
