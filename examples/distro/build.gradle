@@ -1,0 +1,57 @@
+group 'io.opentelemetry.example'
+version '1.0-SNAPSHOT'
+
+subprojects {
+    version = rootProject.version
+
+    apply plugin: "java"
+
+    ext {
+        versions = [
+                opentelemetry            : "0.10.0",
+                opentelemetryJavaagent   : "0.10.0",
+                opentelemetryJavaagentSpi: "0.10.0",
+                bytebuddy                : "1.10.10",
+                guava                    : "20.0"
+
+        ]
+        deps = [
+                bytebuddy           : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: versions.bytebuddy),
+                bytebuddyagent      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: versions.bytebuddy),
+                autoservice         : [
+                        dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
+                        dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
+                        // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
+                        dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
+                ],
+                autoValueAnnotations: "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
+        ]
+    }
+
+    repositories {
+        jcenter()
+        maven {
+            url = uri("https://dl.bintray.com/open-telemetry/maven")
+        }
+        maven {
+            url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local")
+        }
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation("org.mockito:mockito-core:3.3.3")
+        testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+    }
+
+    tasks {
+        test {
+            useJUnitPlatform()
+        }
+
+        compileJava {
+            options.release.set(11)
+        }
+    }
+}

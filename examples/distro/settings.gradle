@@ -1,0 +1,4 @@
+rootProject.name = 'opentelemetry-java-instrumentation-demo'
+
+include "custom", "agent", "smoke-tests"
+
