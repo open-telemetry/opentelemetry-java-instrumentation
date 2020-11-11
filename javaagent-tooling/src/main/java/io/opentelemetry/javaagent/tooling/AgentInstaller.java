@@ -164,12 +164,16 @@ public class AgentInstaller {
   }
 
   private static AgentBuilder customizeAgentBuilder(AgentBuilder agentBuilder) {
-    Iterable<AgentBuilderCustomizer> agentCustomizers = loadAgentCustomizers();
+    Iterable<AgentBuilderCustomizer> agentCustomizers = loadAgentBuilderCustomizers();
     for (AgentBuilderCustomizer agentCustomizer : agentCustomizers) {
-      log.debug("Applying agent customizer {}", agentCustomizer.getClass().getName());
+      log.debug("Applying agent builder customizer {}", agentCustomizer.getClass().getName());
       agentBuilder = agentCustomizer.customize(agentBuilder);
     }
     return agentBuilder;
+  }
+
+  private static Iterable<AgentBuilderCustomizer> loadAgentBuilderCustomizers() {
+    return ServiceLoader.load(AgentBuilderCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {
@@ -221,10 +225,6 @@ public class AgentInstaller {
       matcher = matcher.or(nameStartsWith(prefix));
     }
     return matcher;
-  }
-
-  private static Iterable<AgentBuilderCustomizer> loadAgentCustomizers() {
-    return ServiceLoader.load(AgentBuilderCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<String> loadBootstrapPackagePrefixes() {
