@@ -158,7 +158,7 @@ public class AgentInstaller {
       }
     }
 
-    customizeAgentBuilder(agentBuilder);
+    agentBuilder = customizeAgentBuilder(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
   }
