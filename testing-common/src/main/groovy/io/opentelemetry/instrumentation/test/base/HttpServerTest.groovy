@@ -88,10 +88,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
   }
 
-  String expectedControllerName(ServerEndpoint serverEndpoint) {
-    "controller"
-  }
-
   String getContextPath() {
     return ""
   }
@@ -410,9 +406,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
           }
           if (endpoint != NOT_FOUND) {
             if (hasHandlerSpan()) {
-              controllerSpan(it, spanIndex++, span(1), errorMessage, endpoint)
+              controllerSpan(it, spanIndex++, span(1), errorMessage)
             } else {
-              controllerSpan(it, spanIndex++, span(0), errorMessage, endpoint)
+              controllerSpan(it, spanIndex++, span(0), errorMessage)
             }
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
@@ -430,9 +426,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, ServerEndpoint endpoint) {
+  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
     trace.span(index) {
-      name expectedControllerName(endpoint)
+      name "controller"
       errored errorMessage != null
       if (errorMessage) {
         errorEvent(Exception, errorMessage)
@@ -457,15 +453,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     throw new UnsupportedOperationException("errorPageSpans not implemented in " + getClass().name)
   }
 
-  /**
-   * Depending on the web framework, exceptions thrown by controller methods
-   * may or may be not propagated to the server level. Some framework make
-   * sure that all application exceptions are always handled by the framework.
-   */
-  boolean controllerExceptionIsPropagatedToServer() {
-    return true
-  }
-
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -478,7 +465,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && !hasHandlerSpan() && controllerExceptionIsPropagatedToServer()) {
+      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {

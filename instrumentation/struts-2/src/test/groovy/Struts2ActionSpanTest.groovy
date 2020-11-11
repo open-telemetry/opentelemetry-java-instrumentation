@@ -4,13 +4,18 @@
  */
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.sdk.trace.data.SpanData
 import javax.servlet.DispatcherType
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 
 class Struts2ActionSpanTest extends HttpServerTest<Server> {
 
@@ -40,44 +45,41 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   }
 
   @Override
-  boolean controllerExceptionIsPropagatedToServer() {
-    return false
+  boolean hasHandlerSpan() {
+    return true
   }
 
-  @Override
   String expectedControllerName(ServerEndpoint serverEndpoint) {
     switch (serverEndpoint) {
-      case ServerEndpoint.QUERY_PARAM: return "GreetingAction.query"
-      case ServerEndpoint.EXCEPTION: return "GreetingAction.exception"
+      case QUERY_PARAM: return "GreetingAction.query"
+      case EXCEPTION: return "GreetingAction.exception"
       default: return "GreetingAction.success"
     }
   }
 
-  def "It records Struts action invocation as an internal span"() {
-    expect:
-    server != null
+  String expectedMethodName(ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case QUERY_PARAM: return "query"
+      case EXCEPTION: return "exception"
+      default: return "success"
+    }
+  }
 
-    when:
-    def greeting = new String(new URL("http://localhost:${port}/success").openStream().readAllBytes())
-
-    then:
-    greeting == "success"
-    assertTraces(1, {
-      trace(0, 2, {
-        span(0, {
-          kind Span.Kind.SERVER
-        })
-        span(1, {
-          name expectedControllerName()
-          kind Span.Kind.INTERNAL
-          attributes {
-            "code.namespace" "GreetingAction"
-            "code.function" "success"
-          }
-        })
-
-      })
-    })
+  @Override
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    trace.span(index) {
+      name expectedControllerName(endpoint)
+      kind Span.Kind.INTERNAL
+      errored endpoint == EXCEPTION
+      if (endpoint == EXCEPTION) {
+        errorEvent(Exception, EXCEPTION.body)
+      }
+      attributes {
+        'code.namespace' "GreetingAction"
+        'code.function' { it == expectedMethodName(endpoint) }
+      }
+      childOf((SpanData) parent)
+    }
   }
 
   @Override
@@ -89,7 +91,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     context.setBaseResource(resource)
     server.setHandler(context)
 
-    context.addServlet(DefaultServlet.class, "/");
+    context.addServlet(DefaultServlet.class, "/")
     context.addFilter(StrutsPrepareAndExecuteFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
 
     server.start()
