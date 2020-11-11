@@ -13,20 +13,17 @@ public class ActionInvocationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This ActionInvocation actionProxy,
-      @Advice.Local("otelSpan") Span span) {
+      @Advice.This ActionInvocation actionProxy, @Advice.Local("otelSpan") Span span) {
     span = Struts2Tracer.TRACER.startSpan(actionProxy);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelSpan") Span span) {
+      @Advice.Thrown Throwable throwable, @Advice.Local("otelSpan") Span span) {
 
     if (throwable != null) {
       Struts2Tracer.TRACER.endExceptionally(span, throwable);
-    }
-    else {
+    } else {
       Struts2Tracer.TRACER.end(span);
     }
   }
