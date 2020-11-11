@@ -49,7 +49,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     return true
   }
 
-  String expectedControllerName(ServerEndpoint serverEndpoint) {
+  String expectedHandlerName(ServerEndpoint serverEndpoint) {
     switch (serverEndpoint) {
       case QUERY_PARAM: return "GreetingAction.query"
       case EXCEPTION: return "GreetingAction.exception"
@@ -68,7 +68,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
-      name expectedControllerName(endpoint)
+      name expectedHandlerName(endpoint)
       kind Span.Kind.INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
