@@ -12,8 +12,8 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  * {@link AgentBuilderCustomizer} customizes ByteBuddy agent builder right before {@link
  * AgentBuilder#installOn(Instrumentation)} is called.
  *
- * <p>This is a service provider interface that requires to register implementation in
- * `META-INF/services` folder.
+ * <p>This is a service provider interface that requires implementations to be registered in {@code
+ * META-INF/services} folder.
  */
 public interface AgentBuilderCustomizer {
 
