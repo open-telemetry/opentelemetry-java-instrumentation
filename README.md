@@ -236,6 +236,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
+| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                      | 3.270.0+                                                                                                                              |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
@@ -273,6 +274,8 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
 | [Vert.x](https://vertx.io)                                                                                                            | 3.0+                           |
 | [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                               | 3.5+                           |
+
+<sup>&dagger;</sup> OpenTelemetry support provided by the library
 
 ### Disabled instrumentations
 
