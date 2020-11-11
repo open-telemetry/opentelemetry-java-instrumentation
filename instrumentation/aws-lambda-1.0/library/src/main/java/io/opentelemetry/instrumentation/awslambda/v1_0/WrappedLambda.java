@@ -92,6 +92,7 @@ class WrappedLambda {
        - Context can be omitted
        - Select the method with the largest number of parameters.
        - If two or more methods have the same number of parameters, AWS Lambda selects the method that has the Context as the last parameter.
+       - Non-Bridge methods are prefered
        - If none or all of these methods have the Context parameter, then the behavior is undefined.
     */
     List<Method> methods = Arrays.asList(targetClass.getMethods());
@@ -104,12 +105,19 @@ class WrappedLambda {
                   if (a.getParameterCount() != b.getParameterCount()) {
                     return b.getParameterCount() - a.getParameterCount();
                   }
-                  if (isLastParameterContext(a.getParameters())) {
-                    return -1;
-                  } else if (isLastParameterContext(b.getParameters())) {
-                    return 1;
+                  boolean firstCtx = isLastParameterContext(a.getParameters());
+                  boolean secondCtx = isLastParameterContext(b.getParameters());
+                  // one of the methods has last param context ?
+                  if (firstCtx ^ secondCtx) {
+                    return (firstCtx ? -1 : 1);
                   }
-                  return -1;
+                  boolean firstBridge = a.isBridge();
+                  boolean secondBridge = b.isBridge();
+                  if (firstBridge ^ secondBridge) {
+                    return (firstBridge ? 1 : -1);
+                  }
+                  // undefined = methods are equal
+                  return 0;
                 })
             .findFirst();
     if (!firstOptional.isPresent()) {

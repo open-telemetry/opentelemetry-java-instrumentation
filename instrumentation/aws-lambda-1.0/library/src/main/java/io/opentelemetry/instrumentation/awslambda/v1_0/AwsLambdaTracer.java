@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import com.amazonaws.serverless.proxy.model.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
@@ -15,6 +14,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AwsLambdaTracer extends BaseTracer {
@@ -36,12 +36,12 @@ public class AwsLambdaTracer extends BaseTracer {
     return parentSpanContext.isValid();
   }
 
-  private io.opentelemetry.context.Context parent(@Nullable Headers headers) {
+  private io.opentelemetry.context.Context parent(@Nullable Map<String, String> headers) {
 
     io.opentelemetry.context.Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
-      parentContext = ParentContextExtractor.fromXrayHeader(parentTraceHeader);
+      parentContext = ParentContextExtractor.fromXRayHeader(parentTraceHeader);
     }
     if (!isValid(parentContext) && (headers != null)) {
       // try http
@@ -51,7 +51,7 @@ public class AwsLambdaTracer extends BaseTracer {
     return parentContext;
   }
 
-  SpanBuilder createSpan(Context context, @Nullable Headers headers) {
+  SpanBuilder createSpan(Context context, @Nullable Map<String, String> headers) {
     SpanBuilder span = tracer.spanBuilder(context.getFunctionName());
     span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
     io.opentelemetry.context.Context parent = parent(headers);
@@ -61,7 +61,7 @@ public class AwsLambdaTracer extends BaseTracer {
     return span;
   }
 
-  public Span startSpan(Context context, Kind kind, Headers headers) {
+  public Span startSpan(Context context, Kind kind, Map<String, String> headers) {
     return createSpan(context, headers).setSpanKind(kind).startSpan();
   }
 

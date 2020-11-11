@@ -13,6 +13,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -42,9 +45,16 @@ abstract class ApiGatewayProxyRequest {
     return new CopiedApiGatewayProxyRequest(source);
   }
 
+  private static final Function<Map.Entry<String, List<String>>, String> EXTRACTOR =
+      (entry -> {
+        List<String> values = entry.getValue();
+        return (values != null && !values.isEmpty() ? values.get(0) : null);
+      });
+
   @Nullable
-  Headers getHeaders() throws IOException {
-    return ofStream(freshStream());
+  Map<String, String> getHeaders() throws IOException {
+    Headers headers = ofStream(freshStream());
+    return headers.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, EXTRACTOR));
   }
 
   abstract InputStream freshStream() throws IOException;
@@ -63,7 +73,7 @@ abstract class ApiGatewayProxyRequest {
     }
 
     @Override
-    Headers getHeaders() {
+    Map<String, String> getHeaders() {
       return null;
     }
   }
