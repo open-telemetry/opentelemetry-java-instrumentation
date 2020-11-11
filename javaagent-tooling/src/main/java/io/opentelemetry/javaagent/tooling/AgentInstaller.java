@@ -62,6 +62,8 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
+    
+
     if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
       installBytebuddyAgent(inst, false);
     } else {
