@@ -31,17 +31,17 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 
 @AutoService(InstrumentationModule.class)
-public final class ReactorHttpClientInstrumentationModule extends InstrumentationModule {
+public final class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
-  public ReactorHttpClientInstrumentationModule() {
-    super("reactor-httpclient");
+  public ReactorNettyInstrumentationModule() {
+    super("reactor-netty");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      ReactorHttpClientInstrumentationModule.class.getName() + "$MapConnect",
-      ReactorHttpClientInstrumentationModule.class.getName() + "$OnRequest",
+      ReactorNettyInstrumentationModule.class.getName() + "$MapConnect",
+      ReactorNettyInstrumentationModule.class.getName() + "$OnRequest",
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
       "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1",
       // these below a transitive dependencies of AttributeKeys from above
@@ -73,7 +73,7 @@ public final class ReactorHttpClientInstrumentationModule extends Instrumentatio
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isStatic().and(named("create")),
-          ReactorHttpClientInstrumentationModule.class.getName() + "$CreateAdvice");
+          ReactorNettyInstrumentationModule.class.getName() + "$CreateAdvice");
     }
   }
 
