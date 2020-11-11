@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import com.google.auto.service.AutoService;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.spi.TracerCustomizer;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.javaagent.spi.exporter.MetricServer;
@@ -30,8 +34,10 @@ import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TracerInstaller {
-  private static final Logger log = LoggerFactory.getLogger(TracerInstaller.class);
+@AutoService(ComponentInstaller.class)
+public class OpenTelemetryComponentInstaller implements ComponentInstaller {
+
+  private static final Logger log = LoggerFactory.getLogger(OpenTelemetryComponentInstaller.class);
 
   private static final String EXPORTER_JAR_CONFIG = "otel.exporter.jar";
   private static final String EXPORTERS_CONFIG = "otel.exporter"; // this name is from spec
@@ -39,9 +45,36 @@ public class TracerInstaller {
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
+  @Override
+  public void beforeByteBuddyAgent() {
+    ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      // calling (shaded) OpenTelemetry.getGlobalTracerProvider() with context class loader set to
+      // the
+      // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
+      // OpenTelemetry registers it, and then when instrumentation calls (shaded)
+      // OpenTelemetry.getGlobalTracerProvider() later, they get back the agent's (isolated) SDK
+      //
+      // but if we don't trigger this early registration, then if instrumentation is the first to
+      // call (shaded) OpenTelemetry.getGlobalTracerProvider(), then SPI can't see the agent class
+      // loader,
+      // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
+      // later
+      Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
+      OpenTelemetry.getGlobalTracerProvider();
+    } finally {
+      Thread.currentThread().setContextClassLoader(savedContextClassLoader);
+    }
+
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        (timeout, unit) ->
+            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
+  }
+
   /** Register agent tracer if no agent tracer is already registered. */
+  @Override
   @SuppressWarnings("unused")
-  public static synchronized void installAgentTracer() {
+  public void afterByteBuddyAgent() {
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Properties config = Config.get().asJavaProperties();
 
@@ -59,9 +92,10 @@ public class TracerInstaller {
     }
 
     PropagatorsInitializer.initializePropagators(Config.get().getListProperty(PROPAGATORS_CONFIG));
+    logVersionInfo();
   }
 
-  private static synchronized void installExporters(List<String> exporters, Properties config) {
+  private synchronized void installExporters(List<String> exporters, Properties config) {
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {
@@ -86,9 +120,10 @@ public class TracerInstaller {
     }
   }
 
-  private static MetricExporterFactory findMetricExporterFactory(String exporterName) {
+  private MetricExporterFactory findMetricExporterFactory(String exporterName) {
     ServiceLoader<MetricExporterFactory> serviceLoader =
-        ServiceLoader.load(MetricExporterFactory.class, TracerInstaller.class.getClassLoader());
+        ServiceLoader.load(
+            MetricExporterFactory.class, OpenTelemetryComponentInstaller.class.getClassLoader());
 
     for (MetricExporterFactory metricExporterFactory : serviceLoader) {
       if (metricExporterFactory.getNames().contains(exporterName)) {
@@ -98,9 +133,10 @@ public class TracerInstaller {
     return null;
   }
 
-  private static MetricServer findMetricServer(String exporterName) {
+  private MetricServer findMetricServer(String exporterName) {
     ServiceLoader<MetricServer> serviceLoader =
-        ServiceLoader.load(MetricServer.class, TracerInstaller.class.getClassLoader());
+        ServiceLoader.load(
+            MetricServer.class, OpenTelemetryComponentInstaller.class.getClassLoader());
 
     for (MetricServer metricServer : serviceLoader) {
       if (metricServer.getNames().contains(exporterName)) {
@@ -110,9 +146,10 @@ public class TracerInstaller {
     return null;
   }
 
-  private static SpanExporterFactory findSpanExporterFactory(String exporterName) {
+  private SpanExporterFactory findSpanExporterFactory(String exporterName) {
     ServiceLoader<SpanExporterFactory> serviceLoader =
-        ServiceLoader.load(SpanExporterFactory.class, TracerInstaller.class.getClassLoader());
+        ServiceLoader.load(
+            SpanExporterFactory.class, OpenTelemetryComponentInstaller.class.getClassLoader());
 
     for (SpanExporterFactory spanExporterFactory : serviceLoader) {
       if (spanExporterFactory.getNames().contains(exporterName)) {
@@ -122,7 +159,7 @@ public class TracerInstaller {
     return null;
   }
 
-  private static synchronized void installExportersFromJar(String exporterJar, Properties config) {
+  private synchronized void installExportersFromJar(String exporterJar, Properties config) {
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
@@ -132,7 +169,7 @@ public class TracerInstaller {
       return;
     }
     ExporterClassLoader exporterLoader =
-        new ExporterClassLoader(url, TracerInstaller.class.getClassLoader());
+        new ExporterClassLoader(url, OpenTelemetryComponentInstaller.class.getClassLoader());
 
     SpanExporterFactory spanExporterFactory =
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
@@ -151,8 +188,7 @@ public class TracerInstaller {
     }
   }
 
-  private static void installExporter(
-      MetricExporterFactory metricExporterFactory, Properties config) {
+  private void installExporter(MetricExporterFactory metricExporterFactory, Properties config) {
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
         .readProperties(config)
@@ -163,7 +199,7 @@ public class TracerInstaller {
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
 
-  private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
+  private void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     SpanProcessor spanProcessor =
         BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
@@ -171,7 +207,7 @@ public class TracerInstaller {
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
-  private static void installMetricServer(MetricServer metricServer, Properties config) {
+  private void installMetricServer(MetricServer metricServer, Properties config) {
     MetricProducer metricProducer = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer();
     metricServer.start(metricProducer, config);
     log.info("Installed metric server: " + metricServer.getClass().getName());
@@ -192,7 +228,7 @@ public class TracerInstaller {
     return null;
   }
 
-  private static void configure(Properties config) {
+  private void configure(Properties config) {
     TracerSdkManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
 
     // Register additional thread details logging span processor
@@ -200,7 +236,8 @@ public class TracerInstaller {
 
     // Execute any user-provided (usually vendor-provided) configuration logic.
     ServiceLoader<TracerCustomizer> serviceLoader =
-        ServiceLoader.load(TracerCustomizer.class, TracerInstaller.class.getClassLoader());
+        ServiceLoader.load(
+            TracerCustomizer.class, OpenTelemetryComponentInstaller.class.getClassLoader());
     for (TracerCustomizer customizer : serviceLoader) {
       customizer.configure(tracerManagement);
     }
@@ -212,7 +249,7 @@ public class TracerInstaller {
   }
 
   @SuppressWarnings("unused")
-  public static void logVersionInfo() {
+  public void logVersionInfo() {
     VersionLogger.logAllVersions();
     log.debug(
         AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
