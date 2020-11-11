@@ -52,10 +52,9 @@ class HttpClientTest extends AgentTestRunner {
     def pool = Executors.newFixedThreadPool(4)
 
     when:
-    pool.submit(job)
-    pool.submit(job)
-    pool.submit(job)
-    pool.submit(job)
+    4.times {
+      pool.submit(job)
+    }
     latch.countDown()
 
     then:
