@@ -13,6 +13,9 @@ package io.opentelemetry.javaagent.spi;
  *
  * <p>Before using service loader set the context classloader to agent's classloader e.g. {@code
  * Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader())}.
+ *
+ * <p>This is a service provider interface that requires implementations to be registered in
+ * `META-INF/services` folder.
  */
 public interface AgentInstallerExtension {
 
