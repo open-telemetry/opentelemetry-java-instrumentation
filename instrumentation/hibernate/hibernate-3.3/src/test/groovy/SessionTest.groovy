@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
@@ -60,7 +60,7 @@ class SessionTest extends AbstractHibernateTest {
             }
           }
           span(2) {
-            name ~/^select /
+            name "SELECT db1.Value"
             kind CLIENT
             childOf span(1)
             attributes {
@@ -201,7 +201,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name ~/^select /
+          name "SELECT db1.Value"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -492,7 +492,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(5) {
-          name ~/^insert /
+          name "INSERT db1.Value"
           kind CLIENT
           childOf span(4)
           attributes {
@@ -504,7 +504,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(6) {
-          name ~/^delete /
+          name "DELETE db1.Value"
           kind CLIENT
           childOf span(4)
           attributes {

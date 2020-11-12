@@ -16,13 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -34,17 +33,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
-  public JaxRsAnnotationsInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-annotations");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
-  }
-
+final class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
@@ -56,16 +45,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     return safeHasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
             .<TypeDescription>or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsTracer",
-      packageName + ".CompletionStageFinishCallback"
-    };
   }
 
   @Override

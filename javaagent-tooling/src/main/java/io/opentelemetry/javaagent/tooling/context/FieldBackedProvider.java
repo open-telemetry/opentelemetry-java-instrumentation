@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
@@ -388,7 +388,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               builder
                   .type(safeHasSuperType(named(entry.getKey())))
                   .and(safeToInjectFieldsMatcher())
-                  .and(Default.NOT_DECORATOR_MATCHER)
+                  .and(InstrumentationModule.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
           /*

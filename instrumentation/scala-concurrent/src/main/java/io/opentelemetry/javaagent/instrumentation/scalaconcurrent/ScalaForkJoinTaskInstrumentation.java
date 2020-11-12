@@ -13,15 +13,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
@@ -37,14 +34,9 @@ import scala.concurrent.forkjoin.ForkJoinTask;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Scala version.
  */
-@AutoService(Instrumenter.class)
-public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default {
+final class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   static final String TASK_CLASS_NAME = "scala.concurrent.forkjoin.ForkJoinTask";
-
-  public ScalaForkJoinTaskInstrumentation() {
-    super("java_concurrent", "scala_concurrent");
-  }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -55,15 +47,6 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named(TASK_CLASS_NAME));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> map = new HashMap<>();
-    map.put(Runnable.class.getName(), State.class.getName());
-    map.put(Callable.class.getName(), State.class.getName());
-    map.put(TASK_CLASS_NAME, State.class.getName());
-    return Collections.unmodifiableMap(map);
   }
 
   @Override
@@ -82,7 +65,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
      * need to use that state.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.This ForkJoinTask thiz) {
+    public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
       Scope scope = AdviceUtils.startTaskScope(contextStore, thiz);

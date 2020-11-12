@@ -7,16 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.AmazonWebServiceRequest;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -24,12 +22,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class RequestInstrumentation extends Instrumenter.Default {
-
-  public RequestInstrumentation() {
-    super("aws-sdk");
-  }
+final class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -41,13 +34,6 @@ public final class RequestInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("com.amazonaws.services.")
         .and(extendsClass(named("com.amazonaws.AmazonWebServiceRequest")));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RequestMeta",
-    };
   }
 
   @Override
@@ -69,11 +55,6 @@ public final class RequestInstrumentation extends Instrumenter.Default {
         named("setTableName").and(takesArgument(0, String.class)),
         RequestInstrumentation.class.getName() + "$TableNameAdvice");
     return transformers;
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.amazonaws.AmazonWebServiceRequest", packageName + ".RequestMeta");
   }
 
   public static class BucketNameAdvice {

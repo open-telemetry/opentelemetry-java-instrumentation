@@ -15,13 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.ws.rs.Path;
@@ -30,19 +28,12 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
+final class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
-  public JaxRsAnnotationsInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-annotations");
-  }
-
-  // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.ws.rs.container.AsyncResponse"))
-        // Optimization for expensive typeMatcher.
-        .and(hasClassesNamed("javax.ws.rs.Path"));
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("javax.ws.rs.Path");
   }
 
   @Override
@@ -50,15 +41,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     return safeHasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
             .<TypeDescription>or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsTracer",
-    };
   }
 
   @Override

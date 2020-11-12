@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
 import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlStatementInfoExtractor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -79,6 +82,15 @@ public abstract class JDBCUtils {
     } catch (Exception e) {
       log.debug("Could not normalize sql", e);
       return null;
+    }
+  }
+
+  public static SqlStatementInfo normalizeAndExtractInfo(String sql) {
+    try {
+      return SqlStatementInfoExtractor.extract(normalizeSql(sql));
+    } catch (ParseException e) {
+      log.debug("Could not extract sql info", e);
+      return new SqlStatementInfo(null, null, null);
     }
   }
 }

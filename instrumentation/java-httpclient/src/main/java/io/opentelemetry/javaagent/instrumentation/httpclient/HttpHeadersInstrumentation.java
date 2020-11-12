@@ -12,9 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -22,25 +21,13 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class HttpHeadersInstrumentation extends Instrumenter.Default {
-
-  public HttpHeadersInstrumentation() {
-    super("httpclient");
-  }
+final class HttpHeadersInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
         .or(nameStartsWith("jdk.internal."))
         .and(extendsClass(named("java.net.http.HttpRequest")));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpHeadersInjectAdapter", packageName + ".JdkHttpClientTracer"
-    };
   }
 
   @Override

@@ -16,11 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
@@ -31,12 +30,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class HttpClientInstrumentation extends Instrumenter.Default {
-
-  public HttpClientInstrumentation() {
-    super("httpclient");
-  }
+final class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -50,15 +44,6 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
         .or(nameStartsWith("jdk.internal."))
         .and(not(named("jdk.internal.net.http.HttpClientFacade")))
         .and(extendsClass(named("java.net.http.HttpClient")));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpHeadersInjectAdapter",
-      packageName + ".JdkHttpClientTracer",
-      packageName + ".ResponseConsumer"
-    };
   }
 
   @Override
@@ -103,7 +88,7 @@ public class HttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return HttpResponse result,
+        @Advice.Return HttpResponse<?> result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,

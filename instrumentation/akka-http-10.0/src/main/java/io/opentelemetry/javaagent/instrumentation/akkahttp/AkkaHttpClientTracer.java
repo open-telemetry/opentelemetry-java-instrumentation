@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentation.InjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.InjectAdapter.SETTER;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.HttpExt;
@@ -13,7 +13,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentation.AkkaHttpHeaders;
+import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;

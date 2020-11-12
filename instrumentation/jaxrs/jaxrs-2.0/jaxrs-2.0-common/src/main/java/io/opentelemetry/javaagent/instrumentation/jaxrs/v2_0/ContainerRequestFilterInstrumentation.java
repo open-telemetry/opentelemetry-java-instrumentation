@@ -13,8 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -27,12 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * This adds the filter class name to the request properties. The class name is used by <code>
  * DefaultRequestContextInstrumentation</code>
  */
-@AutoService(Instrumenter.class)
-public class ContainerRequestFilterInstrumentation extends Instrumenter.Default {
-
-  public ContainerRequestFilterInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-filter");
-  }
+class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {

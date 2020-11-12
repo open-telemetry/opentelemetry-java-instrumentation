@@ -84,7 +84,7 @@ class QueryTest extends AbstractHibernateTest {
             }
           }
           span(2) {
-            name ~/^select /
+            name "SELECT db1.Value"
             kind CLIENT
             childOf span(1)
             attributes {
@@ -156,7 +156,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          name ~/^select /
+          name "SELECT db1.Value"
           kind CLIENT
           childOf span(1)
           attributes {

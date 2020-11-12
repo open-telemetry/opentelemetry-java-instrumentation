@@ -22,7 +22,7 @@ import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -55,8 +55,8 @@ import spock.lang.Specification;
  * This will cause the following to occur before test startup:
  *
  * <ul>
- *   <li>All {@link Instrumenter}s on the test classpath will be applied. Matching preloaded classes
- *       will be retransformed.
+ *   <li>All {@link InstrumentationModule}s on the test classpath will be applied. Matching
+ *       preloaded classes will be retransformed.
  *   <li>{@link AgentTestRunner#TEST_WRITER} will be registered with the global tracer and available
  *       in an initialized state.
  * </ul>

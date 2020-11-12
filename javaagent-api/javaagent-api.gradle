@@ -12,9 +12,15 @@ project.ext.minimumInstructionCoverage = 0.0
 
 javacc {
   configs {
-    template {
+    normalizer {
       inputFile = file('src/main/javacc/SqlNormalizer.jj')
       packageName = 'io.opentelemetry.javaagent.instrumentation.api.db.normalizer'
+      outputDir = file("${project.buildDir}/generated/javacc/sql")
+    }
+    statmentInfoExtractor {
+      inputFile = file('src/main/javacc/SqlStatementInfoExtractor.jj')
+      packageName = 'io.opentelemetry.javaagent.instrumentation.api.db.normalizer'
+      outputDir = file("${project.buildDir}/generated/javacc/sql")
     }
   }
 }

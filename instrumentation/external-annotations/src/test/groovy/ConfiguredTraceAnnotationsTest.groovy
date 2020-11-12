@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
+import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentation
+import io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
@@ -55,7 +55,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
 
     expect:
-    new TraceAnnotationsInstrumentation().additionalTraceAnnotations == expected.toSet()
+    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
 
     cleanup:
     ConfigUtils.setConfig(previousConfig)

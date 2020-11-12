@@ -10,8 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -19,23 +18,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.internal.Continuation;
 import ratpack.func.Action;
-import ratpack.path.PathBinding;
 
-@AutoService(Instrumenter.class)
-public final class DefaultExecutionInstrumentation extends Instrumenter.Default {
-
-  public DefaultExecutionInstrumentation() {
-    super("ratpack");
-  }
+final class DefaultExecutionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("ratpack.exec.internal.DefaultExecution");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".ActionWrapper"};
   }
 
   @Override
@@ -55,11 +43,6 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
         @Advice.Argument(value = 1, readOnly = false) Action<? super Continuation> segment) {
       onError = ActionWrapper.wrapIfNeeded(onError);
       segment = ActionWrapper.wrapIfNeeded(segment);
-    }
-
-    public void muzzleCheck(PathBinding binding) {
-      // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
-      binding.getDescription();
     }
   }
 }

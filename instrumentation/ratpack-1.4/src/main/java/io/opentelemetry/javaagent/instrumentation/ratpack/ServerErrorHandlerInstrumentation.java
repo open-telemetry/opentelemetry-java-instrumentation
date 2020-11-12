@@ -13,19 +13,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
-
-  public ServerErrorHandlerInstrumentation() {
-    super("ratpack");
-  }
+final class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -39,18 +33,11 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RatpackTracer",
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("error")
             .and(takesArgument(0, named("ratpack.handling.Context")))
             .and(takesArgument(1, Throwable.class)),
-        packageName + ".ErrorHandlerAdvice");
+        ErrorHandlerAdvice.class.getName());
   }
 }

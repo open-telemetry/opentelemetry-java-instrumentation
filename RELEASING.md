@@ -10,7 +10,7 @@ to calculate the current version based on git tags. This plugin looks for the la
 ## Snapshot builds
 Every successful CI build of the master branch automatically executes `./gradlew snapshot` as the last task.
 This signals Nebula plugin to build and publish to
-[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/)next _minor_ release version.
+[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/instrumentation/) next _minor_ release version.
 This means version `vX.(Y+1).0-SNAPSHOT`.
 
 ## Starting the Release

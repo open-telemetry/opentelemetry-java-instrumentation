@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,11 +22,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractExecutorInstrumentation extends Instrumenter.Default {
-
+abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
   private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
-
-  public static final String EXEC_NAME = "java_concurrent";
 
   private static final String TRACE_EXECUTORS_CONFIG = "otel.trace.executors";
   private final boolean TRACE_ALL_EXECUTORS =
@@ -45,9 +42,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
    */
   private final Collection<String> ALLOWED_EXECUTORS_PREFIXES;
 
-  public AbstractExecutorInstrumentation(String... additionalNames) {
-    super(EXEC_NAME, additionalNames);
-
+  AbstractExecutorInstrumentation() {
     if (TRACE_ALL_EXECUTORS) {
       log.info("Tracing all executors enabled.");
       ALLOWED_EXECUTORS = Collections.emptyList();

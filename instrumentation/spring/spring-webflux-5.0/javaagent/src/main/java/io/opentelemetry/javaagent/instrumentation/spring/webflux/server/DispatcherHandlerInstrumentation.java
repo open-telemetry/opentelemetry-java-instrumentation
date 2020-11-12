@@ -12,15 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstrumentation {
+final class DispatcherHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,7 +33,6 @@ public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstr
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArguments(1)),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
-        packageName + ".DispatcherHandlerAdvice");
+        DispatcherHandlerAdvice.class.getName());
   }
 }

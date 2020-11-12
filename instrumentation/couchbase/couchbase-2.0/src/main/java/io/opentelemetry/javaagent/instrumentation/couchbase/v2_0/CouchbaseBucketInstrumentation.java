@@ -13,9 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,31 +24,13 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-@AutoService(Instrumenter.class)
-public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
-
-  public CouchbaseBucketInstrumentation() {
-    super("couchbase");
-  }
+final class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
         "com.couchbase.client.java.bucket.DefaultAsyncBucketManager",
         "com.couchbase.client.java.CouchbaseAsyncBucket");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
-      packageName + ".CouchbaseClientTracer",
-      packageName + ".CouchbaseOnSubscribe",
-      packageName + ".CouchbaseQueryNormalizer"
-    };
   }
 
   @Override

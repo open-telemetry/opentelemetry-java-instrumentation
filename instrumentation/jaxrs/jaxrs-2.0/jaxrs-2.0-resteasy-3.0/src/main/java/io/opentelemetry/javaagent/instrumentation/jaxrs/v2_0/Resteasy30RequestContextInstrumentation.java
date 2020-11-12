@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -28,8 +26,12 @@ import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
  * PostMatchContainerRequestContext</code>. This class provides a way to get the matched resource
  * method through <code>getResourceMethod()</code>.
  */
-@AutoService(Instrumenter.class)
-public class Resteasy30RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+final class Resteasy30RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+  @Override
+  protected String abortAdviceName() {
+    return ContainerRequestContextAdvice.class.getName();
+  }
+
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
@@ -44,7 +46,7 @@ public class Resteasy30RequestContextInstrumentation extends AbstractRequestCont
         Method method = resourceMethodInvoker.getMethod();
         Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
-        span = RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
+        span = RequestContextHelper.createOrUpdateAbortSpan(context, resourceClass, method);
         if (span != null) {
           scope = tracer().startScope(span);
         }
@@ -56,7 +58,7 @@ public class Resteasy30RequestContextInstrumentation extends AbstractRequestCont
         @Local("otelSpan") Span span,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      RequestFilterHelper.closeSpanAndScope(span, scope, throwable);
+      RequestContextHelper.closeSpanAndScope(span, scope, throwable);
     }
   }
 }
