@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
-import io.opentelemetry.javaagent.spi.AgentBuilderCustomizer;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
+import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -158,22 +158,23 @@ public class AgentInstaller {
       }
     }
 
-    agentBuilder = customizeAgentBuilder(agentBuilder);
+    agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
   }
 
-  private static AgentBuilder customizeAgentBuilder(AgentBuilder agentBuilder) {
-    Iterable<AgentBuilderCustomizer> agentCustomizers = loadAgentBuilderCustomizers();
-    for (AgentBuilderCustomizer agentCustomizer : agentCustomizers) {
+  private static AgentBuilder customizeByteBuddyAgent(AgentBuilder agentBuilder) {
+    Iterable<ByteBuddyAgentCustomizer> agentCustomizers = loadByteBuddyAgentCustomizers();
+    for (ByteBuddyAgentCustomizer agentCustomizer : agentCustomizers) {
       log.debug("Applying agent builder customizer {}", agentCustomizer.getClass().getName());
       agentBuilder = agentCustomizer.customize(agentBuilder);
     }
     return agentBuilder;
   }
 
-  private static Iterable<AgentBuilderCustomizer> loadAgentBuilderCustomizers() {
-    return ServiceLoader.load(AgentBuilderCustomizer.class, AgentInstaller.class.getClassLoader());
+  private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
+    return ServiceLoader.load(
+        ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {
