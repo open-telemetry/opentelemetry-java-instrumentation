@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactor_netty;
+package io.opentelemetry.javaagent.instrumentation.reactornetty;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -30,6 +30,12 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 
+/**
+ * This instrumentation solves the problem of the correct context propagation through
+ * the roller coaster of Project Reactor and Netty thread hopping. It uses two public hooks of
+ * {@link HttpClient}: {@link HttpClient#mapConnect(BiFunction)} and {@link HttpClient#doOnRequest(BiConsumer)}
+ * two short-cut context propagation from the caller to Reactor to Netty.
+ */
 @AutoService(InstrumentationModule.class)
 public final class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
@@ -88,7 +94,7 @@ public final class ReactorNettyInstrumentationModule extends InstrumentationModu
     public static void stopSpan(
         @Advice.Thrown Throwable throwable, @Advice.Return(readOnly = false) HttpClient client) {
 
-      if (throwable == null && CallDepthThreadLocalMap.decrementCallDepth(HttpClient.class) == 0) {
+      if (CallDepthThreadLocalMap.decrementCallDepth(HttpClient.class) == 0 && throwable == null) {
         client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
     }
