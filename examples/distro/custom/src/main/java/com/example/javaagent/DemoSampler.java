@@ -1,4 +1,4 @@
-package io.opentelemetry.demo;
+package com.example.javaagent;
 
 import io.opentelemetry.api.common.ReadableAttributes;
 import io.opentelemetry.api.trace.Span;

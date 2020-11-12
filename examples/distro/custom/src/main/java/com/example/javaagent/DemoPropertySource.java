@@ -1,4 +1,4 @@
-package io.opentelemetry.demo;
+package com.example.javaagent;
 
 import io.opentelemetry.javaagent.spi.config.PropertySource;
 import java.util.Map;

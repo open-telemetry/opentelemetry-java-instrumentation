@@ -1,4 +1,4 @@
-package io.opentelemetry.demo.instrumentation;
+package com.example.javaagent.instrumentation;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;

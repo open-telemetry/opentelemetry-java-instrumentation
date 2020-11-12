@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
-    implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-spi:${versions.opentelemetryJavaagentSpi}")
+    implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-spi:${versions.opentelemetryJavaagent}")
     implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagent}")
 
     implementation deps.bytebuddy

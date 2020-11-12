@@ -1,4 +1,4 @@
-package io.opentelemetry.demo;
+package com.example.javaagent;
 
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.util.concurrent.atomic.AtomicLong;

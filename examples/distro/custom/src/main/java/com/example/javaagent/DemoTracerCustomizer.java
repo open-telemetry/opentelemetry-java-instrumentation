@@ -1,4 +1,4 @@
-package io.opentelemetry.demo;
+package com.example.javaagent;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
