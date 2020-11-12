@@ -285,8 +285,8 @@ For this reason, the following instrumentations are disabled by default:
 - `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
-To enable them, add the `otel.integration.<name>.enabled` system property:
-`-Dotel.integration.jdbc-datasource.enabled=true`
+To enable them, add the `otel.instrumentation.<name>.enabled` system property:
+`-Dotel.instrumentation.jdbc-datasource.enabled=true`
 
 #### Grizzly instrumentation
 
@@ -296,7 +296,7 @@ Servlet-based applications, you get better experience from Servlet-specific
 support. As these two instrumentations conflict with each other, more generic
 instrumentation for Grizzly HTTP server is disabled by default. If needed,
 you can enable it by adding the following system property:
-`-Dotel.integration.grizzly.enabled=true`
+`-Dotel.instrumentation.grizzly.enabled=true`
 
 ### Suppressing specific auto-instrumentation
 
