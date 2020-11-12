@@ -106,7 +106,6 @@ abstract class SmokeTest {
             .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent.jar")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
-            .withEnv("OTEL_INTEGRATION_GEODE_ENABLED","false")
             .withEnv(getExtraEnv());
     target.start();
   }

@@ -11,7 +11,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 /**
  * This is the main entry point for the majority of Instrumentation Agent's customizations.
  * It allows for configuring various aspects of OpenTelemetrySdk.
- * Just read the {@link #configure(TracerSdkManagement)} method.
+ * See the {@link #configure(TracerSdkManagement)} method below.
  *
  * Also see https://github.com/open-telemetry/opentelemetry-java/issues/2022
  */

@@ -28,6 +28,6 @@ public class DemoSampler implements Sampler {
 
   @Override
   public String getDescription() {
-    return null;
+    return "DemoSampler";
   }
 }

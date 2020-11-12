@@ -15,11 +15,11 @@ public class DemoIdGenerator implements IdGenerator {
 
   @Override
   public String generateSpanId() {
-    return String.valueOf(spanId.incrementAndGet());
+    return String.format("%016d", spanId.incrementAndGet());
   }
 
   @Override
   public String generateTraceId() {
-    return String.valueOf(traceId.incrementAndGet());
+    return String.format("%032d", spanId.incrementAndGet());
   }
 }
