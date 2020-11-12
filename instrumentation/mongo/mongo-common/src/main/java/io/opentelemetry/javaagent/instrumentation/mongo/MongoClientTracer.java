@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo;
 
+import static java.util.Arrays.asList;
+
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
@@ -13,9 +15,10 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -92,7 +95,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
    * collection names to be captured.
    */
   private static final List<String> UNSCRUBBED_FIELDS =
-      Arrays.asList("ordered", "insert", "count", "find", "create");
+      asList("ordered", "insert", "count", "find", "create");
 
   private static final BsonValue HIDDEN_CHAR = new BsonString("?");
 
@@ -130,10 +133,24 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     return scrubbed;
   }
 
+  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
+      new HashSet<>(asList(
+          "aggregate", "count", "distinct", "mapReduce", "geoSearch", "delete", "find", "killCursors",
+          "findAndModify", "insert", "update", "listIndexes"));
+
   private static String collectionName(CommandStartedEvent event) {
-    BsonValue collectionValue = event.getCommand().get(event.getCommandName());
-    if (collectionValue != null && collectionValue.isString()) {
-      return collectionValue.asString().getValue();
+    if (event.getCommandName().equals("getMore")) {
+      if (event.getCommand().containsKey("collection")) {
+        BsonValue collectionValue = event.getCommand().get("collection");
+        if (collectionValue.isString()) {
+          return event.getCommand().getString("collection").getValue();
+        }
+      }
+    } else if (COMMANDS_WITH_COLLECTION_NAME_AS_VALUE.contains(event.getCommandName())) {
+      BsonValue commandValue = event.getCommand().get(event.getCommandName());
+      if (commandValue != null && commandValue.isString()) {
+        return commandValue.asString().getValue();
+      }
     }
     return null;
   }
