@@ -62,8 +62,6 @@ public final class DemoServlet3Instrumentation extends Instrumenter.Default {
   @SuppressWarnings("unused")
   public static class DemoServlet3Advice {
 
-    public static final String X_SERVER_ID = "X-server-id";
-
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 1) ServletResponse response) {
       if (!(response instanceof HttpServletResponse)) {
@@ -71,8 +69,8 @@ public final class DemoServlet3Instrumentation extends Instrumenter.Default {
       }
 
       HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-      if (!httpServletResponse.containsHeader(X_SERVER_ID)) {
-        httpServletResponse.addHeader(X_SERVER_ID, Span.current().getSpanContext().getTraceIdAsHexString());
+      if (!httpServletResponse.containsHeader("X-server-id")) {
+        httpServletResponse.addHeader("X-server-id", Span.current().getSpanContext().getTraceIdAsHexString());
       }
     }
 
