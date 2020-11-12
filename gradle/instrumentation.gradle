@@ -1,4 +1,5 @@
 // common gradle file for instrumentation
+import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
 apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
@@ -7,14 +8,6 @@ apply plugin: 'muzzle'
 ext {
   packageInAgentBundle = true
   mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
-}
-
-byteBuddy {
-  transformation {
-    // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
-    tasks = ['compileJava', 'compileScala', 'compileKotlin']
-    plugin = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin$NoOp'
-  }
 }
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -29,14 +22,6 @@ if (projectDir.name == 'javaagent') {
 }
 
 afterEvaluate {
-  byteBuddy {
-    transformation {
-      tasks = ['compileJava', 'compileScala', 'compileKotlin']
-      plugin = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
-      classPath = project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
-    }
-  }
-
   dependencies {
     implementation project(':instrumentation-api')
     implementation project(':javaagent-api')
@@ -64,4 +49,11 @@ afterEvaluate {
 
     testImplementation deps.testcontainers
   }
+
+  def pluginName = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
+  new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName, [
+    project(':javaagent-tooling').configurations.instrumentationMuzzle.files,
+    configurations.runtimeClasspath.files,
+    sourceSets.main.output.files
+  ]).configure()
 }
