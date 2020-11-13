@@ -48,10 +48,6 @@ repositories {
 
 description = 'OpenTelemetry instrumentations for Java'
 
-wrapper {
-  distributionType = Wrapper.DistributionType.ALL
-}
-
 allprojects {
   apply plugin: 'idea'
 

@@ -2,6 +2,12 @@ apply plugin: "codenarc"
 
 dependencies {
   codenarc "org.codenarc:CodeNarc:1.5"
+
+  constraints {
+    // Allows codenarc to run on JDK14+
+    // https://github.com/gradle/gradle/issues/12646
+    "codenarc"("org.codehaus.groovy:groovy:2.5.10")
+  }
 }
 
 codenarc {

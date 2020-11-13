@@ -37,6 +37,11 @@ if (project.hasProperty("minJavaVersionForTests")) {
 java {
   sourceCompatibility = JavaVersion.toVersion(project.ext.release)
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
+
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(Math.max(project.ext.release.majorVersion.toInteger(), 11))
+  }
+
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
   disableAutoTargetJvm()
   withJavadocJar()
@@ -44,13 +49,13 @@ java {
 }
 
 tasks.withType(JavaCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 tasks.withType(GroovyCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 tasks.withType(ScalaCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 
 apply plugin: "eclipse"
@@ -175,39 +180,6 @@ project.afterEvaluate {
   }
 }
 
-if (!rootProject.ext.has("javaExecutableVersionCache")) {
-  rootProject.ext.javaExecutableVersionCache = [:]
-}
-
-/**
- * Returns version of java from a given java home.
- */
-JavaVersion getJavaHomeVersion(String javaHome) {
-  def cache = rootProject.ext.javaExecutableVersionCache
-  if (cache.containsKey(javaHome)) {
-    return cache.get(javaHome)
-  }
-  new ByteArrayOutputStream().withStream { stream ->
-    exec {
-      commandLine = [toExecutable(javaHome), "-version"]
-      errorOutput = stream
-    }
-    def output = stream.toString()
-    for (def line : output.split('\n')) {
-      line = line.trim()
-      def matcher = line =~ /^(?:java|openjdk) version "([^"]+)"/
-      if (matcher) {
-        def version = JavaVersion.toVersion(matcher.group(1))
-        cache.put(javaHome, version)
-        return version
-      }
-    }
-
-    // Getting here means we didn't find a line matching the version pattern.
-    throw new GradleScriptException("Cannot determine java version. Executable: ${javaHome}, output: ${output}", null)
-  }
-}
-
 def isJavaVersionAllowed(JavaVersion version) {
   if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
     return false
@@ -218,61 +190,17 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
-/**
- * For a given java home return the location of java executable
- */
-static String toExecutable(String javaHome) {
-  return Objects.requireNonNull(javaHome) + "/bin/java"
-}
-
-/**
- * Returns java home for a given version or {@code null} if not found
- */
-String findJavaHome(JavaVersion version) {
-  def javaHome = System.getenv("JAVA_${version.majorVersion}_HOME")
-  if (javaHome == null) {
-    return null
-  }
-  def foundVersion = getJavaHomeVersion(javaHome)
-  return version == foundVersion ? javaHome : null
-}
-
-ext {
-  findJavaHome = this.&findJavaHome
-  toExecutable = this.&toExecutable
-}
-
-def addTestRule(String testTaskName) {
-  def prefix = testTaskName + "Java"
-  tasks.addRule("Pattern: $prefix<Version>: Runs tests using given java version") { String taskName ->
-    if (taskName.startsWith(prefix)) {
-      def requestedJavaVersion = JavaVersion.toVersion(taskName - prefix)
-      def gradleJavaVersion = JavaVersion.current()
-
-      if (gradleJavaVersion != requestedJavaVersion) {
-        def javaHomeForTests = findJavaHome(requestedJavaVersion)
-        if (javaHomeForTests != null) {
-
-          tasks.withType(Test).all {
-            executable = toExecutable(javaHomeForTests)
-            enabled = isJavaVersionAllowed(requestedJavaVersion)
-          }
-        } else {
-          throw new BuildCancelledException("Requested java version $requestedJavaVersion not found")
-        }
-      }
-
-      task(taskName) {
-        if (project.tasks.findByName(testTaskName) != null) {
-          dependsOn testTaskName
-        }
-      }
+[8, 15].findAll { isJavaVersionAllowed(JavaVersion.toVersion(it)) }.each {version ->
+  def testJavaForVersion = tasks.register("testJava${version}", Test) {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(version)
     }
   }
-}
 
-addTestRule("test")
-addTestRule("latestDepTest")
+  if (rootProject.findProperty('testAdditionalJavaVersions') == 'true') {
+    tasks.check.dependsOn(testJavaForVersion)
+  }
+}
 
 tasks.withType(Test).configureEach {
   useJUnitPlatform()
