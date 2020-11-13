@@ -2,9 +2,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
   pass {
-    group = "io.opentracing.contrib.dropwizard"
-    module = "dropwizard-opentracing"
-    versions = "[0.2.2,)"
+    coreJdk = true
   }
 }
 
