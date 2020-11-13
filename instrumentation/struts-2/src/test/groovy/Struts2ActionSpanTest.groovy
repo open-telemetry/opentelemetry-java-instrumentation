@@ -15,6 +15,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 
 class Struts2ActionSpanTest extends HttpServerTest<Server> {
@@ -26,7 +27,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
 
   @Override
   boolean testPathParam() {
-    return false
+    return true
   }
 
   @Override
@@ -49,18 +50,19 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     return true
   }
 
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
+  }
+
   String expectedHandlerName(ServerEndpoint serverEndpoint) {
-    switch (serverEndpoint) {
-      case QUERY_PARAM: return "GreetingAction.query"
-      case EXCEPTION: return "GreetingAction.exception"
-      default: return "GreetingAction.success"
-    }
+    return "GreetingAction." + expectedMethodName(serverEndpoint)
   }
 
   String expectedMethodName(ServerEndpoint endpoint) {
     switch (endpoint) {
       case QUERY_PARAM: return "query"
       case EXCEPTION: return "exception"
+      case PATH_PARAM: return "pathParam"
       default: return "success"
     }
   }
@@ -83,10 +85,15 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   }
 
   @Override
+  String getContextPath() {
+    return "/context"
+  }
+
+  @Override
   Server startServer(int port) {
     def server = new Server(port)
     ServletContextHandler context = new ServletContextHandler(0);
-    context.setContextPath("/")
+    context.setContextPath(getContextPath())
     def resource = new FileResource(getClass().getResource("/"))
     context.setBaseResource(resource)
     server.setHandler(context)

@@ -8,10 +8,10 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 
 public class GreetingAction extends ActionSupport {
 
-  String message = "default";
+  String responseBody = "default";
 
   public String success() {
-    message =
+    responseBody =
         HttpServerTest.controller(
             HttpServerTest.ServerEndpoint.SUCCESS, HttpServerTest.ServerEndpoint.SUCCESS::getBody);
 
@@ -19,7 +19,7 @@ public class GreetingAction extends ActionSupport {
   }
 
   public String query() {
-    message =
+    responseBody =
         HttpServerTest.controller(
             HttpServerTest.ServerEndpoint.QUERY_PARAM,
             HttpServerTest.ServerEndpoint.QUERY_PARAM::getBody);
@@ -27,7 +27,7 @@ public class GreetingAction extends ActionSupport {
   }
 
   public String exception() throws Exception {
-    message =
+    responseBody =
         HttpServerTest.controller(
             HttpServerTest.ServerEndpoint.EXCEPTION,
             () -> {
@@ -36,12 +36,23 @@ public class GreetingAction extends ActionSupport {
     return "exception";
   }
 
+  public String pathParam() {
+    HttpServerTest.controller(
+        HttpServerTest.ServerEndpoint.PATH_PARAM,
+        () -> "this does nothing, as responseBody is set in setId, but we need this controller span nevertheless");
+    return "greeting";
+  }
+
+  public void setId(String id) {
+    responseBody = id;
+  }
+
   public void setSome(String some) {
-    message = "some=" + some;
+    responseBody = "some=" + some;
     System.out.println("Setting query param some to " + some);
   }
 
-  public String getMessage() {
-    return message;
+  public String getResponseBody() {
+    return responseBody;
   }
 }

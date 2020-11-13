@@ -5,20 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
+import static io.opentelemetry.javaagent.instrumentation.struts2.Struts2Tracer.TRACER;
+
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 
 public class ActionInvocationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This ActionInvocation actionProxy,
+      @Advice.This ActionInvocation actionInvocation,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = Struts2Tracer.TRACER.startSpan(actionProxy);
-    scope = Struts2Tracer.TRACER.startScope(span);
+    span = TRACER.startSpan(actionInvocation);
+    scope = TRACER.startScope(span);
+
+    TRACER.updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -30,9 +35,9 @@ public class ActionInvocationAdvice {
       scope.close();
     }
     if (throwable != null) {
-      Struts2Tracer.TRACER.endExceptionally(span, throwable);
+      TRACER.endExceptionally(span, throwable);
     } else {
-      Struts2Tracer.TRACER.end(span);
+      TRACER.end(span);
     }
   }
 }
