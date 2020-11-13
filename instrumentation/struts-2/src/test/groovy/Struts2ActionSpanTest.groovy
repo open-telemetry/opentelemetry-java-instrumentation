@@ -77,7 +77,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
         errorEvent(Exception, EXCEPTION.body)
       }
       attributes {
-        'code.namespace' "GreetingAction"
+        'code.namespace' "io.opentelemetry.struts.GreetingAction"
         'code.function' { it == expectedMethodName(endpoint) }
       }
       childOf((SpanData) parent)
@@ -92,7 +92,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     def server = new Server(port)
-    ServletContextHandler context = new ServletContextHandler(0);
+    ServletContextHandler context = new ServletContextHandler(0)
     context.setContextPath(getContextPath())
     def resource = new FileResource(getClass().getResource("/"))
     context.setBaseResource(resource)

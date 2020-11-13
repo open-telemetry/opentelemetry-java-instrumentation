@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.struts;
+
 import com.opensymphony.xwork2.ActionSupport;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 
@@ -26,7 +28,7 @@ public class GreetingAction extends ActionSupport {
     return "greeting";
   }
 
-  public String exception() throws Exception {
+  public String exception() {
     responseBody =
         HttpServerTest.controller(
             HttpServerTest.ServerEndpoint.EXCEPTION,

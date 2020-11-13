@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.test.asserts
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import java.util.regex.Pattern
-import org.spockframework.util.Assert
 
 class AttributesAssert {
   private final Map<String, Object> attributes
@@ -42,7 +41,7 @@ class AttributesAssert {
     } else if (value instanceof Closure) {
       assert ((Closure) value).call(val)
     } else {
-      Assert.that(value == val, "Attribute '$name'")
+      assert value == val
     }
   }
 
