@@ -52,7 +52,9 @@ public class PropagatorsInitializer {
    * extraction, these rules are applied:
    *
    * <ul>
-   *   <li>W3CBaggagePropagator and JaegerPropagator are added outside of the multi-propagator so that they will always runs and extract baggage (note: JaegerPropagator extracts both baggage and context).
+   *   <li>W3CBaggagePropagator and JaegerPropagator are added outside of the multi-propagator so
+   *       that they will always runs and extract baggage (note: JaegerPropagator extracts both
+   *       baggage and context).
    *   <li>W3CBaggagePropagator comes after JaegerPropagator, as it can have more complex/complete
    *       values that Jaeger baggage lacks, e.g. metadata. Baggage extraction can enrich the
    *       previous one.
