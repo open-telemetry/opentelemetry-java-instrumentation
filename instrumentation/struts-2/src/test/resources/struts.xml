@@ -6,6 +6,9 @@
 <struts>
 
   <constant name="struts.devMode" value="true" />
+  <constant name="struts.enable.SlashesInActionNames" value="true"/>
+  <constant name="struts.mapper.alwaysSelectFullNamespace" value="false"/>
+  <constant name="struts.patternMatcher" value="namedVariable" />
 
   <package name="basic-struts2" extends="struts-default">
     <global-results>
@@ -19,12 +22,11 @@
       <exception-mapping exception="java.lang.Exception" result="exception" />
     </global-exception-mappings>
 
-    <action name="success" class="GreetingAction" method="success">
-    </action>
-    <action name="query" class="GreetingAction" method="query">
-    </action>
-    <action name="exception" class="GreetingAction" method="exception">
-    </action>
+    <action name="success" class="GreetingAction" method="success"/>
+    <action name="query" class="GreetingAction" method="query"/>
+    <action name="exception" class="GreetingAction" method="exception"/>
+    <action name="/path/{id}/param" class="GreetingAction" method="pathParam"/>
   </package>
+
 
 </struts>
