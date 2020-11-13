@@ -1,0 +1,5 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+}

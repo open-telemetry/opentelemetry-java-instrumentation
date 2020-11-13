@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+  private static final String MIDDLEWARE_ATTRIBUTE = "otel.middleware";
 
   public Context startSpan(HttpServletRequest request) {
     return startSpan(request, request, getSpanName(request));
@@ -92,6 +94,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     request.setAttribute("traceId", span.getSpanContext().getTraceIdAsHexString());
     request.setAttribute("spanId", span.getSpanContext().getSpanIdAsHexString());
 
+    setMiddlewareAttributes(span, request);
+
     super.onRequest(span, request);
   }
 
@@ -124,6 +128,18 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   protected String requestHeader(HttpServletRequest httpServletRequest, String name) {
     return httpServletRequest.getHeader(name);
+  }
+
+  private void setMiddlewareAttributes(Span span, HttpServletRequest request) {
+    Object value = request.getAttribute(MIDDLEWARE_ATTRIBUTE);
+
+    if (value instanceof Map<?, ?>) {
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+        if (entry.getValue() != null) {
+          span.setAttribute(entry.getKey().toString(), entry.getValue().toString());
+        }
+      }
+    }
   }
 
   private static String getSpanName(HttpServletRequest request) {

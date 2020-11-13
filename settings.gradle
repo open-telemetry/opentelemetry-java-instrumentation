@@ -190,6 +190,7 @@ include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
+include ':instrumentation:weblogic'
 
 include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet-2.2'
