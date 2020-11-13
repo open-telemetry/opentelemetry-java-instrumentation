@@ -22,14 +22,9 @@ instrumented library.
 
 #### Executing tests with specific java version
 
-In order to run tests on a specific java version, just execute `./gradlew
-testJava7` (or `testJava11` etc). Then Gradle task
-rule will kick in and do the following:
-
-- check, if Gradle already runs on a java with required version
-- if not, look for an environment variable named `JAVA_N_HOME`, where `N` is the requested java version
-- if Gradle could not found requested java version, then build will fail
-- Gradle will now find all corresponding test tasks and configure them to use java executable of the requested version.
+We run all tests on Java 11 by default, along with Java 8 and 15. To run on the later, use
+`./gradlew testJava8` or `./gradlew testJava15`. If you don't have a JDK of these versions
+installed, Gradle will automatically download it for you.
 
 #### Executing tests against the latest versions of libraries under instrumentation
 
