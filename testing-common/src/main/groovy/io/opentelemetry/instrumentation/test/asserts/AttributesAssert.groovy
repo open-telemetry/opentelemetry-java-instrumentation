@@ -41,8 +41,10 @@ class AttributesAssert {
       assert ((Class) value).isInstance(val)
     } else if (value instanceof Closure) {
       assert ((Closure) value).call(val)
+    } else if (val instanceof String) { // because value is sometimes GString
+      Assert.assertEquals("Attribute '$name'", val, value.toString())
     } else {
-      Assert.assertEquals("Attribute '$name'", value, val)
+      Assert.assertEquals("Attribute '$name'", val, value)
     }
   }
 
