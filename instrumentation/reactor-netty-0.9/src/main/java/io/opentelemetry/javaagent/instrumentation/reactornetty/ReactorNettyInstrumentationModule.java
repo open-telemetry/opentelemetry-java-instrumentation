@@ -31,10 +31,11 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 
 /**
- * This instrumentation solves the problem of the correct context propagation through
- * the roller coaster of Project Reactor and Netty thread hopping. It uses two public hooks of
- * {@link HttpClient}: {@link HttpClient#mapConnect(BiFunction)} and {@link HttpClient#doOnRequest(BiConsumer)}
- * two short-cut context propagation from the caller to Reactor to Netty.
+ * This instrumentation solves the problem of the correct context propagation through the roller
+ * coaster of Project Reactor and Netty thread hopping. It uses two public hooks of {@link
+ * HttpClient}: {@link HttpClient#mapConnect(BiFunction)} and {@link
+ * HttpClient#doOnRequest(BiConsumer)} two short-cut context propagation from the caller to Reactor
+ * to Netty.
  */
 @AutoService(InstrumentationModule.class)
 public final class ReactorNettyInstrumentationModule extends InstrumentationModule {
