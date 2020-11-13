@@ -11,9 +11,7 @@ import java.lang.invoke.MethodType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 
-/**
- * Provides wrappers around WebLogic internal class instances.
- */
+/** Provides wrappers around WebLogic internal class instances. */
 public class WebLogicEntity {
   private static final MethodHandle REQUEST_GET_CONTEXT;
   private static final MethodHandle CONTEXT_GET_MBEAN;

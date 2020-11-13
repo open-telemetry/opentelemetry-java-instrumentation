@@ -22,9 +22,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * Adds an instrumentation to collect middleware attributes for WebLogic Server 12 and 14. As span
- * detection on WebLogic does not require and special logic, this does not initiate servlet spans
- * by itself, but saves the special attributes as a map to a servlet request attribute, which is
- * then later read when span is started by generic servlet instrumentation.
+ * detection on WebLogic does not require any special logic, this does not initiate servlet spans by
+ * itself, but saves the special attributes as a map to a servlet request attribute, which is then
+ * later read when span is started by generic servlet instrumentation.
  */
 @AutoService(InstrumentationModule.class)
 public class WebLogicInstrumentationModule extends InstrumentationModule {
