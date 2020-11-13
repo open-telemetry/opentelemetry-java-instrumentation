@@ -209,9 +209,8 @@ tasks.withType(Test).configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout = Duration.ofMinutes(15)
 
-  // Disable all tests if current JVM doesn't match version requirements
   // Disable all tests if skipTests property was specified
-  enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
+  enabled = !project.rootProject.hasProperty("skipTests")
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
@@ -224,6 +223,12 @@ tasks.withType(Test).configureEach {
 
   testLogging {
     exceptionFormat = 'full'
+  }
+
+  if (!isJavaVersionAllowed(JavaVersion.toVersion(11))) {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
+    }
   }
 }
 
