@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.test.asserts
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import java.util.regex.Pattern
-import org.junit.Assert
+import org.spockframework.util.Assert
 
 class AttributesAssert {
   private final Map<String, Object> attributes
@@ -41,10 +41,8 @@ class AttributesAssert {
       assert ((Class) value).isInstance(val)
     } else if (value instanceof Closure) {
       assert ((Closure) value).call(val)
-    } else if (val instanceof String) { // because value is sometimes GString
-      Assert.assertEquals("Attribute '$name'", val, value.toString())
     } else {
-      Assert.assertEquals("Attribute '$name'", val, value)
+      Assert.that(value == val, "Attribute '$name'")
     }
   }
 
