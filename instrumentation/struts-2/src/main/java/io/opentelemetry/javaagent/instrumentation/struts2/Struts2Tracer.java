@@ -48,8 +48,7 @@ public class Struts2Tracer extends BaseTracer {
     if (actionNamespace != null && !actionNamespace.isEmpty()) {
       if (actionNamespace.endsWith("/") || result.startsWith("/")) {
         result = actionNamespace + result;
-      }
-      else {
+      } else {
         result = actionNamespace + "/" + result;
       }
     }
@@ -74,5 +73,4 @@ public class Struts2Tracer extends BaseTracer {
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.struts-2";
   }
-
 }
