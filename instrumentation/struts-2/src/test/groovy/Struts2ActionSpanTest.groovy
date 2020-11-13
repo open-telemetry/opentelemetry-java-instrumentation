@@ -98,8 +98,8 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     context.setBaseResource(resource)
     server.setHandler(context)
 
-    context.addServlet(DefaultServlet.class, "/")
-    context.addFilter(StrutsPrepareAndExecuteFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
+    context.addServlet(DefaultServlet, "/")
+    context.addFilter(StrutsPrepareAndExecuteFilter, "/*", EnumSet.of(DispatcherType.REQUEST))
 
     server.start()
 
