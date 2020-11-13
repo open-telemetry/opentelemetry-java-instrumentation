@@ -148,19 +148,12 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 #### Propagator
 
-The propagator controls which distributed tracing header format is used.
+The propagators determine which distributed tracing header formats are used, and which baggage propagation header formats are used.
 
-If set to a comma-separated list of the values, the multi-propagator is used. Special case is `baggage` 
-and `jaeger` propagators: they cannot be added to multi-propagator because they may not get a chance 
-to extract any existing Baggage, instead they can be added only to DefaultContextPropagators. 
-The multi-propagator attempts to extract the context from incoming requests using each of the 
-configured propagator formats (in order), stopping after the first successful context extraction. 
-The multi-propagator injects the context into outgoing requests using all the configured propagator 
-formats.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext,baggage` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
+| otel.propagators | OTEL_PROPAGATORS     | The propagators to be used. Use a comma-separated list for multiple propagators. Supported propagators are `tracecontext`, `baggage`, `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. Default is `tracecontext,baggage` (W3C). |
 
 #### OpenTelemetry Resource
 

@@ -49,14 +49,10 @@ public class PropagatorsInitializer {
    * Initialize OpenTelemetry global Propagators with propagator list, if any.
    *
    * <p>Because TraceMultiPropagator returns first successful extracted Context and stops further
-   * extraction next rules applied:
+   * extraction, these rules are applied:
    *
    * <ul>
-   *   <li>W3CBaggagePropagator can be added to DefaultContextPropagators only to allow another
-   *       propagator extract Context.
-   *   <li>JaegerPropagator can be added to DefaultContextPropagators only because it extracts both
-   *       Context and Baggage. Otherwise in TraceMultiPropagator it may not get a chance to extract
-   *       any existing Baggage.
+   *   <li>W3CBaggagePropagator and JaegerPropagator are added outside of the multi-propagator so that they will always runs and extract baggage (note: JaegerPropagator extracts both baggage and context).
    *   <li>W3CBaggagePropagator comes after JaegerPropagator, as it can have more complex/complete
    *       values that Jaeger baggage lacks, e.g. metadata. Baggage extraction can enrich the
    *       previous one.
@@ -86,11 +82,11 @@ public class PropagatorsInitializer {
     if (propagatorIds.remove(JAEGER)) {
       // Jaeger handles both tracing and baggage
       propagatorsBuilder.addTextMapPropagator(JaegerPropagator.getInstance());
-      log.info("Added " + JaegerPropagator.getInstance() + " propagator");
+      log.debug("Added " + JaegerPropagator.getInstance() + " propagator");
     }
     if (propagatorIds.remove(BAGGAGE)) {
       propagatorsBuilder.addTextMapPropagator(W3CBaggagePropagator.getInstance());
-      log.info("Added " + W3CBaggagePropagator.getInstance() + " propagator");
+      log.debug("Added " + W3CBaggagePropagator.getInstance() + " propagator");
     }
 
     for (String propagatorId : propagatorIds) {
