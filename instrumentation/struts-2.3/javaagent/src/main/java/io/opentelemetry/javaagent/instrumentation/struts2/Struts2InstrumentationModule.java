@@ -16,7 +16,7 @@ import java.util.List;
 public class Struts2InstrumentationModule extends InstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super("struts-2");
+    super("struts", "struts-2.3");
   }
 
   @Override
