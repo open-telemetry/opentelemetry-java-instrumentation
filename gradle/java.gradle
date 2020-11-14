@@ -16,6 +16,9 @@ afterEvaluate {
   }
 }
 
+// Version to use to compile code and run tests.
+def DEFAULT_JAVA_VERSION = 11
+
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
     //TODO why some tests fail on java 11 if jacoco is present?
@@ -39,7 +42,7 @@ java {
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
 
   toolchain {
-    languageVersion = JavaLanguageVersion.of(Math.max(project.ext.release.majorVersion.toInteger(), 11))
+    languageVersion = JavaLanguageVersion.of(Math.max(project.ext.release.majorVersion.toInteger(), DEFAULT_JAVA_VERSION))
   }
 
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
@@ -193,7 +196,7 @@ def isJavaVersionAllowed(JavaVersion version) {
 // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
 // the default test task's version so commands like `./gradlew check` can test all projects regardless
 // of Java version.
-if (!isJavaVersionAllowed(JavaVersion.toVersion(11))) {
+if (!isJavaVersionAllowed(JavaVersion.toVersion(DEFAULT_JAVA_VERSION))) {
   tasks.withType(Test) {
     javaLauncher = javaToolchains.launcherFor {
       languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
