@@ -67,6 +67,8 @@ tasks.register("testDisabledFieldInjection", Test) {
   includes = ["context/FieldBackedProviderFieldInjectionDisabledTest.class"]
 }
 test.dependsOn(testDisabledFieldInjection)
-test.forkEvery 1
+tasks.withType(Test) {
+  forkEvery 1
+}
 
 javadoc.enabled = false

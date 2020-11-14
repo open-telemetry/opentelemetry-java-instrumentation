@@ -191,14 +191,21 @@ def isJavaVersionAllowed(JavaVersion version) {
 }
 
 [8, 15].findAll { isJavaVersionAllowed(JavaVersion.toVersion(it)) }.each {version ->
-  def testJavaForVersion = tasks.register("testJava${version}", Test) {
+  tasks.register("testJava${version}", Test) {
     javaLauncher = javaToolchains.launcherFor {
       languageVersion = JavaLanguageVersion.of(version)
     }
   }
+}
 
-  if (rootProject.findProperty('testAdditionalJavaVersions') == 'true') {
-    tasks.check.dependsOn(testJavaForVersion)
+// We default to testing with Java 11 for most tests, but some tests don't support it, where we change
+// the default test task's version so commands like `./gradlew check` can test all projects regardless
+// of Java version.
+if (!isJavaVersionAllowed(JavaVersion.toVersion(11))) {
+  test {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
+    }
   }
 }
 
@@ -223,12 +230,6 @@ tasks.withType(Test).configureEach {
 
   testLogging {
     exceptionFormat = 'full'
-  }
-
-  if (!isJavaVersionAllowed(JavaVersion.toVersion(11))) {
-    javaLauncher = javaToolchains.launcherFor {
-      languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
-    }
   }
 }
 
