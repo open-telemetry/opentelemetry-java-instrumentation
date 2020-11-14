@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -13,10 +17,6 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
-
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 
 class Struts2ActionSpanTest extends HttpServerTest<Server> {
 
@@ -36,12 +36,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   }
 
   @Override
-  boolean testError() {
-    return false
-  }
-
-  @Override
-  boolean testRedirect() {
+  boolean testErrorBody() {
     return false
   }
 
@@ -54,29 +49,16 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     return endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
   }
 
-  String expectedHandlerName(ServerEndpoint serverEndpoint) {
-    return "GreetingAction." + expectedMethodName(serverEndpoint)
-  }
-
-  String expectedMethodName(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case QUERY_PARAM: return "query"
-      case EXCEPTION: return "exception"
-      case PATH_PARAM: return "pathParam"
-      default: return "success"
-    }
-  }
-
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
-      name expectedHandlerName(endpoint)
+      name "GreetingAction.${endpoint.name().toLowerCase()}"
       kind Span.Kind.INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
       }
-      def expectedMethodName = expectedMethodName(endpoint)
+      def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
         'code.namespace' "io.opentelemetry.struts.GreetingAction"
         'code.function' expectedMethodName
