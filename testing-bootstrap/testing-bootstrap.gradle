@@ -1,0 +1,34 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+// Depend on all libraries that are in the bootstrap classloader when running the agent. When
+// running tests, we simulate this by adding the jar produced by this project to the bootstrap
+// classpath.
+
+dependencies {
+  implementation project(":instrumentation-api")
+  implementation project(":javaagent-bootstrap")
+
+  implementation deps.opentelemetryApi
+  implementation deps.opentelemetryContext
+  implementation deps.slf4j
+  implementation "ch.qos.logback:logback-classic:${versions.logback}"
+  implementation "javax.servlet:javax.servlet-api:3.1.0"
+}
+
+shadowJar {
+  archiveFileName = "testing-bootstrap.jar"
+
+  exclude {
+    // Tomcat tests require these classes from servlet API on the bootstrap classpath. They should
+    // be harmless for other tests. Note that we cannot include everything in javax.servlet because
+    // we expect to instrument them in the app classloader.
+    if (it.path.startsWith("javax/servlet") && !it.name.startsWith("ServletContext") && !it.name.startsWith("ServletContainerInitializer")) {
+      return true
+    }
+    return false
+  }
+}
