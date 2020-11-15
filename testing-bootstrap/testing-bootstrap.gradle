@@ -11,6 +11,7 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   implementation project(":instrumentation-api")
   implementation project(":javaagent-bootstrap")
+  implementation project(path: ":opentelemetry-sdk-shaded-for-testing", configuration: "shadow")
 
   implementation deps.opentelemetryApi
   implementation deps.opentelemetryContext
