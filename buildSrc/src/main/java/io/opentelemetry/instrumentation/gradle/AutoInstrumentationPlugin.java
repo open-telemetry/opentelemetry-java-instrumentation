@@ -33,6 +33,7 @@ public class AutoInstrumentationPlugin implements Plugin<Project> {
               File testingBootstrapJar =
                   new File(
                       project.getRootDir(), "testing-bootstrap/build/libs/testing-bootstrap.jar");
+              // Make sure tests get rerun if the contents of the testing-bootstrap.jar change
               task.getInputs().property("testing-bootstrap-jar", testingBootstrapJar);
               task.getJvmArgumentProviders().add(new InstrumentationTestArgs(testingBootstrapJar));
             });
