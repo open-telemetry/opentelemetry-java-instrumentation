@@ -354,11 +354,10 @@
       <property name="ignoreInlineTags" value="false"/>
     </module>
     -->
-    <!--
     <module name="EmptyCatchBlock">
-      <property name="exceptionVariableName" value="expected"/>
+      <!-- modified from "expected" to "ignored" to match Intellij -->
+      <property name="exceptionVariableName" value="ignored"/>
     </module>
-    -->
     <module name="CommentsIndentation">
       <property name="tokens" value="SINGLE_LINE_COMMENT, BLOCK_COMMENT_BEGIN"/>
     </module>

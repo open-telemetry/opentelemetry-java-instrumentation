@@ -89,6 +89,7 @@ final class ClassLoaderInstrumentation implements TypeInstrumentation {
             try {
               return Class.forName(name, false, null);
             } catch (ClassNotFoundException e) {
+              // ignore
             }
           }
         }

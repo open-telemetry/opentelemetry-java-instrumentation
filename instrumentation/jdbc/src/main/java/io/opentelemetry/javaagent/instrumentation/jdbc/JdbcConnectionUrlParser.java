@@ -290,6 +290,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, dbLoc)));
         } catch (NumberFormatException e) {
+          log.debug(e.getMessage(), e);
         }
       } else {
         hostEndLoc = dbLoc;
@@ -330,6 +331,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
         } catch (NumberFormatException e) {
+          log.debug(e.getMessage(), e);
         }
       } else {
         hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -478,6 +480,7 @@ public enum JdbcConnectionUrlParser {
             try {
               parsedPort = Integer.parseInt(portOrInstance);
             } catch (NumberFormatException e) {
+              log.debug(e.getMessage(), e);
             }
             if (parsedPort == null) {
               port = null;
