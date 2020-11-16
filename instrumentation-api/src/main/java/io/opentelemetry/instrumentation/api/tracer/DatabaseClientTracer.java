@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-public abstract class DatabaseClientTracer<ConnectionT, QueryT> extends BaseTracer {
+public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
 
   protected static final String DB_QUERY = "DB Query";
 
@@ -28,7 +28,7 @@ public abstract class DatabaseClientTracer<ConnectionT, QueryT> extends BaseTrac
     tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
-  public Span startSpan(ConnectionT connection, QueryT query) {
+  public Span startSpan(CONNECTION connection, QUERY query) {
     String normalizedQuery = normalizeQuery(query);
 
     Span span =
@@ -82,7 +82,7 @@ public abstract class DatabaseClientTracer<ConnectionT, QueryT> extends BaseTrac
   }
 
   /** This should be called when the connection is being used, not when it's created. */
-  protected Span onConnection(Span span, ConnectionT connection) {
+  protected Span onConnection(Span span, CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER, dbUser(connection));
     span.setAttribute(SemanticAttributes.DB_NAME, dbName(connection));
     span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, dbConnectionString(connection));
@@ -98,7 +98,7 @@ public abstract class DatabaseClientTracer<ConnectionT, QueryT> extends BaseTrac
     }
   }
 
-  protected void setNetSemanticConvention(Span span, ConnectionT connection) {
+  protected void setNetSemanticConvention(Span span, CONNECTION connection) {
     NetPeerUtils.setNetPeer(span, peerAddress(connection));
   }
 
@@ -106,25 +106,25 @@ public abstract class DatabaseClientTracer<ConnectionT, QueryT> extends BaseTrac
     span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
   }
 
-  protected abstract String normalizeQuery(QueryT query);
+  protected abstract String normalizeQuery(QUERY query);
 
-  protected abstract String dbSystem(ConnectionT connection);
+  protected abstract String dbSystem(CONNECTION connection);
 
-  protected String dbUser(ConnectionT connection) {
+  protected String dbUser(CONNECTION connection) {
     return null;
   }
 
-  protected String dbName(ConnectionT connection) {
+  protected String dbName(CONNECTION connection) {
     return null;
   }
 
-  protected String dbConnectionString(ConnectionT connection) {
+  protected String dbConnectionString(CONNECTION connection) {
     return null;
   }
 
-  protected abstract InetSocketAddress peerAddress(ConnectionT connection);
+  protected abstract InetSocketAddress peerAddress(CONNECTION connection);
 
-  protected String spanName(ConnectionT connection, QueryT query, String normalizedQuery) {
+  protected String spanName(CONNECTION connection, QUERY query, String normalizedQuery) {
     if (normalizedQuery != null) {
       return normalizedQuery;
     }
