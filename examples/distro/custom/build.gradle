@@ -1,37 +1,30 @@
 plugins {
-    id "java"
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+  id "java"
+  id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
 dependencies {
-    implementation("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
-    implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-spi:${versions.opentelemetryJavaagent}")
-    implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagent}")
-
-    implementation deps.bytebuddy
-    implementation deps.bytebuddyagent
-    annotationProcessor deps.autoservice
-    implementation deps.autoservice
-
-    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-spi:${versions.opentelemetryJavaagent}")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagent}")
 }
 
 tasks {
-    shadowJar {
-        mergeServiceFiles()
+  shadowJar {
+    mergeServiceFiles()
 
-        exclude("**/module-info.class")
+    exclude("**/module-info.class")
 
-        // Prevents conflict with other SLF4J instances. Important for premain.
-        relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
-        // rewrite dependencies calling Logger.getLogger
-        relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
+    // Prevents conflict with other SLF4J instances. Important for premain.
+    relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
+    // rewrite dependencies calling Logger.getLogger
+    relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-        // prevents conflict with library instrumentation
-        relocate("io.opentelemetry.instrumentation.api", "io.opentelemetry.javaagent.shaded.instrumentation.api")
+    // prevents conflict with library instrumentation
+    relocate("io.opentelemetry.instrumentation.api", "io.opentelemetry.javaagent.shaded.instrumentation.api")
 
-        // relocate OpenTelemetry API
-        relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-        relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
-    }
+    // relocate OpenTelemetry API
+    relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
+    relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+  }
 }

@@ -1,16 +1,13 @@
 package com.example.javaagent.instrumentation;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.tooling.ClassLoaderMatcher;
 import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers;
+import io.opentelemetry.javaagent.tooling.matcher.NameMatchers;
 import java.util.Map;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * This is a demo instrumentation which hooks into servlet invocation and modifies the http response.
@@ -40,22 +38,22 @@ public final class DemoServlet3Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("javax.servlet.http.HttpServlet");
+    return ClassLoaderMatcher.hasClassesNamed("javax.servlet.http.HttpServlet");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-        namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
+    return AgentElementMatchers.safeHasSuperType(
+        NameMatchers.namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        namedOneOf("doFilter", "service")
-            .and(takesArgument(0, named("javax.servlet.ServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.ServletResponse")))
-            .and(isPublic()),
+        NameMatchers.namedOneOf("doFilter", "service")
+            .and(ElementMatchers.takesArgument(0, ElementMatchers.named("javax.servlet.ServletRequest")))
+            .and(ElementMatchers.takesArgument(1, ElementMatchers.named("javax.servlet.ServletResponse")))
+            .and(ElementMatchers.isPublic()),
         DemoServlet3Instrumentation.class.getName() + "$DemoServlet3Advice");
   }
 

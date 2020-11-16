@@ -6,25 +6,47 @@ configurations {
 }
 dependencies {
   customShadow project(path: ":custom", configuration: "shadow")
+  customShadow project(path: ":instrumentation", configuration: "shadow")
   implementation "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}:all"
 }
 
-tasks {
-  processResources {
-    dependsOn(configurations.customShadow)
-    with copySpec {
-      from(zipTree(configurations.customShadow.files.first())) {
+CopySpec isolateSpec() {
+  return copySpec {
+    configurations.customShadow.files.each {
+      from(zipTree(it)) {
         into("inst")
         rename("(^.*)\\.class\$", "\$1.classdata")
       }
     }
   }
+}
 
+
+tasks {
   shadowJar {
+    dependsOn ':custom:shadowJar'
+    dependsOn ':instrumentation:shadowJar'
+    with isolateSpec()
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     mergeServiceFiles {
       include("inst/META-INF/services/*")
     }
     exclude("**/module-info.class")
+
+    // Prevents conflict with other SLF4J instances. Important for premain.
+    relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
+    // rewrite dependencies calling Logger.getLogger
+    relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
+
+    // prevents conflict with library instrumentation
+    relocate("io.opentelemetry.instrumentation.api", "io.opentelemetry.javaagent.shaded.instrumentation.api")
+
+    // relocate OpenTelemetry API
+    relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
+    relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+
     manifest {
       attributes.put("Main-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")
       attributes.put("Agent-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")

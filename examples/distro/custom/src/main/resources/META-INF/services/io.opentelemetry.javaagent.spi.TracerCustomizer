@@ -1,1 +1,1 @@
-io.opentelemetry.demo.DemoTracerCustomizer
+com.example.javaagent.DemoTracerCustomizer
