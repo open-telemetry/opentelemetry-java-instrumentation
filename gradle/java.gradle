@@ -16,6 +16,9 @@ afterEvaluate {
   }
 }
 
+// Version to use to compile code and run tests.
+def DEFAULT_JAVA_VERSION = 11
+
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
     //TODO why some tests fail on java 11 if jacoco is present?
@@ -37,6 +40,11 @@ if (project.hasProperty("minJavaVersionForTests")) {
 java {
   sourceCompatibility = JavaVersion.toVersion(project.ext.release)
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
+
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(Math.max(project.ext.release.majorVersion.toInteger(), DEFAULT_JAVA_VERSION))
+  }
+
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
   disableAutoTargetJvm()
   withJavadocJar()
@@ -44,13 +52,13 @@ java {
 }
 
 tasks.withType(JavaCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 tasks.withType(GroovyCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 tasks.withType(ScalaCompile) {
-  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+  options.release = project.ext.release.majorVersion.toInteger()
 }
 
 apply plugin: "eclipse"
@@ -175,39 +183,6 @@ project.afterEvaluate {
   }
 }
 
-if (!rootProject.ext.has("javaExecutableVersionCache")) {
-  rootProject.ext.javaExecutableVersionCache = [:]
-}
-
-/**
- * Returns version of java from a given java home.
- */
-JavaVersion getJavaHomeVersion(String javaHome) {
-  def cache = rootProject.ext.javaExecutableVersionCache
-  if (cache.containsKey(javaHome)) {
-    return cache.get(javaHome)
-  }
-  new ByteArrayOutputStream().withStream { stream ->
-    exec {
-      commandLine = [toExecutable(javaHome), "-version"]
-      errorOutput = stream
-    }
-    def output = stream.toString()
-    for (def line : output.split('\n')) {
-      line = line.trim()
-      def matcher = line =~ /^(?:java|openjdk) version "([^"]+)"/
-      if (matcher) {
-        def version = JavaVersion.toVersion(matcher.group(1))
-        cache.put(javaHome, version)
-        return version
-      }
-    }
-
-    // Getting here means we didn't find a line matching the version pattern.
-    throw new GradleScriptException("Cannot determine java version. Executable: ${javaHome}, output: ${output}", null)
-  }
-}
-
 def isJavaVersionAllowed(JavaVersion version) {
   if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
     return false
@@ -218,28 +193,15 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
-/**
- * For a given java home return the location of java executable
- */
-static String toExecutable(String javaHome) {
-  return Objects.requireNonNull(javaHome) + "/bin/java"
-}
-
-/**
- * Returns java home for a given version or {@code null} if not found
- */
-String findJavaHome(JavaVersion version) {
-  def javaHome = System.getenv("JAVA_${version.majorVersion}_HOME")
-  if (javaHome == null) {
-    return null
+// We default to testing with Java 11 for most tests, but some tests don't support it, where we change
+// the default test task's version so commands like `./gradlew check` can test all projects regardless
+// of Java version.
+if (!isJavaVersionAllowed(JavaVersion.toVersion(DEFAULT_JAVA_VERSION))) {
+  tasks.withType(Test) {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
+    }
   }
-  def foundVersion = getJavaHomeVersion(javaHome)
-  return version == foundVersion ? javaHome : null
-}
-
-ext {
-  findJavaHome = this.&findJavaHome
-  toExecutable = this.&toExecutable
 }
 
 def addTestRule(String testTaskName) {
@@ -250,15 +212,11 @@ def addTestRule(String testTaskName) {
       def gradleJavaVersion = JavaVersion.current()
 
       if (gradleJavaVersion != requestedJavaVersion) {
-        def javaHomeForTests = findJavaHome(requestedJavaVersion)
-        if (javaHomeForTests != null) {
-
-          tasks.withType(Test).all {
-            executable = toExecutable(javaHomeForTests)
-            enabled = isJavaVersionAllowed(requestedJavaVersion)
+        tasks.withType(Test).all {
+          javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
           }
-        } else {
-          throw new BuildCancelledException("Requested java version $requestedJavaVersion not found")
+          enabled = isJavaVersionAllowed(requestedJavaVersion)
         }
       }
 
@@ -272,7 +230,6 @@ def addTestRule(String testTaskName) {
 }
 
 addTestRule("test")
-addTestRule("latestDepTest")
 
 tasks.withType(Test).configureEach {
   useJUnitPlatform()
@@ -281,9 +238,8 @@ tasks.withType(Test).configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout = Duration.ofMinutes(15)
 
-  // Disable all tests if current JVM doesn't match version requirements
   // Disable all tests if skipTests property was specified
-  enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
+  enabled = !project.rootProject.hasProperty("skipTests")
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
