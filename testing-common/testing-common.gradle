@@ -22,6 +22,8 @@ dependencies {
   api deps.spock
 
   implementation deps.opentelemetryApi
+  implementation deps.opentelemetryProto
+  implementation deps.opentelemetrySdkTesting
   implementation deps.bytebuddy
   implementation deps.bytebuddyagent
   implementation deps.slf4j
@@ -34,10 +36,10 @@ dependencies {
   //TODO replace with Servlet API?
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
-  implementation project(':javaagent-bootstrap')
+  compileOnly project(':javaagent-bootstrap')
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
-  implementation(project(':javaagent-tooling')) {
+  compileOnly(project(':javaagent-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }

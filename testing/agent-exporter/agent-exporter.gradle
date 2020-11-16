@@ -1,0 +1,36 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  compileOnly(project(':javaagent-spi'))
+  compileOnly(deps.opentelemetrySdk)
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  implementation project(':javaagent-tooling')
+  implementation deps.opentelemetryProto
+  implementation deps.opentelemetryOtlp
+  implementation group: 'io.grpc', name: 'grpc-testing', version: '1.30.2'
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+}

@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
+import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
@@ -179,7 +180,7 @@ public abstract class AgentTestRunner extends Specification {
   public void beforeTest() {
     assert !Span.current().getSpanContext().isValid()
         : "Span is active before test has started: " + Span.current();
-    TEST_WRITER.clear();
+    AgentTestingExporterAccess.reset();
   }
 
   /** See comment for {@code #setupBeforeTests} above. */

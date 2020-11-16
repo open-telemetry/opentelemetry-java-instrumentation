@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributeConsumer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -25,28 +26,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class InMemoryExporter implements SpanProcessor {
 
   private static final Logger log = LoggerFactory.getLogger(InMemoryExporter.class);
-
-  private final List<List<SpanData>> traces = new ArrayList<>(); // guarded by tracesLock
-
-  private boolean needsTraceSorting; // guarded by tracesLock
-  private final Set<String> needsSpanSorting = new HashSet<>(); // guarded by tracesLock
-
-  private final Object tracesLock = new Object();
 
   // not using span startEpochNanos since that is not strictly increasing so can lead to ties
   private final Map<String, Integer> spanOrders = new ConcurrentHashMap<>();
@@ -65,10 +57,6 @@ public class InMemoryExporter implements SpanProcessor {
         sd.getTraceId(),
         sd.getParentSpanId(),
         sd.getInstrumentationLibraryInfo());
-    synchronized (tracesLock) {
-      spanOrders.put(
-          readWriteSpan.getSpanContext().getSpanIdAsHexString(), nextSpanOrder.getAndIncrement());
-    }
   }
 
   @Override
@@ -77,43 +65,7 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   @Override
-  public void onEnd(ReadableSpan readableSpan) {
-    SpanData sd = readableSpan.toSpanData();
-    log.debug(
-        "<<<{} SPAN END: {} id={} traceid={} parent={}, library={}, attributes={}",
-        sd.getEndEpochNanos(),
-        sd.getName(),
-        sd.getSpanId(),
-        sd.getTraceId(),
-        sd.getParentSpanId(),
-        sd.getInstrumentationLibraryInfo(),
-        printSpanAttributes(sd));
-    SpanData span = readableSpan.toSpanData();
-    synchronized (tracesLock) {
-      if (!spanOrders.containsKey(span.getSpanId())) {
-        // this happens on some tests where there are sporadic background traces,
-        // e.g. Elasticsearch "RefreshAction"
-        log.debug("span ended that was started prior to clear(): {}", span);
-        return;
-      }
-      boolean found = false;
-      for (List<SpanData> trace : traces) {
-        if (trace.get(0).getTraceId().equals(span.getTraceId())) {
-          trace.add(span);
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        List<SpanData> trace = new CopyOnWriteArrayList<>();
-        trace.add(span);
-        traces.add(trace);
-        needsTraceSorting = true;
-      }
-      needsSpanSorting.add(span.getTraceId());
-      tracesLock.notifyAll();
-    }
-  }
+  public void onEnd(ReadableSpan readableSpan) {}
 
   private String printSpanAttributes(SpanData sd) {
     final StringBuilder attributes = new StringBuilder();
@@ -134,30 +86,16 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   public List<List<SpanData>> getTraces() {
-    synchronized (tracesLock) {
-      // important not to sort trace or span lists in place so that any tests that are currently
-      // iterating over them are not affected
-      if (needsTraceSorting) {
-        sortTraces();
-        needsTraceSorting = false;
-      }
-      if (!needsSpanSorting.isEmpty()) {
-        for (int i = 0; i < traces.size(); i++) {
-          List<SpanData> trace = traces.get(i);
-          if (needsSpanSorting.contains(trace.get(0).getTraceId())) {
-            traces.set(i, sort(trace));
-          }
-        }
-        needsSpanSorting.clear();
-      }
-      // always return a copy so that future structural changes cannot cause race conditions during
-      // test verification
-      List<List<SpanData>> copy = new ArrayList<>(traces.size());
-      for (List<SpanData> trace : traces) {
-        copy.add(new ArrayList<>(trace));
-      }
-      return copy;
+    List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
+    List<List<SpanData>> traces =
+        new ArrayList<>(
+            spans.stream().collect(Collectors.groupingBy(SpanData::getTraceId)).values());
+    sortTraces(traces);
+    for (int i = 0; i < traces.size(); i++) {
+      List<SpanData> trace = traces.get(i);
+      traces.set(i, sort(trace));
     }
+    return traces;
   }
 
   public void waitForTraces(int number) throws InterruptedException, TimeoutException {
@@ -166,28 +104,26 @@ public class InMemoryExporter implements SpanProcessor {
 
   public List<List<SpanData>> waitForTraces(int number, Predicate<List<SpanData>> excludes)
       throws InterruptedException, TimeoutException {
-    synchronized (tracesLock) {
-      long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
-      List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
-      while (traces.size() < number && remainingWaitMillis > 0) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        tracesLock.wait(remainingWaitMillis);
-        remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        traces = getCompletedAndFilteredTraces(excludes);
-      }
-      if (traces.size() < number) {
-        throw new TimeoutException(
-            "Timeout waiting for "
-                + number
-                + " completed/filtered trace(s), found "
-                + traces.size()
-                + " completed/filtered trace(s) and "
-                + traces.size()
-                + " total trace(s): "
-                + traces);
-      }
-      return traces;
+    long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
+    List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
+    while (traces.size() < number && remainingWaitMillis > 0) {
+      Stopwatch stopwatch = Stopwatch.createStarted();
+      Thread.sleep(remainingWaitMillis);
+      remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
+      traces = getCompletedAndFilteredTraces(excludes);
     }
+    if (traces.size() < number) {
+      throw new TimeoutException(
+          "Timeout waiting for "
+              + number
+              + " completed/filtered trace(s), found "
+              + traces.size()
+              + " completed/filtered trace(s) and "
+              + traces.size()
+              + " total trace(s): "
+              + traces);
+    }
+    return traces;
   }
 
   private List<List<SpanData>> getCompletedAndFilteredTraces(Predicate<List<SpanData>> excludes) {
@@ -200,13 +136,7 @@ public class InMemoryExporter implements SpanProcessor {
     return traces;
   }
 
-  public void clear() {
-    synchronized (tracesLock) {
-      traces.clear();
-      spanOrders.clear();
-    }
-    forceFlushCalled = false;
-  }
+  public void clear() {}
 
   @Override
   public CompletableResultCode shutdown() {
@@ -224,7 +154,7 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   // must be called under tracesLock
-  private void sortTraces() {
+  private void sortTraces(List<List<SpanData>> traces) {
     Collections.sort(
         traces,
         new Comparator<List<SpanData>>() {

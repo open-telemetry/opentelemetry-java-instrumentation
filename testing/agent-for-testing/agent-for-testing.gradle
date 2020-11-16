@@ -1,0 +1,80 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+jar {
+  manifest {
+    attributes(
+      "Main-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Agent-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Premain-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Can-Redefine-Classes": true,
+      "Can-Retransform-Classes": true,
+    )
+  }
+}
+
+CopySpec isolateSpec(Collection<Jar> shadowJarTasks) {
+  return copySpec {
+    from({ shadowJarTasks.collect { zipTree(it.archiveFile) } }) {
+      // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
+      into 'inst'
+      rename '(^.*)\\.class$', '$1.classdata'
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename '^LICENSE$', 'LICENSE.renamed'
+    }
+  }
+}
+
+configurations {
+  shadowInclude
+}
+
+shadowJar {
+  configurations = [project.configurations.shadowInclude]
+  archiveFileName = 'javaagent-for-testing.jar'
+
+  dependsOn ':testing:agent-exporter:shadowJar'
+  with isolateSpec([project(':testing:agent-exporter').tasks.shadowJar])
+
+  manifest {
+    inheritFrom project.tasks.jar.manifest
+  }
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
+
+  // prevents conflict with library instrumentation
+  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
+
+  // relocate OpenTelemetry API
+  relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+}
+
+dependencies {
+  // Dependencies to include without obfuscation.
+  shadowInclude project(':javaagent-bootstrap')
+
+  testImplementation project(':testing-common')
+  testImplementation deps.opentelemetryApi
+}
+
+tasks.withType(Test).configureEach {
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dnet.bytebuddy.raw=true"
+  jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
+  jvmArgs "-Dotel.initializer.jar=${project(':instrumentation:opentelemetry-api-beta').tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
+
+  dependsOn shadowJar
+  dependsOn ":instrumentation:opentelemetry-api-beta:shadowJar"
+}

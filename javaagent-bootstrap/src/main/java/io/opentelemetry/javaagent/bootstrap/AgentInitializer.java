@@ -41,6 +41,7 @@ public class AgentInitializer {
     log = LoggerFactory.getLogger(AgentInitializer.class);
   }
 
+  // Accessed via reflection from tests.
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
 

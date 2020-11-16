@@ -47,6 +47,8 @@ include ':instrumentation-api'
 include ':javaagent-api'
 
 // misc
+include ':testing:agent-exporter'
+include ':testing:agent-for-testing'
 include ':testing-bootstrap'
 include ':testing-common'
 include ':utils:test-utils'
