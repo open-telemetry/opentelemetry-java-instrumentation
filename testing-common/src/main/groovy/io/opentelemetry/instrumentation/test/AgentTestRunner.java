@@ -21,25 +21,18 @@ import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
+import io.opentelemetry.javaagent.bootstrap.TransformationListener;
+import io.opentelemetry.javaagent.testing.common.AgentInstallerAccess;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import net.bytebuddy.agent.ByteBuddyAgent;
-import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -82,11 +75,8 @@ public abstract class AgentTestRunner extends Specification {
 
   protected static final Tracer TEST_TRACER;
 
-  private static final ElementMatcher.Junction<TypeDescription> GLOBAL_LIBRARIES_IGNORES_MATCHER =
-      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
-
   protected static final Set<String> TRANSFORMED_CLASSES_NAMES = Sets.newConcurrentHashSet();
-  protected static final Set<TypeDescription> TRANSFORMED_CLASSES_TYPES =
+  protected static final Set<String> TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED =
       Sets.newConcurrentHashSet();
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger(0);
   private static final TestRunnerListener TEST_LISTENER = new TestRunnerListener();
@@ -95,7 +85,7 @@ public abstract class AgentTestRunner extends Specification {
   private static volatile ClassFileTransformer activeTransformer = null;
 
   static {
-    INSTRUMENTATION = ByteBuddyAgent.install();
+    INSTRUMENTATION = AgentInstallerAccess.getInstrumentation();
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
@@ -131,11 +121,7 @@ public abstract class AgentTestRunner extends Specification {
    * @return true if the test should fail because of this error.
    */
   protected boolean onInstrumentationError(
-      String typeName,
-      ClassLoader classLoader,
-      JavaModule module,
-      boolean loaded,
-      Throwable throwable) {
+      String typeName, ClassLoader classLoader, Throwable throwable) {
     log.error(
         "Unexpected instrumentation error when instrumenting {} on {}",
         typeName,
@@ -171,7 +157,7 @@ public abstract class AgentTestRunner extends Specification {
 
     if (activeTransformer == null) {
       activeTransformer =
-          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
+          AgentInstallerAccess.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
     }
     TEST_LISTENER.activateTest(this);
   }
@@ -219,15 +205,9 @@ public abstract class AgentTestRunner extends Specification {
     // Cleanup before assertion.
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
-
-    List<TypeDescription> ignoredClassesTransformed = new ArrayList<>();
-    for (TypeDescription type : TRANSFORMED_CLASSES_TYPES) {
-      if (GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)) {
-        ignoredClassesTransformed.add(type);
-      }
-    }
-    assert ignoredClassesTransformed.isEmpty()
-        : "Transformed classes match global libraries ignore matcher: " + ignoredClassesTransformed;
+    assert TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED.isEmpty()
+        : "Transformed classes match global libraries ignore matcher: "
+            + TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED;
   }
 
   public static void assertTraces(
@@ -252,7 +232,7 @@ public abstract class AgentTestRunner extends Specification {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
-  public static class TestRunnerListener implements AgentBuilder.Listener {
+  public static class TestRunnerListener implements TransformationListener {
     private static final List<AgentTestRunner> activeTests = new CopyOnWriteArrayList<>();
 
     public void activateTest(AgentTestRunner testRunner) {
@@ -264,8 +244,7 @@ public abstract class AgentTestRunner extends Specification {
     }
 
     @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
+    public void onDiscovery(String typeName, ClassLoader classLoader) {
       for (AgentTestRunner testRunner : activeTests) {
         if (!testRunner.shouldTransformClass(typeName, classLoader)) {
           throw new AbortTransformationException(
@@ -275,43 +254,24 @@ public abstract class AgentTestRunner extends Specification {
     }
 
     @Override
-    public void onTransformation(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded,
-        DynamicType dynamicType) {
-      TRANSFORMED_CLASSES_NAMES.add(typeDescription.getActualName());
-      TRANSFORMED_CLASSES_TYPES.add(typeDescription);
+    public void onTransformation(String actualName, boolean matchedGlobalIgnoreMatcher) {
+      TRANSFORMED_CLASSES_NAMES.add(actualName);
+      if (matchedGlobalIgnoreMatcher) {
+        TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED.add(actualName);
+      }
     }
 
     @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {}
-
-    @Override
-    public void onError(
-        String typeName,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded,
-        Throwable throwable) {
+    public void onError(String typeName, ClassLoader classLoader, Throwable throwable) {
       if (!(throwable instanceof AbortTransformationException)) {
         for (AgentTestRunner testRunner : activeTests) {
-          if (testRunner.onInstrumentationError(typeName, classLoader, module, loaded, throwable)) {
+          if (testRunner.onInstrumentationError(typeName, classLoader, throwable)) {
             INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
             break;
           }
         }
       }
     }
-
-    @Override
-    public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
     /** Used to signal that a transformation was intentionally aborted and is not an error. */
     public static class AbortTransformationException extends RuntimeException {

@@ -2,11 +2,11 @@ package io.opentelemetry.javaagent.testing.common;
 
 import static java.lang.invoke.MethodType.methodType;
 
+import io.opentelemetry.javaagent.bootstrap.TransformationListener;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import net.bytebuddy.agent.builder.AgentBuilder;
 
 public final class AgentInstallerAccess {
 
@@ -30,9 +30,7 @@ public final class AgentInstallerAccess {
                   ClassFileTransformer.class,
                   Instrumentation.class,
                   boolean.class,
-                  // TODO(anuraaga): Probably doesn't work since AgentBuilder.Listener not compatible
-                  // across classloader.
-                  AgentBuilder.Listener[].class));
+                  TransformationListener[].class));
     } catch (Throwable t) {
       throw new Error("Could not load agent installer.", t);
     }
@@ -49,7 +47,7 @@ public final class AgentInstallerAccess {
   public static ClassFileTransformer installBytebuddyAgent(
       Instrumentation inst,
       boolean skipAdditionalLibraryMatcher,
-      AgentBuilder.Listener... listeners) {
+      TransformationListener... listeners) {
     try {
       return (ClassFileTransformer)
           installBytebuddyAgent.invoke(inst, skipAdditionalLibraryMatcher, listeners);
