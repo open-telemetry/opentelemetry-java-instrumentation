@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.logback.v1_0_0;
+package io.opentelemetry.instrumentation.logback.v1_0;
 
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
@@ -16,7 +16,7 @@ import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.instrumentation.logback.v1_0_0.internal.UnionMap;
+import io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
