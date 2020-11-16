@@ -123,3 +123,5 @@ tasks.withType(Test).configureEach {
 
   dependsOn shadowJar
 }
+
+assemble.dependsOn shadowJar
