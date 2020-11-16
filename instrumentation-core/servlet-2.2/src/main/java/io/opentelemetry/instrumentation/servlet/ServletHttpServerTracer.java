@@ -20,8 +20,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ServletHttpServerTracer<RESPONSE>
-    extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
+public abstract class ServletHttpServerTracer<ResponseT>
+    extends HttpServerTracer<
+        HttpServletRequest, ResponseT, HttpServletRequest, HttpServletRequest> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 

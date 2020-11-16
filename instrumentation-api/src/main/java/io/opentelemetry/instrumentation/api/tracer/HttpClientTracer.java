@@ -22,7 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseTracer {
+public abstract class HttpClientTracer<RequestT, CarrierT, ResponseT> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -30,26 +30,26 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
-  protected abstract String method(REQUEST request);
+  protected abstract String method(RequestT request);
 
   @Nullable
-  protected abstract URI url(REQUEST request) throws URISyntaxException;
+  protected abstract URI url(RequestT request) throws URISyntaxException;
 
   @Nullable
-  protected String flavor(REQUEST request) {
+  protected String flavor(RequestT request) {
     // This is de facto standard nowadays, so let us use it, unless overridden
     return "1.1";
   }
 
-  protected abstract Integer status(RESPONSE response);
+  protected abstract Integer status(ResponseT response);
 
   @Nullable
-  protected abstract String requestHeader(REQUEST request, String name);
+  protected abstract String requestHeader(RequestT request, String name);
 
   @Nullable
-  protected abstract String responseHeader(RESPONSE response, String name);
+  protected abstract String responseHeader(ResponseT response, String name);
 
-  protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
+  protected abstract TextMapPropagator.Setter<CarrierT> getSetter();
 
   protected HttpClientTracer() {
     super();
@@ -59,18 +59,18 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super(tracer);
   }
 
-  public Span startSpan(REQUEST request) {
+  public Span startSpan(RequestT request) {
     return startSpan(request, -1);
   }
 
-  public Span startSpan(REQUEST request, long startTimeNanos) {
+  public Span startSpan(RequestT request, long startTimeNanos) {
     return startSpan(request, spanNameForRequest(request), startTimeNanos);
   }
 
-  public Scope startScope(Span span, CARRIER carrier) {
+  public Scope startScope(Span span, CarrierT carrier) {
     Context context = Context.current().with(span);
 
-    Setter<CARRIER> setter = getSetter();
+    Setter<CarrierT> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
@@ -80,21 +80,21 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return context.makeCurrent();
   }
 
-  public void end(Span span, RESPONSE response) {
+  public void end(Span span, ResponseT response) {
     end(span, response, -1);
   }
 
-  public void end(Span span, RESPONSE response, long endTimeNanos) {
+  public void end(Span span, ResponseT response, long endTimeNanos) {
     onResponse(span, response);
     super.end(span, endTimeNanos);
   }
 
-  public void endExceptionally(Span span, RESPONSE response, Throwable throwable) {
+  public void endExceptionally(Span span, ResponseT response, Throwable throwable) {
     endExceptionally(span, response, throwable, -1);
   }
 
   public void endExceptionally(
-      Span span, RESPONSE response, Throwable throwable, long endTimeNanos) {
+      Span span, ResponseT response, Throwable throwable, long endTimeNanos) {
     onResponse(span, response);
     super.endExceptionally(span, throwable, endTimeNanos);
   }
@@ -103,7 +103,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
    * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
    * Context}, or an invalid {@link Span} otherwise.
    */
-  private Span startSpan(REQUEST request, String name, long startTimeNanos) {
+  private Span startSpan(RequestT request, String name, long startTimeNanos) {
     Context context = Context.current();
     Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 
@@ -121,7 +121,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return span;
   }
 
-  protected Span onRequest(Span span, REQUEST request) {
+  protected Span onRequest(Span span, RequestT request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
@@ -134,7 +134,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return span;
   }
 
-  private void setFlavor(Span span, REQUEST request) {
+  private void setFlavor(Span span, RequestT request) {
     String flavor = flavor(request);
     if (flavor == null) {
       return;
@@ -148,7 +148,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
-  private void setUrl(Span span, REQUEST request) {
+  private void setUrl(Span span, RequestT request) {
     try {
       URI url = url(request);
       if (url != null) {
@@ -160,7 +160,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     }
   }
 
-  protected Span onResponse(Span span, RESPONSE response) {
+  protected Span onResponse(Span span, ResponseT response) {
     assert span != null;
     if (response != null) {
       Integer status = status(response);
@@ -172,7 +172,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return span;
   }
 
-  protected String spanNameForRequest(REQUEST request) {
+  protected String spanNameForRequest(RequestT request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

@@ -17,14 +17,14 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.WriteCompletionEvent;
 
 public class CombinedSimpleChannelHandler<
-        Upstream extends SimpleChannelUpstreamHandler,
-        Downstream extends SimpleChannelDownstreamHandler>
+        UpstreamT extends SimpleChannelUpstreamHandler,
+        DownstreamT extends SimpleChannelDownstreamHandler>
     extends SimpleChannelHandler {
 
-  private final Upstream upstream;
-  private final Downstream downstream;
+  private final UpstreamT upstream;
+  private final DownstreamT downstream;
 
-  public CombinedSimpleChannelHandler(Upstream upstream, Downstream downstream) {
+  public CombinedSimpleChannelHandler(UpstreamT upstream, DownstreamT downstream) {
     this.upstream = upstream;
     this.downstream = downstream;
   }
