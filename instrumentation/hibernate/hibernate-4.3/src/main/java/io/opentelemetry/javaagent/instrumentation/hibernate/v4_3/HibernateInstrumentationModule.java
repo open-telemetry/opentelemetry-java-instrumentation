@@ -19,7 +19,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class HibernateInstrumentationModule extends InstrumentationModule {
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-core");
+    super("hibernate", "hibernate-4.3");
   }
 
   @Override

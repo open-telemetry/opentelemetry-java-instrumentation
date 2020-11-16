@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OkHttp2InstrumentationModule extends InstrumentationModule {
   public OkHttp2InstrumentationModule() {
-    super("okhttp", "okhttp-2");
+    super("okhttp", "okhttp-2.2");
   }
 
   @Override

@@ -38,7 +38,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
-    super("httpclient", "apache-httpclient", "apache-http-client");
+    super("apache-httpclient", "apache-httpclient-4.0");
   }
 
   @Override

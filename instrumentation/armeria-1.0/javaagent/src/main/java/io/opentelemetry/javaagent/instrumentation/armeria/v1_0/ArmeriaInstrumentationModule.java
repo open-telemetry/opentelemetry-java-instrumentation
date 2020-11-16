@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ArmeriaInstrumentationModule extends InstrumentationModule {
   public ArmeriaInstrumentationModule() {
-    super("armeria");
+    super("armeria", "armeria-1.0");
   }
 
   @Override

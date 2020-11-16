@@ -20,7 +20,7 @@ import java.util.concurrent.Callable;
 @AutoService(InstrumentationModule.class)
 public class AkkaContextPropagationInstrumentationModule extends InstrumentationModule {
   public AkkaContextPropagationInstrumentationModule() {
-    super("akka_context_propagation");
+    super("akka-context-propagation", "akka-context-propagation-2.5");
   }
 
   @Override

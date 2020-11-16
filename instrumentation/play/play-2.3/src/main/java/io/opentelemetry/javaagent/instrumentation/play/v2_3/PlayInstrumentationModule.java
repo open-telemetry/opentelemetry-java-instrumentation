@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class PlayInstrumentationModule extends InstrumentationModule {
 
   public PlayInstrumentationModule() {
-    super("play", "play-action");
+    super("play", "play-2.3");
   }
 
   @Override

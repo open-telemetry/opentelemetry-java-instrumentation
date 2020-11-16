@@ -24,7 +24,7 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws");
+    super("play-ws", "play-ws-2.0");
   }
 
   @Override

@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
   public CassandraClientInstrumentationModule() {
-    super("cassandra");
+    super("cassandra", "cassandra-3.0");
   }
 
   @Override

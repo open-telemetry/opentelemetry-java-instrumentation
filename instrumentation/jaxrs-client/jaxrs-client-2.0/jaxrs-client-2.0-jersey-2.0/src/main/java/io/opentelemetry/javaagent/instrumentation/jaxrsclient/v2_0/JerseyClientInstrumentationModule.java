@@ -37,7 +37,7 @@ import org.glassfish.jersey.client.ClientRequest;
 public final class JerseyClientInstrumentationModule extends InstrumentationModule {
 
   public JerseyClientInstrumentationModule() {
-    super("jax-rs", "jaxrs", "jax-rs-client");
+    super("jaxrs", "jaxrs-2.0", "jaxrs-client", "jersey-client", "jersey-client-2.0");
   }
 
   @Override

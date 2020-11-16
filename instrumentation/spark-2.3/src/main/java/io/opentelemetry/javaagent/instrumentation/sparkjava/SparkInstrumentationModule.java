@@ -29,7 +29,7 @@ import spark.routematch.RouteMatch;
 public class SparkInstrumentationModule extends InstrumentationModule {
 
   public SparkInstrumentationModule() {
-    super("sparkjava", "sparkjava-2.4");
+    super("spark", "spark-2.3");
   }
 
   @Override

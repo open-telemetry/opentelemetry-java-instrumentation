@@ -38,7 +38,7 @@ public final class WithSpanAnnotationInstrumentationModule extends Instrumentati
       "otel.trace.annotated.methods.exclude";
 
   public WithSpanAnnotationInstrumentationModule() {
-    super("trace", "with-span-annotation");
+    super("with-span-annotation");
   }
 
   @Override

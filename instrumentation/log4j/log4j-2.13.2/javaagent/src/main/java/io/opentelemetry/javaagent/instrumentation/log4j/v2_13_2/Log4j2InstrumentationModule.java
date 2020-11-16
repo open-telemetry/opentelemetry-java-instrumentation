@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public final class Log4j2InstrumentationModule extends InstrumentationModule {
   public Log4j2InstrumentationModule() {
-    super("log4j2", "log4j", "log4j-2.13.2");
+    super("log4j", "log4j-2.13.2");
   }
 
   @Override
