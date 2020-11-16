@@ -18,9 +18,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class IBMResourceLevelInstrumentation extends InstrumentationModule {
-  public IBMResourceLevelInstrumentation() {
-    super(IBMResourceLevelInstrumentation.class.getName());
+public class IbmResourceLevelInstrumentation extends InstrumentationModule {
+  public IbmResourceLevelInstrumentation() {
+    super(IbmResourceLevelInstrumentation.class.getName());
   }
 
   @Override

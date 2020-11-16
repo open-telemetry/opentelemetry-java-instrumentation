@@ -384,6 +384,10 @@
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>
+    <property name="files" value="bytebuddy[/\\]matcher[/\\]testclasses"/>
+  </module>
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="MethodName"/>
     <property name="files" value="benchmark[/\\]src[/\\]jmh"/>
   </module>
   <module name="SuppressionSingleFilter">
