@@ -40,12 +40,14 @@
     <property name="eachLine" value="true"/>
   </module>
 
+  <!--
   <module name="LineLength">
     <property name="fileExtensions" value="java"/>
     <property name="max" value="100"/>
     <property name="ignorePattern"
       value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
   </module>
+  -->
 
   <module name="TreeWalker">
     <module name="OuterTypeFilename"/>
@@ -170,7 +172,11 @@
       <property name="option" value="nl"/>
     </module>
     <module name="PackageName">
-      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+      <!-- modified from default to support packages like
+           io.opentelemetry.javaagent.instrumentation.log4j.v2_13_2 and
+           io.opentelemetry.javaagent.instrumentation.netty.v4_1.client -->
+      <property name="format"
+        value="^[a-z]+(\.[a-z][a-z0-9]*)*(\.v[0-9]+_[0-9]+(_[0-9]+)?)?(\.[a-z][a-z0-9]*)*$"/>
       <message key="name.invalidPattern"
         value="Package name ''{0}'' must match pattern ''{1}''."/>
     </module>
@@ -210,21 +216,25 @@
       <message key="name.invalidPattern"
         value="Pattern variable name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    <!--
     <module name="ClassTypeParameterName">
       <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
       <message key="name.invalidPattern"
         value="Class type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    -->
     <module name="RecordTypeParameterName">
       <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
       <message key="name.invalidPattern"
         value="Record type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    <!--
     <module name="MethodTypeParameterName">
       <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
       <message key="name.invalidPattern"
         value="Method type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    -->
     <module name="InterfaceTypeParameterName">
       <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
       <message key="name.invalidPattern"
@@ -241,6 +251,7 @@
       <message key="ws.notPreceded"
         value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
+    <!-- this doesn't seem to be compatible with google auto-format
     <module name="Indentation">
       <property name="basicOffset" value="2"/>
       <property name="braceAdjustment" value="2"/>
@@ -249,16 +260,22 @@
       <property name="lineWrappingIndentation" value="4"/>
       <property name="arrayInitIndent" value="2"/>
     </module>
+    -->
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>
-      <property name="allowedAbbreviationLength" value="0"/>
+      <!-- modified from default to support KHttp -->
+      <property name="allowedAbbreviationLength" value="1"/>
       <property name="tokens"
         value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, ANNOTATION_DEF, ANNOTATION_FIELD_DEF,
                     PARAMETER_DEF, VARIABLE_DEF, METHOD_DEF, PATTERN_VARIABLE_DEF, RECORD_DEF,
                     RECORD_COMPONENT_DEF"/>
     </module>
+    <!--
     <module name="OverloadMethodsDeclarationOrder"/>
+    -->
+    <!-- there are only a few violations of this, and they all appear to be for good reasons
     <module name="VariableDeclarationUsageDistance"/>
+    -->
     <module name="CustomImportOrder">
       <property name="sortImportsInGroupAlphabetically" value="true"/>
       <property name="separateLineBetweenGroups" value="true"/>
@@ -322,6 +339,7 @@
       <property name="allowedAnnotations" value="Override, Test"/>
       <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF, COMPACT_CTOR_DEF"/>
     </module>
+    <!--
     <module name="MissingJavadocMethod">
       <property name="scope" value="public"/>
       <property name="minLineCount" value="2"/>
@@ -329,17 +347,22 @@
       <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF,
                                    COMPACT_CTOR_DEF"/>
     </module>
+    -->
     <module name="MethodName">
       <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9_]*$"/>
       <message key="name.invalidPattern"
         value="Method name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    <!-- this doesn't seem to be compatible with google auto-format
     <module name="SingleLineJavadoc">
       <property name="ignoreInlineTags" value="false"/>
     </module>
+    -->
+    <!--
     <module name="EmptyCatchBlock">
       <property name="exceptionVariableName" value="expected"/>
     </module>
+    -->
     <module name="CommentsIndentation">
       <property name="tokens" value="SINGLE_LINE_COMMENT, BLOCK_COMMENT_BEGIN"/>
     </module>
@@ -349,5 +372,22 @@
         default="checkstyle-xpath-suppressions.xml"/>
       <property name="optional" value="true"/>
     </module>
+    <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
+    <module name="SuppressWarningsHolder"/>
+  </module>
+  <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
+  <module name="SuppressWarningsFilter"/>
+  <!-- skip javacc generated files -->
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value=".*"/>
+    <property name="files" value="javaagent-api[/\\]build[/\\]generated[/\\]javacc"/>
+  </module>
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="MethodName"/>
+    <property name="files" value="benchmark[/\\]src[/\\]jmh"/>
+  </module>
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value=".*"/>
+    <property name="files" value="instrumentation[/\\]api[/\\]typedspan"/>
   </module>
 </module>
