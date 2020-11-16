@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
-/** Helper utils for Runnable/Callable instrumentation */
+/** Helper utils for Runnable/Callable instrumentation. */
 public class AdviceUtils {
 
   private static final Tracer TRACER =
@@ -22,7 +22,7 @@ public class AdviceUtils {
   }
 
   /**
-   * Start scope for a given task
+   * Start scope for a given task.
    *
    * @param contextStore context storage for task's state
    * @param task task to start scope for

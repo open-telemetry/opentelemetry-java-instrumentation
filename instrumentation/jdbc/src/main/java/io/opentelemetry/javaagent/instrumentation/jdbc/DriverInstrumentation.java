@@ -46,7 +46,7 @@ final class DriverInstrumentation implements TypeInstrumentation {
 
   public static class DriverAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addDBInfo(
+    public static void addDbInfo(
         @Advice.Argument(0) String url,
         @Advice.Argument(1) Properties props,
         @Advice.Return Connection connection) {
@@ -54,8 +54,8 @@ final class DriverInstrumentation implements TypeInstrumentation {
         // Exception was probably thrown.
         return;
       }
-      DBInfo dbInfo = JDBCConnectionUrlParser.parse(url, props);
-      JDBCMaps.connectionInfo.put(connection, dbInfo);
+      DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, props);
+      JdbcMaps.connectionInfo.put(connection, dbInfo);
     }
   }
 }

@@ -33,7 +33,7 @@ import io.opentelemetry.context.Scope;
  *   }
  * </pre>
  *
- * We are (slowly) migrating to a new pattern using `@Advice.Local`:
+ * <p>We are (slowly) migrating to a new pattern using `@Advice.Local`:
  *
  * <pre>
  *   &#64;Advice.OnMethodEnter(...)
@@ -57,7 +57,7 @@ import io.opentelemetry.context.Scope;
  *   }
  * </pre>
  *
- * This new pattern has the following benefits:
+ * <p>This new pattern has the following benefits:
  *
  * <ul>
  *   <li>The new pattern is more efficient since it doesn't require instantiating the {@code
@@ -66,7 +66,7 @@ import io.opentelemetry.context.Scope;
  *       CallDepthThreadLocalMap.Depth} between the methods
  * </ul>
  *
- * @deprecated
+ * @deprecated see above
  */
 @Deprecated
 public class SpanWithScope {

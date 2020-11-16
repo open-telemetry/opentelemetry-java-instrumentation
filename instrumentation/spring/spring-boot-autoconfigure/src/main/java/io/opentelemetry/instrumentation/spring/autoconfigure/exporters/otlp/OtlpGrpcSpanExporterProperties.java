@@ -12,7 +12,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link io.opentelemetry.exporter.otlp.OtlpGrpcSpanExporter}
+ * Configuration for {@link io.opentelemetry.exporter.otlp.OtlpGrpcSpanExporter}.
  *
  * <p>Get Exporter Service Name
  *

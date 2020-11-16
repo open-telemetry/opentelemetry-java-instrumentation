@@ -12,8 +12,8 @@ import net.bytebuddy.asm.Advice;
 public class RedisConnectionAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(1) RedisURI redisURI) {
-    return InstrumentationPoints.beforeConnect(redisURI);
+  public static SpanWithScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
+    return InstrumentationPoints.beforeConnect(redisUri);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -39,7 +39,7 @@ public final class Java8BytecodeBridge {
     return OpenTelemetry.getGlobalPropagators();
   }
 
-  /** Calls {@link OpenTelemetry#getGlobalTracer(String)} */
+  /** Calls {@link OpenTelemetry#getGlobalTracer(String)}. */
   public static Tracer getGlobalTracer(String name) {
     return OpenTelemetry.getGlobalTracer(name);
   }

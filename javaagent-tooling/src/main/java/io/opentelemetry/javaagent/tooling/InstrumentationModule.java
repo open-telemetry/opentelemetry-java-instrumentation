@@ -231,12 +231,12 @@ public abstract class InstrumentationModule {
     return 0;
   }
 
-  /** @return Class names of helpers to inject into the user's classloader */
+  /** Returns class names of helpers to inject into the user's classloader. */
   public String[] helperClassNames() {
     return EMPTY;
   }
 
-  /** @return Resource names to inject into the user's classloader */
+  /** Returns resource names to inject into the user's classloader. */
   public String[] helperResourceNames() {
     return EMPTY;
   }
@@ -256,7 +256,7 @@ public abstract class InstrumentationModule {
     return any();
   }
 
-  /** @return A list of all individual type instrumentation in this module. */
+  /** Returns a list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**

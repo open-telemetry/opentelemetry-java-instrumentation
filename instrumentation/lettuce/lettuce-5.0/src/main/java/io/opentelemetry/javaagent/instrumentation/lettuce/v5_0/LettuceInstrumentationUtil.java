@@ -21,9 +21,8 @@ public class LettuceInstrumentationUtil {
   /**
    * Determines whether a redis command should finish its relevant span early (as soon as tags are
    * added and the command is executed) because these commands have no return values/call backs, so
-   * we must close the span early in order to provide info for the users
+   * we must close the span early in order to provide info for the users.
    *
-   * @param command
    * @return false if the span should finish early (the command will not have a return value)
    */
   public static boolean expectsResponse(RedisCommand<?, ?, ?> command) {
@@ -32,7 +31,7 @@ public class LettuceInstrumentationUtil {
   }
 
   /**
-   * Retrieves the actual redis command name from a RedisCommand object
+   * Retrieves the actual redis command name from a RedisCommand object.
    *
    * @param command the lettuce RedisCommand object
    * @return the redis command as a string

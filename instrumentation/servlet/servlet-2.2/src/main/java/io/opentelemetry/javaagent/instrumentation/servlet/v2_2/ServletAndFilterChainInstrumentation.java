@@ -32,6 +32,7 @@ final class ServletAndFilterChainInstrumentation implements TypeInstrumentation 
     return safeHasSuperType(
         namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
   }
+
   /**
    * Here we are instrumenting the public method for HttpServlet. This should ensure that this
    * advice is always called before HttpServletInstrumentation which is instrumenting the protected

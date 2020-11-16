@@ -54,14 +54,14 @@ public class OpenTelemetryAgent {
   public static void agentmain(String agentArgs, Instrumentation inst) {
     try {
 
-      URL bootstrapURL = installBootstrapJar(inst);
+      URL bootstrapUrl = installBootstrapJar(inst);
 
       Class<?> agentInitializerClass =
           ClassLoader.getSystemClassLoader()
               .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
       Method startMethod =
           agentInitializerClass.getMethod("initialize", Instrumentation.class, URL.class);
-      startMethod.invoke(null, inst, bootstrapURL);
+      startMethod.invoke(null, inst, bootstrapUrl);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + thisClass.getName());
@@ -82,19 +82,19 @@ public class OpenTelemetryAgent {
 
   private static synchronized URL installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
-    URL javaAgentJarURL = null;
+    URL javaAgentJarUrl = null;
 
     // First try Code Source
     CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
 
     if (codeSource != null) {
-      javaAgentJarURL = codeSource.getLocation();
-      File bootstrapFile = new File(javaAgentJarURL.toURI());
+      javaAgentJarUrl = codeSource.getLocation();
+      File bootstrapFile = new File(javaAgentJarUrl.toURI());
 
       if (!bootstrapFile.isDirectory()) {
-        checkJarManifestMainClassIsThis(javaAgentJarURL);
+        checkJarManifestMainClassIsThis(javaAgentJarUrl);
         inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapFile));
-        return javaAgentJarURL;
+        return javaAgentJarUrl;
       }
     }
 
@@ -105,7 +105,7 @@ public class OpenTelemetryAgent {
     // - On IBM-based JDKs since at least 1.7
     // This prevents custom log managers from working correctly
     // Use reflection to bypass the loading of the class
-    List<String> arguments = getVMArgumentsThroughReflection();
+    List<String> arguments = getVmArgumentsThroughReflection();
 
     String agentArgument = null;
     for (String arg : arguments) {
@@ -135,14 +135,14 @@ public class OpenTelemetryAgent {
     if (!(javaagentFile.exists() || javaagentFile.isFile())) {
       throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
     }
-    javaAgentJarURL = javaagentFile.toURI().toURL();
-    checkJarManifestMainClassIsThis(javaAgentJarURL);
+    javaAgentJarUrl = javaagentFile.toURI().toURL();
+    checkJarManifestMainClassIsThis(javaAgentJarUrl);
     inst.appendToBootstrapClassLoaderSearch(new JarFile(javaagentFile));
 
-    return javaAgentJarURL;
+    return javaAgentJarUrl;
   }
 
-  private static List<String> getVMArgumentsThroughReflection() {
+  private static List<String> getVmArgumentsThroughReflection() {
     try {
       // Try Oracle-based
       Class managementFactoryHelperClass =
@@ -167,8 +167,8 @@ public class OpenTelemetryAgent {
 
     } catch (ReflectiveOperationException e) {
       try { // Try IBM-based.
-        Class VMClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
-        String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
+        Class vmClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
+        String[] argArray = (String[]) vmClass.getMethod("getVMArgs").invoke(null);
         return Arrays.asList(argArray);
       } catch (ReflectiveOperationException e1) {
         // Fallback to default

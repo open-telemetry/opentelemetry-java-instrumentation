@@ -44,6 +44,7 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
   private final ElementMatcher<? super TypeDescription.Generic> matcher;
 
   private final boolean interfacesOnly;
+
   /**
    * Creates a new matcher for a super type.
    *

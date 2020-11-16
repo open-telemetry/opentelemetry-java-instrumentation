@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
-import static io.opentelemetry.javaagent.instrumentation.jsp.JSPTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JspTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;

@@ -39,7 +39,7 @@ public class ContextPropagator {
 
   public static final ContextPropagator PROPAGATOR = new ContextPropagator();
 
-  public boolean isRMIInternalObject(ObjID id) {
+  public boolean isRmiInternalObject(ObjID id) {
     return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
   }
 
@@ -68,7 +68,7 @@ public class ContextPropagator {
     return result;
   }
 
-  /** @return true when no error happened during call */
+  /** Returns true when no error happened during call. */
   private boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {

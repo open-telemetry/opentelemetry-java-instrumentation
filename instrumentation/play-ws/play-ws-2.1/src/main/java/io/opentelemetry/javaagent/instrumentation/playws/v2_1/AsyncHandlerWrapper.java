@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

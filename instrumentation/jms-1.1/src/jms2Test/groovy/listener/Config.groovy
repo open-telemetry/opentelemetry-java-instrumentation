@@ -53,7 +53,7 @@ class Config {
     def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
     def sf = serverLocator.createSessionFactory()
     def clientSession = sf.createSession(false, false, false)
-    clientSession.createQueue("jms.queue.SpringListenerJMS2", "jms.queue.SpringListenerJMS2", true)
+    clientSession.createQueue("jms.queue.SpringListenerJms2", "jms.queue.SpringListenerJms2", true)
     clientSession.close()
     sf.close()
     serverLocator.close()

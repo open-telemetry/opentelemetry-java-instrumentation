@@ -7,7 +7,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils
+import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils
 
 class SlickTest extends AgentTestRunner {
 
@@ -40,7 +40,7 @@ class SlickTest extends AgentTestRunner {
             "$SemanticAttributes.DB_SYSTEM.key" "h2"
             "$SemanticAttributes.DB_NAME.key" SlickUtils.Db()
             "$SemanticAttributes.DB_USER.key" SlickUtils.Username()
-            "$SemanticAttributes.DB_STATEMENT.key" JDBCUtils.normalizeSql(SlickUtils.TestQuery())
+            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(SlickUtils.TestQuery())
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "h2:mem:"
           }
         }

@@ -26,8 +26,6 @@ class WrappedLambda {
   /**
    * Creates new lambda wrapper out of configuration. Supported env properties: - {@value
    * OTEL_LAMBDA_HANDLER_ENV_KEY} - lambda handler in format: package.ClassName::methodName
-   *
-   * @return
    */
   static WrappedLambda fromConfiguration() {
 

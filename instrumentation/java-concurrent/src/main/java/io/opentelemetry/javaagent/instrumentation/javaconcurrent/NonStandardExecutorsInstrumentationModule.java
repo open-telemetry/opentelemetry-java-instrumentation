@@ -43,7 +43,8 @@ public final class NonStandardExecutorsInstrumentationModule extends Instrumenta
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
-      transformers.put( // org.eclipse.jetty.util.thread.QueuedThreadPool
+      transformers.put(
+          // org.eclipse.jetty.util.thread.QueuedThreadPool
           named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
           JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
       return transformers;

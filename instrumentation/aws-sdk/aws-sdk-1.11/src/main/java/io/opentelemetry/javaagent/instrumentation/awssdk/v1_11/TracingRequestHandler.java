@@ -17,7 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 
-/** Tracing Request Handler */
+/** Tracing Request Handler. */
 public class TracingRequestHandler extends RequestHandler2 {
 
   private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
