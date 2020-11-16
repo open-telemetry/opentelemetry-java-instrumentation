@@ -91,7 +91,7 @@ public class TestClasses {
   public static class InDyAdvice {
     //    public static MethodBodyAdvice.SomeInterface indyMethod(
     //        final MethodBodyAdvice.SomeImplementation a) {
-    //      Runnable aStaticMethod = MethodBodyAdvice.B::aStaticMethod;
+    //      Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
     //      return a::someMethod;
     //    }
   }

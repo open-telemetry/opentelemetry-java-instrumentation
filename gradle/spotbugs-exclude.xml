@@ -1,51 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
   <Match>
-    <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" /> <!-- Fluent APIs trigger this -->
+    <!-- Fluent APIs trigger this -->
+    <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
   </Match>
 
   <Match>
+    <!-- ignore default encoding for auto-genned class -->
     <Class name="io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SimpleCharStream"/>
-    <Bug pattern="DM_DEFAULT_ENCODING"/> <!-- ignore default encoding for auto-genned class -->
+    <Bug pattern="DM_DEFAULT_ENCODING"/>
   </Match>
 
   <Match>
-    <Class name="io.opentelemetry.instrumentation.util.gc.GCUtils"/>
-    <Bug pattern="DM_GC"/> <!-- forced GC only used in testing -->
+    <!-- forced GC only used in testing -->
+    <Class name="io.opentelemetry.instrumentation.util.gc.GcUtils"/>
+    <Bug pattern="DM_GC"/>
   </Match>
 
   <Match>
-    <Source name="~.*\.kt" /> <!-- https://github.com/spotbugs/spotbugs/issues/573 kotlin is not well supported (yet) -->
+    <!-- https://github.com/spotbugs/spotbugs/issues/573 kotlin is not well supported (yet) -->
+    <Source name="~.*\.kt"/>
   </Match>
 
   <Match>
+    <!-- final field warnings can be ignored for this test class -->
     <Class name="~muzzle\.TestClasses.*"/>
-    <Bug
-      pattern="MS_SHOULD_BE_FINAL"/> <!-- final field warnings can be ignored for this test class -->
+    <Bug pattern="MS_SHOULD_BE_FINAL"/>
   </Match>
 
   <Match>
+    <!-- inner class serialization warning can be ignored for testing purposes -->
     <Class name="~HttpServletResponseTest\$.*"/>
-    <Bug
-      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
+    <Bug pattern="SE_BAD_FIELD_INNER_CLASS"/>
   </Match>
 
   <Match>
+    <!-- inner class serialization warning can be ignored for testing purposes -->
     <Class name="~HttpServletTest\$.*"/>
-    <Bug
-      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
+    <Bug pattern="SE_BAD_FIELD_INNER_CLASS"/>
   </Match>
 
   <Match>
+    <!-- inner class serialization warning can be ignored for testing purposes -->
     <Class name="~SpymemcachedTest\$.*"/>
-    <Bug
-      pattern="SE_BAD_FIELD_INNER_CLASS"/> <!-- inner class serialization warning can be ignored for testing purposes -->
+    <Bug pattern="SE_BAD_FIELD_INNER_CLASS"/>
   </Match>
 
   <Match>
     <Class name="io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils"/>
     <Method name="setNetPeer"
-      params="io.opentelemetry.api.trace.Span,java.lang.String,java.lang.String,int" returns="void"/>
+      params="io.opentelemetry.api.trace.Span,java.lang.String,java.lang.String,int"
+      returns="void"/>
     <Bug pattern="UC_USELESS_VOID_METHOD"/>
   </Match>
 
