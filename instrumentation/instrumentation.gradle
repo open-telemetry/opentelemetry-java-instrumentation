@@ -50,9 +50,6 @@ shadowJar {
   mergeServiceFiles()
 
   exclude '**/module-info.class'
-  //These classes are added to bootstrap classloader by javaagent module
-  exclude 'io/opentelemetry/instrumentation/api/**/*.*'
-  exclude 'io/opentelemetry/javaagent/instrumentation/api/**/*.*'
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
@@ -60,7 +57,10 @@ shadowJar {
   duplicatesStrategy = DuplicatesStrategy.FAIL
 
   dependencies {
+    //These classes are added to bootstrap classloader by javaagent module
     exclude(project(':javaagent-bootstrap'))
+    exclude(project(':instrumentation-api'))
+    exclude(project(':javaagent-api'))
   }
 
   // rewrite library instrumentation dependencies
