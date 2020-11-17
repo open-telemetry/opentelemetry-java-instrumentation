@@ -4,4 +4,4 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /work                           controllers.HomeController.doGet(workTimeMS: Option[Long], error: Option[String])
+GET     /work                           controllers.HomeController.doGet(workTimeMillis: Option[Long], error: Option[String])

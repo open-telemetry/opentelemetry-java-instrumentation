@@ -17,10 +17,10 @@ public class ConnectionFutureAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Argument(1) RedisURI redisURI,
+      @Advice.Argument(1) RedisURI redisUri,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan(redisURI, "CONNECT");
+    span = tracer().startSpan(redisUri, "CONNECT");
     scope = tracer().startScope(span);
   }
 

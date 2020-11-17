@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-import io.opentelemetry.instrumentation.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GcUtils
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,7 +51,7 @@ class PeriodicSchedulingTest extends Specification {
 
     when:
     CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, target.get(), 10, 10, MILLISECONDS, "test")
-    GCUtils.awaitGC(target)
+    GcUtils.awaitGc(target)
     Thread.sleep(1)
     def snapshot = callCount.get()
     Thread.sleep(11)

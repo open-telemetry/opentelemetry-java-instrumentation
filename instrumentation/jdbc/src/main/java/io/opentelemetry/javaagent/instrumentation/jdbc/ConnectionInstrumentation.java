@@ -47,11 +47,11 @@ final class ConnectionInstrumentation implements TypeInstrumentation {
 
   public static class ConnectionPrepareAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addDBInfo(
+    public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      SqlStatementInfo normalizedSql = JDBCUtils.normalizeAndExtractInfo(sql);
+      SqlStatementInfo normalizedSql = JdbcUtils.normalizeAndExtractInfo(sql);
       if (normalizedSql != null) {
-        JDBCMaps.preparedStatements.put(statement, normalizedSql);
+        JdbcMaps.preparedStatements.put(statement, normalizedSql);
       }
     }
   }

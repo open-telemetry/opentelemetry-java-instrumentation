@@ -43,23 +43,23 @@ class ReferenceCollectorTest extends AgentTestRunner {
     bRef.flags.contains(MinimumVisibilityFlag.PACKAGE_OR_HIGHER)
 
     // method refs
-    assertMethod bRef, 'aMethod', '(Ljava/lang/String;)Ljava/lang/String;',
+    assertMethod bRef, 'method', '(Ljava/lang/String;)Ljava/lang/String;',
       MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
       OwnershipFlag.NON_STATIC
-    assertMethod bRef, 'aMethodWithPrimitives', '(Z)V',
+    assertMethod bRef, 'methodWithPrimitives', '(Z)V',
       MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
       OwnershipFlag.NON_STATIC
-    assertMethod bRef, 'aStaticMethod', '()V',
+    assertMethod bRef, 'staticMethod', '()V',
       MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
       OwnershipFlag.STATIC
-    assertMethod bRef, 'aMethodWithArrays', '([Ljava/lang/String;)[Ljava/lang/Object;',
+    assertMethod bRef, 'methodWithArrays', '([Ljava/lang/String;)[Ljava/lang/Object;',
       MinimumVisibilityFlag.PROTECTED_OR_HIGHER,
       OwnershipFlag.NON_STATIC
 
     // field refs
     bRef.fields.isEmpty()
     aRef.fields.size() == 2
-    assertField aRef, 'b', MinimumVisibilityFlag.PACKAGE_OR_HIGHER, OwnershipFlag.NON_STATIC
+    assertField aRef, 'publicB', MinimumVisibilityFlag.PACKAGE_OR_HIGHER, OwnershipFlag.NON_STATIC
     assertField aRef, 'staticB', MinimumVisibilityFlag.PACKAGE_OR_HIGHER, OwnershipFlag.STATIC
   }
 

@@ -15,13 +15,13 @@ import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
-/** Java Runtime Metrics Utility */
+/** Java Runtime Metrics Utility. */
 public class ProcessMetrics {
   private static final String TYPE_LABEL_KEY = "type";
 
   private ProcessMetrics() {}
 
-  /** Register observers for java runtime metrics */
+  /** Register observers for java runtime metrics. */
   public static void registerObservers() {
     Meter meter = OpenTelemetry.getGlobalMeterProvider().get(ProcessMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();

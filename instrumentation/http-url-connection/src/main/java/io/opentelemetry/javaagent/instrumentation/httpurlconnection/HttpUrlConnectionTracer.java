@@ -38,8 +38,8 @@ public class HttpUrlConnectionTracer
   }
 
   @Override
-  protected String requestHeader(HttpURLConnection httpURLConnection, String name) {
-    return httpURLConnection.getRequestProperty(name);
+  protected String requestHeader(HttpURLConnection httpUrlConnection, String name) {
+    return httpUrlConnection.getRequestProperty(name);
   }
 
   @Override

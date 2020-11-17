@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -30,7 +30,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer",
       "io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
       packageName + ".StreamedAsyncHandlerWrapper"

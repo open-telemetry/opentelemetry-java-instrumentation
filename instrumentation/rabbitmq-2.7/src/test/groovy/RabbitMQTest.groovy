@@ -65,7 +65,6 @@ class RabbitMQTest extends AgentTestRunner {
       channel.close()
       conn.close()
     } catch (ShutdownSignalException ignored) {
-      // Ignore
     }
   }
 

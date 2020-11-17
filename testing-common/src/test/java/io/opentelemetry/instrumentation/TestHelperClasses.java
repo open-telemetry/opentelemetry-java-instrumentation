@@ -34,12 +34,15 @@ public class TestHelperClasses {
   public interface AnotherHelperInterface extends HelperInterface {
     void bar();
 
+    @Override
     int hashCode();
 
+    @Override
     boolean equals(Object other);
 
     Object clone();
 
+    @SuppressWarnings("checkstyle:NoFinalizer")
     void finalize();
   }
 

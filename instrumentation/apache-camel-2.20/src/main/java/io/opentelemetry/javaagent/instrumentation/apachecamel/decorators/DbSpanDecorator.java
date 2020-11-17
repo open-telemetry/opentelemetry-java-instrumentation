@@ -48,77 +48,69 @@ class DbSpanDecorator extends BaseSpanDecorator {
     switch (component) {
       case "mongodb":
       case "elasticsearch":
-        {
-          Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          if (queryParameters.containsKey("operation")) {
-            return queryParameters.get("operation");
-          }
+        Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
+        if (queryParameters.containsKey("operation")) {
+          return queryParameters.get("operation");
         }
+        return super.getOperationName(exchange, endpoint, camelDirection);
+      default:
+        return super.getOperationName(exchange, endpoint, camelDirection);
     }
-    return super.getOperationName(exchange, endpoint, camelDirection);
   }
 
   private String getStatement(Exchange exchange, Endpoint endpoint) {
     switch (component) {
       case "mongodb":
-        {
-          Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          return queryParameters.toString();
-        }
+        Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
+        return mongoParameters.toString();
       case "cql":
-        {
-          Object cql = exchange.getIn().getHeader("CamelCqlQuery");
-          if (cql != null) {
-            return cql.toString();
-          } else {
-            Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-            if (queryParameters.containsKey("cql")) {
-              return queryParameters.get("cql");
-            }
-          }
+        Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
+        if (cqlObj != null) {
+          return cqlObj.toString();
         }
+        Map<String, String> cqlParameters = toQueryParameters(endpoint.getEndpointUri());
+        if (cqlParameters.containsKey("cql")) {
+          return cqlParameters.get("cql");
+        }
+        return null;
       case "jdbc":
-        {
-          Object body = exchange.getIn().getBody();
-          if (body instanceof String) {
-            return (String) body;
-          }
+        Object body = exchange.getIn().getBody();
+        if (body instanceof String) {
+          return (String) body;
         }
+        return null;
       case "sql":
-        {
-          Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
-          if (sqlquery instanceof String) {
-            return (String) sqlquery;
-          }
+        Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
+        if (sqlquery instanceof String) {
+          return (String) sqlquery;
         }
+        return null;
+      default:
+        return null;
     }
-    return null;
   }
 
   private String getDbName(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
-        {
-          Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          return queryParameters.get("database");
-        }
+        Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
+        return mongoParameters.get("database");
       case "cql":
-        {
-          URI uri = URI.create(endpoint.getEndpointUri());
-          if (uri.getPath() != null && uri.getPath().length() > 0) {
-            // Strip leading '/' from path
-            return uri.getPath().substring(1);
-          }
+        URI uri = URI.create(endpoint.getEndpointUri());
+        if (uri.getPath() != null && uri.getPath().length() > 0) {
+          // Strip leading '/' from path
+          return uri.getPath().substring(1);
         }
+        return null;
       case "elasticsearch":
-        {
-          Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          if (queryParameters.containsKey("indexName")) {
-            return queryParameters.get("indexName");
-          }
+        Map<String, String> elasticsearchParameters = toQueryParameters(endpoint.getEndpointUri());
+        if (elasticsearchParameters.containsKey("indexName")) {
+          return elasticsearchParameters.get("indexName");
         }
+        return null;
+      default:
+        return null;
     }
-    return null;
   }
 
   @Override
