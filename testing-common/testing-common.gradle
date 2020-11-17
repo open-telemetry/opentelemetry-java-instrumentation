@@ -27,9 +27,8 @@ dependencies {
   implementation deps.slf4j
   implementation deps.testLogging
 
-  // okhttp 3.12.x is the last version to support Java7
-  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.12.12'
-  api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '3.12.12'
+  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
+  api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '4.9.0'
 
   //TODO replace with Servlet API?
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'

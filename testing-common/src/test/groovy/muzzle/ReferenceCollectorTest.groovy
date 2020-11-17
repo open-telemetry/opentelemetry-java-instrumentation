@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
-import spock.lang.Ignore
 
 class ReferenceCollectorTest extends AgentTestRunner {
   def "method body creates references"() {
@@ -90,11 +89,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
     references[MethodBodyAdvice.A.name] != null
   }
 
-  // TODO: remove ignore when we drop java 7 support.
-  @Ignore
   def "invokedynamic creates references"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InDyAdvice.name)
+    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InvokeDynamicAdvice.name)
 
     expect:
     references['muzzle.TestClasses$MethodBodyAdvice$SomeImplementation'] != null

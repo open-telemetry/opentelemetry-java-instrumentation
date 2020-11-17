@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -37,36 +37,22 @@ class SpymemcachedTest extends AgentTestRunner {
   @Shared
   def keyPrefix = "SpymemcachedTest-" + (Math.abs(new Random().nextInt())) + "-"
   @Shared
-  def defaultMemcachedPort = 11211
-  @Shared
   def timingOutMemcachedOpTimeout = 1000
 
-  /*
-    Note: type here has to stay undefined, otherwise tests will fail in CI in Java 7 because
-    'testcontainers' are built for Java 8 and Java 7 cannot load this class.
-   */
   @Shared
   def memcachedContainer
   @Shared
-  InetSocketAddress memcachedAddress = new InetSocketAddress("127.0.0.1", defaultMemcachedPort)
+  InetSocketAddress memcachedAddress
 
   def setupSpec() {
-
-    /*
-      CircleCI will provide us with memcached container running along side our build.
-      When building locally and in GitHub actions, however, we need to take matters into our own hands
-      and we use 'testcontainers' for this.
-     */
-    if ("true" != System.getenv("CIRCLECI")) {
-      memcachedContainer = new GenericContainer('memcached:latest')
-        .withExposedPorts(defaultMemcachedPort)
-        .withStartupTimeout(Duration.ofSeconds(120))
-      memcachedContainer.start()
-      memcachedAddress = new InetSocketAddress(
-        memcachedContainer.containerIpAddress,
-        memcachedContainer.getMappedPort(defaultMemcachedPort)
-      )
-    }
+    memcachedContainer = new GenericContainer('memcached:latest')
+      .withExposedPorts(11211)
+      .withStartupTimeout(Duration.ofSeconds(120))
+    memcachedContainer.start()
+    memcachedAddress = new InetSocketAddress(
+      memcachedContainer.containerIpAddress,
+      memcachedContainer.getMappedPort(11211)
+    )
   }
 
   def cleanupSpec() {

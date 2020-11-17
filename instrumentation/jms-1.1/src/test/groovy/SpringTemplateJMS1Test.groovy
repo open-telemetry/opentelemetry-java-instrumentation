@@ -20,10 +20,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.jms.core.JmsTemplate
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
-import spock.lang.Requires
 import spock.lang.Shared
 
-@Requires({ "true" != System.getenv("CIRCLECI") })
 class SpringTemplateJMS1Test extends AgentTestRunner {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJMS1Test)
 
