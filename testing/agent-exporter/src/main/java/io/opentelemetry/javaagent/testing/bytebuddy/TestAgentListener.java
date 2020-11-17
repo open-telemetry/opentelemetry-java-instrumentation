@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
@@ -59,8 +64,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
       Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   @Override
-  public void onDiscovery(String typeName, ClassLoader classLoader, JavaModule module,
-      boolean loaded) {
+  public void onDiscovery(
+      String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
     for (Function<String, Boolean> skipCondition : skipTransformationConditions) {
       if (skipCondition.apply(typeName)) {
         throw new AbortTransformationException(
@@ -70,21 +75,29 @@ public class TestAgentListener implements AgentBuilder.Listener {
   }
 
   @Override
-  public void onTransformation(TypeDescription typeDescription,
-      ClassLoader classLoader, JavaModule module, boolean loaded,
+  public void onTransformation(
+      TypeDescription typeDescription,
+      ClassLoader classLoader,
+      JavaModule module,
+      boolean loaded,
       DynamicType dynamicType) {
     transformedClassesNames.add(typeDescription.getActualName());
     transformedClassesTypes.add(typeDescription);
   }
 
   @Override
-  public void onIgnored(TypeDescription typeDescription, ClassLoader classLoader,
-      JavaModule module, boolean loaded) {
-
-  }
+  public void onIgnored(
+      TypeDescription typeDescription,
+      ClassLoader classLoader,
+      JavaModule module,
+      boolean loaded) {}
 
   @Override
-  public void onError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded,
+  public void onError(
+      String typeName,
+      ClassLoader classLoader,
+      JavaModule module,
+      boolean loaded,
       Throwable throwable) {
     if (!(throwable instanceof AbortTransformationException)) {
       logger.error(
@@ -97,10 +110,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
   }
 
   @Override
-  public void onComplete(String typeName, ClassLoader classLoader, JavaModule module,
-      boolean loaded) {
-
-  }
+  public void onComplete(
+      String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
   /** Used to signal that a transformation was intentionally aborted and is not an error. */
   private static class AbortTransformationException extends RuntimeException {

@@ -25,6 +25,7 @@ afterEvaluate {
   dependencies {
     compileOnly project(':instrumentation-api')
     compileOnly project(':javaagent-api')
+    compileOnly project(':javaagent-bootstrap')
     // Apply common dependencies for instrumentation.
     compileOnly(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
@@ -36,11 +37,9 @@ afterEvaluate {
     implementation deps.autoservice
     implementation deps.slf4j
 
-    // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
-    testImplementation project(':instrumentation:java-concurrent')
-    // FIXME: we should enable this, but currently this fails tests for google http client
-    //testImplementation project(':instrumentation:http-url-connection')
-    testImplementation project(':instrumentation:java-classloader')
+    testCompileOnly project(':instrumentation-api')
+    testCompileOnly project(':javaagent-tooling')
+    testImplementation deps.opentelemetryApi
 
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
@@ -92,6 +91,7 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dnet.bytebuddy.raw=true"
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+  jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"

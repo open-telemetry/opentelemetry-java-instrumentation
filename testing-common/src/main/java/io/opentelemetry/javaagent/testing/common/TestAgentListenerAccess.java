@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.testing.common;
 
 import static java.lang.invoke.MethodType.methodType;
@@ -5,21 +10,33 @@ import static java.lang.invoke.MethodType.methodType;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.function.Function;
 
 public class TestAgentListenerAccess {
 
   private static final MethodHandle reset;
   private static final MethodHandle getInstrumentationErrorCount;
   private static final MethodHandle getIgnoredButTransformedClassNames;
+  private static final MethodHandle addSkipTransformationCondition;
 
   static {
     try {
       MethodHandles.Lookup lookup = MethodHandles.lookup();
-      Class<?> testAgentListenerClass = AgentClassLoaderAccess.loadClass("io.opentelemetry.javaagent.testing.bytebuddy.TestAgentListener");
+      Class<?> testAgentListenerClass =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.testing.bytebuddy.TestAgentListener");
       reset = lookup.findStatic(testAgentListenerClass, "reset", methodType(void.class));
-      getInstrumentationErrorCount = lookup.findStatic(testAgentListenerClass, "getInstrumentationErrorCount", methodType(int.class));
-      getIgnoredButTransformedClassNames = lookup.findStatic(testAgentListenerClass, "getIgnoredButTransformedClassNames", methodType(
-          List.class));
+      getInstrumentationErrorCount =
+          lookup.findStatic(
+              testAgentListenerClass, "getInstrumentationErrorCount", methodType(int.class));
+      getIgnoredButTransformedClassNames =
+          lookup.findStatic(
+              testAgentListenerClass, "getIgnoredButTransformedClassNames", methodType(List.class));
+      addSkipTransformationCondition =
+          lookup.findStatic(
+              testAgentListenerClass,
+              "addSkipTransformationCondition",
+              methodType(void.class, Function.class));
     } catch (Throwable t) {
       throw new Error("Could not initialize accessors for TestAgentListener.", t);
     }
@@ -45,6 +62,14 @@ public class TestAgentListenerAccess {
   public static List<String> getIgnoredButTransformedClassNames() {
     try {
       return (List<String>) getIgnoredButTransformedClassNames.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke TestAgentListener.getIgnoredButTransformedClassNames");
+    }
+  }
+
+  public static void addSkipTransformationCondition(Function<String, Boolean> condition) {
+    try {
+      addSkipTransformationCondition.invokeExact(condition);
     } catch (Throwable t) {
       throw new Error("Could not invoke TestAgentListener.getIgnoredButTransformedClassNames");
     }

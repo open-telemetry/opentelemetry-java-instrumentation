@@ -23,6 +23,9 @@ dependencies {
   // FIXME: we should enable this, but currently this fails tests for google http client
   //testImplementation project(':instrumentation:http-url-connection')
   implementation project(':instrumentation:java-classloader')
+
+  // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
+  implementation project(':instrumentation:opentelemetry-api-beta')
 }
 
 jar.enabled = false
@@ -41,4 +44,7 @@ shadowJar {
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+
+  // this is for instrumentation on opentelemetry-api itself
+  relocate "application.io.opentelemetry", "io.opentelemetry"
 }

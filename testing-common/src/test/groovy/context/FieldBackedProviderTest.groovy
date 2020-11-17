@@ -5,27 +5,29 @@
 
 package context
 
-import static context.ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.KeyClass
-import static context.ContextTestInstrumentationModule.UntransformableKeyClass
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.util.gc.GcUtils
-import java.lang.instrument.ClassDefinition
-import java.lang.ref.WeakReference
-import java.lang.reflect.Field
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.util.concurrent.atomic.AtomicReference
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 import spock.lang.Requires
+
+import java.lang.instrument.ClassDefinition
+import java.lang.ref.WeakReference
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.lang.reflect.Modifier
+import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Function
+
+import static context.ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
+import static context.ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
+import static context.ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
+import static context.ContextTestInstrumentationModule.KeyClass
+import static context.ContextTestInstrumentationModule.UntransformableKeyClass
 
 class FieldBackedProviderTest extends AgentTestRunner {
 
@@ -45,8 +47,13 @@ class FieldBackedProviderTest extends AgentTestRunner {
   }
 
   @Override
-  protected boolean shouldTransformClass(final String className, final ClassLoader classLoader) {
-    return className == null || (!className.endsWith("UntransformableKeyClass"))
+  protected List<Function<String, Boolean>> skipTransformationConditions() {
+    return Collections.singletonList(new Function<String, Boolean>() {
+      @Override
+      Boolean apply(String s) {
+        return s != null && s.endsWith("UntransformableKeyClass")
+      }
+    })
   }
 
   def "#keyClassName structure modified = #shouldModifyStructure"() {

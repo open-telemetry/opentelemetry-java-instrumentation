@@ -58,6 +58,9 @@ shadowJar {
   // relocate OpenTelemetry API
   relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+
+  // this is for instrumentation on opentelemetry-api itself
+  relocate "application.io.opentelemetry", "io.opentelemetry"
 }
 
 dependencies {
@@ -73,8 +76,6 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dnet.bytebuddy.raw=true"
   jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
-  jvmArgs "-Dotel.initializer.jar=${project(':instrumentation:opentelemetry-api-beta').tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
 
   dependsOn shadowJar
-  dependsOn ":instrumentation:opentelemetry-api-beta:shadowJar"
 }

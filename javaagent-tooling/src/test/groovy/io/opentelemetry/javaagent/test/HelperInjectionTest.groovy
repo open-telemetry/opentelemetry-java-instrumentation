@@ -5,21 +5,20 @@
 
 package io.opentelemetry.javaagent.test
 
-import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
-import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
-
-import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
-import java.lang.ref.WeakReference
-import java.util.concurrent.atomic.AtomicReference
-import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Specification
 import spock.lang.Timeout
+
+import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicReference
+
+import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
+import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 class HelperInjectionTest extends Specification {
 
@@ -56,8 +55,6 @@ class HelperInjectionTest extends Specification {
 
   def "helpers injected on bootstrap classloader"() {
     setup:
-    ByteBuddyAgent.install()
-    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
     HelperInjector injector = new HelperInjector("test", [helperClassName], [])
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)

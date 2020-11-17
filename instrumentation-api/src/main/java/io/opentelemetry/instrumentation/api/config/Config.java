@@ -163,4 +163,12 @@ public abstract class Config {
     properties.putAll(getAllProperties());
     return properties;
   }
+
+  static Map<String, String> internalGetConfig() {
+    return INSTANCE.getAllProperties();
+  }
+
+  static void internalSetConfig(Map<String, String> properties) {
+    INSTANCE = Config.create(properties);
+  }
 }

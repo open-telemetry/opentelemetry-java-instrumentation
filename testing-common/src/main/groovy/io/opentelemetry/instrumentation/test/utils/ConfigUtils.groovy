@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.test.utils
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer
-import java.util.function.Consumer
+import io.opentelemetry.javaagent.testing.common.AgentInstallerAccess
+import io.opentelemetry.javaagent.testing.common.ConfigAccess
 
+import java.util.function.Consumer
 /**
  * This class provides utility methods for changing {@link Config} values during tests.
  */
@@ -28,7 +28,7 @@ class ConfigUtils {
    */
   synchronized static Config updateConfigAndResetInstrumentation(Consumer<Properties> configModifications) {
     def previousConfig = updateConfig(configModifications)
-    AgentTestRunner.resetInstrumentation()
+    AgentInstallerAccess.resetInstrumentation()
     return previousConfig
   }
 
@@ -39,12 +39,13 @@ class ConfigUtils {
    * @return Previous configuration.
    */
   synchronized static Config updateConfig(Consumer<Properties> configModifications) {
-    def properties = Config.get().asJavaProperties()
+    def properties = new Properties()
+    ConfigAccess.getConfig().each {properties.put(it.key, it.value)}
     configModifications.accept(properties)
 
-    def newConfig = new AgentConfigBuilder()
-      .readProperties(properties)
-      .build()
+    Map<String, String> map = new HashMap<>()
+    properties.each {map.put((String) it.key, (String) it.value)}
+    def newConfig = Config.create(map)
     return setConfig(newConfig)
   }
 
@@ -54,12 +55,8 @@ class ConfigUtils {
    * @return Previous configuration.
    */
   synchronized static Config setConfig(Config config) {
-    def previous = Config.get()
-    Config.INSTANCE = config
+    def previous = Config.create(ConfigAccess.getConfig())
+    ConfigAccess.setConfig(config.getAllProperties())
     return previous
-  }
-
-  synchronized static initializeConfig() {
-    ConfigInitializer.initialize()
   }
 }

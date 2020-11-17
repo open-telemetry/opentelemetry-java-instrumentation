@@ -19,13 +19,12 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
-import io.opentelemetry.javaagent.testing.common.AgentInstallerAccess;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.Instrumentation;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -68,12 +67,7 @@ public abstract class AgentTestRunner extends Specification {
 
   protected static final Tracer TEST_TRACER;
 
-  private static final Instrumentation INSTRUMENTATION;
-  private static volatile ClassFileTransformer activeTransformer = null;
-
   static {
-    INSTRUMENTATION = AgentInstallerAccess.getInstrumentation();
-
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
@@ -100,20 +94,10 @@ public abstract class AgentTestRunner extends Specification {
   }
 
   /**
-   * Returns true if the class under load should be transformed for this test.
-   *
-   * @param className name of the class being loaded
-   * @param classLoader classloader class is being defined on
+   * Returns conditions for the classname for a class for which transformation should be skipped.
    */
-  protected boolean shouldTransformClass(String className, ClassLoader classLoader) {
-    return true;
-  }
-
-  public static synchronized void resetInstrumentation() {
-    if (null != activeTransformer) {
-      INSTRUMENTATION.removeTransformer(activeTransformer);
-      activeTransformer = null;
-    }
+  protected List<Function<String, Boolean>> skipTransformationConditions() {
+    return Collections.emptyList();
   }
 
   /**
@@ -124,6 +108,10 @@ public abstract class AgentTestRunner extends Specification {
   @BeforeClass
   public void setupBeforeTests() {
     TestAgentListenerAccess.reset();
+    if (!skipTransformationConditions().isEmpty()) {
+      skipTransformationConditions()
+          .forEach(TestAgentListenerAccess::addSkipTransformationCondition);
+    }
   }
 
   @Before
@@ -162,7 +150,8 @@ public abstract class AgentTestRunner extends Specification {
   public static synchronized void agentCleanup() {
     // Cleanup before assertion.
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
-        : TestAgentListenerAccess.getInstrumentationErrorCount() + " Instrumentation errors during test";
+        : TestAgentListenerAccess.getInstrumentationErrorCount()
+            + " Instrumentation errors during test";
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
         : "Transformed classes match global libraries ignore matcher: "
             + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
