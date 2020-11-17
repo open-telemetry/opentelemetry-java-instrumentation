@@ -14,6 +14,6 @@ import java.util.Map;
 public class AgentTestingExporterPropertySource implements PropertySource {
   @Override
   public Map<String, String> getProperties() {
-    return Collections.singletonMap("otel.exporter", "javaagent-testing");
+    return Collections.singletonMap("otel.exporter", "");
   }
 }

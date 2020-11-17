@@ -32,9 +32,4 @@ public interface SpanExporterFactory {
    * @return The exporter names supported by this factory
    */
   Set<String> getNames();
-
-  /** Returns whether the batch span processor should not be used with this exporter. */
-  default boolean disableBatchSpanProcessor() {
-    return false;
-  }
 }

@@ -18,7 +18,6 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -166,12 +165,8 @@ public class TracerInstaller {
 
   private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-    final SpanProcessor spanProcessor;
-    if (!spanExporterFactory.disableBatchSpanProcessor()) {
-      spanProcessor = BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
-    } else {
-      spanProcessor = SimpleSpanProcessor.builder(spanExporter).build();
-    }
+    SpanProcessor spanProcessor =
+        BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }

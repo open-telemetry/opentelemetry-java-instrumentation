@@ -86,7 +86,6 @@ public class OpenTelemetryAgent {
 
     // First try Code Source
     CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
-    System.out.println("codeSource:" + codeSource);
 
     if (codeSource != null) {
       javaAgentJarUrl = codeSource.getLocation();
