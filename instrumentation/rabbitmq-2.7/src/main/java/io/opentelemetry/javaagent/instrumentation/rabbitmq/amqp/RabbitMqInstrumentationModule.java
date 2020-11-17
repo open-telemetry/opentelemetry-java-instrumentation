@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RabbitMqInstrumentationModule extends InstrumentationModule {
   public RabbitMqInstrumentationModule() {
-    super("rabbitmq", "rabbitmq-2.7", "ampq");
+    super("rabbitmq", "rabbitmq-2.7");
   }
 
   @Override

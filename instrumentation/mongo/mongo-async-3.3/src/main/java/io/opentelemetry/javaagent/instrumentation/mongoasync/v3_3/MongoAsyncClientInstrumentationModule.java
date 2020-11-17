@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class MongoAsyncClientInstrumentationModule extends InstrumentationModule {
 
   public MongoAsyncClientInstrumentationModule() {
-    super("mongo", "mongo-async", "mongo-async-3.3");
+    super("mongo-async", "mongo-async-3.3", "mongo");
   }
 
   @Override

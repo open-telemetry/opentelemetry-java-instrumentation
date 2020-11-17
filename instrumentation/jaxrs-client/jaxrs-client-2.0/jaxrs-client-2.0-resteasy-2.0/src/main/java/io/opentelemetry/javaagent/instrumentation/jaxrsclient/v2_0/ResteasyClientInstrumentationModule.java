@@ -39,7 +39,7 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 public final class ResteasyClientInstrumentationModule extends InstrumentationModule {
 
   public ResteasyClientInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "jaxrs-client", "resteasy-client", "resteasy-client-2.0");
+    super("jaxrs-client", "jaxrs-client-2.0", "resteasy-client", "resteasy-client-2.0");
   }
 
   @Override
