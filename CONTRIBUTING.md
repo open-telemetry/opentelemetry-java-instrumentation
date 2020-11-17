@@ -30,12 +30,6 @@ java -version
 ./gradlew assemble
 ```
 
-and then generate the -all artifact
-
-```bash
-./gradlew :javaagent:shadowJar
-```
-
 and then you can find the java agent artifact at
 
 `javaagent/build/lib/opentelemetry-javaagent-<version>-all.jar`.
