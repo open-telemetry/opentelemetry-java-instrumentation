@@ -26,7 +26,6 @@ buildCache {
     region = 'us-west-2'
     bucket = 'opentelemetry-java-instrumentation-gradle-cache'
     push = isCI && awsAccessKeyId != null && !awsAccessKeyId.isEmpty()
-    lookupDefaultAwsCredentials = true
   }
 }
 
