@@ -12,8 +12,8 @@ import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 
-public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
-    extends DatabaseClientTracer<RedisURI, QUERY> {
+public abstract class LettuceAbstractDatabaseClientTracer<Q>
+    extends DatabaseClientTracer<RedisURI, Q> {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.lettuce";

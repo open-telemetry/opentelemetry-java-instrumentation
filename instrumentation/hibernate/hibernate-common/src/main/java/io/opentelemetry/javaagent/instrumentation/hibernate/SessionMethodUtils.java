@@ -24,11 +24,11 @@ public class SessionMethodUtils {
 
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
-  public static <TARGET, ENTITY> SpanWithScope startScopeFrom(
-      ContextStore<TARGET, Context> contextStore,
-      TARGET spanKey,
+  public static <K> SpanWithScope startScopeFrom(
+      ContextStore<K, Context> contextStore,
+      K spanKey,
       String operationName,
-      ENTITY entity,
+      Object entity,
       boolean createSpan) {
 
     Context sessionContext = contextStore.get(spanKey);

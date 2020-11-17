@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
-public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
+public abstract class HttpServerTracer<ReqT, ResT, C, S> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
@@ -43,17 +43,16 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super(tracer);
   }
 
-  public Context startSpan(REQUEST request, CONNECTION connection, Method origin) {
+  public Context startSpan(ReqT request, C connection, Method origin) {
     String spanName = spanNameForMethod(origin);
     return startSpan(request, connection, spanName);
   }
 
-  public Context startSpan(REQUEST request, CONNECTION connection, String spanName) {
+  public Context startSpan(ReqT request, C connection, String spanName) {
     return startSpan(request, connection, spanName, -1);
   }
 
-  public Context startSpan(
-      REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
+  public Context startSpan(ReqT request, C connection, String spanName, long startTimestamp) {
     Context parentContext = extract(request, getGetter());
     Span.Builder builder =
         tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
@@ -75,7 +74,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
-  public Scope startScope(Span span, STORAGE storage) {
+  public Scope startScope(Span span, S storage) {
     return startScope(span, storage, Context.current());
   }
 
@@ -84,7 +83,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
-  public Scope startScope(Span span, STORAGE storage, Context context) {
+  public Scope startScope(Span span, S storage, Context context) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     Context newContext = context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
     attachServerContext(newContext, storage);
@@ -96,12 +95,12 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * value of {@code -1}.
    */
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, RESPONSE response) {
+  public void end(Span span, ResT response) {
     end(span, response, -1);
   }
 
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, RESPONSE response, long timestamp) {
+  public void end(Span span, ResT response, long timestamp) {
     setStatus(span, responseStatus(response));
     endSpan(span, timestamp);
   }
@@ -119,7 +118,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object, long)},
    * passing {@code timestamp} value of {@code -1}.
    */
-  public void endExceptionally(Span span, Throwable throwable, RESPONSE response) {
+  public void endExceptionally(Span span, Throwable throwable, ResT response) {
     endExceptionally(span, throwable, response, -1);
   }
 
@@ -127,7 +126,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
    * and the {@link Span} status will be set to {@link io.opentelemetry.api.trace.StatusCode#ERROR}.
    */
-  public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
+  public void endExceptionally(Span span, Throwable throwable, ResT response, long timestamp) {
     onError(span, unwrapThrowable(throwable));
     if (response == null) {
       setStatus(span, 500);
@@ -137,7 +136,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     endSpan(span, timestamp);
   }
 
-  public Span getServerSpan(STORAGE storage) {
+  public Span getServerSpan(S storage) {
     Context attachedContext = getServerContext(storage);
     return attachedContext == null ? null : attachedContext.get(CONTEXT_SERVER_SPAN_KEY);
   }
@@ -147,9 +146,9 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * #attachServerContext(Context, Object)}.
    */
   @Nullable
-  public abstract Context getServerContext(STORAGE storage);
+  public abstract Context getServerContext(S storage);
 
-  protected void onConnection(Span span, CONNECTION connection) {
+  protected void onConnection(Span span, C connection) {
     span.setAttribute(SemanticAttributes.NET_PEER_IP, peerHostIP(connection));
     Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
@@ -158,7 +157,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     }
   }
 
-  protected void onRequest(Span span, REQUEST request) {
+  protected void onRequest(Span span, ReqT request) {
     span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
     span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
 
@@ -178,11 +177,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   which is the recommended value for http.target attribute. Therefore we cannot use any of the
   recommended combinations of attributes and are forced to use http.url.
    */
-  private void setUrl(Span span, REQUEST request) {
+  private void setUrl(Span span, ReqT request) {
     span.setAttribute(SemanticAttributes.HTTP_URL, url(request));
   }
 
-  protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
+  protected void onConnectionAndRequest(Span span, C connection, ReqT request) {
     String flavor = flavor(connection, request);
     if (flavor != null) {
       span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
@@ -190,7 +189,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     span.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIP(connection, request));
   }
 
-  private String clientIP(CONNECTION connection, REQUEST request) {
+  private String clientIP(C connection, ReqT request) {
     // try Forwarded
     String forwarded = requestHeader(request, "Forwarded");
     if (forwarded != null) {
@@ -295,28 +294,28 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   @Nullable
-  protected abstract Integer peerPort(CONNECTION connection);
+  protected abstract Integer peerPort(C connection);
 
   @Nullable
-  protected abstract String peerHostIP(CONNECTION connection);
+  protected abstract String peerHostIP(C connection);
 
-  protected abstract String flavor(CONNECTION connection, REQUEST request);
+  protected abstract String flavor(C connection, ReqT request);
 
-  protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
+  protected abstract TextMapPropagator.Getter<ReqT> getGetter();
 
-  protected abstract String url(REQUEST request);
+  protected abstract String url(ReqT request);
 
-  protected abstract String method(REQUEST request);
+  protected abstract String method(ReqT request);
 
   @Nullable
-  protected abstract String requestHeader(REQUEST request, String name);
+  protected abstract String requestHeader(ReqT request, String name);
 
-  protected abstract int responseStatus(RESPONSE response);
+  protected abstract int responseStatus(ResT response);
 
   /**
    * Stores given context in the given request-response-loop storage in implementation specific way.
    */
-  protected abstract void attachServerContext(Context context, STORAGE storage);
+  protected abstract void attachServerContext(Context context, S storage);
 
   /*
   We are making quite simple check by just verifying the presence of schema.
