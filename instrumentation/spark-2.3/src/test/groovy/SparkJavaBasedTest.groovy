@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes

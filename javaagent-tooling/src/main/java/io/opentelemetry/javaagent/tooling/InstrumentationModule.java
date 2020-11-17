@@ -83,18 +83,22 @@ public abstract class InstrumentationModule {
     this(toList(mainInstrumentationName, additionalInstrumentationNames));
   }
 
+  /**
+   * Creates an instrumentation module.
+   *
+   * @see #InstrumentationModule(String, String...)
+   */
+  public InstrumentationModule(List<String> instrumentationNames) {
+    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
+    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
+    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
+  }
+
   private static List<String> toList(String first, String[] rest) {
     List<String> instrumentationNames = new ArrayList<>(rest.length + 1);
     instrumentationNames.add(first);
     instrumentationNames.addAll(asList(rest));
     return instrumentationNames;
-  }
-
-  /** @see #InstrumentationModule(String, String...) */
-  public InstrumentationModule(List<String> instrumentationNames) {
-    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
-    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   /**
