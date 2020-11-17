@@ -1,7 +1,6 @@
 // common gradle file for instrumentation
 import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
-apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -24,10 +23,10 @@ if (projectDir.name == 'javaagent') {
 
 afterEvaluate {
   dependencies {
-    implementation project(':instrumentation-api')
-    implementation project(':javaagent-api')
+    compileOnly project(':instrumentation-api')
+    compileOnly project(':javaagent-api')
     // Apply common dependencies for instrumentation.
-    implementation(project(':javaagent-tooling')) {
+    compileOnly(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
       // is brought in for tests by project(:testing-common) below
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
@@ -62,7 +61,7 @@ afterEvaluate {
 shadowJar {
   mergeServiceFiles()
 
-  archiveClassifier = 'agenttesting'
+  archiveFileName = 'agent-testing.jar'
 
   dependencies {
     exclude(project(':javaagent-bootstrap'))
@@ -85,4 +84,15 @@ shadowJar {
 
   // this is for instrumentation on opentelemetry-api itself
   relocate "application.io.opentelemetry", "io.opentelemetry"
+}
+
+tasks.withType(Test).configureEach {
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dnet.bytebuddy.raw=true"
+  jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
+  jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+
+  dependsOn shadowJar
+  dependsOn ":testing:agent-for-testing:shadowJar"
 }

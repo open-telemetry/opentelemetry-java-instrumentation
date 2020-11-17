@@ -6,7 +6,9 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   compileOnly(project(':javaagent-spi'))
+  compileOnly(deps.bytebuddy)
   compileOnly(deps.opentelemetrySdk)
+  compileOnly(deps.slf4j)
 
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
@@ -15,6 +17,12 @@ dependencies {
   implementation deps.opentelemetryProto
   implementation deps.opentelemetryOtlp
   implementation group: 'io.grpc', name: 'grpc-testing', version: '1.30.2'
+
+  // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
+  implementation project(':instrumentation:java-concurrent')
+  // FIXME: we should enable this, but currently this fails tests for google http client
+  //testImplementation project(':instrumentation:http-url-connection')
+  implementation project(':instrumentation:java-classloader')
 }
 
 jar.enabled = false

@@ -15,14 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
-import io.opentelemetry.javaagent.bootstrap.TransformationListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
-import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -82,9 +80,7 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst,
-      boolean skipAdditionalLibraryMatcher,
-      TransformationListener... listeners) {
-
+      boolean skipAdditionalLibraryMatcher) {
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       // calling (shaded) OpenTelemetry.getGlobalTracerProvider() with context class loader set to
@@ -141,10 +137,6 @@ public class AgentInstaller {
               .with(AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE)
               .with(new RedefinitionLoggingListener())
               .with(new TransformLoggingListener());
-    }
-
-    for (TransformationListener listener : listeners) {
-      agentBuilder = agentBuilder.with(new ByteBuddyListener(listener));
     }
 
     int numInstrumenters = 0;
@@ -378,55 +370,6 @@ public class AgentInstaller {
         }
       }
     }
-  }
-
-  private static class ByteBuddyListener implements AgentBuilder.Listener {
-
-    private final TransformationListener listener;
-
-    private ByteBuddyListener(TransformationListener listener) {
-      this.listener = listener;
-    }
-
-    @Override
-    public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      listener.onDiscovery(typeName, classLoader);
-    }
-
-    @Override
-    public void onTransformation(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded,
-        DynamicType dynamicType) {
-      boolean shouldBeIgnored =
-          AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher()
-              .matches(typeDescription);
-      listener.onTransformation(typeDescription.getActualName(), shouldBeIgnored);
-    }
-
-    @Override
-    public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded) {}
-
-    @Override
-    public void onError(
-        String typeName,
-        ClassLoader classLoader,
-        JavaModule module,
-        boolean loaded,
-        Throwable throwable) {
-      listener.onError(typeName, classLoader, throwable);
-    }
-
-    @Override
-    public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   private AgentInstaller() {}

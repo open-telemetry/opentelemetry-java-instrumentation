@@ -9,7 +9,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
@@ -20,19 +19,13 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
-import io.opentelemetry.javaagent.bootstrap.TransformationListener;
 import io.opentelemetry.javaagent.testing.common.AgentInstallerAccess;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,8 +42,8 @@ import spock.lang.Specification;
  * This will cause the following to occur before test startup:
  *
  * <ul>
- *   <li>All {@link InstrumentationModule}s on the test classpath will be applied. Matching
- *       preloaded classes will be retransformed.
+ *   <li>All {@link io.opentelemetry.javaagent.tooling.InstrumentationModule}s on the test classpath
+ *       will be applied. Matching preloaded classes will be retransformed.
  *   <li>{@link AgentTestRunner#TEST_WRITER} will be registered with the global tracer and available
  *       in an initialized state.
  * </ul>
@@ -74,12 +67,6 @@ public abstract class AgentTestRunner extends Specification {
   public static final InMemoryExporter TEST_WRITER;
 
   protected static final Tracer TEST_TRACER;
-
-  protected static final Set<String> TRANSFORMED_CLASSES_NAMES = Sets.newConcurrentHashSet();
-  protected static final Set<String> TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED =
-      Sets.newConcurrentHashSet();
-  private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger(0);
-  private static final TestRunnerListener TEST_LISTENER = new TestRunnerListener();
 
   private static final Instrumentation INSTRUMENTATION;
   private static volatile ClassFileTransformer activeTransformer = null;
@@ -105,29 +92,11 @@ public abstract class AgentTestRunner extends Specification {
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
     }
-    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {
     return TEST_TRACER;
-  }
-
-  /**
-   * Invoked when Bytebuddy encounters an instrumentation error. Fails the test by default.
-   *
-   * <p>Override to skip specific expected errors.
-   *
-   * @return true if the test should fail because of this error.
-   */
-  protected boolean onInstrumentationError(
-      String typeName, ClassLoader classLoader, Throwable throwable) {
-    log.error(
-        "Unexpected instrumentation error when instrumenting {} on {}",
-        typeName,
-        classLoader,
-        throwable);
-    return true;
   }
 
   /**
@@ -154,13 +123,7 @@ public abstract class AgentTestRunner extends Specification {
    */
   @BeforeClass
   public void setupBeforeTests() {
-    ConfigUtils.initializeConfig();
-
-    if (activeTransformer == null) {
-      activeTransformer =
-          AgentInstallerAccess.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
-    }
-    TEST_LISTENER.activateTest(this);
+    TestAgentListenerAccess.reset();
   }
 
   @Before
@@ -168,12 +131,6 @@ public abstract class AgentTestRunner extends Specification {
     assert !Span.current().getSpanContext().isValid()
         : "Span is active before test has started: " + Span.current();
     AgentTestingExporterAccess.reset();
-  }
-
-  /** See comment for {@code #setupBeforeTests} above. */
-  @AfterClass
-  public void cleanUpAfterTests() {
-    TEST_LISTENER.deactivateTest(this);
   }
 
   /**
@@ -204,11 +161,11 @@ public abstract class AgentTestRunner extends Specification {
   @AfterClass
   public static synchronized void agentCleanup() {
     // Cleanup before assertion.
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0
-        : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
-    assert TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED.isEmpty()
+    assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
+        : TestAgentListenerAccess.getInstrumentationErrorCount() + " Instrumentation errors during test";
+    assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
         : "Transformed classes match global libraries ignore matcher: "
-            + TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED;
+            + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
   }
 
   public static void assertTraces(
@@ -231,59 +188,6 @@ public abstract class AgentTestRunner extends Specification {
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
-  }
-
-  public static class TestRunnerListener implements TransformationListener {
-    private static final List<AgentTestRunner> activeTests = new CopyOnWriteArrayList<>();
-
-    public void activateTest(AgentTestRunner testRunner) {
-      activeTests.add(testRunner);
-    }
-
-    public void deactivateTest(AgentTestRunner testRunner) {
-      activeTests.remove(testRunner);
-    }
-
-    @Override
-    public void onDiscovery(String typeName, ClassLoader classLoader) {
-      for (AgentTestRunner testRunner : activeTests) {
-        if (!testRunner.shouldTransformClass(typeName, classLoader)) {
-          throw new AbortTransformationException(
-              "Aborting transform for class name = " + typeName + ", loader = " + classLoader);
-        }
-      }
-    }
-
-    @Override
-    public void onTransformation(String actualName, boolean matchedGlobalIgnoreMatcher) {
-      TRANSFORMED_CLASSES_NAMES.add(actualName);
-      if (matchedGlobalIgnoreMatcher) {
-        TRANSFORMED_CLASSES_NAMES_THAT_SHOULD_HAVE_BEEN_IGNORED.add(actualName);
-      }
-    }
-
-    @Override
-    public void onError(String typeName, ClassLoader classLoader, Throwable throwable) {
-      if (!(throwable instanceof AbortTransformationException)) {
-        for (AgentTestRunner testRunner : activeTests) {
-          if (testRunner.onInstrumentationError(typeName, classLoader, throwable)) {
-            INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
-            break;
-          }
-        }
-      }
-    }
-
-    /** Used to signal that a transformation was intentionally aborted and is not an error. */
-    public static class AbortTransformationException extends RuntimeException {
-      public AbortTransformationException() {
-        super();
-      }
-
-      public AbortTransformationException(String message) {
-        super(message);
-      }
-    }
   }
 
   protected static String getClassName(Class clazz) {

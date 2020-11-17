@@ -170,7 +170,6 @@ public class TracerInstaller {
     if (!spanExporterFactory.disableBatchSpanProcessor()) {
       spanProcessor = BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
     } else {
-      Thread.dumpStack();
       spanProcessor = SimpleSpanProcessor.builder(spanExporter).build();
     }
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(spanProcessor);

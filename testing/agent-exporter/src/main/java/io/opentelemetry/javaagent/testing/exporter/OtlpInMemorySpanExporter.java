@@ -17,7 +17,6 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -31,9 +30,7 @@ class OtlpInMemorySpanExporter implements SpanExporter {
       new LinkedBlockingQueue<>();
 
   List<byte[]> getCollectedExportRequests() {
-    List<ExportTraceServiceRequest> collected = new ArrayList<>(collectedRequests.size());
-    collectedRequests.drainTo(collected);
-    return collected.stream()
+    return collectedRequests.stream()
         .map(ExportTraceServiceRequest::toByteArray)
         .collect(Collectors.toList());
   }
@@ -68,7 +65,6 @@ class OtlpInMemorySpanExporter implements SpanExporter {
 
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
-    Thread.dumpStack();
     return delegate.export(spans);
   }
 
@@ -89,7 +85,6 @@ class OtlpInMemorySpanExporter implements SpanExporter {
     public void export(
         ExportTraceServiceRequest request,
         StreamObserver<ExportTraceServiceResponse> responseObserver) {
-      Thread.dumpStack();
       collectedRequests.add(request);
       responseObserver.onNext(ExportTraceServiceResponse.getDefaultInstance());
       responseObserver.onCompleted();

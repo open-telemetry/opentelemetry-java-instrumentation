@@ -1,0 +1,52 @@
+package io.opentelemetry.javaagent.testing.common;
+
+import static java.lang.invoke.MethodType.methodType;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.util.List;
+
+public class TestAgentListenerAccess {
+
+  private static final MethodHandle reset;
+  private static final MethodHandle getInstrumentationErrorCount;
+  private static final MethodHandle getIgnoredButTransformedClassNames;
+
+  static {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      Class<?> testAgentListenerClass = AgentClassLoaderAccess.loadClass("io.opentelemetry.javaagent.testing.bytebuddy.TestAgentListener");
+      reset = lookup.findStatic(testAgentListenerClass, "reset", methodType(void.class));
+      getInstrumentationErrorCount = lookup.findStatic(testAgentListenerClass, "getInstrumentationErrorCount", methodType(int.class));
+      getIgnoredButTransformedClassNames = lookup.findStatic(testAgentListenerClass, "getIgnoredButTransformedClassNames", methodType(
+          List.class));
+    } catch (Throwable t) {
+      throw new Error("Could not initialize accessors for TestAgentListener.", t);
+    }
+  }
+
+  public static void reset() {
+    try {
+      reset.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke TestAgentListener.reset", t);
+    }
+  }
+
+  public static int getInstrumentationErrorCount() {
+    try {
+      return (int) getInstrumentationErrorCount.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke TestAgentListener.getInstrumentationErrorCount", t);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<String> getIgnoredButTransformedClassNames() {
+    try {
+      return (List<String>) getIgnoredButTransformedClassNames.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke TestAgentListener.getIgnoredButTransformedClassNames");
+    }
+  }
+}

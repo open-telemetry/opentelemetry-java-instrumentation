@@ -36,7 +36,6 @@ trait AgentTestTrait {
   }
 
   def cleanupSpec() {
-    agentTestRunner.cleanUpAfterTests()
     AgentTestRunner.agentCleanup()
 
     childCleanupSpec()
