@@ -24,19 +24,19 @@ public class ParentContextExtractor {
 
   private static Map<String, String> lowercaseMap(Map<String, String> source) {
     return source.entrySet().stream()
-        .collect(
-            Collectors.toMap(
-                e -> e.getKey() == null ? null : e.getKey().toLowerCase(), Entry::getValue));
+        .filter(e -> e.getKey() != null)
+        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Entry::getValue));
   }
 
-  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "X-Amzn-Trace-Id";
+  // lower-case map getter used for extraction
+  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
   static Context fromXRayHeader(String parentHeader) {
     return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .extract(
             Context.current(),
-            Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY.toLowerCase(), parentHeader),
+            Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
             MapGetter.INSTANCE);
   }
 

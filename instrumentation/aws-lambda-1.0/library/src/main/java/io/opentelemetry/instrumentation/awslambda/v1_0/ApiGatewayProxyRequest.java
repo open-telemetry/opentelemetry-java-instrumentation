@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,7 +28,7 @@ abstract class ApiGatewayProxyRequest {
   private static boolean xrayPropagationFieldsOnly(List<String> fields) {
     // ugly but faster than typical convert-to-set-and-check-contains-only
     return (fields.size() == 1)
-        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equals(fields.get(0)));
+        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(fields.get(0)));
   }
 
   static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
@@ -45,16 +44,20 @@ abstract class ApiGatewayProxyRequest {
     return new CopiedApiGatewayProxyRequest(source);
   }
 
-  private static final Function<Map.Entry<String, List<String>>, String> EXTRACTOR =
-      (entry -> {
-        List<String> values = entry.getValue();
-        return (values != null && !values.isEmpty() ? values.get(0) : null);
-      });
+  private static boolean nullOrEmpty(List<String> values) {
+    return ((values == null) || values.isEmpty());
+  }
+
+  private static String extractFirstValue(Map.Entry<String, List<String>> entry) {
+    List<String> values = entry.getValue();
+    return (nullOrEmpty(values) ? null : values.get(0));
+  }
 
   @Nullable
   Map<String, String> getHeaders() throws IOException {
     Headers headers = ofStream(freshStream());
-    return headers.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, EXTRACTOR));
+    return headers.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, ApiGatewayProxyRequest::extractFirstValue));
   }
 
   abstract InputStream freshStream() throws IOException;

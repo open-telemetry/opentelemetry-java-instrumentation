@@ -92,8 +92,13 @@ class WrappedLambda {
        - Context can be omitted
        - Select the method with the largest number of parameters.
        - If two or more methods have the same number of parameters, AWS Lambda selects the method that has the Context as the last parameter.
-       - Non-Bridge methods are prefered
+       - Non-Bridge methods are preferred
        - If none or all of these methods have the Context parameter, then the behavior is undefined.
+
+       Examples:
+       - handleA(String, String, Integer), handleB(String, Context) - handleA is selected (number of parameters)
+       - handleA(String, String, Integer), handleB(String, String, Context) - handleB is selected (has Context as the last parameter)
+       - generic method handleG(T, U, Context), implementation (T, U - String) handleA(String, String, Context), bridge method handleB(Object, Object, Context) - handleA is selected (non-bridge)
     */
     List<Method> methods = Arrays.asList(targetClass.getMethods());
     Optional<Method> firstOptional =
@@ -101,16 +106,17 @@ class WrappedLambda {
             .filter((Method m) -> m.getName().equals(targetMethodName))
             .sorted(
                 (Method a, Method b) -> {
-                  // sort descending (reverse of default ascending)
+                  // larger number of params wins
                   if (a.getParameterCount() != b.getParameterCount()) {
                     return b.getParameterCount() - a.getParameterCount();
                   }
                   boolean firstCtx = isLastParameterContext(a.getParameters());
                   boolean secondCtx = isLastParameterContext(b.getParameters());
-                  // one of the methods has last param context ?
+                  // only one of the methods has last param context ?
                   if (firstCtx ^ secondCtx) {
                     return (firstCtx ? -1 : 1);
                   }
+                  // one of the methods is a bridge
                   boolean firstBridge = a.isBridge();
                   boolean secondBridge = b.isBridge();
                   if (firstBridge ^ secondBridge) {
