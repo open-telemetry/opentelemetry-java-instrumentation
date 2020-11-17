@@ -143,50 +143,6 @@ public final class ReferenceMatcher {
     }
   }
 
-  // for helper classes we make sure that all abstract methods from super classes and interfaces are
-  // implemented
-  private List<Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
-    List<Mismatch> mismatches = Collections.emptyList();
-
-    HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
-
-    if (!helperWrapper.hasSuperTypes() || helperWrapper.isAbstract()) {
-      return mismatches;
-    }
-
-    // treat the helper type as a bag of methods: collect all methods defined in the helper class,
-    // all superclasses and interfaces and check if all abstract methods are implemented somewhere
-    Set<HelperReferenceWrapper.Method> abstractMethods = new HashSet<>();
-    Set<HelperReferenceWrapper.Method> plainMethods = new HashSet<>();
-    collectMethodsFromTypeHierarchy(helperWrapper, abstractMethods, plainMethods);
-
-    Set<HelperReferenceWrapper.Method> unimplementedMethods =
-        Sets.difference(abstractMethods, plainMethods);
-    for (HelperReferenceWrapper.Method unimplementedMethod : unimplementedMethods) {
-      mismatches =
-          lazyAdd(
-              mismatches,
-              new Mismatch.MissingMethod(
-                  helperClass.getSources().toArray(new Reference.Source[0]),
-                  unimplementedMethod.getDeclaringClass(),
-                  unimplementedMethod.getName(),
-                  unimplementedMethod.getDescriptor()));
-    }
-
-    return mismatches;
-  }
-
-  private static void collectMethodsFromTypeHierarchy(
-      HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
-
-    type.getMethods()
-        .forEach(method -> (method.isAbstract() ? abstractMethods : plainMethods).add(method));
-
-    type.getSuperTypes()
-        .forEach(
-            superType -> collectMethodsFromTypeHierarchy(superType, abstractMethods, plainMethods));
-  }
-
   private static List<Mismatch> checkMatch(Reference reference, TypeDescription typeOnClasspath) {
     List<Mismatch> mismatches = Collections.emptyList();
 
@@ -265,6 +221,50 @@ public final class ReferenceMatcher {
       }
     }
     return mismatches;
+  }
+
+  // for helper classes we make sure that all abstract methods from super classes and interfaces are
+  // implemented
+  private List<Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
+    List<Mismatch> mismatches = Collections.emptyList();
+
+    HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
+
+    if (!helperWrapper.hasSuperTypes() || helperWrapper.isAbstract()) {
+      return mismatches;
+    }
+
+    // treat the helper type as a bag of methods: collect all methods defined in the helper class,
+    // all superclasses and interfaces and check if all abstract methods are implemented somewhere
+    Set<HelperReferenceWrapper.Method> abstractMethods = new HashSet<>();
+    Set<HelperReferenceWrapper.Method> plainMethods = new HashSet<>();
+    collectMethodsFromTypeHierarchy(helperWrapper, abstractMethods, plainMethods);
+
+    Set<HelperReferenceWrapper.Method> unimplementedMethods =
+        Sets.difference(abstractMethods, plainMethods);
+    for (HelperReferenceWrapper.Method unimplementedMethod : unimplementedMethods) {
+      mismatches =
+          lazyAdd(
+              mismatches,
+              new Mismatch.MissingMethod(
+                  helperClass.getSources().toArray(new Reference.Source[0]),
+                  unimplementedMethod.getDeclaringClass(),
+                  unimplementedMethod.getName(),
+                  unimplementedMethod.getDescriptor()));
+    }
+
+    return mismatches;
+  }
+
+  private static void collectMethodsFromTypeHierarchy(
+      HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
+
+    type.getMethods()
+        .forEach(method -> (method.isAbstract() ? abstractMethods : plainMethods).add(method));
+
+    type.getSuperTypes()
+        .forEach(
+            superType -> collectMethodsFromTypeHierarchy(superType, abstractMethods, plainMethods));
   }
 
   private static boolean matchesPrimitive(String longName, String shortName) {
