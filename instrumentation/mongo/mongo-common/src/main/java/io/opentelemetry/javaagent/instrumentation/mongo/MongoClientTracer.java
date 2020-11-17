@@ -134,9 +134,20 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
-      new HashSet<>(asList(
-          "aggregate", "count", "distinct", "mapReduce", "geoSearch", "delete", "find", "killCursors",
-          "findAndModify", "insert", "update", "listIndexes"));
+      new HashSet<>(
+          asList(
+              "aggregate",
+              "count",
+              "distinct",
+              "mapReduce",
+              "geoSearch",
+              "delete",
+              "find",
+              "killCursors",
+              "findAndModify",
+              "insert",
+              "update",
+              "listIndexes"));
 
   private static String collectionName(CommandStartedEvent event) {
     if (event.getCommandName().equals("getMore")) {
