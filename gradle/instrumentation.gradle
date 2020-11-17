@@ -97,7 +97,9 @@ tasks.withType(Test).configureEach {
   dependsOn ":testing:agent-for-testing:shadowJar"
 }
 
-configurations.testRuntimeClasspath {
-  // Added by agent, don't let Gradle bring it in.
-  exclude module: 'javaagent-bootstrap'
+configurations.configureEach {
+  if (it.name.toLowerCase().endsWith('testruntimeclasspath')) {
+    // Added by agent, don't let Gradle bring it in when running tests.
+    exclude module: 'javaagent-bootstrap'
+  }
 }
