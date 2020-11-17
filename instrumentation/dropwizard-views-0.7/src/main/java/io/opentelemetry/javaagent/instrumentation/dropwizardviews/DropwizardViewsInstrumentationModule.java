@@ -30,9 +30,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class DropwizardViewInstrumentationModule extends InstrumentationModule {
-  public DropwizardViewInstrumentationModule() {
-    super("dropwizard", "dropwizard-view");
+public final class DropwizardViewsInstrumentationModule extends InstrumentationModule {
+  public DropwizardViewsInstrumentationModule() {
+    super("dropwizard-views");
   }
 
   @Override
@@ -64,7 +64,7 @@ public final class DropwizardViewInstrumentationModule extends InstrumentationMo
               .and(named("render"))
               .and(takesArgument(0, named("io.dropwizard.views.View")))
               .and(isPublic()),
-          DropwizardViewInstrumentationModule.class.getName() + "$RenderAdvice");
+          DropwizardViewsInstrumentationModule.class.getName() + "$RenderAdvice");
     }
   }
 

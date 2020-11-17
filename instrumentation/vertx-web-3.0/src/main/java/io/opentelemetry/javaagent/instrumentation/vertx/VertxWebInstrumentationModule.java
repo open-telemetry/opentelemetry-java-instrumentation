@@ -28,10 +28,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class VertxInstrumentationModule extends InstrumentationModule {
+public final class VertxWebInstrumentationModule extends InstrumentationModule {
 
-  public VertxInstrumentationModule() {
-    super("vertx");
+  public VertxWebInstrumentationModule() {
+    super("vertx-web", "vertx-web-3.0", "vertx");
   }
 
   @Override
@@ -61,7 +61,7 @@ public final class VertxInstrumentationModule extends InstrumentationModule {
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isMethod().and(named("handler")).and(takesArgument(0, named("io.vertx.core.Handler"))),
-          VertxInstrumentationModule.class.getName() + "$RouteAdvice");
+          VertxWebInstrumentationModule.class.getName() + "$RouteAdvice");
     }
   }
 

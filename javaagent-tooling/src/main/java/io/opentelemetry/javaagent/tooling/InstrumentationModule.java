@@ -58,9 +58,40 @@ public abstract class InstrumentationModule {
   protected final String packageName =
       getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
+  /**
+   * Creates an instrumentation module. Note that all implementations of {@link
+   * InstrumentationModule} must have a default constructor (for SPI), so they have to pass the
+   * instrumentation names to the super class constructor.
+   *
+   * <p>The instrumentation names should follow several rules:
+   *
+   * <ul>
+   *   <li>Instrumentation names should consist of hyphen-separated words, e.g. {@code
+   *       instrumented-library};
+   *   <li>In general, instrumentation names should be the as close as possible to the gradle module
+   *       name - which in turn should be as close as possible to the instrumented library name;
+   *   <li>The main instrumentation name should be the same as the gradle module name, minus the
+   *       version if it's a part of the module name. When several versions of a library are
+   *       instrumented they should all share the same main instrumentation name so that it's easy
+   *       to enable/disable the instrumentation regardless of the runtime library version;
+   *   <li>If the gradle module has a version as a part of its name, an additional instrumentation
+   *       name containing the version should be passed, e.g. {@code instrumented-library-1.0}.
+   * </ul>
+   */
   public InstrumentationModule(
-      String mainInstrumentationName, String... otherInstrumentationNames) {
-    this(toList(mainInstrumentationName, otherInstrumentationNames));
+      String mainInstrumentationName, String... additionalInstrumentationNames) {
+    this(toList(mainInstrumentationName, additionalInstrumentationNames));
+  }
+
+  /**
+   * Creates an instrumentation module.
+   *
+   * @see #InstrumentationModule(String, String...)
+   */
+  public InstrumentationModule(List<String> instrumentationNames) {
+    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
+    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
+    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -68,12 +99,6 @@ public abstract class InstrumentationModule {
     instrumentationNames.add(first);
     instrumentationNames.addAll(asList(rest));
     return instrumentationNames;
-  }
-
-  public InstrumentationModule(List<String> instrumentationNames) {
-    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
-    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   /**

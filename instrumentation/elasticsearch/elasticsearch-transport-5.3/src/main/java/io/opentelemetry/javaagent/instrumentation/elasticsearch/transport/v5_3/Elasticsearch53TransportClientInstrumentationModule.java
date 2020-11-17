@@ -32,7 +32,7 @@ import org.elasticsearch.action.ActionResponse;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch53TransportClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch53TransportClientInstrumentationModule() {
-    super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-5");
+    super("elasticsearch-transport", "elasticsearch-transport-5.3", "elasticsearch");
   }
 
   @Override

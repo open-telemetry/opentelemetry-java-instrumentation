@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KafkaInstrumentationModule extends InstrumentationModule {
-  public KafkaInstrumentationModule() {
-    super("kafka");
+public class KafkaClientsInstrumentationModule extends InstrumentationModule {
+  public KafkaClientsInstrumentationModule() {
+    super("kafka-clients", "kafka-clients-0.11", "kafka");
   }
 
   @Override

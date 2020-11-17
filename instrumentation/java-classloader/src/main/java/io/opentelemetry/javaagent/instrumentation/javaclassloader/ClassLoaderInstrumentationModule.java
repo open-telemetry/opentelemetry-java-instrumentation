@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   public ClassLoaderInstrumentationModule() {
-    super("class-loader");
+    super("classloader");
   }
 
   @Override

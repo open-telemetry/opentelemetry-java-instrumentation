@@ -18,7 +18,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase");
+    super("couchbase", "couchbase-2.6");
   }
 
   @Override

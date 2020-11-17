@@ -20,9 +20,9 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 
 @AutoService(InstrumentationModule.class)
-public class JavaConcurrentInstrumentationModule extends InstrumentationModule {
-  public JavaConcurrentInstrumentationModule() {
-    super("java_concurrent");
+public class ExecutorInstrumentationModule extends InstrumentationModule {
+  public ExecutorInstrumentationModule() {
+    super("executor");
   }
 
   @Override

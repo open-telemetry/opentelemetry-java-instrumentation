@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GrizzlyInstrumentationModule extends InstrumentationModule {
   public GrizzlyInstrumentationModule() {
-    super("grizzly");
+    super("grizzly", "grizzly-2.0");
   }
 
   @Override

@@ -20,7 +20,7 @@ import java.util.Map;
 public class HibernateInstrumentationModule extends InstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-core");
+    super("hibernate", "hibernate-3.3");
   }
 
   @Override

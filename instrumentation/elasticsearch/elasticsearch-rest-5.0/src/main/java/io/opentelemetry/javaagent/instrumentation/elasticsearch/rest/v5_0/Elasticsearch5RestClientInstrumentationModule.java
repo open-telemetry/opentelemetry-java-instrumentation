@@ -30,7 +30,7 @@ import org.elasticsearch.client.ResponseListener;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch5RestClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch5RestClientInstrumentationModule() {
-    super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-5");
+    super("elasticsearch-rest", "elasticsearch-rest-5.0", "elasticsearch");
   }
 
   @Override

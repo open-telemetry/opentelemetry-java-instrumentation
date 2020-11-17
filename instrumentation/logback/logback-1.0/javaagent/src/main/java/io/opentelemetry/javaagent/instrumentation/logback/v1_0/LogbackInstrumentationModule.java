@@ -18,7 +18,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class LogbackInstrumentationModule extends InstrumentationModule {
   public LogbackInstrumentationModule() {
-    super("logback");
+    super("logback", "logback-1.0");
   }
 
   @Override

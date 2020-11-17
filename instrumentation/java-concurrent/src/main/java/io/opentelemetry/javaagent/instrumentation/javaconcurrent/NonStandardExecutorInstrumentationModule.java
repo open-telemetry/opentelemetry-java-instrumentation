@@ -22,10 +22,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class NonStandardExecutorsInstrumentationModule extends InstrumentationModule {
+public final class NonStandardExecutorInstrumentationModule extends InstrumentationModule {
 
-  public NonStandardExecutorsInstrumentationModule() {
-    super("java_concurrent.other");
+  public NonStandardExecutorInstrumentationModule() {
+    super("executor", "non-standard-executor");
   }
 
   @Override
