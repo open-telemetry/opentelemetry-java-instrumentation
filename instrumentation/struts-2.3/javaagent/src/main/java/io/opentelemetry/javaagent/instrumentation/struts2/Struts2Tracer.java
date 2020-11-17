@@ -14,7 +14,11 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class Struts2Tracer extends BaseTracer {
 
-  public static final Struts2Tracer TRACER = new Struts2Tracer();
+  private static final Struts2Tracer TRACER = new Struts2Tracer();
+
+  public static Struts2Tracer tracer() {
+    return TRACER;
+  }
 
   public Span startSpan(ActionInvocation actionInvocation) {
     Object action = actionInvocation.getAction();
@@ -66,7 +70,7 @@ public class Struts2Tracer extends BaseTracer {
       return;
     }
 
-    getCurrentServerSpan().updateName(ServletContextPath.prepend(context, result));
+    serverSpan.updateName(ServletContextPath.prepend(context, result));
   }
 
   @Override

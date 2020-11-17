@@ -41,7 +41,7 @@ class AttributesAssert {
     } else if (value instanceof Closure) {
       assert ((Closure) value).call(val)
     } else {
-      assert value == val
+      assert val == value
     }
   }
 

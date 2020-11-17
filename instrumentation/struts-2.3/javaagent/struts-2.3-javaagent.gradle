@@ -9,9 +9,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
-
-  testImplementation group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
+  library group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
 
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'

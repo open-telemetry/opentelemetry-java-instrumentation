@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
-import static io.opentelemetry.javaagent.instrumentation.struts2.Struts2Tracer.TRACER;
+import static io.opentelemetry.javaagent.instrumentation.struts2.Struts2Tracer.tracer;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.trace.Span;
@@ -20,10 +20,10 @@ public class ActionInvocationAdvice {
       @Advice.This ActionInvocation actionInvocation,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = TRACER.startSpan(actionInvocation);
-    scope = TRACER.startScope(span);
+    span = tracer().startSpan(actionInvocation);
+    scope = tracer().startScope(span);
 
-    TRACER.updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
+    tracer().updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -35,9 +35,9 @@ public class ActionInvocationAdvice {
       scope.close();
     }
     if (throwable != null) {
-      TRACER.endExceptionally(span, throwable);
+      tracer().endExceptionally(span, throwable);
     } else {
-      TRACER.end(span);
+      tracer().end(span);
     }
   }
 }
