@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -15,6 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class HibernateInstrumentationModule extends InstrumentationModule {
@@ -24,11 +26,19 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed(
+        // Not in 4.0
+        "org.hibernate.classic.Validatable",
+        // Not before 3.3.0.GA
+        "org.hibernate.transaction.JBossTransactionManagerLookup");
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
       "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
-      packageName + ".V3Advice",
     };
   }
 
