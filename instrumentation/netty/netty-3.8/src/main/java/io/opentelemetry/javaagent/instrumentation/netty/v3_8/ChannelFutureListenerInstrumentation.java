@@ -50,7 +50,7 @@ final class ChannelFutureListenerInstrumentation implements TypeInstrumentation 
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
-  public static class OperationCompleteAdvice extends AbstractNettyAdvice {
+  public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*

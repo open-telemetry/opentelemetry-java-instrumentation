@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.log4j.v2_13_2.OpenTelemetryContextDataProvider;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(InstrumentationModule.class)
 public final class Log4j2InstrumentationModule extends InstrumentationModule {
@@ -63,8 +65,15 @@ public final class Log4j2InstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      // Nothing to instrument, injecting helper resource & class is enough
-      return Collections.emptyMap();
+      // Nothing to instrument, no methods to match
+      return Collections.singletonMap(ElementMatchers.none(), getClass().getName() + "$MuzzleCheckAdvice");
+    }
+
+    // This way muzzle will collect OpenTelemetryContextDataProvider references
+    public static class MuzzleCheckAdvice {
+      public static void muzzleCheck(OpenTelemetryContextDataProvider contextDataProvider) {
+        contextDataProvider.supplyContextData();
+      }
     }
   }
 }

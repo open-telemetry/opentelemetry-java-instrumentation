@@ -45,7 +45,7 @@ final class TransactionInstrumentation implements TypeInstrumentation {
         TransactionInstrumentation.class.getName() + "$TransactionCommitAdvice");
   }
 
-  public static class TransactionCommitAdvice extends V3Advice {
+  public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startCommit(@Advice.This Transaction transaction) {

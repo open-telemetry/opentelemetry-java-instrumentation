@@ -46,7 +46,7 @@ final class CriteriaInstrumentation implements TypeInstrumentation {
         CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
   }
 
-  public static class CriteriaMethodAdvice extends V3Advice {
+  public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
