@@ -17,7 +17,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class JmsInstrumentationModule extends InstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms");
+    super("jms", "jms-1.1");
   }
 
   @Override
