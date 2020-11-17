@@ -76,9 +76,10 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
       }
+      def expectedMethodName = expectedMethodName(endpoint)
       attributes {
         'code.namespace' "io.opentelemetry.struts.GreetingAction"
-        'code.function' { it == expectedMethodName(endpoint) }
+        'code.function' expectedMethodName
       }
       childOf((SpanData) parent)
     }
