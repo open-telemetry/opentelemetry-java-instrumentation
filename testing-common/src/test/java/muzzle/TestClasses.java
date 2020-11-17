@@ -16,28 +16,28 @@ public class TestClasses {
       A a = new A();
       SomeInterface inter = new SomeImplementation();
       inter.someMethod();
-      a.b.aMethod("foo");
-      a.b.aMethodWithPrimitives(false);
-      a.b.aMethodWithArrays(new String[0]);
-      B.aStaticMethod();
-      A.staticB.aMethod("bar");
+      a.publicB.method("foo");
+      a.publicB.methodWithPrimitives(false);
+      a.publicB.methodWithArrays(new String[0]);
+      B.staticMethod();
+      A.staticB.method("bar");
     }
 
     public static class A {
-      public B b = new B();
+      public B publicB = new B();
       protected Object protectedField = null;
       private final Object privateField = null;
       public static B staticB = new B();
     }
 
     public static class B {
-      public String aMethod(String s) {
+      public String method(String s) {
         return s;
       }
 
-      public void aMethodWithPrimitives(boolean b) {}
+      public void methodWithPrimitives(boolean b) {}
 
-      public Object[] aMethodWithArrays(String[] s) {
+      public Object[] methodWithArrays(String[] s) {
         return s;
       }
 
@@ -45,7 +45,7 @@ public class TestClasses {
 
       protected void protectedMethod() {}
 
-      public static void aStaticMethod() {}
+      public static void staticMethod() {}
     }
 
     public static class B2 extends B {
@@ -91,7 +91,7 @@ public class TestClasses {
   public static class InDyAdvice {
     //    public static MethodBodyAdvice.SomeInterface indyMethod(
     //        final MethodBodyAdvice.SomeImplementation a) {
-    //      Runnable aStaticMethod = MethodBodyAdvice.B::aStaticMethod;
+    //      Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
     //      return a::someMethod;
     //    }
   }

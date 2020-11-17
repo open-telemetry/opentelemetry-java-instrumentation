@@ -15,12 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * no null keys nor null values are permitted
- *
- * @param <K>
- * @param <V>
- */
+/** No null keys nor null values are permitted. */
 public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(GuavaWeakCache.class);
@@ -58,10 +53,7 @@ public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
     this.cache = cache;
   }
 
-  /**
-   * @return null if key is not present
-   * @param key
-   */
+  /** Returns null if key is not present. */
   @Override
   public V getIfPresent(K key) {
     return cache.getIfPresent(key);

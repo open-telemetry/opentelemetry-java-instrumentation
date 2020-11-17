@@ -68,7 +68,7 @@ public final class RmiClientContextInstrumentation implements TypeInstrumentatio
       if (!c.isReusable()) {
         return;
       }
-      if (PROPAGATOR.isRMIInternalObject(id)) {
+      if (PROPAGATOR.isRmiInternalObject(id)) {
         return;
       }
       Span activeSpan = Java8BytecodeBridge.currentSpan();

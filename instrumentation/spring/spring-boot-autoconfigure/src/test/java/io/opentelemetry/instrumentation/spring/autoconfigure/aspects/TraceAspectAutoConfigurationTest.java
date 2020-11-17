@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-/** Spring Boot auto configuration test for {@link TraceAspectAutoConfiguration} */
+/** Spring Boot auto configuration test for {@link TraceAspectAutoConfiguration}. */
 public class TraceAspectAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =

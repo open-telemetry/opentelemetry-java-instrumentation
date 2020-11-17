@@ -24,7 +24,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
-/** AWS request execution interceptor */
+/** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =

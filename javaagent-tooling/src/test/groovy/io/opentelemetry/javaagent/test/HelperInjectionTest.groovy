@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.test
 
 import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
-import static io.opentelemetry.instrumentation.util.gc.GCUtils.awaitGC
+import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 import io.opentelemetry.javaagent.tooling.AgentInstaller
@@ -48,7 +48,7 @@ class HelperInjectionTest extends Specification {
     def ref = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGC(ref)
+    awaitGc(ref)
 
     then: "HelperInjector doesn't prevent it from being collected"
     null == ref.get()
@@ -94,7 +94,7 @@ class HelperInjectionTest extends Specification {
     def injectorRef = new WeakReference(injector.get())
     injector.set(null)
 
-    awaitGC(injectorRef)
+    awaitGc(injectorRef)
 
     then:
     null == injectorRef.get()
@@ -103,7 +103,7 @@ class HelperInjectionTest extends Specification {
     def loaderRef = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGC(loaderRef)
+    awaitGc(loaderRef)
 
     then:
     null == loaderRef.get()

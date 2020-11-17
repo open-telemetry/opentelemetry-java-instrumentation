@@ -79,7 +79,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
           .maximumSize(TYPE_CAPACITY)
           .build();
 
-  /** Fast path for bootstrap */
+  // fast path for bootstrap
   final SharedResolutionCacheAdapter bootstrapCacheProvider =
       new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 

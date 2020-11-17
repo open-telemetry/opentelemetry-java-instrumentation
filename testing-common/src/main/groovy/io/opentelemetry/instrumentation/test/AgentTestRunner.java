@@ -131,9 +131,10 @@ public abstract class AgentTestRunner extends Specification {
   }
 
   /**
+   * Returns true if the class under load should be transformed for this test.
+   *
    * @param className name of the class being loaded
    * @param classLoader classloader class is being defined on
-   * @return true if the class under load should be transformed for this test.
    */
   protected boolean shouldTransformClass(String className, ClassLoader classLoader) {
     return true;

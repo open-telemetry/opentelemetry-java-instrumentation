@@ -87,8 +87,9 @@ public final class ClassLoaderMatcher {
         case AGENT_CLASSLOADER_NAME:
         case EXPORTER_CLASSLOADER_NAME:
           return true;
+        default:
+          return false;
       }
-      return false;
     }
 
     /**

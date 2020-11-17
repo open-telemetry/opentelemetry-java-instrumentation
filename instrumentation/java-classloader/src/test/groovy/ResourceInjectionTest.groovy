@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.util.gc.GCUtils.awaitGC
+import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.HelperInjector
@@ -40,7 +40,7 @@ class ResourceInjectionTest extends AgentTestRunner {
     def ref = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGC(ref)
+    awaitGc(ref)
 
     then: "HelperInjector doesn't prevent it from being collected"
     null == ref.get()

@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 
 /**
  * Callback class to close the span on an error or a success in the RedisFuture returned by the
- * lettuce async API
+ * lettuce async API.
  *
  * @param <T> the normal completion result
  * @param <U> the error

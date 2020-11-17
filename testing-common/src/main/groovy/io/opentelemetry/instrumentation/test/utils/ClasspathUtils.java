@@ -62,7 +62,6 @@ public class ClasspathUtils {
    * @param loader classloader used to load bytes
    * @param resourceNames names of resources to copy into the new jar
    * @return the location of the newly created jar.
-   * @throws IOException
    */
   public static URL createJarWithClasses(ClassLoader loader, String... resourceNames)
       throws IOException {
@@ -94,7 +93,6 @@ public class ClasspathUtils {
    *
    * @param classes classes to package into the jar.
    * @return the location of the newly created jar.
-   * @throws IOException
    */
   public static URL createJarWithClasses(Class<?>... classes) throws IOException {
     File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");

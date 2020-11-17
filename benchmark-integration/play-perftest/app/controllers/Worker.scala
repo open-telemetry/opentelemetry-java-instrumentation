@@ -24,19 +24,19 @@ object Worker {
   val TRACER: Tracer =
     OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
-  def doWork(workTimeMS: Long) = {
+  def doWork(workTimeMillis: Long) = {
     val span = tracer().spanBuilder("work").startSpan()
     val scope = tracer().withSpan(span)
     try {
       if (span != null) {
-        span.setAttribute("work-time", workTimeMS)
+        span.setAttribute("work-time", workTimeMillis)
         span.setAttribute("info", "interesting stuff")
         span.setAttribute("additionalInfo", "interesting stuff")
       }
       val doneTimestamp = System.nanoTime + TimeUnit.MILLISECONDS.toNanos(
-        workTimeMS
+        workTimeMillis
       )
-      while ({
+      while ( {
         System.nanoTime < doneTimestamp
       }) {
         // busy-wait to simulate work

@@ -45,8 +45,8 @@ public class AgentInitializer {
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
 
-  public static void initialize(Instrumentation inst, URL bootstrapURL) {
-    startAgent(inst, bootstrapURL);
+  public static void initialize(Instrumentation inst, URL bootstrapUrl) {
+    startAgent(inst, bootstrapUrl);
 
     boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
 
@@ -69,7 +69,7 @@ public class AgentInitializer {
      * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
      * logging facility.
      */
-    if (isJavaBefore9WithJFR() && appUsingCustomLogManager) {
+    if (isJavaBefore9WithJfr() && appUsingCustomLogManager) {
       log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
       registerLogManagerCallback(new InstallAgentTracerCallback());
     } else {
@@ -133,10 +133,10 @@ public class AgentInitializer {
     }
   }
 
-  private static synchronized void startAgent(Instrumentation inst, URL bootstrapURL) {
+  private static synchronized void startAgent(Instrumentation inst, URL bootstrapUrl) {
     if (AGENT_CLASSLOADER == null) {
       try {
-        ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
+        ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
         Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
         Method agentInstallerMethod =
@@ -192,7 +192,7 @@ public class AgentInitializer {
    *     classloader
    * @return Agent Classloader
    */
-  private static ClassLoader createAgentClassLoader(String innerJarFilename, URL bootstrapURL)
+  private static ClassLoader createAgentClassLoader(String innerJarFilename, URL bootstrapUrl)
       throws Exception {
     ClassLoader agentParent;
     if (isJavaBefore9()) {
@@ -207,7 +207,7 @@ public class AgentInitializer {
             .loadClass("io.opentelemetry.javaagent.bootstrap.AgentClassLoader");
     Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
-    return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);
+    return (ClassLoader) constructor.newInstance(bootstrapUrl, innerJarFilename, agentParent);
   }
 
   private static ClassLoader getPlatformClassLoader()
@@ -292,7 +292,7 @@ public class AgentInitializer {
     return System.getProperty("java.version").startsWith("1.");
   }
 
-  private static boolean isJavaBefore9WithJFR() {
+  private static boolean isJavaBefore9WithJfr() {
     if (!isJavaBefore9()) {
       return false;
     }

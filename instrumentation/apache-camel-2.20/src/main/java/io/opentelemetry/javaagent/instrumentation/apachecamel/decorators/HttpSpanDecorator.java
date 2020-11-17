@@ -80,7 +80,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     super.pre(span, exchange, endpoint, camelDirection);
 
-    String httpUrl = getHttpURL(exchange, endpoint);
+    String httpUrl = getHttpUrl(exchange, endpoint);
     if (httpUrl != null) {
       span.setAttribute(SemanticAttributes.HTTP_URL, httpUrl);
     }
@@ -100,7 +100,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   @Nullable
   protected String getPath(Exchange exchange, Endpoint endpoint) {
 
-    String httpUrl = getHttpURL(exchange, endpoint);
+    String httpUrl = getHttpUrl(exchange, endpoint);
     try {
       URL url = new URL(httpUrl);
       return url.getPath();
@@ -120,7 +120,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  protected String getHttpURL(Exchange exchange, Endpoint endpoint) {
+  protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {
     Object url = exchange.getIn().getHeader(Exchange.HTTP_URL);
     if (url instanceof String) {
       return (String) url;

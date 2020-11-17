@@ -17,18 +17,18 @@ package io.opentelemetry.javaagent.instrumentation.api;
 public interface ContextStore<K, C> {
 
   /**
-   * Factory interface to create context instances
+   * Factory interface to create context instances.
    *
    * @param <C> context type
    */
   interface Factory<C> {
 
-    /** @return new context instance */
+    /** Returns a new context instance. */
     C create();
   }
 
   /**
-   * Get context given the key
+   * Get context given the key.
    *
    * @param key the key to looup
    * @return context object
@@ -36,7 +36,7 @@ public interface ContextStore<K, C> {
   C get(K key);
 
   /**
-   * Put new context instance for given key
+   * Put new context instance for given key.
    *
    * @param key key to use
    * @param context context instance to save
@@ -44,7 +44,7 @@ public interface ContextStore<K, C> {
   void put(K key, C context);
 
   /**
-   * Put new context instance if key is absent
+   * Put new context instance if key is absent.
    *
    * @param key key to use
    * @param context new context instance to put

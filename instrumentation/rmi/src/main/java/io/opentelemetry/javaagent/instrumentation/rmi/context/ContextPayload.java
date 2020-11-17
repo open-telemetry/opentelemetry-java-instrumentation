@@ -18,7 +18,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** ContextPayload wraps context information shared between client and server */
+/** ContextPayload wraps context information shared between client and server. */
 public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
