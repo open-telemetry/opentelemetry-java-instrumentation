@@ -38,7 +38,7 @@ afterEvaluate {
     implementation deps.slf4j
 
     testCompileOnly project(':instrumentation-api')
-    testCompileOnly project(':javaagent-tooling')
+    testImplementation project(':javaagent-tooling')
     testImplementation deps.opentelemetryApi
 
     testImplementation project(':testing-common')
@@ -95,4 +95,9 @@ tasks.withType(Test).configureEach {
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"
+}
+
+configurations.testRuntimeClasspath {
+  // Added by agent, don't let Gradle bring it in.
+  exclude module: 'javaagent-bootstrap'
 }
