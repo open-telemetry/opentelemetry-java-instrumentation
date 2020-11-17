@@ -27,7 +27,7 @@ public class PropagatorsInitializer {
 
   private static final String TRACE_CONTEXT = "tracecontext";
   private static final String B3 = "b3";
-  private static final String B3_SINGLE = "b3single";
+  private static final String B3_MULTI = "b3multi";
   private static final String JAEGER = "jaeger";
   private static final String OT_TRACER = "ottracer";
   private static final String XRAY = "xray";
@@ -35,8 +35,8 @@ public class PropagatorsInitializer {
   private static final Map<String, TextMapPropagator> TEXTMAP_PROPAGATORS =
       ImmutableMap.<String, TextMapPropagator>builder()
           .put(TRACE_CONTEXT, HttpTraceContext.getInstance())
-          .put(B3, B3Propagator.builder().injectMultipleHeaders().build())
-          .put(B3_SINGLE, B3Propagator.getInstance())
+          .put(B3, B3Propagator.getInstance())
+          .put(B3_MULTI, B3Propagator.builder().injectMultipleHeaders().build())
           .put(JAEGER, JaegerPropagator.getInstance())
           .put(OT_TRACER, OtTracerPropagator.getInstance())
           .put(XRAY, AwsXRayPropagator.getInstance())
