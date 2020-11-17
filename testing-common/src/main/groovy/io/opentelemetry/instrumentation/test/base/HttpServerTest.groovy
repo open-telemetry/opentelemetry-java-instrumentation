@@ -128,6 +128,14 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     true
   }
 
+  boolean testRedirect() {
+    true
+  }
+
+  boolean testError() {
+    true
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
@@ -208,7 +216,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
-    assert io.opentelemetry.api.trace.Span.current().getSpanContext().isValid(): "Controller should have a parent span."
+    assert Span.current().getSpanContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
@@ -278,6 +286,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test redirect"() {
     setup:
+    assumeTrue(testRedirect())
     def request = request(REDIRECT, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -297,6 +306,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test error"() {
     setup:
+    assumeTrue(testError())
     def request = request(ERROR, method, body).build()
     def response = client.newCall(request).execute()
 
