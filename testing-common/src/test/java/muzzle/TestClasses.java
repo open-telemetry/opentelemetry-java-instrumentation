@@ -87,13 +87,12 @@ public class TestClasses {
     }
   }
 
-  // TODO Can't test this until java 7 is dropped.
-  public static class InDyAdvice {
-    //    public static MethodBodyAdvice.SomeInterface indyMethod(
-    //        final MethodBodyAdvice.SomeImplementation a) {
-    //      Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
-    //      return a::someMethod;
-    //    }
+  public static class InvokeDynamicAdvice {
+    public static MethodBodyAdvice.SomeInterface invokeDynamicMethod(
+        MethodBodyAdvice.SomeImplementation a) {
+      Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
+      return a::someMethod;
+    }
   }
 
   public static class HelperAdvice {

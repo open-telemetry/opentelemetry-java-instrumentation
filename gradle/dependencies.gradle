@@ -77,7 +77,7 @@ ext {
         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
       }),
       // Used by Spock for mocking:
-      dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '2.6') // Last version to support Java7
+      dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '3.1')
     ],
     groovy                      : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     systemLambda                : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",

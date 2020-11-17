@@ -11,9 +11,7 @@ import javax.jms.ConnectionFactory
 import listener.Config
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
-import spock.lang.Requires
 
-@Requires({ "true" != System.getenv("CIRCLECI") })
 class SpringListenerJms1Test extends AgentTestRunner {
 
   def "receiving message in spring listener generates spans"() {

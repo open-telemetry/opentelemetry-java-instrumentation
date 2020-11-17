@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -20,10 +20,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
-import spock.lang.Requires
 import spock.lang.Shared
 
-@Requires({ "true" != System.getenv("CIRCLECI") })
 class CassandraClientTest extends AgentTestRunner {
   private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
 

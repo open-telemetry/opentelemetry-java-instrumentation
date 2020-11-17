@@ -34,43 +34,29 @@ import spock.lang.Shared
 
 class RabbitMQTest extends AgentTestRunner {
 
-  /*
-    Note: type here has to stay undefined, otherwise tests will fail in CI in Java 7 because
-    'testcontainers' are built for Java 8 and Java 7 cannot load this class.
-   */
   @Shared
-  def rabbbitMQContainer
+  def rabbitMQContainer
   @Shared
-  def defaultRabbitMQPort = 5672
-  @Shared
-  InetSocketAddress rabbitmqAddress = new InetSocketAddress("127.0.0.1", defaultRabbitMQPort)
+  InetSocketAddress rabbitmqAddress
 
   ConnectionFactory factory = new ConnectionFactory(host: rabbitmqAddress.hostName, port: rabbitmqAddress.port)
   Connection conn = factory.newConnection()
   Channel channel = conn.createChannel()
 
   def setupSpec() {
-
-    /*
-      CircleCI will provide us with rabbitmq container running along side our build.
-      When building locally and in GitHub actions, however, we need to take matters into our own hands
-      and we use 'testcontainers' for this.
-     */
-    if ("true" != System.getenv("CIRCLECI")) {
-      rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
-        .withExposedPorts(defaultRabbitMQPort)
-        .withStartupTimeout(Duration.ofSeconds(120))
-      rabbbitMQContainer.start()
-      rabbitmqAddress = new InetSocketAddress(
-        rabbbitMQContainer.containerIpAddress,
-        rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
-      )
-    }
+    rabbitMQContainer = new GenericContainer('rabbitmq:latest')
+      .withExposedPorts(5672)
+      .withStartupTimeout(Duration.ofSeconds(120))
+    rabbitMQContainer.start()
+    rabbitmqAddress = new InetSocketAddress(
+      rabbitMQContainer.containerIpAddress,
+      rabbitMQContainer.getMappedPort(5672)
+    )
   }
 
   def cleanupSpec() {
-    if (rabbbitMQContainer) {
-      rabbbitMQContainer.stop()
+    if (rabbitMQContainer) {
+      rabbitMQContainer.stop()
     }
   }
 
