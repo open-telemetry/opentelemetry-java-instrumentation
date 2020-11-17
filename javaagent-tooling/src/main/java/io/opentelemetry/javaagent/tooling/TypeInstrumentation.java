@@ -30,14 +30,14 @@ public interface TypeInstrumentation {
   }
 
   /**
-   * @return A type matcher defining which classes should undergo transformations defined by advices
-   *     returned by {@link #transformers()}.
+   * Returns a type matcher defining which classes should undergo transformations defined by advices
+   * returned by {@link #transformers()}.
    */
   ElementMatcher<? super TypeDescription> typeMatcher();
 
   /**
-   * @return Keys of the returned map are method matchers, values are full names of advice classes
-   *     that will be applied onto methods that satisfy matcher (key).
+   * Keys of the returned map are method matchers, values are full names of advice classes that will
+   * be applied onto methods that satisfy matcher (key).
    */
   Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 }

@@ -62,7 +62,7 @@ class WeakMapTest extends Specification {
     def counter = 0
 
     @Override
-    Integer get(String ignored) {
+    Integer get(String key) {
       counter = counter + 1
       return counter
     }

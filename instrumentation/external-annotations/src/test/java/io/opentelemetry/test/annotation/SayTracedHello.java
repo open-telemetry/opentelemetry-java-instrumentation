@@ -75,13 +75,13 @@ public class SayTracedHello {
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public static String sayHELLOsayHA() {
+  public static String sayHelloSayHa() {
     Span.current().setAttribute("myattr", "test2");
     return sayHello() + sayHello();
   }
 
   @io.opentracing.contrib.dropwizard.Trace
-  public static String sayERROR() {
+  public static String sayError() {
     throw new RuntimeException();
   }
 

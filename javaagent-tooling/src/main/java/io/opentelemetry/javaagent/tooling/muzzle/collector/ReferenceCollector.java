@@ -168,8 +168,8 @@ public class ReferenceCollector extends ClassVisitor {
   }
 
   /**
-   * @return If TYPE is an array, return the underlying type. If TYPE is not an array simply return
-   *     the type.
+   * If TYPE is an array, returns the underlying type. If TYPE is not an array simply return the
+   * type.
    */
   private static Type underlyingType(Type type) {
     while (type.getSort() == Type.ARRAY) {

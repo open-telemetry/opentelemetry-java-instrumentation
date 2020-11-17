@@ -17,13 +17,13 @@ import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 
-/** System Metrics Utility */
+/** System Metrics Utility. */
 public class SystemMetrics {
   private static final String TYPE_LABEL_KEY = "type";
 
   private SystemMetrics() {}
 
-  /** Register observers for system metrics */
+  /** Register observers for system metrics. */
   public static void registerObservers() {
     Meter meter = OpenTelemetry.getGlobalMeterProvider().get(SystemMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();

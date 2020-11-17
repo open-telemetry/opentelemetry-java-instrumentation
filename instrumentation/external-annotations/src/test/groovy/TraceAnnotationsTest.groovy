@@ -33,13 +33,13 @@ class TraceAnnotationsTest extends AgentTestRunner {
   def "test complex case annotations"() {
     when:
     // Test new trace with 2 children spans
-    SayTracedHello.sayHELLOsayHA()
+    SayTracedHello.sayHelloSayHa()
 
     then:
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "SayTracedHello.sayHELLOsayHA"
+          name "SayTracedHello.sayHelloSayHa"
           hasNoParent()
           errored false
           attributes {
@@ -70,7 +70,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     setup:
     Throwable error = null
     try {
-      SayTracedHello.sayERROR()
+      SayTracedHello.sayError()
     } catch (final Throwable ex) {
       error = ex
     }
@@ -79,7 +79,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SayTracedHello.sayERROR"
+          name "SayTracedHello.sayError"
           errored true
           errorEvent(error.class)
         }

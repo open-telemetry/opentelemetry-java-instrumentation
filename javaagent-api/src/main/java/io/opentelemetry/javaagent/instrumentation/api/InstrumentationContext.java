@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
-/** Instrumentation Context API */
+/** Instrumentation Context API. */
 public class InstrumentationContext {
   private InstrumentationContext() {}
 

@@ -187,7 +187,7 @@ public final class Reference {
     boolean matches(int asmFlags);
 
     // This method is internally used to generate the getMuzzleReferenceMatcher() implementation
-    /** Same as {@link Enum#name()} */
+    /** Same as {@link Enum#name()}. */
     String name();
 
     /**

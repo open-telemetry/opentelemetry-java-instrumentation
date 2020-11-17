@@ -59,17 +59,18 @@ public class IntegrationTestUtils {
     }
   }
 
-  /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
+  /** Returns the URL to the jar the agent appended to the bootstrap classpath. */
   public static ClassLoader getBootstrapProxy() throws Exception {
     ClassLoader agentClassLoader = getAgentClassLoader();
     Method getBootstrapProxy = agentClassLoader.getClass().getMethod("getBootstrapProxy");
     return (ClassLoader) getBootstrapProxy.invoke(agentClassLoader);
   }
 
-  /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
+  /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])}. */
   public static URL createJarWithClasses(Class<?>... classes) throws IOException {
     return createJarWithClasses(null, classes);
   }
+
   /**
    * Create a temporary jar on the filesystem with the bytes of the given classes.
    *
@@ -78,7 +79,6 @@ public class IntegrationTestUtils {
    * @param mainClassname The name of the class to use for Main-Class and Premain-Class. May be null
    * @param classes classes to package into the jar.
    * @return the location of the newly created jar.
-   * @throws IOException
    */
   public static URL createJarWithClasses(String mainClassname, Class<?>... classes)
       throws IOException {
@@ -129,7 +129,7 @@ public class IntegrationTestUtils {
     }
   }
 
-  /** com.foo.Bar -> com/foo/Bar.class */
+  // com.foo.Bar -> com/foo/Bar.class
   public static String getResourceName(String className) {
     return className.replace('.', '/') + ".class";
   }
@@ -179,7 +179,6 @@ public class IntegrationTestUtils {
    * @param mainClassName The name of the entry point class. Must declare a main method.
    * @param printOutputStreams if true, print stdout and stderr of the child jvm
    * @return the return code of the child jvm
-   * @throws Exception
    */
   public static int runOnSeparateJvm(
       String mainClassName,

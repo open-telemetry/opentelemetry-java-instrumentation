@@ -14,9 +14,9 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Inspired by: <a
+ * Inspired by <a
  * href="https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientAutoConfiguration.java">Spring
- * Cloud Sleuth</a>
+ * Cloud Sleuth</a>.
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
 

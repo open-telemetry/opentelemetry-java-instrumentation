@@ -21,7 +21,7 @@ public class JspInstrumentationModule extends InstrumentationModule {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JSPTracer",
+      packageName + ".JspTracer",
     };
   }
 

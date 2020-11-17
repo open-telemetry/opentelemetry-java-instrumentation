@@ -53,7 +53,8 @@ public abstract class Config {
   abstract Map<String, String> getAllProperties();
 
   /**
-   * @return A string property value or null if a property with name {@code name} did not exist.
+   * Returns a string property value or null if a property with name {@code name} did not exist.
+   *
    * @see #getProperty(String, String)
    */
   @Nullable
@@ -80,8 +81,9 @@ public abstract class Config {
   }
 
   /**
-   * @return A boolean property value or {@code defaultValue} if a property with name {@code name}
-   *     did not exist.
+   * Returns a boolean property value or {@code defaultValue} if a property with name {@code name}
+   * did not exist.
+   *
    * @see #getProperty(String, String)
    */
   public boolean getBooleanProperty(String name, boolean defaultValue) {
@@ -89,8 +91,9 @@ public abstract class Config {
   }
 
   /**
-   * @return A list-of-strings property value or empty list if a property with name {@code name} did
-   *     not exist.
+   * Returns a list-of-strings property value or empty list if a property with name {@code name} did
+   * not exist.
+   *
    * @see #getProperty(String, String)
    */
   public List<String> getListProperty(String name) {
@@ -98,8 +101,9 @@ public abstract class Config {
   }
 
   /**
-   * @return A list-of-strings property value or {@code defaultValue} if a property with name {@code
-   *     name} did not exist.
+   * Returns a list-of-strings property value or {@code defaultValue} if a property with name {@code
+   * name} did not exist.
+   *
    * @see #getProperty(String, String)
    */
   public List<String> getListProperty(String name, List<String> defaultValue) {
@@ -107,8 +111,9 @@ public abstract class Config {
   }
 
   /**
-   * @return A map-of-strings property value or empty map if a property with name {@code name} did
-   *     not exist.
+   * Returns a map-of-strings property value or empty map if a property with name {@code name} did
+   * not exist.
+   *
    * @see #getProperty(String, String)
    */
   public Map<String, String> getMapProperty(String name) {
