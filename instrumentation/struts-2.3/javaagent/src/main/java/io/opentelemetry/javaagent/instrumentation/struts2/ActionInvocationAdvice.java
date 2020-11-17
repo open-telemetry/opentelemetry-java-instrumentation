@@ -23,7 +23,8 @@ public class ActionInvocationAdvice {
     span = tracer().startSpan(actionInvocation);
     scope = tracer().startScope(span);
 
-    tracer().updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
+    tracer()
+        .updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
