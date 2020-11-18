@@ -13,12 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -27,28 +26,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
-@AutoService(Instrumenter.class)
-public final class KafkaProducerInstrumentation extends Instrumenter.Default {
-
-  public KafkaProducerInstrumentation() {
-    super("kafka");
-  }
+final class KafkaProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.clients.producer.KafkaProducer");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KafkaClientConfiguration",
-      packageName + ".KafkaProducerTracer",
-      packageName + ".TextMapInjectAdapter",
-      KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
-    };
   }
 
   @Override
@@ -67,7 +50,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
-        @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
+        @Advice.Argument(value = 0, readOnly = false) ProducerRecord<?, ?> record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
@@ -116,37 +99,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         tracer().endExceptionally(span, throwable);
       }
       // span finished by ProducerCallback
-    }
-  }
-
-  public static class ProducerCallback implements Callback {
-    private final Callback callback;
-    private final Context parent;
-    private final Span span;
-
-    public ProducerCallback(Callback callback, Context parent, Span span) {
-      this.callback = callback;
-      this.parent = parent;
-      this.span = span;
-    }
-
-    @Override
-    public void onCompletion(RecordMetadata metadata, Exception exception) {
-      if (exception != null) {
-        tracer().endExceptionally(span, exception);
-      } else {
-        tracer().end(span);
-      }
-
-      if (callback != null) {
-        if (parent != null) {
-          try (Scope ignored = parent.makeCurrent()) {
-            callback.onCompletion(metadata, exception);
-          }
-        } else {
-          callback.onCompletion(metadata, exception);
-        }
-      }
     }
   }
 }

@@ -88,7 +88,7 @@ public class Utils {
     return type.getDeclaredMethods().filter(named(methodName)).getOnly();
   }
 
-  /** @return The current stack trace with multiple entries on new lines. */
+  /** Returns the current stack trace with multiple entries on new lines. */
   public static String getStackTraceAsString() {
     StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     StringBuilder stringBuilder = new StringBuilder();

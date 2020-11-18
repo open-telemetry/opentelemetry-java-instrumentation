@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.test.utils;
 public class ExceptionUtils {
 
   static RuntimeException sneakyThrow(Throwable t) {
-    if (t == null) throw new NullPointerException("t");
+    if (t == null) {
+      throw new NullPointerException("t");
+    }
     return ExceptionUtils.<RuntimeException>sneakyThrow0(t);
   }
 

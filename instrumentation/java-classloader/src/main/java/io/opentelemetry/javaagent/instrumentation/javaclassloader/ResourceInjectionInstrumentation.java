@@ -10,9 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -30,12 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>We currently only intercept {@link ClassLoader#getResources(String)} because this is the case
  * we are currently always interested in, where it's used for service loading.
  */
-@AutoService(Instrumenter.class)
-public class ResourceInjectionInstrumentation extends Instrumenter.Default {
-
-  public ResourceInjectionInstrumentation() {
-    super("class-loader");
-  }
+class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {

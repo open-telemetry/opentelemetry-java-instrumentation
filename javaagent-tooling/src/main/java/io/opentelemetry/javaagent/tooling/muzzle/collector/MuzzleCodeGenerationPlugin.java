@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.WeakHashMap;
 import net.bytebuddy.build.Plugin;
@@ -34,8 +33,6 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
         });
   }
 
-  private static final TypeDescription defaultInstrumenterType =
-      new TypeDescription.ForLoadedType(Instrumenter.Default.class);
   private static final TypeDescription instrumentationModuleType =
       new TypeDescription.ForLoadedType(InstrumentationModule.class);
 
@@ -44,18 +41,17 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
     if (target.isAbstract()) {
       return false;
     }
-    // AutoService annotation is not retained at runtime. Check for Instrumenter.Default supertype
-    boolean isInstrumenter = false;
-    TypeDefinition instrumenter = target.getSuperClass();
-    while (instrumenter != null) {
-      if (instrumenter.equals(defaultInstrumenterType)
-          || instrumenter.equals(instrumentationModuleType)) {
-        isInstrumenter = true;
+    // AutoService annotation is not retained at runtime. Check for InstrumentationModule supertype
+    boolean isInstrumentationModule = false;
+    TypeDefinition instrumentation = target.getSuperClass();
+    while (instrumentation != null) {
+      if (instrumentation.equals(instrumentationModuleType)) {
+        isInstrumentationModule = true;
         break;
       }
-      instrumenter = instrumenter.getSuperClass();
+      instrumentation = instrumentation.getSuperClass();
     }
-    return isInstrumenter;
+    return isInstrumentationModule;
   }
 
   @Override
@@ -68,23 +64,4 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
 
   @Override
   public void close() {}
-
-  /** Compile-time Optimization used by gradle buildscripts. */
-  public static class NoOp implements Plugin {
-    @Override
-    public boolean matches(TypeDescription target) {
-      return false;
-    }
-
-    @Override
-    public DynamicType.Builder<?> apply(
-        DynamicType.Builder<?> builder,
-        TypeDescription typeDescription,
-        ClassFileLocator classFileLocator) {
-      return builder;
-    }
-
-    @Override
-    public void close() {}
-  }
 }

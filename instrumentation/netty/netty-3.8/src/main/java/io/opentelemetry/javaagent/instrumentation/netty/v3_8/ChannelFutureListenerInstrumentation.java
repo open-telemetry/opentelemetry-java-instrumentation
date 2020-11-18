@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
@@ -20,8 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,14 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
-@AutoService(Instrumenter.class)
-public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
-
-  public ChannelFutureListenerInstrumentation() {
-    super(
-        NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
-        NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
-  }
+final class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -51,19 +42,6 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AbstractNettyAdvice",
-      packageName + ".ChannelTraceContext",
-      packageName + ".ChannelTraceContext$Factory",
-      packageName + ".client.NettyHttpClientTracer",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".server.NettyHttpServerTracer",
-      packageName + ".server.NettyRequestExtractAdapter"
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
@@ -72,13 +50,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", packageName + ".ChannelTraceContext");
-  }
-
-  public static class OperationCompleteAdvice extends AbstractNettyAdvice {
+  public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {
       /*

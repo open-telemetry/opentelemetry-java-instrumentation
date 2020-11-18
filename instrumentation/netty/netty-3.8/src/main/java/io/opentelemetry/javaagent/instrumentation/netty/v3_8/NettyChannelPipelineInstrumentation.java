@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -22,8 +21,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientTr
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.HttpServerTracingHandler;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -40,15 +38,7 @@ import org.jboss.netty.handler.codec.http.HttpResponseDecoder;
 import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import org.jboss.netty.handler.codec.http.HttpServerCodec;
 
-@AutoService(Instrumenter.class)
-public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
-
-  static final String INSTRUMENTATION_NAME = "netty";
-  static final String[] ADDITIONAL_INSTRUMENTATION_NAMES = {"netty-3.8"};
-
-  public NettyChannelPipelineInstrumentation() {
-    super(INSTRUMENTATION_NAME, ADDITIONAL_INSTRUMENTATION_NAMES);
-  }
+final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -59,30 +49,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.jboss.netty.channel.ChannelPipeline"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AbstractNettyAdvice",
-      packageName + ".ChannelTraceContext",
-      packageName + ".ChannelTraceContext$Factory",
-      NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdviceUtil",
-      // Util
-      packageName + ".util.CombinedSimpleChannelHandler",
-      // client helpers
-      packageName + ".client.NettyHttpClientTracer",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".client.HttpClientRequestTracingHandler",
-      packageName + ".client.HttpClientResponseTracingHandler",
-      packageName + ".client.HttpClientTracingHandler",
-      // server helpers
-      packageName + ".server.NettyHttpServerTracer",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".server.HttpServerRequestTracingHandler",
-      packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler"
-    };
   }
 
   @Override
@@ -99,12 +65,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
             .and(takesArgument(2, named("org.jboss.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdd3ArgsAdvice");
     return transformers;
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
   /**
@@ -150,7 +110,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class ChannelPipelineAdd2ArgsAdvice extends AbstractNettyAdvice {
+  public static class ChannelPipelineAdd2ArgsAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
@@ -179,7 +139,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class ChannelPipelineAdd3ArgsAdvice extends AbstractNettyAdvice {
+  public static class ChannelPipelineAdd3ArgsAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {

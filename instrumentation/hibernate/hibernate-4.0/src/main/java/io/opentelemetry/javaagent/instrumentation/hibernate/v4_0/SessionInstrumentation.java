@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -16,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -24,8 +24,7 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,17 +37,12 @@ import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 
-@AutoService(Instrumenter.class)
-public class SessionInstrumentation extends AbstractHibernateInstrumentation {
+final class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.SharedSessionContract", Context.class.getName());
-    map.put("org.hibernate.Query", Context.class.getName());
-    map.put("org.hibernate.Transaction", Context.class.getName());
-    map.put("org.hibernate.Criteria", Context.class.getName());
-    return Collections.unmodifiableMap(map);
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.hibernate.SharedSessionContract");
   }
 
   @Override
@@ -109,7 +103,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     return transformers;
   }
 
-  public static class SessionCloseAdvice extends V4Advice {
+  public static class SessionCloseAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
@@ -129,7 +123,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class SessionMethodAdvice extends V4Advice {
+  public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
@@ -155,7 +149,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetQueryAdvice extends V4Advice {
+  public static class GetQueryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
@@ -171,7 +165,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetTransactionAdvice extends V4Advice {
+  public static class GetTransactionAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
@@ -187,7 +181,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetCriteriaAdvice extends V4Advice {
+  public static class GetCriteriaAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(

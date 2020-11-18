@@ -59,16 +59,16 @@ Next, request passes several other methods from Servlet specification, such as
 
 `protected void org.springframework.web.servlet.FrameworkServlet#doGet(HttpServletRequest, HttpServletResponse)`.
 
-They are the targets for `HttpServletInstrumentation`.
+They are the targets for `HttpServletInstrumentationModule`.
 From the observability point of view nothing of interest usually happens inside these methods.
 Thus it usually does not make sense to create spans from them, as they would only add useless noise.
-For this reason `HttpServletInstrumentation` is disabled by default.
-In rare cases when you need it, you can enable it using configuration property `otel.integration.servlet-service.enabled`.
+For this reason `HttpServletInstrumentationModule` is disabled by default.
+In rare cases when you need it, you can enable it using configuration property `otel.instrumentation.servlet-service.enabled`.
 
 In exactly the same situation are all other Servlet filters beyond the initial entry point.
 Usually unimportant, they may be sometimes of interest during troubleshooting.
-They are instrumented by `FilterInstrumentation` which is also disabled by default.
-You can enable it with the configuration property `otel.integration.servlet-filter.enabled`.
+They are instrumented by `FilterInstrumentationModule` which is also disabled by default.
+You can enable it with the configuration property `otel.instrumentation.servlet-filter.enabled`.
 At last, request processing may reach the specific framework that your application uses.
 In this case Spring MVC and `OwnerController.initCreationForm`.
 
@@ -88,10 +88,10 @@ Of course, still adhering to OpenTelemetry
 [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md).
 
 ## Additional instrumentations
-`RequestDispatcherInstrumentation` instruments `javax.servlet.RequestDispatcher.forward` and
+`RequestDispatcherInstrumentationModule` instruments `javax.servlet.RequestDispatcher.forward` and
 `javax.servlet.RequestDispatcher.include` methods to create new `INTERNAL` spans around their
 invocations.
 
-`HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
+`HttpServletResponseInstrumentationModule` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.

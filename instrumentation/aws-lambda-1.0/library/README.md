@@ -81,6 +81,7 @@ public class MyBatchHandler extends TracingSQSEventHandler {
 
 ## Trace propagation
 
+### X-Ray propagation
 This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
 requests and SQS requests. To enable this propagation, in your code as early as possible,
 configure the `AwsXrayPropagator` along with any other propagators you use. If in doubt, you can
@@ -110,3 +111,17 @@ allow linking between messages in a backend-agnostic way.
 Otherwise, only enable the above if you are using AWS X-Ray as your tracing backend. You should not
 enable the X-Ray propagator if you are not using X-Ray as it will cause the spans in Lambda to not
 have the correct parent/child connection between client and server spans.
+
+### HTTP headers based propagation
+For API Gateway (HTTP) requests instrumented by using either `TracingRequestStreamHandler` or `TracingRequestStreamWrapper`
+traces can be propagated with supported HTTP headers (see https://github.com/open-telemetry/opentelemetry-java/tree/master/extensions/trace_propagators).
+To enable requested propagation, configure it in your code as early as possible.
+
+```java
+  static {
+    OpenTelemetry.setGlobalPropagators(
+      DefaultContextPropagators.builder()
+        .addTextMapPropagator(HttpTraceContext.getInstance())
+        .build());
+  }
+```

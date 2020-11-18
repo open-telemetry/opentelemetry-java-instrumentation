@@ -19,7 +19,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -27,19 +26,14 @@ import com.twilio.Twilio;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/** Instrument the Twilio SDK to identify calls as a seperate service. */
-@AutoService(Instrumenter.class)
-public class TwilioAsyncInstrumentation extends Instrumenter.Default {
-
-  public TwilioAsyncInstrumentation() {
-    super("twilio-sdk");
-  }
+/** Instrument the Twilio SDK to identify calls as a separate service. */
+final class TwilioAsyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -57,15 +51,6 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
             "com.twilio.base.Fetcher",
             "com.twilio.base.Reader",
             "com.twilio.base.Updater"));
-  }
-
-  /** Return the helper classes which will be available for use in instrumentation. */
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TwilioClientDecorator",
-      packageName + ".TwilioAsyncInstrumentation$SpanFinishingCallback",
-    };
   }
 
   /** Return bytebuddy transformers for instrumenting the Twilio SDK. */
@@ -122,7 +107,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
     public static void methodExit(
         @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return ListenableFuture response) {
+        @Advice.Return ListenableFuture<?> response) {
       if (spanWithScope == null) {
         return;
       }
@@ -142,7 +127,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
           // We're calling an async operation, we still need to finish the span when it's
           // complete and report the results; set an appropriate callback
           Futures.addCallback(
-              response, new SpanFinishingCallback(span), Twilio.getExecutorService());
+              response, new SpanFinishingCallback<>(span), Twilio.getExecutorService());
         }
       } finally {
         spanWithScope.closeScope();
@@ -155,7 +140,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
    * FutureCallback, which automatically finishes the span and annotates with any appropriate
    * metadata on a potential failure.
    */
-  public static class SpanFinishingCallback implements FutureCallback {
+  public static class SpanFinishingCallback<T> implements FutureCallback<T> {
 
     /** Span that we should finish and annotate when the future is complete. */
     private final Span span;

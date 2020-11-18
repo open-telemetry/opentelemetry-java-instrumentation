@@ -12,12 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.rmi.server.ObjID;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -47,32 +46,11 @@ import sun.rmi.transport.Connection;
  * that instruction will essentially be garbage data and will cause the parsing loop to throw
  * exception and shutdown the connection which we do not want
  */
-@AutoService(Instrumenter.class)
-public class RmiClientContextInstrumentation extends Instrumenter.Default {
-
-  public RmiClientContextInstrumentation() {
-    super("rmi", "rmi-context-propagator", "rmi-client-context-propagator");
-  }
+public final class RmiClientContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return extendsClass(named("sun.rmi.transport.StreamRemoteCall"));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    // caching if a connection can support enhanced format
-    return singletonMap("sun.rmi.transport.Connection", "java.lang.Boolean");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$InjectAdapter",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$ExtractAdapter",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator"
-    };
   }
 
   @Override
@@ -90,7 +68,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
       if (!c.isReusable()) {
         return;
       }
-      if (PROPAGATOR.isRMIInternalObject(id)) {
+      if (PROPAGATOR.isRmiInternalObject(id)) {
         return;
       }
       Span activeSpan = Java8BytecodeBridge.currentSpan();

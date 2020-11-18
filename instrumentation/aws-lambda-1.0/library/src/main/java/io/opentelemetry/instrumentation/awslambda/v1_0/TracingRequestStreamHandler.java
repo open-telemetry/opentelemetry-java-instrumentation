@@ -50,11 +50,14 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   }
 
   @Override
-  public final void handleRequest(InputStream input, OutputStream output, Context context)
+  public void handleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
-    Span span = tracer.startSpan(context, Kind.SERVER);
+
+    ApiGatewayProxyRequest proxyRequest = ApiGatewayProxyRequest.forStream(input);
+    Span span = tracer.startSpan(context, Kind.SERVER, proxyRequest.getHeaders());
+
     try (Scope ignored = tracer.startScope(span)) {
-      doHandleRequest(input, new OutputStreamWrapper(output, span), context);
+      doHandleRequest(proxyRequest.freshStream(), new OutputStreamWrapper(output, span), context);
     } catch (Throwable t) {
       tracer.endExceptionally(span, t);
       OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
@@ -86,6 +89,11 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     }
 
     @Override
+    public void write(int b) throws IOException {
+      delegate.write(b);
+    }
+
+    @Override
     public void flush() throws IOException {
       delegate.flush();
     }
@@ -95,11 +103,6 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       delegate.close();
       tracer.end(span);
       OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-      delegate.write(b);
     }
   }
 }

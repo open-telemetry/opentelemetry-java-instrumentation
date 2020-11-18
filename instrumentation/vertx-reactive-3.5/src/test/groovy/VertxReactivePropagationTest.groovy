@@ -69,7 +69,7 @@ class VertxReactivePropagationTest extends AgentTestRunner {
         basicSpan(it, 1, "handleListProducts", span(0))
         basicSpan(it, 2, "listProducts", span(1))
         span(3) {
-          name "SELECT id, name, price, weight FROM products"
+          name "SELECT test.products"
           kind CLIENT
           childOf span(2)
           errored false

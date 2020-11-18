@@ -12,8 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -28,12 +27,7 @@ import org.apache.http.HttpRequest;
  * manually. Inspired by
  * https://github.com/elastic/apm-agent-java/blob/master/apm-agent-plugins/apm-apache-httpclient-plugin/src/main/java/co/elastic/apm/agent/httpclient/ApacheHttpAsyncClientRedirectInstrumentation.java
  */
-@AutoService(Instrumenter.class)
-public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Default {
-
-  public ApacheHttpClientRedirectInstrumentation() {
-    super("httpasyncclient", "apache-httpasyncclient");
-  }
+public class ApacheHttpClientRedirectInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {

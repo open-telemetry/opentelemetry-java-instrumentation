@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 /**
  * Instrumentation for methods annotated with {@link WithSpan} annotation.
  *
- * @see WithSpanAnnotationInstrumentation
+ * @see WithSpanAnnotationInstrumentationModule
  */
 public class WithSpanAdvice {
 

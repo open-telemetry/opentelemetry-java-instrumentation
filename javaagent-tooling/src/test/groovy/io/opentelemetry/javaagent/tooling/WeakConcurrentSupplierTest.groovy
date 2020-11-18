@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.instrumentation.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GcUtils
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
@@ -51,7 +51,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def supplierRef = new WeakReference(supplier)
     supplier = null
-    GCUtils.awaitGC(supplierRef)
+    GcUtils.awaitGc(supplierRef)
 
     then:
     ref.get() == null
@@ -72,7 +72,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def mapRef = new WeakReference(map)
     map = null
-    GCUtils.awaitGC(mapRef)
+    GcUtils.awaitGc(mapRef)
 
     then:
     ref.get() == null
@@ -88,7 +88,7 @@ class WeakConcurrentSupplierTest extends Specification {
     setup:
     def key = new Object()
     map.put(key, "value")
-    GCUtils.awaitGC()
+    GcUtils.awaitGc()
 
     expect:
     map.size() == 1
@@ -96,7 +96,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def keyRef = new WeakReference(key)
     key = null
-    GCUtils.awaitGC(keyRef)
+    GcUtils.awaitGc(keyRef)
 
     if (name == "WeakConcurrent") {
       // Sleep enough time for cleanup thread to get scheduled.

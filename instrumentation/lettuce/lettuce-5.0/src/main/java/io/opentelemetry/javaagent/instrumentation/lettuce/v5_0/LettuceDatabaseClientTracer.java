@@ -21,7 +21,7 @@ public class LettuceDatabaseClientTracer
   }
 
   private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("lettuce", "lettuce-5");
+      new RedisCommandNormalizer("lettuce", "lettuce-5.0");
 
   @Override
   protected String spanName(

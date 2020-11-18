@@ -13,14 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,33 +26,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.procedure.ProcedureCall;
 
-@AutoService(Instrumenter.class)
-public class SessionInstrumentation extends Instrumenter.Default {
-
-  public SessionInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.SharedSessionContract", Context.class.getName());
-    map.put("org.hibernate.procedure.ProcedureCall", Context.class.getName());
-    return Collections.unmodifiableMap(map);
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
-    };
-  }
+final class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.hibernate.Session");
+    return hasClassesNamed("org.hibernate.SharedSessionContract");
   }
 
   @Override

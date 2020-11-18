@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normalizeAndExtractInfo;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -18,7 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
+public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
   private static final JdbcTracer TRACER = new JdbcTracer();
 
   public static JdbcTracer tracer() {
@@ -31,17 +33,17 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   @Override
-  protected String dbSystem(DBInfo info) {
+  protected String dbSystem(DbInfo info) {
     return info.getSystem();
   }
 
   @Override
-  protected String dbUser(DBInfo info) {
+  protected String dbUser(DbInfo info) {
     return info.getUser();
   }
 
   @Override
-  protected String dbName(DBInfo info) {
+  protected String dbName(DbInfo info) {
     if (info.getName() != null) {
       return info.getName();
     } else {
@@ -51,12 +53,12 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
 
   // TODO find a way to implement
   @Override
-  protected InetSocketAddress peerAddress(DBInfo dbInfo) {
+  protected InetSocketAddress peerAddress(DbInfo dbInfo) {
     return null;
   }
 
   @Override
-  protected String dbConnectionString(DBInfo info) {
+  protected String dbConnectionString(DbInfo info) {
     return info.getShortUrl();
   }
 
@@ -65,27 +67,52 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   public Span startSpan(PreparedStatement statement) {
-    return startSpan(statement, JDBCMaps.preparedStatements.get(statement));
+    return startSpan(statement, JdbcMaps.preparedStatements.get(statement));
   }
 
   public Span startSpan(Statement statement, String query) {
+    return startSpan(statement, normalizeAndExtractInfo(query));
+  }
+
+  public Span startSpan(Statement statement, SqlStatementInfo queryInfo) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    DBInfo dbInfo = extractDbInfo(connection);
+    DbInfo dbInfo = extractDbInfo(connection);
 
-    return startSpan(dbInfo, query);
+    return startSpan(dbInfo, queryInfo);
   }
 
   @Override
-  protected String normalizeQuery(String query) {
-    return JDBCUtils.normalizeSql(query);
+  protected String normalizeQuery(SqlStatementInfo query) {
+    return query.getFullStatement();
   }
 
-  private DBInfo extractDbInfo(Connection connection) {
-    DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
+  @Override
+  protected String spanName(DbInfo connection, SqlStatementInfo query, String normalizedQuery) {
+    String dbName = dbName(connection);
+    if (query.getOperation() == null) {
+      return dbName == null ? DB_QUERY : dbName;
+    }
+
+    StringBuilder name = new StringBuilder();
+    name.append(query.getOperation()).append(' ');
+    if (dbName != null) {
+      name.append(dbName);
+      if (query.getTable() != null) {
+        name.append('.');
+      }
+    }
+    if (query.getTable() != null) {
+      name.append(query.getTable());
+    }
+    return name.toString();
+  }
+
+  private DbInfo extractDbInfo(Connection connection) {
+    DbInfo dbInfo = JdbcMaps.connectionInfo.get(connection);
     /*
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
      * Driver.connect, or it has never seen before, the connectionInfo map will return null and will
@@ -100,18 +127,18 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
           String url = metaData.getURL();
           if (url != null) {
             try {
-              dbInfo = JDBCConnectionUrlParser.parse(url, connection.getClientInfo());
+              dbInfo = JdbcConnectionUrlParser.parse(url, connection.getClientInfo());
             } catch (Throwable ex) {
               // getClientInfo is likely not allowed.
-              dbInfo = JDBCConnectionUrlParser.parse(url, null);
+              dbInfo = JdbcConnectionUrlParser.parse(url, null);
             }
           } else {
-            dbInfo = DBInfo.DEFAULT;
+            dbInfo = DbInfo.DEFAULT;
           }
         } catch (SQLException se) {
-          dbInfo = DBInfo.DEFAULT;
+          dbInfo = DbInfo.DEFAULT;
         }
-        JDBCMaps.connectionInfo.put(connection, dbInfo);
+        JdbcMaps.connectionInfo.put(connection, dbInfo);
       }
     }
     return dbInfo;

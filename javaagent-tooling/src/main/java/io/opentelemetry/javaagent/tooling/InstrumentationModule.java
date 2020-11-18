@@ -58,9 +58,40 @@ public abstract class InstrumentationModule {
   protected final String packageName =
       getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
+  /**
+   * Creates an instrumentation module. Note that all implementations of {@link
+   * InstrumentationModule} must have a default constructor (for SPI), so they have to pass the
+   * instrumentation names to the super class constructor.
+   *
+   * <p>The instrumentation names should follow several rules:
+   *
+   * <ul>
+   *   <li>Instrumentation names should consist of hyphen-separated words, e.g. {@code
+   *       instrumented-library};
+   *   <li>In general, instrumentation names should be the as close as possible to the gradle module
+   *       name - which in turn should be as close as possible to the instrumented library name;
+   *   <li>The main instrumentation name should be the same as the gradle module name, minus the
+   *       version if it's a part of the module name. When several versions of a library are
+   *       instrumented they should all share the same main instrumentation name so that it's easy
+   *       to enable/disable the instrumentation regardless of the runtime library version;
+   *   <li>If the gradle module has a version as a part of its name, an additional instrumentation
+   *       name containing the version should be passed, e.g. {@code instrumented-library-1.0}.
+   * </ul>
+   */
   public InstrumentationModule(
-      String mainInstrumentationName, String... otherInstrumentationNames) {
-    this(toList(mainInstrumentationName, otherInstrumentationNames));
+      String mainInstrumentationName, String... additionalInstrumentationNames) {
+    this(toList(mainInstrumentationName, additionalInstrumentationNames));
+  }
+
+  /**
+   * Creates an instrumentation module.
+   *
+   * @see #InstrumentationModule(String, String...)
+   */
+  public InstrumentationModule(List<String> instrumentationNames) {
+    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
+    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
+    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -68,12 +99,6 @@ public abstract class InstrumentationModule {
     instrumentationNames.add(first);
     instrumentationNames.addAll(asList(rest));
     return instrumentationNames;
-  }
-
-  public InstrumentationModule(List<String> instrumentationNames) {
-    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
-    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   /**
@@ -84,19 +109,31 @@ public abstract class InstrumentationModule {
    */
   public final AgentBuilder instrument(AgentBuilder parentAgentBuilder) {
     if (!enabled) {
-      log.debug("Instrumentation {} is disabled", instrumentationNames.iterator().next());
+      log.debug("Instrumentation {} is disabled", mainInstrumentationName());
+      return parentAgentBuilder;
+    }
+
+    List<String> helperClassNames = asList(helperClassNames());
+    List<String> helperResourceNames = asList(helperResourceNames());
+    List<TypeInstrumentation> typeInstrumentations = typeInstrumentations();
+    if (typeInstrumentations.isEmpty()) {
+      if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
+        log.warn(
+            "Helper classes and resources won't be injected if no types are instrumented: {}",
+            mainInstrumentationName());
+      }
+
       return parentAgentBuilder;
     }
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
     HelperInjector helperInjector =
-        new HelperInjector(
-            getClass().getSimpleName(), asList(helperClassNames()), asList(helperResourceNames()));
+        new HelperInjector(mainInstrumentationName(), helperClassNames, helperResourceNames);
     InstrumentationContextProvider contextProvider = getContextProvider();
 
     AgentBuilder agentBuilder = parentAgentBuilder;
-    for (TypeInstrumentation typeInstrumentation : typeInstrumentations()) {
+    for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           agentBuilder
               .type(
@@ -172,7 +209,7 @@ public abstract class InstrumentationModule {
           if (!isMatch) {
             log.debug(
                 "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
-                instrumentationNames.iterator().next(),
+                mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
             List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
@@ -182,7 +219,7 @@ public abstract class InstrumentationModule {
           } else {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
-                instrumentationNames.iterator().next(),
+                mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
           }
@@ -192,6 +229,10 @@ public abstract class InstrumentationModule {
       }
       return true;
     }
+  }
+
+  private String mainInstrumentationName() {
+    return instrumentationNames.iterator().next();
   }
 
   /**
@@ -215,12 +256,12 @@ public abstract class InstrumentationModule {
     return 0;
   }
 
-  /** @return Class names of helpers to inject into the user's classloader */
+  /** Returns class names of helpers to inject into the user's classloader. */
   public String[] helperClassNames() {
     return EMPTY;
   }
 
-  /** @return Resource names to inject into the user's classloader */
+  /** Returns resource names to inject into the user's classloader. */
   public String[] helperResourceNames() {
     return EMPTY;
   }
@@ -240,7 +281,7 @@ public abstract class InstrumentationModule {
     return any();
   }
 
-  /** @return A list of all individual type instrumentation in this module. */
+  /** Returns a list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**

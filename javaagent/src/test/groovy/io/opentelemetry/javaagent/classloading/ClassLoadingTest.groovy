@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.classloading
 
 import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
 
-import io.opentelemetry.instrumentation.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GcUtils
 import io.opentelemetry.javaagent.ClassToInstrument
 import io.opentelemetry.javaagent.ClassToInstrumentChild
 import java.lang.ref.WeakReference
@@ -44,7 +44,7 @@ class ClassLoadingTest extends Specification {
     loader.loadClass(ClassToInstrument.getName())
     loader = null
 
-    GCUtils.awaitGC(ref)
+    GcUtils.awaitGc(ref)
 
     then:
     null == ref.get()

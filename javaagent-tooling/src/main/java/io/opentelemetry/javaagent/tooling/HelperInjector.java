@@ -57,6 +57,7 @@ public class HelperInjector implements Transformer {
   private final WeakMap<ClassLoader, Boolean> injectedClassLoaders = newWeakMap();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
+
   /**
    * Construct HelperInjector.
    *

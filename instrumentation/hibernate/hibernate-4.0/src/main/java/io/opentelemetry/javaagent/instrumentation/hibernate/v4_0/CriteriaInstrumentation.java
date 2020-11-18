@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,12 +26,12 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 
-@AutoService(Instrumenter.class)
-public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
+final class CriteriaInstrumentation implements TypeInstrumentation {
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Criteria", Context.class.getName());
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.hibernate.Criteria");
   }
 
   @Override
@@ -46,7 +46,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
         CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
   }
 
-  public static class CriteriaMethodAdvice extends V4Advice {
+  public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(

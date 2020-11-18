@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -25,12 +25,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Transaction;
 
-@AutoService(Instrumenter.class)
-public class TransactionInstrumentation extends AbstractHibernateInstrumentation {
+final class TransactionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Transaction", Context.class.getName());
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.hibernate.Transaction");
   }
 
   @Override
@@ -45,7 +45,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
         TransactionInstrumentation.class.getName() + "$TransactionCommitAdvice");
   }
 
-  public static class TransactionCommitAdvice extends V3Advice {
+  public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startCommit(@Advice.This Transaction transaction) {

@@ -5,7 +5,7 @@
 
 package muzzle;
 
-import io.opentelemetry.instrumentation.util.gc.GCUtils;
+import io.opentelemetry.instrumentation.util.gc.GcUtils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
@@ -29,7 +29,7 @@ public class MuzzleWeakReferenceTest {
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
     refMatcher.getMismatchedReferenceSources(loader);
     loader = null;
-    GCUtils.awaitGC(clRef);
+    GcUtils.awaitGc(clRef);
     return clRef.get() == null;
   }
 }

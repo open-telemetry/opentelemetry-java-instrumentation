@@ -5,55 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceFluxCreationAdvice;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceMonoCreationAdvice;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default {
-
-  public LettuceReactiveCommandsInstrumentation() {
-    super("lettuce", "lettuce-5", "lettuce-5-rx");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("io.lettuce.core.tracing.Tracing"));
-  }
+final class LettuceReactiveCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.lettuce.core.AbstractRedisReactiveCommands");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter",
-      packageName + ".LettuceAbstractDatabaseClientTracer",
-      packageName + ".LettuceConnectionDatabaseClientTracer",
-      packageName + ".LettuceDatabaseClientTracer",
-      packageName + ".LettuceInstrumentationUtil",
-      packageName + ".rx.LettuceMonoCreationAdvice",
-      packageName + ".rx.LettuceMonoDualConsumer",
-      packageName + ".rx.LettuceFluxCreationAdvice",
-      packageName + ".rx.LettuceFluxTerminationRunnable",
-      packageName + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
-    };
   }
 
   @Override
@@ -64,7 +37,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(named("createMono"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        packageName + ".rx.LettuceMonoCreationAdvice");
+        LettuceMonoCreationAdvice.class.getName());
     transformers.put(
         isMethod()
             .and(nameStartsWith("create"))
@@ -72,7 +45,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(isPublic())
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        packageName + ".rx.LettuceFluxCreationAdvice");
+        LettuceFluxCreationAdvice.class.getName());
 
     return transformers;
   }

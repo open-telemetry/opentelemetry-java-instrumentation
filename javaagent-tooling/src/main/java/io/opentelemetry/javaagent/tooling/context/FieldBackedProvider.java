@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.Instrumenter.Default;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
@@ -110,12 +110,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private final ByteBuddy byteBuddy;
   private final Map<String, String> contextStore;
 
-  /** fields-accessor-interface-name -> fields-accessor-interface-dynamic-type */
+  // fields-accessor-interface-name -> fields-accessor-interface-dynamic-type
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
 
   private final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
 
-  /** context-store-type-name -> context-store-type-name-dynamic-type */
+  // context-store-type-name -> context-store-type-name-dynamic-type
   private final Map<String, DynamicType.Unloaded<?>> contextStoreImplementations;
 
   private final AgentBuilder.Transformer contextStoreImplementationsInjector;
@@ -140,7 +140,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
        * invokes appropriate storage implementation.
        */
       builder =
-          builder.transform(getTransformerForASMVisitor(getContextStoreReadsRewritingVisitor()));
+          builder.transform(getTransformerForAsmVisitor(getContextStoreReadsRewritingVisitor()));
       builder = injectHelpersIntoBootstrapClassloader(builder);
     }
     return builder;
@@ -351,7 +351,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    */
   private static final Set<Map.Entry<String, String>> INSTALLED_CONTEXT_MATCHERS = new HashSet<>();
 
-  /** Clear set that prevents multiple matchers for same context class */
+  /** Clear set that prevents multiple matchers for same context class. */
   public static void resetContextMatchers() {
     synchronized (INSTALLED_CONTEXT_MATCHERS) {
       INSTALLED_CONTEXT_MATCHERS.clear();
@@ -388,7 +388,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               builder
                   .type(safeHasSuperType(named(entry.getKey())))
                   .and(safeToInjectFieldsMatcher())
-                  .and(Default.NOT_DECORATOR_MATCHER)
+                  .and(InstrumentationModule.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
           /*
@@ -400,7 +400,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           builder =
               builder.transform(
-                  getTransformerForASMVisitor(
+                  getTransformerForAsmVisitor(
                       getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
         }
       }
@@ -532,7 +532,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             super.visitEnd();
           }
 
-          /** Just 'standard' getter implementation */
+          // just 'standard' getter implementation
           private void addGetter() {
             MethodVisitor mv = getAccessorMethodVisitor(getterMethodName);
             mv.visitCode();
@@ -547,7 +547,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             mv.visitEnd();
           }
 
-          /** Just 'standard' setter implementation */
+          // just 'standard' setter implementation
           private void addSetter() {
             MethodVisitor mv = getAccessorMethodVisitor(setterMethodName);
             mv.visitCode();
@@ -601,7 +601,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   /**
    * Generate an 'implementation' of a context store classfor given key class name and context class
-   * name
+   * name.
    *
    * @param keyClassName key class name
    * @param contextClassName context class name
@@ -619,7 +619,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   /**
    * Returns a visitor that 'fills in' missing methods into concrete implementation of
-   * ContextStoreImplementationTemplate for given key class name and context class name
+   * ContextStoreImplementationTemplate for given key class name and context class name.
    *
    * @param keyClassName key class name
    * @param contextClassName context class name
@@ -676,7 +676,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           }
 
           /**
-           * Provides implementation for {@code realGet} method that looks like this
+           * Provides implementation for {@code realGet} method that looks like below.
            *
            * <blockquote>
            *
@@ -729,7 +729,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           }
 
           /**
-           * Provides implementation for {@code realPut} method that looks like this
+           * Provides implementation for {@code realPut} method that looks like below.
            *
            * <blockquote>
            *
@@ -789,7 +789,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           }
 
           /**
-           * Provides implementation for {@code realSynchronizeInstance} method that looks like this
+           * Provides implementation for {@code realSynchronizeInstance} method that looks like
+           * below.
            *
            * <blockquote>
            *
@@ -965,7 +966,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   /**
    * Generate an interface that provides field accessor methods for given key class name and context
-   * class name
+   * class name.
    *
    * @param keyClassName key class name
    * @param contextClassName context class name
@@ -987,7 +988,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         .make();
   }
 
-  private AgentBuilder.Transformer getTransformerForASMVisitor(final AsmVisitorWrapper visitor) {
+  private AgentBuilder.Transformer getTransformerForAsmVisitor(final AsmVisitorWrapper visitor) {
     return new AgentBuilder.Transformer() {
       @Override
       public DynamicType.Builder<?> transform(

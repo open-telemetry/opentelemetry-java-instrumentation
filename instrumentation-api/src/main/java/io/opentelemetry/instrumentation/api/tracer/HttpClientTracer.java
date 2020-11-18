@@ -64,7 +64,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public Span startSpan(REQUEST request, long startTimeNanos) {
-    return startSpan(request, spanNameForRequest(request), startTimeNanos);
+    return internalStartSpan(request, spanNameForRequest(request), startTimeNanos);
   }
 
   public Scope startScope(Span span, CARRIER carrier) {
@@ -103,7 +103,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
    * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
    * Context}, or an invalid {@link Span} otherwise.
    */
-  private Span startSpan(REQUEST request, String name, long startTimeNanos) {
+  private Span internalStartSpan(REQUEST request, String name, long startTimeNanos) {
     Context context = Context.current();
     Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
 

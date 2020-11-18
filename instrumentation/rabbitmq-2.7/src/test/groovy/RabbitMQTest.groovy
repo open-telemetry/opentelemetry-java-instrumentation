@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
@@ -18,10 +18,10 @@ import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.time.Duration
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
@@ -34,43 +34,29 @@ import spock.lang.Shared
 
 class RabbitMQTest extends AgentTestRunner {
 
-  /*
-    Note: type here has to stay undefined, otherwise tests will fail in CI in Java 7 because
-    'testcontainers' are built for Java 8 and Java 7 cannot load this class.
-   */
   @Shared
-  def rabbbitMQContainer
+  def rabbitMQContainer
   @Shared
-  def defaultRabbitMQPort = 5672
-  @Shared
-  InetSocketAddress rabbitmqAddress = new InetSocketAddress("127.0.0.1", defaultRabbitMQPort)
+  InetSocketAddress rabbitmqAddress
 
   ConnectionFactory factory = new ConnectionFactory(host: rabbitmqAddress.hostName, port: rabbitmqAddress.port)
   Connection conn = factory.newConnection()
   Channel channel = conn.createChannel()
 
   def setupSpec() {
-
-    /*
-      CircleCI will provide us with rabbitmq container running along side our build.
-      When building locally and in GitHub actions, however, we need to take matters into our own hands
-      and we use 'testcontainers' for this.
-     */
-    if ("true" != System.getenv("CIRCLECI")) {
-      rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
-        .withExposedPorts(defaultRabbitMQPort)
-        .withStartupTimeout(Duration.ofSeconds(120))
-      rabbbitMQContainer.start()
-      rabbitmqAddress = new InetSocketAddress(
-        rabbbitMQContainer.containerIpAddress,
-        rabbbitMQContainer.getMappedPort(defaultRabbitMQPort)
-      )
-    }
+    rabbitMQContainer = new GenericContainer('rabbitmq:latest')
+      .withExposedPorts(5672)
+      .withStartupTimeout(Duration.ofSeconds(120))
+    rabbitMQContainer.start()
+    rabbitmqAddress = new InetSocketAddress(
+      rabbitMQContainer.containerIpAddress,
+      rabbitMQContainer.getMappedPort(5672)
+    )
   }
 
   def cleanupSpec() {
-    if (rabbbitMQContainer) {
-      rabbbitMQContainer.stop()
+    if (rabbitMQContainer) {
+      rabbitMQContainer.stop()
     }
   }
 
@@ -79,7 +65,6 @@ class RabbitMQTest extends AgentTestRunner {
       channel.close()
       conn.close()
     } catch (ShutdownSignalException ignored) {
-      // Ignore
     }
   }
 

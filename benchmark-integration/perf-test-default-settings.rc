@@ -10,8 +10,8 @@ test_num_threads=5
 # endpoionts to test
 declare -A endpoints
 endpoints['<1MS']='http://localhost:8080/work'
-endpoints['1MS']='http://localhost:8080/work?workTimeMS=1'
-endpoints['2MS']='http://localhost:8080/work?workTimeMS=2'
-endpoints['5MS']='http://localhost:8080/work?workTimeMS=5'
-endpoints['10MS']='http://localhost:8080/work?workTimeMS=10'
+endpoints['1MS']='http://localhost:8080/work?workTimeMillis=1'
+endpoints['2MS']='http://localhost:8080/work?workTimeMillis=2'
+endpoints['5MS']='http://localhost:8080/work?workTimeMillis=5'
+endpoints['10MS']='http://localhost:8080/work?workTimeMillis=10'
 test_order=( '<1MS' '1MS' '2MS' '5MS' '10MS' )

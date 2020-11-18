@@ -15,15 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import akka.dispatch.forkjoin.ForkJoinPool;
 import akka.dispatch.forkjoin.ForkJoinTask;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
-import java.util.Collections;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import net.bytebuddy.asm.Advice;
@@ -37,19 +34,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Akka version.
  */
-@AutoService(Instrumenter.class)
-public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default {
-
+final class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
-
-  public AkkaForkJoinTaskInstrumentation() {
-    super("akka_context_propagation");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -60,15 +46,6 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named(TASK_CLASS_NAME));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> map = new HashMap<>();
-    map.put(Runnable.class.getName(), State.class.getName());
-    map.put(Callable.class.getName(), State.class.getName());
-    map.put(TASK_CLASS_NAME, State.class.getName());
-    return Collections.unmodifiableMap(map);
   }
 
   @Override

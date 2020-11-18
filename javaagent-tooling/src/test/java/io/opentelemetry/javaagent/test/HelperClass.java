@@ -5,5 +5,5 @@
 
 package io.opentelemetry.javaagent.test;
 
-/** Used by {@link HelperInjectionTest} */
+/** Used by {@link HelperInjectionTest}. */
 class HelperClass {}

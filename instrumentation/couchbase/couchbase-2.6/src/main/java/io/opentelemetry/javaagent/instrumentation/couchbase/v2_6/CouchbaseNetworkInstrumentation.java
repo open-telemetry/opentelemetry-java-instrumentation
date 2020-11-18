@@ -15,25 +15,19 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
-public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
-  public CouchbaseNetworkInstrumentation() {
-    super("couchbase");
-  }
+final class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -47,11 +41,6 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
     return nameStartsWith("com.couchbase.client.")
         .<TypeDescription>and(
             extendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
   }
 
   @Override
@@ -93,11 +82,6 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
         span.setAttribute("local.address", localSocket);
       }
-    }
-
-    // 2.6.0 and above
-    public static void muzzleCheck(JsonCryptoTranscoder transcoder) {
-      transcoder.documentType();
     }
   }
 }

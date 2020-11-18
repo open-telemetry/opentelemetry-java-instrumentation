@@ -18,13 +18,9 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> unMuzzledClasses = []
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
-    for (Object instrumenter : SafeServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
-      if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
-        // TraceConfigInstrumentation doesn't do muzzle checks
-        // check on TracerClassInstrumentation instead
-        instrumenter = IntegrationTestUtils.getAgentClassLoader().loadClass(instrumenter.getClass().getName() + '$TracerClassInstrumentation').newInstance()
-      }
-      if (!IntegrationTestUtils.getAgentClassLoader().loadClass('io.opentelemetry.javaagent.tooling.Instrumenter$Default').isAssignableFrom(instrumenter.getClass())) {
+    def instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.tooling.InstrumentationModule")
+    for (Object instrumenter : SafeServiceLoader.load(instrumentationModuleClass, IntegrationTestUtils.getAgentClassLoader())) {
+      if (!instrumentationModuleClass.isAssignableFrom(instrumenter.getClass())) {
         // muzzle only applies to default instrumenters
         continue
       }

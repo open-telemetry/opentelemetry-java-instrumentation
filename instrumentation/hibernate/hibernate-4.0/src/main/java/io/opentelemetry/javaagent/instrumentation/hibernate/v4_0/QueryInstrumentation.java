@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.javaagent.tooling.Instrumenter;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -25,12 +25,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Query;
 
-@AutoService(Instrumenter.class)
-public class QueryInstrumentation extends AbstractHibernateInstrumentation {
+final class QueryInstrumentation implements TypeInstrumentation {
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Query", Context.class.getName());
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.hibernate.Query");
   }
 
   @Override
@@ -45,7 +45,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 
-  public static class QueryMethodAdvice extends V4Advice {
+  public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(@Advice.This Query query) {
