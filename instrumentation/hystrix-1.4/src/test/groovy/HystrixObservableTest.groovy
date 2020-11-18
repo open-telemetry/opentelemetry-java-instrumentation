@@ -62,7 +62,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$1")
     result == "Hello!"
 
     assertTraces(1) {
@@ -157,7 +156,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$2")
     result == "Fallback!"
 
     assertTraces(1) {

@@ -19,3 +19,7 @@ dependencies {
   latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
   latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
 }
+
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.grizzly.enabled=true"
+}

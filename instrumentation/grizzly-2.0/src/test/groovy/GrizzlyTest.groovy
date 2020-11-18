@@ -22,10 +22,6 @@ import org.glassfish.jersey.server.ResourceConfig
 
 class GrizzlyTest extends HttpServerTest<HttpServer> {
 
-  static {
-    System.setProperty("otel.instrumentation.grizzly.enabled", "true")
-  }
-
   @Override
   HttpServer startServer(int port) {
     ResourceConfig rc = new ResourceConfig()
