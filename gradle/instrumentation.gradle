@@ -37,7 +37,8 @@ afterEvaluate {
     implementation deps.autoservice
     implementation deps.slf4j
 
-    testCompileOnly project(':instrumentation-api')
+    testImplementation project(':instrumentation-api')
+    testImplementation project(':javaagent-api')
     testImplementation project(':javaagent-tooling')
     testImplementation deps.opentelemetryApi
 
@@ -86,8 +87,6 @@ shadowJar {
 }
 
 tasks.withType(Test).configureEach {
-  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
-  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dnet.bytebuddy.raw=true"
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
