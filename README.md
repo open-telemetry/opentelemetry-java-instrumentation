@@ -157,7 +157,7 @@ The multi-propagator will inject the context into outgoing requests using all th
 
 | System property  | Environment variable | Purpose                                                                                                     |
 |------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is "tracecontext" (W3C). Other supported values are "b3", "b3single", "jaeger", "ottracer", "xray". |
+| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3multi`, `jaeger`, `ottracer`, and `xray`. |
 
 #### OpenTelemetry Resource
 
