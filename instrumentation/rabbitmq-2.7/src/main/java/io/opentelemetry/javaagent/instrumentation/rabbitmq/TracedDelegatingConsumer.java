@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitTracer.tracer;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;

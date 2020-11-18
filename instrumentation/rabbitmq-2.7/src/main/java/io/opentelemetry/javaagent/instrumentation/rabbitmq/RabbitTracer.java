@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.TextMapExtractAdapter.GETTER;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.rabbitmq.client.AMQP;
