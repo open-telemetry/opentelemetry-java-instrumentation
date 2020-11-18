@@ -9,7 +9,6 @@ on:
         required: true
       commits:
         description: Comma separated list of commit shas to cherrypick
-        required: true
 
 jobs:
   prepare-release-branch:
