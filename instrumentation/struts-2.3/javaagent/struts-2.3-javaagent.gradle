@@ -11,13 +11,17 @@ muzzle {
 dependencies {
   library group: 'org.apache.struts', name: 'struts2-core', version: '2.3.20'
 
-  testImplementation(project(':testing-common')) {
-    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
-  }
-  testLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
-  testLibrary group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
-  testLibrary group: 'javax.servlet', name: 'jsp-api', version: '2.0'
+  // There was no 2.4 version at all.
+  // In version 2.5 Struts Servlet Filter entry point was relocated.
+  // This Servlet Filter is relevant only in setting up the test app and it is not used in
+  // instrumentation. So fixing Struts library version for the test.
+  latestDepTestLibrary group: 'org.apache.struts', name: 'struts2-core', version: '2.3.+'
+
+  testImplementation(project(':testing-common'))
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
+  testRuntime group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  testRuntime group: 'javax.servlet', name: 'jsp-api', version: '2.0'
 
   testImplementation project(":instrumentation:servlet:servlet-3.0")
   testImplementation project(':instrumentation:jetty-8.0')
