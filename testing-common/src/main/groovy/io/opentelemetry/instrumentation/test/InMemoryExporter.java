@@ -10,8 +10,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 import io.opentelemetry.api.common.AttributeConsumer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
@@ -136,7 +134,9 @@ public class InMemoryExporter implements SpanProcessor {
     return traces;
   }
 
-  public void clear() {}
+  public void clear() {
+    AgentTestingExporterAccess.reset();
+  }
 
   @Override
   public CompletableResultCode shutdown() {
@@ -157,20 +157,11 @@ public class InMemoryExporter implements SpanProcessor {
   private void sortTraces(List<List<SpanData>> traces) {
     Collections.sort(
         traces,
-        new Comparator<List<SpanData>>() {
-          @Override
-          public int compare(List<SpanData> trace1, List<SpanData> trace2) {
-            return Longs.compare(getMinSpanOrder(trace1), getMinSpanOrder(trace2));
-          }
-        });
+        Comparator.comparingLong(this::getMinSpanOrder));
   }
 
   private long getMinSpanOrder(List<SpanData> spans) {
-    long min = Long.MAX_VALUE;
-    for (SpanData span : spans) {
-      min = Math.min(min, getSpanOrder(span));
-    }
-    return min;
+    return spans.stream().mapToLong(SpanData::getStartEpochNanos).min().orElse(0);
   }
 
   private List<SpanData> sort(List<SpanData> trace) {
@@ -223,20 +214,7 @@ public class InMemoryExporter implements SpanProcessor {
   private void sortOneLevel(List<Node> nodes) {
     Collections.sort(
         nodes,
-        new Comparator<Node>() {
-          @Override
-          public int compare(Node node1, Node node2) {
-            return Ints.compare(getSpanOrder(node1.span), getSpanOrder(node2.span));
-          }
-        });
-  }
-
-  private int getSpanOrder(SpanData span) {
-    Integer order = spanOrders.get(span.getSpanId());
-    if (order == null) {
-      throw new IllegalStateException("order not found for span: " + span);
-    }
-    return order;
+        Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
   }
 
   // trace is completed if root span is present

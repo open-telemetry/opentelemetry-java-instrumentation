@@ -14,10 +14,10 @@ dependencies {
 
   implementation project(':instrumentation:hibernate:hibernate-common')
 
-  testImplementation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc')
   // Added to ensure cross compatibility:
-  testImplementation project(':instrumentation:hibernate:hibernate-3.3')
-  testImplementation project(':instrumentation:hibernate:hibernate-4.0')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-3.3')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-4.0')
 
   testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'

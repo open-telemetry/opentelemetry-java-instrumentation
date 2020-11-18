@@ -48,7 +48,7 @@ dependencies {
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
-  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'

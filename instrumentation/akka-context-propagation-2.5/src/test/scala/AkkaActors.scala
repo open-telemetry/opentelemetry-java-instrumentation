@@ -6,10 +6,8 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.context.Context
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 
 import scala.concurrent.duration._
 

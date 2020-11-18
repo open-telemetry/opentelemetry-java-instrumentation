@@ -25,8 +25,8 @@ dependencies {
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common')
 
-  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
-  testImplementation project(':instrumentation:apache-httpasyncclient-4.0')
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.0')
 
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

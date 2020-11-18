@@ -14,10 +14,10 @@ dependencies {
 
   implementation project(':instrumentation:hibernate:hibernate-common')
 
-  testImplementation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc')
   // Added to ensure cross compatibility:
-  testImplementation project(':instrumentation:hibernate:hibernate-3.3')
-  testImplementation project(':instrumentation:hibernate:hibernate-4.3')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-3.3')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-4.3')
 
   testImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
   testImplementation "javax.xml.bind:jaxb-api:2.2.11"

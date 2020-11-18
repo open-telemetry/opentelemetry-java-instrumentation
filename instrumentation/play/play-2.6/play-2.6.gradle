@@ -34,9 +34,9 @@ dependencies {
   // here.
   compileOnly group: 'com.typesafe.play', name: "play_$scalaVersion", version: playVersion
 
-  testImplementation project(':instrumentation:netty:netty-4.0')
-  testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation project(':instrumentation:akka-http-10.0')
+  testInstrumentation project(':instrumentation:netty:netty-4.0')
+  testInstrumentation project(':instrumentation:netty:netty-4.1')
+  testInstrumentation project(':instrumentation:akka-http-10.0')
 
   testLibrary group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: playVersion
   // TODO: Play WS is a separately versioned library starting with 2.6 and needs separate instrumentation.
