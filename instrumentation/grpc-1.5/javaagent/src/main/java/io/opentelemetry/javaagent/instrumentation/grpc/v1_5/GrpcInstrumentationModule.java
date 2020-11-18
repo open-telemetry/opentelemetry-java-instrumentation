@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GrpcInstrumentationModule extends InstrumentationModule {
   public GrpcInstrumentationModule() {
-    super("grpc");
+    super("grpc", "grpc-1.5");
   }
 
   @Override

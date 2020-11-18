@@ -68,14 +68,6 @@ public class AdviceUtils {
     }
   }
 
-  private static void finishSpanIfPresentInAttributes(
-      Map<String, Object> attributes, Throwable throwable) {
-
-    io.opentelemetry.context.Context context =
-        (io.opentelemetry.context.Context) attributes.remove(CONTEXT_ATTRIBUTE);
-    finishSpanIfPresent(context, throwable);
-  }
-
   static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
     if (context != null) {
       Span span = Span.fromContext(context);
@@ -85,6 +77,14 @@ public class AdviceUtils {
       }
       span.end();
     }
+  }
+
+  private static void finishSpanIfPresentInAttributes(
+      Map<String, Object> attributes, Throwable throwable) {
+
+    io.opentelemetry.context.Context context =
+        (io.opentelemetry.context.Context) attributes.remove(CONTEXT_ATTRIBUTE);
+    finishSpanIfPresent(context, throwable);
   }
 
   public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T> {

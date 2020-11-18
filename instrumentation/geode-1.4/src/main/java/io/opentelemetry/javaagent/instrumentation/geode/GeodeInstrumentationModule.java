@@ -33,7 +33,7 @@ import org.apache.geode.cache.Region;
 @AutoService(InstrumentationModule.class)
 public class GeodeInstrumentationModule extends InstrumentationModule {
   public GeodeInstrumentationModule() {
-    super("geode", "geode-client");
+    super("geode", "geode-1.4");
   }
 
   @Override

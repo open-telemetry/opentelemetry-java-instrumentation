@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RatpackInstrumentationModule extends InstrumentationModule {
   public RatpackInstrumentationModule() {
-    super("ratpack");
+    super("ratpack", "ratpack-1.4");
   }
 
   @Override

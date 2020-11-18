@@ -17,7 +17,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk");
+    super("aws-sdk", "aws-sdk-1.11");
   }
 
   @Override

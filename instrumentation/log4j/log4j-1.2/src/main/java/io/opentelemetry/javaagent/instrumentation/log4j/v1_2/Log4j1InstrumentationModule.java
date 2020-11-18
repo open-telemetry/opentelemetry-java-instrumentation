@@ -18,7 +18,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class Log4j1InstrumentationModule extends InstrumentationModule {
   public Log4j1InstrumentationModule() {
-    super("log4j1", "log4j");
+    super("log4j", "log4j-1.2");
   }
 
   @Override

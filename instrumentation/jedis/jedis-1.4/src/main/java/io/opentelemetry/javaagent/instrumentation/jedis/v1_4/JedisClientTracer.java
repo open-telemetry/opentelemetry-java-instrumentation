@@ -23,7 +23,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   }
 
   private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("jedis", "redis");
+      new RedisCommandNormalizer("jedis", "jedis-1.4");
 
   @Override
   protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {

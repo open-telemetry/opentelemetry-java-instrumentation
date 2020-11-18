@@ -30,7 +30,7 @@ import org.apache.logging.log4j.core.ContextDataInjector;
 @AutoService(InstrumentationModule.class)
 public class Log4j27InstrumentationModule extends InstrumentationModule {
   public Log4j27InstrumentationModule() {
-    super("log4j2", "log4j", "log4j-2.7");
+    super("log4j", "log4j-2.7");
   }
 
   @Override

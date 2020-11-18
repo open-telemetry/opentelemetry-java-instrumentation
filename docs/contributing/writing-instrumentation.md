@@ -1,4 +1,4 @@
-### Writing instrumentation
+# Writing instrumentation
 
 **Warning**: The repository is still in the process of migrating to the structure described here.
 
@@ -32,7 +32,7 @@ for libraries where manual instrumentation is not possible, such as `URLConnecti
 intercept even the JDK's classes. Such libraries will not have manual instrumentation but will have
 auto instrumentation.
 
-#### Folder Structure
+## Folder Structure
 
 Please also refer to some of our existing instrumentation for examples of our structure, for example,
 [aws-sdk-2.2](../../instrumentation/aws-sdk/aws-sdk-2.2).
@@ -51,8 +51,8 @@ For example, if we are targeting an RPC framework `yarpc` at version `1.0` we wo
 instrumentation ->
     ...
     yarpc-1.0 ->
-        auto
-            yarpc-1.0-auto.gradle
+        javaagent
+            yarpc-1.0-javaagent.gradle
         library
             yarpc-1.0-library.gradle
         testing
@@ -63,12 +63,12 @@ and in the top level `settings.gradle`
 
 ```groovy
 
-include 'instrumentation:yarpc-1.0:agent'
+include 'instrumentation:yarpc-1.0:javaagent'
 include 'instrumentation:yarpc-1.0:library'
 include 'instrumentation:yarpc-1.0:testing'
 ```
 
-#### Writing manual instrumentation
+## Writing manual instrumentation
 
 Begin by writing the instrumentation for the library in `library`. This generally involves defining a
 `Tracer` and using the typed tracers in our `instrumentation-common` library to create and annotate
@@ -77,7 +77,7 @@ only depend on the OpenTelemetry API, `instrumentation-common`, and the instrume
 [instrumentation-library.gradle](../../gradle/instrumentation-library.gradle) needs to be applied to
 configure build tooling for the library.
 
-#### Writing unit tests
+## Writing unit tests
 
 Once the instrumentation is completed, we add unit tests to the `testing` module. Tests will
 generally apply to both manual and auto instrumentation, with the only difference being how a client
@@ -94,10 +94,10 @@ a method like `registerInterceptor` or wrapping the result of a library factory 
 test should implement the `InstrumentationTestRunner` trait for common setup logic. If the tests
 pass, manual instrumentation is working OK.
 
-#### Writing auto instrumentation
+## Writing auto instrumentation
 
 Now that we have working instrumentation, we can implement auto instrumentation so users of the agent
-do not have to modify their apps to use it. Make sure the `auto` submodule has a dependency on the
+do not have to modify their apps to use it. Make sure the `javaagent` submodule has a dependency on the
 `library` submodule and a test dependency on the `testing` submodule. Auto instrumentation defines
 classes to match against to generate bytecode for. You will often match against the class you used
 in the unit test for manual instrumentation, for example the builder of a client. And then you could

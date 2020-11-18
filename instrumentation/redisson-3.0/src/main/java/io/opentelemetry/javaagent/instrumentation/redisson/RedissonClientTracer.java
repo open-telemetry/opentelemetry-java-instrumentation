@@ -27,7 +27,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("redisson", "redis");
+      new RedisCommandNormalizer("redisson", "redisson-3.0");
 
   @Override
   protected String spanName(RedisConnection connection, Object query, String normalizedQuery) {

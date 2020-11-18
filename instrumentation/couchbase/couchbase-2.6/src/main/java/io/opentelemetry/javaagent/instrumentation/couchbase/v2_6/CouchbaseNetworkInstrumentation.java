@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -83,11 +82,6 @@ final class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
         span.setAttribute("local.address", localSocket);
       }
-    }
-
-    // 2.6.0 and above
-    public static void muzzleCheck(JsonCryptoTranscoder transcoder) {
-      transcoder.documentType();
     }
   }
 }

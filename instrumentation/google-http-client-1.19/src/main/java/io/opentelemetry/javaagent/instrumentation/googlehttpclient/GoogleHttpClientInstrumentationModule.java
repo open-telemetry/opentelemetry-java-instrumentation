@@ -37,7 +37,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class GoogleHttpClientInstrumentationModule extends InstrumentationModule {
   public GoogleHttpClientInstrumentationModule() {
-    super("google-http-client");
+    super("google-http-client", "google-http-client-1.19");
   }
 
   @Override

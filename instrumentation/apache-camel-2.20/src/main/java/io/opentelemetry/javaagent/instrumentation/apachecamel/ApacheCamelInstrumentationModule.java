@@ -30,7 +30,7 @@ import org.apache.camel.CamelContext;
 public class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelInstrumentationModule() {
-    super("apachecamel", "apache-camel");
+    super("apache-camel", "apache-camel-2.20");
   }
 
   @Override

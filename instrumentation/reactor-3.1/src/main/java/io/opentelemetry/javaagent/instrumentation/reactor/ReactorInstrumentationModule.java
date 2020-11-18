@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class ReactorInstrumentationModule extends InstrumentationModule {
 
   public ReactorInstrumentationModule() {
-    super("reactor-core");
+    super("reactor", "reactor-3.1");
   }
 
   @Override

@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class Servlet3InstrumentationModule extends InstrumentationModule {
   public Servlet3InstrumentationModule() {
-    super("servlet", "servlet-3");
+    super("servlet", "servlet-3.0");
   }
 
   @Override

@@ -19,7 +19,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class RmiContextPropagationInstrumentationModule extends InstrumentationModule {
   public RmiContextPropagationInstrumentationModule() {
-    super("rmi", "rmi-context-propagator");
+    super("rmi", "rmi-context-propagation");
   }
 
   @Override

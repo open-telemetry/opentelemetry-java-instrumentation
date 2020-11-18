@@ -110,7 +110,7 @@ final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class ChannelPipelineAdd2ArgsAdvice extends AbstractNettyAdvice {
+  public static class ChannelPipelineAdd2ArgsAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
@@ -139,7 +139,7 @@ final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class ChannelPipelineAdd3ArgsAdvice extends AbstractNettyAdvice {
+  public static class ChannelPipelineAdd3ArgsAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {

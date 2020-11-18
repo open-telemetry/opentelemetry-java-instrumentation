@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 @AutoService(InstrumentationModule.class)
 public class ScalaConcurrentInstrumentationModule extends InstrumentationModule {
   public ScalaConcurrentInstrumentationModule() {
-    super("java_concurrent", "scala_concurrent");
+    super("scala-concurrent");
   }
 
   @Override
