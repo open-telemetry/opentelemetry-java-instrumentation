@@ -163,6 +163,6 @@ public class RabbitTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.rabbitmq-amqp";
+    return "io.opentelemetry.javaagent.rabbitmq";
   }
 }

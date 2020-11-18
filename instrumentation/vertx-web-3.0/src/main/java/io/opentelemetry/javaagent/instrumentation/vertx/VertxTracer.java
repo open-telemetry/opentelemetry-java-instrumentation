@@ -16,6 +16,6 @@ public class VertxTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.vertx";
+    return "io.opentelemetry.javaagent.vertx-web";
   }
 }

@@ -65,7 +65,7 @@ public class AkkaHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.akka-http";
+    return "io.opentelemetry.javaagent.akka-http";
   }
 
   @Override

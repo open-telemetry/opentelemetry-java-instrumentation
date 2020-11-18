@@ -22,7 +22,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.servlet";
+    return "io.opentelemetry.javaagent.servlet";
   }
 
   @Override
