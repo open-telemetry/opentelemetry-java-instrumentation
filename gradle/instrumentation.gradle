@@ -34,7 +34,7 @@ afterEvaluate {
     }
     implementation deps.bytebuddy
     annotationProcessor deps.autoservice
-    implementation deps.autoservice
+    compileOnly deps.autoservice
     implementation deps.slf4j
 
     testImplementation project(':instrumentation-api')
@@ -70,6 +70,11 @@ shadowJar {
 
   dependencies {
     exclude(project(':javaagent-bootstrap'))
+    exclude(project(':instrumentation-api'))
+    exclude(project(':javaagent-api'))
+    exclude(project(':javaagent-tooling'))
+    exclude(dependency(deps.bytebuddy))
+    exclude(dependency(deps.slf4j))
   }
 
   // rewrite library instrumentation dependencies
