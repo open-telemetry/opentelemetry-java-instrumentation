@@ -7,19 +7,20 @@ its usage.
 
 ## General structure
 
-This repository has three main submodules:
+This repository has four main submodules:
 
 * `custom` contains all custom functionality, SPI and other extensions
 * `agent` contains the main repackaging functionality and, optionally, an entry point to the agent, if one wishes to
 customize that
+* `instrumentation` contains custom instrumentations added by vendor
 * `smoke-tests` contains simple tests to verify that resulting agent builds and applies correctly
 
 ## Extensions examples
 
-* [DemoIdGenerator](custom/src/main/java/io/opentelemetry/demo/DemoIdGenerator.java) - custom `IdGenerator`
-* [DemoPropagator](custom/src/main/java/io/opentelemetry/demo/DemoPropagator.java) - custom `TextMapPropagator`
-* [DemoPropertySource](custom/src/main/java/io/opentelemetry/demo/DemoPropertySource.java) - default configuration
-* [DemoSampler](custom/src/main/java/io/opentelemetry/demo/DemoSampler.java) - custom `Sampler`
-* [DemoSpanProcessor](custom/src/main/java/io/opentelemetry/demo/DemoSpanProcessor.java) - custom `SpanProcessor`
-* [DemoSpanExporter](custom/src/main/java/io/opentelemetry/demo/DemoSpanExporter.java) - custom `SpanExporter`
-* [DemoServlet3Instrumentation](custom/src/main/java/io/opentelemetry/demo/instrumentation/DemoServlet3Instrumentation.java) - additional instrumentation
+* [DemoIdGenerator](custom/src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
+* [DemoPropagator](custom/src/main/java/com/example/javaagent/DemoPropagator.java) - custom `TextMapPropagator`
+* [DemoPropertySource](custom/src/main/java/com/example/javaagent/DemoPropertySource.java) - default configuration
+* [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
+* [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
+* [DemoSpanExporter](custom/src/main/java/com/example/javaagent/DemoSpanExporter.java) - custom `SpanExporter`
+* [DemoServlet3Instrumentation](custom/src/main/java/com/example/javaagent/instrumentation/servlet-3/DemoServlet3Instrumentation.java) - additional instrumentation

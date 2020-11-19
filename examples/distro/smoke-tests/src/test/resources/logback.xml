@@ -12,6 +12,6 @@
   </root>
 
   <logger name="io.opentelemetry" level="debug"/>
-  <logger name="com.splunk" level="debug"/>
+  <logger name="com.example.javaagent" level="debug"/>
 
 </configuration>
