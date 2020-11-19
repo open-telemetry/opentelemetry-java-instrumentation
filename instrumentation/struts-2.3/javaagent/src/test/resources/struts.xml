@@ -5,27 +5,32 @@
 
 <struts>
 
-  <constant name="struts.devMode" value="true" />
   <constant name="struts.enable.SlashesInActionNames" value="true"/>
-  <constant name="struts.mapper.alwaysSelectFullNamespace" value="false"/>
-  <constant name="struts.patternMatcher" value="namedVariable" />
+  <constant name="struts.patternMatcher" value="namedVariable"/>
 
   <package name="basic-struts2" extends="struts-default">
     <global-results>
-      <result name="exception" type="httpheader">
+      <result name="redirect" type="redirect">
+        <param name="location">/redirected</param>
+        <param name="prependServletContext">false</param>
+      </result>
+      <result name="error" type="httpheader">
         <param name="error">500</param>
       </result>
-      <result type="freemarker" name="greeting">greeting.ftl</result>
+      <result type="freemarker" name="greeting">/greeting.ftl</result>
     </global-results>
 
     <global-exception-mappings>
-      <exception-mapping exception="java.lang.Exception" result="exception" />
+      <exception-mapping exception="java.lang.Exception" result="error"/>
     </global-exception-mappings>
 
     <action name="success" class="io.opentelemetry.struts.GreetingAction" method="success"/>
-    <action name="query" class="io.opentelemetry.struts.GreetingAction" method="query"/>
+    <action name="redirect" class="io.opentelemetry.struts.GreetingAction" method="redirect"/>
+    <action name="query" class="io.opentelemetry.struts.GreetingAction" method="query_param"/>
+    <action name="error-status" class="io.opentelemetry.struts.GreetingAction" method="error"/>
     <action name="exception" class="io.opentelemetry.struts.GreetingAction" method="exception"/>
-    <action name="/path/{id}/param" class="io.opentelemetry.struts.GreetingAction" method="pathParam"/>
+    <action name="/path/{id}/param" class="io.opentelemetry.struts.GreetingAction"
+      method="path_param"/>
   </package>
 
 

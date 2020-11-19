@@ -63,17 +63,12 @@ jobs:
               # Trim whitespaces and cherrypick
               echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
           done
-      - uses: burrunan/gradle-cache-action@v1.5
-        with:
-          job-id: jdk11
-          remote-build-cache-proxy-enabled: false
-          arguments: build --stacktrace -Prelease.version=${{ github.event.inputs.version }}
-      - name: Publish artifacts
+      - name: Build and publish artifacts
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: build final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}

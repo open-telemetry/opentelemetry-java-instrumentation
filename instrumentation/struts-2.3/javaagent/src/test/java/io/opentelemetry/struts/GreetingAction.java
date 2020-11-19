@@ -20,7 +20,15 @@ public class GreetingAction extends ActionSupport {
     return "greeting";
   }
 
-  public String query() {
+  public String redirect() {
+    responseBody =
+        HttpServerTest.controller(
+            HttpServerTest.ServerEndpoint.REDIRECT,
+            HttpServerTest.ServerEndpoint.REDIRECT::getBody);
+    return "redirect";
+  }
+
+  public String query_param() {
     responseBody =
         HttpServerTest.controller(
             HttpServerTest.ServerEndpoint.QUERY_PARAM,
@@ -28,17 +36,22 @@ public class GreetingAction extends ActionSupport {
     return "greeting";
   }
 
-  public String exception() {
-    responseBody =
-        HttpServerTest.controller(
-            HttpServerTest.ServerEndpoint.EXCEPTION,
-            () -> {
-              throw new Exception(HttpServerTest.ServerEndpoint.EXCEPTION.getBody());
-            });
-    return "exception";
+  public String error() {
+    HttpServerTest.controller(
+        HttpServerTest.ServerEndpoint.ERROR, HttpServerTest.ServerEndpoint.ERROR::getBody);
+    return "error";
   }
 
-  public String pathParam() {
+  public String exception() {
+    HttpServerTest.controller(
+        HttpServerTest.ServerEndpoint.EXCEPTION,
+        () -> {
+          throw new Exception(HttpServerTest.ServerEndpoint.EXCEPTION.getBody());
+        });
+    throw new AssertionError(); // should not reach here
+  }
+
+  public String path_param() {
     HttpServerTest.controller(
         HttpServerTest.ServerEndpoint.PATH_PARAM,
         () ->
@@ -48,11 +61,6 @@ public class GreetingAction extends ActionSupport {
 
   public void setId(String id) {
     responseBody = id;
-  }
-
-  public void setSome(String some) {
-    responseBody = "some=" + some;
-    System.out.println("Setting query param some to " + some);
   }
 
   public String getResponseBody() {

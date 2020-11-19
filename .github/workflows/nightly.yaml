@@ -5,6 +5,9 @@ on:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -149,7 +152,6 @@ jobs:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
         run: ./gradlew snapshot --stacktrace
-
 
   issue:
     name: Open issue on failure
