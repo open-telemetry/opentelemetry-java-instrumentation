@@ -113,16 +113,9 @@ public abstract class AgentTestRunner extends Specification {
         .getSimpleName()
         .equals("NoopTextMapPropagator")) {
       // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-      OpenTelemetry.set(
-          OpenTelemetrySdk.builder()
-              .setResource(OpenTelemetrySdk.get().getResource())
-              .setClock(OpenTelemetrySdk.get().getClock())
-              .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
-              .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
-              .setPropagators(
-                  DefaultContextPropagators.builder()
-                      .addTextMapPropagator(HttpTraceContext.getInstance())
-                      .build())
+      setGlobalPropagators(
+          DefaultContextPropagators.builder()
+              .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
     }
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER);
@@ -361,7 +354,6 @@ public abstract class AgentTestRunner extends Specification {
             .setPropagators(propagators)
             .build());
   }
-
 
   private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
     if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
