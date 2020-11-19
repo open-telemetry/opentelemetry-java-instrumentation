@@ -33,6 +33,8 @@ muzzle {
     group = 'com.typesafe.akka'
     module = 'akka-http_2.11'
     versions = "[10.1.0,)"
+    // TODO (trask) this release may be mid-flight, check again sometime in the future
+    skipVersions += '10.1.13' // Bad release on bintray
     // later versions of akka-http expect streams to be provided
     extraDependency 'com.typesafe.akka:akka-stream_2.11:2.5.11'
   }
