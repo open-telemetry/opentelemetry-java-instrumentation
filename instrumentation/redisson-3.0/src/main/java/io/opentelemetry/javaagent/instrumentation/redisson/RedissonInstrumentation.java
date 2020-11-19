@@ -28,7 +28,7 @@ import org.redisson.client.RedisConnection;
 public final class RedissonInstrumentation extends InstrumentationModule {
 
   public RedissonInstrumentation() {
-    super("redisson", "redis");
+    super("redisson", "redisson-3.0");
   }
 
   @Override

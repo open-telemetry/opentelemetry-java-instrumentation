@@ -16,13 +16,13 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import ch.qos.logback.classic.Level
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -120,6 +120,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     false
   }
 
+  boolean testErrorBody() {
+    return true
+  }
+
   boolean testExceptionBody() {
     true
   }
@@ -208,7 +212,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
-    assert io.opentelemetry.api.trace.Span.current().getSpanContext().isValid(): "Controller should have a parent span."
+    assert Span.current().getSpanContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
@@ -302,7 +306,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
     expect:
     response.code() == ERROR.status
-    response.body().string() == ERROR.body
+    if (testErrorBody()) {
+      response.body().string() == ERROR.body
+    }
 
     and:
     assertTheTraces(1, null, null, method, ERROR, null, response)

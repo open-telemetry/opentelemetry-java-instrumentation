@@ -37,7 +37,7 @@ class CamelTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.apache-camel-2.20";
+    return "io.opentelemetry.javaagent.apache-camel";
   }
 
   public Span.Builder spanBuilder(String name) {

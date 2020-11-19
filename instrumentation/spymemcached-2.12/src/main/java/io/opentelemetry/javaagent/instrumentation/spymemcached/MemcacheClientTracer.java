@@ -50,6 +50,6 @@ public class MemcacheClientTracer extends DatabaseClientTracer<MemcachedConnecti
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spymemcached";
+    return "io.opentelemetry.javaagent.spymemcached";
   }
 }

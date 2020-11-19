@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory;
 
 public final class CouchbaseQueryNormalizer {
   private static final Logger log = LoggerFactory.getLogger(CouchbaseQueryNormalizer.class);
-  private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("couchbase");
+  private static final boolean NORMALIZATION_ENABLED =
+      isQueryNormalizationEnabled("couchbase", "couchbase-2.0");
 
   private static final Class<?> QUERY_CLASS;
   private static final Class<?> STATEMENT_CLASS;

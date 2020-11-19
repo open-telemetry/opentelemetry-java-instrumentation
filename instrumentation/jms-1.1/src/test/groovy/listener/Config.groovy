@@ -21,7 +21,7 @@ import org.testcontainers.containers.GenericContainer
 @EnableJms
 class Config {
 
-  private static GenericContainer broker = new GenericContainer("rmohr/activemq")
+  private static GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
     .withExposedPorts(61616, 8161)
 
   static {

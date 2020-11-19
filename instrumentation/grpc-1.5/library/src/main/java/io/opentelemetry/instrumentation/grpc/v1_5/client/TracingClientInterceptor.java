@@ -51,13 +51,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
   }
 
   @Override
-  public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-      MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+  public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
+      MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
     String methodName = method.getFullMethodName();
     Span span = tracer.startSpan(methodName);
     GrpcHelper.prepareSpan(span, methodName);
     Context context = Context.current().with(span);
-    final ClientCall<ReqT, RespT> result;
+    final ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
@@ -77,15 +77,18 @@ public class TracingClientInterceptor implements ClientInterceptor {
     return new TracingClientCall<>(result, span, context, tracer);
   }
 
-  static final class TracingClientCall<ReqT, RespT>
-      extends ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT> {
+  static final class TracingClientCall<REQUEST, RESPONSE>
+      extends ForwardingClientCall.SimpleForwardingClientCall<REQUEST, RESPONSE> {
 
     private final Span span;
     private final Context context;
     private final GrpcClientTracer tracer;
 
     TracingClientCall(
-        ClientCall<ReqT, RespT> delegate, Span span, Context context, GrpcClientTracer tracer) {
+        ClientCall<REQUEST, RESPONSE> delegate,
+        Span span,
+        Context context,
+        GrpcClientTracer tracer) {
       super(delegate);
       this.span = span;
       this.context = context;
@@ -93,7 +96,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
 
     @Override
-    public void start(Listener<RespT> responseListener, Metadata headers) {
+    public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = span.makeCurrent()) {
         super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
@@ -104,7 +107,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
 
     @Override
-    public void sendMessage(ReqT message) {
+    public void sendMessage(REQUEST message) {
       try (Scope ignored = span.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
@@ -114,21 +117,21 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
   }
 
-  static final class TracingClientCallListener<RespT>
-      extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
+  static final class TracingClientCallListener<RESPONSE>
+      extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
     private final Span span;
     private final GrpcClientTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(Listener<RespT> delegate, Span span, GrpcClientTracer tracer) {
+    TracingClientCallListener(Listener<RESPONSE> delegate, Span span, GrpcClientTracer tracer) {
       super(delegate);
       this.span = span;
       this.tracer = tracer;
     }
 
     @Override
-    public void onMessage(RespT message) {
+    public void onMessage(RESPONSE message) {
       Attributes attributes =
           Attributes.of(
               GrpcHelper.MESSAGE_TYPE, "SENT", GrpcHelper.MESSAGE_ID, messageId.incrementAndGet());

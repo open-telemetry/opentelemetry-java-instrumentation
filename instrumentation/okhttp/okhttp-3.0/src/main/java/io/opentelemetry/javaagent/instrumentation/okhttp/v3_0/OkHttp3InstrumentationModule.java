@@ -27,7 +27,7 @@ import okhttp3.OkHttpClient;
 public class OkHttp3InstrumentationModule extends InstrumentationModule {
 
   public OkHttp3InstrumentationModule() {
-    super("okhttp", "okhttp-3");
+    super("okhttp", "okhttp-3.0");
   }
 
   @Override

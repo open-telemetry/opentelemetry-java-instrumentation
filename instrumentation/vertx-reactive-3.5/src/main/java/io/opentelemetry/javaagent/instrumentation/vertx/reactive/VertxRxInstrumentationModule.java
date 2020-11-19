@@ -31,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxRxInstrumentationModule extends InstrumentationModule {
 
   public VertxRxInstrumentationModule() {
-    super("vertx");
+    super("vertx-reactive", "vertx-reactive-3.5", "vertx");
   }
 
   @Override

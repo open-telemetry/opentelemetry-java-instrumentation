@@ -45,7 +45,7 @@ final class QueryInstrumentation implements TypeInstrumentation {
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 
-  public static class QueryMethodAdvice extends V3Advice {
+  public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(@Advice.This Query query) {

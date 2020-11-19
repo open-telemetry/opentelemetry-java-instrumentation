@@ -167,6 +167,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
       if (name.startsWith("org.springframework.web.")) {
         if (name.startsWith("org.springframework.web.servlet.")
+            || name.startsWith("org.springframework.web.filter.")
             || name.startsWith("org.springframework.web.reactive.")
             || name.startsWith("org.springframework.web.context.request.async.")
             || name.equals(
@@ -306,7 +307,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     return false;
   }
 
-  private static Set<String> INSTRUMENTED_SPRING_BOOT_CLASSES =
+  private static final Set<String> INSTRUMENTED_SPRING_BOOT_CLASSES =
       Sets.newHashSet(
           "org.springframework.boot.autoconfigure.BackgroundPreinitializer$",
           "org.springframework.boot.autoconfigure.condition.OnClassCondition$",
@@ -319,7 +320,12 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           "org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext",
           "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext",
           "org.springframework.boot.web.embedded.tomcat.TomcatWebServer$",
-          "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
+          "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader",
+          "org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$",
+          "org.springframework.boot.web.filter.OrderedCharacterEncodingFilter",
+          "org.springframework.boot.web.filter.OrderedHiddenHttpMethodFilter",
+          "org.springframework.boot.web.filter.OrderedHttpPutFormContentFilter",
+          "org.springframework.boot.web.filter.OrderedRequestContextFilter");
 
   private static String outerClassName(final String name) {
     int separator = name.indexOf('$');

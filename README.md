@@ -157,7 +157,7 @@ outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
+| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3multi`, `jaeger`, `ottracer`, and `xray`. |
 
 #### OpenTelemetry Resource
 
@@ -283,7 +283,6 @@ Because the automatic instrumentation runs in a different classpath than the ins
 Some instrumentations can produce too many spans and make traces very noisy.
 For this reason, the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
-- `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:

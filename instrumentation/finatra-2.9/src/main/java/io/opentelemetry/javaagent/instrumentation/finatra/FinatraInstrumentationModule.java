@@ -37,7 +37,7 @@ import scala.Some;
 @AutoService(InstrumentationModule.class)
 public class FinatraInstrumentationModule extends InstrumentationModule {
   public FinatraInstrumentationModule() {
-    super("finatra");
+    super("finatra", "finatra-2.9");
   }
 
   @Override

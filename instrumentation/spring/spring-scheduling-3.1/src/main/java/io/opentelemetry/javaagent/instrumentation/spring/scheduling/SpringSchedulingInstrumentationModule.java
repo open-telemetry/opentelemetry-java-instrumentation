@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class SpringSchedulingInstrumentationModule extends InstrumentationModule {
 
   public SpringSchedulingInstrumentationModule() {
-    super("spring-scheduling");
+    super("spring-scheduling", "spring-scheduling-3.1");
   }
 
   @Override

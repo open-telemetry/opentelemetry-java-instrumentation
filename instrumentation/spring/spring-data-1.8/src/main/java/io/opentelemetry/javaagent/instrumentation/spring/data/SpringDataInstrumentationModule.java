@@ -35,7 +35,7 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 public final class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
-    super("spring-data");
+    super("spring-data", "spring-data-1.8");
   }
 
   @Override
@@ -73,12 +73,6 @@ public final class SpringDataInstrumentationModule extends InstrumentationModule
         @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
           InterceptingRepositoryProxyPostProcessor.INSTANCE);
-    }
-
-    // Muzzle doesn't detect the "Override" implementation dependency, so we have to help it.
-    private void muzzleCheck(RepositoryProxyPostProcessor processor) {
-      processor.postProcess(null, null);
-      // (see usage in InterceptingRepositoryProxyPostProcessor below)
     }
   }
 

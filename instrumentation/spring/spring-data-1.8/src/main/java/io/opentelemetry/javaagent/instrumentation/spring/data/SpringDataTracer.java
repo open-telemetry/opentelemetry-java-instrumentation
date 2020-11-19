@@ -18,6 +18,6 @@ public final class SpringDataTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-data";
+    return "io.opentelemetry.javaagent.spring-data";
   }
 }

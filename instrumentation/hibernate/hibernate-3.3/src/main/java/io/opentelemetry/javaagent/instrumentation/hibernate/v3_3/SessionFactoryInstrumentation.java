@@ -57,7 +57,7 @@ final class SessionFactoryInstrumentation implements TypeInstrumentation {
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 
-  public static class SessionFactoryAdvice extends V3Advice {
+  public static class SessionFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {

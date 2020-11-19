@@ -35,7 +35,7 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
   private static final String OPERATION_NAME = "hystrix.cmd";
 
   public HystrixInstrumentationModule() {
-    super("hystrix");
+    super("hystrix", "hystrix-1.4");
   }
 
   @Override

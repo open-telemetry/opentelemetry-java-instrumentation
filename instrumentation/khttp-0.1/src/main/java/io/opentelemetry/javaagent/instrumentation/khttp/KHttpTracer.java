@@ -60,6 +60,6 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, St
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.khttp";
+    return "io.opentelemetry.javaagent.khttp";
   }
 }

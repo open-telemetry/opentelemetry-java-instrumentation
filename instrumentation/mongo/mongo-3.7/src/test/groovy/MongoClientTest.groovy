@@ -177,7 +177,7 @@ class MongoClientTest extends MongoBaseTest {
     collection.count() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "update", collectionName, dbName, "{\"update\":\"?\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}")
+        mongoSpan(it, 0, "update", collectionName, dbName, "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}")
       }
       trace(1, 1) {
         mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")
@@ -209,7 +209,7 @@ class MongoClientTest extends MongoBaseTest {
     collection.count() == 0
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "delete", collectionName, dbName, "{\"delete\":\"?\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
+        mongoSpan(it, 0, "delete", collectionName, dbName, "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
       }
       trace(1, 1) {
         mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")

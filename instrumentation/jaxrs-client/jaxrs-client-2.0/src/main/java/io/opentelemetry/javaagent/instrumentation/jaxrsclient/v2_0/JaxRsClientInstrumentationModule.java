@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JaxRsClientInstrumentationModule extends InstrumentationModule {
 
   public JaxRsClientInstrumentationModule() {
-    super("jax-rs", "jaxrs", "jax-rs-client");
+    super("jaxrs-client", "jaxrs-client-2.0");
   }
 
   @Override

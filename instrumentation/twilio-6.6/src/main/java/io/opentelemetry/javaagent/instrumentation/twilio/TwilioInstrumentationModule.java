@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TwilioInstrumentationModule extends InstrumentationModule {
   public TwilioInstrumentationModule() {
-    super("twilio-sdk");
+    super("twilio", "twilio-6.6");
   }
 
   @Override

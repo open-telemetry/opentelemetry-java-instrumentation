@@ -28,7 +28,7 @@ import okhttp3.Interceptor;
 public class KubernetesClientInstrumentationModule extends InstrumentationModule {
 
   public KubernetesClientInstrumentationModule() {
-    super("kubernetes-client");
+    super("kubernetes-client", "kubernetes-client-3.0");
   }
 
   @Override
