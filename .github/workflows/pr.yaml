@@ -19,7 +19,7 @@ jobs:
           job-id: jdk11
 
       - name: Build
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         with:
           command: ./gradlew check --stacktrace -x :smoke-tests:test
           timeout_minutes: 90
@@ -61,7 +61,7 @@ jobs:
           job-id: jdk${{ matrix.java }}
 
       - name: Test
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         with:
           command: ./gradlew testJava${{ matrix.java }} --stacktrace -x :smoke-tests:test -Dorg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
           timeout_minutes: 90
@@ -94,7 +94,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         with:
           command: ./gradlew :smoke-tests:test
           timeout_minutes: 90
