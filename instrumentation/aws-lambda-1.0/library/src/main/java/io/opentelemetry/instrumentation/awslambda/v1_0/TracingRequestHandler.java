@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +51,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       APIGatewayProxyRequestEvent event = (APIGatewayProxyRequestEvent) input;
       return event.getHeaders();
     }
-    return null;
+    return Collections.emptyMap();
   }
 
   @Override

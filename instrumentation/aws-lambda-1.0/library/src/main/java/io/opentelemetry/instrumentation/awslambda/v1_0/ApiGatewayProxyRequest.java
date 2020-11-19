@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,6 +57,10 @@ abstract class ApiGatewayProxyRequest {
   @Nullable
   Map<String, String> getHeaders() throws IOException {
     Headers headers = ofStream(freshStream());
+    return (headers == null ? Collections.emptyMap() : toMap(headers));
+  }
+
+  private Map<String, String> toMap(Headers headers) {
     return headers.entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, ApiGatewayProxyRequest::extractFirstValue));
   }
@@ -77,7 +82,7 @@ abstract class ApiGatewayProxyRequest {
 
     @Override
     Map<String, String> getHeaders() {
-      return null;
+      return Collections.emptyMap();
     }
   }
 
