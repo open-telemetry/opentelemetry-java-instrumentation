@@ -283,7 +283,6 @@ Because the automatic instrumentation runs in a different classpath than the ins
 Some instrumentations can produce too many spans and make traces very noisy.
 For this reason, the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
-- `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
