@@ -25,7 +25,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   }
 
   private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("jedis", "redis");
+      new RedisCommandNormalizer("jedis", "jedis-3.0");
 
   @Override
   protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {
@@ -54,7 +54,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jedis";
+    return "io.opentelemetry.javaagent.jedis";
   }
 
   public static final class CommandWithArgs {

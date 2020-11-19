@@ -33,7 +33,7 @@ import net.spy.memcached.internal.OperationFuture;
 public final class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
-    super("spymemcached");
+    super("spymemcached", "spymemcached-2.12");
   }
 
   @Override

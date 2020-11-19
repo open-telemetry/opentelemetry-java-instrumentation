@@ -164,6 +164,6 @@ public class JmsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jms";
+    return "io.opentelemetry.javaagent.jms";
   }
 }

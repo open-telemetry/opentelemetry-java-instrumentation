@@ -136,13 +136,6 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @Nullable
-  public <REQUEST extends Request, RESULT> RESULT execute(
-      @NonNull REQUEST request, @NonNull GenericType<RESULT> resultType) {
-    return session.execute(request, resultType);
-  }
-
-  @Override
   @NonNull
   public CompletionStage<Void> closeFuture() {
     return session.closeFuture();
@@ -171,14 +164,20 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
+  @Nullable
+  public <REQUEST extends Request, RESULT> RESULT execute(
+      @NonNull REQUEST request, @NonNull GenericType<RESULT> resultType) {
+    return session.execute(request, resultType);
+  }
+
+  @Override
   @NonNull
-  public ResultSet execute(@NonNull Statement<?> statement) {
-    String query = getQuery(statement);
+  public ResultSet execute(@NonNull String query) {
 
     Span span = tracer().startSpan(session, query);
     try (Scope ignored = tracer().startScope(span)) {
       try {
-        ResultSet resultSet = session.execute(statement);
+        ResultSet resultSet = session.execute(query);
         tracer().onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
@@ -192,12 +191,13 @@ public class TracingCqlSession implements CqlSession {
 
   @Override
   @NonNull
-  public ResultSet execute(@NonNull String query) {
+  public ResultSet execute(@NonNull Statement<?> statement) {
+    String query = getQuery(statement);
 
     Span span = tracer().startSpan(session, query);
     try (Scope ignored = tracer().startScope(span)) {
       try {
-        ResultSet resultSet = session.execute(query);
+        ResultSet resultSet = session.execute(statement);
         tracer().onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {

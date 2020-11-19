@@ -48,6 +48,6 @@ public class ElasticsearchTransportClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.elasticsearch";
+    return "io.opentelemetry.javaagent.elasticsearch";
   }
 }

@@ -53,6 +53,6 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.okhttp";
+    return "io.opentelemetry.javaagent.okhttp";
   }
 }

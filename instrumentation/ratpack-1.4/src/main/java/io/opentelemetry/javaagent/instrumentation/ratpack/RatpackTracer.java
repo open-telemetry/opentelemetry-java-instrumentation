@@ -31,7 +31,7 @@ public class RatpackTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.ratpack";
+    return "io.opentelemetry.javaagent.ratpack";
   }
 
   @Override

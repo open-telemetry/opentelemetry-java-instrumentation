@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class GuavaInstrumentationModule extends InstrumentationModule {
 
   public GuavaInstrumentationModule() {
-    super("guava");
+    super("guava", "guava-10.0");
   }
 
   @Override

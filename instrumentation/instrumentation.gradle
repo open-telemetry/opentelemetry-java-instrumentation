@@ -34,16 +34,13 @@ subprojects {
 }
 
 dependencies {
-  implementation project(':instrumentation-api')
-  implementation project(':javaagent-api')
-  implementation(project(':javaagent-tooling')) {
-    exclude module: ':javaagent-bootstrap'
-  }
+  compileOnly project(':instrumentation-api')
+  compileOnly project(':javaagent-api')
+  implementation(project(':javaagent-tooling'))
 }
 
 configurations {
   // exclude bootstrap dependencies from shadowJar
-  implementation.exclude module: deps.slf4j
   implementation.exclude group: 'org.slf4j'
   implementation.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
 }
@@ -60,19 +57,17 @@ shadowJar {
   duplicatesStrategy = DuplicatesStrategy.FAIL
 
   dependencies {
+    //These classes are added to bootstrap classloader by javaagent module
     exclude(project(':javaagent-bootstrap'))
+    exclude(project(':instrumentation-api'))
+    exclude(project(':javaagent-api'))
   }
 
   // rewrite library instrumentation dependencies
-  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
-    exclude "io.opentelemetry.javaagent.instrumentation.**"
-  }
+  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation")
 
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
-
-  // prevents conflict with library instrumentation
-  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"

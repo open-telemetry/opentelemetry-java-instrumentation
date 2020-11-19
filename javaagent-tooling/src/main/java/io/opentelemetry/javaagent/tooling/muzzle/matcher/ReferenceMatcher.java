@@ -127,7 +127,7 @@ public final class ReferenceMatcher {
               new Mismatch.MissingClass(
                   reference.getSources().toArray(new Source[0]), reference.getClassName()));
         }
-        return checkMatch(reference, resolution.resolve());
+        return checkThirdPartyTypeMatch(reference, resolution.resolve());
       }
     } catch (Exception e) {
       if (e.getMessage().startsWith("Cannot resolve type description for ")) {
@@ -187,7 +187,8 @@ public final class ReferenceMatcher {
             superType -> collectMethodsFromTypeHierarchy(superType, abstractMethods, plainMethods));
   }
 
-  private static List<Mismatch> checkMatch(Reference reference, TypeDescription typeOnClasspath) {
+  private static List<Mismatch> checkThirdPartyTypeMatch(
+      Reference reference, TypeDescription typeOnClasspath) {
     List<Mismatch> mismatches = Collections.emptyList();
 
     for (Reference.Flag flag : reference.getFlags()) {

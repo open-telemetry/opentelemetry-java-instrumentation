@@ -30,7 +30,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.mongo";
+    return "io.opentelemetry.javaagent.mongo";
   }
 
   @Override

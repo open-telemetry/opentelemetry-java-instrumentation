@@ -157,7 +157,7 @@ outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
+| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3multi`, `jaeger`, `ottracer`, and `xray`. |
 
 #### OpenTelemetry Resource
 

@@ -44,17 +44,6 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.api.trace.Span toAgentOrNull(Span applicationSpan) {
-    if (!applicationSpan.getSpanContext().isValid()) {
-      // no need to wrap
-      return io.opentelemetry.api.trace.Span.getInvalid();
-    } else if (applicationSpan instanceof ApplicationSpan) {
-      return ((ApplicationSpan) applicationSpan).getAgentSpan();
-    } else {
-      return null;
-    }
-  }
-
   public static SpanContext toApplication(io.opentelemetry.api.trace.SpanContext agentContext) {
     if (agentContext.isRemote()) {
       return SpanContext.createFromRemoteParent(
@@ -68,6 +57,32 @@ public class Bridging {
           agentContext.getSpanIdAsHexString(),
           agentContext.getTraceFlags(),
           toApplication(agentContext.getTraceState()));
+    }
+  }
+
+  private static TraceState toApplication(io.opentelemetry.api.trace.TraceState agentTraceState) {
+    TraceState.Builder applicationTraceState = TraceState.builder();
+    agentTraceState.forEach(applicationTraceState::set);
+    return applicationTraceState.build();
+  }
+
+  public static io.opentelemetry.api.trace.Span toAgentOrNull(Span applicationSpan) {
+    if (!applicationSpan.getSpanContext().isValid()) {
+      // no need to wrap
+      return io.opentelemetry.api.trace.Span.getInvalid();
+    } else if (applicationSpan instanceof ApplicationSpan) {
+      return ((ApplicationSpan) applicationSpan).getAgentSpan();
+    } else {
+      return null;
+    }
+  }
+
+  public static io.opentelemetry.api.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
+    try {
+      return io.opentelemetry.api.trace.Span.Kind.valueOf(applicationSpanKind.name());
+    } catch (IllegalArgumentException e) {
+      log.debug("unexpected span kind: {}", applicationSpanKind.name());
+      return null;
     }
   }
 
@@ -148,21 +163,6 @@ public class Bridging {
       return io.opentelemetry.api.trace.StatusCode.UNSET;
     }
     return agentCanonicalCode;
-  }
-
-  public static io.opentelemetry.api.trace.Span.Kind toAgentOrNull(Span.Kind applicationSpanKind) {
-    try {
-      return io.opentelemetry.api.trace.Span.Kind.valueOf(applicationSpanKind.name());
-    } catch (IllegalArgumentException e) {
-      log.debug("unexpected span kind: {}", applicationSpanKind.name());
-      return null;
-    }
-  }
-
-  private static TraceState toApplication(io.opentelemetry.api.trace.TraceState agentTraceState) {
-    TraceState.Builder applicationTraceState = TraceState.builder();
-    agentTraceState.forEach(applicationTraceState::set);
-    return applicationTraceState.build();
   }
 
   private static io.opentelemetry.api.trace.TraceState toAgent(TraceState applicationTraceState) {

@@ -41,7 +41,7 @@ public enum OpenTelemetryTracing implements Tracing {
   }
 
   private static final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("lettuce", "lettuce-5", "lettuce-5.1");
+      new RedisCommandNormalizer("lettuce", "lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {

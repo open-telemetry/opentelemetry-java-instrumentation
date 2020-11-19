@@ -33,7 +33,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public final class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "redis");
+    super("jedis", "jedis-3.0");
   }
 
   @Override

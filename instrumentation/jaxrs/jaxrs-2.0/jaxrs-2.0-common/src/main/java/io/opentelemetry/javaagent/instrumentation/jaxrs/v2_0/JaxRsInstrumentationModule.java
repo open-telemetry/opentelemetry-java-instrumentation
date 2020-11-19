@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxRsInstrumentationModule extends InstrumentationModule {
   public JaxRsInstrumentationModule() {
-    super("jax-rs", "jaxrs");
+    super("jaxrs", "jaxrs-2.0");
   }
 
   // require jax-rs 2

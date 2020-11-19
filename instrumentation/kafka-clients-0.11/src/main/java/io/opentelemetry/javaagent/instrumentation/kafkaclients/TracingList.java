@@ -49,8 +49,18 @@ public class TracingList extends TracingIterable implements List<ConsumerRecord<
   }
 
   @Override
+  public void add(int index, ConsumerRecord element) {
+    delegate.add(index, element);
+  }
+
+  @Override
   public boolean remove(Object o) {
     return delegate.remove(o);
+  }
+
+  @Override
+  public ConsumerRecord<?, ?> remove(int index) {
+    return delegate.remove(index);
   }
 
   @Override
@@ -92,16 +102,6 @@ public class TracingList extends TracingIterable implements List<ConsumerRecord<
   @Override
   public ConsumerRecord<?, ?> set(int index, ConsumerRecord element) {
     return delegate.set(index, element);
-  }
-
-  @Override
-  public void add(int index, ConsumerRecord element) {
-    delegate.add(index, element);
-  }
-
-  @Override
-  public ConsumerRecord<?, ?> remove(int index) {
-    return delegate.remove(index);
   }
 
   @Override

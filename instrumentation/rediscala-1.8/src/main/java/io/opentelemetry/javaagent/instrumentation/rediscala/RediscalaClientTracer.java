@@ -36,6 +36,6 @@ public class RediscalaClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.rediscala";
+    return "io.opentelemetry.javaagent.rediscala";
   }
 }

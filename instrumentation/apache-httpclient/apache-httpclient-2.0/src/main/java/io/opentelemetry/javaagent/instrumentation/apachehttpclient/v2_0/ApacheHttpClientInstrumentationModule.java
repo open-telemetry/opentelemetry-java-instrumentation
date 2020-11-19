@@ -33,7 +33,7 @@ import org.apache.commons.httpclient.HttpMethod;
 public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
-    super("apache-httpclient");
+    super("apache-httpclient", "apache-httpclient-2.0");
   }
 
   @Override

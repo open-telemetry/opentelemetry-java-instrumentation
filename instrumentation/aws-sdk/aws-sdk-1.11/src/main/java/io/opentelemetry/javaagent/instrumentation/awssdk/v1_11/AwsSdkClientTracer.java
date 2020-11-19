@@ -126,7 +126,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.aws-sdk";
+    return "io.opentelemetry.javaagent.aws-sdk";
   }
 
   static final class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {

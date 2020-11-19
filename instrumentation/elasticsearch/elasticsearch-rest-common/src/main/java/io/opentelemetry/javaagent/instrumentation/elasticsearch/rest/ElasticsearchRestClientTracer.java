@@ -55,6 +55,6 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.elasticsearch";
+    return "io.opentelemetry.javaagent.elasticsearch";
   }
 }

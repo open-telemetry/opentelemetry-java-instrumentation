@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public final class GeodeQueryNormalizer {
   private static final Logger log = LoggerFactory.getLogger(GeodeQueryNormalizer.class);
   private static final boolean NORMALIZATION_ENABLED =
-      isQueryNormalizationEnabled("geode", "geode-client");
+      isQueryNormalizationEnabled("geode", "geode-1.4");
 
   public static String normalize(String query) {
     if (!NORMALIZATION_ENABLED || query == null) {

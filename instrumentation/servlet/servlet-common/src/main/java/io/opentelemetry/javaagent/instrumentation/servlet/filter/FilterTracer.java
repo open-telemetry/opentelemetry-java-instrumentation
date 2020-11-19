@@ -16,6 +16,6 @@ public class FilterTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.servlet";
+    return "io.opentelemetry.javaagent.servlet";
   }
 }

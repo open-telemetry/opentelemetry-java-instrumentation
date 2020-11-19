@@ -52,7 +52,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.netty";
+    return "io.opentelemetry.javaagent.netty";
   }
 
   @Override

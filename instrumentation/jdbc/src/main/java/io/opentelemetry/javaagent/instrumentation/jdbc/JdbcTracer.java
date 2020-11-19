@@ -29,7 +29,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jdbc";
+    return "io.opentelemetry.javaagent.jdbc";
   }
 
   @Override
