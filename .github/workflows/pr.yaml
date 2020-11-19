@@ -97,7 +97,7 @@ jobs:
         uses: nick-invision/retry@v2.1.0
         with:
           command: ./gradlew :smoke-tests:test
-          timeout_minutes: 90
+          timeout_minutes: 180
           max_attempts: 3
 
       - name: Aggregate test reports with ciMate
