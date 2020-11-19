@@ -22,7 +22,6 @@ import java.util.Optional;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
-import org.bson.json.JsonMode;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
@@ -100,38 +99,46 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   private static final Method IS_TRUNCATED_METHOD;
 
   static {
-    IS_TRUNCATED_METHOD = Arrays.stream(JsonWriter.class.getMethods())
-        .filter(method -> method.getName().equals("isTruncated")).findFirst().orElse(null);
+    IS_TRUNCATED_METHOD =
+        Arrays.stream(JsonWriter.class.getMethods())
+            .filter(method -> method.getName().equals("isTruncated"))
+            .findFirst()
+            .orElse(null);
   }
 
-  private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength)  {
+  private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
     JsonWriterSettings settings = new JsonWriterSettings(false);
     try {
       // The static JsonWriterSettings.builder() method was introduced in the 3.5 release
-      Optional<Method> buildMethod = Arrays.stream(JsonWriterSettings.class.getMethods())
-          .filter(method -> method.getName().equals("builder")).findFirst();
+      Optional<Method> buildMethod =
+          Arrays.stream(JsonWriterSettings.class.getMethods())
+              .filter(method -> method.getName().equals("builder"))
+              .findFirst();
       if (buildMethod.isPresent()) {
         Class<?> builderClass = buildMethod.get().getReturnType();
         Object builder = buildMethod.get().invoke(null, (Object[]) null);
 
         // The JsonWriterSettings.Builder.indent method was introduced in the 3.5 release,
         // but checking anyway
-        Optional<Method> indentMethod = Arrays.stream(builderClass.getMethods())
-            .filter(method -> method.getName().equals("indent"))
-            .findFirst();
+        Optional<Method> indentMethod =
+            Arrays.stream(builderClass.getMethods())
+                .filter(method -> method.getName().equals("indent"))
+                .findFirst();
         if (indentMethod.isPresent()) {
           indentMethod.get().invoke(builder, false);
         }
 
         // The JsonWriterSettings.Builder.maxLength method was introduced in the 3.7 release
-        Optional<Method> maxLengthMethod = Arrays.stream(builderClass.getMethods())
-            .filter(method -> method.getName().equals("maxLength"))
-            .findFirst();
+        Optional<Method> maxLengthMethod =
+            Arrays.stream(builderClass.getMethods())
+                .filter(method -> method.getName().equals("maxLength"))
+                .findFirst();
         if (maxLengthMethod.isPresent()) {
           maxLengthMethod.get().invoke(builder, maxNormalizedQueryLength);
         }
-        settings = (JsonWriterSettings) builderClass.getMethod("build", (Class<?>[]) null)
-            .invoke(builder, (Object[]) null);
+        settings =
+            (JsonWriterSettings)
+                builderClass.getMethod("build", (Class<?>[]) null).invoke(builder, (Object[]) null);
       }
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
     }
@@ -144,7 +151,8 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
     // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    return stringWriter.getBuffer()
+    return stringWriter
+        .getBuffer()
         .substring(0, Math.min(maxNormalizedQueryLength, stringWriter.getBuffer().length()));
   }
 
