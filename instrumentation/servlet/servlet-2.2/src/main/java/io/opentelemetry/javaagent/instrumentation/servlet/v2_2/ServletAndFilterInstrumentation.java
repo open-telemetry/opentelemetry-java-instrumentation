@@ -32,11 +32,6 @@ final class ServletAndFilterInstrumentation implements TypeInstrumentation {
     return safeHasSuperType(namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
   }
 
-  /**
-   * Here we are instrumenting the public method for HttpServlet. This should ensure that this
-   * advice is always called before HttpServletInstrumentation which is instrumenting the protected
-   * method.
-   */
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(

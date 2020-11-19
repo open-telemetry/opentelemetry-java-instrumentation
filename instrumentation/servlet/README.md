@@ -30,7 +30,7 @@ at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServ
 <b>at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)</b>
 <b>at javax.servlet.http.HttpServlet.service(HttpServlet.java:741)</b>
 ...
-<b>at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)</b>
+<b>at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:119)</b>
 ...
 at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
 at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
@@ -40,40 +40,23 @@ at java.base/java.lang.Thread.run(Thread.java:834)
 </pre>
 
 Everything starts when HTTP request processing reaches the first class from Servlet specification.
-In the example above this is `ApplicationFilterChain.doFilter(ServletRequest, ServletResponse)` method.
+In the example above this is the
+`OncePerRequestFilter.doFilter(ServletRequest, ServletResponse, FilterChain)` method.
 Let us call this first servlet specific method an "entry point".
-This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentation` instruments:
+This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentation`:
 
-`public void javax.servlet.FilterChain#doFilter(ServletRequest, ServletResponse)`
+`public void javax.servlet.Filter#doFilter(ServletRequest, ServletResponse, FilterChain)`
 
 `public void javax.servlet.http.HttpServlet#service(ServletRequest, ServletResponse)`.
 
-For example, Jetty Servlet container does not have default filter chain and in many cases will have
-the second method as instrumentation entry point.
-These instrumentations are located in two separate submodules `request-3.0` and `request-2.3`, respectively,
-because they and corresponding tests depend on different versions of servlet specification.
+These instrumentations are located in two separate submodules `servlet-3.0` and `servlet-2.2`,
+because they and corresponding tests depend on different versions of the servlet specification.
 
-Next, request passes several other methods from Servlet specification, such as
-
-`protected void javax.servlet.http.HttpServlet#service(HttpServletRequest, HttpServletResponse)` or
-
-`protected void org.springframework.web.servlet.FrameworkServlet#doGet(HttpServletRequest, HttpServletResponse)`.
-
-They are the targets for `HttpServletInstrumentationModule`.
-From the observability point of view nothing of interest usually happens inside these methods.
-Thus it usually does not make sense to create spans from them, as they would only add useless noise.
-For this reason `HttpServletInstrumentationModule` is disabled by default.
-In rare cases when you need it, you can enable it using configuration property `otel.instrumentation.servlet-service.enabled`.
-
-In exactly the same situation are all other Servlet filters beyond the initial entry point.
-Usually unimportant, they may be sometimes of interest during troubleshooting.
-They are instrumented by `FilterInstrumentationModule` which is also disabled by default.
-You can enable it with the configuration property `otel.instrumentation.servlet-filter.enabled`.
 At last, request processing may reach the specific framework that your application uses.
 In this case Spring MVC and `OwnerController.initCreationForm`.
 
 If all instrumentations are enabled, then a new span will be created for every highlighted frame.
-All spans from Servlet API will have `kind=SERVER` and name based on corresponding class ana method names,
+All spans from Servlet API will have `kind=SERVER` and name based on corresponding class and method names,
 such as `ApplicationFilterChain.doFilter` or `FrameworkServlet.doGet`.
 Span created by Spring MVC instrumentation will have `kind=INTERNAL` and named `OwnerController.initCreationForm`.
 
