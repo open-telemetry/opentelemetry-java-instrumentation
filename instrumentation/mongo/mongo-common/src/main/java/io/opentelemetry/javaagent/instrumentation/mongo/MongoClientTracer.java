@@ -147,6 +147,9 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
               "findAndModify",
               "insert",
               "update",
+              "create",
+              "drop",
+              "createIndexes",
               "listIndexes"));
 
   private static String collectionName(CommandStartedEvent event) {

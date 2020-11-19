@@ -48,7 +48,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", null, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
+        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
       }
     }
 
@@ -78,7 +78,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", null, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
+        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
       }
     }
 
@@ -97,7 +97,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "create", null, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
+        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
       }
     }
 
