@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
-import io.opentelemetry.api.trace.Span
 
 /**
- * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.auto.annotations.WithSpan} contrib annotation.
+ * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {

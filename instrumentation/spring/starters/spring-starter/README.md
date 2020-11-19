@@ -1,6 +1,6 @@
 # OpenTelemetry Spring Starter
 
-OpenTelemetry Spring Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-auto-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the full list of supported libraries and features.
+OpenTelemetry Spring Starter is a starter package that includes the opentelemetry-api, opentelemetry-sdk, opentelemetry-extension-annotations, opentelmetry-logging-exporter, opentelemetry-spring-boot-autoconfigurations and spring framework starters required to setup distributed tracing. Check out [opentelemetry-spring-boot-autoconfigure](../../spring-boot-autoconfigure/README.md#features) for the full list of supported libraries and features.
 
 This version is compatible with Spring Boot 2.0.
 
@@ -9,7 +9,7 @@ This version is compatible with Spring Boot 2.0.
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.8.0`
+ - Minimum version: `0.11.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
