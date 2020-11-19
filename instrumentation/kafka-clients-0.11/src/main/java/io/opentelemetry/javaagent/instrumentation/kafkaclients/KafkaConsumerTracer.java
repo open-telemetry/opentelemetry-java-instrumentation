@@ -78,6 +78,6 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kafka-clients";
+    return "io.opentelemetry.javaagent.kafka-clients";
   }
 }

@@ -50,7 +50,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.redisson";
+    return "io.opentelemetry.javaagent.redisson";
   }
 
   @Override

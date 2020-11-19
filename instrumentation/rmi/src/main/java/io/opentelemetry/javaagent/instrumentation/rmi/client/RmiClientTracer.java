@@ -19,6 +19,7 @@ public class RmiClientTracer extends RpcClientTracer {
     return TRACER;
   }
 
+  @Override
   public Span startSpan(Method method) {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
@@ -34,6 +35,6 @@ public class RmiClientTracer extends RpcClientTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.rmi";
+    return "io.opentelemetry.javaagent.rmi";
   }
 }

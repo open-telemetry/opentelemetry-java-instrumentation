@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp;
+package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.RabbitTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -158,7 +157,7 @@ final class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         Java8BytecodeBridge.getGlobalPropagators()
             .getTextMapPropagator()
-            .inject(context, headers, SETTER);
+            .inject(context, headers, TextMapInjectAdapter.SETTER);
 
         props =
             new AMQP.BasicProperties(
