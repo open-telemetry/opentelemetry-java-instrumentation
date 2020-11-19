@@ -12,17 +12,33 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
-import org.bson.BsonString;
 import org.bson.BsonValue;
+import org.bson.json.JsonWriter;
+import org.bson.json.JsonWriterSettings;
 
 public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
   private static final MongoClientTracer TRACER = new MongoClientTracer();
+
+  private final int maxNormalizedQueryLength;
+  private final JsonWriterSettings jsonWriterSettings;
+
+  public MongoClientTracer() {
+    this(32 * 1024);
+  }
+
+  public MongoClientTracer(int maxNormalizedQueryLength) {
+    this.maxNormalizedQueryLength = maxNormalizedQueryLength;
+    this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
+  }
 
   public static MongoClientTracer tracer() {
     return TRACER;
@@ -80,54 +96,120 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     return null;
   }
 
-  @Override
-  public String normalizeQuery(BsonDocument statement) {
-    // scrub the Mongo command so that parameters are removed from the string
-    BsonDocument scrubbed = scrub(statement);
-    return scrubbed.toString();
+  private static final Method IS_TRUNCATED_METHOD;
+
+  static {
+    IS_TRUNCATED_METHOD =
+        Arrays.stream(JsonWriter.class.getMethods())
+            .filter(method -> method.getName().equals("isTruncated"))
+            .findFirst()
+            .orElse(null);
   }
 
-  /**
-   * The values of these mongo fields will not be scrubbed out. This allows the non-sensitive
-   * collection names to be captured.
-   */
-  private static final List<String> UNSCRUBBED_FIELDS =
-      Arrays.asList("ordered", "insert", "count", "find", "create");
+  private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
+    JsonWriterSettings settings = new JsonWriterSettings(false);
+    try {
+      // The static JsonWriterSettings.builder() method was introduced in the 3.5 release
+      Optional<Method> buildMethod =
+          Arrays.stream(JsonWriterSettings.class.getMethods())
+              .filter(method -> method.getName().equals("builder"))
+              .findFirst();
+      if (buildMethod.isPresent()) {
+        Class<?> builderClass = buildMethod.get().getReturnType();
+        Object builder = buildMethod.get().invoke(null, (Object[]) null);
 
-  private static final BsonValue HIDDEN_CHAR = new BsonString("?");
+        // The JsonWriterSettings.Builder.indent method was introduced in the 3.5 release,
+        // but checking anyway
+        Optional<Method> indentMethod =
+            Arrays.stream(builderClass.getMethods())
+                .filter(method -> method.getName().equals("indent"))
+                .findFirst();
+        if (indentMethod.isPresent()) {
+          indentMethod.get().invoke(builder, false);
+        }
 
-  private static BsonDocument scrub(BsonDocument origin) {
-    BsonDocument scrub = new BsonDocument();
+        // The JsonWriterSettings.Builder.maxLength method was introduced in the 3.7 release
+        Optional<Method> maxLengthMethod =
+            Arrays.stream(builderClass.getMethods())
+                .filter(method -> method.getName().equals("maxLength"))
+                .findFirst();
+        if (maxLengthMethod.isPresent()) {
+          maxLengthMethod.get().invoke(builder, maxNormalizedQueryLength);
+        }
+        settings =
+            (JsonWriterSettings)
+                builderClass.getMethod("build", (Class<?>[]) null).invoke(builder, (Object[]) null);
+      }
+    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+    }
+    return settings;
+  }
+
+  @Override
+  public String normalizeQuery(BsonDocument command) {
+    StringWriter stringWriter = new StringWriter(128);
+    writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
+    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
+    // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
+    return stringWriter
+        .getBuffer()
+        .substring(0, Math.min(maxNormalizedQueryLength, stringWriter.getBuffer().length()));
+  }
+
+  private static final String HIDDEN_CHAR = "?";
+
+  private static boolean writeScrubbed(BsonDocument origin, JsonWriter writer, boolean isRoot) {
+    writer.writeStartDocument();
+    boolean firstField = true;
     for (Map.Entry<String, BsonValue> entry : origin.entrySet()) {
-      if (UNSCRUBBED_FIELDS.contains(entry.getKey()) && entry.getValue().isString()) {
-        scrub.put(entry.getKey(), entry.getValue());
+      writer.writeName(entry.getKey());
+      // the first field of the root document is the command name, so we preserve its value
+      // (which for most CRUD commands is the collection name)
+      if (isRoot && firstField && entry.getValue().isString()) {
+        writer.writeString(entry.getValue().asString().getValue());
       } else {
-        BsonValue child = scrub(entry.getValue());
-        scrub.put(entry.getKey(), child);
+        if (writeScrubbed(entry.getValue(), writer)) {
+          return true;
+        }
+      }
+      firstField = false;
+    }
+    writer.writeEndDocument();
+    return false;
+  }
+
+  private static boolean writeScrubbed(BsonArray origin, JsonWriter writer) {
+    writer.writeStartArray();
+    for (BsonValue value : origin) {
+      if (writeScrubbed(value, writer)) {
+        return true;
       }
     }
-    return scrub;
+    writer.writeEndArray();
+    return false;
   }
 
-  private static BsonValue scrub(BsonArray origin) {
-    BsonArray scrub = new BsonArray();
-    for (BsonValue value : origin) {
-      BsonValue child = scrub(value);
-      scrub.add(child);
-    }
-    return scrub;
-  }
-
-  private static BsonValue scrub(BsonValue origin) {
-    BsonValue scrubbed;
+  private static boolean writeScrubbed(BsonValue origin, JsonWriter writer) {
     if (origin.isDocument()) {
-      scrubbed = scrub(origin.asDocument());
+      return writeScrubbed(origin.asDocument(), writer, false);
     } else if (origin.isArray()) {
-      scrubbed = scrub(origin.asArray());
+      return writeScrubbed(origin.asArray(), writer);
     } else {
-      scrubbed = HIDDEN_CHAR;
+      writer.writeString(HIDDEN_CHAR);
+      return isTruncated(writer);
     }
-    return scrubbed;
+  }
+
+  private static boolean isTruncated(JsonWriter writer) {
+    if (IS_TRUNCATED_METHOD == null) {
+      return false;
+    } else {
+      try {
+        return (boolean) IS_TRUNCATED_METHOD.invoke(writer, (Object[]) null);
+      } catch (IllegalAccessException | InvocationTargetException ignored) {
+        return false;
+      }
+    }
   }
 
   private static String collectionName(CommandStartedEvent event) {
