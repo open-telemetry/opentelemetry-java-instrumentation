@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_IP;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_NAME;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_TRANSPORT;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 
@@ -202,17 +206,17 @@ public class DbRedisSpan extends DelegatingSpan implements DbRedisSemanticConven
   /** Builder class for {@link DbRedisSpan}. */
   public static class DbRedisSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Span.Builder internalBuilder;
+    protected SpanBuilder internalBuilder;
 
     protected DbRedisSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public DbRedisSpanBuilder(Span.Builder spanBuilder) {
+    public DbRedisSpanBuilder(SpanBuilder spanBuilder) {
       this.internalBuilder = spanBuilder;
     }
 
-    public Span.Builder getSpanBuilder() {
+    public SpanBuilder getSpanBuilder() {
       return this.internalBuilder;
     }
 

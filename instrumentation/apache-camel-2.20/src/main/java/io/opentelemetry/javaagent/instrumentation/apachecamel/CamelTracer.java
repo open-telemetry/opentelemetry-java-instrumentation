@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DecoratorRegistry;
 import org.apache.camel.Endpoint;
@@ -40,7 +40,7 @@ class CamelTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.apache-camel";
   }
 
-  public Span.Builder spanBuilder(String name) {
+  public SpanBuilder spanBuilder(String name) {
     return tracer.spanBuilder(name);
   }
 

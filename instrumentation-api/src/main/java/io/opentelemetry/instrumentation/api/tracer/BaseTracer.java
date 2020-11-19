@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class BaseTracer {
   // Keeps track of the server span for the current trace.
@@ -114,7 +115,7 @@ public abstract class BaseTracer {
 
   public void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
-      span.end(endTimeNanos);
+      span.end(endTimeNanos, TimeUnit.NANOSECONDS);
     } else {
       span.end();
     }

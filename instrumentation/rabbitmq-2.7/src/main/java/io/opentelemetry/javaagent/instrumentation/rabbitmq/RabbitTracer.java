@@ -18,6 +18,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -45,14 +46,14 @@ public class RabbitTracer extends BaseTracer {
 
   public Span startGetSpan(
       String queue, long startTime, GetResponse response, Connection connection) {
-    Span.Builder spanBuilder =
+    SpanBuilder spanBuilder =
         tracer
             .spanBuilder(spanNameOnGet(queue))
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
-            .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
+            .setStartTimestamp(startTime, TimeUnit.MILLISECONDS);
 
     Span span = spanBuilder.startSpan();
     if (response != null) {
@@ -79,7 +80,7 @@ public class RabbitTracer extends BaseTracer {
             .spanBuilder(spanNameOnDeliver(queue))
             .setSpanKind(CONSUMER)
             .setParent(extract(headers, GETTER))
-            .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis))
+            .setStartTimestamp(startTimeMillis, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")

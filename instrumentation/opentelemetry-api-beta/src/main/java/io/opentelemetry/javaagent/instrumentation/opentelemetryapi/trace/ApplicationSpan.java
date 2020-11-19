@@ -10,10 +10,12 @@ import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.api.trace.SpanBuilder;
 import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +71,8 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public Span addEvent(String name, long timestamp) {
-    agentSpan.addEvent(name, timestamp);
+  public Span addEvent(String name, long timestamp, TimeUnit unit) {
+    agentSpan.addEvent(name, timestamp, unit);
     return this;
   }
 
@@ -81,8 +83,9 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public Span addEvent(String name, Attributes applicationAttributes, long timestamp) {
-    agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp);
+  public Span addEvent(
+      String name, Attributes applicationAttributes, long timestamp, TimeUnit unit) {
+    agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp, unit);
     return this;
   }
 
@@ -122,8 +125,8 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public void end(long timestamp) {
-    agentSpan.end(timestamp);
+  public void end(long timestamp, TimeUnit unit) {
+    agentSpan.end(timestamp, unit);
   }
 
   @Override
@@ -144,67 +147,67 @@ class ApplicationSpan implements Span {
     return agentSpan.equals(((ApplicationSpan) other).agentSpan);
   }
 
-  static class Builder implements Span.Builder {
+  static class Builder implements SpanBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(Builder.class);
 
-    private final io.opentelemetry.api.trace.Span.Builder agentBuilder;
+    private final io.opentelemetry.api.trace.SpanBuilder agentBuilder;
 
-    Builder(io.opentelemetry.api.trace.Span.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.trace.SpanBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public Span.Builder setParent(Context applicationContext) {
+    public SpanBuilder setParent(Context applicationContext) {
       agentBuilder.setParent(AgentContextStorage.getAgentContext(applicationContext));
       return this;
     }
 
     @Override
-    public Span.Builder setNoParent() {
+    public SpanBuilder setNoParent() {
       agentBuilder.setNoParent();
       return this;
     }
 
     @Override
-    public Span.Builder addLink(SpanContext applicationSpanContext) {
+    public SpanBuilder addLink(SpanContext applicationSpanContext) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
       return this;
     }
 
     @Override
-    public Span.Builder addLink(
+    public SpanBuilder addLink(
         SpanContext applicationSpanContext, Attributes applicationAttributes) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(String key, String value) {
+    public SpanBuilder setAttribute(String key, String value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(String key, long value) {
+    public SpanBuilder setAttribute(String key, long value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(String key, double value) {
+    public SpanBuilder setAttribute(String key, double value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public Span.Builder setAttribute(String key, boolean value) {
+    public SpanBuilder setAttribute(String key, boolean value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public <T> Span.Builder setAttribute(AttributeKey<T> applicationKey, T value) {
+    public <T> SpanBuilder setAttribute(AttributeKey<T> applicationKey, T value) {
       io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
       if (agentKey != null) {
         agentBuilder.setAttribute(agentKey, value);
@@ -213,7 +216,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setSpanKind(Span.Kind applicationSpanKind) {
+    public SpanBuilder setSpanKind(Span.Kind applicationSpanKind) {
       io.opentelemetry.api.trace.Span.Kind agentSpanKind = toAgentOrNull(applicationSpanKind);
       if (agentSpanKind != null) {
         agentBuilder.setSpanKind(agentSpanKind);
@@ -222,8 +225,8 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public Span.Builder setStartTimestamp(long startTimestamp) {
-      agentBuilder.setStartTimestamp(startTimestamp);
+    public SpanBuilder setStartTimestamp(long startTimestamp, TimeUnit unit) {
+      agentBuilder.setStartTimestamp(startTimestamp, unit);
       return this;
     }
 

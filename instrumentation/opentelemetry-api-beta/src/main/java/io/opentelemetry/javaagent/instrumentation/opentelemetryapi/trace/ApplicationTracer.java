@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.api.trace.SpanBuilder;
 import application.io.opentelemetry.api.trace.Tracer;
 
 class ApplicationTracer implements Tracer {
@@ -17,7 +17,7 @@ class ApplicationTracer implements Tracer {
   }
 
   @Override
-  public Span.Builder spanBuilder(String spanName) {
+  public SpanBuilder spanBuilder(String spanName) {
     return new ApplicationSpan.Builder(agentTracer.spanBuilder(spanName));
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.common.LabelsBuilder;
 
 /**
  * This class converts between Labels class that application brings and Labels class that agent
@@ -16,7 +17,7 @@ import io.opentelemetry.api.common.Labels;
 public class LabelBridging {
 
   public static Labels toAgent(application.io.opentelemetry.api.common.Labels applicationLabels) {
-    Labels.Builder builder = Labels.builder();
+    LabelsBuilder builder = Labels.builder();
     applicationLabels.forEach(builder::put);
     return builder.build();
   }

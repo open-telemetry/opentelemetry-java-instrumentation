@@ -5,9 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_IP;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_NAME;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_PORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_IP;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_NAME;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_TRANSPORT;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
@@ -283,17 +290,17 @@ public class MessagingConsumerSpan extends DelegatingSpan
   /** Builder class for {@link MessagingConsumerSpan}. */
   public static class MessagingConsumerSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Span.Builder internalBuilder;
+    protected SpanBuilder internalBuilder;
 
     protected MessagingConsumerSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public MessagingConsumerSpanBuilder(Span.Builder spanBuilder) {
+    public MessagingConsumerSpanBuilder(SpanBuilder spanBuilder) {
       this.internalBuilder = spanBuilder;
     }
 
-    public Span.Builder getSpanBuilder() {
+    public SpanBuilder getSpanBuilder() {
       return this.internalBuilder;
     }
 

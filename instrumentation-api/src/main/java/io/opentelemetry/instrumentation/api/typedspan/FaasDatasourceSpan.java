@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.typedspan;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 
@@ -127,17 +128,17 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
   /** Builder class for {@link FaasDatasourceSpan}. */
   public static class FaasDatasourceSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Span.Builder internalBuilder;
+    protected SpanBuilder internalBuilder;
 
     protected FaasDatasourceSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public FaasDatasourceSpanBuilder(Span.Builder spanBuilder) {
+    public FaasDatasourceSpanBuilder(SpanBuilder spanBuilder) {
       this.internalBuilder = spanBuilder;
     }
 
-    public Span.Builder getSpanBuilder() {
+    public SpanBuilder getSpanBuilder() {
       return this.internalBuilder;
     }
 

@@ -11,10 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.10.0',
-    opentelemetryOther  : '0.10.0',
-    opentelemetryAnother: '0.10.0',
-    opentelemetryContext: '0.10.0',
+    opentelemetry       : '0.11.0',
+    opentelemetryOther  : '0.11.0',
+    opentelemetryAnother: '0.11.0',
+    opentelemetryContext: '0.11.0',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7
@@ -40,7 +40,7 @@ ext {
   deps = [
     // OpenTelemetry
     opentelemetryApi            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
-    opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-auto-annotations', version: versions.opentelemetryAnother),
+    opentelemetryAutoAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-annotations', version: versions.opentelemetryAnother),
     opentelemetryContext        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetryContext),
     opentelemetryTraceProps     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryAnother),

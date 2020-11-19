@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.ENDUSER_ID;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.ENDUSER_ROLE;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.ENDUSER_SCOPE;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 
@@ -80,17 +83,17 @@ public class IdentitySpan extends DelegatingSpan implements IdentitySemanticConv
   /** Builder class for {@link IdentitySpan}. */
   public static class IdentitySpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Span.Builder internalBuilder;
+    protected SpanBuilder internalBuilder;
 
     protected IdentitySpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public IdentitySpanBuilder(Span.Builder spanBuilder) {
+    public IdentitySpanBuilder(SpanBuilder spanBuilder) {
       this.internalBuilder = spanBuilder;
     }
 
-    public Span.Builder getSpanBuilder() {
+    public SpanBuilder getSpanBuilder() {
       return this.internalBuilder;
     }
 

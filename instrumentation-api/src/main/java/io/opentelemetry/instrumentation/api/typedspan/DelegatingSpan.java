@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import java.util.concurrent.TimeUnit;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
@@ -55,8 +56,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public Span addEvent(String name, long timestamp) {
-    delegate.addEvent(name, timestamp);
+  public Span addEvent(String name, long timestamp, TimeUnit unit) {
+    delegate.addEvent(name, timestamp, unit);
     return this;
   }
 
@@ -67,8 +68,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public Span addEvent(String name, Attributes attributes, long timestamp) {
-    delegate.addEvent(name, attributes, timestamp);
+  public Span addEvent(String name, Attributes attributes, long timestamp, TimeUnit unit) {
+    delegate.addEvent(name, attributes, timestamp, unit);
     return this;
   }
 
@@ -108,8 +109,8 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void end(long timestamp) {
-    delegate.end(timestamp);
+  public void end(long timestamp, TimeUnit unit) {
+    delegate.end(timestamp, unit);
   }
 
   @Override

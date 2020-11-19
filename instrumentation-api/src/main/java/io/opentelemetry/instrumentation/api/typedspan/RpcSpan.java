@@ -5,9 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.typedspan;
 
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.*;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_IP;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_NAME;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_HOST_PORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_IP;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_NAME;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.NET_TRANSPORT;
+import static io.opentelemetry.api.trace.attributes.SemanticAttributes.RPC_SERVICE;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 
@@ -132,17 +140,17 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
   /** Builder class for {@link RpcSpan}. */
   public static class RpcSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Span.Builder internalBuilder;
+    protected SpanBuilder internalBuilder;
 
     protected RpcSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public RpcSpanBuilder(Span.Builder spanBuilder) {
+    public RpcSpanBuilder(SpanBuilder spanBuilder) {
       this.internalBuilder = spanBuilder;
     }
 
-    public Span.Builder getSpanBuilder() {
+    public SpanBuilder getSpanBuilder() {
       return this.internalBuilder;
     }
 
