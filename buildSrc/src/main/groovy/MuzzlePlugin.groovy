@@ -55,7 +55,7 @@ class MuzzlePlugin implements Plugin<Project> {
     RemoteRepository akka = new RemoteRepository.Builder("akka", "default", "https://dl.bintray.com/akka/maven/").build()
     RemoteRepository atlassian = new RemoteRepository.Builder("atlassian", "default", "https://maven.atlassian.com/content/repositories/atlassian-public/").build()
 //    MUZZLE_REPOS = Arrays.asList(central, sonatype, jcenter, spring, jboss, typesafe, akka, atlassian)
-    MUZZLE_REPOS = Arrays.asList(central, jcenter, typesafe)
+    MUZZLE_REPOS = Arrays.asList(central, typesafe)
   }
 
   @Override
