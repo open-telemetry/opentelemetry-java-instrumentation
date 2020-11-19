@@ -31,6 +31,6 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AsyncContextInstrumentation(), new ServletAndFilterChainInstrumentation());
+    return asList(new AsyncContextInstrumentation(), new ServletAndFilterInstrumentation());
   }
 }

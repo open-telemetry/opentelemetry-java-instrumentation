@@ -19,7 +19,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ServletAndFilterChainInstrumentation implements TypeInstrumentation {
+final class ServletAndFilterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -29,8 +29,7 @@ final class ServletAndFilterChainInstrumentation implements TypeInstrumentation 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-        namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
+    return safeHasSuperType(namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
   }
 
   /**
