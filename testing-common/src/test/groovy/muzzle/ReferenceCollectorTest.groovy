@@ -14,6 +14,9 @@ import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
 import io.opentelemetry.instrumentation.TestHelperClasses
+import io.opentelemetry.instrumentation.TestHelperDepCycle
+import io.opentelemetry.instrumentation.TestHelperDeps
+import io.opentelemetry.instrumentation.TestHelperDepsEnum
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
@@ -21,7 +24,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 class ReferenceCollectorTest extends AgentTestRunner {
   def "method body creates references"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    def references = collector.getReferences()
 
     expect:
     references.keySet() == [
@@ -65,7 +70,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
   def "protected ref test"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.B2.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(MethodBodyAdvice.B2.name)
+    def references = collector.getReferences()
 
     expect:
     assertMethod references[MethodBodyAdvice.B.name], 'protectedMethod', '()V',
@@ -75,7 +82,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
   def "ldc creates references"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(LdcAdvice.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(LdcAdvice.name)
+    def references = collector.getReferences()
 
     expect:
     references[MethodBodyAdvice.A.name] != null
@@ -83,7 +92,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
   def "instanceof creates references"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InstanceofAdvice.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.InstanceofAdvice.name)
+    def references = collector.getReferences()
 
     expect:
     references[MethodBodyAdvice.A.name] != null
@@ -91,7 +102,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
   def "invokedynamic creates references"() {
     setup:
-    def references = ReferenceCollector.collectReferencesFrom(TestClasses.InvokeDynamicAdvice.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.InvokeDynamicAdvice.name)
+    def references = collector.getReferences()
 
     expect:
     references['muzzle.TestClasses$MethodBodyAdvice$SomeImplementation'] != null
@@ -100,7 +113,9 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
   def "should create references for helper classes"() {
     when:
-    def references = ReferenceCollector.collectReferencesFrom(HelperAdvice.name)
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(HelperAdvice.name)
+    def references = collector.getReferences()
 
     then:
     references.keySet() == [
@@ -128,6 +143,82 @@ class ReferenceCollectorTest extends AgentTestRunner {
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
     }
+  }
+
+  def "should find all helper classes"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(HelperAdvice.name)
+    def helperClasses = collector.getSortedHelperClasses()
+
+    then:
+    helperClasses == [
+      TestHelperClasses.HelperInterface.name,
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.Helper.name
+    ]
+  }
+
+  def "should correctly sort helper classes topologically"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.HelperDepsAdvice.name)
+    def helperClasses = collector.getSortedHelperClasses()
+
+    then:
+    helperClasses == [
+      TestHelperDeps.ThirdOne.name,
+      TestHelperDeps.Bar.name,
+      TestHelperDeps.SomeTestClass.name,
+      TestHelperDeps.BarProvider.name,
+      TestHelperDeps.Foo.name,
+      TestHelperDeps.FooProvider.name,
+      TestHelperDeps.name,
+    ]
+  }
+
+  def "should deal with a dependency cycle"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.HelperDepCycleAdvice.name)
+    def helperClasses = collector.getSortedHelperClasses()
+
+    then:
+    helperClasses == [
+      TestHelperDepCycle.ClassOne.name,
+      TestHelperDepCycle.ClassTwo.name,
+      TestHelperDepCycle.name
+    ]
+  }
+
+  def "should deal with a dependency cycle with multiple advice classes"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.HelperDepCycleAdvice.name)
+    collector.collectReferencesFrom(TestClasses.HelperDepCycleSeparateAdvice.name)
+    def helperClasses = collector.getSortedHelperClasses()
+
+    then:
+    helperClasses == [
+      TestHelperDepCycle.ClassOne.name,
+      TestHelperDepCycle.ClassTwo.name,
+      TestHelperDepCycle.name
+    ]
+  }
+
+  def "should deal with a dependency cycle between abstract & implementation classes"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(TestClasses.HelperDepEnumCycle.name)
+    def helperClasses = collector.getSortedHelperClasses()
+
+    then:
+    assertThatContainsInOrder helperClasses, [
+      TestHelperDepsEnum.EnumWithOverridingClasses.getName(),
+      TestHelperDepsEnum.name,
+      TestHelperDepsEnum.EnumWithOverridingClasses.getName() + '$2',
+      TestHelperDepsEnum.EnumWithOverridingClasses.getName() + '$1',
+    ]
   }
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
@@ -170,5 +261,20 @@ class ReferenceCollectorTest extends AgentTestRunner {
       }
     }
     return null
+  }
+
+  private static assertThatContainsInOrder(List<String> list, List<String> sublist) {
+    def listIt = list.iterator()
+    def sublistIt = sublist.iterator()
+    while (listIt.hasNext() && sublistIt.hasNext()) {
+      def sublistElem = sublistIt.next()
+      while (listIt.hasNext()) {
+        def listElem = listIt.next()
+        if (listElem == sublistElem) {
+          break
+        }
+      }
+    }
+    return !sublistIt.hasNext()
   }
 }

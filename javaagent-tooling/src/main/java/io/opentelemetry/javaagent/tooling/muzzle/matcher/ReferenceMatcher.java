@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import com.google.common.collect.Sets;
@@ -17,7 +18,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,15 +38,15 @@ public final class ReferenceMatcher {
   private final Set<String> helperClassNames;
 
   public ReferenceMatcher(Reference... references) {
-    this(new String[0], references);
+    this(emptyList(), references);
   }
 
-  public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
+  public ReferenceMatcher(List<String> helperClassNames, Reference[] references) {
     this.references = new HashMap<>(references.length);
     for (Reference reference : references) {
       this.references.put(reference.getClassName(), reference);
     }
-    this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
+    this.helperClassNames = new HashSet<>(helperClassNames);
   }
 
   Collection<Reference> getReferences() {
@@ -88,7 +88,7 @@ public final class ReferenceMatcher {
       loader = Utils.getBootstrapProxy();
     }
 
-    List<Mismatch> mismatches = Collections.emptyList();
+    List<Mismatch> mismatches = emptyList();
 
     for (Reference reference : references.values()) {
       mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
@@ -119,7 +119,7 @@ public final class ReferenceMatcher {
       } else if (helperClassNames.contains(reference.getClassName())) {
         // skip muzzle check for those helper classes that are not in instrumentation packages; e.g.
         // some instrumentations inject guava types as helper classes
-        return Collections.emptyList();
+        return emptyList();
       } else {
         TypePool.Resolution resolution = typePool.describe(reference.getClassName());
         if (!resolution.isResolved()) {
@@ -146,7 +146,7 @@ public final class ReferenceMatcher {
   // for helper classes we make sure that all abstract methods from super classes and interfaces are
   // implemented
   private List<Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
-    List<Mismatch> mismatches = Collections.emptyList();
+    List<Mismatch> mismatches = emptyList();
 
     HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
 

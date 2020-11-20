@@ -19,6 +19,13 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  protected String[] additionalHelperClassNames() {
+    return new String[] {
+      "rx.__OpenTelemetryTracingUtil",
+    };
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
