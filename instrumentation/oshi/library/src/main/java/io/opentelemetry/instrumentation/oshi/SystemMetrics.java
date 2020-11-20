@@ -19,6 +19,9 @@ import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
 public class SystemMetrics {
+  private static final String DEVICE_LABEL_KEY = "device";
+  private static final String DIRECTION_LABEL_KEY = "direction";
+  private static final String STATE_LABEL_KEY = "state";
 
   private SystemMetrics() {}
 
@@ -38,8 +41,8 @@ public class SystemMetrics {
               @Override
               public void update(LongResult r) {
                 GlobalMemory mem = hal.getMemory();
-                r.observe(mem.getTotal() - mem.getAvailable(), Labels.of("state", "used"));
-                r.observe(mem.getAvailable(), Labels.of("state", "free"));
+                r.observe(mem.getTotal() - mem.getAvailable(), Labels.of(STATE_LABEL_KEY, "used"));
+                r.observe(mem.getAvailable(), Labels.of(STATE_LABEL_KEY, "free"));
               }
             });
 
@@ -55,9 +58,10 @@ public class SystemMetrics {
                 GlobalMemory mem = hal.getMemory();
                 r.observe(
                     ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
-                    Labels.of("state", "used"));
+                    Labels.of(STATE_LABEL_KEY, "used"));
                 r.observe(
-                    ((double) mem.getAvailable()) / mem.getTotal(), Labels.of("state", "free"));
+                    ((double) mem.getAvailable()) / mem.getTotal(),
+                    Labels.of(STATE_LABEL_KEY, "free"));
               }
             });
 
@@ -76,8 +80,10 @@ public class SystemMetrics {
                   long recv = networkIf.getBytesRecv();
                   long sent = networkIf.getBytesSent();
                   String device = networkIf.getName();
-                  r.observe(recv, Labels.of("device", device, "direction", "receive"));
-                  r.observe(sent, Labels.of("device", device, "direction", "transmit"));
+                  r.observe(
+                      recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
+                  r.observe(
+                      sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
                 }
               }
             });
@@ -97,8 +103,10 @@ public class SystemMetrics {
                   long recv = networkIf.getPacketsRecv();
                   long sent = networkIf.getPacketsSent();
                   String device = networkIf.getName();
-                  r.observe(recv, Labels.of("device", device, "direction", "receive"));
-                  r.observe(sent, Labels.of("device", device, "direction", "transmit"));
+                  r.observe(
+                      recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
+                  r.observe(
+                      sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
                 }
               }
             });
@@ -118,8 +126,10 @@ public class SystemMetrics {
                   long recv = networkIf.getInErrors();
                   long sent = networkIf.getOutErrors();
                   String device = networkIf.getName();
-                  r.observe(recv, Labels.of("device", device, "direction", "receive"));
-                  r.observe(sent, Labels.of("device", device, "direction", "transmit"));
+                  r.observe(
+                      recv, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "receive"));
+                  r.observe(
+                      sent, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "transmit"));
                 }
               }
             });
@@ -137,8 +147,9 @@ public class SystemMetrics {
                   long read = diskStore.getReadBytes();
                   long write = diskStore.getWriteBytes();
                   String device = diskStore.getName();
-                  r.observe(read, Labels.of("device", device, "direction", "read"));
-                  r.observe(write, Labels.of("device", device, "direction", "write"));
+                  r.observe(read, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "read"));
+                  r.observe(
+                      write, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "write"));
                 }
               }
             });
@@ -157,8 +168,9 @@ public class SystemMetrics {
                   long read = diskStore.getReads();
                   long write = diskStore.getWrites();
                   String device = diskStore.getName();
-                  r.observe(read, Labels.of("device", device, "direction", "read"));
-                  r.observe(write, Labels.of("device", device, "direction", "write"));
+                  r.observe(read, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "read"));
+                  r.observe(
+                      write, Labels.of(DEVICE_LABEL_KEY, device, DIRECTION_LABEL_KEY, "write"));
                 }
               }
             });
