@@ -114,7 +114,7 @@ public class InMemoryExporter implements SpanProcessor {
       previousNumSpans = numSpans;
       Thread.sleep(10);
     }
-    List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
+    List<List<SpanData>> traces = getFilteredTraces(excludes);
     if (traces.size() < number) {
       throw new TimeoutException(
           "Timeout waiting for "
@@ -129,10 +129,10 @@ public class InMemoryExporter implements SpanProcessor {
     return traces;
   }
 
-  private List<List<SpanData>> getCompletedAndFilteredTraces(Predicate<List<SpanData>> excludes) {
+  private List<List<SpanData>> getFilteredTraces(Predicate<List<SpanData>> excludes) {
     List<List<SpanData>> traces = new ArrayList<>();
     for (List<SpanData> trace : getTraces()) {
-      if (isCompleted(trace) && !excludes.apply(trace)) {
+      if (!excludes.apply(trace)) {
         traces.add(trace);
       }
     }
@@ -216,20 +216,6 @@ public class InMemoryExporter implements SpanProcessor {
 
   private static void sortOneLevel(List<Node> nodes) {
     Collections.sort(nodes, Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
-  }
-
-  // trace is completed if root span is present
-  private static boolean isCompleted(List<SpanData> trace) {
-    for (SpanData span : trace) {
-      if (!SpanId.isValid(span.getParentSpanId())) {
-        return true;
-      }
-      if (span.getParentSpanId().equals("0000000000000456")) {
-        // this is a special parent id that some tests use
-        return true;
-      }
-    }
-    return false;
   }
 
   private static class Node {
