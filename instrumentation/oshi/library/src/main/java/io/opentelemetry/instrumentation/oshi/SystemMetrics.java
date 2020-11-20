@@ -21,7 +21,8 @@ import oshi.hardware.NetworkIF;
 public class SystemMetrics {
   private static final String DEVICE_LABEL_KEY = "device";
   private static final String DIRECTION_LABEL_KEY = "direction";
-  private static final String STATE_LABEL_KEY = "state";
+  private static final Labels LABEL_STATE_USED = Labels.of("state", "used");
+  private static final Labels LABEL_STATE_FREE = Labels.of("state", "free");
 
   private SystemMetrics() {}
 
@@ -41,8 +42,8 @@ public class SystemMetrics {
               @Override
               public void update(LongResult r) {
                 GlobalMemory mem = hal.getMemory();
-                r.observe(mem.getTotal() - mem.getAvailable(), Labels.of(STATE_LABEL_KEY, "used"));
-                r.observe(mem.getAvailable(), Labels.of(STATE_LABEL_KEY, "free"));
+                r.observe(mem.getTotal() - mem.getAvailable(), LABEL_STATE_USED);
+                r.observe(mem.getAvailable(), LABEL_STATE_FREE);
               }
             });
 
@@ -58,10 +59,8 @@ public class SystemMetrics {
                 GlobalMemory mem = hal.getMemory();
                 r.observe(
                     ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
-                    Labels.of(STATE_LABEL_KEY, "used"));
-                r.observe(
-                    ((double) mem.getAvailable()) / mem.getTotal(),
-                    Labels.of(STATE_LABEL_KEY, "free"));
+                    LABEL_STATE_USED);
+                r.observe(((double) mem.getAvailable()) / mem.getTotal(), LABEL_STATE_FREE);
               }
             });
 
