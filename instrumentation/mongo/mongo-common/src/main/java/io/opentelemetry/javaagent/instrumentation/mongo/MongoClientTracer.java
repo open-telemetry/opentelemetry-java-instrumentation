@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo;
 
+import static java.util.Arrays.asList;
+
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
@@ -17,8 +19,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -105,6 +110,13 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
             .findFirst()
             .orElse(null);
   }
+
+  /**
+   * The values of these mongo fields will not be scrubbed out. This allows the non-sensitive
+   * collection names to be captured.
+   */
+  private static final List<String> UNSCRUBBED_FIELDS =
+      asList("ordered", "insert", "count", "find", "create");
 
   private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
     JsonWriterSettings settings = new JsonWriterSettings(false);
@@ -212,10 +224,38 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     }
   }
 
+  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
+      new HashSet<>(
+          asList(
+              "aggregate",
+              "count",
+              "distinct",
+              "mapReduce",
+              "geoSearch",
+              "delete",
+              "find",
+              "killCursors",
+              "findAndModify",
+              "insert",
+              "update",
+              "create",
+              "drop",
+              "createIndexes",
+              "listIndexes"));
+
   private static String collectionName(CommandStartedEvent event) {
-    BsonValue collectionValue = event.getCommand().get(event.getCommandName());
-    if (collectionValue != null && collectionValue.isString()) {
-      return collectionValue.asString().getValue();
+    if (event.getCommandName().equals("getMore")) {
+      if (event.getCommand().containsKey("collection")) {
+        BsonValue collectionValue = event.getCommand().get("collection");
+        if (collectionValue.isString()) {
+          return event.getCommand().getString("collection").getValue();
+        }
+      }
+    } else if (COMMANDS_WITH_COLLECTION_NAME_AS_VALUE.contains(event.getCommandName())) {
+      BsonValue commandValue = event.getCommand().get(event.getCommandName());
+      if (commandValue != null && commandValue.isString()) {
+        return commandValue.asString().getValue();
+      }
     }
     return null;
   }

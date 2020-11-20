@@ -211,6 +211,36 @@ class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
+  def "test collection name for getMore command"() {
+    setup:
+    MongoCollection<Document> collection = runUnderTrace("setup") {
+      MongoDatabase db = client.getDatabase(dbName)
+      def coll = db.getCollection(collectionName)
+      coll.insertMany([new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)])
+      return coll
+    }
+    TEST_WRITER.waitForTraces(1)
+    TEST_WRITER.clear()
+
+    when:
+    collection.find().filter(new Document("_id", new Document('$gte', 0)))
+      .batchSize(2).into(new ArrayList())
+
+    then:
+    assertTraces(2) {
+      trace(0, 1) {
+        mongoSpan(it, 0, "find", collectionName, dbName, '{"find":"testCollection","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}')
+      }
+      trace(1, 1) {
+        mongoSpan(it, 0, "getMore", collectionName, dbName, '{"getMore":"?","collection":"?","batchSize":"?"}')
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = "testCollection"
+  }
+
   def "test error"() {
     setup:
     MongoCollection<Document> collection = runUnderTrace("setup") {
