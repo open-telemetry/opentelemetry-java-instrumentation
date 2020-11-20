@@ -221,7 +221,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
-| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+                           |
+| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
