@@ -1,0 +1,7 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  testImplementation project(':testing-common')
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+}
