@@ -76,9 +76,9 @@ class MongoClientTracerTest extends Specification {
   }
 
   def normalizeAcrossVersions(String json) {
-    json = json.replaceAll('\\{ ', '{');
-    json = json.replaceAll(' }', '}');
-    json = json.replaceAll(' :', ':');
+    json = json.replaceAll('\\{ ', '{')
+    json = json.replaceAll(' }', '}')
+    json = json.replaceAll(' :', ':')
     return json
   }
 }
