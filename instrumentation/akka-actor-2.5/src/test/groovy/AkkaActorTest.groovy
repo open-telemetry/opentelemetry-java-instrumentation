@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class AkkaActorTest extends AgentTestRunner {
 
-  // TODO this test doesn't really depend on otel.instrumentation.akka_context_propagation.enabled=true
+  // TODO this test doesn't really depend on otel.instrumentation.akka-actor.enabled=true
   //  but setting this property here is needed when running both this test
   //  and AkkaExecutorInstrumentationTest in the run, otherwise get
   //  "class redefinition failed: attempted to change superclass or interfaces"
@@ -16,7 +16,7 @@ class AkkaActorTest extends AgentTestRunner {
   //  instrumentation in this module, is it just to verify that the instrumentation doesn't break
   //  this scenario?)
   static {
-    System.setProperty("otel.instrumentation.akka_context_propagation.enabled", "true")
+    System.setProperty("otel.instrumentation.akka-actor.enabled", "true")
   }
 
   def "akka #testMethod"() {

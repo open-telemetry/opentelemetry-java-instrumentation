@@ -25,7 +25,7 @@ import spock.lang.Shared
 class AkkaExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
-    System.setProperty("otel.instrumentation.akka_context_propagation.enabled", "true")
+    System.setProperty("otel.instrumentation.akka-actor.enabled", "true")
   }
 
   @Shared

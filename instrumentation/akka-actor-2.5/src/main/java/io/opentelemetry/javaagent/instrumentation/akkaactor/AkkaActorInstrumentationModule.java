@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaContextPropagationInstrumentationModule extends InstrumentationModule {
-  public AkkaContextPropagationInstrumentationModule() {
+public class AkkaActorInstrumentationModule extends InstrumentationModule {
+  public AkkaActorInstrumentationModule() {
     super("akka-actor", "akka-actor-2.5");
   }
 
