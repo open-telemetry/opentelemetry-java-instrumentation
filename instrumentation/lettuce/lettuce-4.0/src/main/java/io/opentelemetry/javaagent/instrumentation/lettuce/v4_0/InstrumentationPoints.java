@@ -57,8 +57,8 @@ public final class InstrumentationPoints {
     spanWithScope.closeScope();
   }
 
-  public static SpanWithScope beforeConnect(RedisURI redisURI) {
-    Span span = LettuceConnectionDatabaseClientTracer.tracer().startSpan(redisURI, "CONNECT");
+  public static SpanWithScope beforeConnect(RedisURI redisUri) {
+    Span span = LettuceConnectionDatabaseClientTracer.tracer().startSpan(redisUri, "CONNECT");
     return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.tracer().startScope(span));
   }
 
@@ -75,7 +75,7 @@ public final class InstrumentationPoints {
   /**
    * Determines whether a redis command should finish its relevant span early (as soon as tags are
    * added and the command is executed) because these commands have no return values/call backs, so
-   * we must close the span early in order to provide info for the users
+   * we must close the span early in order to provide info for the users.
    *
    * @return false if the span should finish early (the command will not have a return value)
    */

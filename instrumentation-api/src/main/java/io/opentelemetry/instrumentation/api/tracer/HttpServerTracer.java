@@ -9,6 +9,7 @@ import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
@@ -19,6 +20,7 @@ import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,11 +57,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public Context startSpan(
       REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
     Context parentContext = extract(request, getGetter());
-    Span.Builder builder =
-        tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
+    SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
     if (startTimestamp >= 0) {
-      builder.setStartTimestamp(startTimestamp);
+      builder.setStartTimestamp(startTimestamp, TimeUnit.NANOSECONDS);
     }
 
     Span span = builder.startSpan();
@@ -288,7 +289,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static void endSpan(Span span, long timestamp) {
     if (timestamp >= 0) {
-      span.end(timestamp);
+      span.end(timestamp, TimeUnit.NANOSECONDS);
     } else {
       span.end();
     }

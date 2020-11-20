@@ -25,10 +25,6 @@ javacc {
   }
 }
 
-tasks.withType(Checkstyle).configureEach {
-  exclude '**/db/normalizer/*.java'
-}
-
 dependencies {
   api deps.opentelemetryApi
   compileOnly deps.opentelemetrySdk

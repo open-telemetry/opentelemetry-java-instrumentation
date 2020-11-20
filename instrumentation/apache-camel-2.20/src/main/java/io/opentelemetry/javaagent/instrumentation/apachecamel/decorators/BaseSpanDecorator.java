@@ -86,8 +86,8 @@ class BaseSpanDecorator implements SpanDecorator {
   @Override
   public String getOperationName(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    String[] splitURI = StringHelper.splitOnCharacter(endpoint.getEndpointUri(), ":", 2);
-    return (splitURI.length > 0 ? splitURI[0] : DEFAULT_OPERATION_NAME);
+    String[] splitUri = StringHelper.splitOnCharacter(endpoint.getEndpointUri(), ":", 2);
+    return (splitUri.length > 0 ? splitUri[0] : DEFAULT_OPERATION_NAME);
   }
 
   @Override

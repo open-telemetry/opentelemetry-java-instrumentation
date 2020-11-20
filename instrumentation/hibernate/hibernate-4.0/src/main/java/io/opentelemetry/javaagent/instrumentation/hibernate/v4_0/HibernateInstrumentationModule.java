@@ -20,7 +20,7 @@ import java.util.Map;
 public class HibernateInstrumentationModule extends InstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-core");
+    super("hibernate", "hibernate-4.0");
   }
 
   @Override
@@ -28,7 +28,6 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
     return new String[] {
       "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
       "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
-      packageName + ".V4Advice",
     };
   }
 

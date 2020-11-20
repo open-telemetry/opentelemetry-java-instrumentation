@@ -14,8 +14,9 @@ public class Servlet2HttpServerTracer extends ServletHttpServerTracer<ResponseWi
     return TRACER;
   }
 
+  @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.servlet";
+    return "io.opentelemetry.javaagent.servlet";
   }
 
   @Override

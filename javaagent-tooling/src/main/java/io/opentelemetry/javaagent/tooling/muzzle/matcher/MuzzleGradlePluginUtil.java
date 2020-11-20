@@ -34,8 +34,8 @@ public final class MuzzleGradlePluginUtil {
    *       injected into {@code userClassLoader}
    * </ol>
    *
-   * When {@code assertPass = false} this method behaves in an opposite way: failure in any of the
-   * first two steps is expected (helper classes are not injected at all).
+   * <p>When {@code assertPass = false} this method behaves in an opposite way: failure in any of
+   * the first two steps is expected (helper classes are not injected at all).
    *
    * <p>This method is repeatedly called by the {@code :muzzle} gradle task - each tested dependency
    * version passes different {@code userClassLoader}.

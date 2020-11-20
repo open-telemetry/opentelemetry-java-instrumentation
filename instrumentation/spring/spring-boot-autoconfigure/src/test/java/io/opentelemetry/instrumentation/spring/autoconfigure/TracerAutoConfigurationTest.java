@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 
-/** Spring Boot auto configuration test for {@link TracerAutoConfiguration} */
+/** Spring Boot auto configuration test for {@link TracerAutoConfiguration}. */
 class TracerAutoConfigurationTest {
   @TestConfiguration
   static class CustomTracerConfiguration {

@@ -17,7 +17,7 @@ dependencies {
 
   testImplementation project(':instrumentation:jdbc')
   testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation project(':instrumentation:vertx-3.0')
+  testImplementation project(':instrumentation:vertx-web-3.0')
 
   testLibrary group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
   testLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion

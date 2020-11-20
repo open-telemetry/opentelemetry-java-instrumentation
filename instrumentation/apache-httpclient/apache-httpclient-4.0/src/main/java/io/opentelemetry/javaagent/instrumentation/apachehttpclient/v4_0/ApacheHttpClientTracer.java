@@ -68,7 +68,7 @@ class ApacheHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.apache-httpclient";
+    return "io.opentelemetry.javaagent.apache-httpclient";
   }
 
   /** This method is overridden to allow other classes in this package to call it. */

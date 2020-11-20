@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxRsInstrumentationModule extends InstrumentationModule {
   public JaxRsInstrumentationModule() {
-    super("jax-rs", "jaxrs");
+    super("jaxrs", "jaxrs-1.0");
   }
 
   // this is required to make sure instrumentation won't apply to jax-rs 2

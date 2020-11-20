@@ -17,14 +17,14 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class JmsInstrumentationModule extends InstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms", "jms-1", "jms-2");
+    super("jms", "jms-1.1");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".MessageDestination",
-      packageName + ".JMSTracer",
+      packageName + ".JmsTracer",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"
     };
@@ -33,10 +33,10 @@ public class JmsInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new JMSMessageConsumerInstrumentation(),
-        new JMSMessageListenerInstrumentation(),
-        new JMSMessageProducerInstrumentation(),
-        new JMSSessionInstrumentation());
+        new JmsMessageConsumerInstrumentation(),
+        new JmsMessageListenerInstrumentation(),
+        new JmsMessageProducerInstrumentation(),
+        new JmsSessionInstrumentation());
   }
 
   @Override

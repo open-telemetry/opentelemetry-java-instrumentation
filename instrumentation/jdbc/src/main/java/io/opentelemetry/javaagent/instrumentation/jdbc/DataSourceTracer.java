@@ -16,6 +16,6 @@ public class DataSourceTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jdbc";
+    return "io.opentelemetry.javaagent.jdbc";
   }
 }

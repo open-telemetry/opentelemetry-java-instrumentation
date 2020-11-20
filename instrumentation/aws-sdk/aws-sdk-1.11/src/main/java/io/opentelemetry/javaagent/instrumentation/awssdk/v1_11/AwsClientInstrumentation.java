@@ -36,10 +36,10 @@ final class AwsClientInstrumentation implements TypeInstrumentation {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isConstructor(), AwsClientInstrumentation.class.getName() + "$AWSClientAdvice");
+        isConstructor(), AwsClientInstrumentation.class.getName() + "$AwsClientAdvice");
   }
 
-  public static class AWSClientAdvice {
+  public static class AwsClientAdvice {
     // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(

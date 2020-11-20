@@ -23,7 +23,7 @@ Using the [spring project initializer](https://start.spring.io/), we will create
 Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeService`. The Jaeger and LoggingExporter packages are recommended for exporting traces but are not required. As of May 2020, Jaeger, Zipkin, OTLP, and Logging exporters are supported by opentelemetry-java. Feel free to use whatever exporter you are most comfortable with.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.8.0`
+ - Minimum version: `0.11.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
  
 ### Maven
@@ -601,7 +601,7 @@ In this tutorial we will create two SpringBoot applications (MainService and Tim
 Add the following dependencies to your build file.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.8.0`
+ - Minimum version: `0.11.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 #### Maven

@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class WebfluxClientInstrumentationModule extends InstrumentationModule {
 
   public WebfluxClientInstrumentationModule() {
-    super("spring-webflux", "spring-webflux-client");
+    super("spring-webflux", "spring-webflux-5.0", "spring-webflux-client");
   }
 
   @Override

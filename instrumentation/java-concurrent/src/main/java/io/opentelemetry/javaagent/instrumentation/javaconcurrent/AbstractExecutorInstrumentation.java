@@ -26,27 +26,30 @@ abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
   private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
 
   private static final String TRACE_EXECUTORS_CONFIG = "otel.trace.executors";
-  private final boolean TRACE_ALL_EXECUTORS =
+
+  // hopefully these configuration properties can be static after
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1345
+  private final boolean traceAllExecutors =
       Config.get().getBooleanProperty("otel.trace.executors.all", false);
 
   /**
    * Only apply executor instrumentation to allowed executors. To apply to all executors, use
    * override setting above.
    */
-  private final Collection<String> ALLOWED_EXECUTORS;
+  private final Collection<String> allowedExecutors;
 
   /**
    * Some frameworks have their executors defined as anon classes inside other classes. Referencing
    * anon classes by name would be fragile, so instead we will use list of class prefix names. Since
    * checking this list is more expensive (O(n)) we should try to keep it short.
    */
-  private final Collection<String> ALLOWED_EXECUTORS_PREFIXES;
+  private final Collection<String> allowedExecutorsPrefixes;
 
   AbstractExecutorInstrumentation() {
-    if (TRACE_ALL_EXECUTORS) {
+    if (traceAllExecutors) {
       log.info("Tracing all executors enabled.");
-      ALLOWED_EXECUTORS = Collections.emptyList();
-      ALLOWED_EXECUTORS_PREFIXES = Collections.emptyList();
+      allowedExecutors = Collections.emptyList();
+      allowedExecutorsPrefixes = Collections.emptyList();
     } else {
       String[] allowed = {
         "akka.actor.ActorSystemImpl$$anon$1",
@@ -94,11 +97,10 @@ abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
       Set<String> executors = new HashSet<>(Config.get().getListProperty(TRACE_EXECUTORS_CONFIG));
       executors.addAll(Arrays.asList(allowed));
 
-      ALLOWED_EXECUTORS = Collections.unmodifiableSet(executors);
+      allowedExecutors = Collections.unmodifiableSet(executors);
 
       String[] allowedPrefixes = {"slick.util.AsyncExecutor$"};
-      ALLOWED_EXECUTORS_PREFIXES =
-          Collections.unmodifiableCollection(Arrays.asList(allowedPrefixes));
+      allowedExecutorsPrefixes = Collections.unmodifiableCollection(Arrays.asList(allowedPrefixes));
     }
   }
 
@@ -107,17 +109,17 @@ abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<TypeDescription> matcher = any();
     final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
         implementsInterface(named(Executor.class.getName()));
-    if (!TRACE_ALL_EXECUTORS) {
+    if (!traceAllExecutors) {
       matcher =
           matcher.and(
               new ElementMatcher<TypeDescription>() {
                 @Override
                 public boolean matches(TypeDescription target) {
-                  boolean allowed = ALLOWED_EXECUTORS.contains(target.getName());
+                  boolean allowed = allowedExecutors.contains(target.getName());
 
                   // Check for possible prefixes match only if not allowed already
                   if (!allowed) {
-                    for (String name : ALLOWED_EXECUTORS_PREFIXES) {
+                    for (String name : allowedExecutorsPrefixes) {
                       if (target.getName().startsWith(name)) {
                         allowed = true;
                         break;

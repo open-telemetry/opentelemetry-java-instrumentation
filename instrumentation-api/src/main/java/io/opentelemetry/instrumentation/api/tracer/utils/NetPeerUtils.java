@@ -90,7 +90,7 @@ public final class NetPeerUtils {
   }
 
   /**
-   * This helper interface allows setting attributes on both {@link Span} and {@link Span.Builder}.
+   * This helper interface allows setting attributes on both {@link Span} and {@link SpanBuilder}.
    */
   @FunctionalInterface
   public interface SpanAttributeSetter {

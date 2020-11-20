@@ -89,6 +89,11 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     }
 
     @Override
+    public void write(int b) throws IOException {
+      delegate.write(b);
+    }
+
+    @Override
     public void flush() throws IOException {
       delegate.flush();
     }
@@ -98,11 +103,6 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       delegate.close();
       tracer.end(span);
       OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-      delegate.write(b);
     }
   }
 }

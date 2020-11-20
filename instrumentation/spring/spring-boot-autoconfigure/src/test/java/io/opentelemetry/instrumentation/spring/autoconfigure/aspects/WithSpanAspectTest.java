@@ -13,9 +13,10 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 
-/** Spring AOP Test for {@link WithSpanAspect} */
+/** Spring AOP Test for {@link WithSpanAspect}. */
 @ExtendWith(MockitoExtension.class)
 public class WithSpanAspectTest {
   static class WithSpanTester {
@@ -51,7 +52,7 @@ public class WithSpanAspectTest {
 
   @Mock private Tracer tracer;
   @Mock private Span span;
-  @Mock private Span.Builder spanBuilder;
+  @Mock private SpanBuilder spanBuilder;
 
   private WithSpanTester withSpanTester;
 

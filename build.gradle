@@ -14,7 +14,7 @@ plugins {
 
   id 'com.dorongold.task-tree' version '1.5'
 
-  id "com.github.johnrengelman.shadow" version "6.0.0"
+  id "com.github.johnrengelman.shadow" version "6.1.0"
 
   id "com.diffplug.spotless" version "5.6.1"
   id "com.github.spotbugs" version "4.5.1"
@@ -47,10 +47,6 @@ repositories {
 }
 
 description = 'OpenTelemetry instrumentations for Java'
-
-wrapper {
-  distributionType = Wrapper.DistributionType.ALL
-}
 
 allprojects {
   apply plugin: 'idea'

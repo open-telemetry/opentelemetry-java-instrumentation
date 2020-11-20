@@ -16,18 +16,18 @@
 
 package io.opentelemetry.javaagent.bootstrap
 
-import io.opentelemetry.javaagent.bootstrap.InternalJarURLHandler
+
 import spock.lang.Shared
 import spock.lang.Specification
 
-class InternalJarURLHandlerTest extends Specification {
+class InternalJarUrlHandlerTest extends Specification {
 
   @Shared
   URL testJarLocation = new File("src/test/resources/classloader-test-jar/testjar-jdk8").toURI().toURL()
 
   def "test get URL"() {
     setup:
-    InternalJarURLHandler handler = new InternalJarURLHandler(dir, testJarLocation)
+    InternalJarUrlHandler handler = new InternalJarUrlHandler(dir, testJarLocation)
     when:
     URLConnection connection = handler.openConnection(new URL('file://' + file))
     assert connection != null
@@ -62,7 +62,7 @@ class InternalJarURLHandlerTest extends Specification {
   // the third load indistinguishable from the first load, hence the lack of a test for it.
   def "test read class twice"() {
     setup:
-    InternalJarURLHandler handler = new InternalJarURLHandler(dir, testJarLocation)
+    InternalJarUrlHandler handler = new InternalJarUrlHandler(dir, testJarLocation)
     when:
     URLConnection connection = handler.openConnection(new URL('file://' + file))
     assert connection != null
@@ -86,7 +86,7 @@ class InternalJarURLHandlerTest extends Specification {
 
   def "handle not found"() {
     setup:
-    InternalJarURLHandler handler = new InternalJarURLHandler(dir, testJarLocation)
+    InternalJarUrlHandler handler = new InternalJarUrlHandler(dir, testJarLocation)
     when:
     handler.openConnection(new File(file).toURI().toURL())
     then:

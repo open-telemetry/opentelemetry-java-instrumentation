@@ -61,7 +61,9 @@ instance of `io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader`, l
 `io.opentelemetry.javaagent.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the
-instrumentations with the help of ByteBuddy.
+instrumentations with the help of ByteBuddy. Instead of using agent classloader all agent classes
+could be shaded and used from the bootstrap classloader. However, this opens de-serialization
+security vulnerability and in addition to that the shaded classes are harder to debug.
 
 The complicated process above ensures that the majority of
 auto-instrumentation agent's classes are totally isolated from application
@@ -94,3 +96,8 @@ Available in the agent class loader:
 - `inst/` - contains `javaagent-tooling` module and `instrumentation` submodules, loaded and isolated
 inside `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the
 `-all` artifact).
+
+![Agent initialization sequence](initialization-sequence.svg)
+[Image source](https://docs.google.com/drawings/d/1FyRd11emnHvNWzUXLdpMNyf2R-auZlJsicNg8FpU_Ys)
+![Agent classloader state](classloader-state.svg)
+[Image source](https://docs.google.com/drawings/d/1WlJ_VHuo_t4RurQ6_qiQHdEBgRLc22l7L5f5dFRqgB8)

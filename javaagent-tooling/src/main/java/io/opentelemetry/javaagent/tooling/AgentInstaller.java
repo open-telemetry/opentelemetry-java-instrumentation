@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHol
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
+import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -29,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -156,8 +158,23 @@ public class AgentInstaller {
       }
     }
 
+    agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     return agentBuilder.installOn(inst);
+  }
+
+  private static AgentBuilder customizeByteBuddyAgent(AgentBuilder agentBuilder) {
+    Iterable<ByteBuddyAgentCustomizer> agentCustomizers = loadByteBuddyAgentCustomizers();
+    for (ByteBuddyAgentCustomizer agentCustomizer : agentCustomizers) {
+      log.debug("Applying agent builder customizer {}", agentCustomizer.getClass().getName());
+      agentBuilder = agentCustomizer.customize(agentBuilder);
+    }
+    return agentBuilder;
+  }
+
+  private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
+    return ServiceLoader.load(
+        ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<InstrumentationModule> loadInstrumentationModules() {

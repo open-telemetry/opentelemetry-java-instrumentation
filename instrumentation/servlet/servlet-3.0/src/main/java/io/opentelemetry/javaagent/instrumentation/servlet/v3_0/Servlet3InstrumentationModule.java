@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class Servlet3InstrumentationModule extends InstrumentationModule {
   public Servlet3InstrumentationModule() {
-    super("servlet", "servlet-3");
+    super("servlet", "servlet-3.0");
   }
 
   @Override
@@ -31,6 +31,6 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AsyncContextInstrumentation(), new ServletAndFilterChainInstrumentation());
+    return asList(new AsyncContextInstrumentation(), new ServletAndFilterInstrumentation());
   }
 }

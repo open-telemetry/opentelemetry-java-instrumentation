@@ -64,23 +64,4 @@ public class MuzzleCodeGenerationPlugin implements Plugin {
 
   @Override
   public void close() {}
-
-  /** Compile-time Optimization used by gradle buildscripts. */
-  public static class NoOp implements Plugin {
-    @Override
-    public boolean matches(TypeDescription target) {
-      return false;
-    }
-
-    @Override
-    public DynamicType.Builder<?> apply(
-        DynamicType.Builder<?> builder,
-        TypeDescription typeDescription,
-        ClassFileLocator classFileLocator) {
-      return builder;
-    }
-
-    @Override
-    public void close() {}
-  }
 }

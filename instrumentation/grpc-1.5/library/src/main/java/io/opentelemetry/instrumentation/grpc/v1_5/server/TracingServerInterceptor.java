@@ -46,8 +46,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
   }
 
   @Override
-  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-      ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+  public <REQUEST, RESPONSE> ServerCall.Listener<REQUEST> interceptCall(
+      ServerCall<REQUEST, RESPONSE> call,
+      Metadata headers,
+      ServerCallHandler<REQUEST, RESPONSE> next) {
 
     String methodName = call.getMethodDescriptor().getFullMethodName();
     Span span = tracer.startSpan(methodName, headers);
@@ -72,12 +74,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
   }
 
-  static final class TracingServerCall<ReqT, RespT>
-      extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
+  static final class TracingServerCall<REQUEST, RESPONSE>
+      extends ForwardingServerCall.SimpleForwardingServerCall<REQUEST, RESPONSE> {
     private final Span span;
     private final GrpcServerTracer tracer;
 
-    TracingServerCall(ServerCall<ReqT, RespT> delegate, Span span, GrpcServerTracer tracer) {
+    TracingServerCall(ServerCall<REQUEST, RESPONSE> delegate, Span span, GrpcServerTracer tracer) {
       super(delegate);
       this.span = span;
       this.tracer = tracer;
@@ -95,21 +97,21 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
   }
 
-  static final class TracingServerCallListener<ReqT>
-      extends ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT> {
+  static final class TracingServerCallListener<REQUEST>
+      extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
     private final Span span;
     private final GrpcServerTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingServerCallListener(Listener<ReqT> delegate, Span span, GrpcServerTracer tracer) {
+    TracingServerCallListener(Listener<REQUEST> delegate, Span span, GrpcServerTracer tracer) {
       super(delegate);
       this.span = span;
       this.tracer = tracer;
     }
 
     @Override
-    public void onMessage(ReqT message) {
+    public void onMessage(REQUEST message) {
       // TODO(anuraaga): Restore
       Attributes attributes =
           Attributes.of(

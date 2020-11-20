@@ -10,7 +10,7 @@ import javax.validation.constraints.DecimalMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for OpenTelemetry Tracer
+ * Configuration for OpenTelemetry Tracer.
  *
  * <p>Get Tracer Name
  *
@@ -21,11 +21,8 @@ public final class TracerProperties {
 
   private String name = "io.opentelemetry.instrumentation.spring-boot-autoconfigure";
 
-  /**
-   * If Sample probability == 1: always sample
-   *
-   * <p>If Sample probability == 0: never sample
-   */
+  // if Sample probability == 1: always sample
+  // if Sample probability == 0: never sample
   @DecimalMin("0.0")
   @DecimalMax("1.0")
   private double samplerProbability = 1.0;

@@ -24,18 +24,18 @@ public interface HelperReferenceWrapper {
   boolean isAbstract();
 
   /**
-   * @return true if the wrapped type extends any class other than {@link Object} or implements any
-   *     interface.
+   * Returns true if the wrapped type extends any class other than {@link Object} or implements any
+   * interface.
    */
   boolean hasSuperTypes();
 
   /**
-   * @return An iterable containing the wrapped type's super class (if exists) and implemented
-   *     interfaces.
+   * Returns an iterable containing the wrapped type's super class (if exists) and implemented
+   * interfaces.
    */
   Stream<HelperReferenceWrapper> getSuperTypes();
 
-  /** @return An iterable with all non-private, non-static methods declared in the wrapped type. */
+  /** Returns an iterable with all non-private, non-static methods declared in the wrapped type. */
   Stream<Method> getMethods();
 
   final class Method {
@@ -69,8 +69,12 @@ public interface HelperReferenceWrapper {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       Method method = (Method) o;
       return Objects.equal(name, method.name) && Objects.equal(descriptor, method.descriptor);
     }

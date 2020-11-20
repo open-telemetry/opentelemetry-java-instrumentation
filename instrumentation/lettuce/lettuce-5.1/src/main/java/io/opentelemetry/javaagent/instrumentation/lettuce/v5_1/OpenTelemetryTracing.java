@@ -15,6 +15,7 @@ import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
@@ -27,7 +28,6 @@ import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public enum OpenTelemetryTracing implements Tracing {
@@ -41,7 +41,7 @@ public enum OpenTelemetryTracing implements Tracing {
   }
 
   private static final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("lettuce", "lettuce-5", "lettuce-5.1");
+      new RedisCommandNormalizer("lettuce", "lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -145,7 +145,7 @@ public enum OpenTelemetryTracing implements Tracing {
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
   private static class OpenTelemetrySpan extends Tracer.Span {
-    private final Span.Builder spanBuilder;
+    private final SpanBuilder spanBuilder;
 
     @Nullable private String name;
 
@@ -200,7 +200,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
       if (events != null) {
         for (int i = 0; i < events.size(); i += 2) {
-          span.addEvent((String) events.get(i), (long) events.get(i + 1));
+          span.addEvent((String) events.get(i), (Instant) events.get(i + 1));
         }
         events = null;
       }
@@ -223,8 +223,7 @@ public enum OpenTelemetryTracing implements Tracing {
           events = new ArrayList<>();
         }
         events.add(value);
-        Instant now = Instant.now();
-        events.add(TimeUnit.SECONDS.toNanos(now.getEpochSecond()) + now.getNano());
+        events.add(Instant.now());
       }
       return this;
     }

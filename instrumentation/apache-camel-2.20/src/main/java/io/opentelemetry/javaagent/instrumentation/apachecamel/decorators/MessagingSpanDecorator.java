@@ -44,9 +44,8 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   public String getOperationName(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
 
-    switch (component) {
-      case "mqtt":
-        return stripSchemeAndOptions(endpoint);
+    if ("mqtt".equals(component)) {
+      return stripSchemeAndOptions(endpoint);
     }
     return getDestination(exchange, endpoint);
   }
@@ -78,22 +77,19 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
       case "rabbitmq":
         return (String) exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME");
       case "stomp":
-        {
-          String destination = stripSchemeAndOptions(endpoint);
-          if (destination.startsWith("queue:")) {
-            destination = destination.substring("queue:".length());
-          }
-          return destination;
+        String destination = stripSchemeAndOptions(endpoint);
+        if (destination.startsWith("queue:")) {
+          destination = destination.substring("queue:".length());
         }
+        return destination;
       case "mqtt":
-        {
-          Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-          return (queryParameters.containsKey("subscribeTopicNames")
-              ? queryParameters.get("subscribeTopicNames")
-              : queryParameters.get("publishTopicName"));
-        }
+        Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
+        return (queryParameters.containsKey("subscribeTopicNames")
+            ? queryParameters.get("subscribeTopicNames")
+            : queryParameters.get("publishTopicName"));
+      default:
+        return stripSchemeAndOptions(endpoint);
     }
-    return stripSchemeAndOptions(endpoint);
   }
 
   @Override
@@ -121,7 +117,8 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
         return (String) exchange.getIn().getHeader("CamelIronMQMessageId");
       case "jms":
         return (String) exchange.getIn().getHeader("JMSMessageID");
+      default:
+        return null;
     }
-    return null;
   }
 }

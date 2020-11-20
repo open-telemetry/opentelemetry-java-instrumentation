@@ -1,7 +1,7 @@
 ## Suppressing specific auto-instrumentation
 
 You can suppress auto-instrumentation of specific libraries by using
-`-Dotel.integration.[id].enabled=false`.
+`-Dotel.instrumentation.[id].enabled=false`.
 
 where `id` is the instrumentation `id`:
 

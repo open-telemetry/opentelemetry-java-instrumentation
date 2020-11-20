@@ -9,6 +9,7 @@ import com.amazonaws.serverless.proxy.model.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
@@ -40,7 +41,7 @@ public class AwsLambdaTracer extends BaseTracer {
     io.opentelemetry.context.Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
-      parentContext = ParentContextExtractor.fromXRayHeader(parentTraceHeader);
+      parentContext = ParentContextExtractor.fromXrayHeader(parentTraceHeader);
     }
     if (!isValid(parentContext) && (headers != null)) {
       // try http
@@ -50,8 +51,8 @@ public class AwsLambdaTracer extends BaseTracer {
     return parentContext;
   }
 
-  Span.Builder createSpan(Context context, @Nullable Headers headers) {
-    Span.Builder span = tracer.spanBuilder(context.getFunctionName());
+  SpanBuilder createSpan(Context context, @Nullable Headers headers) {
+    SpanBuilder span = tracer.spanBuilder(context.getFunctionName());
     span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
     io.opentelemetry.context.Context parent = parent(headers);
     if (parent != null) {
@@ -69,6 +70,7 @@ public class AwsLambdaTracer extends BaseTracer {
   }
 
   /** Creates new scoped context with the given span. */
+  @Override
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     io.opentelemetry.context.Context newContext =

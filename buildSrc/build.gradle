@@ -46,6 +46,7 @@ dependencies {
   implementation group: "org.ow2.asm", name: "asm", version: "7.0-beta"
   implementation group: "org.ow2.asm", name: "asm-tree", version: "7.0-beta"
   implementation group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.10"
+  implementation group: "net.bytebuddy", name: "byte-buddy-gradle-plugin", version: "1.10.18"
 
   testImplementation group: "org.spockframework", name: "spock-core", version: "1.3-groovy-2.5"
   testImplementation group: "org.codehaus.groovy", name: "groovy-all", version: "2.5.8"

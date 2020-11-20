@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Servlet2InstrumentationModule extends InstrumentationModule {
   public Servlet2InstrumentationModule() {
-    super("servlet", "servlet-2");
+    super("servlet", "servlet-2.2");
   }
 
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
@@ -42,7 +42,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
-        new HttpServletResponseInstrumentation(), new ServletAndFilterChainInstrumentation());
+        new HttpServletResponseInstrumentation(), new ServletAndFilterInstrumentation());
   }
 
   @Override

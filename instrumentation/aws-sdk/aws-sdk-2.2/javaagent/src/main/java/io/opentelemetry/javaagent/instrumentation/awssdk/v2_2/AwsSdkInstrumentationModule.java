@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk");
+    super("aws-sdk", "aws-sdk-2.2");
   }
 
   @Override

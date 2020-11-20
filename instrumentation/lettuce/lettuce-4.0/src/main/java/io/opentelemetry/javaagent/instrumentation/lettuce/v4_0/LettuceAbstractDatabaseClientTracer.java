@@ -21,8 +21,8 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
   }
 
   @Override
-  protected InetSocketAddress peerAddress(RedisURI redisURI) {
-    return new InetSocketAddress(redisURI.getHost(), redisURI.getPort());
+  protected InetSocketAddress peerAddress(RedisURI redisUri) {
+    return new InetSocketAddress(redisUri.getHost(), redisUri.getPort());
   }
 
   @Override
@@ -35,6 +35,6 @@ public abstract class LettuceAbstractDatabaseClientTracer<QUERY>
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.lettuce";
+    return "io.opentelemetry.javaagent.lettuce";
   }
 }

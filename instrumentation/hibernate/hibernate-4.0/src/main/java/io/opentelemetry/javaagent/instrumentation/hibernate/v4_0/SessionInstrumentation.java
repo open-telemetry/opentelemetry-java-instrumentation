@@ -103,7 +103,7 @@ final class SessionInstrumentation implements TypeInstrumentation {
     return transformers;
   }
 
-  public static class SessionCloseAdvice extends V4Advice {
+  public static class SessionCloseAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
@@ -123,7 +123,7 @@ final class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class SessionMethodAdvice extends V4Advice {
+  public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
@@ -149,7 +149,7 @@ final class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class GetQueryAdvice extends V4Advice {
+  public static class GetQueryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
@@ -165,7 +165,7 @@ final class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class GetTransactionAdvice extends V4Advice {
+  public static class GetTransactionAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
@@ -181,7 +181,7 @@ final class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class GetCriteriaAdvice extends V4Advice {
+  public static class GetCriteriaAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(

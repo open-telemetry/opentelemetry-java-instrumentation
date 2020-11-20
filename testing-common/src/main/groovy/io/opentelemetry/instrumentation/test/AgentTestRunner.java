@@ -17,7 +17,9 @@ import groovy.transform.stc.SimpleType;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.HttpTraceContext;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
@@ -28,6 +30,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -109,7 +112,8 @@ public abstract class AgentTestRunner extends Specification {
         .getClass()
         .getSimpleName()
         .equals("NoopTextMapPropagator")) {
-      OpenTelemetry.setGlobalPropagators(
+      // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
+      setGlobalPropagators(
           DefaultContextPropagators.builder()
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .build());
@@ -144,9 +148,10 @@ public abstract class AgentTestRunner extends Specification {
   }
 
   /**
+   * Returns true if the class under load should be transformed for this test.
+   *
    * @param className name of the class being loaded
    * @param classLoader classloader class is being defined on
-   * @return true if the class under load should be transformed for this test.
    */
   protected boolean shouldTransformClass(String className, ClassLoader classLoader) {
     return true;
@@ -336,5 +341,30 @@ public abstract class AgentTestRunner extends Specification {
       }
     }
     return className;
+  }
+
+  // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
+  public static void setGlobalPropagators(ContextPropagators propagators) {
+    OpenTelemetry.set(
+        OpenTelemetrySdk.builder()
+            .setResource(OpenTelemetrySdk.get().getResource())
+            .setClock(OpenTelemetrySdk.get().getClock())
+            .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
+            .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
+            .setPropagators(propagators)
+            .build());
+  }
+
+  private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
+    if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
+      return tracerProvider;
+    }
+    try {
+      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate");
+      unobfuscate.setAccessible(true);
+      return (TracerProvider) unobfuscate.invoke(tracerProvider);
+    } catch (Throwable t) {
+      return tracerProvider;
+    }
   }
 }

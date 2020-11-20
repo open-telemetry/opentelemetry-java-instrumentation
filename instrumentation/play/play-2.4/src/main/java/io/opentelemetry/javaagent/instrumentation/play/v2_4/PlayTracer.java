@@ -31,7 +31,7 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.play";
+    return "io.opentelemetry.javaagent.play";
   }
 
   @Override

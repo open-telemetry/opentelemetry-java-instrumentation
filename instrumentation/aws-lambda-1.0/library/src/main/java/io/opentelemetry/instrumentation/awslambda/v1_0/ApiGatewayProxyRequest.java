@@ -20,10 +20,10 @@ abstract class ApiGatewayProxyRequest {
 
   private static boolean noHttpPropagationNeeded() {
     List<String> fields = OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
-    return (fields.isEmpty() || xRayPropagationFieldsOnly(fields));
+    return (fields.isEmpty() || xrayPropagationFieldsOnly(fields));
   }
 
-  private static boolean xRayPropagationFieldsOnly(List<String> fields) {
+  private static boolean xrayPropagationFieldsOnly(List<String> fields) {
     // ugly but faster than typical convert-to-set-and-check-contains-only
     return (fields.size() == 1)
         && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equals(fields.get(0)));

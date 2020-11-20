@@ -52,6 +52,6 @@ public class GrizzlyClientTracer extends HttpClientTracer<Request, Request, Resp
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.grizzly-client";
+    return "io.opentelemetry.javaagent.grizzly-client";
   }
 }

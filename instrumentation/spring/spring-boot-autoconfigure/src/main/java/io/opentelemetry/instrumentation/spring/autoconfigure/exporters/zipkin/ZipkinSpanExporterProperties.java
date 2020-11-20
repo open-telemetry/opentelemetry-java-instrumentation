@@ -11,7 +11,7 @@ import static io.opentelemetry.exporter.zipkin.ZipkinSpanExporter.DEFAULT_SERVIC
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link io.opentelemetry.exporters.zipkin.ZipkinSpanExporter}
+ * Configuration for {@link io.opentelemetry.exporter.zipkin.ZipkinSpanExporter}.
  *
  * <p>Get Exporter Service Name {@link #getServiceName()}
  *

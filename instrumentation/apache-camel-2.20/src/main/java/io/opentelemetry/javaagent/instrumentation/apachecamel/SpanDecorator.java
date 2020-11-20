@@ -39,8 +39,7 @@ public interface SpanDecorator {
   boolean shouldStartNewSpan();
 
   /**
-   * This method returns the operation name to use with the Span representing this exchange and
-   * endpoint.
+   * Returns the operation name to use with the Span representing this exchange and endpoint.
    *
    * @param exchange The exchange
    * @param endpoint The endpoint
@@ -68,19 +67,9 @@ public interface SpanDecorator {
    */
   void post(Span span, Exchange exchange, Endpoint endpoint);
 
-  /**
-   * This method returns the 'span.kind' value for use when the component is initiating a
-   * communication.
-   *
-   * @return The kind
-   */
+  /** Returns the 'span.kind' value for use when the component is initiating a communication. */
   Span.Kind getInitiatorSpanKind();
 
-  /**
-   * This method returns the 'span.kind' value for use when the component is receiving a
-   * communication.
-   *
-   * @return The kind
-   */
+  /** Returns the 'span.kind' value for use when the component is receiving a communication. */
   Span.Kind getReceiverSpanKind();
 }

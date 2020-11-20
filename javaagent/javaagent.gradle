@@ -90,6 +90,7 @@ tasks.withType(ShadowJar).configureEach {
 
   // relocate OpenTelemetry API
   relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
+  relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
 }
 
@@ -123,3 +124,5 @@ tasks.withType(Test).configureEach {
 
   dependsOn shadowJar
 }
+assemble.dependsOn lightShadow
+assemble.dependsOn shadowJar

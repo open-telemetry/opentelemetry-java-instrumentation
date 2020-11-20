@@ -55,25 +55,25 @@ public class JettyPerftest {
       if (request.getParameter("error") != null) {
         throw new RuntimeException("some sync error");
       }
-      String workVal = request.getParameter("workTimeMS");
-      long workTimeMS = 0l;
+      String workVal = request.getParameter("workTimeMillis");
+      long workTimeMillis = 0L;
       if (null != workVal) {
-        workTimeMS = Long.parseLong(workVal);
+        workTimeMillis = Long.parseLong(workVal);
       }
-      scheduleWork(workTimeMS);
-      response.getWriter().print("Did " + workTimeMS + "ms of work.");
+      scheduleWork(workTimeMillis);
+      response.getWriter().print("Did " + workTimeMillis + "ms of work.");
     }
 
-    private void scheduleWork(long workTimeMS) {
+    private void scheduleWork(long workTimeMillis) {
       Span span = tracer.spanBuilder("work").startSpan();
       try (Scope scope = span.makeCurrent()) {
         if (span != null) {
-          span.setAttribute("work-time", workTimeMS);
+          span.setAttribute("work-time", workTimeMillis);
           span.setAttribute("info", "interesting stuff");
           span.setAttribute("additionalInfo", "interesting stuff");
         }
-        if (workTimeMS > 0) {
-          Worker.doWork(workTimeMS);
+        if (workTimeMillis > 0) {
+          Worker.doWork(workTimeMillis);
         }
         span.end();
       }

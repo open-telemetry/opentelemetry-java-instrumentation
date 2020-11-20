@@ -13,7 +13,6 @@ public class VersionLogger {
 
   private static final Logger log = LoggerFactory.getLogger(VersionLogger.class);
 
-  /** Log version string for java-agent */
   public static void logAllVersions() {
     log.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
     if (log.isDebugEnabled()) {

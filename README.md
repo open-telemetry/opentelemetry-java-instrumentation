@@ -157,7 +157,7 @@ outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
+| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3multi`, `jaeger`, `ottracer`, and `xray`. |
 
 #### OpenTelemetry Resource
 
@@ -260,6 +260,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                            | 0.9+ (not including 1.0)       |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
@@ -282,11 +283,10 @@ Because the automatic instrumentation runs in a different classpath than the ins
 Some instrumentations can produce too many spans and make traces very noisy.
 For this reason, the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
-- `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
-To enable them, add the `otel.integration.<name>.enabled` system property:
-`-Dotel.integration.jdbc-datasource.enabled=true`
+To enable them, add the `otel.instrumentation.<name>.enabled` system property:
+`-Dotel.instrumentation.jdbc-datasource.enabled=true`
 
 #### Grizzly instrumentation
 
@@ -296,7 +296,7 @@ Servlet-based applications, you get better experience from Servlet-specific
 support. As these two instrumentations conflict with each other, more generic
 instrumentation for Grizzly HTTP server is disabled by default. If needed,
 you can enable it by adding the following system property:
-`-Dotel.integration.grizzly.enabled=true`
+`-Dotel.instrumentation.grizzly.enabled=true`
 
 ### Suppressing specific auto-instrumentation
 
@@ -322,7 +322,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>0.7.0</version>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -331,7 +331,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-api:0.7.0')
+    compile('io.opentelemetry:opentelemetry-api:0.11.0')
 }
 ```
 
@@ -370,8 +370,8 @@ You'll also need to add a dependency for this annotation:
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
-      <version>0.7.0</version>
+      <artifactId>opentelemetry-extension-annotations</artifactId>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -380,7 +380,7 @@ You'll also need to add a dependency for this annotation:
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
+    compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
 }
 ```
 

@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
   public CassandraClientInstrumentationModule() {
-    super("cassandra");
+    super("cassandra", "cassandra-3.0");
   }
 
   @Override
@@ -68,7 +68,6 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
      * contribution is a simple wrapper, so we just have to wrap the new session.
      *
      * @param session The fresh session to patch. This session is replaced with new session
-     * @throws Exception
      */
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {

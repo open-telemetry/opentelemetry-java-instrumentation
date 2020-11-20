@@ -81,6 +81,8 @@ final class LoggingEventInstrumentation implements TypeInstrumentation {
           case SAMPLED:
             value = Boolean.toString(spanContext.isSampled());
             break;
+          default:
+            // do nothing
         }
       }
     }

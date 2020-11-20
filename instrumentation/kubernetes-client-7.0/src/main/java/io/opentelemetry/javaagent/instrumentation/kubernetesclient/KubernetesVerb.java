@@ -43,8 +43,9 @@ public enum KubernetesVerb {
           return DELETE_COLLECTION;
         }
         return DELETE;
+      default:
+        throw new IllegalArgumentException("invalid HTTP verb for kubernetes client");
     }
-    throw new IllegalArgumentException("invalid HTTP verb for kubernetes client");
   }
 
   public String value() {

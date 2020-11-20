@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -24,13 +24,13 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws");
+    super("play-ws", "play-ws-2.1");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.playws.PlayWSClientTracer",
+      "io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer",
       "io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
       packageName + ".StreamedAsyncHandlerWrapper"

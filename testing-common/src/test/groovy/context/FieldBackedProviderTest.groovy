@@ -13,7 +13,7 @@ import static context.ContextTestInstrumentationModule.UntransformableKeyClass
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
-import io.opentelemetry.instrumentation.util.gc.GCUtils
+import io.opentelemetry.instrumentation.util.gc.GcUtils
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
@@ -155,7 +155,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
     int count = keyValue.get().incrementContextCount()
     WeakReference<KeyClass> instanceRef = new WeakReference(keyValue.get())
     keyValue.set(null)
-    GCUtils.awaitGC(instanceRef)
+    GcUtils.awaitGc(instanceRef)
 
     then:
     instanceRef.get() == null

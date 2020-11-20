@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
@@ -42,7 +43,7 @@ public class AwsLambdaMessageTracer extends BaseTracer {
       }
     }
 
-    Span.Builder span = tracer.spanBuilder(source + " process").setSpanKind(Kind.CONSUMER);
+    SpanBuilder span = tracer.spanBuilder(source + " process").setSpanKind(Kind.CONSUMER);
 
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
     span.setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process");
@@ -55,7 +56,7 @@ public class AwsLambdaMessageTracer extends BaseTracer {
   }
 
   public Span startSpan(SQSMessage message) {
-    Span.Builder span =
+    SpanBuilder span =
         tracer.spanBuilder(message.getEventSource() + " process").setSpanKind(Kind.CONSUMER);
 
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
@@ -68,15 +69,16 @@ public class AwsLambdaMessageTracer extends BaseTracer {
     return span.startSpan();
   }
 
+  @Override
   public Scope startScope(Span span) {
     return span.makeCurrent();
   }
 
-  private void addLinkToMessageParent(SQSMessage message, Span.Builder span) {
+  private void addLinkToMessageParent(SQSMessage message, SpanBuilder span) {
     String parentHeader = message.getAttributes().get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
     if (parentHeader != null) {
       SpanContext parentCtx =
-          Span.fromContext(ParentContextExtractor.fromXRayHeader(parentHeader)).getSpanContext();
+          Span.fromContext(ParentContextExtractor.fromXrayHeader(parentHeader)).getSpanContext();
       if (parentCtx.isValid()) {
         span.addLink(parentCtx);
       }

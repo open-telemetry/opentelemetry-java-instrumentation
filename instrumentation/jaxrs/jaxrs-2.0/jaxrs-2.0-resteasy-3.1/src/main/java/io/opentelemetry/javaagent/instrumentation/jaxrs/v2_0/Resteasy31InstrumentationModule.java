@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class Resteasy31InstrumentationModule extends InstrumentationModule {
   public Resteasy31InstrumentationModule() {
-    super("jax-rs", "jaxrs", "resteasy");
+    super("jaxrs", "jaxrs-2.0", "resteasy", "resteasy-3.1");
   }
 
   @Override

@@ -95,8 +95,9 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
         return paths.get(paths.size() - 1);
       case REGEX_WITH_PREFIX:
         return paths.get(1) + paths.get(0);
+      default:
+        return null;
     }
-    return null;
   }
 
   private static class Decorator implements Function<HttpService, OpenTelemetryService> {

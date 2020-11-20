@@ -14,13 +14,13 @@ import org.apache.http.RequestLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.AbstractHttpMessage;
 
-/** Wraps HttpHost and HttpRequest into a HttpUriRequest for decorators and injectors */
+/** Wraps HttpHost and HttpRequest into a HttpUriRequest for decorators and injectors. */
 public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implements HttpUriRequest {
 
   private final String method;
   private final RequestLine requestLine;
   private final ProtocolVersion protocolVersion;
-  private final java.net.URI URI;
+  private final java.net.URI uri;
 
   private final HttpRequest actualRequest;
 
@@ -30,13 +30,13 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
     requestLine = httpRequest.getRequestLine();
     protocolVersion = requestLine.getProtocolVersion();
 
-    URI calculatedURI;
+    URI calculatedUri;
     try {
-      calculatedURI = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
+      calculatedUri = new URI(httpHost.toURI() + httpRequest.getRequestLine().getUri());
     } catch (URISyntaxException e) {
-      calculatedURI = null;
+      calculatedUri = null;
     }
-    URI = calculatedURI;
+    uri = calculatedUri;
     actualRequest = httpRequest;
   }
 
@@ -72,7 +72,7 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
 
   @Override
   public java.net.URI getURI() {
-    return URI;
+    return uri;
   }
 
   public HttpRequest getActualRequest() {

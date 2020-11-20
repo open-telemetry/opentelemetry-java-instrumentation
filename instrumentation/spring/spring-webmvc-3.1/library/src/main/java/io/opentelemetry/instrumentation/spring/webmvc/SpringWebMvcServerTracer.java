@@ -74,6 +74,6 @@ class SpringWebMvcServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-web";
+    return "io.opentelemetry.javaagent.spring-webmvc";
   }
 }

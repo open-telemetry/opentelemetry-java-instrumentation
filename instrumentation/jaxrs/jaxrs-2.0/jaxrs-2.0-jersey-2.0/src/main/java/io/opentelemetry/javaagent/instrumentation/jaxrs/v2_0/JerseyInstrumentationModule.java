@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JerseyInstrumentationModule extends InstrumentationModule {
   public JerseyInstrumentationModule() {
-    super("jax-rs", "jaxrs", "jersey");
+    super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
   }
 
   @Override

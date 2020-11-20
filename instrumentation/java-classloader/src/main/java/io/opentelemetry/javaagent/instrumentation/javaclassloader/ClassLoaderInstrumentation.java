@@ -88,7 +88,7 @@ final class ClassLoaderInstrumentation implements TypeInstrumentation {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
-            } catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException ignored) {
             }
           }
         }

@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 
 public final class CassandraQueryNormalizer {
   private static final Logger log = LoggerFactory.getLogger(CassandraQueryNormalizer.class);
-  private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("cassandra");
+  private static final boolean NORMALIZATION_ENABLED =
+      isQueryNormalizationEnabled("cassandra", "cassandra-3.0");
 
   public static String normalize(String query) {
     if (!NORMALIZATION_ENABLED) {

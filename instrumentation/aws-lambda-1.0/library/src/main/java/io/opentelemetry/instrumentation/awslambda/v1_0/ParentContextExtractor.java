@@ -38,7 +38,7 @@ public class ParentContextExtractor {
 
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "X-Amzn-Trace-Id";
 
-  static Context fromXRayHeader(String parentHeader) {
+  static Context fromXrayHeader(String parentHeader) {
     return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .extract(

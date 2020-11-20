@@ -49,7 +49,7 @@ final class NettyChannelInstrumentation implements TypeInstrumentation {
     return transformers;
   }
 
-  public static class ChannelConnectAdvice extends AbstractNettyAdvice {
+  public static class ChannelConnectAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This Channel channel) {
       Context context = Java8BytecodeBridge.currentContext();

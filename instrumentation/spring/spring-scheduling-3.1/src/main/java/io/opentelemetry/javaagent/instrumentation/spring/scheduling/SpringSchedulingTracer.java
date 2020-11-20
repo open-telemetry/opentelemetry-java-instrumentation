@@ -17,7 +17,7 @@ public class SpringSchedulingTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.spring-scheduling";
+    return "io.opentelemetry.javaagent.spring-scheduling";
   }
 
   public String spanNameOnRun(Runnable runnable) {

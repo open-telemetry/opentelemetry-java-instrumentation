@@ -16,6 +16,6 @@ public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jetty";
+    return "io.opentelemetry.javaagent.jetty";
   }
 }

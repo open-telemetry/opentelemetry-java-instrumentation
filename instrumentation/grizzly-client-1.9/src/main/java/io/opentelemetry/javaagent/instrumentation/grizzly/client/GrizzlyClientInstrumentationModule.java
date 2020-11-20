@@ -18,7 +18,7 @@ import java.util.Map;
 @AutoService(InstrumentationModule.class)
 public class GrizzlyClientInstrumentationModule extends InstrumentationModule {
   public GrizzlyClientInstrumentationModule() {
-    super("grizzly-client", "ning");
+    super("grizzly-client", "grizzly-client-1.9", "ning");
   }
 
   @Override

@@ -38,7 +38,7 @@ import scala.util.Try;
 public final class RediscalaInstrumentationModule extends InstrumentationModule {
 
   public RediscalaInstrumentationModule() {
-    super("rediscala", "redis");
+    super("rediscala", "rediscala-1.8");
   }
 
   @Override
