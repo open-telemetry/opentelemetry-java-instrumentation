@@ -17,7 +17,8 @@ dependencies {
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common')
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0')
-  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
+
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
 
   // First version with DropwizardTestSupport:
   testLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'

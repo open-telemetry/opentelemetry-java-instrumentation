@@ -74,13 +74,13 @@ shadowJar {
     exclude(project(':javaagent-api'))
     exclude(project(':javaagent-tooling'))
     exclude(dependency(deps.bytebuddy))
+    exclude(dependency(deps.opentelemetryApi))
+    exclude(dependency(deps.opentelemetryContext))
     exclude(dependency(deps.slf4j))
   }
 
   // rewrite library instrumentation dependencies
-  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
-    exclude "io.opentelemetry.javaagent.instrumentation.**"
-  }
+  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation"
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
@@ -108,6 +108,15 @@ tasks.withType(Test).configureEach {
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"
+
+  // The sources are packaged into the testing jar so we need to make sure to exclude from the test
+  // classpath, which automatically inherits them, to ensure our shaded versions are used.
+  classpath = classpath.filter {
+    if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
+      return false
+    }
+    return true
+  }
 }
 
 configurations.configureEach {

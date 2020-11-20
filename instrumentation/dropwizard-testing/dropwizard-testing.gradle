@@ -7,6 +7,14 @@ dependencies {
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0')
 
+  // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
+  // that is compatible with Dropwizard.
+  testImplementation("com.google.guava:guava") {
+    version {
+      strictly("20.0")
+    }
+  }
+
   // First version with DropwizardTestSupport:
   testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'

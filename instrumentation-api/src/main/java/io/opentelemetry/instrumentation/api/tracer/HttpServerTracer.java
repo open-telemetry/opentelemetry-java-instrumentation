@@ -28,7 +28,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
-  public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
+  public static final String CONTEXT_ATTRIBUTE =
+      "io.opentelemetry.javaagent.shaded.instrumentation.context";
 
   protected static final String USER_AGENT = "User-Agent";
 

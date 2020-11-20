@@ -30,7 +30,7 @@ dependencies {
 
 jar.enabled = false
 shadowJar {
-  archiveClassifier = ''
+  archiveFileName = 'testing-agent-classloader.jar'
 
   mergeServiceFiles()
 

@@ -10,8 +10,8 @@ import static SpanAssert.assertSpan
 import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.instrumentation.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import java.util.concurrent.TimeUnit
 
 class TraceAssert {
@@ -23,14 +23,14 @@ class TraceAssert {
     this.spans = spans
   }
 
-  static void assertTrace(InMemoryExporter writer, String traceId, int expectedSize,
+  static void assertTrace(List<List<SpanData>> traces, String traceId, int expectedSize,
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    def spans = getTrace(writer, traceId)
+    def spans = getTrace(traces, traceId)
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (spans.size() < expectedSize && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       Thread.sleep(10)
-      spans = getTrace(writer, traceId)
+      spans = getTrace(traces, traceId)
     }
     assert spans.size() == expectedSize
     def asserter = new TraceAssert(spans)
@@ -77,8 +77,8 @@ class TraceAssert {
     assert assertedIndexes.size() == spans.size()
   }
 
-  private static List<SpanData> getTrace(InMemoryExporter writer, String traceId) {
-    for (List<SpanData> trace : writer.getTraces()) {
+  private static List<SpanData> getTrace(List<List<SpanData>> traces, String traceId) {
+    for (List<SpanData> trace : traces) {
       if (trace[0].traceId == traceId) {
         return trace
       }

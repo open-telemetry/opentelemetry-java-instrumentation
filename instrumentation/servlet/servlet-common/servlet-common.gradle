@@ -25,3 +25,8 @@ dependencies {
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
 }
+
+tasks.withType(Test) {
+  jvmArgs '-Dotel.instrumentation.servlet-filter.enabled=true'
+  jvmArgs '-Dotel.instrumentation.servlet-service.enabled=true'
+}

@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,6 +54,7 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AwsHttpClientInstrumentation());
+    return Arrays.asList(
+        new AwsHttpClientInstrumentation(), new ExecutionInterceptorInstrumentation());
   }
 }

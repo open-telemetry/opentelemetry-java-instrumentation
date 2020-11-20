@@ -9,6 +9,7 @@ import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 
 /**
@@ -18,11 +19,11 @@ import io.opentelemetry.sdk.trace.data.SpanData
 trait InstrumentationTestTrait {
 
   static InstrumentationTestRunner instrumentationTestRunner
-  static InMemoryExporter testWriter
+  static InMemorySpanExporter testWriter
 
   def setupSpec() {
     instrumentationTestRunner = new InstrumentationTestRunnerImpl()
-    testWriter = InstrumentationTestRunner.TEST_WRITER
+    testWriter = InstrumentationTestRunner.testExporter
 
     childSetupSpec()
   }

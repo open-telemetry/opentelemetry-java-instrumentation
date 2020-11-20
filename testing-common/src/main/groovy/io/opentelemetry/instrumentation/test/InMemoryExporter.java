@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.test;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import io.opentelemetry.api.common.AttributeConsumer;
@@ -27,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -85,6 +83,10 @@ public class InMemoryExporter implements SpanProcessor {
 
   public List<List<SpanData>> getTraces() {
     List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
+    return groupTraces(spans);
+  }
+
+  public static List<List<SpanData>> groupTraces(List<SpanData> spans) {
     List<List<SpanData>> traces =
         new ArrayList<>(
             spans.stream().collect(Collectors.groupingBy(SpanData::getTraceId)).values());
@@ -102,14 +104,17 @@ public class InMemoryExporter implements SpanProcessor {
 
   public List<List<SpanData>> waitForTraces(int number, Predicate<List<SpanData>> excludes)
       throws InterruptedException, TimeoutException {
-    long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
-    List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
-    while (traces.size() < number && remainingWaitMillis > 0) {
-      Stopwatch stopwatch = Stopwatch.createStarted();
-      Thread.sleep(remainingWaitMillis);
-      remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
-      traces = getCompletedAndFilteredTraces(excludes);
+    // Wait for returned spans to stabilize.
+    int previousNumSpans = -1;
+    for (int attempt = 0; attempt < 2000; attempt++) {
+      int numSpans = AgentTestingExporterAccess.getExportedSpans().size();
+      if (numSpans != 0 && numSpans == previousNumSpans) {
+        break;
+      }
+      previousNumSpans = numSpans;
+      Thread.sleep(10);
     }
+    List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
     if (traces.size() < number) {
       throw new TimeoutException(
           "Timeout waiting for "
@@ -154,17 +159,15 @@ public class InMemoryExporter implements SpanProcessor {
   }
 
   // must be called under tracesLock
-  private void sortTraces(List<List<SpanData>> traces) {
-    Collections.sort(
-        traces,
-        Comparator.comparingLong(this::getMinSpanOrder));
+  private static void sortTraces(List<List<SpanData>> traces) {
+    Collections.sort(traces, Comparator.comparingLong(InMemoryExporter::getMinSpanOrder));
   }
 
-  private long getMinSpanOrder(List<SpanData> spans) {
+  private static long getMinSpanOrder(List<SpanData> spans) {
     return spans.stream().mapToLong(SpanData::getStartEpochNanos).min().orElse(0);
   }
 
-  private List<SpanData> sort(List<SpanData> trace) {
+  private static List<SpanData> sort(List<SpanData> trace) {
 
     Map<String, Node> lookup = new HashMap<>();
     for (SpanData span : trace) {
@@ -211,10 +214,8 @@ public class InMemoryExporter implements SpanProcessor {
     return orderedSpans;
   }
 
-  private void sortOneLevel(List<Node> nodes) {
-    Collections.sort(
-        nodes,
-        Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
+  private static void sortOneLevel(List<Node> nodes) {
+    Collections.sort(nodes, Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
   }
 
   // trace is completed if root span is present

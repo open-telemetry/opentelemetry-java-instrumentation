@@ -14,7 +14,3 @@ dependencies {
   library group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
   library group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 }
-
-tasks.withType(Test) {
-  // jvmArgs "-Dotel.hystrix.tags.enabled=true"
-}

@@ -252,7 +252,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     then:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$3")
     def err = thrown HystrixRuntimeException
     err.cause instanceof IllegalArgumentException
 

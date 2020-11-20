@@ -16,14 +16,18 @@ excludedClassesCoverage += [
 ]
 
 dependencies {
-  api(project(path: ':opentelemetry-sdk-shaded-for-testing', configuration: 'shadow'))
-
   api deps.guava
   api deps.spock
 
-  implementation deps.opentelemetryApi
-  implementation deps.opentelemetryProto
-  implementation deps.opentelemetrySdkTesting
+  api deps.opentelemetryApi
+  api deps.opentelemetrySdk
+  api deps.opentelemetrySdkTesting
+
+  implementation(deps.opentelemetryProto) {
+    // Only need the proto, not gRPC.
+    exclude group: 'io.grpc'
+  }
+
   implementation deps.bytebuddy
   implementation deps.bytebuddyagent
   implementation deps.slf4j
@@ -45,7 +49,7 @@ dependencies {
   api project(':utils:test-utils')
 
   annotationProcessor deps.autoservice
-  implementation deps.autoservice
+  compileOnly deps.autoservice
 
   api deps.groovy
 
@@ -59,7 +63,7 @@ dependencies {
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor deps.autoservice
-  testImplementation deps.autoservice
+  testCompileOnly deps.autoservice
 }
 
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here

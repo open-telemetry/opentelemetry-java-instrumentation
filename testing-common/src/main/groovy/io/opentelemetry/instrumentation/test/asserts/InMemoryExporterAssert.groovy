@@ -19,23 +19,28 @@ import org.spockframework.runtime.model.TextPosition
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
-  private final InMemoryExporter writer
 
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private InMemoryExporterAssert(List<List<SpanData>> traces, InMemoryExporter writer) {
+  private InMemoryExporterAssert(List<List<SpanData>> traces) {
     this.traces = traces
-    this.writer = writer
   }
 
   static void assertTraces(InMemoryExporter writer, int expectedSize,
                            final Predicate<List<SpanData>> excludes,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    def traces = writer.waitForTraces(expectedSize, excludes)
+    assertTraces(traces, expectedSize, excludes, spec)
+  }
+
+  static void assertTraces(List<List<SpanData>> traces, int expectedSize,
+                           final Predicate<List<SpanData>> excludes,
+                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
+                           @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
-      def traces = writer.waitForTraces(expectedSize, excludes)
       assert traces.size() == expectedSize
-      def asserter = new InMemoryExporterAssert(traces, writer)
+      def asserter = new InMemoryExporterAssert(traces)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -72,7 +77,7 @@ class InMemoryExporterAssert {
       throw new ArrayIndexOutOfBoundsException(index)
     }
     assertedIndexes.add(index)
-    assertTrace(writer, traces[index][0].traceId, expectedSize, spec)
+    assertTrace(traces, traces[index][0].traceId, expectedSize, spec)
   }
 
   // this doesn't provide any functionality, just a self-documenting marker

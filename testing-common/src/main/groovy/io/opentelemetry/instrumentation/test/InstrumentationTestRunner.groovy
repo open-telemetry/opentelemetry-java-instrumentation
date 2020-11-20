@@ -10,11 +10,13 @@ import com.google.common.base.Predicates
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.propagation.HttpTraceContext
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.propagation.HttpTraceContext
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import org.junit.Before
 import spock.lang.Specification
 
@@ -24,10 +26,10 @@ import spock.lang.Specification
  */
 abstract class InstrumentationTestRunner extends Specification {
 
-  protected static final InMemoryExporter TEST_WRITER
+  protected static final InMemorySpanExporter testExporter
 
   static {
-    TEST_WRITER = new InMemoryExporter()
+    testExporter = InMemorySpanExporter.create()
     // TODO this is probably temporary until default propagators are supplied by SDK
     //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
     //  currently checking against no-op implementation so that it won't override aws-lambda
@@ -37,12 +39,13 @@ abstract class InstrumentationTestRunner extends Specification {
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .build())
     }
-    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER)
+    OpenTelemetrySdk.getGlobalTracerManagement()
+      .addSpanProcessor(SimpleSpanProcessor.builder(testExporter).build())
   }
 
   @Before
   void beforeTest() {
-    TEST_WRITER.clear()
+    testExporter.reset()
   }
 
   protected void assertTraces(
@@ -53,7 +56,7 @@ abstract class InstrumentationTestRunner extends Specification {
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
     InMemoryExporterAssert.assertTraces(
-      TEST_WRITER, size, Predicates.<List<SpanData>> alwaysFalse(), spec)
+      getTraces(), size, Predicates.<List<SpanData>> alwaysFalse(), spec)
   }
 
   protected void assertTracesWithFilter(
@@ -64,6 +67,10 @@ abstract class InstrumentationTestRunner extends Specification {
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec)
+    InMemoryExporterAssert.assertTraces(getTraces(), size, excludes, spec)
+  }
+
+  private static List<List<SpanData>> getTraces() {
+    return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
   }
 }

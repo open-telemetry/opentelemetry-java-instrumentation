@@ -8,18 +8,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 class HttpServletTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.servlet-service.enabled", "true")
-  }
-
-  def specCleanup() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def req = Mock(HttpServletRequest) {
     getMethod() >> "GET"

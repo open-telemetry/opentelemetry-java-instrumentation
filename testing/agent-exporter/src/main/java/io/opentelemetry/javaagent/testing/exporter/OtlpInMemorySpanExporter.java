@@ -23,8 +23,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class OtlpInMemorySpanExporter implements SpanExporter {
+
+  private static final Logger logger = LoggerFactory.getLogger(OtlpInMemorySpanExporter.class);
 
   private final BlockingQueue<ExportTraceServiceRequest> collectedRequests =
       new LinkedBlockingQueue<>();
@@ -65,6 +69,9 @@ class OtlpInMemorySpanExporter implements SpanExporter {
 
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
+    for (SpanData span : spans) {
+      logger.info("Exporting span {}", span);
+    }
     return delegate.export(spans);
   }
 
