@@ -12,6 +12,7 @@ import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.api.trace.TraceState;
+import application.io.opentelemetry.api.trace.TraceStateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class Bridging {
   }
 
   private static TraceState toApplication(io.opentelemetry.api.trace.TraceState agentTraceState) {
-    TraceState.Builder applicationTraceState = TraceState.builder();
+    TraceStateBuilder applicationTraceState = TraceState.builder();
     agentTraceState.forEach(applicationTraceState::set);
     return applicationTraceState.build();
   }
@@ -103,7 +104,7 @@ public class Bridging {
   }
 
   public static io.opentelemetry.api.common.Attributes toAgent(Attributes applicationAttributes) {
-    final io.opentelemetry.api.common.Attributes.Builder agentAttributes =
+    final io.opentelemetry.api.common.AttributesBuilder agentAttributes =
         io.opentelemetry.api.common.Attributes.builder();
     applicationAttributes.forEach(
         new AttributeConsumer() {
@@ -166,7 +167,7 @@ public class Bridging {
   }
 
   private static io.opentelemetry.api.trace.TraceState toAgent(TraceState applicationTraceState) {
-    io.opentelemetry.api.trace.TraceState.Builder agentTraceState =
+    io.opentelemetry.api.trace.TraceStateBuilder agentTraceState =
         io.opentelemetry.api.trace.TraceState.builder();
     applicationTraceState.forEach(agentTraceState::set);
     return agentTraceState.build();

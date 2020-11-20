@@ -322,7 +322,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>0.7.0</version>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -331,7 +331,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-api:0.7.0')
+    compile('io.opentelemetry:opentelemetry-api:0.11.0')
 }
 ```
 
@@ -370,8 +370,8 @@ You'll also need to add a dependency for this annotation:
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
-      <version>0.7.0</version>
+      <artifactId>opentelemetry-extension-annotations</artifactId>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -380,7 +380,7 @@ You'll also need to add a dependency for this annotation:
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
+    compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
 }
 ```
 

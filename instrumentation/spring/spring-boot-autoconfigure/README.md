@@ -7,7 +7,7 @@ Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.8.0`
+ - Minimum version: `0.11.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
@@ -115,7 +115,7 @@ For Maven add to your `pom.xml`:
   </dependency>
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-extension-auto-annotations</artifactId>
+    <artifactId>opentelemetry-extension-annotations</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -140,7 +140,7 @@ implementation "org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION"
 
 //Enables instrumentation using @WithSpan
 implementation "org.springframework:spring-aop:SPRING_VERSION"
-implementation "io.opentelemetry:opentelemetry-extension-auto-annotations:OPENTELEMETRY_VERSION"
+implementation "io.opentelemetry:opentelemetry-extension-annotations:OPENTELEMETRY_VERSION"
 ```
 
 #### OpenTelemetry Auto Configuration

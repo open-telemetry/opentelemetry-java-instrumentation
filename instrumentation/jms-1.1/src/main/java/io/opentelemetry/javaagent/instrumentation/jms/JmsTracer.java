@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapte
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
@@ -43,11 +44,11 @@ public class JmsTracer extends BaseTracer {
 
   public Span startConsumerSpan(
       MessageDestination destination, String operation, Message message, long startTime) {
-    Span.Builder spanBuilder =
+    SpanBuilder spanBuilder =
         tracer
             .spanBuilder(spanName(destination, operation))
             .setSpanKind(CONSUMER)
-            .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime))
+            .setStartTimestamp(startTime, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, operation);
 
     if (message != null && "process".equals(operation)) {

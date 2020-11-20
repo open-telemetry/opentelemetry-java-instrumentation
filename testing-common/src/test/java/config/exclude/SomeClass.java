@@ -5,7 +5,7 @@
 
 package config.exclude;
 
-import io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 
 public class SomeClass implements Runnable {
 

@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import application.io.opentelemetry.extension.auto.annotations.WithSpan;
+import application.io.opentelemetry.extension.annotations.WithSpan;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser;
@@ -60,8 +60,7 @@ public final class WithSpanAnnotationInstrumentationModule extends Instrumentati
 
     AnnotatedMethodInstrumentation() {
       annotatedMethodMatcher =
-          isAnnotatedWith(
-              named("application.io.opentelemetry.extension.auto.annotations.WithSpan"));
+          isAnnotatedWith(named("application.io.opentelemetry.extension.annotations.WithSpan"));
       excludedMethodsMatcher = configureExcludedMethods();
     }
 
