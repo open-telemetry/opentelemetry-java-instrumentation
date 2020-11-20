@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.java.runtime;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Labels;
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult;
 import io.opentelemetry.api.metrics.LongUpDownSumObserver;
 import io.opentelemetry.api.metrics.Meter;
@@ -77,12 +76,9 @@ public final class MemoryPools {
             .setUnit("By")
             .build();
     areaMetric.setCallback(
-        new AsynchronousInstrument.Callback<LongResult>() {
-          @Override
-          public void update(LongResult resultLongObserver) {
-            observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
-            observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
-          }
+        resultLongObserver -> {
+          observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
+          observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
         });
   }
 
@@ -103,19 +99,16 @@ public final class MemoryPools {
       maxLabelSets.add(Labels.of(TYPE_LABEL_KEY, MAX, POOL_LABEL_KEY, pool.getName()));
     }
     poolMetric.setCallback(
-        new AsynchronousInstrument.Callback<LongResult>() {
-          @Override
-          public void update(LongResult resultLongObserver) {
-            for (int i = 0; i < poolBeans.size(); i++) {
-              MemoryUsage poolUsage = poolBeans.get(i).getUsage();
-              if (poolUsage != null) {
-                observe(
-                    resultLongObserver,
-                    poolUsage,
-                    usedLabelSets.get(i),
-                    committedLabelSets.get(i),
-                    maxLabelSets.get(i));
-              }
+        resultLongObserver -> {
+          for (int i = 0; i < poolBeans.size(); i++) {
+            MemoryUsage poolUsage = poolBeans.get(i).getUsage();
+            if (poolUsage != null) {
+              observe(
+                  resultLongObserver,
+                  poolUsage,
+                  usedLabelSets.get(i),
+                  committedLabelSets.get(i),
+                  maxLabelSets.get(i));
             }
           }
         });
