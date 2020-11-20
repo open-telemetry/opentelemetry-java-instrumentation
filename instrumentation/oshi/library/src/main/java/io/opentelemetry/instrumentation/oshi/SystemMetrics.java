@@ -19,7 +19,6 @@ import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
 public class SystemMetrics {
-  private static final String TYPE_LABEL_KEY = "type";
 
   private SystemMetrics() {}
 
