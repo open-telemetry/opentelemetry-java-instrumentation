@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.grizzly.client;
-
-import static io.opentelemetry.javaagent.instrumentation.grizzly.client.GrizzlyClientTracer.tracer;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
@@ -18,7 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Pair;
 import net.bytebuddy.asm.Advice;
 
-public class GrizzlyClientResponseAdvice {
+public class ResponseAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
@@ -33,7 +31,7 @@ public class GrizzlyClientResponseAdvice {
       contextStore.put(handler, null);
     }
     if (spanWithParent.hasRight()) {
-      tracer().end(spanWithParent.getRight(), response);
+      AsyncHttpClientTracer.tracer().end(spanWithParent.getRight(), response);
     }
     return spanWithParent.hasLeft() ? spanWithParent.getLeft().makeCurrent() : null;
   }

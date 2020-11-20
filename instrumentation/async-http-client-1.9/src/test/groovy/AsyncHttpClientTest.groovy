@@ -13,11 +13,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class GrizzlyAsyncHttpClientTest extends HttpClientTest {
-
-  static {
-    System.setProperty("otel.instrumentation.grizzly-client.enabled", "true")
-  }
+class AsyncHttpClientTest extends HttpClientTest {
 
   @AutoCleanup
   @Shared

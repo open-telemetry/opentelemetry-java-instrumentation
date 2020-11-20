@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.grizzly.client;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import com.ning.http.client.Request;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public class GrizzlyInjectAdapter implements TextMapPropagator.Setter<Request> {
+public class AsyncHttpClientInjectAdapter implements TextMapPropagator.Setter<Request> {
 
-  public static final GrizzlyInjectAdapter SETTER = new GrizzlyInjectAdapter();
+  public static final AsyncHttpClientInjectAdapter SETTER = new AsyncHttpClientInjectAdapter();
 
   @Override
   public void set(Request carrier, String key, String value) {
