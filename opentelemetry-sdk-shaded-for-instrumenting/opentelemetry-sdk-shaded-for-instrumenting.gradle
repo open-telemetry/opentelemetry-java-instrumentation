@@ -11,8 +11,8 @@ dependencies {
 }
 
 // OpenTelemetry API (and SDK) shaded so that it can be used (and tested) in
-// opentelemetry-api-beta instrumentation, and then its usage can be unshaded after
-// OpenTelemetry API is shaded (see more explanation in opentelemetry-api-beta.gradle)
+// instrumentation of OpenTelemetry API itself, and then its usage can be unshaded after
+// OpenTelemetry API is shaded (see more explanation in opentelemetry-api-1.0.gradle)
 shadowJar {
 
   mergeServiceFiles()
