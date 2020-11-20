@@ -12,10 +12,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.common.collect.ImmutableMap
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase {
 
@@ -32,7 +32,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
   def childSetupSpec() {
     super.childSetupSpec()
-    OpenTelemetry.setGlobalPropagators(DefaultContextPropagators.builder()
+    AgentTestRunner.setGlobalPropagators(DefaultContextPropagators.builder()
       .addTextMapPropagator(B3Propagator.getInstance()).build())
   }
 
