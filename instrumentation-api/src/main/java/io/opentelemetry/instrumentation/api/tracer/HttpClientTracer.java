@@ -77,8 +77,17 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
+
+    // Avoid sending an invalid span to the propagators if a client span already exists.
+    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
+    if (clientSpan != null) {
+      span = clientSpan;
+      context = context.with(span);
+    } else {
+      context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
+    }
+
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
     return context.makeCurrent();
   }
 

@@ -5,11 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+import io.opentelemetry.api.DefaultOpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
+import io.opentelemetry.api.trace.SpanContextKey
+import io.opentelemetry.api.trace.TraceFlags
+import io.opentelemetry.api.trace.TraceState
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.context.Context
+import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
@@ -31,6 +39,8 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   @Shared
   def testUserAgent = "Apache HttpClient"
+
+  def mockSetter = Mock(TextMapPropagator.Setter)
 
   def "test onRequest"() {
     setup:
@@ -159,6 +169,49 @@ class HttpClientTracerTest extends BaseTracerTest {
     thrown(AssertionError)
   }
 
+  def "valid span is passed to propagation injection when http span is not created"() {
+    setup:
+    def tracer = newTracer()
+    def clientSpan = Mock(Span)
+    Context.current()
+      .with(SpanContextKey.KEY, span)
+      .with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan)
+      .makeCurrent();
+    def propagators = Mock(ContextPropagators)
+    def textMapPropagator = Mock(TextMapPropagator)
+
+    def oldOpenTelemetry = OpenTelemetry.get()
+    def mockOpenTelemetry = Mock(OpenTelemetry)
+    OpenTelemetry.set(mockOpenTelemetry)
+
+    when:
+    mockOpenTelemetry.getPropagators() >> propagators
+    propagators.getTextMapPropagator() >> textMapPropagator
+
+    span.storeInContext(_) >> { args -> args[0].with(SpanContextKey.KEY, span) }
+    clientSpan.storeInContext(_) >> { args -> args[0].with(SpanContextKey.KEY, clientSpan) }
+
+    span.getSpanContext() >> SpanContext.getInvalid()
+
+    clientSpan.getSpanContext() >>
+      SpanContext.create(
+        "8a3c60f7d188f8fa79d48a391a778fa6",
+        "53995c3f42cd8ad8",
+        TraceFlags.getSampled(),
+        TraceState.getDefault())
+
+    tracer.startScope(span, null)
+
+    then:
+    def ctx = null
+    1 * textMapPropagator.inject(_, _, _) >> { args ->
+      assert Span.fromContext(args[0]).getSpanContext().isValid()
+    }
+
+    and:
+    OpenTelemetry.set(oldOpenTelemetry)
+  }
+
   @Override
   def newTracer() {
     return new HttpClientTracer<Map, Map, Map>() {
@@ -190,7 +243,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
       @Override
       protected TextMapPropagator.Setter<Map> getSetter() {
-        return null
+        return mockSetter
       }
 
       @Override
