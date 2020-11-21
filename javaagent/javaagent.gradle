@@ -50,7 +50,7 @@ shadowJar {
   // instrumentation project.
   // Removing duplicates reduces jar size and can prevent issues when downstream projects repackage
   // the jar.
-  duplicatesStrategy = 'exclude'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 //Includes instrumentations, but not exporters
