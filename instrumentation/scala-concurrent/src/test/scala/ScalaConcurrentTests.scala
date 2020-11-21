@@ -5,9 +5,8 @@
 
 import java.util.concurrent.CountDownLatch
 
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

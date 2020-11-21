@@ -34,6 +34,10 @@ trait InstrumentationTestTrait {
     childSetup()
   }
 
+  boolean forceFlushCalled() {
+    return instrumentationTestRunner.forceFlushCalled()
+  }
+
   /**
    * Initialization method called once per test class. Equivalent to Spock's {@code setupSpec} which
    * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler

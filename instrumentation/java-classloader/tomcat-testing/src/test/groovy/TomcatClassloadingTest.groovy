@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.State
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader
@@ -25,11 +24,8 @@ class TomcatClassloadingTest extends AgentTestRunner {
     classloader.init()
     classloader.start()
 
-    when:
+    expect:
     // If instrumentation didn't work this would blow up with NPE due to incomplete resources mocking
-    def clazz = classloader.loadClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.State")
-
-    then:
-    clazz == State
+    classloader.loadClass("io.opentelemetry.javaagent.instrumentation.api.concurrent.State")
   }
 }

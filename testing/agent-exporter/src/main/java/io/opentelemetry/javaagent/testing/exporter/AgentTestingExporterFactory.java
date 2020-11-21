@@ -18,4 +18,8 @@ public class AgentTestingExporterFactory {
   public static void reset() {
     exporter.reset();
   }
+
+  public static boolean forceFlushCalled() {
+    return AgentTestingSdkCustomizer.spanProcessor.forceFlushCalled;
+  }
 }

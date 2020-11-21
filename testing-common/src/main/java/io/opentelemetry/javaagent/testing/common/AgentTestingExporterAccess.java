@@ -48,22 +48,27 @@ public final class AgentTestingExporterAccess {
 
   private static final MethodHandle getExportRequests;
   private static final MethodHandle reset;
+  private static final MethodHandle forceFlushCalled;
 
   static {
     try {
       Class<?> agentTestingExporterFactoryClass =
           AgentClassLoaderAccess.loadClass(
               "io.opentelemetry.javaagent.testing.exporter.AgentTestingExporterFactory");
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
       getExportRequests =
-          MethodHandles.lookup()
-              .findStatic(
-                  agentTestingExporterFactoryClass,
-                  "getExportRequests",
-                  MethodType.methodType(List.class));
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "getExportRequests",
+              MethodType.methodType(List.class));
       reset =
-          MethodHandles.lookup()
-              .findStatic(
-                  agentTestingExporterFactoryClass, "reset", MethodType.methodType(void.class));
+          lookup.findStatic(
+              agentTestingExporterFactoryClass, "reset", MethodType.methodType(void.class));
+      forceFlushCalled =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "forceFlushCalled",
+              MethodType.methodType(boolean.class));
     } catch (Exception e) {
       throw new Error("Error accessing fields with reflection.", e);
     }
@@ -74,6 +79,14 @@ public final class AgentTestingExporterAccess {
       reset.invokeExact();
     } catch (Throwable t) {
       throw new Error("Could not invoke reset", t);
+    }
+  }
+
+  public static boolean forceFlushCalled() {
+    try {
+      return (boolean) forceFlushCalled.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke forceFlushCalled", t);
     }
   }
 

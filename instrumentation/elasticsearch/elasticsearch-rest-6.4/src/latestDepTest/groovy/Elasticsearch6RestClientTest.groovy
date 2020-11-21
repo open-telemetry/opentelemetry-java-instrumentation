@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
@@ -126,6 +125,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP Request"
   }
 }

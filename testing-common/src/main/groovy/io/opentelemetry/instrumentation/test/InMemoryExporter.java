@@ -104,6 +104,9 @@ public class InMemoryExporter implements SpanProcessor {
 
   public List<List<SpanData>> waitForTraces(int number, Predicate<List<SpanData>> excludes)
       throws InterruptedException, TimeoutException {
+    if (number == 0) {
+      return getFilteredTraces(excludes);
+    }
     // Wait for returned spans to stabilize.
     int previousNumSpans = -1;
     for (int attempt = 0; attempt < 2000; attempt++) {

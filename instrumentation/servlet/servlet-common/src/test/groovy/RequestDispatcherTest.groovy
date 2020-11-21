@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -27,7 +26,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     dispatcher.include("")
 
     then:
-    2 * request.getAttribute(CONTEXT_ATTRIBUTE)
+    2 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context")
     assertTraces(2) {
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
@@ -48,7 +47,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context")
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -61,11 +60,11 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context") >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", { Span.fromContext(it).name == "TestDispatcher.$operation" })
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", mockContext)
     0 * _
 
     where:
@@ -91,7 +90,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context") >> mockContext
     assertTraces(2) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -107,9 +106,9 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "parent" })
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context") >> mockContext
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", { Span.fromContext(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", { Span.fromContext(it).name == "parent" })
     0 * _
 
     where:
@@ -136,7 +135,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     def th = thrown(ServletException)
     th == ex
 
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context")
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)
@@ -151,11 +150,11 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
+    1 * request.getAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context") >> mockContext
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", { Span.fromContext(it).name == "TestDispatcher.$operation" })
     then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
+    1 * request.setAttribute("io.opentelemetry.javaagent.shaded.instrumentation.context", mockContext)
     0 * _
 
     where:

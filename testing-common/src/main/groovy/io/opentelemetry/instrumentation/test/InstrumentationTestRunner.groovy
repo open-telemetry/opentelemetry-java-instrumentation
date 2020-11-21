@@ -11,10 +11,15 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.propagation.HttpTraceContext
+import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
+import io.opentelemetry.sdk.trace.ReadWriteSpan
+import io.opentelemetry.sdk.trace.ReadableSpan
+import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import org.junit.Before
@@ -28,6 +33,8 @@ abstract class InstrumentationTestRunner extends Specification {
 
   protected static final InMemorySpanExporter testExporter
 
+  private static boolean forceFlushCalled
+
   static {
     testExporter = InMemorySpanExporter.create()
     // TODO this is probably temporary until default propagators are supplied by SDK
@@ -39,13 +46,50 @@ abstract class InstrumentationTestRunner extends Specification {
         .addTextMapPropagator(HttpTraceContext.getInstance())
         .build())
     }
+    def delegate = SimpleSpanProcessor.builder(testExporter).build()
     OpenTelemetrySdk.getGlobalTracerManagement()
-      .addSpanProcessor(SimpleSpanProcessor.builder(testExporter).build())
+      .addSpanProcessor(new SpanProcessor() {
+        @Override
+        void onStart(Context parentContext, ReadWriteSpan span) {
+          delegate.onStart(parentContext, span)
+        }
+
+        @Override
+        boolean isStartRequired() {
+          return delegate.isStartRequired()
+        }
+
+        @Override
+        void onEnd(ReadableSpan span) {
+          delegate.onEnd(span)
+        }
+
+        @Override
+        boolean isEndRequired() {
+          return delegate.isEndRequired()
+        }
+
+        @Override
+        CompletableResultCode shutdown() {
+          return delegate.shutdown()
+        }
+
+        @Override
+        CompletableResultCode forceFlush() {
+          forceFlushCalled = true
+          return delegate.forceFlush()
+        }
+      })
   }
 
   @Before
   void beforeTest() {
     testExporter.reset()
+    forceFlushCalled = false
+  }
+
+  protected boolean forceFlushCalled() {
+    return forceFlushCalled
   }
 
   protected void assertTraces(

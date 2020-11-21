@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.testing.common;
 
 import java.lang.reflect.Field;
 
-final class AgentClassLoaderAccess {
+public final class AgentClassLoaderAccess {
 
   private static final ClassLoader agentClassLoader;
 
@@ -22,6 +22,10 @@ final class AgentClassLoaderAccess {
     } catch (Throwable t) {
       throw new Error("Could not access agent classLoader");
     }
+  }
+
+  public static ClassLoader getAgentClassLoader() {
+    return agentClassLoader;
   }
 
   static Class<?> loadClass(String name) {

@@ -18,8 +18,8 @@ class OshiTest extends AgentTestRunner {
     PlatformEnum platform = SystemInfo.getCurrentPlatformEnum()
 
     expect:
-    Collection<MetricData> metrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
     platform != null
+    Collection<MetricData> metrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
     metrics.size() == 7
   }
 }

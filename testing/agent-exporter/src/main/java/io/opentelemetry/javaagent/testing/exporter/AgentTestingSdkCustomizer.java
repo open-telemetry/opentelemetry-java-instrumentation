@@ -12,9 +12,17 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 @AutoService(TracerCustomizer.class)
 public class AgentTestingSdkCustomizer implements TracerCustomizer {
+
+  static final AgentTestingSpanProcessor spanProcessor =
+      new AgentTestingSpanProcessor(
+          SimpleSpanProcessor.builder(AgentTestingExporterFactory.exporter).build());
+
+  static void reset() {
+    spanProcessor.forceFlushCalled = false;
+  }
+
   @Override
   public void configure(TracerSdkManagement tracerManagement) {
-    tracerManagement.addSpanProcessor(
-        SimpleSpanProcessor.builder(AgentTestingExporterFactory.exporter).build());
+    tracerManagement.addSpanProcessor(spanProcessor);
   }
 }

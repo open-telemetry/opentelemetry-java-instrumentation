@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher

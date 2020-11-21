@@ -5,3 +5,7 @@ dependencies {
 
   testImplementation project(':javaagent-bootstrap')
 }
+
+shadowJar {
+  from("src/test/resources/")
+}

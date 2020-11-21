@@ -11,7 +11,6 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 import spock.lang.Timeout
@@ -64,7 +63,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
       trace(0, 1) {
         span(0) {
           hasNoParent()
-          name HttpClientTracer.DEFAULT_SPAN_NAME
+          name "HTTP request"
           kind CLIENT
           errored true
           errorEvent(NullPointerException)

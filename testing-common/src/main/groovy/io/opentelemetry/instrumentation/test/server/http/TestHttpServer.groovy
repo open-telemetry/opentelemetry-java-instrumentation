@@ -5,28 +5,29 @@
 
 package io.opentelemetry.instrumentation.test.server.http
 
-import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.Tracer
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.HandlerList
+
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class TestHttpServer implements AutoCloseable {
 
@@ -248,7 +249,9 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final Span.Builder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
-        spanBuilder.setParent(BaseDecorator.extract(req, GETTER))
+        spanBuilder.setParent(
+          OpenTelemetry.getGlobalPropagators().getTextMapPropagator()
+            .extract(Context.root(), req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()
       }

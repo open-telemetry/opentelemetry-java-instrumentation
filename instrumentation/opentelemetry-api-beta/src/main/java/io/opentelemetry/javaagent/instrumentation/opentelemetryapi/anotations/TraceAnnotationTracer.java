@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.extension.auto.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
@@ -21,6 +23,23 @@ public class TraceAnnotationTracer extends BaseTracer {
   }
 
   private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
+
+  /**
+   * Creates new scoped context, based on the given context, with the given span.
+   *
+   * <p>Attaches new context to the request to avoid creating duplicate server spans.
+   */
+  public Scope startScope(
+      io.opentelemetry.api.trace.Span span,
+      io.opentelemetry.api.trace.Span.Kind kind,
+      Context context) {
+    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
+    Context newContext =
+        kind == io.opentelemetry.api.trace.Span.Kind.SERVER
+            ? context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span)
+            : context;
+    return newContext.makeCurrent();
+  }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method

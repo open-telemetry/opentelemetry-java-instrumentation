@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.test
 
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
 import net.bytebuddy.description.type.TypeDescription
@@ -40,7 +41,7 @@ class HelperInjectionTest extends Specification {
     then:
     isClassLoaded(helperClassName, emptyLoader.get())
     // injecting into emptyLoader should not load on agent's classloader
-    !isClassLoaded(helperClassName, Utils.getAgentClassLoader())
+    !isClassLoaded(helperClassName, AgentClassLoaderAccess.getAgentClassLoader())
 
     when: "references to emptyLoader are gone"
     emptyLoader.get().close() // cleanup

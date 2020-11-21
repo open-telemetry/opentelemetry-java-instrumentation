@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.tooling.HelperInjector
+import io.opentelemetry.javaagent.testing.common.HelperInjectorAccess
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 
@@ -15,7 +15,6 @@ class ResourceInjectionTest extends AgentTestRunner {
   def "resources injected to non-delegating classloader"() {
     setup:
     String resourceName = 'test-resources/test-resource.txt'
-    HelperInjector injector = new HelperInjector("test", [], [resourceName])
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 
     when:
@@ -26,7 +25,7 @@ class ResourceInjectionTest extends AgentTestRunner {
     when:
     URLClassLoader notInjectedLoader = new URLClassLoader(new URL[0], (ClassLoader) null)
 
-    injector.transform(null, null, emptyLoader.get(), null)
+    HelperInjectorAccess.injectResources(emptyLoader.get(), resourceName)
     resourceUrls = emptyLoader.get().getResources(resourceName)
 
     then:

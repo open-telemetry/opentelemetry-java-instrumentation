@@ -32,6 +32,7 @@ dependencies {
   implementation deps.bytebuddyagent
   implementation deps.slf4j
   implementation deps.testLogging
+  implementation deps.opentelemetryAutoAnnotations
 
   api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
   api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '4.9.0'
@@ -39,13 +40,6 @@ dependencies {
   //TODO replace with Servlet API?
   implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
-  compileOnly project(':javaagent-bootstrap')
-  implementation project(':javaagent-api')
-  implementation project(':instrumentation-api')
-  compileOnly(project(':javaagent-tooling')) {
-    // including :opentelemetry-sdk-shaded-for-testing above instead
-    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-  }
   api project(':utils:test-utils')
 
   annotationProcessor deps.autoservice
@@ -53,7 +47,6 @@ dependencies {
 
   api deps.groovy
 
-  testImplementation deps.opentelemetryAutoAnnotations
   testImplementation project(':instrumentation:external-annotations')
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'

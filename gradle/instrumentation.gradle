@@ -37,14 +37,11 @@ afterEvaluate {
     compileOnly deps.autoservice
     implementation deps.slf4j
 
-    testImplementation project(':instrumentation-api')
-    testImplementation project(':javaagent-api')
-    testImplementation project(':javaagent-tooling')
     testImplementation deps.opentelemetryApi
 
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
-    testImplementation deps.autoservice
+    testCompileOnly deps.autoservice
     testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers

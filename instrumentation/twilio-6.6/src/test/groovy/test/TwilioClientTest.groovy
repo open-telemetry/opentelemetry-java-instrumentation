@@ -5,8 +5,8 @@
 
 package test
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.util.concurrent.ListenableFuture
@@ -18,17 +18,16 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 
 class TwilioClientTest extends AgentTestRunner {
   final static String ACCOUNT_SID = "abc"
@@ -723,6 +722,6 @@ class TwilioClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 }
