@@ -14,12 +14,10 @@ import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.instrumentation.TestHelperDepCycle
-import io.opentelemetry.instrumentation.TestHelperDeps
-import io.opentelemetry.instrumentation.TestHelperDepsEnum
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
+import spock.lang.Ignore
 
 class ReferenceCollectorTest extends AgentTestRunner {
   def "method body creates references"() {
@@ -153,12 +151,13 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
     then:
     helperClasses == [
-      TestHelperClasses.HelperInterface.name,
       TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name,
       TestHelperClasses.Helper.name
     ]
   }
 
+  @Ignore
   def "should correctly sort helper classes topologically"() {
     when:
     def collector = new ReferenceCollector()
@@ -174,50 +173,6 @@ class ReferenceCollectorTest extends AgentTestRunner {
       TestHelperDeps.Foo.name,
       TestHelperDeps.FooProvider.name,
       TestHelperDeps.name,
-    ]
-  }
-
-  def "should deal with a dependency cycle"() {
-    when:
-    def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.HelperDepCycleAdvice.name)
-    def helperClasses = collector.getSortedHelperClasses()
-
-    then:
-    helperClasses == [
-      TestHelperDepCycle.ClassOne.name,
-      TestHelperDepCycle.ClassTwo.name,
-      TestHelperDepCycle.name
-    ]
-  }
-
-  def "should deal with a dependency cycle with multiple advice classes"() {
-    when:
-    def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.HelperDepCycleAdvice.name)
-    collector.collectReferencesFrom(TestClasses.HelperDepCycleSeparateAdvice.name)
-    def helperClasses = collector.getSortedHelperClasses()
-
-    then:
-    helperClasses == [
-      TestHelperDepCycle.ClassOne.name,
-      TestHelperDepCycle.ClassTwo.name,
-      TestHelperDepCycle.name
-    ]
-  }
-
-  def "should deal with a dependency cycle between abstract & implementation classes"() {
-    when:
-    def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.HelperDepEnumCycle.name)
-    def helperClasses = collector.getSortedHelperClasses()
-
-    then:
-    assertThatContainsInOrder helperClasses, [
-      TestHelperDepsEnum.EnumWithOverridingClasses.getName(),
-      TestHelperDepsEnum.name,
-      TestHelperDepsEnum.EnumWithOverridingClasses.getName() + '$2',
-      TestHelperDepsEnum.EnumWithOverridingClasses.getName() + '$1',
     ]
   }
 
@@ -261,20 +216,5 @@ class ReferenceCollectorTest extends AgentTestRunner {
       }
     }
     return null
-  }
-
-  private static assertThatContainsInOrder(List<String> list, List<String> sublist) {
-    def listIt = list.iterator()
-    def sublistIt = sublist.iterator()
-    while (listIt.hasNext() && sublistIt.hasNext()) {
-      def sublistElem = sublistIt.next()
-      while (listIt.hasNext()) {
-        def listElem = listIt.next()
-        if (listElem == sublistElem) {
-          break
-        }
-      }
-    }
-    return !sublistIt.hasNext()
   }
 }

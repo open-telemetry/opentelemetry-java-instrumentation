@@ -6,9 +6,6 @@
 package muzzle;
 
 import io.opentelemetry.instrumentation.TestHelperClasses.Helper;
-import io.opentelemetry.instrumentation.TestHelperDepCycle;
-import io.opentelemetry.instrumentation.TestHelperDeps;
-import io.opentelemetry.instrumentation.TestHelperDepsEnum;
 import net.bytebuddy.asm.Advice;
 
 public class TestClasses {
@@ -101,30 +98,6 @@ public class TestClasses {
   public static class HelperAdvice {
     public static void adviceMethod() {
       Helper h = new Helper();
-    }
-  }
-
-  public static class HelperDepsAdvice {
-    public static void adviceMethod() {
-      TestHelperDeps.INSTANCE.name();
-    }
-  }
-
-  public static class HelperDepCycleAdvice {
-    public static void adviceMethod() {
-      new TestHelperDepCycle();
-    }
-  }
-
-  public static class HelperDepCycleSeparateAdvice {
-    public static void adviceMethod() {
-      new TestHelperDepCycle.ClassOne();
-    }
-  }
-
-  public static class HelperDepEnumCycle {
-    public static void adviceMethod() {
-      new TestHelperDepsEnum().get();
     }
   }
 }

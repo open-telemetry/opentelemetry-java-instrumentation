@@ -8,12 +8,10 @@ package io.opentelemetry.javaagent.tooling.muzzle.collector;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
 
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graph;
+import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
-import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
+import com.google.common.graph.MutableGraph;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
@@ -31,8 +29,7 @@ import net.bytebuddy.jar.asm.ClassReader;
 
 public class ReferenceCollector {
   private final Map<String, Reference> references = new HashMap<>();
-  private final MutableValueGraph<String, DependencyType> helperDependencyGraph =
-      ValueGraphBuilder.directed().build();
+  private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Set<String> visitedClasses = new HashSet<>();
 
   /**
@@ -52,7 +49,7 @@ public class ReferenceCollector {
     Queue<String> instrumentationQueue = new ArrayDeque<>();
     instrumentationQueue.add(adviceClassName);
 
-    boolean isEntryPoint = true;
+    boolean isAdviceClass = true;
 
     while (!instrumentationQueue.isEmpty()) {
       String visitedClassName = instrumentationQueue.remove();
@@ -67,7 +64,7 @@ public class ReferenceCollector {
               visitedClassName)) {
 
         // only start from method bodies for the advice class (skips class/method references)
-        ReferenceCollectingClassVisitor cv = new ReferenceCollectingClassVisitor(isEntryPoint);
+        ReferenceCollectingClassVisitor cv = new ReferenceCollectingClassVisitor(isAdviceClass);
         ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -81,14 +78,15 @@ public class ReferenceCollector {
           }
           addReference(refClassName, reference);
         }
-        addDependencies(isEntryPoint, cv.getHelperClassDependencies());
+        addHelperSuperClasses(
+            isAdviceClass, cv.getClassName(), cv.getHelperClasses(), cv.getHelperSuperClasses());
 
       } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + visitedClassName, e);
       }
 
-      if (isEntryPoint) {
-        isEntryPoint = false;
+      if (isAdviceClass) {
+        isAdviceClass = false;
       }
     }
   }
@@ -101,62 +99,19 @@ public class ReferenceCollector {
     }
   }
 
-  private void addDependencies(
-      boolean isEntryPoint, ValueGraph<String, DependencyType> dependencies) {
-    for (EndpointPair<String> edge : dependencies.edges()) {
-      String helper = edge.nodeU();
-      String dependency = edge.nodeV();
-
-      if (isInstrumentationClass(helper) && isInstrumentationClass(dependency)) {
-        if (isEntryPoint) {
-          // for the advice class just add nodes for each used dependency
-          helperDependencyGraph.addNode(dependency);
-        } else {
-          DependencyType dependencyType = dependencies.edgeValue(helper, dependency);
-
-          if (!pathExists(dependency, helper)) {
-            // add edge between helpers if the reverse path does not exist; in case it exists it
-            // means we have a dependency cycle
-            helperDependencyGraph.putEdgeValue(helper, dependency, dependencyType);
-          } else if (directUsagePathExists(dependency, helper)
-              && dependencyType == DependencyType.EXTENDS) {
-            // if there's a dependency cycle between two classes, check if the already existing
-            // edge can be replaced: USES dependency type is weaker than EXTENDS
-            // the logic below makes sure that the base class/interface is always injected first
-            helperDependencyGraph.removeEdge(dependency, helper);
-            helperDependencyGraph.putEdgeValue(helper, dependency, dependencyType);
-          }
-        }
+  private void addHelperSuperClasses(
+      boolean isAdviceClass,
+      String className,
+      Set<String> helperClasses,
+      Set<String> helperSuperClasses) {
+    for (String helperClass : helperClasses) {
+      helperSuperClassGraph.addNode(helperClass);
+    }
+    if (!isAdviceClass) {
+      for (String helperSuperClass : helperSuperClasses) {
+        helperSuperClassGraph.putEdge(className, helperSuperClass);
       }
     }
-  }
-
-  // assuming a direct acyclic graph - this method prevents cycles from being added, so the
-  // assumption always holds
-  private boolean pathExists(String from, String to) {
-    if (!helperDependencyGraph.nodes().contains(from)) {
-      return false;
-    }
-
-    Queue<String> toVisit = new LinkedList<>();
-    toVisit.add(from);
-
-    while (!toVisit.isEmpty()) {
-      String node = toVisit.remove();
-      Set<String> successors = helperDependencyGraph.successors(node);
-      if (successors.contains(to)) {
-        return true;
-      } else {
-        toVisit.addAll(successors);
-      }
-    }
-
-    return false;
-  }
-
-  private boolean directUsagePathExists(String dependency, String helper) {
-    return helperDependencyGraph.edgeValueOrDefault(dependency, helper, null)
-        == DependencyType.USES;
   }
 
   public Map<String, Reference> getReferences() {
@@ -165,8 +120,7 @@ public class ReferenceCollector {
 
   // see https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
   public List<String> getSortedHelperClasses() {
-    MutableValueGraph<String, DependencyType> dependencyGraph =
-        Graphs.copyOf(Graphs.transpose(helperDependencyGraph));
+    MutableGraph<String> dependencyGraph = Graphs.copyOf(Graphs.transpose(helperSuperClassGraph));
     List<String> helperClasses = new ArrayList<>(dependencyGraph.nodes().size());
 
     Queue<String> helpersWithNoDeps = findAllHelperClassesWithoutDependencies(dependencyGraph);

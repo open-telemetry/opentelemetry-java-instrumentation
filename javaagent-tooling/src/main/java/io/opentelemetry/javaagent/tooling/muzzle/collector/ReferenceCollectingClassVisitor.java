@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
-import com.google.common.graph.MutableValueGraph;
-import com.google.common.graph.ValueGraph;
-import com.google.common.graph.ValueGraphBuilder;
+import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
+
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag;
@@ -17,9 +16,11 @@ import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
@@ -107,35 +108,44 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     return type;
   }
 
-  private final boolean skipClassReferenceGeneration;
+  private final boolean isAdviceClass;
   private final Map<String, Reference> references = new LinkedHashMap<>();
-  private final MutableValueGraph<String, DependencyType> helperClassDependencies =
-      ValueGraphBuilder.directed().build();
+  private final Set<String> helperClasses = new HashSet<>();
+  // helper super classes which are themselves also helpers
+  // this is needed for injecting the helper classes into the class loader in the correct order
+  private final Set<String> helperSuperClasses = new HashSet<>();
   private String refSourceClassName;
   private Type refSourceType;
 
-  ReferenceCollectingClassVisitor(boolean skipClassReferenceGeneration) {
+  ReferenceCollectingClassVisitor(boolean isAdviceClass) {
     super(Opcodes.ASM7);
-    this.skipClassReferenceGeneration = skipClassReferenceGeneration;
+    this.isAdviceClass = isAdviceClass;
   }
 
   Map<String, Reference> getReferences() {
     return references;
   }
 
-  ValueGraph<String, DependencyType> getHelperClassDependencies() {
-    return helperClassDependencies;
+  String getClassName() {
+    return refSourceClassName;
+  }
+
+  Set<String> getHelperClasses() {
+    return helperClasses;
+  }
+
+  Set<String> getHelperSuperClasses() {
+    return helperSuperClasses;
   }
 
   private void addExtendsReference(Reference ref) {
-    addReference(ref, DependencyType.EXTENDS);
+    addReference(ref);
+    if (isInstrumentationClass(ref.getClassName())) {
+      helperSuperClasses.add(ref.getClassName());
+    }
   }
 
   private void addReference(Reference ref) {
-    addReference(ref, DependencyType.USES);
-  }
-
-  private void addReference(Reference ref, DependencyType dependencyType) {
     if (!ref.getClassName().startsWith("java.")) {
       Reference reference = references.get(ref.getClassName());
       if (null == reference) {
@@ -143,19 +153,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       } else {
         references.put(ref.getClassName(), reference.merge(ref));
       }
-      addDependency(ref.getClassName(), dependencyType);
     }
-  }
-
-  private void addDependency(String className, DependencyType dependencyType) {
-    // do not add dependency on self
-    if (!className.equals(refSourceClassName)) {
-      DependencyType previous =
-          helperClassDependencies.edgeValueOrDefault(refSourceClassName, className, null);
-      helperClassDependencies.putEdgeValue(
-          refSourceClassName,
-          className,
-          previous == null ? dependencyType : previous.max(dependencyType));
+    if (isInstrumentationClass(ref.getClassName())) {
+      helperClasses.add(ref.getClassName());
     }
   }
 
@@ -171,7 +171,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     refSourceType = Type.getType("L" + name + ";");
 
     // class references are not generated for advice classes, only for helper classes
-    if (!skipClassReferenceGeneration) {
+    if (!isAdviceClass) {
       String fixedSuperClassName = Utils.getClassName(superName);
 
       addExtendsReference(
@@ -214,7 +214,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       int access, String name, String descriptor, String signature, String[] exceptions) {
 
     // declared method references are not generated for advice classes, only for helper classes
-    if (!skipClassReferenceGeneration) {
+    if (!isAdviceClass) {
       Type methodType = Type.getMethodType(descriptor);
 
       Flag visibilityFlag = computeVisibilityFlag(access);
