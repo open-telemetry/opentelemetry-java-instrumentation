@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.grizzly.client;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
@@ -12,11 +12,11 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GrizzlyClientTracer extends HttpClientTracer<Request, Request, Response> {
+public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Response> {
 
-  private static final GrizzlyClientTracer TRACER = new GrizzlyClientTracer();
+  private static final AsyncHttpClientTracer TRACER = new AsyncHttpClientTracer();
 
-  public static GrizzlyClientTracer tracer() {
+  public static AsyncHttpClientTracer tracer() {
     return TRACER;
   }
 
@@ -47,11 +47,11 @@ public class GrizzlyClientTracer extends HttpClientTracer<Request, Request, Resp
 
   @Override
   protected Setter<Request> getSetter() {
-    return GrizzlyInjectAdapter.SETTER;
+    return AsyncHttpClientInjectAdapter.SETTER;
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.grizzly-client";
+    return "io.opentelemetry.javaagent.async-http-client";
   }
 }

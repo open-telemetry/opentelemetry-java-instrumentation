@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.grizzly.client;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,7 +16,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class GrizzlyClientRequestInstrumentation implements TypeInstrumentation {
+final class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
@@ -30,6 +30,6 @@ final class GrizzlyClientRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.ning.http.client.Request")))
             .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
-        GrizzlyClientRequestAdvice.class.getName());
+        RequestAdvice.class.getName());
   }
 }

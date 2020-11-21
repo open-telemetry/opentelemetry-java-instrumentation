@@ -217,6 +217,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
+| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
@@ -228,11 +229,10 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default, see below) |
-| [Grizzly Client](https://github.com/javaee/grizzly-ahc)                                                                               | 1.9+                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
-| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                      | 3.270.0+                                                                                                                              |
+| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                     | 3.270.0+                                                                                                                              |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
@@ -256,7 +256,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
-| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                            | 0.9+ (not including 1.0)       |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+ (not including 1.0)       |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
