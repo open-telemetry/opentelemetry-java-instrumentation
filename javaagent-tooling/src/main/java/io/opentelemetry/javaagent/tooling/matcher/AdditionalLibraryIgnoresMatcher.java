@@ -102,7 +102,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       }
 
       if (name.startsWith("org.springframework.boot.")) {
-        return !instrumentedSpringBootClasses(name);
+        return !instrumentedSpringBootClasses(name)
+            && !name.startsWith("org.springframework.boot.web.filter.")
+            && !name.startsWith("org.springframework.boot.web.servlet.");
       }
 
       if (name.startsWith("org.springframework.cglib.")) {
@@ -321,11 +323,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext",
           "org.springframework.boot.web.embedded.tomcat.TomcatWebServer$",
           "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader",
-          "org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$",
-          "org.springframework.boot.web.filter.OrderedCharacterEncodingFilter",
-          "org.springframework.boot.web.filter.OrderedHiddenHttpMethodFilter",
-          "org.springframework.boot.web.filter.OrderedHttpPutFormContentFilter",
-          "org.springframework.boot.web.filter.OrderedRequestContextFilter");
+          "org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$");
 
   private static String outerClassName(final String name) {
     int separator = name.indexOf('$');
