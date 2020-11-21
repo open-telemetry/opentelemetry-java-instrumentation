@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.test.server;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 import java.util.concurrent.Callable;
 
 /**

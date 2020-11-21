@@ -12,6 +12,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -19,6 +20,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.api.trace.TraceStateBuilder;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
@@ -174,7 +176,7 @@ public final class AgentTestingExporterAccess {
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {
-    Attributes.Builder converted = Attributes.builder();
+    AttributesBuilder converted = Attributes.builder();
     for (KeyValue attribute : attributes) {
       String key = attribute.getKey();
       AnyValue value = attribute.getValue();
@@ -274,7 +276,7 @@ public final class AgentTestingExporterAccess {
     if (traceStateHeader.isEmpty()) {
       return TraceState.getDefault();
     }
-    TraceState.Builder traceStateBuilder = TraceState.builder();
+    TraceStateBuilder traceStateBuilder = TraceState.builder();
     String[] listMembers = TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN.split(traceStateHeader);
     // Iterate in reverse order because when call builder set the elements is added in the
     // front of the list.
