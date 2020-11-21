@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -36,7 +36,7 @@ public class WithSpanAspect {
     this.tracer = tracer;
   }
 
-  @Around("@annotation(io.opentelemetry.extension.auto.annotations.WithSpan)")
+  @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
     MethodSignature signature = (MethodSignature) pjp.getSignature();
     Method method = signature.getMethod();

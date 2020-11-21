@@ -16,6 +16,6 @@ public class TraceAnnotationTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.trace-annotation";
+    return "io.opentelemetry.javaagent.external-annotation";
   }
 }

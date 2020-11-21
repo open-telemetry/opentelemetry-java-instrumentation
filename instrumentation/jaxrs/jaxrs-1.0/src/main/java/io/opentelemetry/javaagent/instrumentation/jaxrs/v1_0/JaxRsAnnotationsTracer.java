@@ -184,6 +184,6 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jaxrs";
+    return "io.opentelemetry.javaagent.jaxrs";
   }
 }

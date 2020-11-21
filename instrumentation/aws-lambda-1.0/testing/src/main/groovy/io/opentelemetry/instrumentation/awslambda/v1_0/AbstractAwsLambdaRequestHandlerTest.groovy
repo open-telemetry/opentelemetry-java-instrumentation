@@ -5,17 +5,17 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
-
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.context.propagation.DefaultContextPropagators
-import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.api.trace.propagation.HttpTraceContext
+import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
+import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
 
@@ -25,7 +25,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
       .addTextMapPropagator(HttpTraceContext.instance)
       .addTextMapPropagator(AwsXRayPropagator.instance)
       .build()
-    OpenTelemetry.setGlobalPropagators(propagators)
+    AgentTestRunner.setGlobalPropagators(propagators)
   }
 
   protected static String doHandleRequest(String input, Context context) {

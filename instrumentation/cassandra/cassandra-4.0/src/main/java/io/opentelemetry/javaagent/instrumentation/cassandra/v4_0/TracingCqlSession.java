@@ -165,8 +165,8 @@ public class TracingCqlSession implements CqlSession {
 
   @Override
   @Nullable
-  public <RequestT extends Request, ResultT> ResultT execute(
-      @NonNull RequestT request, @NonNull GenericType<ResultT> resultType) {
+  public <REQUEST extends Request, RESULT> RESULT execute(
+      @NonNull REQUEST request, @NonNull GenericType<RESULT> resultType) {
     return session.execute(request, resultType);
   }
 

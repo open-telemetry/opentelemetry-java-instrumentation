@@ -148,16 +148,12 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 #### Propagator
 
-The propagator controls which distributed tracing header format is used.
+The propagators determine which distributed tracing header formats are used, and which baggage propagation header formats are used.
 
-If set to a comma-separated list of the values, the multi-propagator is used. The multi-propagator attempts
-to extract the context from incoming requests using each of the configured propagator formats (in order),
-stopping after the first successful context extraction. The multi-propagator injects the context into
-outgoing requests using all the configured propagator formats.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
-| otel.propagators | OTEL_PROPAGATORS     | Default is `tracecontext` (W3C). Other supported values are `b3`, `b3single`, `jaeger`, `ottracer`, and `xray`. |
+| otel.propagators | OTEL_PROPAGATORS     | The propagators to be used. Use a comma-separated list for multiple propagators. Supported propagators are `tracecontext`, `baggage`, `b3`, `b3multi`, `jaeger`, `ottracer`, and `xray`. Default is `tracecontext,baggage` (W3C). |
 
 #### OpenTelemetry Resource
 
@@ -221,6 +217,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
+| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
@@ -232,11 +229,10 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default, see below) |
-| [Grizzly Client](https://github.com/javaee/grizzly-ahc)                                                                               | 1.9+                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
-| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                      | 3.270.0+                                                                                                                              |
+| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                     | 3.270.0+                                                                                                                              |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
@@ -260,7 +256,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
-| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                            | 0.9+ (not including 1.0)       |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+ (not including 1.0)       |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
@@ -283,7 +279,6 @@ Because the automatic instrumentation runs in a different classpath than the ins
 Some instrumentations can produce too many spans and make traces very noisy.
 For this reason, the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
-- `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
@@ -323,7 +318,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>0.7.0</version>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -332,7 +327,7 @@ You'll need to add a dependency on the `opentelemetry-api` library to get starte
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-api:0.7.0')
+    compile('io.opentelemetry:opentelemetry-api:0.11.0')
 }
 ```
 
@@ -371,8 +366,8 @@ You'll also need to add a dependency for this annotation:
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-extension-auto-annotations</artifactId>
-      <version>0.7.0</version>
+      <artifactId>opentelemetry-extension-annotations</artifactId>
+      <version>0.11.0</version>
     </dependency>
   </dependencies>
 ```
@@ -381,7 +376,7 @@ You'll also need to add a dependency for this annotation:
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-extension-auto-annotations:0.7.0')
+    compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
 }
 ```
 

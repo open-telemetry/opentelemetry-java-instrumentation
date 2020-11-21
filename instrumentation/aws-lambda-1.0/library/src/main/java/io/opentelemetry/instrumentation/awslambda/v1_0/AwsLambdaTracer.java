@@ -9,6 +9,7 @@ import com.amazonaws.serverless.proxy.model.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
@@ -50,8 +51,8 @@ public class AwsLambdaTracer extends BaseTracer {
     return parentContext;
   }
 
-  Span.Builder createSpan(Context context, @Nullable Headers headers) {
-    Span.Builder span = tracer.spanBuilder(context.getFunctionName());
+  SpanBuilder createSpan(Context context, @Nullable Headers headers) {
+    SpanBuilder span = tracer.spanBuilder(context.getFunctionName());
     span.setAttribute(SemanticAttributes.FAAS_EXECUTION, context.getAwsRequestId());
     io.opentelemetry.context.Context parent = parent(headers);
     if (parent != null) {

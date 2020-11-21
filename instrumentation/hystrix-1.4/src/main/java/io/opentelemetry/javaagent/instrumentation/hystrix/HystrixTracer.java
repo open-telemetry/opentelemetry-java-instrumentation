@@ -25,7 +25,7 @@ public class HystrixTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.hystrix";
+    return "io.opentelemetry.javaagent.hystrix";
   }
 
   public void onCommand(Span span, HystrixInvokableInfo<?> command, String methodName) {

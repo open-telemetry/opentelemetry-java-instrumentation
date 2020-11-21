@@ -42,9 +42,11 @@ abstract class InstrumentationTestRunner extends Specification {
     //  currently checking against no-op implementation so that it won't override aws-lambda
     //  propagator configuration
     if (OpenTelemetry.getGlobalPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
-      OpenTelemetry.setGlobalPropagators(DefaultContextPropagators.builder()
-        .addTextMapPropagator(HttpTraceContext.getInstance())
-        .build())
+      // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
+      AgentTestRunner.setGlobalPropagators(
+            DefaultContextPropagators.builder()
+              .addTextMapPropagator(HttpTraceContext.getInstance())
+              .build())
     }
     def delegate = SimpleSpanProcessor.builder(testExporter).build()
     OpenTelemetrySdk.getGlobalTracerManagement()

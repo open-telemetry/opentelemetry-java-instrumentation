@@ -6,12 +6,9 @@
 package io.opentelemetry.instrumentation.gradle.bytebuddy;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask;
-import net.bytebuddy.build.gradle.PluginArgument;
 import net.bytebuddy.build.gradle.Transformation;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -42,13 +39,10 @@ public class ByteBuddyPluginConfigurator {
   private final Project project;
   private final SourceSet sourceSet;
   private final String pluginClassName;
-  private final List<Iterable<File>> inputClasspath;
+  private final Iterable<File> inputClasspath;
 
   public ByteBuddyPluginConfigurator(
-      Project project,
-      SourceSet sourceSet,
-      String pluginClassName,
-      List<Iterable<File>> inputClasspath) {
+      Project project, SourceSet sourceSet, String pluginClassName, Iterable<File> inputClasspath) {
     this.project = project;
     this.sourceSet = sourceSet;
     this.pluginClassName = pluginClassName;
@@ -87,13 +81,9 @@ public class ByteBuddyPluginConfigurator {
     task.setTarget(classesDirectory);
     task.setClassPath(compileTask.getClasspath());
 
-    List<Iterable<File>> classPath = new ArrayList<>();
-    classPath.add(Collections.singletonList(rawClassesDirectory));
-    classPath.addAll(inputClasspath);
-
     task.dependsOn(compileTask);
 
-    task.getTransformations().add(createTransformation(classPath, pluginClassName));
+    task.getTransformations().add(createTransformation(inputClasspath, pluginClassName));
     return task;
   }
 
@@ -120,19 +110,9 @@ public class ByteBuddyPluginConfigurator {
   }
 
   private static Transformation createTransformation(
-      List<Iterable<File>> classPath, String pluginClassName) {
-    Transformation transformation = new Transformation();
+      Iterable<File> classPath, String pluginClassName) {
+    Transformation transformation = new ClasspathTransformation(classPath, pluginClassName);
     transformation.setPlugin(ClasspathByteBuddyPlugin.class);
-    addArgument(transformation, classPath);
-    addArgument(transformation, pluginClassName);
     return transformation;
-  }
-
-  private static void addArgument(Transformation transformation, Object value) {
-    List<PluginArgument> arguments = transformation.getArguments();
-    PluginArgument argument = new PluginArgument();
-    argument.setIndex(arguments.size());
-    argument.setValue(value);
-    arguments.add(argument);
   }
 }

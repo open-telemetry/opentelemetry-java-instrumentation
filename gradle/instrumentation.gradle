@@ -48,11 +48,9 @@ afterEvaluate {
   }
 
   def pluginName = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
-  new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName, [
-    project(':javaagent-tooling').configurations.instrumentationMuzzle.files,
-    configurations.runtimeClasspath.files,
-    sourceSets.main.output.files
-  ]).configure()
+  new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName,
+    project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath
+  ).configure()
 }
 
 configurations {

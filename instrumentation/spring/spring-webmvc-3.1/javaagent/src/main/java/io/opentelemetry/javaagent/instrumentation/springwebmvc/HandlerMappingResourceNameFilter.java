@@ -12,33 +12,44 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.io.IOException;
 import java.util.List;
+import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.Ordered;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 
-public class HandlerMappingResourceNameFilter extends OncePerRequestFilter implements Ordered {
+public class HandlerMappingResourceNameFilter implements Filter, Ordered {
   private volatile List<HandlerMapping> handlerMappings;
 
   @Override
-  protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+  public void init(FilterConfig filterConfig) {}
+
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
     Context context = Context.current();
     Span serverSpan = BaseTracer.getCurrentServerSpan(context);
 
     if (handlerMappings != null && serverSpan != null) {
       try {
-        if (findMapping(request)) {
+        if (findMapping((HttpServletRequest) request)) {
+
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          tracer().onRequest(context, serverSpan, request);
+          tracer().onRequest(context, serverSpan, (HttpServletRequest) request);
         }
       } catch (Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore
@@ -47,6 +58,9 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
 
     filterChain.doFilter(request, response);
   }
+
+  @Override
+  public void destroy() {}
 
   /**
    * When a HandlerMapping matches a request, it sets HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE

@@ -24,7 +24,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session,
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.cassandra";
+    return "io.opentelemetry.javaagent.cassandra";
   }
 
   @Override

@@ -24,6 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -38,7 +39,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   private Span spanOnExchangeBegin(Route route, Exchange exchange, SpanDecorator sd) {
     Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
     String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
-    Span.Builder builder = CamelTracer.TRACER.spanBuilder(name);
+    SpanBuilder builder = CamelTracer.TRACER.spanBuilder(name);
     if (!activeSpan.getSpanContext().isValid()) {
       // root operation, set kind, otherwise - INTERNAL
       builder.setSpanKind(sd.getReceiverSpanKind());

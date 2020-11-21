@@ -28,8 +28,14 @@ import net.bytebuddy.dynamic.DynamicType;
 public class ClasspathByteBuddyPlugin implements Plugin {
   private final Plugin delegate;
 
-  public ClasspathByteBuddyPlugin(List<Iterable<File>> classPath, String className) {
-    this.delegate = pluginFromClassPath(classPath, className);
+  /**
+   * classPath and className argument resolvers are explicitly added by {@link
+   * ClasspathTransformation}, sourceDirectory is automatically resolved as by default any {@link
+   * File} argument is resolved to source directory.
+   */
+  public ClasspathByteBuddyPlugin(
+      Iterable<File> classPath, File sourceDirectory, String className) {
+    this.delegate = pluginFromClassPath(classPath, sourceDirectory, className);
   }
 
   @Override
@@ -51,9 +57,10 @@ public class ClasspathByteBuddyPlugin implements Plugin {
     return delegate.matches(typeDefinitions);
   }
 
-  private static Plugin pluginFromClassPath(List<Iterable<File>> classPath, String className) {
+  private static Plugin pluginFromClassPath(
+      Iterable<File> classPath, File sourceDirectory, String className) {
     try {
-      ClassLoader classLoader = classLoaderFromClassPath(classPath);
+      ClassLoader classLoader = classLoaderFromClassPath(classPath, sourceDirectory);
       Class<?> clazz = Class.forName(className, false, classLoader);
       return (Plugin) clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
@@ -61,20 +68,23 @@ public class ClasspathByteBuddyPlugin implements Plugin {
     }
   }
 
-  private static ClassLoader classLoaderFromClassPath(List<Iterable<File>> classPath) {
+  private static ClassLoader classLoaderFromClassPath(
+      Iterable<File> classPath, File sourceDirectory) {
     List<URL> urls = new ArrayList<>();
+    urls.add(fileAsUrl(sourceDirectory));
 
-    for (Iterable<File> fileList : classPath) {
-      for (File file : fileList) {
-        try {
-          URL url = file.toURI().toURL();
-          urls.add(url);
-        } catch (MalformedURLException e) {
-          throw new RuntimeException("Cannot resolve " + file + " as URL", e);
-        }
-      }
+    for (File file : classPath) {
+      urls.add(fileAsUrl(file));
     }
 
     return new URLClassLoader(urls.toArray(new URL[0]), ByteBuddy.class.getClassLoader());
+  }
+
+  private static URL fileAsUrl(File file) {
+    try {
+      return file.toURI().toURL();
+    } catch (MalformedURLException e) {
+      throw new RuntimeException("Cannot resolve " + file + " as URL", e);
+    }
   }
 }

@@ -54,6 +54,6 @@ public class HttpUrlConnectionTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.http-url-connection";
+    return "io.opentelemetry.javaagent.http-url-connection";
   }
 }

@@ -16,13 +16,13 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import ch.qos.logback.classic.Level
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -120,19 +120,15 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     false
   }
 
+  boolean testErrorBody() {
+    return true
+  }
+
   boolean testExceptionBody() {
     true
   }
 
   boolean testException() {
-    true
-  }
-
-  boolean testRedirect() {
-    true
-  }
-
-  boolean testError() {
     true
   }
 
@@ -286,7 +282,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test redirect"() {
     setup:
-    assumeTrue(testRedirect())
     def request = request(REDIRECT, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -306,13 +301,14 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test error"() {
     setup:
-    assumeTrue(testError())
     def request = request(ERROR, method, body).build()
     def response = client.newCall(request).execute()
 
     expect:
     response.code() == ERROR.status
-    response.body().string() == ERROR.body
+    if (testErrorBody()) {
+      response.body().string() == ERROR.body
+    }
 
     and:
     assertTheTraces(1, null, null, method, ERROR, null, response)

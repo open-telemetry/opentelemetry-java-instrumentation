@@ -54,7 +54,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.jedis";
+    return "io.opentelemetry.javaagent.jedis";
   }
 
   public static final class CommandWithArgs {

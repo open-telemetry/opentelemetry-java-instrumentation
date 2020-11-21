@@ -24,8 +24,8 @@ dependencies {
   implementation "io.grpc:grpc-netty-shaded:1.32.1"
   implementation "io.grpc:grpc-protobuf:1.32.1"
   implementation "io.grpc:grpc-stub:1.32.1"
-  implementation "io.opentelemetry:opentelemetry-proto:0.10.0"
-  implementation "io.opentelemetry:opentelemetry-extension-auto-annotations:0.10.0"
+  implementation "io.opentelemetry:opentelemetry-proto:0.11.0"
+  implementation "io.opentelemetry:opentelemetry-extension-annotations:0.11.0"
   implementation "org.apache.logging.log4j:log4j-core"
 
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl")

@@ -5,6 +5,9 @@ on:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -23,7 +26,7 @@ jobs:
           job-id: jdk11
 
       - name: Build
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -68,7 +71,7 @@ jobs:
           job-id: jdk${{ matrix.java }}
 
       - name: Test
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -103,7 +106,7 @@ jobs:
           job-id: latestDepTest
 
       - name: Test
-        uses: nick-invision/retry@v2.1.0
+        uses: nick-invision/retry@v2.2.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -149,7 +152,6 @@ jobs:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
         run: ./gradlew snapshot --stacktrace
-
 
   issue:
     name: Open issue on failure

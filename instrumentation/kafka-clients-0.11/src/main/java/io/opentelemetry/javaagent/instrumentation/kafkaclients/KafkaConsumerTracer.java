@@ -32,7 +32,7 @@ public class KafkaConsumerTracer extends BaseTracer {
             .spanBuilder(spanNameOnConsume(record))
             .setSpanKind(CONSUMER)
             .setParent(extractParent(record))
-            .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(now))
+            .setStartTimestamp(now, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
@@ -78,6 +78,6 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.kafka-clients";
+    return "io.opentelemetry.javaagent.kafka-clients";
   }
 }

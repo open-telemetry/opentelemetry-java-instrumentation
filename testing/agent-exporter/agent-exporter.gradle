@@ -25,7 +25,7 @@ dependencies {
   implementation project(':instrumentation:java-classloader')
 
   // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
-  implementation project(':instrumentation:opentelemetry-api-beta')
+  implementation project(':instrumentation:opentelemetry-api-1.0')
 }
 
 jar.enabled = false
