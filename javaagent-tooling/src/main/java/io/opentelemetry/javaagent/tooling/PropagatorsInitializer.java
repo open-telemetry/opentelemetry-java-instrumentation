@@ -9,14 +9,18 @@ import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.HttpTraceContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extension.trace.propagation.OtTracerPropagator;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -59,7 +63,7 @@ public class PropagatorsInitializer {
     if (propagatorIds.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      OpenTelemetry.setGlobalPropagators(
+      setGlobalPropagators(
           DefaultContextPropagators.builder()
               .addTextMapPropagator(HttpTraceContext.getInstance())
               .addTextMapPropagator(W3CBaggagePropagator.getInstance())
@@ -86,7 +90,32 @@ public class PropagatorsInitializer {
       propagatorsBuilder.addTextMapPropagator(propagators.get(0));
     }
     // Register it in the global propagators:
-    OpenTelemetry.setGlobalPropagators(propagatorsBuilder.build());
+    setGlobalPropagators(propagatorsBuilder.build());
+  }
+
+  // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
+  public static void setGlobalPropagators(ContextPropagators propagators) {
+    OpenTelemetry.set(
+        OpenTelemetrySdk.builder()
+            .setResource(OpenTelemetrySdk.get().getResource())
+            .setClock(OpenTelemetrySdk.get().getClock())
+            .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
+            .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
+            .setPropagators(propagators)
+            .build());
+  }
+
+  private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
+    if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
+      return tracerProvider;
+    }
+    try {
+      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate");
+      unobfuscate.setAccessible(true);
+      return (TracerProvider) unobfuscate.invoke(tracerProvider);
+    } catch (Throwable t) {
+      return tracerProvider;
+    }
   }
 
   static class MultiPropagator implements TextMapPropagator {
