@@ -1,0 +1,6 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  testImplementation project(':testing-common')
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+}
