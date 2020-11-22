@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -26,14 +25,12 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
-    Span span = Span.current();
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    return span.getSpanContext().isValid()
-        // TODO Workaround for
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-        && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
+    // TODO Workaround for
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
+    return !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
         // Don't instrument the executor's own runnables.  These runnables may never return until
         // netty shuts down.
         && (enclosingClass == null
