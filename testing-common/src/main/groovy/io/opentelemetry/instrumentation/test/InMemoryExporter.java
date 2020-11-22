@@ -12,12 +12,7 @@ import com.google.common.collect.TreeTraverser;
 import io.opentelemetry.api.common.AttributeConsumer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.trace.ReadWriteSpan;
-import io.opentelemetry.sdk.trace.ReadableSpan;
-import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +27,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class InMemoryExporter implements SpanProcessor {
+public class InMemoryExporter {
 
   private static final Logger log = LoggerFactory.getLogger(InMemoryExporter.class);
 
@@ -41,27 +36,6 @@ public class InMemoryExporter implements SpanProcessor {
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
 
   private volatile boolean forceFlushCalled;
-
-  @Override
-  public void onStart(Context context, ReadWriteSpan readWriteSpan) {
-    SpanData sd = readWriteSpan.toSpanData();
-    log.debug(
-        ">>>{} SPAN START: {} id={} traceid={} parent={}, library={}",
-        sd.getStartEpochNanos(),
-        sd.getName(),
-        sd.getSpanId(),
-        sd.getTraceId(),
-        sd.getParentSpanId(),
-        sd.getInstrumentationLibraryInfo());
-  }
-
-  @Override
-  public boolean isStartRequired() {
-    return true;
-  }
-
-  @Override
-  public void onEnd(ReadableSpan readableSpan) {}
 
   private String printSpanAttributes(SpanData sd) {
     final StringBuilder attributes = new StringBuilder();
@@ -74,11 +48,6 @@ public class InMemoryExporter implements SpanProcessor {
               }
             });
     return attributes.toString();
-  }
-
-  @Override
-  public boolean isEndRequired() {
-    return true;
   }
 
   public List<List<SpanData>> getTraces() {
@@ -144,17 +113,6 @@ public class InMemoryExporter implements SpanProcessor {
 
   public void clear() {
     AgentTestingExporterAccess.reset();
-  }
-
-  @Override
-  public CompletableResultCode shutdown() {
-    return CompletableResultCode.ofSuccess();
-  }
-
-  @Override
-  public CompletableResultCode forceFlush() {
-    forceFlushCalled = true;
-    return CompletableResultCode.ofSuccess();
   }
 
   public boolean forceFlushCalled() {
