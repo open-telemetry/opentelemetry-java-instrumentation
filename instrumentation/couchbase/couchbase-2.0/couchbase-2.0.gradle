@@ -26,7 +26,7 @@ muzzle {
 }
 
 dependencies {
-  implementation project(':instrumentation:rxjava-1.0')
+  implementation project(':instrumentation:rxjava-1.0:library')
 
   library group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 
