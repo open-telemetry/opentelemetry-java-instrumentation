@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements AgentTestTrait {
 
-  class TestRequestHandler implements RequestHandler<SQSEvent, Void> {
+  static class TestRequestHandler implements RequestHandler<SQSEvent, Void> {
     @Override
     Void handleRequest(SQSEvent input, Context context) {
       return null

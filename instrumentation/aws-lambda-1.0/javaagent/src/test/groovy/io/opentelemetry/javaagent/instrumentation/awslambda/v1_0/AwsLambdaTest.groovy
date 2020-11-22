@@ -16,7 +16,7 @@ class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements Agent
     assert testWriter.forceFlushCalled()
   }
 
-  class TestRequestHandler implements RequestHandler<String, String> {
+  static class TestRequestHandler implements RequestHandler<String, String> {
     @Override
     String handleRequest(String input, Context context) {
       return doHandleRequest(input, context)

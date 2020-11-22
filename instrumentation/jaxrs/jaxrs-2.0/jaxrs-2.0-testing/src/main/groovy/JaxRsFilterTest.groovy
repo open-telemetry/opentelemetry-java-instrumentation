@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
+
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.ws.rs.container.ContainerRequestContext
@@ -120,7 +121,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
   }
 
   @Provider
-  class SimpleRequestFilter implements ContainerRequestFilter {
+  static class SimpleRequestFilter implements ContainerRequestFilter {
     boolean abort = false
 
     @Override
@@ -137,7 +138,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
 
   @Provider
   @PreMatching
-  class PrematchRequestFilter implements ContainerRequestFilter {
+  static class PrematchRequestFilter implements ContainerRequestFilter {
     boolean abort = false
 
     @Override

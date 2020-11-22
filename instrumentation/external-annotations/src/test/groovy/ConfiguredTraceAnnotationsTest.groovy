@@ -73,7 +73,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
   }
 
-  class AnnotationTracedCallable implements Callable<String> {
+  static class AnnotationTracedCallable implements Callable<String> {
     @OuterClass.InterestingMethod
     @Override
     String call() throws Exception {

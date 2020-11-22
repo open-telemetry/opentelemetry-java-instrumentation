@@ -173,13 +173,13 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
   }
 
   @Path("/abstract")
-  abstract class AbstractClassWithPath implements Jax {
+  static abstract class AbstractClassWithPath implements Jax {
     @PUT
     abstract void call()
   }
 
   @Path("child")
-  class ChildClassWithPath extends AbstractClassWithPath {
+  static class ChildClassWithPath extends AbstractClassWithPath {
     @Path("call")
     @POST
     void call() {
