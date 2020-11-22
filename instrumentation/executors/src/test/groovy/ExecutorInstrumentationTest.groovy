@@ -27,7 +27,7 @@ import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+    it.setProperty("otel.instrumentation.executors.include", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
   }
 
   def cleanupSpec() {
