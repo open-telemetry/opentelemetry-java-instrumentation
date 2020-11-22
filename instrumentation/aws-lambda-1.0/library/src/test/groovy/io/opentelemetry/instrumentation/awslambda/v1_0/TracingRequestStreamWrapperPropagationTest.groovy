@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
+
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,16 +14,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.DefaultContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
-
-import java.nio.charset.Charset
-
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecification implements InstrumentationTestTrait {
 
@@ -53,7 +52,7 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
   TracingRequestStreamWrapper wrapper
 
   def childSetup() {
-    AgentTestRunner.setGlobalPropagators(DefaultContextPropagators.builder()
+    InstrumentationTestRunner.setGlobalPropagators(DefaultContextPropagators.builder()
       .addTextMapPropagator(B3Propagator.getInstance()).build())
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapperPropagationTest\$TestRequestHandler::handleRequest")
     TracingRequestStreamWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
@@ -67,12 +66,12 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
   def "handler traced with trace propagation"() {
     when:
     String content =
-      "{"+
-        "\"multiValueHeaders\" : {"+
-          "\"X-B3-TraceId\": [\"4fd0b6131f19f39af59518d127b0cafe\"], \"X-B3-SpanId\": [\"0000000000000456\"], \"X-B3-Sampled\": [\"true\"]"+
-        "},"+
-        "\"body\" : \"hello\""+
-      "}"
+      "{" +
+        "\"multiValueHeaders\" : {" +
+        "\"X-B3-TraceId\": [\"4fd0b6131f19f39af59518d127b0cafe\"], \"X-B3-SpanId\": [\"0000000000000456\"], \"X-B3-Sampled\": [\"true\"]" +
+        "}," +
+        "\"body\" : \"hello\"" +
+        "}"
     def context = Mock(Context)
     context.getFunctionName() >> "my_function"
     context.getAwsRequestId() >> "1-22-333"
@@ -100,12 +99,12 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
   def "handler traced with exception and trace propagation"() {
     when:
     String content =
-      "{"+
-        "\"multiValueHeaders\" : {"+
-          "\"X-B3-TraceId\": [\"4fd0b6131f19f39af59518d127b0cafe\"], \"X-B3-SpanId\": [\"0000000000000456\"], \"X-B3-Sampled\": [\"true\"]"+
-        "},"+
-        "\"body\" : \"bye\""+
-      "}"
+      "{" +
+        "\"multiValueHeaders\" : {" +
+        "\"X-B3-TraceId\": [\"4fd0b6131f19f39af59518d127b0cafe\"], \"X-B3-SpanId\": [\"0000000000000456\"], \"X-B3-Sampled\": [\"true\"]" +
+        "}," +
+        "\"body\" : \"bye\"" +
+        "}"
     def context = Mock(Context)
     context.getFunctionName() >> "my_function"
     context.getAwsRequestId() >> "1-22-333"

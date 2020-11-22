@@ -16,16 +16,10 @@ import groovy.transform.stc.SimpleType;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.api.trace.propagation.HttpTraceContext;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -76,21 +70,6 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new InMemoryExporter();
-    // TODO this is probably temporary until default propagators are supplied by SDK
-    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-    //  currently checking against no-op implementation so that it won't override aws-lambda
-    //  propagator configuration
-    if (OpenTelemetry.getGlobalPropagators()
-        .getTextMapPropagator()
-        .getClass()
-        .getSimpleName()
-        .equals("NoopTextMapPropagator")) {
-      // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-      setGlobalPropagators(
-          DefaultContextPropagators.builder()
-              .addTextMapPropagator(HttpTraceContext.getInstance())
-              .build());
-    }
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 
@@ -196,30 +175,5 @@ public abstract class AgentTestRunner extends Specification {
       }
     }
     return className;
-  }
-
-  // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-  public static void setGlobalPropagators(ContextPropagators propagators) {
-    OpenTelemetry.set(
-        OpenTelemetrySdk.builder()
-            .setResource(OpenTelemetrySdk.get().getResource())
-            .setClock(OpenTelemetrySdk.get().getClock())
-            .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
-            .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
-            .setPropagators(propagators)
-            .build());
-  }
-
-  private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
-    if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
-      return tracerProvider;
-    }
-    try {
-      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate");
-      unobfuscate.setAccessible(true);
-      return (TracerProvider) unobfuscate.invoke(tracerProvider);
-    } catch (Throwable t) {
-      return tracerProvider;
-    }
   }
 }
