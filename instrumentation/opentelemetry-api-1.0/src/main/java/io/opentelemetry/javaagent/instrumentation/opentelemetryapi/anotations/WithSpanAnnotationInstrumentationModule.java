@@ -44,7 +44,7 @@ public final class WithSpanAnnotationInstrumentationModule extends Instrumentati
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".TraceAnnotationTracer",
+      packageName + ".WithSpanTracer",
     };
   }
 
