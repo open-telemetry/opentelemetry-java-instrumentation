@@ -40,7 +40,7 @@ afterEvaluate {
     testImplementation project(':instrumentation:executors')
     // FIXME: we should enable this, but currently this fails tests for google http client
     //testImplementation project(':instrumentation:http-url-connection')
-    testImplementation project(':instrumentation:java-classloader')
+    testImplementation project(':instrumentation:classloaders')
 
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice

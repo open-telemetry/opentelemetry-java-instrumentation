@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  testImplementation project(':instrumentation:java-classloader')
+  testImplementation project(':instrumentation:classloaders')
 
   // This is the earliest version that has org.apache.catalina.loader.ParallelWebappClassLoader
   // which is used in the test
