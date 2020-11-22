@@ -69,7 +69,7 @@ public abstract class AgentTestRunner extends Specification {
    */
   public static final InMemoryExporter TEST_WRITER;
 
-  protected static final Tracer TEST_TRACER;
+  private static final Tracer TEST_TRACER;
 
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);

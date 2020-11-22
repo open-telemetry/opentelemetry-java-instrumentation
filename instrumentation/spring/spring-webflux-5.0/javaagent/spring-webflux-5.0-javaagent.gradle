@@ -49,6 +49,8 @@ dependencies {
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 
+  testImplementation deps.opentelemetryExtAnnotations
+
   // FIXME: reactor-netty packages have changed so test imports are failing
   latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
   latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'

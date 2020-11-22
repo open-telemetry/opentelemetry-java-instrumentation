@@ -5,8 +5,8 @@
 
 package server
 
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.Tracer
+
+import io.opentelemetry.extension.annotations.WithSpan
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -16,10 +16,8 @@ import reactor.core.publisher.Mono
 @Component
 class EchoHandler {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
-
+  @WithSpan("echo")
   Mono<ServerResponse> echo(ServerRequest request) {
-    tracer.spanBuilder("echo").startSpan().end()
     return ServerResponse.accepted().contentType(MediaType.TEXT_PLAIN)
       .body(request.bodyToMono(String), String)
   }
