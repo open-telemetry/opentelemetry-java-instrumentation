@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
+import java.util.Objects;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,22 +62,19 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
-    } else if (other == null) {
-      return false;
-    } else if (getClass() != other.getClass()) {
-      return false;
-    } else if (fallback != ((LoggingFailSafeMatcher) other).fallback) {
-      return false;
-    } else {
-      return matcher.equals(((LoggingFailSafeMatcher) other).matcher);
     }
+    if (!(obj instanceof LoggingFailSafeMatcher)) {
+      return false;
+    }
+    LoggingFailSafeMatcher<?> other = (LoggingFailSafeMatcher<?>) obj;
+    return Objects.equals(fallback, other.fallback) && Objects.equals(matcher, other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return (17 * 31 + matcher.hashCode()) * 31 + (fallback ? 1231 : 1237);
+    return Objects.hash(fallback, matcher);
   }
 }

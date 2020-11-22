@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -163,17 +164,20 @@ public final class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (o instanceof Source) {
-        Source other = (Source) o;
-        return name.equals(other.name) && line == other.line;
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
       }
-      return false;
+      if (!(obj instanceof Source)) {
+        return false;
+      }
+      Source other = (Source) obj;
+      return Objects.equals(name, other.name) && line == other.line;
     }
 
     @Override
     public int hashCode() {
-      return name.hashCode() + line;
+      return Objects.hash(name, line);
     }
   }
 
@@ -406,17 +410,21 @@ public final class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (o instanceof Method) {
-        Method m = (Method) o;
-        return name.equals(m.name) && getDescriptor().equals(m.getDescriptor());
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
       }
-      return false;
+      if (!(obj instanceof Method)) {
+        return false;
+      }
+      Method other = (Method) obj;
+      return Objects.equals(name, other.name)
+          && Objects.equals(getDescriptor(), other.getDescriptor());
     }
 
     @Override
     public int hashCode() {
-      return toString().hashCode();
+      return Objects.hash(name, getDescriptor());
     }
   }
 
@@ -466,17 +474,20 @@ public final class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (o instanceof Field) {
-        Field other = (Field) o;
-        return name.equals(other.name);
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
       }
-      return false;
+      if (!(obj instanceof Field)) {
+        return false;
+      }
+      Field other = (Field) obj;
+      return Objects.equals(name, other.name);
     }
 
     @Override
     public int hashCode() {
-      return name.hashCode();
+      return Objects.hashCode(name);
     }
   }
 

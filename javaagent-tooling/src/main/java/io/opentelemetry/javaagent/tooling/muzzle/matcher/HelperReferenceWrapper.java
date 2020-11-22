@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static net.bytebuddy.description.method.MethodDescription.CONSTRUCTOR_INTERNAL_NAME;
 
-import com.google.common.base.Objects;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 import net.bytebuddy.description.method.MethodDescription.InDefinedShape;
 import net.bytebuddy.description.type.TypeDescription;
@@ -68,20 +68,20 @@ public interface HelperReferenceWrapper {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) {
+    public boolean equals(Object obj) {
+      if (obj == this) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(obj instanceof Method)) {
         return false;
       }
-      Method method = (Method) o;
-      return Objects.equal(name, method.name) && Objects.equal(descriptor, method.descriptor);
+      Method other = (Method) obj;
+      return Objects.equals(name, other.name) && Objects.equals(descriptor, other.descriptor);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(name, descriptor);
+      return Objects.hash(name, descriptor);
     }
   }
 

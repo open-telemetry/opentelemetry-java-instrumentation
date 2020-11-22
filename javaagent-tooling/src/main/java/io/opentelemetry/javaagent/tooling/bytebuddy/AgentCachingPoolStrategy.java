@@ -10,6 +10,7 @@ import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
@@ -144,57 +145,60 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
       this.loaderRef = loaderRef;
       this.className = className;
 
-      hashCode = 31 * this.loaderHash + className.hashCode();
+      hashCode = Objects.hash(loaderHash, className);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof TypeCacheKey)) {
+        return false;
+      }
+
+      TypeCacheKey other = (TypeCacheKey) obj;
+
+      if (loaderHash != other.loaderHash) {
+        return false;
+      }
+
+      if (!Objects.equals(className, other.className)) {
+        return false;
+      }
+
+      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+      // Also covers the bootstrap null loaderRef case
+      if (loaderRef == other.loaderRef) {
+        return true;
+      }
+
+      // need to perform a deeper loader check -- requires calling Reference.get
+      // which can strengthen the Reference, so deliberately done last
+
+      // If either reference has gone null, they aren't considered equivalent
+      // Technically, this is a bit of violation of equals semantics, since
+      // two equivalent references can become not equivalent.
+
+      // In this case, it is fine because that means the ClassLoader is no
+      // longer live, so the entries will never match anyway and will fall
+      // out of the cache.
+      ClassLoader thisLoader = loaderRef.get();
+      if (thisLoader == null) {
+        return false;
+      }
+
+      ClassLoader otherLoader = other.loaderRef.get();
+      if (otherLoader == null) {
+        return false;
+      }
+
+      return thisLoader == otherLoader;
     }
 
     @Override
     public final int hashCode() {
       return hashCode;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof TypeCacheKey)) {
-        return false;
-      }
-
-      TypeCacheKey that = (TypeCacheKey) obj;
-
-      if (loaderHash != that.loaderHash) {
-        return false;
-      }
-
-      if (className.equals(that.className)) {
-        // Fastpath loaderRef equivalence -- works because of WeakReference cache used
-        // Also covers the bootstrap null loaderRef case
-        if (loaderRef == that.loaderRef) {
-          return true;
-        }
-
-        // need to perform a deeper loader check -- requires calling Reference.get
-        // which can strengthen the Reference, so deliberately done last
-
-        // If either reference has gone null, they aren't considered equivalent
-        // Technically, this is a bit of violation of equals semantics, since
-        // two equivalent references can become not equivalent.
-
-        // In this case, it is fine because that means the ClassLoader is no
-        // longer live, so the entries will never match anyway and will fall
-        // out of the cache.
-        ClassLoader thisLoader = loaderRef.get();
-        if (thisLoader == null) {
-          return false;
-        }
-
-        ClassLoader thatLoader = that.loaderRef.get();
-        if (thatLoader == null) {
-          return false;
-        }
-
-        return (thisLoader == thatLoader);
-      } else {
-        return false;
-      }
     }
   }
 

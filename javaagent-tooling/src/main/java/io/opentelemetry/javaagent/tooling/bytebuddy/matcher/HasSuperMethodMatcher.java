@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.SafeHasSuperT
 import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -73,20 +74,19 @@ class HasSuperMethodMatcher<T extends MethodDescription>
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
-    } else if (other == null) {
-      return false;
-    } else if (getClass() != other.getClass()) {
-      return false;
-    } else {
-      return matcher.equals(((HasSuperMethodMatcher) other).matcher);
     }
+    if (!(obj instanceof HasSuperMethodMatcher)) {
+      return false;
+    }
+    HasSuperMethodMatcher<?> other = (HasSuperMethodMatcher<?>) obj;
+    return Objects.equals(matcher, other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return 17 * 31 + matcher.hashCode();
+    return Objects.hashCode(matcher);
   }
 }
