@@ -15,14 +15,14 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TraceAnnotationTracer extends BaseTracer {
-  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+public class WithSpanTracer extends BaseTracer {
+  private static final WithSpanTracer TRACER = new WithSpanTracer();
 
-  public static TraceAnnotationTracer tracer() {
+  public static WithSpanTracer tracer() {
     return TRACER;
   }
 
-  private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
+  private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
 
   /**
    * Creates new scoped context, based on the given context, with the given span.
