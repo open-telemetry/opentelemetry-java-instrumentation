@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static application.io.opentelemetry.api.trace.Span.Kind.PRODUCER
-import application.io.opentelemetry.api.OpenTelemetry
-import application.io.opentelemetry.api.common.Attributes
-import application.io.opentelemetry.context.Context
-import application.io.opentelemetry.context.Scope
-import application.io.opentelemetry.api.trace.Span
-import application.io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.context.Context
+import io.opentelemetry.context.Scope
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracerTest extends AgentTestRunner {
 

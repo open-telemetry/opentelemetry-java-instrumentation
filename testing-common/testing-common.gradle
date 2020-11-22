@@ -32,7 +32,7 @@ dependencies {
   implementation deps.bytebuddyagent
   implementation deps.slf4j
   implementation deps.testLogging
-  implementation deps.opentelemetryAutoAnnotations
+  implementation deps.opentelemetryExtAnnotations
 
   api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
   api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '4.9.0'

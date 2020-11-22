@@ -36,9 +36,9 @@ public class TraceAnnotationTracer extends BaseTracer {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     Context newContext =
         kind == io.opentelemetry.api.trace.Span.Kind.SERVER
-            ? context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span)
+            ? context.with(CONTEXT_SERVER_SPAN_KEY, span)
             : context;
-    return newContext.makeCurrent();
+    return newContext.with(span).makeCurrent();
   }
 
   /**

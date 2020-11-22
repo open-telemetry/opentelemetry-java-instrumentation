@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import application.io.opentelemetry.sdk.OpenTelemetrySdk
-import application.io.opentelemetry.sdk.trace.TracerSdkProvider
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.TracerSdkProvider
 
 class TracerSdkTest extends AgentTestRunner {
 
