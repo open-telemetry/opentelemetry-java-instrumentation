@@ -255,7 +255,7 @@ class TestHttpServer implements AutoCloseable {
       }
     }
 
-    static class RequestApi {
+    class RequestApi {
       def path = req.pathInfo
       def headers = new Headers(req)
       def contentLength = req.contentLength
@@ -292,7 +292,7 @@ class TestHttpServer implements AutoCloseable {
       }
     }
 
-    static class ResponseApi {
+    class ResponseApi {
       private int status = 200
 
       ResponseApi status(int status) {
