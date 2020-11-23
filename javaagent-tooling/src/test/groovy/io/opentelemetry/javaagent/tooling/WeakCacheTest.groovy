@@ -72,7 +72,7 @@ class WeakCacheTest extends Specification {
     weakCacheFor1elem.cache.size() == 1
   }
 
-  class CounterSupplier implements Callable<Integer> {
+  static class CounterSupplier implements Callable<Integer> {
     def counter = 0
 
     @Override

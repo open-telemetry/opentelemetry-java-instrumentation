@@ -1,3 +1,5 @@
+def isCI = System.getenv("CI") != null
+
 allprojects {
   apply plugin: 'com.github.spotbugs'
 

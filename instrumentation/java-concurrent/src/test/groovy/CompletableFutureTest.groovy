@@ -228,7 +228,7 @@ class CompletableFutureTest extends AgentTestRunner {
     }
   }
 
-  class AppendingSupplier implements Supplier<String> {
+  static class AppendingSupplier implements Supplier<String> {
     String letter
 
     AppendingSupplier(String letter) {

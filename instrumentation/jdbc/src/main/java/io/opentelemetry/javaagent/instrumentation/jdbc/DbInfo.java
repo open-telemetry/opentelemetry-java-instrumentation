@@ -84,22 +84,22 @@ public class DbInfo {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
     }
-    if (!(o instanceof DbInfo)) {
+    if (!(obj instanceof DbInfo)) {
       return false;
     }
-    DbInfo dbInfo = (DbInfo) o;
-    return Objects.equals(system, dbInfo.system)
-        && Objects.equals(subtype, dbInfo.subtype)
-        && Objects.equals(shortUrl, dbInfo.shortUrl)
-        && Objects.equals(user, dbInfo.user)
-        && Objects.equals(name, dbInfo.name)
-        && Objects.equals(db, dbInfo.db)
-        && Objects.equals(host, dbInfo.host)
-        && Objects.equals(port, dbInfo.port);
+    DbInfo other = (DbInfo) obj;
+    return Objects.equals(system, other.system)
+        && Objects.equals(subtype, other.subtype)
+        && Objects.equals(shortUrl, other.shortUrl)
+        && Objects.equals(user, other.user)
+        && Objects.equals(name, other.name)
+        && Objects.equals(db, other.db)
+        && Objects.equals(host, other.host)
+        && Objects.equals(port, other.port);
   }
 
   @Override

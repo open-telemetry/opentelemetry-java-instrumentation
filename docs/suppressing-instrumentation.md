@@ -1,6 +1,11 @@
-## Suppressing specific auto-instrumentation
+## Disabling the agent entirely
 
-You can suppress auto-instrumentation of specific libraries by using
+You can disable the agent using `-Dotel.javaagent.enabled=false`
+(or using the equivalent environment variable `OTEL_JAVAAGENT_ENABLED=false`).
+
+## Suppressing specific agent instrumentation
+
+You can suppress agent instrumentation of specific libraries by using
 `-Dotel.instrumentation.[id].enabled=false`.
 
 where `id` is the instrumentation `id`:

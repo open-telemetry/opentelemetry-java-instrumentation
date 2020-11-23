@@ -295,6 +295,6 @@ public abstract class InstrumentationModule {
   }
 
   protected boolean defaultEnabled() {
-    return Config.get().getBooleanProperty("otel.instrumentations.enabled", true);
+    return Config.get().getBooleanProperty("otel.instrumentation.defaultEnabled", true);
   }
 }

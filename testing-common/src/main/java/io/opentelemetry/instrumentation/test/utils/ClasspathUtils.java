@@ -11,7 +11,6 @@ import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
-import io.opentelemetry.instrumentation.test.AgentTestRunner;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -124,7 +123,7 @@ public class ClasspathUtils {
   }
 
   private static ClassPath computeTestClasspath() {
-    ClassLoader testClassLoader = AgentTestRunner.class.getClassLoader();
+    ClassLoader testClassLoader = ClasspathUtils.class.getClassLoader();
     if (!(testClassLoader instanceof URLClassLoader)) {
       // java9's system loader does not extend URLClassLoader
       // which breaks Guava ClassPath lookup

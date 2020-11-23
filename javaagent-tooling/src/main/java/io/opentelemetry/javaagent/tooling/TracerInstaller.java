@@ -36,13 +36,13 @@ public class TracerInstaller {
   private static final String EXPORTER_JAR_CONFIG = "otel.exporter.jar";
   private static final String EXPORTERS_CONFIG = "otel.exporter";
   private static final String PROPAGATORS_CONFIG = "otel.propagators";
-  private static final String TRACE_ENABLED_CONFIG = "otel.trace.enabled";
+  private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
   /** Register agent tracer if no agent tracer is already registered. */
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {
-    if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
+    if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Properties config = Config.get().asJavaProperties();
 
       configure(config);

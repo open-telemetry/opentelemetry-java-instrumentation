@@ -1,5 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
-}

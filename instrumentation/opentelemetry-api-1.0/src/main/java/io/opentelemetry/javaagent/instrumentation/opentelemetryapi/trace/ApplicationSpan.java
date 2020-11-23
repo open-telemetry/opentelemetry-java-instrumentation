@@ -140,11 +140,20 @@ class ApplicationSpan implements Span {
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof ApplicationSpan)) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (!(obj instanceof ApplicationSpan)) {
       return false;
     }
-    return agentSpan.equals(((ApplicationSpan) other).agentSpan);
+    ApplicationSpan other = (ApplicationSpan) obj;
+    return agentSpan.equals(other.agentSpan);
+  }
+
+  @Override
+  public int hashCode() {
+    return agentSpan.hashCode();
   }
 
   static class Builder implements SpanBuilder {

@@ -219,7 +219,7 @@ class TestHttpServer implements AutoCloseable {
     }
   }
 
-  class HandlerApi {
+  static class HandlerApi {
     private final Request req
     private final HttpServletResponse resp
 

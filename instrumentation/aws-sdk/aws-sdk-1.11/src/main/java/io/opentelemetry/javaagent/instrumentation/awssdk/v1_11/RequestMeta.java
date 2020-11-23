@@ -62,19 +62,19 @@ public class RequestMeta {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(obj instanceof RequestMeta)) {
       return false;
     }
-    RequestMeta that = (RequestMeta) o;
-    return Objects.equals(bucketName, that.bucketName)
-        && Objects.equals(queueUrl, that.queueUrl)
-        && Objects.equals(queueName, that.queueName)
-        && Objects.equals(streamName, that.streamName)
-        && Objects.equals(tableName, that.tableName);
+    RequestMeta other = (RequestMeta) obj;
+    return Objects.equals(bucketName, other.bucketName)
+        && Objects.equals(queueUrl, other.queueUrl)
+        && Objects.equals(queueName, other.queueName)
+        && Objects.equals(streamName, other.streamName)
+        && Objects.equals(tableName, other.tableName);
   }
 
   @Override

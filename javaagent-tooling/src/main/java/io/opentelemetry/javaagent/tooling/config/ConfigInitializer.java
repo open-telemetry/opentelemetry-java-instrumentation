@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 public final class ConfigInitializer {
   private static final Logger log = LoggerFactory.getLogger(ConfigInitializer.class);
 
-  private static final String CONFIGURATION_FILE_PROPERTY = "otel.trace.config";
-  private static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_TRACE_CONFIG";
+  private static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.config";
+  private static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIG";
 
   public static void initialize() {
     Config.internalInitializeConfig(

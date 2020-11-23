@@ -15,7 +15,7 @@ class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements Instr
     assert forceFlushCalled()
   }
 
-  class TestRequestHandler extends TracingRequestHandler<String, String> {
+  static class TestRequestHandler extends TracingRequestHandler<String, String> {
 
     @Override
     protected String doHandleRequest(String input, Context context) {
