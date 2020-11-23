@@ -217,7 +217,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
  * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
  * Instead we have to configure this via Gradle. Ideally we should not have to do this.
  */
-@Requires({ "false" == System.getProperty("otel.trace.runtime.context.field.injection") })
+@Requires({ "false" == System.getProperty("otel.javaagent.runtime.context.field.injection") })
 class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
 
   static {
