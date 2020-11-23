@@ -16,7 +16,7 @@ class TraceConfigTest extends AgentTestRunner {
     ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
-  class ConfigTracedCallable implements Callable<String> {
+  static class ConfigTracedCallable implements Callable<String> {
     @Override
     String call() throws Exception {
       return "Hello!"

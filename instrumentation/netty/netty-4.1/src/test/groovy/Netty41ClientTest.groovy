@@ -339,7 +339,7 @@ class Netty41ClientTest extends HttpClientTest {
     }
   }
 
-  class SimpleHandler implements ChannelHandler {
+  static class SimpleHandler implements ChannelHandler {
     @Override
     void handlerAdded(ChannelHandlerContext ctx) throws Exception {
     }
@@ -353,7 +353,7 @@ class Netty41ClientTest extends HttpClientTest {
     }
   }
 
-  class OtherSimpleHandler implements ChannelHandler {
+  static class OtherSimpleHandler implements ChannelHandler {
     @Override
     void handlerAdded(ChannelHandlerContext ctx) throws Exception {
     }
@@ -367,7 +367,7 @@ class Netty41ClientTest extends HttpClientTest {
     }
   }
 
-  class TracedHandlerFromInitializerHandler extends ChannelInitializer<Channel> implements ChannelHandler {
+  static class TracedHandlerFromInitializerHandler extends ChannelInitializer<Channel> implements ChannelHandler {
     @Override
     protected void initChannel(Channel ch) throws Exception {
       // This replicates how reactor 0.8.x add the HttpClientCodec

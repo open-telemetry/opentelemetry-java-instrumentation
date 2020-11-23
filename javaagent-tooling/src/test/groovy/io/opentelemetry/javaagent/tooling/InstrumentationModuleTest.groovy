@@ -131,7 +131,7 @@ class InstrumentationModuleTest extends Specification {
     "period.test"     | true    | "period.test" | "asdf"
   }
 
-  class TestInstrumentationModule extends InstrumentationModule {
+  static class TestInstrumentationModule extends InstrumentationModule {
     boolean applyCalled = false
 
     TestInstrumentationModule(List<String> instrumentationNames) {

@@ -91,7 +91,7 @@ class SpringWebFluxTestApplication {
   }
 
   @Component
-  class GreetingHandler {
+  static class GreetingHandler {
     static final String DEFAULT_RESPONSE = "HELLO"
 
     Mono<ServerResponse> defaultGreet() {
