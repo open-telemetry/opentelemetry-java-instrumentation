@@ -331,7 +331,7 @@ class Netty41ClientTest extends HttpClientTest {
     method << BODY_METHODS
   }
 
-  static class TracedClass {
+  class TracedClass {
     int tracedMethod(String method) {
       runUnderTrace("tracedMethod") {
         doRequest(method, server.address.resolve("/success"))
