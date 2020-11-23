@@ -29,7 +29,6 @@ final class ChannelFutureListenerInstrumentation implements TypeInstrumentation 
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("io.netty.channel.ChannelFutureListener");
   }
 

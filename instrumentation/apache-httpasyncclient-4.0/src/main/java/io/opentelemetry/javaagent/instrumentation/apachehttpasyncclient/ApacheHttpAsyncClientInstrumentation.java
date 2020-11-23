@@ -42,7 +42,6 @@ final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation 
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.apache.http.nio.client.HttpAsyncClient");
   }
 

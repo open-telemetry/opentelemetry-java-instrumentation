@@ -32,7 +32,6 @@ final class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage");
   }

@@ -53,7 +53,6 @@ public final class JaxRsClientInstrumentationModule extends InstrumentationModul
   private static final class ClientHandlerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      // Optimization for expensive typeMatcher.
       return hasClassesNamed("com.sun.jersey.api.client.ClientHandler");
     }
 

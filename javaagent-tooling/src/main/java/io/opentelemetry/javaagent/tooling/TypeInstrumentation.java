@@ -19,11 +19,16 @@ import net.bytebuddy.matcher.ElementMatcher;
 public interface TypeInstrumentation {
   /**
    * A type instrumentation can implement this method to optimize an expensive {@link
-   * #typeMatcher()} - usually {@link AgentElementMatchers#implementsInterface(ElementMatcher)} or
-   * {@link AgentElementMatchers#extendsClass(ElementMatcher)}. In that case it's useful to check
-   * that the classloader contains the class/interface that is being extended.
+   * #typeMatcher()} - usually one that uses {@link AgentElementMatchers}, e.g. {@link
+   * AgentElementMatchers#implementsInterface(ElementMatcher)} or {@link
+   * AgentElementMatchers#extendsClass(ElementMatcher)}. Type matchers that check annotation
+   * presence or class inheritance are particularly expensive for classloaders that do not contain
+   * the base class/interface/annotation. To make this check significantly less expensive this
+   * method can be used to verify that the classloader contains the class/interface that is being
+   * extended.
    *
-   * @return A type matcher used to match the classloader under transform
+   * @return A type matcher that rejects classloaders that do not contain desired interfaces or base
+   *     classes.
    */
   default ElementMatcher<ClassLoader> classLoaderOptimization() {
     return any();

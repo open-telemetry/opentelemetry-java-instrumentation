@@ -29,7 +29,6 @@ final class TransactionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.hibernate.Transaction");
   }
 

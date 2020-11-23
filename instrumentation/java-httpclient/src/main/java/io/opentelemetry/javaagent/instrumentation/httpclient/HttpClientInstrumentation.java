@@ -34,7 +34,6 @@ final class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("java.net.http.HttpClient");
   }
 

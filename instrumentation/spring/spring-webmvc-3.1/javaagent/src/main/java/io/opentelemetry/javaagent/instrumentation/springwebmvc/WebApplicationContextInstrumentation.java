@@ -30,7 +30,6 @@ final class WebApplicationContextInstrumentation implements TypeInstrumentation 
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.springframework.context.support.AbstractApplicationContext",
         "org.springframework.web.context.WebApplicationContext");

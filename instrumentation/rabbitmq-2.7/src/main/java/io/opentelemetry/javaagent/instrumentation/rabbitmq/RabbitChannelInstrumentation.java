@@ -46,7 +46,6 @@ final class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("com.rabbitmq.client.Channel");
   }
 

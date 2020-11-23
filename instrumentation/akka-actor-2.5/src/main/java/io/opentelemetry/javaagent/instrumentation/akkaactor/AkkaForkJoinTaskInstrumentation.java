@@ -39,7 +39,6 @@ final class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed(TASK_CLASS_NAME);
   }
 

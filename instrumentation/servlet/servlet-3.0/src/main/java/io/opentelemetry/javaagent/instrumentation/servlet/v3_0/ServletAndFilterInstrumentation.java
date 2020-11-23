@@ -22,7 +22,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class ServletAndFilterInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.servlet.Filter");
   }
 

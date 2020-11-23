@@ -84,6 +84,7 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
 
   private static final class AnnotatedMethodsInstrumentation implements TypeInstrumentation {
     private final Set<String> additionalTraceAnnotations;
+    private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
     private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
     /** This matcher matches all methods that should be excluded from transformation. */
     private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
@@ -92,16 +93,21 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
       additionalTraceAnnotations = configureAdditionalTraceAnnotations();
 
       if (additionalTraceAnnotations.isEmpty()) {
+        classLoaderOptimization = none();
         traceAnnotationMatcher = none();
       } else {
+        ElementMatcher.Junction<ClassLoader> classLoaderMatcher = null;
         ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
         for (String annotationName : additionalTraceAnnotations) {
           if (methodTraceMatcher == null) {
+            classLoaderMatcher = hasClassesNamed(annotationName);
             methodTraceMatcher = named(annotationName);
           } else {
+            classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
             methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
           }
         }
+        this.classLoaderOptimization = classLoaderMatcher;
         this.traceAnnotationMatcher = methodTraceMatcher;
       }
 
@@ -110,19 +116,7 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
 
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      // Optimization for expensive typeMatcher.
-      ElementMatcher.Junction<ClassLoader> matcher = null;
-      for (String name : additionalTraceAnnotations) {
-        if (matcher == null) {
-          matcher = hasClassesNamed(name);
-        } else {
-          matcher = matcher.or(hasClassesNamed(name));
-        }
-      }
-      if (matcher == null) {
-        return none();
-      }
-      return matcher;
+      return classLoaderOptimization;
     }
 
     @Override

@@ -31,7 +31,6 @@ public class ApacheHttpClientRedirectInstrumentation implements TypeInstrumentat
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.apache.http.client.RedirectStrategy");
   }
 

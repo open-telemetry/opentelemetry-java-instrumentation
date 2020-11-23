@@ -31,7 +31,6 @@ final class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.jms.MessageProducer");
   }
 

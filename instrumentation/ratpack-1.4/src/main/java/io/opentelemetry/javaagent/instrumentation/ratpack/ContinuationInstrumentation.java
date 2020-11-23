@@ -24,7 +24,6 @@ final class ContinuationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("ratpack.exec.internal.Continuation");
   }
 

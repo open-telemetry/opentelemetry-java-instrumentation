@@ -30,7 +30,6 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient");
   }
 

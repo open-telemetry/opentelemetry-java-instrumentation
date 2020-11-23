@@ -40,7 +40,6 @@ final class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed(TASK_CLASS_NAME);
   }
 

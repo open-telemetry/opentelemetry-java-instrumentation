@@ -25,7 +25,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // optimization for expensive typeMatcher
     return hasClassesNamed("io.grpc.ManagedChannelBuilder");
   }
 

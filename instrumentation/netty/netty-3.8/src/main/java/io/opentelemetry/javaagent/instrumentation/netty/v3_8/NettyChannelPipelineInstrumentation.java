@@ -42,7 +42,6 @@ final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.jboss.netty.channel.ChannelPipeline");
   }
 

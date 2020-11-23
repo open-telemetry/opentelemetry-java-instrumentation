@@ -51,7 +51,6 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
   private static final class RegionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      // optimization for expensive typeMatcher
       return hasClassesNamed("org.apache.geode.cache.Region");
     }
 

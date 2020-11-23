@@ -36,7 +36,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.ws.rs.Path");
   }
 

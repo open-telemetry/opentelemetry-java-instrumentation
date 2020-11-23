@@ -42,7 +42,6 @@ final class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.hibernate.Session", "org.hibernate.StatelessSession");
   }
 

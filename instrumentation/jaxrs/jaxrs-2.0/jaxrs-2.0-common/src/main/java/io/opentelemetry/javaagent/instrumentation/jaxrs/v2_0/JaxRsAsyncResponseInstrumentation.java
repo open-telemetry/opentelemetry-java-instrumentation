@@ -28,7 +28,6 @@ final class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.ws.rs.container.AsyncResponse");
   }
 

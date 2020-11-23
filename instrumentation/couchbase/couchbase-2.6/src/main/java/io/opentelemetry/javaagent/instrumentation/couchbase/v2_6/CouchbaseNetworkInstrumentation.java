@@ -31,7 +31,6 @@ final class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("com.couchbase.client.core.endpoint.AbstractGenericHandler");
   }
 

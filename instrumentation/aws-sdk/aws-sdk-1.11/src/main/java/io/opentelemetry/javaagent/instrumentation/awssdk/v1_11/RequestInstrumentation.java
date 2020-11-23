@@ -26,7 +26,6 @@ final class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("com.amazonaws.AmazonWebServiceRequest");
   }
 

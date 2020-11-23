@@ -55,7 +55,6 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
   private static final class RouteInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      // Optimization for expensive typeMatcher.
       return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");
     }
 

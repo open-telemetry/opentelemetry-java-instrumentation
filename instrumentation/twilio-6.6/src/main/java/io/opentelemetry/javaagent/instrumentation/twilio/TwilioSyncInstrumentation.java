@@ -32,7 +32,6 @@ final class TwilioSyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    // Optimization for expensive typeMatcher.
     return hasClassesNamed("com.twilio.Twilio");
   }
 
