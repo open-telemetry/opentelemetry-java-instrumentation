@@ -25,7 +25,7 @@ public final class TracingHandler implements Handler {
    */
   public static final AttributeKey<io.opentelemetry.context.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
+          "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys.context");
 
   @Override
   public void handle(Context ctx) {

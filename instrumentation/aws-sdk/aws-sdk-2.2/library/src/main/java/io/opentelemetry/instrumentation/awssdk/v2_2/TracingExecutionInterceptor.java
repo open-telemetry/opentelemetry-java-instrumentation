@@ -27,11 +27,15 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
+  // the class name is part of the attribute name, so that it will be shaded when used in javaagent
+  // instrumentation, and won't conflict with usage outside javaagent instrumentation
   static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.Context");
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
 
+  // the class name is part of the attribute name, so that it will be shaded when used in javaagent
+  // instrumentation, and won't conflict with usage outside javaagent instrumentation
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.aws.RequestType");
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestType");
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
