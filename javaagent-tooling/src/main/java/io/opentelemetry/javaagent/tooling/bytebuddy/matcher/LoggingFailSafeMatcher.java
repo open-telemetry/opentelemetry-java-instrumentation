@@ -70,7 +70,7 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
       return false;
     }
     LoggingFailSafeMatcher<?> other = (LoggingFailSafeMatcher<?>) obj;
-    return Objects.equals(fallback, other.fallback) && Objects.equals(matcher, other.matcher);
+    return fallback == other.fallback && matcher.equals(other.matcher);
   }
 
   @Override

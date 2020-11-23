@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
 
-import java.util.Objects;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,11 +49,11 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
       return false;
     }
     SafeExtendsClassMatcher<?> other = (SafeExtendsClassMatcher<?>) obj;
-    return Objects.equals(matcher, other.matcher);
+    return matcher.equals(other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(matcher);
+    return matcher.hashCode();
   }
 }

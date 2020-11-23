@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.SafeErasureMa
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -129,12 +128,12 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
       return false;
     }
     SafeHasSuperTypeMatcher<?> other = (SafeHasSuperTypeMatcher<?>) obj;
-    return Objects.equals(matcher, other.matcher);
+    return matcher.equals(other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(matcher);
+    return matcher.hashCode();
   }
 
   /**

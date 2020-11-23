@@ -15,7 +15,6 @@ import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,12 +148,12 @@ class ApplicationSpan implements Span {
       return false;
     }
     ApplicationSpan other = (ApplicationSpan) obj;
-    return Objects.equals(agentSpan, other.agentSpan);
+    return agentSpan.equals(other.agentSpan);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(agentSpan);
+    return agentSpan.hashCode();
   }
 
   static class Builder implements SpanBuilder {

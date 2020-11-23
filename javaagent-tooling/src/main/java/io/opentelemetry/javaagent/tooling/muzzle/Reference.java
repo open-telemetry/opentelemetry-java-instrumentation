@@ -172,7 +172,7 @@ public final class Reference {
         return false;
       }
       Source other = (Source) obj;
-      return Objects.equals(name, other.name) && line == other.line;
+      return name.equals(other.name) && line == other.line;
     }
 
     @Override
@@ -418,8 +418,7 @@ public final class Reference {
         return false;
       }
       Method other = (Method) obj;
-      return Objects.equals(name, other.name)
-          && Objects.equals(getDescriptor(), other.getDescriptor());
+      return name.equals(other.name) && getDescriptor().equals(other.getDescriptor());
     }
 
     @Override
@@ -482,12 +481,12 @@ public final class Reference {
         return false;
       }
       Field other = (Field) obj;
-      return Objects.equals(name, other.name);
+      return name.equals(other.name);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(name);
+      return name.hashCode();
     }
   }
 

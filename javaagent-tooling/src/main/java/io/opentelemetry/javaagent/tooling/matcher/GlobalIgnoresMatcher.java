@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -184,11 +183,11 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return false;
     }
     GlobalIgnoresMatcher<?> other = (GlobalIgnoresMatcher<?>) obj;
-    return Objects.equals(additionalLibraryIgnoreMatcher, other.additionalLibraryIgnoreMatcher);
+    return additionalLibraryIgnoreMatcher.equals(other.additionalLibraryIgnoreMatcher);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(additionalLibraryIgnoreMatcher);
+    return additionalLibraryIgnoreMatcher.hashCode();
   }
 }
