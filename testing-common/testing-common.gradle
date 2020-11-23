@@ -62,7 +62,7 @@ dependencies {
 
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
 tasks.register("testDisabledFieldInjection", Test) {
-  systemProperties "otel.trace.runtime.context.field.injection": "false"
+  systemProperties "otel.javaagent.runtime.context.field.injection": "false"
   includes = ["context/FieldBackedProviderFieldInjectionDisabledTest.class"]
 }
 test.dependsOn(testDisabledFieldInjection)

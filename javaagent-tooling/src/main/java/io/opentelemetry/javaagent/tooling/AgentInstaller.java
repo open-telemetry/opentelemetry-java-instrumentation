@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class AgentInstaller {
   private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
 
-  private static final String TRACE_ENABLED_CONFIG = "otel.trace.enabled";
+  private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final String EXCLUDED_CLASSES_CONFIG = "otel.trace.classes.exclude";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
@@ -64,7 +64,7 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
-    if (Config.get().getBooleanProperty(TRACE_ENABLED_CONFIG, true)) {
+    if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       installBytebuddyAgent(inst, false);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");

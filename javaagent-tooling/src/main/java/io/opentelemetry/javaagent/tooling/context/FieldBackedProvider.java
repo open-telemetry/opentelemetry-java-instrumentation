@@ -104,7 +104,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private static final boolean FIELD_INJECTION_ENABLED =
-      Config.get().getBooleanProperty("otel.trace.runtime.context.field.injection", true);
+      Config.get().getBooleanProperty("otel.javaagent.runtime.context.field.injection", true);
 
   private final Class<?> instrumenterClass;
   private final ByteBuddy byteBuddy;
