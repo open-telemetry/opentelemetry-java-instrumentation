@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -42,9 +42,9 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.instrumentation.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.instrumentation.rxjava.TracedSubscriber",
+      "io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".HystrixTracer",
       getClass().getName() + "$HystrixOnSubscribe",
     };

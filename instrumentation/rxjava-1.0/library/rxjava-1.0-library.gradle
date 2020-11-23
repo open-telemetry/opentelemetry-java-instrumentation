@@ -1,0 +1,5 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  library group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
+}
