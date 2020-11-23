@@ -126,10 +126,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     return references;
   }
 
-  String getClassName() {
-    return refSourceClassName;
-  }
-
   Set<String> getHelperClasses() {
     return helperClasses;
   }

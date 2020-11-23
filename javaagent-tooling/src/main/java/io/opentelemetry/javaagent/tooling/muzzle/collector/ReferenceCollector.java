@@ -78,8 +78,8 @@ public class ReferenceCollector {
           }
           addReference(refClassName, reference);
         }
-        addHelperSuperClasses(
-            isAdviceClass, cv.getClassName(), cv.getHelperClasses(), cv.getHelperSuperClasses());
+        collectHelperClasses(
+            isAdviceClass, visitedClassName, cv.getHelperClasses(), cv.getHelperSuperClasses());
 
       } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + visitedClassName, e);
@@ -99,7 +99,7 @@ public class ReferenceCollector {
     }
   }
 
-  private void addHelperSuperClasses(
+  private void collectHelperClasses(
       boolean isAdviceClass,
       String className,
       Set<String> helperClasses,

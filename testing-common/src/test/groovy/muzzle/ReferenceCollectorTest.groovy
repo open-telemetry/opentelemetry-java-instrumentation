@@ -13,11 +13,11 @@ import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
+import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
-import spock.lang.Ignore
 
 class ReferenceCollectorTest extends AgentTestRunner {
   def "method body creates references"() {
@@ -157,22 +157,26 @@ class ReferenceCollectorTest extends AgentTestRunner {
     ]
   }
 
-  @Ignore
-  def "should correctly sort helper classes topologically"() {
+  def "should correctly sort helper classes from multiple advice classes topologically"() {
     when:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.HelperDepsAdvice.name)
+    collector.collectReferencesFrom(TestClasses.HelperAdvice.name)
+    collector.collectReferencesFrom(TestClasses.HelperOtherAdvice.name)
     def helperClasses = collector.getSortedHelperClasses()
 
     then:
-    helperClasses == [
-      TestHelperDeps.ThirdOne.name,
-      TestHelperDeps.Bar.name,
-      TestHelperDeps.SomeTestClass.name,
-      TestHelperDeps.BarProvider.name,
-      TestHelperDeps.Foo.name,
-      TestHelperDeps.FooProvider.name,
-      TestHelperDeps.name,
+    assertThatContainsInOrder helperClasses, [
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name,
+      TestHelperClasses.Helper.name
+    ]
+    assertThatContainsInOrder helperClasses, [
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name,
+      OtherTestHelperClasses.Bar.name,
+      OtherTestHelperClasses.Foo.name,
+      OtherTestHelperClasses.TestEnum.name,
+      OtherTestHelperClasses.TestEnum.name + '$1',
     ]
   }
 
@@ -216,5 +220,20 @@ class ReferenceCollectorTest extends AgentTestRunner {
       }
     }
     return null
+  }
+
+  private static assertThatContainsInOrder(List<String> list, List<String> sublist) {
+    def listIt = list.iterator()
+    def sublistIt = sublist.iterator()
+    while (listIt.hasNext() && sublistIt.hasNext()) {
+      def sublistElem = sublistIt.next()
+      while (listIt.hasNext()) {
+        def listElem = listIt.next()
+        if (listElem == sublistElem) {
+          break
+        }
+      }
+    }
+    return !sublistIt.hasNext()
   }
 }
