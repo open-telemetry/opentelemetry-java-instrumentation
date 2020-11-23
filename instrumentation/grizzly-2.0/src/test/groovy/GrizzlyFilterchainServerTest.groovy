@@ -98,7 +98,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
     return new IdleTimeoutFilter(new DelayedExecutor(Executors.newCachedThreadPool()), 80000, MILLISECONDS)
   }
 
-  class LastFilter extends BaseFilter {
+  static class LastFilter extends BaseFilter {
 
     @Override
     NextAction handleRead(final FilterChainContext ctx) throws IOException {
@@ -168,7 +168,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
       return new ResponseParameters(endpoint, status, responseBodyBytes, headers)
     }
 
-    class ResponseParameters {
+    static class ResponseParameters {
       Map<String, String> headers
       HttpServerTest.ServerEndpoint endpoint
       int status

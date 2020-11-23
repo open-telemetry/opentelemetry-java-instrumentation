@@ -57,7 +57,7 @@ class WeakMapTest extends Specification {
     weakMap.size() == 0
   }
 
-  class CounterSupplier implements WeakMap.ValueSupplier<String, Integer> {
+  static class CounterSupplier implements WeakMap.ValueSupplier<String, Integer> {
 
     def counter = 0
 

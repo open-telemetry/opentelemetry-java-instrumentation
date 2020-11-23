@@ -341,16 +341,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (!super.equals(other)) {
-      return false;
-    } else if (this == other) {
-      return true;
-    } else if (other == null) {
-      return false;
-    } else {
-      return getClass() == other.getClass();
-    }
+  public boolean equals(Object obj) {
+    // all instances are the same
+    return obj instanceof AdditionalLibraryIgnoresMatcher;
   }
 
   @Override

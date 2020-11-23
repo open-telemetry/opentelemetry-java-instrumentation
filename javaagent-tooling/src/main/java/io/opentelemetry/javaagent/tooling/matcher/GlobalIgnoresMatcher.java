@@ -175,21 +175,19 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
-    } else if (other == null) {
-      return false;
-    } else if (getClass() != other.getClass()) {
-      return false;
-    } else {
-      return additionalLibraryIgnoreMatcher.equals(
-          ((GlobalIgnoresMatcher) other).additionalLibraryIgnoreMatcher);
     }
+    if (!(obj instanceof GlobalIgnoresMatcher)) {
+      return false;
+    }
+    GlobalIgnoresMatcher<?> other = (GlobalIgnoresMatcher<?>) obj;
+    return additionalLibraryIgnoreMatcher.equals(other.additionalLibraryIgnoreMatcher);
   }
 
   @Override
   public int hashCode() {
-    return 17 * 31 + additionalLibraryIgnoreMatcher.hashCode();
+    return additionalLibraryIgnoreMatcher.hashCode();
   }
 }

@@ -71,20 +71,19 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
-    } else if (other == null) {
-      return false;
-    } else if (getClass() != other.getClass()) {
-      return false;
-    } else {
-      return matcher.equals(((SafeErasureMatcher) other).matcher);
     }
+    if (!(obj instanceof SafeErasureMatcher)) {
+      return false;
+    }
+    SafeErasureMatcher<?> other = (SafeErasureMatcher<?>) obj;
+    return matcher.equals(other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return 17 * 31 + matcher.hashCode();
+    return matcher.hashCode();
   }
 }

@@ -849,17 +849,17 @@ class PatchLoggerTest {
     String returnType;
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o) {
+    public boolean equals(Object obj) {
+      if (obj == this) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(obj instanceof MethodSignature)) {
         return false;
       }
-      MethodSignature that = (MethodSignature) o;
-      return Objects.equals(name, that.name)
-          && Objects.equals(parameterTypes, that.parameterTypes)
-          && Objects.equals(returnType, that.returnType);
+      MethodSignature other = (MethodSignature) obj;
+      return Objects.equals(name, other.name)
+          && Objects.equals(parameterTypes, other.parameterTypes)
+          && Objects.equals(returnType, other.returnType);
     }
 
     @Override

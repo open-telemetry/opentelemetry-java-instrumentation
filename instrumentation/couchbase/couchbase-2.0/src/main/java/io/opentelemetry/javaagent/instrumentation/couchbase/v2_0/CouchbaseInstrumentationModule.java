@@ -22,9 +22,9 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.javaagent.instrumentation.rxjava.TracedOnSubscribe",
+      "io.opentelemetry.instrumentation.rxjava.SpanFinishingSubscription",
+      "io.opentelemetry.instrumentation.rxjava.TracedSubscriber",
+      "io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".CouchbaseClientTracer",
       packageName + ".CouchbaseOnSubscribe",
       packageName + ".CouchbaseQueryNormalizer"
