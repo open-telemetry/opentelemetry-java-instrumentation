@@ -150,14 +150,17 @@ class ReferenceCollectorTest extends AgentTestRunner {
     def helperClasses = collector.getSortedHelperClasses()
 
     then:
-    helperClasses == [
-      TestHelperClasses.HelperSuperClass.name,
+    assertThatContainsInOrder helperClasses, [
       TestHelperClasses.HelperInterface.name,
+      TestHelperClasses.Helper.name
+    ]
+    assertThatContainsInOrder helperClasses, [
+      TestHelperClasses.HelperSuperClass.name,
       TestHelperClasses.Helper.name
     ]
   }
 
-  def "should correctly sort helper classes from multiple advice classes topologically"() {
+  def "should correctly find helper classes from multiple advice classes"() {
     when:
     def collector = new ReferenceCollector()
     collector.collectReferencesFrom(TestClasses.HelperAdvice.name)
@@ -166,18 +169,23 @@ class ReferenceCollectorTest extends AgentTestRunner {
 
     then:
     assertThatContainsInOrder helperClasses, [
-      TestHelperClasses.HelperSuperClass.name,
       TestHelperClasses.HelperInterface.name,
       TestHelperClasses.Helper.name
     ]
     assertThatContainsInOrder helperClasses, [
       TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.Helper.name
+    ]
+    new HashSet<>(helperClasses) == new HashSet([
+      TestHelperClasses.HelperSuperClass.name,
       TestHelperClasses.HelperInterface.name,
+      TestHelperClasses.Helper.name,
       OtherTestHelperClasses.Bar.name,
       OtherTestHelperClasses.Foo.name,
       OtherTestHelperClasses.TestEnum.name,
       OtherTestHelperClasses.TestEnum.name + '$1',
-    ]
+      OtherTestHelperClasses.name + '$1',
+    ])
   }
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
