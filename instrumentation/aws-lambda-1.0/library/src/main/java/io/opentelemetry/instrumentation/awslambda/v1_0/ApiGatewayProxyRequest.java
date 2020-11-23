@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import static io.opentelemetry.instrumentation.awslambda.v1_0.HeadersFactory.ofStream;
 
-import com.amazonaws.serverless.proxy.model.Headers;
 import io.opentelemetry.api.OpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,7 +14,6 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -49,20 +47,10 @@ abstract class ApiGatewayProxyRequest {
     return ((values == null) || values.isEmpty());
   }
 
-  private static String extractFirstValue(Map.Entry<String, List<String>> entry) {
-    List<String> values = entry.getValue();
-    return (nullOrEmpty(values) ? null : values.get(0));
-  }
-
   @Nullable
   Map<String, String> getHeaders() throws IOException {
-    Headers headers = ofStream(freshStream());
-    return (headers == null ? Collections.emptyMap() : toMap(headers));
-  }
-
-  private Map<String, String> toMap(Headers headers) {
-    return headers.entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, ApiGatewayProxyRequest::extractFirstValue));
+    Map<String, String> headers = ofStream(freshStream());
+    return (headers == null ? Collections.emptyMap() : headers);
   }
 
   abstract InputStream freshStream() throws IOException;
