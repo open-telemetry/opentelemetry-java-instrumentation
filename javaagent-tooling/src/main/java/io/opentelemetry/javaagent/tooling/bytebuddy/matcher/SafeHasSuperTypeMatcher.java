@@ -120,21 +120,20 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
-    } else if (other == null) {
-      return false;
-    } else if (getClass() != other.getClass()) {
-      return false;
-    } else {
-      return matcher.equals(((SafeHasSuperTypeMatcher) other).matcher);
     }
+    if (!(obj instanceof SafeHasSuperTypeMatcher)) {
+      return false;
+    }
+    SafeHasSuperTypeMatcher<?> other = (SafeHasSuperTypeMatcher<?>) obj;
+    return matcher.equals(other.matcher);
   }
 
   @Override
   public int hashCode() {
-    return 17 * 31 + matcher.hashCode();
+    return matcher.hashCode();
   }
 
   /**

@@ -36,17 +36,17 @@ public final class SqlStatementInfo {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(obj instanceof SqlStatementInfo)) {
       return false;
     }
-    SqlStatementInfo that = (SqlStatementInfo) o;
-    return Objects.equals(fullStatement, that.fullStatement)
-        && Objects.equals(operation, that.operation)
-        && Objects.equals(table, that.table);
+    SqlStatementInfo other = (SqlStatementInfo) obj;
+    return Objects.equals(fullStatement, other.fullStatement)
+        && Objects.equals(operation, other.operation)
+        && Objects.equals(table, other.table);
   }
 
   @Override

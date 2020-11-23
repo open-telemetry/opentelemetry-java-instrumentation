@@ -58,18 +58,18 @@ public class ChannelTraceContext {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(obj instanceof ChannelTraceContext)) {
       return false;
     }
-    ChannelTraceContext that = (ChannelTraceContext) o;
-    return Objects.equals(connectionContext, that.connectionContext)
-        && Objects.equals(clientSpan, that.clientSpan)
-        && Objects.equals(clientParentContext, that.clientParentContext)
-        && Objects.equals(context, that.context);
+    ChannelTraceContext other = (ChannelTraceContext) obj;
+    return Objects.equals(connectionContext, other.connectionContext)
+        && Objects.equals(clientSpan, other.clientSpan)
+        && Objects.equals(clientParentContext, other.clientParentContext)
+        && Objects.equals(context, other.context);
   }
 
   @Override

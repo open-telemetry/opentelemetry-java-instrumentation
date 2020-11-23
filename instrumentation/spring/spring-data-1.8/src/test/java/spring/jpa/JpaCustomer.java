@@ -58,17 +58,17 @@ public class JpaCustomer {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (obj == this) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(obj instanceof JpaCustomer)) {
       return false;
     }
-    JpaCustomer that = (JpaCustomer) o;
-    return Objects.equals(id, that.id)
-        && Objects.equals(firstName, that.firstName)
-        && Objects.equals(lastName, that.lastName);
+    JpaCustomer other = (JpaCustomer) obj;
+    return Objects.equals(id, other.id)
+        && Objects.equals(firstName, other.firstName)
+        && Objects.equals(lastName, other.lastName);
   }
 
   @Override
