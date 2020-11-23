@@ -27,11 +27,7 @@ public class AttributeKeys {
   public static final AttributeKey<Context> CONNECT_CONTEXT_ATTRIBUTE_KEY =
       attributeKey(AttributeKeys.class.getName() + "connect.context");
 
-  /**
-   * This constant is copied over to
-   * io.opentelemetry.javaagent.instrumentation.ratpack.server.TracingHandler, so if this changes,
-   * that must also change.
-   */
+  // this attribute key is also used by ratpack instrumentation
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
       attributeKey(AttributeKeys.class.getName() + ".context");
 

@@ -25,6 +25,8 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
       packageName + ".BlockWrapper",
       packageName + ".RatpackTracer",
       packageName + ".TracingHandler",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
+      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1"
     };
   }
 
