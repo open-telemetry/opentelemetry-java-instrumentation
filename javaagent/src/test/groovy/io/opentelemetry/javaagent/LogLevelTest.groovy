@@ -13,82 +13,82 @@ import spock.lang.Timeout
 class LogLevelTest extends Specification {
 
 
-  /* Priority: io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel > opentelemetry.auto.trace.debug > OTEL_TRACE_DEBUG
+  /* Priority: io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel > opentelemetry.javaagent.debug > OTEL_JAVAAGENT_DEBUG
   1: INFO LOGS
   0: DEBUG Logs
    */
 
-  def "otel.trace.debug false"() {
+  def "otel.javaagent.debug false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=false", "-Dotel.javaagent.enabled=false"] as String[]
+      , ["-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 1
   }
 
-  def "SLF4J DEBUG && otel.trace.debug is false"() {
+  def "SLF4J DEBUG && otel.javaagent.debug is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=false", "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.javaagent.enabled=false"] as String[]
+      , ["-Dotel.javaagent.debug=false", "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
   }
 
-  def "otel.trace.debug is false && OTEL_TRACE_DEBUG is true"() {
+  def "otel.javaagent.debug is false && OTEL_JAVAAGENT_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=false", "-Dotel.javaagent.enabled=false"] as String[]
+      , ["-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
-      , ["OTEL_TRACE_DEBUG": "true"]
+      , ["OTEL_JAVAAGENT_DEBUG": "true"]
       , true) == 1
   }
 
-  def "otel.trace.debug is true"() {
+  def "otel.javaagent.debug is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=true", "-Dotel.javaagent.enabled=false"] as String[]
+      , ["-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
   }
 
 
-  def "OTEL_TRACE_DEBUG is true"() {
+  def "OTEL_JAVAAGENT_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
-      , ["OTEL_TRACE_DEBUG": "true"]
+      , ["OTEL_JAVAAGENT_DEBUG": "true"]
       , true) == 0
   }
 
-  def "otel.trace.debug is true && OTEL_TRACE_DEBUG is false"() {
+  def "otel.javaagent.debug is true && OTEL_JAVAAGENT_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dotel.trace.debug=true", "-Dotel.javaagent.enabled=false"] as String[]
+      , ["-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
-      , ["OTEL_TRACE_DEBUG": "false"]
+      , ["OTEL_JAVAAGENT_DEBUG": "false"]
       , true) == 0
   }
 
 
-  def "SLF4J DEBUG && OTEL_TRACE_DEBUG is false"() {
+  def "SLF4J DEBUG && OTEL_JAVAAGENT_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
-      , ["OTEL_TRACE_DEBUG": "false"]
+      , ["OTEL_JAVAAGENT_DEBUG": "false"]
       , true) == 0
   }
 
-  def "SLF4J INFO && OTEL_TRACE_DEBUG is true"() {
+  def "SLF4J INFO && OTEL_JAVAAGENT_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=info", "-Dotel.javaagent.enabled=false"] as String[]
       , "" as String[]
-      , ["OTEL_TRACE_DEBUG": "true"]
+      , ["OTEL_JAVAAGENT_DEBUG": "true"]
       , true) == 1
   }
 

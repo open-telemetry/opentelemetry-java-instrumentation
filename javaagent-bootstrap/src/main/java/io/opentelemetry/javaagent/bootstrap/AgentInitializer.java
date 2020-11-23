@@ -220,12 +220,12 @@ public class AgentInitializer {
   }
 
   /**
-   * Determine if we should log in debug level according to otel.trace.debug
+   * Determine if we should log in debug level according to otel.javaagent.debug
    *
    * @return true if we should
    */
   private static boolean isDebugMode() {
-    String tracerDebugLevelSysprop = "otel.trace.debug";
+    String tracerDebugLevelSysprop = "otel.javaagent.debug";
     String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
 
     if (tracerDebugLevelProp != null) {
