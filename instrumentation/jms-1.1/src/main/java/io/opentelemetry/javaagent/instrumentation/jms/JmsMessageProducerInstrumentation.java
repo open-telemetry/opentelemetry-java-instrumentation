@@ -30,7 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.jms.MessageProducer");
   }

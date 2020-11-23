@@ -29,7 +29,7 @@ import org.hibernate.procedure.ProcedureCall;
 final class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.hibernate.SharedSessionContract");
   }

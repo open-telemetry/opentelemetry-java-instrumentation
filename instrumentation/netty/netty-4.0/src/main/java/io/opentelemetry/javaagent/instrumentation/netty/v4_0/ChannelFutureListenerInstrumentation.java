@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("io.netty.channel.ChannelFutureListener");
   }

@@ -42,7 +42,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("io.netty.channel.ChannelPipeline");
   }

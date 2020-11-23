@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class AsyncContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.servlet.AsyncContext");
   }

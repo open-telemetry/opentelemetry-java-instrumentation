@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("ratpack.error.ServerErrorHandler");
   }

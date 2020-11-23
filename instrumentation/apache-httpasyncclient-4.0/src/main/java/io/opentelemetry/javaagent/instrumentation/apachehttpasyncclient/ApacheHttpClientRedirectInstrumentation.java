@@ -30,7 +30,7 @@ import org.apache.http.HttpRequest;
 public class ApacheHttpClientRedirectInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.apache.http.client.RedirectStrategy");
   }

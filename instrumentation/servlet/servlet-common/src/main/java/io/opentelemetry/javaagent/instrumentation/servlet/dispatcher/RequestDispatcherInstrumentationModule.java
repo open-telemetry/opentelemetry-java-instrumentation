@@ -60,7 +60,7 @@ public final class RequestDispatcherInstrumentationModule extends Instrumentatio
 
   private static final class RequestDispatcherInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Optimization for expensive typeMatcher.
       return hasClassesNamed("javax.servlet.RequestDispatcher");
     }

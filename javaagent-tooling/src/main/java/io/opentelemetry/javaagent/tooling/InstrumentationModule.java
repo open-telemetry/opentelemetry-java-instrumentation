@@ -141,7 +141,7 @@ public abstract class InstrumentationModule {
                       typeInstrumentation.typeMatcher(),
                       "Instrumentation type matcher unexpected exception: " + getClass().getName()),
                   failSafe(
-                      moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderMatcher()),
+                      moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
               .and(NOT_DECORATOR_MATCHER)

@@ -25,7 +25,7 @@ public interface TypeInstrumentation {
    *
    * @return A type matcher used to match the classloader under transform
    */
-  default ElementMatcher<ClassLoader> classLoaderMatcher() {
+  default ElementMatcher<ClassLoader> classLoaderOptimization() {
     return any();
   }
 

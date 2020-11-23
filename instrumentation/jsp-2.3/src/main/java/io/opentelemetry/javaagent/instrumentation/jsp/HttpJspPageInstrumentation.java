@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class HttpJspPageInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("javax.servlet.jsp.HttpJspPage");
   }

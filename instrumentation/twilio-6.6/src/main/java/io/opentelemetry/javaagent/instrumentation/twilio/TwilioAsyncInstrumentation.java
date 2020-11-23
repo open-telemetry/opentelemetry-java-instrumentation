@@ -36,7 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class TwilioAsyncInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("com.twilio.Twilio");
   }

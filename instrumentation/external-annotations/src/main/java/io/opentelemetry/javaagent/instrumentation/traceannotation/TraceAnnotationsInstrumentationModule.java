@@ -109,7 +109,7 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
     }
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Optimization for expensive typeMatcher.
       ElementMatcher.Junction<ClassLoader> matcher = null;
       for (String name : additionalTraceAnnotations) {

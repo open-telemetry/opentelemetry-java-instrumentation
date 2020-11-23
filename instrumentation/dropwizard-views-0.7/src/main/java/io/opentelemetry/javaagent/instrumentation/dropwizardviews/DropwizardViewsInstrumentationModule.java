@@ -47,7 +47,7 @@ public final class DropwizardViewsInstrumentationModule extends InstrumentationM
 
   private static final class ViewRendererInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Optimization for expensive typeMatcher.
       return hasClassesNamed("io.dropwizard.views.ViewRenderer");
     }

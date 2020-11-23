@@ -49,7 +49,7 @@ public final class JaxRsClientInstrumentationModule extends InstrumentationModul
 
   private static final class ClientBuilderInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Optimization for expensive typeMatcher.
       return hasClassesNamed("javax.ws.rs.client.ClientBuilder");
     }

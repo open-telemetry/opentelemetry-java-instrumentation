@@ -29,7 +29,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 final class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.springframework.context.support.AbstractApplicationContext",

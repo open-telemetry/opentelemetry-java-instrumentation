@@ -39,7 +39,7 @@ final class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
   static final String TASK_CLASS_NAME = "scala.concurrent.forkjoin.ForkJoinTask";
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(TASK_CLASS_NAME);
   }

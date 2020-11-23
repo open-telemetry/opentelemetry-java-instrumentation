@@ -51,7 +51,7 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
 
   private static final class ApiClientInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Optimization for expensive typeMatcher.
       return hasClassesNamed("io.kubernetes.client.openapi.ApiClient");
     }

@@ -32,7 +32,7 @@ import org.hibernate.SharedSessionContract;
 final class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.hibernate.SessionFactory");
   }

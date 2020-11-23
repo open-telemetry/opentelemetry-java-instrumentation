@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class ConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.sql.Connection");
   }
 
