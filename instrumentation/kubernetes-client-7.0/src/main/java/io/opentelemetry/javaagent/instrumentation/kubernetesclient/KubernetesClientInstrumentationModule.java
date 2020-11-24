@@ -32,6 +32,13 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  protected String[] additionalHelperClassNames() {
+    return new String[] {
+      "com.google.common.base.Strings",
+    };
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KubernetesClientTracer",

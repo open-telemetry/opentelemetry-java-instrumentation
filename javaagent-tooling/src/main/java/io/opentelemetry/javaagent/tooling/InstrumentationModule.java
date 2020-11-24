@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.security.ProtectionDomain;
@@ -55,6 +56,12 @@ public abstract class InstrumentationModule {
   private final Set<String> instrumentationNames;
   protected final boolean enabled;
 
+  /**
+   * Deprecated, will be removed.
+   *
+   * @deprecated Will be removed together with {@link #helperClassNames()}
+   */
+  @Deprecated
   protected final String packageName =
       getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
@@ -113,7 +120,7 @@ public abstract class InstrumentationModule {
       return parentAgentBuilder;
     }
 
-    List<String> helperClassNames = asList(helperClassNames());
+    List<String> helperClassNames = getAllHelperClassNames();
     List<String> helperResourceNames = asList(helperResourceNames());
     List<TypeInstrumentation> typeInstrumentations = typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
@@ -158,6 +165,17 @@ public abstract class InstrumentationModule {
     }
 
     return agentBuilder;
+  }
+
+  /**
+   * Returns all helper classes that will be injected into the application classloader, both ones
+   * provided by the implementation and ones that were collected by muzzle during compilation.
+   */
+  public final List<String> getAllHelperClassNames() {
+    List<String> helperClassNames = new ArrayList<>();
+    helperClassNames.addAll(asList(additionalHelperClassNames()));
+    helperClassNames.addAll(asList(getMuzzleHelperClassNames()));
+    return helperClassNames;
   }
 
   private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
@@ -247,6 +265,30 @@ public abstract class InstrumentationModule {
   }
 
   /**
+   * Returns a list of instrumentation helper classes, automatically detected by muzzle during
+   * compilation. Those helpers will be injected into the application classloader.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
+   *
+   * <p><b>This method is generated automatically, do not override it.</b>
+   */
+  protected String[] getMuzzleHelperClassNames() {
+    return EMPTY;
+  }
+
+  /**
+   * Instrumentation modules can override this method to provide additional helper classes that are
+   * not located in instrumentation packages described in {@link InstrumentationClassPredicate} (and
+   * not automatically detected by muzzle). These additional classes will be injected into the
+   * application classloader first.
+   */
+  protected String[] additionalHelperClassNames() {
+    return EMPTY;
+  }
+
+  /**
    * Order of adding instrumentation to ByteBuddy. For example instrumentation with order 1 runs
    * after an instrumentation with order 0 (default) matched on the same API.
    *
@@ -256,7 +298,13 @@ public abstract class InstrumentationModule {
     return 0;
   }
 
-  /** Returns class names of helpers to inject into the user's classloader. */
+  /**
+   * Deprecated, will be removed.
+   *
+   * @deprecated This method is replaced by {@link #getMuzzleHelperClassNames()} and {@link
+   *     #additionalHelperClassNames()}, extending it provides no effect.
+   */
+  @Deprecated
   public String[] helperClassNames() {
     return EMPTY;
   }
