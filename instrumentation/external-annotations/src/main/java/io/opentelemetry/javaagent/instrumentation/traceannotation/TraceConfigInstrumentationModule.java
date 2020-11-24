@@ -69,7 +69,7 @@ public class TraceConfigInstrumentationModule extends InstrumentationModule {
     return typeInstrumentations;
   }
 
-  private static final class TracerClassInstrumentation implements TypeInstrumentation {
+  public static class TracerClassInstrumentation implements TypeInstrumentation {
     private final String className;
     private final Set<String> methodNames;
 

@@ -38,7 +38,7 @@ public class Elasticsearch6RestClientInstrumentationModule extends Instrumentati
     return singletonList(new RestClientInstrumentation());
   }
 
-  private static final class RestClientInstrumentation implements TypeInstrumentation {
+  public static class RestClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.elasticsearch.client.RestClient");

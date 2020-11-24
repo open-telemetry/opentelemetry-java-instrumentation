@@ -16,7 +16,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
+public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

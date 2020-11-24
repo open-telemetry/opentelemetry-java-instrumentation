@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
+public abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
   private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
 
   private static final String EXECUTORS_INCLUDE_PROPERTY_NAME =
@@ -49,7 +49,7 @@ abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
    */
   private final Collection<String> includePrefixes;
 
-  AbstractExecutorInstrumentation() {
+  protected AbstractExecutorInstrumentation() {
     if (includeAll) {
       includeExecutors = Collections.emptyList();
       includePrefixes = Collections.emptyList();

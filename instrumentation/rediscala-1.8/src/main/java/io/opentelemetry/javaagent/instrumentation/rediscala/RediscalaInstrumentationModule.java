@@ -35,7 +35,7 @@ import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
 @AutoService(InstrumentationModule.class)
-public final class RediscalaInstrumentationModule extends InstrumentationModule {
+public class RediscalaInstrumentationModule extends InstrumentationModule {
 
   public RediscalaInstrumentationModule() {
     super("rediscala", "rediscala-1.8");
@@ -46,7 +46,7 @@ public final class RediscalaInstrumentationModule extends InstrumentationModule 
     return singletonList(new RequestInstrumentation());
   }
 
-  private static final class RequestInstrumentation implements TypeInstrumentation {
+  public static class RequestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("redis.Request");

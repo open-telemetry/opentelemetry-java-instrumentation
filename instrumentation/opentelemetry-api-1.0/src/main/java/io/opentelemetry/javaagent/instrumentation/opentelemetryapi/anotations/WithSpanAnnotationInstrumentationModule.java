@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 /** Instrumentation for methods annotated with {@link WithSpan} annotation. */
 @AutoService(InstrumentationModule.class)
-public final class WithSpanAnnotationInstrumentationModule extends InstrumentationModule {
+public class WithSpanAnnotationInstrumentationModule extends InstrumentationModule {
 
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
       "otel.trace.annotated.methods.exclude";
@@ -46,7 +46,7 @@ public final class WithSpanAnnotationInstrumentationModule extends Instrumentati
     return singletonList(new AnnotatedMethodInstrumentation());
   }
 
-  private static final class AnnotatedMethodInstrumentation implements TypeInstrumentation {
+  public static class AnnotatedMethodInstrumentation implements TypeInstrumentation {
     private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
     // this matcher matches all methods that should be excluded from transformation
     private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;

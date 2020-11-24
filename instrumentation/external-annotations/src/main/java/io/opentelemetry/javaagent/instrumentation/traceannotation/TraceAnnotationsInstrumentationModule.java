@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @AutoService(InstrumentationModule.class)
-public final class TraceAnnotationsInstrumentationModule extends InstrumentationModule {
+public class TraceAnnotationsInstrumentationModule extends InstrumentationModule {
   private static final Logger log =
       LoggerFactory.getLogger(TraceAnnotationsInstrumentationModule.class);
 
@@ -75,7 +75,7 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
     return singletonList(new AnnotatedMethodsInstrumentation());
   }
 
-  private static final class AnnotatedMethodsInstrumentation implements TypeInstrumentation {
+  public static class AnnotatedMethodsInstrumentation implements TypeInstrumentation {
     private final Set<String> additionalTraceAnnotations;
     private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
     private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;

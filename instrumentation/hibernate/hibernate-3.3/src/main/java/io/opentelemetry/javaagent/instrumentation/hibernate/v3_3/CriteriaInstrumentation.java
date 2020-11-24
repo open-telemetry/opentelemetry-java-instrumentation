@@ -26,7 +26,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 
-final class CriteriaInstrumentation implements TypeInstrumentation {
+public class CriteriaInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

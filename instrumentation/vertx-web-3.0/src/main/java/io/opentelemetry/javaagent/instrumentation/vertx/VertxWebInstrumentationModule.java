@@ -28,7 +28,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class VertxWebInstrumentationModule extends InstrumentationModule {
+public class VertxWebInstrumentationModule extends InstrumentationModule {
 
   public VertxWebInstrumentationModule() {
     super("vertx-web", "vertx-web-3.0", "vertx");
@@ -39,7 +39,7 @@ public final class VertxWebInstrumentationModule extends InstrumentationModule {
     return singletonList(new RouteInstrumentation());
   }
 
-  private static final class RouteInstrumentation implements TypeInstrumentation {
+  public static class RouteInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("io.vertx.ext.web.Route");

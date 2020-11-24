@@ -27,7 +27,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class JmsMessageProducerInstrumentation implements TypeInstrumentation {
+public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

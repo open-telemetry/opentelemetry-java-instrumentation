@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JettyInstrumentationModule extends InstrumentationModule {
+public class JettyInstrumentationModule extends InstrumentationModule {
 
   public JettyInstrumentationModule() {
     super("jetty", "jetty-8.0");
@@ -35,7 +35,7 @@ public final class JettyInstrumentationModule extends InstrumentationModule {
     return singletonList(new HandlerInstrumentation());
   }
 
-  private static final class HandlerInstrumentation implements TypeInstrumentation {
+  public static class HandlerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.eclipse.jetty.server.Handler");

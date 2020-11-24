@@ -29,7 +29,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 
-final class SessionFactoryInstrumentation implements TypeInstrumentation {
+public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

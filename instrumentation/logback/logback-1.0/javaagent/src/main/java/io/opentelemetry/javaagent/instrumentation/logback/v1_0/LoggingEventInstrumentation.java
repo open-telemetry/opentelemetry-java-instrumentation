@@ -29,7 +29,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class LoggingEventInstrumentation implements TypeInstrumentation {
+public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return implementsInterface(named("ch.qos.logback.classic.spi.ILoggingEvent"));

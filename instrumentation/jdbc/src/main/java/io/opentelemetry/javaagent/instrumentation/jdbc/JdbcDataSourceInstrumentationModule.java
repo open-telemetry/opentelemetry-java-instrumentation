@@ -27,7 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
+public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
   public JdbcDataSourceInstrumentationModule() {
     super("jdbc-datasource");
   }
@@ -42,7 +42,7 @@ public final class JdbcDataSourceInstrumentationModule extends InstrumentationMo
     return false;
   }
 
-  private static final class DataSourceInstrumentation implements TypeInstrumentation {
+  public static class DataSourceInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return implementsInterface(named("javax.sql.DataSource"));

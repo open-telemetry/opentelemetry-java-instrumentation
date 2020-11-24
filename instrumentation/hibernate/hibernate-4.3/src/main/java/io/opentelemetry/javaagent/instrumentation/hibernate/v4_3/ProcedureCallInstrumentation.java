@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.procedure.ProcedureCall;
 
-final class ProcedureCallInstrumentation implements TypeInstrumentation {
+public class ProcedureCallInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

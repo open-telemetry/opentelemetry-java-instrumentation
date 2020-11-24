@@ -37,7 +37,7 @@ public class KHttpInstrumentationModule extends InstrumentationModule {
     return singletonList(new KHttpInstrumentation());
   }
 
-  private static final class KHttpInstrumentation implements TypeInstrumentation {
+  public static class KHttpInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("khttp.KHttp");

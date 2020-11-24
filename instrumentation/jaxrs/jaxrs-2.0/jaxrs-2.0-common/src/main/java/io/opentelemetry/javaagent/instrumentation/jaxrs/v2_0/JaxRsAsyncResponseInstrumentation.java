@@ -24,7 +24,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
+public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

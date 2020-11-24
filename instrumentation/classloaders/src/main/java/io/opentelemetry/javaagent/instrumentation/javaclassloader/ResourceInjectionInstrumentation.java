@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>We currently only intercept {@link ClassLoader#getResources(String)} because this is the case
  * we are currently always interested in, where it's used for service loading.
  */
-class ResourceInjectionInstrumentation implements TypeInstrumentation {
+public class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {

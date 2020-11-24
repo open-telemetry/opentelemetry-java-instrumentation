@@ -32,7 +32,7 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
     return singletonList(new SessionBuilderInstrumentation());
   }
 
-  private static final class SessionBuilderInstrumentation implements TypeInstrumentation {
+  public static class SessionBuilderInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // Note: Cassandra has a large driver and we instrument single class in it.

@@ -44,8 +44,7 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
     return singletonList(new ContextDataInjectorFactoryInstrumentation());
   }
 
-  private static final class ContextDataInjectorFactoryInstrumentation
-      implements TypeInstrumentation {
+  public static class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory");

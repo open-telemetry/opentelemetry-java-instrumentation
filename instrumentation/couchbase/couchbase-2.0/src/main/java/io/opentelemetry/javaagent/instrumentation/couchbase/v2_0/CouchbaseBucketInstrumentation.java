@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
 
-final class CouchbaseBucketInstrumentation implements TypeInstrumentation {
+public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

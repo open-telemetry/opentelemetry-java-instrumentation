@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import sun.rmi.transport.Target;
 
-public final class RmiServerContextInstrumentation implements TypeInstrumentation {
+public class RmiServerContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {

@@ -34,7 +34,7 @@ public class WebfluxClientInstrumentationModule extends InstrumentationModule {
     return singletonList(new WebClientBuilderInstrumentation());
   }
 
-  private static final class WebClientBuilderInstrumentation implements TypeInstrumentation {
+  public static class WebClientBuilderInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");

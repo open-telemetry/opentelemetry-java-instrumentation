@@ -50,7 +50,7 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     return store;
   }
 
-  private static final class ContextTestInstrumentation implements TypeInstrumentation {
+  public static class ContextTestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return nameStartsWith(ContextTestInstrumentationModule.class.getName() + "$");

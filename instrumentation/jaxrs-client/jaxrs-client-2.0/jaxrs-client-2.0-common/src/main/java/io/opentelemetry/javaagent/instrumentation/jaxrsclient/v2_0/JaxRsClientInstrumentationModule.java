@@ -26,7 +26,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JaxRsClientInstrumentationModule extends InstrumentationModule {
+public class JaxRsClientInstrumentationModule extends InstrumentationModule {
 
   public JaxRsClientInstrumentationModule() {
     super("jaxrs-client", "jaxrs-client-2.0");
@@ -37,7 +37,7 @@ public final class JaxRsClientInstrumentationModule extends InstrumentationModul
     return singletonList(new ClientBuilderInstrumentation());
   }
 
-  private static final class ClientBuilderInstrumentation implements TypeInstrumentation {
+  public static class ClientBuilderInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("javax.ws.rs.client.ClientBuilder");

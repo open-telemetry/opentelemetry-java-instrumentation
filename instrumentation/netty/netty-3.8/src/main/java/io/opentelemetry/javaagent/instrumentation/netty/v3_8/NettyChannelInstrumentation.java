@@ -25,7 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.Channel;
 
-final class NettyChannelInstrumentation implements TypeInstrumentation {
+public class NettyChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

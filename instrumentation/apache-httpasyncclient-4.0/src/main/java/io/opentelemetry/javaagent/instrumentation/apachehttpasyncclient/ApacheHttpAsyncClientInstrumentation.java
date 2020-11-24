@@ -38,7 +38,7 @@ import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
-final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
+public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

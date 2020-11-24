@@ -36,7 +36,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class RequestDispatcherInstrumentationModule extends InstrumentationModule {
+public class RequestDispatcherInstrumentationModule extends InstrumentationModule {
   public RequestDispatcherInstrumentationModule() {
     super("servlet", "servlet-dispatcher");
   }
@@ -51,7 +51,7 @@ public final class RequestDispatcherInstrumentationModule extends Instrumentatio
     return singletonMap("javax.servlet.RequestDispatcher", String.class.getName());
   }
 
-  private static final class RequestDispatcherInstrumentation implements TypeInstrumentation {
+  public static class RequestDispatcherInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("javax.servlet.RequestDispatcher");

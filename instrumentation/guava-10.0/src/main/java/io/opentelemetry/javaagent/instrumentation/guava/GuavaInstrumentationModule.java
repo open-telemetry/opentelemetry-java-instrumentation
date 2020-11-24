@@ -46,7 +46,7 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
     return singletonMap(Runnable.class.getName(), State.class.getName());
   }
 
-  private static final class ListenableFutureInstrumentation implements TypeInstrumentation {
+  public static class ListenableFutureInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.google.common.util.concurrent.AbstractFuture");

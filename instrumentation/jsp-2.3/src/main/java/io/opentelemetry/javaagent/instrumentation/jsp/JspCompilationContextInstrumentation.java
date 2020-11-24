@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.jasper.JspCompilationContext;
 
-final class JspCompilationContextInstrumentation implements TypeInstrumentation {
+public class JspCompilationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

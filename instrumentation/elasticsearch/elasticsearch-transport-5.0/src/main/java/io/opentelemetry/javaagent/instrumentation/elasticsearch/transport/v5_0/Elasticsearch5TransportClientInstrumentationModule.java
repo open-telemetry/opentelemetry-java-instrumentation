@@ -51,7 +51,7 @@ public class Elasticsearch5TransportClientInstrumentationModule extends Instrume
     return singletonList(new AbstractClientInstrumentation());
   }
 
-  private static final class AbstractClientInstrumentation implements TypeInstrumentation {
+  public static class AbstractClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // If we want to be more generic, we could instrument the interface instead:

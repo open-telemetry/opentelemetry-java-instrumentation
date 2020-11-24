@@ -34,7 +34,7 @@ import scala.concurrent.forkjoin.ForkJoinTask;
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
  * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Scala version.
  */
-final class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
+public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
   static final String TASK_CLASS_NAME = "scala.concurrent.forkjoin.ForkJoinTask";
 

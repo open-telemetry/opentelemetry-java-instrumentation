@@ -41,7 +41,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return singletonList(new DefaultClientResourcesInstrumentation());
   }
 
-  private static final class DefaultClientResourcesInstrumentation implements TypeInstrumentation {
+  public static class DefaultClientResourcesInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("io.lettuce.core.resource.DefaultClientResources");

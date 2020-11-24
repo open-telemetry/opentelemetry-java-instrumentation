@@ -33,7 +33,7 @@ import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 
 @AutoService(InstrumentationModule.class)
-public final class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
+public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
     super("akka-http", "akka-http-server");
   }
@@ -43,7 +43,7 @@ public final class AkkaHttpServerInstrumentationModule extends InstrumentationMo
     return singletonList(new HttpExtInstrumentation());
   }
 
-  private static final class HttpExtInstrumentation implements TypeInstrumentation {
+  public static class HttpExtInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("akka.http.scaladsl.HttpExt");

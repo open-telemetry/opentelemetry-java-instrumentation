@@ -39,7 +39,7 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
     return singletonList(new AsyncResultSingleInstrumentation());
   }
 
-  private static final class AsyncResultSingleInstrumentation implements TypeInstrumentation {
+  public static class AsyncResultSingleInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Different versions of Vert.x has this class in different packages

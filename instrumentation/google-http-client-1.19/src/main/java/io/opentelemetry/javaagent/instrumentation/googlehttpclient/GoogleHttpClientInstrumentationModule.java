@@ -50,7 +50,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     return singletonList(new HttpRequestInstrumentation());
   }
 
-  private static final class HttpRequestInstrumentation implements TypeInstrumentation {
+  public static class HttpRequestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       // HttpRequest is a final class.  Only need to instrument it exactly

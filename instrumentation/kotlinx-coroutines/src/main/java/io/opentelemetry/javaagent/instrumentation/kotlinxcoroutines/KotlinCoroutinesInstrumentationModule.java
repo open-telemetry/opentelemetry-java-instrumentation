@@ -61,7 +61,7 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     return singletonList(new KotlinDebugProbeInstrumentation());
   }
 
-  private static final class KotlinDebugProbeInstrumentation implements TypeInstrumentation {
+  public static class KotlinDebugProbeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("kotlin.coroutines.jvm.internal.DebugProbesKt");

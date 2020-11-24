@@ -30,7 +30,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
+public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

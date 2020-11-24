@@ -28,7 +28,7 @@ import software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRe
  * Separate instrumentation class to close aws request scope right after request has been submitted
  * for execution for Sync clients.
  */
-final class AwsHttpClientInstrumentation implements TypeInstrumentation {
+public class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

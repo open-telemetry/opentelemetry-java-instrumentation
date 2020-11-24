@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
 @AutoService(InstrumentationModule.class)
-public final class RedissonInstrumentation extends InstrumentationModule {
+public class RedissonInstrumentation extends InstrumentationModule {
 
   public RedissonInstrumentation() {
     super("redisson", "redisson-3.0");
@@ -36,7 +36,7 @@ public final class RedissonInstrumentation extends InstrumentationModule {
     return singletonList(new RedisConnectionInstrumentation());
   }
 
-  private static final class RedisConnectionInstrumentation implements TypeInstrumentation {
+  public static class RedisConnectionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.redisson.client.RedisConnection");

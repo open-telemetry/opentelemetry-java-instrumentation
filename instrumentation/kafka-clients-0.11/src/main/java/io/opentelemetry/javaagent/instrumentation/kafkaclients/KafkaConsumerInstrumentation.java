@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-final class KafkaConsumerInstrumentation implements TypeInstrumentation {
+public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

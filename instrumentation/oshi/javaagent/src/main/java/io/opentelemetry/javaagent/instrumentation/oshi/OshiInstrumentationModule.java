@@ -36,7 +36,7 @@ public class OshiInstrumentationModule extends InstrumentationModule {
     return singletonList(new SystemInfoInstrumentation());
   }
 
-  private static final class SystemInfoInstrumentation implements TypeInstrumentation {
+  public static class SystemInfoInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("oshi.SystemInfo");

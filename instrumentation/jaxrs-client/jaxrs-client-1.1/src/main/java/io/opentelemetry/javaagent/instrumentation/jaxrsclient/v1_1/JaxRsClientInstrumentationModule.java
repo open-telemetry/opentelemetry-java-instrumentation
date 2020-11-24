@@ -32,7 +32,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JaxRsClientInstrumentationModule extends InstrumentationModule {
+public class JaxRsClientInstrumentationModule extends InstrumentationModule {
 
   public JaxRsClientInstrumentationModule() {
     super("jaxrs-client", "jaxrs-client-1.1");
@@ -43,7 +43,7 @@ public final class JaxRsClientInstrumentationModule extends InstrumentationModul
     return singletonList(new ClientHandlerInstrumentation());
   }
 
-  private static final class ClientHandlerInstrumentation implements TypeInstrumentation {
+  public static class ClientHandlerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("com.sun.jersey.api.client.ClientHandler");

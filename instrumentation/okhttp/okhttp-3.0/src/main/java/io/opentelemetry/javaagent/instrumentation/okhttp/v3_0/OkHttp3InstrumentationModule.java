@@ -35,7 +35,7 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
     return singletonList(new OkHttpClientInstrumentation());
   }
 
-  private static final class OkHttpClientInstrumentation implements TypeInstrumentation {
+  public static class OkHttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("okhttp3.OkHttpClient");
