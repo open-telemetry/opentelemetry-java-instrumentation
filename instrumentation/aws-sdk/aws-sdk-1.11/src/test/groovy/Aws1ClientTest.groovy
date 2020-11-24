@@ -39,7 +39,6 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicReference
 import spock.lang.AutoCleanup
@@ -337,6 +336,6 @@ class Aws1ClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP Request"
   }
 }

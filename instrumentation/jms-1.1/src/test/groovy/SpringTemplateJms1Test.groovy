@@ -8,7 +8,6 @@ import static Jms1Test.producerSpan
 
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.jms.JmsTracer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection
@@ -106,10 +105,10 @@ class SpringTemplateJms1Test extends AgentTestRunner {
       }
       trace(2, 1) {
         // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", JmsTracer.TEMP_DESTINATION_NAME)
+        producerSpan(it, 0, "queue", "(temporary)")
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue", JmsTracer.TEMP_DESTINATION_NAME, receivedMessage.getJMSMessageID(), null, "receive")
+        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
     }
 
