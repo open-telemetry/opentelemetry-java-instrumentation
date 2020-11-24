@@ -3,12 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils
+import java.sql.CallableStatement
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Statement
+import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -18,17 +28,6 @@ import spock.lang.Shared
 import spock.lang.Unroll
 import test.TestConnection
 import test.TestDriver
-
-import javax.sql.DataSource
-import java.sql.CallableStatement
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Statement
-
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 class JdbcInstrumentationTest extends AgentTestRunner {
 
@@ -187,7 +186,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -199,22 +198,22 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    system   | connection                                                           | username | query                                           | spanName                                                | url
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "SELECT 3"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | "SELECT 3"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "SELECT 3"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
-    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "SELECT 3"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
-    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "SELECT 3"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
-    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    system   | connection                                                           | username | query                                           | normalizedQuery                                 | spanName                                                | url
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "SELECT 3"                                      | "SELECT ?"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ? FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | "SELECT 3"                                      | "SELECT ?"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ? FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "SELECT 3"                                      | "SELECT ?"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ? FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "SELECT 3"                                      | "SELECT ?"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ? FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "SELECT 3"                                      | "SELECT ?"                                      | "SELECT $dbNameLower"                                   | "h2:mem:"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "SELECT ? FROM SYSIBM.SYSDUMMY1"                | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
   }
 
   @Unroll
@@ -243,7 +242,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -255,15 +254,15 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    system  | connection                                                | username | query                            | spanName                                 | url
-    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    system  | connection                                                | username | query                            | normalizedQuery                  | spanName                                 | url
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
   }
 
   @Unroll
@@ -291,7 +290,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -303,15 +302,15 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    system  | connection                                                | username | query                            | spanName                                 | url
-    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    system  | connection                                                | username | query                            | normalizedQuery                  | spanName                                 | url
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
   }
 
   @Unroll
@@ -339,7 +338,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -351,15 +350,15 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    system  | connection                                                | username | query                            | spanName                                 | url
-    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT $dbNameLower"                    | "h2:mem:"
-    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    system  | connection                                                | username | query                            | normalizedQuery                  | spanName                                 | url
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"                       | "SELECT ?"                       | "SELECT $dbNameLower"                    | "h2:mem:"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
   }
 
   @Unroll
@@ -387,7 +386,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" query
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -438,7 +437,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" query
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -500,7 +499,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$SemanticAttributes.DB_USER.key" username
             }
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" url
           }
         }
@@ -512,11 +511,11 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     connection?.close()
 
     where:
-    prepareStatement | system  | driver               | jdbcUrl                                        | username | query                            | spanName                                 | url
-    true             | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"                      | "SELECT $dbNameLower"                    | "h2:mem:"
-    true             | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
-    false            | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"                      | "SELECT $dbNameLower"                    | "h2:mem:"
-    false            | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    prepareStatement | system  | driver               | jdbcUrl                                        | username | query                            | normalizedQuery                  | spanName                                 | url
+    true             | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"                      | "SELECT ?;"                      | "SELECT $dbNameLower"                    | "h2:mem:"
+    true             | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
+    false            | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"                      | "SELECT ?;"                      | "SELECT $dbNameLower"                    | "h2:mem:"
+    false            | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1" | "SELECT ? FROM SYSIBM.SYSDUMMY1" | "SELECT ${dbNameLower}.SYSIBM.SYSDUMMY1" | "derby:memory:"
   }
 
   def "calling #datasource.class.simpleName getConnection generates a span when under existing trace"() {
@@ -595,7 +594,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
           errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
           }
         }
@@ -634,7 +633,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
             "$SemanticAttributes.DB_NAME.key" databaseName
-            "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+            "$SemanticAttributes.DB_STATEMENT.key" normalizedQuery
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
           }
         }
@@ -642,12 +641,12 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    url                                         | query                 | spanName            | databaseName
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT test.table" | "test"
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT test"       | "test"
-    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT table"      | null
-    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "test"              | "test"
-    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "DB Query"          | null
+    url                                         | query                 | normalizedQuery       | spanName            | databaseName
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT test.table" | "test"
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT ?"            | "SELECT test"       | "test"
+    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT table"      | null
+    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "CREATE TABLE table"  | "test"              | "test"
+    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "DB Query"          | null
   }
 
   @Unroll
@@ -691,7 +690,7 @@ class JdbcInstrumentationTest extends AgentTestRunner {
               "$SemanticAttributes.DB_SYSTEM.key" "hsqldb"
               "$SemanticAttributes.DB_NAME.key" dbNameLower
               "$SemanticAttributes.DB_USER.key" "SA"
-              "$SemanticAttributes.DB_STATEMENT.key" JdbcUtils.normalizeSql(query)
+              "$SemanticAttributes.DB_STATEMENT.key" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
               "$SemanticAttributes.DB_CONNECTION_STRING.key" "hsqldb:mem:"
             }
           }
