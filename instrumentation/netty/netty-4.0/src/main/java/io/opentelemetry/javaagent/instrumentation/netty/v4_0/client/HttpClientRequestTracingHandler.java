@@ -30,7 +30,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     // TODO pass Context into Tracer.startSpan() and then don't need this scoping
     Scope parentScope = null;
     Context parentContext =
-        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+        ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
     if (parentContext != null) {
       parentScope = parentContext.makeCurrent();
     }

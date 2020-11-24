@@ -82,17 +82,20 @@ public final class ReactorNettyInstrumentationModule extends InstrumentationModu
 
   public static class MapConnect
       implements BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
+
+    static final String CONTEXT_ATTRIBUTE = MapConnect.class.getName() + ".Context";
+
     @Override
     public Mono<? extends Connection> apply(Mono<? extends Connection> m, Bootstrap b) {
-      return m.subscriberContext(s -> s.put("otel_context", Context.current()));
+      return m.subscriberContext(s -> s.put(CONTEXT_ATTRIBUTE, Context.current()));
     }
   }
 
   public static class OnRequest implements BiConsumer<HttpClientRequest, Connection> {
     @Override
     public void accept(HttpClientRequest r, Connection c) {
-      Context context = r.currentContext().get("otel_context");
-      c.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).set(context);
+      Context context = r.currentContext().get(MapConnect.CONTEXT_ATTRIBUTE);
+      c.channel().attr(AttributeKeys.CONNECT_CONTEXT_ATTRIBUTE_KEY).set(context);
     }
   }
 }

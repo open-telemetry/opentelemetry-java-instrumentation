@@ -24,8 +24,7 @@ import reactor.util.context.Context;
 
 public class AdviceUtils {
 
-  public static final String CONTEXT_ATTRIBUTE =
-      "io.opentelemetry.javaagent.instrumentation.springwebflux.Context";
+  public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
 
   public static String parseOperationName(Object handler) {
     String className = tracer().spanNameForClass(handler.getClass());
