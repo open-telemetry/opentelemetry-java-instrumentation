@@ -12,20 +12,31 @@ import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * Interface representing a single type instrumentation. Part of an {@link InstrumentationModule}.
  */
 public interface TypeInstrumentation {
   /**
-   * A type instrumentation can implement this method to optimize an expensive {@link
-   * #typeMatcher()} - usually one that uses {@link AgentElementMatchers}, e.g. {@link
-   * AgentElementMatchers#implementsInterface(ElementMatcher)} or {@link
-   * AgentElementMatchers#extendsClass(ElementMatcher)}. Type matchers that check annotation
-   * presence or class inheritance are particularly expensive for classloaders that do not contain
-   * the base class/interface/annotation. To make this check significantly less expensive this
-   * method can be used to verify that the classloader contains the class/interface that is being
-   * extended.
+   * An optimization to short circuit matching in the case where the instrumented library is not
+   * even present on the class path.
+   *
+   * <p>Most applications have only a small subset of libraries on their class path, so this ends up
+   * being a very useful optimization.
+   *
+   * <p>Some background on type matcher performance:
+   *
+   * <p>Type matchers that only match against the type name are fast, e.g. {@link
+   * ElementMatchers#named(String)}.
+   *
+   * <p>All other type matchers require some level of bytecode inspection, e.g. {@link
+   * ElementMatchers#isAnnotatedWith(ElementMatcher)}.
+   *
+   * <p>Type matchers that need to inspect the super class hierarchy are even more expensive, e.g.
+   * {@link AgentElementMatchers#implementsInterface(ElementMatcher)}. This is because they require
+   * inspecting multiple super classes/interfaces as well (which may not even be loaded yet in which
+   * case their bytecode has to be read and inspected).
    *
    * @return A type matcher that rejects classloaders that do not contain desired interfaces or base
    *     classes.
