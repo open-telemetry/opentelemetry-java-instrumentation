@@ -5,40 +5,33 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import com.amazonaws.serverless.proxy.model.Headers;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class ParentContextExtractor {
 
-  static Context fromHttpHeaders(Headers headers) {
-
+  static Context fromHttpHeaders(Map<String, String> headers) {
     return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
-        .extract(io.opentelemetry.context.Context.current(), headers, HeadersGetter.INSTANCE);
+        .extract(
+            io.opentelemetry.context.Context.current(), lowercaseMap(headers), MapGetter.INSTANCE);
   }
 
-  private static class HeadersGetter implements TextMapPropagator.Getter<Headers> {
-
-    private static final HeadersGetter INSTANCE = new HeadersGetter();
-
-    @Override
-    public Iterable<String> keys(Headers map) {
-      return map.keySet();
-    }
-
-    @Override
-    public String get(Headers headers, String s) {
-      return headers.getFirst(s);
-    }
+  private static Map<String, String> lowercaseMap(Map<String, String> source) {
+    return source.entrySet().stream()
+        .filter(e -> e.getKey() != null)
+        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Entry::getValue));
   }
 
-  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "X-Amzn-Trace-Id";
+  // lower-case map getter used for extraction
+  static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
-  static Context fromXrayHeader(String parentHeader) {
+  static Context fromXRayHeader(String parentHeader) {
     return OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .extract(
@@ -58,7 +51,7 @@ public class ParentContextExtractor {
 
     @Override
     public String get(Map<String, String> map, String s) {
-      return map.get(s);
+      return map.get(s.toLowerCase());
     }
   }
 }

@@ -67,8 +67,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
   private static final class CamelContextInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.camel.CamelContext");
     }
 

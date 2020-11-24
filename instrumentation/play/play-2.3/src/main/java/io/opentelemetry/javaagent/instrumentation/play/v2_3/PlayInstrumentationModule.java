@@ -41,8 +41,7 @@ public final class PlayInstrumentationModule extends InstrumentationModule {
 
   private static final class ActionInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("play.api.mvc.Action");
     }
 

@@ -5,6 +5,7 @@
 
 package muzzle;
 
+import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses.Helper;
 import net.bytebuddy.asm.Advice;
 
@@ -98,6 +99,12 @@ public class TestClasses {
   public static class HelperAdvice {
     public static void adviceMethod() {
       Helper h = new Helper();
+    }
+  }
+
+  public static class HelperOtherAdvice {
+    public static void adviceMethod() {
+      new OtherTestHelperClasses.Bar().doSomething();
     }
   }
 }

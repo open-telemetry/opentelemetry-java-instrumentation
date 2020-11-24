@@ -40,8 +40,7 @@ import org.hibernate.Transaction;
 final class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.hibernate.SharedSessionContract");
   }
 

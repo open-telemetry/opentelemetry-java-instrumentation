@@ -48,7 +48,7 @@ public class KHttpInstrumentationModule extends InstrumentationModule {
 
   private static final class KHttpInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("khttp.KHttp");
     }
 

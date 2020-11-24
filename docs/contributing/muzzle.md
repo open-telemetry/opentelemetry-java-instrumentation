@@ -12,7 +12,7 @@ Muzzle will prevent loading an instrumentation if it detects any mismatch or con
 ## How it works
 
 Muzzle has two phases:
-* at compile time it collects references to the third-party symbols;
+* at compile time it collects references to the third-party symbols and used helper classes;
 * at runtime it compares those references to the actual API symbols on the classpath.
 
 ### Compile-time reference collection
@@ -24,12 +24,16 @@ For each instrumentation module the ByteBuddy plugin collects symbols referring 
 third party APIs used by the currently processed module's type instrumentations (`InstrumentationModule#typeInstrumentations()`).
 The reference collection process starts from advice classes (values of the map returned by the
 `TypeInstrumentation#transformers()`method) and traverses the class graph until it encounters
-a reference to a non-instrumentation class.
+a reference to a non-instrumentation class (determined by `InstrumentationClassPredicate`).
+Aside from references, the collection process also builds a graph of dependencies between internal
+instrumentation helper classes - this dependency graph is later used to construct a list of helper
+classes that will be injected to the application classloader (`InstrumentationModule#getMuzzleHelperClassNames()`).
 
 All collected references are then used to create a `ReferenceMatcher` instance. This matcher
 is stored in the instrumentation module class in the method `InstrumentationModule#getMuzzleReferenceMatcher()`
 and is shared between all type instrumentations. The bytecode of this method (basically an array of
-`Reference` builder calls) is generated automatically by the ByteBuddy plugin using an ASM code visitor.
+`Reference` builder calls) and the `getMuzzleHelperClassNames()` is generated automatically by the
+ByteBuddy plugin using an ASM code visitor.
 
 The source code of the compile-time plugin is located in the `javaagent-tooling` module,
 package `io.opentelemetry.javaagent.tooling.muzzle.collector`.

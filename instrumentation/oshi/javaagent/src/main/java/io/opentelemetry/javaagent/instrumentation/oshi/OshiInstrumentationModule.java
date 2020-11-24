@@ -52,7 +52,7 @@ public class OshiInstrumentationModule extends InstrumentationModule {
 
   private static final class SystemInfoInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("oshi.SystemInfo");
     }
 

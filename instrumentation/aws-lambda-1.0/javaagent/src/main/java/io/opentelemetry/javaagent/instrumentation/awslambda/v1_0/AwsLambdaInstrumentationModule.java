@@ -25,8 +25,7 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
       "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer",
       "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer",
       "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$MapGetter",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$HeadersGetter"
+      "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$MapGetter"
     };
   }
 

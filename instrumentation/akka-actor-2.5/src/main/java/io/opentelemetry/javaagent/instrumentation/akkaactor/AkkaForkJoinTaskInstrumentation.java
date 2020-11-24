@@ -38,8 +38,7 @@ final class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
   static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed(TASK_CLASS_NAME);
   }
 

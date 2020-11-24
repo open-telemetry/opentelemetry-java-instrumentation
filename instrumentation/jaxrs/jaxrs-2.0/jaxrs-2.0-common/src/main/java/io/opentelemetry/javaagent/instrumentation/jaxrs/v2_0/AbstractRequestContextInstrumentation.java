@@ -21,8 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public abstract class AbstractRequestContextInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.ws.rs.container.ContainerRequestContext");
   }
 

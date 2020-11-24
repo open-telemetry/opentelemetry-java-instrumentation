@@ -33,7 +33,7 @@ class ApiGatewayProxyRequestTest {
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
     assertThat(created.freshStream()).isEqualTo(mock);
-    assertThat(created.getHeaders()).isNull();
+    assertThat(created.getHeaders()).isEmpty();
   }
 
   @Test
@@ -48,7 +48,7 @@ class ApiGatewayProxyRequestTest {
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
     assertThat(created.freshStream()).isEqualTo(mock);
-    assertThat(created.getHeaders()).isNull();
+    assertThat(created.getHeaders()).isEmpty();
   }
 
   @Test
