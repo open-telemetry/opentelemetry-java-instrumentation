@@ -26,7 +26,6 @@ dependencies {
 
   implementation deps.groovy
   implementation deps.opentelemetryApi
-  implementation deps.opentelemetryTraceProps
   implementation deps.spock
   implementation deps.systemLambda
 }
