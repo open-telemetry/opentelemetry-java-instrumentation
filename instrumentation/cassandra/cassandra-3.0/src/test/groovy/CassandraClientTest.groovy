@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -13,14 +14,15 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.time.Duration
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
+import spock.util.concurrent.BlockingVariable
+
+import java.time.Duration
+import java.util.concurrent.Executors
 
 class CassandraClientTest extends AgentTestRunner {
   private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
@@ -86,18 +88,20 @@ class CassandraClientTest extends AgentTestRunner {
 
   def "test async"() {
     setup:
-    def callbackExecuted = new AtomicBoolean()
+    def callbackExecuted = new BlockingVariable()
     Session session = cluster.connect(keyspace)
     runUnderTrace("parent") {
       def future = session.executeAsync(statement)
       future.addListener({ ->
         runUnderTrace("callbackListener") {
-          callbackExecuted.set(true)
+          // No-op span
         }
+        callbackExecuted.set(true)
       }, executor)
     }
 
     expect:
+    callbackExecuted.get()
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {

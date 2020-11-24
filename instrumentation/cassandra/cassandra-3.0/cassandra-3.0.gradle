@@ -45,7 +45,7 @@ dependencies {
   }
 
   testLibrary group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
-  testImplementation project(':instrumentation:guava-10.0')
+  testInstrumentation project(':instrumentation:guava-10.0')
 
   latestDepTestLibrary group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.+'
 }
