@@ -9,8 +9,6 @@ import io.netty.util.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -26,23 +24,18 @@ public class AttributeKeys {
             }
           };
 
-  public static final AttributeKey<Context> PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY =
-      attributeKey("io.opentelemetry.javaagent.instrumentation.netty.v4_1.parent.connect.context");
+  public static final AttributeKey<Context> CONNECT_CONTEXT_ATTRIBUTE_KEY =
+      attributeKey(AttributeKeys.class.getName() + "connect.context");
 
-  /**
-   * This constant is copied over to
-   * io.opentelemetry.javaagent.instrumentation.ratpack.server.TracingHandler, so if this changes,
-   * that must also change.
-   */
+  // this attribute key is also used by ratpack instrumentation
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
-      attributeKey(HttpServerTracingHandler.class.getName() + ".context");
+      attributeKey(AttributeKeys.class.getName() + ".context");
 
-  // TODO understand and change to context
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
-      attributeKey(HttpClientTracingHandler.class.getName() + ".span");
+      attributeKey(AttributeKeys.class.getName() + ".span");
 
   public static final AttributeKey<Context> CLIENT_PARENT_ATTRIBUTE_KEY =
-      attributeKey(HttpClientTracingHandler.class.getName() + ".parent");
+      attributeKey(AttributeKeys.class.getName() + ".parent");
 
   /**
    * Generate an attribute key or reuse the one existing in the global app map. This implementation
