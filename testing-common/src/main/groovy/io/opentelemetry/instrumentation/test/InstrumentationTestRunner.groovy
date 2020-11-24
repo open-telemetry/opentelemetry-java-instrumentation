@@ -24,10 +24,10 @@ import io.opentelemetry.sdk.trace.ReadableSpan
 import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import java.lang.reflect.Method
 import org.junit.Before
 import spock.lang.Specification
 
+import java.lang.reflect.Method
 /**
  * A spock test runner which automatically initializes an in-memory exporter that can be used to
  * verify traces.
@@ -105,7 +105,7 @@ abstract class InstrumentationTestRunner extends Specification {
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
     InMemoryExporterAssert.assertTraces(
-      getTraces(), size, Predicates.<List<SpanData>> alwaysFalse(), spec)
+      getTraces(size), size, Predicates.<List<SpanData>> alwaysFalse(), spec)
   }
 
   protected void assertTracesWithFilter(
@@ -116,10 +116,25 @@ abstract class InstrumentationTestRunner extends Specification {
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    InMemoryExporterAssert.assertTraces(getTraces(), size, excludes, spec)
+    InMemoryExporterAssert.assertTraces(getTraces(size), size, excludes, spec)
   }
 
-  private static List<List<SpanData>> getTraces() {
+  private static List<List<SpanData>> getTraces(int size) {
+    if (size == 0) {
+      return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
+    }
+
+    // Wait for returned spans to stabilize.
+    int previousNumSpans = -1;
+    for (int attempt = 0; attempt < 2000; attempt++) {
+      int numSpans = testExporter.getFinishedSpanItems().size();
+      if (numSpans != 0 && numSpans == previousNumSpans) {
+        break;
+      }
+      previousNumSpans = numSpans;
+      Thread.sleep(10);
+    }
+
     return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
   }
 
