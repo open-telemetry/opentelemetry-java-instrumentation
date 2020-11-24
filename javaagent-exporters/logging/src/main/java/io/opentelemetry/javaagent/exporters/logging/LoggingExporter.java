@@ -28,9 +28,10 @@ public class LoggingExporter implements SpanExporter {
     StringBuilder stringBuilder = new StringBuilder();
     for (SpanData span : list) {
 
+      if (!prefix.isEmpty()) {
+        stringBuilder.append(prefix).append(" ");
+      }
       stringBuilder
-          .append(prefix)
-          .append(" ")
           .append(span.getName())
           .append(" ")
           .append(span.getTraceId())
