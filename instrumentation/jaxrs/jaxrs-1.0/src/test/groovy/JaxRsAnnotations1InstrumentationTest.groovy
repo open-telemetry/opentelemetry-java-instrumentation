@@ -41,7 +41,6 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
 
   def "span named '#name' from annotations on class when is not root span"() {
     setup:
-    def startingCacheSize = spanNames.size()
     runUnderServerTrace("test") {
       obj.call()
     }
@@ -122,6 +121,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
     // "/child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
+    className = getClassName(obj.class)
   }
 
   def "no annotations has no effect"() {

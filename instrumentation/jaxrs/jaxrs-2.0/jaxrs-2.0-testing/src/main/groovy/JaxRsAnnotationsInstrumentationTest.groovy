@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer
-import java.lang.reflect.Method
+import spock.lang.Unroll
+
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -16,7 +16,6 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import spock.lang.Unroll
 
 abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -44,7 +43,6 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
   @Unroll
   def "span named '#paramName' from annotations on class when is not root span"() {
     setup:
-    def startingCacheSize = spanNames.size()
     runUnderServerTrace("test") {
       obj.call()
     }
@@ -66,8 +64,6 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         }
       }
     }
-    spanNames.size() == startingCacheSize + 1
-    spanNames.get(obj.class).size() == 1
 
     when: "multiple calls to the same method"
     runUnderServerTrace("test") {
@@ -76,8 +72,6 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       }
     }
     then: "doesn't increase the cache size"
-    spanNames.size() == startingCacheSize + 1
-    spanNames.get(obj.class).size() == 1
 
     where:
     paramName      | obj
@@ -129,12 +123,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
 //    "GET /child/invoke"         | new JavaInterfaces.DefaultChildClassOnInterface()
-
     className = getClassName(obj.class)
-
-    // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
-    decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsTracer.name).getMethod("tracer").invoke(null)
-    spanNames = (WeakMap<Class, Map<Method, String>>) decorator.spanNames
   }
 
   def "no annotations has no effect"() {

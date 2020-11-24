@@ -78,12 +78,20 @@ public class InMemoryExporter {
     }
     // Wait for returned spans to stabilize.
     int previousNumSpans = -1;
+    int numStableAttempts = 0;
     for (int attempt = 0; attempt < 2000; attempt++) {
       int numSpans = AgentTestingExporterAccess.getExportedSpans().size();
-      if (numSpans != 0 && numSpans == previousNumSpans) {
-        break;
+      if (numSpans != 0) {
+        if (numSpans == previousNumSpans) {
+          numStableAttempts++;
+          if (numStableAttempts == 5) {
+            break;
+          }
+        } else {
+          previousNumSpans = numSpans;
+          numStableAttempts = 0;
+        }
       }
-      previousNumSpans = numSpans;
       Thread.sleep(10);
     }
     List<List<SpanData>> traces = getFilteredTraces(excludes);
