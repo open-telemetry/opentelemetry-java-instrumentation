@@ -19,14 +19,6 @@ public class TwilioInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TwilioClientDecorator",
-      packageName + ".TwilioAsyncInstrumentation$SpanFinishingCallback",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new TwilioAsyncInstrumentation(), new TwilioSyncInstrumentation());
   }

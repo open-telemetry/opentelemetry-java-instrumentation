@@ -19,21 +19,6 @@ public class KafkaClientsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KafkaClientConfiguration",
-      packageName + ".KafkaConsumerTracer",
-      packageName + ".TextMapExtractAdapter",
-      packageName + ".TracingIterable",
-      packageName + ".TracingIterator",
-      packageName + ".TracingList",
-      packageName + ".KafkaProducerTracer",
-      packageName + ".TextMapInjectAdapter",
-      packageName + ".ProducerCallback"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new KafkaConsumerInstrumentation(), new KafkaProducerInstrumentation());
   }

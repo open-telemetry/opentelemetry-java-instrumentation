@@ -20,16 +20,6 @@ public class WebfluxServerInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebfluxHttpServerTracer",
-      packageName + ".AdviceUtils",
-      packageName + ".AdviceUtils$SpanFinishingSubscriber",
-      packageName + ".RouteOnSuccessOrError"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new DispatcherHandlerInstrumentation(),

@@ -19,16 +19,6 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ActionWrapper",
-      packageName + ".BlockWrapper",
-      packageName + ".RatpackTracer",
-      packageName + ".TracingHandler",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContinuationInstrumentation(),

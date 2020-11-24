@@ -19,15 +19,6 @@ public class HttpClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpHeadersInjectAdapter",
-      packageName + ".JdkHttpClientTracer",
-      packageName + ".ResponseConsumer"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpClientInstrumentation(), new HttpHeadersInstrumentation());
   }

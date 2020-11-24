@@ -37,13 +37,6 @@ public final class JedisInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JedisClientTracer$CommandWithArgs", packageName + ".JedisClientTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ConnectionInstrumentation());
   }

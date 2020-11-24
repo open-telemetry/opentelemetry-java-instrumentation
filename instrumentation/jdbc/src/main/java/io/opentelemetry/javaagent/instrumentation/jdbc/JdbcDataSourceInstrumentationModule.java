@@ -33,35 +33,6 @@ public final class JdbcDataSourceInstrumentationModule extends InstrumentationMo
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".DataSourceTracer",
-      packageName + ".DbInfo",
-      packageName + ".DbInfo$Builder",
-      packageName + ".JdbcConnectionUrlParser",
-      packageName + ".JdbcConnectionUrlParser$1",
-      packageName + ".JdbcConnectionUrlParser$2",
-      packageName + ".JdbcConnectionUrlParser$3",
-      packageName + ".JdbcConnectionUrlParser$4",
-      packageName + ".JdbcConnectionUrlParser$5",
-      packageName + ".JdbcConnectionUrlParser$6",
-      packageName + ".JdbcConnectionUrlParser$7",
-      packageName + ".JdbcConnectionUrlParser$8",
-      packageName + ".JdbcConnectionUrlParser$9",
-      packageName + ".JdbcConnectionUrlParser$10",
-      packageName + ".JdbcConnectionUrlParser$11",
-      packageName + ".JdbcConnectionUrlParser$12",
-      packageName + ".JdbcConnectionUrlParser$13",
-      packageName + ".JdbcConnectionUrlParser$14",
-      packageName + ".JdbcConnectionUrlParser$15",
-      packageName + ".JdbcConnectionUrlParser$16",
-      packageName + ".JdbcConnectionUrlParser$17",
-      packageName + ".JdbcMaps",
-      packageName + ".JdbcUtils",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new DataSourceInstrumentation());
   }

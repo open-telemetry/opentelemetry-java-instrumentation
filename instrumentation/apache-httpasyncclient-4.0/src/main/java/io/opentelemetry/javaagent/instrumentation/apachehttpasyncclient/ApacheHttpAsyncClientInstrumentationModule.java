@@ -19,16 +19,6 @@ public class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationM
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpHeadersInjectAdapter",
-      ApacheHttpAsyncClientInstrumentation.class.getName() + "$DelegatingRequestProducer",
-      ApacheHttpAsyncClientInstrumentation.class.getName() + "$TraceContinuedFutureCallback",
-      packageName + ".ApacheHttpAsyncClientTracer"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ApacheHttpAsyncClientInstrumentation(), new ApacheHttpClientRedirectInstrumentation());

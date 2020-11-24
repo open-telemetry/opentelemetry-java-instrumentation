@@ -28,16 +28,6 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".CassandraQueryNormalizer",
-      packageName + ".CassandraDatabaseClientTracer",
-      packageName + ".TracingCqlSession",
-      packageName + ".CompletionStageFunction"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new SessionBuilderInstrumentation());
   }

@@ -35,13 +35,6 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AsyncResultConsumerWrapper", packageName + ".AsyncResultHandlerWrapper"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AsyncResultSingleInstrumentation());
   }

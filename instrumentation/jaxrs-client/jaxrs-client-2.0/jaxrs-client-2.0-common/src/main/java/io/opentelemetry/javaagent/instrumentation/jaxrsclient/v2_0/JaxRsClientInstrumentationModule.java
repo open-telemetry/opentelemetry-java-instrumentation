@@ -33,16 +33,6 @@ public final class JaxRsClientInstrumentationModule extends InstrumentationModul
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JaxRsClientTracer",
-      packageName + ".ClientTracingFeature",
-      packageName + ".ClientTracingFilter",
-      packageName + ".InjectAdapter",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ClientBuilderInstrumentation());
   }

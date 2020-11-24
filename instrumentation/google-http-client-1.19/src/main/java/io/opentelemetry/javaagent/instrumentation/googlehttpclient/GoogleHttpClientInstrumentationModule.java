@@ -46,13 +46,6 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".GoogleHttpClientTracer", packageName + ".HeadersInjectAdapter"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpRequestInstrumentation());
   }

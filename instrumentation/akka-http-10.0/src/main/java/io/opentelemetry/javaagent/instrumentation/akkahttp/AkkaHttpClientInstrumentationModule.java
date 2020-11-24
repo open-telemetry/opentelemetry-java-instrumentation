@@ -39,16 +39,6 @@ public final class AkkaHttpClientInstrumentationModule extends InstrumentationMo
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AkkaHttpClientInstrumentationModule.class.getName() + "$OnCompleteHandler",
-      AkkaHttpClientInstrumentationModule.class.getName() + "$AkkaHttpHeaders",
-      AkkaHttpClientInstrumentationModule.class.getName() + "$InjectAdapter",
-      packageName + ".AkkaHttpClientTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new HttpExtInstrumentation());
   }

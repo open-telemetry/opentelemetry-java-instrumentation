@@ -29,13 +29,6 @@ public final class SpringSchedulingInstrumentationModule extends Instrumentation
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringSchedulingTracer", packageName + ".SpringSchedulingRunnableWrapper",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new TaskInstrumentation());
   }

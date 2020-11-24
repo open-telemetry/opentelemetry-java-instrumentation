@@ -33,15 +33,6 @@ public class KHttpInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KHttpHeadersInjectAdapter",
-      packageName + ".KHttpTracer",
-      packageName + ".RequestWrapper",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new KHttpInstrumentation());
   }

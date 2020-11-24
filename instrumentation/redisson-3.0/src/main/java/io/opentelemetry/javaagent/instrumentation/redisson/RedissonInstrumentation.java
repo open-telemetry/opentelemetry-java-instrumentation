@@ -32,11 +32,6 @@ public final class RedissonInstrumentation extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".RedissonClientTracer"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RedisConnectionInstrumentation());
   }

@@ -19,17 +19,6 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
-      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      packageName + ".Servlet3Advice",
-      packageName + ".Servlet3HttpServerTracer",
-      packageName + ".TagSettingAsyncListener"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new AsyncContextInstrumentation(), new ServletAndFilterInstrumentation());
   }

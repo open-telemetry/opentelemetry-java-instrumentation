@@ -39,19 +39,6 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KubernetesClientTracer",
-      packageName + ".TracingInterceptor",
-      packageName + ".KubernetesRequestDigest",
-      packageName + ".KubernetesResource",
-      packageName + ".KubernetesVerb",
-      packageName + ".ParseKubernetesResourceException",
-      "com.google.common.base.Strings",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApiClientInstrumentation());
   }

@@ -19,11 +19,6 @@ public class GrizzlyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".GrizzlyHttpServerTracer", packageName + ".ExtractAdapter"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new DefaultFilterChainInstrumentation(),

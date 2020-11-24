@@ -40,11 +40,6 @@ public final class DropwizardViewsInstrumentationModule extends InstrumentationM
     return singletonList(new ViewRendererInstrumentation());
   }
 
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".DropwizardTracer"};
-  }
-
   private static final class ViewRendererInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {

@@ -19,15 +19,6 @@ public final class SpringWebMvcInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebMvcTracer",
-      packageName + ".HandlerMappingResourceNameFilter",
-      packageName + ".HandlerMappingResourceNameFilter$BeanDefinition",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new WebApplicationContextInstrumentation(),

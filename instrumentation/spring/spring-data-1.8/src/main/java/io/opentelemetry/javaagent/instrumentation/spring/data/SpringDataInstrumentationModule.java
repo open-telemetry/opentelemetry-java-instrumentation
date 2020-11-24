@@ -39,15 +39,6 @@ public final class SpringDataInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringDataTracer",
-      getClass().getName() + "$RepositoryInterceptor",
-      getClass().getName() + "$InterceptingRepositoryProxyPostProcessor",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RepositoryFactorySupportInstrumentation());
   }

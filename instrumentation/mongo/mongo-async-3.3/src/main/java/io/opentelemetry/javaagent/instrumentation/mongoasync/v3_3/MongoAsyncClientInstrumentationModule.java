@@ -37,14 +37,6 @@ public final class MongoAsyncClientInstrumentationModule extends Instrumentation
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.mongo.MongoClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new MongoClientSettingsBuildersInstrumentation());
   }

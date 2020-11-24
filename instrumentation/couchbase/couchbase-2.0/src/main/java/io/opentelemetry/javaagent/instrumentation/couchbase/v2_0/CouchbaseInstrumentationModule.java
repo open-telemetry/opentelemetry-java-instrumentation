@@ -26,19 +26,6 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe",
-      packageName + ".CouchbaseClientTracer",
-      packageName + ".CouchbaseOnSubscribe",
-      packageName + ".CouchbaseQueryNormalizer"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new CouchbaseBucketInstrumentation(), new CouchbaseClusterInstrumentation());
   }

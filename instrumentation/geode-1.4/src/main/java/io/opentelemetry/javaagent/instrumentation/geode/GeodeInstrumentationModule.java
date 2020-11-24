@@ -37,13 +37,6 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".GeodeQueryNormalizer", packageName + ".GeodeTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RegionInstrumentation());
   }

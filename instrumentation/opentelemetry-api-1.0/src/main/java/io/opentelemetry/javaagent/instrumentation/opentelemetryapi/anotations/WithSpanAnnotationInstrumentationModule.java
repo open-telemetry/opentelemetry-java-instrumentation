@@ -42,13 +42,6 @@ public final class WithSpanAnnotationInstrumentationModule extends Instrumentati
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TraceAnnotationTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AnnotatedMethodInstrumentation());
   }
