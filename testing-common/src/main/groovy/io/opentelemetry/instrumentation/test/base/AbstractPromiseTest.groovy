@@ -132,11 +132,12 @@ abstract class AbstractPromiseTest<P, M> extends AgentTestRunner {
 
     then:
     get(promise) == value
-    assertTraces(1) {
-      trace(0, 2) {
-        // TODO: is this really the behavior we want?
+    assertTraces(2) {
+      trace(0, 1) {
         basicSpan(it, 0, "other")
-        basicSpan(it, 1, "callback", it.span(0))
+      }
+      trace(1, 1) {
+        basicSpan(it, 0, "callback")
       }
     }
 
