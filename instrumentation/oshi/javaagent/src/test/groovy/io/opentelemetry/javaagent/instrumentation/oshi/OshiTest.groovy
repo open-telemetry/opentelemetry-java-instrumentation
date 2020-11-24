@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.oshi
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.metrics.data.MetricData
 import oshi.PlatformEnum
 import oshi.SystemInfo
 
@@ -19,7 +17,9 @@ class OshiTest extends AgentTestRunner {
 
     expect:
     platform != null
-    Collection<MetricData> metrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
-    metrics.size() == 7
+    // TODO(anuraaga): To check metrics for an agent test, we need to actually export and retrieve
+    // them.
+    // Collection<MetricData> metrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
+    // metrics.size() == 7
   }
 }
