@@ -148,7 +148,7 @@ jobs:
     steps:
       # run this action to get workflow conclusion
       # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v1
+      - uses: technote-space/workflow-conclusion-action@v2.0.2
       - name: Fail build
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
         run: exit 1
