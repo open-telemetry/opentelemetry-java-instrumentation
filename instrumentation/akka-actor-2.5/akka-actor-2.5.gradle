@@ -10,7 +10,7 @@ muzzle {
 }
 
 dependencies {
-  implementation project(':instrumentation:java-concurrent')
+  implementation project(':instrumentation:executors')
   compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
   testImplementation deps.scala

@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.data.SpanData
-import spock.lang.Shared
-
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
@@ -22,8 +23,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
 

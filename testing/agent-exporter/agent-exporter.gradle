@@ -19,10 +19,10 @@ dependencies {
   implementation group: 'io.grpc', name: 'grpc-testing', version: '1.30.2'
 
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
-  implementation project(':instrumentation:java-concurrent')
+  implementation project(':instrumentation:executors')
   // FIXME: we should enable this, but currently this fails tests for google http client
   //testImplementation project(':instrumentation:http-url-connection')
-  implementation project(':instrumentation:java-classloader')
+  implementation project(':instrumentation:classloaders')
 
   // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
   implementation project(':instrumentation:opentelemetry-api-1.0')
