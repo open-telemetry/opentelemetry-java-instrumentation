@@ -30,8 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("com.couchbase.client.core.endpoint.AbstractGenericHandler");
   }
 

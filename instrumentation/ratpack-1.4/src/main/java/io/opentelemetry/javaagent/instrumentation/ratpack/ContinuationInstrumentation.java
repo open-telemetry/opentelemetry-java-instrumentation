@@ -23,8 +23,7 @@ import ratpack.func.Block;
 final class ContinuationInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("ratpack.exec.internal.Continuation");
   }
 

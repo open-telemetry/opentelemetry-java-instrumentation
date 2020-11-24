@@ -48,7 +48,7 @@ public final class VertxWebInstrumentationModule extends InstrumentationModule {
 
   private static final class RouteInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("io.vertx.ext.web.Route");
     }
 

@@ -57,8 +57,7 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
 
   private static final class HystrixCommandInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed(
           "com.netflix.hystrix.HystrixCommand", "com.netflix.hystrix.HystrixObservableCommand");
     }

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("com.opensymphony.xwork2.ActionInvocation");
   }
 

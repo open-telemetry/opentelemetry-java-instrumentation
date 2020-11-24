@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("com.amazonaws.services.lambda.runtime.RequestHandler");
   }
 

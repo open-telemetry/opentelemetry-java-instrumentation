@@ -41,8 +41,7 @@ import org.apache.http.protocol.HttpCoreContext;
 final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.http.nio.client.HttpAsyncClient");
   }
 

@@ -33,8 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.net.http.HttpClient");
   }
 

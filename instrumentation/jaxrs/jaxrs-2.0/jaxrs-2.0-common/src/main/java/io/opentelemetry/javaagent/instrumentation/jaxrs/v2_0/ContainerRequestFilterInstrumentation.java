@@ -29,8 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.ws.rs.container.ContainerRequestFilter");
   }
 

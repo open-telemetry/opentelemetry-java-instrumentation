@@ -86,8 +86,7 @@ public class TraceConfigInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed(className);
     }
 
