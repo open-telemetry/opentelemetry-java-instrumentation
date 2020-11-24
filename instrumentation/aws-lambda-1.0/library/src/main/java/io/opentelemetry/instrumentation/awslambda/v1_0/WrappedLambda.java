@@ -86,36 +86,68 @@ class WrappedLambda {
   }
 
   Method getRequestTargetMethod() {
-    /*
-       Per method selection specifications
-       http://docs.aws.amazon.com/lambda/latest/dg/java-programming-model-handler-types.html
-       - Context can be omitted
-       - Select the method with the largest number of parameters.
-       - If two or more methods have the same number of parameters, AWS Lambda selects the method that has the Context as the last parameter.
-       - If none or all of these methods have the Context parameter, then the behavior is undefined.
-    */
+
     List<Method> methods = Arrays.asList(targetClass.getMethods());
     Optional<Method> firstOptional =
         methods.stream()
             .filter((Method m) -> m.getName().equals(targetMethodName))
-            .sorted(
-                (Method a, Method b) -> {
-                  // sort descending (reverse of default ascending)
-                  if (a.getParameterCount() != b.getParameterCount()) {
-                    return b.getParameterCount() - a.getParameterCount();
-                  }
-                  if (isLastParameterContext(a.getParameters())) {
-                    return -1;
-                  } else if (isLastParameterContext(b.getParameters())) {
-                    return 1;
-                  }
-                  return -1;
-                })
+            .sorted(this::methodComparator)
             .findFirst();
     if (!firstOptional.isPresent()) {
       throw new RuntimeException("Method " + targetMethodName + " not found");
     }
     return firstOptional.get();
+  }
+
+  /*
+   Per method selection specifications
+   http://docs.aws.amazon.com/lambda/latest/dg/java-programming-model-handler-types.html
+   - Context can be omitted
+   - Select the method with the largest number of parameters.
+   - If two or more methods have the same number of parameters, AWS Lambda selects the method that has the Context as the last parameter.
+   - Non-Bridge methods are preferred
+   - If none or all of these methods have the Context parameter, then the behavior is undefined.
+
+   Examples:
+   - handleA(String, String, Integer), handleB(String, Context) - handleA is selected (number of parameters)
+   - handleA(String, String, Integer), handleB(String, String, Context) - handleB is selected (has Context as the last parameter)
+   - generic method handleG(T, U, Context), implementation (T, U - String) handleA(String, String, Context), bridge method handleB(Object, Object, Context) - handleA is selected (non-bridge)
+  */
+  private int methodComparator(Method a, Method b) {
+    // greater number of params wins
+    if (a.getParameterCount() != b.getParameterCount()) {
+      return b.getParameterCount() - a.getParameterCount();
+    }
+    // only one of the methods has last param context ?
+    int onlyOneHasCtx = onlyOneHasContextAsLastParam(a, b);
+    if (onlyOneHasCtx != 0) {
+      return onlyOneHasCtx;
+    }
+    // one of the methods is a bridge, otherwise - undefined
+    return onlyOneIsBridgeMethod(a, b);
+  }
+
+  private int onlyOneIsBridgeMethod(Method first, Method second) {
+    boolean firstBridge = first.isBridge();
+    boolean secondBridge = second.isBridge();
+    if (firstBridge && !secondBridge) {
+      return 1;
+    } else if (!firstBridge && secondBridge) {
+      return -1;
+    }
+    return 0;
+  }
+
+  private int onlyOneHasContextAsLastParam(Method first, Method second) {
+    boolean firstCtx = isLastParameterContext(first.getParameters());
+    boolean secondCtx = isLastParameterContext(second.getParameters());
+    // only one of the methods has last param context ?
+    if (firstCtx && !secondCtx) {
+      return -1;
+    } else if (!firstCtx && secondCtx) {
+      return 1;
+    }
+    return 0;
   }
 
   Object getTargetObject() {

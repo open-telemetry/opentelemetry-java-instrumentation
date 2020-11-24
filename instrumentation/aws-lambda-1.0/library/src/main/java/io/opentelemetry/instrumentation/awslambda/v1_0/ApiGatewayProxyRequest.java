@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import static io.opentelemetry.instrumentation.awslambda.v1_0.HeadersFactory.ofStream;
 
-import com.amazonaws.serverless.proxy.model.Headers;
 import io.opentelemetry.api.OpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,7 +27,7 @@ abstract class ApiGatewayProxyRequest {
   private static boolean xrayPropagationFieldsOnly(List<String> fields) {
     // ugly but faster than typical convert-to-set-and-check-contains-only
     return (fields.size() == 1)
-        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equals(fields.get(0)));
+        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(fields.get(0)));
   }
 
   static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
@@ -42,9 +43,14 @@ abstract class ApiGatewayProxyRequest {
     return new CopiedApiGatewayProxyRequest(source);
   }
 
+  private static boolean nullOrEmpty(List<String> values) {
+    return ((values == null) || values.isEmpty());
+  }
+
   @Nullable
-  Headers getHeaders() throws IOException {
-    return ofStream(freshStream());
+  Map<String, String> getHeaders() throws IOException {
+    Map<String, String> headers = ofStream(freshStream());
+    return (headers == null ? Collections.emptyMap() : headers);
   }
 
   abstract InputStream freshStream() throws IOException;
@@ -63,8 +69,8 @@ abstract class ApiGatewayProxyRequest {
     }
 
     @Override
-    Headers getHeaders() {
-      return null;
+    Map<String, String> getHeaders() {
+      return Collections.emptyMap();
     }
   }
 
