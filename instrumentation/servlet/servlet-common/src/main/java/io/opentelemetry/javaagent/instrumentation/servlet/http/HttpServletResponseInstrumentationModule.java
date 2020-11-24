@@ -50,8 +50,7 @@ public final class HttpServletResponseInstrumentationModule extends Instrumentat
 
   private static final class HttpServletResponseInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("javax.servlet.http.HttpServletResponse");
     }
 

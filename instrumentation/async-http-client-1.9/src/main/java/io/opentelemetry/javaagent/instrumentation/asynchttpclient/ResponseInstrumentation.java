@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class ResponseInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("com.ning.http.client.AsyncCompletionHandler");
   }
 

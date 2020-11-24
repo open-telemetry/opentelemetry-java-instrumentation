@@ -9,19 +9,11 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import org.junit.Rule
-import org.junit.contrib.java.lang.system.EnvironmentVariables
-import spock.lang.Shared
 
-class TracingRequestWrapperTest extends InstrumentationSpecification implements InstrumentationTestTrait {
+class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
 
-  @Rule
-  public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
-
-  static class TestRequestHandler implements RequestHandler<String, String> {
+  static class TestRequestHandlerString implements RequestHandler<String, String> {
 
     @Override
     String handleRequest(String input, Context context) {
@@ -32,20 +24,11 @@ class TracingRequestWrapperTest extends InstrumentationSpecification implements 
     }
   }
 
-  @Shared
-  TracingRequestWrapper wrapper
+  def "handler string traced"() {
+    given:
+    setLambda(TestRequestHandlerString.getName()+"::handleRequest", TracingRequestWrapper)
 
-  def childSetup() {
-    environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestWrapperTest\$TestRequestHandler::handleRequest")
-    wrapper = new TracingRequestWrapper()
-  }
-
-  def "handler traced"() {
     when:
-    def context = Mock(Context)
-    context.getFunctionName() >> "my_function"
-    context.getAwsRequestId() >> "1-22-333"
-
     def result = wrapper.handleRequest("hello", context)
 
     then:
@@ -63,12 +46,11 @@ class TracingRequestWrapperTest extends InstrumentationSpecification implements 
     }
   }
 
-  def "handler traced with exception"() {
-    when:
-    def context = Mock(Context)
-    context.getFunctionName() >> "my_function"
-    context.getAwsRequestId() >> "1-22-333"
+  def "handler with exception"() {
+    given:
+    setLambda(TestRequestHandlerString.getName()+"::handleRequest", TracingRequestWrapper)
 
+    when:
     def thrown
     try {
       wrapper.handleRequest("goodbye", context)
@@ -92,5 +74,4 @@ class TracingRequestWrapperTest extends InstrumentationSpecification implements 
       }
     }
   }
-
 }

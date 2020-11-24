@@ -28,8 +28,7 @@ import org.jboss.netty.channel.Channel;
 final class NettyChannelInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.jboss.netty.channel.Channel");
   }
 

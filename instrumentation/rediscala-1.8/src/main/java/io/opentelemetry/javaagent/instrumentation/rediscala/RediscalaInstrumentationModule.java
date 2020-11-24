@@ -56,7 +56,7 @@ public final class RediscalaInstrumentationModule extends InstrumentationModule 
 
   private static final class RequestInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("redis.Request");
     }
 

@@ -46,9 +46,9 @@ class ReferenceMatcherTest extends AgentTestRunner {
 
   def "match safe classpaths"() {
     setup:
-    Reference[] refs = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
-      .values()
-      .toArray(new Reference[0])
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
     def refMatcher = new ReferenceMatcher(refs)
 
     expect:
@@ -83,9 +83,11 @@ class ReferenceMatcherTest extends AgentTestRunner {
         MethodBodyAdvice.SomeInterface,
         MethodBodyAdvice.SomeImplementation)] as URL[],
       (ClassLoader) null)
-    Reference[] refs = ReferenceCollector.collectReferencesFrom(MethodBodyAdvice.name)
-      .values()
-      .toArray(new Reference[0])
+
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
+
     def refMatcher1 = new ReferenceMatcher(refs)
     def refMatcher2 = new ReferenceMatcher(refs)
     assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)).empty
@@ -170,7 +172,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className] as String[], [reference] as Reference[])
+    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
       .getMismatchedReferenceSources(emptyClassLoader)
 
     then:
@@ -186,7 +188,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className] as String[], [reference] as Reference[])
+    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -201,7 +203,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className] as String[], [reference] as Reference[])
+    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -216,7 +218,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className] as String[], [reference] as Reference[])
+    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -233,7 +235,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className, emptySuperClassRef.className] as String[], [reference, emptySuperClassRef] as Reference[])
+    def mismatches = new ReferenceMatcher([reference.className, emptySuperClassRef.className], [reference, emptySuperClassRef] as Reference[])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -255,7 +257,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([helper.className, baseHelper.className] as String[], [helper, baseHelper] as Reference[])
+    def mismatches = new ReferenceMatcher([helper.className, baseHelper.className], [helper, baseHelper] as Reference[])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:

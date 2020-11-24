@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 final class FilterInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.glassfish.grizzly.filterchain.BaseFilter");
   }
 

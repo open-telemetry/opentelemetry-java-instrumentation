@@ -48,7 +48,7 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
 
   private static final class AsyncResultSingleInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       // Different versions of Vert.x has this class in different packages
       return hasClassesNamed("io.vertx.reactivex.core.impl.AsyncResultSingle")
           .or(hasClassesNamed("io.vertx.reactivex.impl.AsyncResultSingle"));

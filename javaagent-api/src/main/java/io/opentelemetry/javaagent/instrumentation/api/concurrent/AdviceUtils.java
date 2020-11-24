@@ -5,21 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 /** Helper utils for Runnable/Callable instrumentation. */
 public class AdviceUtils {
-
-  private static final Tracer TRACER =
-      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.java-concurrent");
-
-  public static Tracer tracer() {
-    return TRACER;
-  }
 
   /**
    * Start scope for a given task.

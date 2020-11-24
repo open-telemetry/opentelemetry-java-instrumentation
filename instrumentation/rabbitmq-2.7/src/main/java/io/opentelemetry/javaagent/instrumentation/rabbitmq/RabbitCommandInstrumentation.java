@@ -25,8 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 final class RabbitCommandInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("com.rabbitmq.client.Command");
   }
 

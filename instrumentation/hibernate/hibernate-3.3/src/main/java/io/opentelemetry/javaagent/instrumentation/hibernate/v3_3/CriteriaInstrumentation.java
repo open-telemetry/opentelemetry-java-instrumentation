@@ -29,8 +29,7 @@ import org.hibernate.Criteria;
 final class CriteriaInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.hibernate.Criteria");
   }
 

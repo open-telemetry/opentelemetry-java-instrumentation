@@ -1,8 +1,0 @@
-ext.skipPublish = true
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  testImplementation project(':instrumentation:java-classloader')
-
-  testImplementation group: 'org.jboss.modules', name: 'jboss-modules', version: '1.3.10.Final'
-}

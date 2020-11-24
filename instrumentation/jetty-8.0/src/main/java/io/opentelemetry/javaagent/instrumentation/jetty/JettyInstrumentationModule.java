@@ -50,8 +50,7 @@ public final class JettyInstrumentationModule extends InstrumentationModule {
 
   private static final class HandlerInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      // Optimization for expensive typeMatcher.
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.eclipse.jetty.server.Handler");
     }
 

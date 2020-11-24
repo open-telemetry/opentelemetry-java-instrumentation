@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,9 @@ public final class MuzzleGradlePluginUtil {
    *   <li>{@code userClassLoader} is not matched by the {@link
    *       InstrumentationModule#classLoaderMatcher()} method
    *   <li>{@link ReferenceMatcher} of any instrumentation module finds any mismatch
-   *   <li>any helper class defined in {@link InstrumentationModule#helperClassNames()} fails to be
-   *       injected into {@code userClassLoader}
+   *   <li>any helper class defined in {@link InstrumentationModule#getMuzzleHelperClassNames()} or
+   *       {@link InstrumentationModule#additionalHelperClassNames()} fails to be injected into
+   *       {@code userClassLoader}
    * </ol>
    *
    * <p>When {@code assertPass = false} this method behaves in an opposite way: failure in any of
@@ -92,11 +94,11 @@ public final class MuzzleGradlePluginUtil {
           ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
         try {
           // verify helper injector works
-          String[] helperClassNames = instrumentationModule.helperClassNames();
-          if (helperClassNames.length > 0) {
+          List<String> allHelperClasses = instrumentationModule.getAllHelperClassNames();
+          if (!allHelperClasses.isEmpty()) {
             new HelperInjector(
                     MuzzleGradlePluginUtil.class.getSimpleName(),
-                    createHelperMap(helperClassNames, agentClassLoader))
+                    createHelperMap(allHelperClasses, agentClassLoader))
                 .transform(null, null, userClassLoader, null);
           }
         } catch (Exception e) {
@@ -109,8 +111,8 @@ public final class MuzzleGradlePluginUtil {
   }
 
   private static Map<String, byte[]> createHelperMap(
-      String[] helperClassNames, ClassLoader agentClassLoader) throws IOException {
-    Map<String, byte[]> helperMap = new LinkedHashMap<>(helperClassNames.length);
+      Collection<String> helperClassNames, ClassLoader agentClassLoader) throws IOException {
+    Map<String, byte[]> helperMap = new LinkedHashMap<>(helperClassNames.size());
     for (String helperName : helperClassNames) {
       ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(agentClassLoader);
       byte[] classBytes = locator.locate(helperName).resolve();

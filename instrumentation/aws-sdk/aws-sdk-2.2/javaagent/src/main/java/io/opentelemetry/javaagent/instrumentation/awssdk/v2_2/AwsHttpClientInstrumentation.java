@@ -31,8 +31,7 @@ import software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRe
 final class AwsHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed(
         "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage");
   }
