@@ -176,6 +176,10 @@ class ReferenceCollectorTest extends AgentTestRunner {
       TestHelperClasses.HelperSuperClass.name,
       TestHelperClasses.Helper.name
     ]
+    assertThatContainsInOrder helperClasses, [
+      OtherTestHelperClasses.TestEnum.name,
+      OtherTestHelperClasses.TestEnum.name + '$1',
+    ]
     new HashSet<>(helperClasses) == new HashSet([
       TestHelperClasses.HelperSuperClass.name,
       TestHelperClasses.HelperInterface.name,
