@@ -25,7 +25,7 @@ public class AttributeKeys {
           };
 
   public static final AttributeKey<Context> CONNECT_CONTEXT =
-      attributeKey(AttributeKeys.class.getName() + ".connect0context");
+      attributeKey(AttributeKeys.class.getName() + ".connect-context");
 
   // this is the context that has the server span
   public static final AttributeKey<Context> SERVER_SPAN =
