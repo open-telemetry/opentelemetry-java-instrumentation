@@ -51,19 +51,6 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "com.google.common.base.Preconditions",
-      "com.google.common.base.Joiner",
-      "com.google.common.base.Joiner$1",
-      "com.google.common.base.Joiner$2",
-      "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer",
-      packageName + ".TransportActionListener",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AbstractClientInstrumentation());
   }

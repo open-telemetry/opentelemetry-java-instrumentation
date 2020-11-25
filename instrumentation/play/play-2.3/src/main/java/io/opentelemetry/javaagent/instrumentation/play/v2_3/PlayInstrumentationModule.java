@@ -30,11 +30,6 @@ public final class PlayInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".PlayTracer", packageName + ".RequestCompleteCallback"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ActionInstrumentation());
   }

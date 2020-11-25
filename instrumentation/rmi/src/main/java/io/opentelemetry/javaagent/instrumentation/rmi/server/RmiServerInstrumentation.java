@@ -40,11 +40,6 @@ public final class RmiServerInstrumentation extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".RmiServerTracer"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ServerInstrumentation());
   }

@@ -19,16 +19,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".LettuceAbstractDatabaseClientTracer",
-      packageName + ".LettuceConnectionDatabaseClientTracer",
-      packageName + ".LettuceDatabaseClientTracer",
-      packageName + ".InstrumentationPoints"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new LettuceClientInstrumentation(), new LettuceAsyncCommandsInstrumentation());
   }

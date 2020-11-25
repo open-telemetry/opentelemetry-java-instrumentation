@@ -41,13 +41,6 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".FinatraTracer", FinatraInstrumentationModule.class.getName() + "$Listener"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RouteInstrumentation());
   }

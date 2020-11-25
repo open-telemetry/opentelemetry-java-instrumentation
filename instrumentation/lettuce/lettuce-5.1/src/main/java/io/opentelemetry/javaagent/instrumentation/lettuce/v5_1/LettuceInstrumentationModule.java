@@ -32,20 +32,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter",
-      packageName + ".OpenTelemetryTracing",
-      packageName + ".OpenTelemetryTracing$OpenTelemetryTracerProvider",
-      packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContextProvider",
-      packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContext",
-      packageName + ".OpenTelemetryTracing$OpenTelemetryEndpoint",
-      packageName + ".OpenTelemetryTracing$OpenTelemetryTracer",
-      packageName + ".OpenTelemetryTracing$OpenTelemetrySpan",
-    };
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("io.lettuce.core.tracing.Tracing");
   }

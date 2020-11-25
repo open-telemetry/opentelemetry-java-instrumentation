@@ -27,15 +27,6 @@ public final class ReactorInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.reactor.TracingOperator$Lifter",
-      "io.opentelemetry.instrumentation.reactor.TracingOperator",
-      "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HooksInstrumentation());
   }

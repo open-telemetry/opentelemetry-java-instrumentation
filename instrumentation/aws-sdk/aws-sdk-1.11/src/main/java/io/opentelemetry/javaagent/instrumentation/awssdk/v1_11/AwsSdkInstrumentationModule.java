@@ -21,16 +21,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AwsSdkClientTracer",
-      packageName + ".AwsSdkClientTracer$NamesCache",
-      packageName + ".RequestMeta",
-      packageName + ".TracingRequestHandler",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AwsClientInstrumentation(),
@@ -41,6 +31,8 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("com.amazonaws.AmazonWebServiceRequest", packageName + ".RequestMeta");
+    return singletonMap(
+        "com.amazonaws.AmazonWebServiceRequest",
+        "io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta");
   }
 }

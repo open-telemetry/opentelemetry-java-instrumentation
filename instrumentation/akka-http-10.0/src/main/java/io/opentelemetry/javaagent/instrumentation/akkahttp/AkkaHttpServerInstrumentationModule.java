@@ -39,18 +39,6 @@ public final class AkkaHttpServerInstrumentationModule extends InstrumentationMo
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AkkaHttpServerInstrumentationModule.class.getName() + "$SyncWrapper",
-      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper",
-      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper$1",
-      AkkaHttpServerInstrumentationModule.class.getName() + "$AsyncWrapper$2",
-      packageName + ".AkkaHttpServerHeaders",
-      packageName + ".AkkaHttpServerTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpExtInstrumentation());
   }

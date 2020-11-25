@@ -30,17 +30,6 @@ public class JaxRsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable",
-      "io.opentelemetry.javaagent.tooling.ClassHierarchyIterable$ClassIterator",
-      packageName + ".JaxRsAnnotationsTracer",
-      packageName + ".CompletionStageFinishCallback",
-      packageName + ".RequestContextHelper"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContainerRequestFilterInstrumentation(),

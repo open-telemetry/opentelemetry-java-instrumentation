@@ -34,14 +34,6 @@ public class Elasticsearch6RestClientInstrumentationModule extends Instrumentati
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer",
-      packageName + ".RestResponseListener",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
   }

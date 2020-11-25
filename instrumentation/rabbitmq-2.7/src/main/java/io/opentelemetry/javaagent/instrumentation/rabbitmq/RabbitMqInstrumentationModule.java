@@ -19,17 +19,6 @@ public class RabbitMqInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RabbitTracer",
-      packageName + ".TextMapInjectAdapter",
-      packageName + ".TextMapExtractAdapter",
-      packageName + ".TracedDelegatingConsumer",
-      RabbitCommandInstrumentation.class.getName() + "$SpanHolder",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new RabbitChannelInstrumentation(), new RabbitCommandInstrumentation());
   }

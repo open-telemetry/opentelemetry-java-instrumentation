@@ -199,7 +199,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       /*
        * protected synchronized ReferenceMatcher getMuzzleReferenceMatcher() {
        *   if (null == this.muzzleReferenceMatcher) {
-       *     this.muzzleReferenceMatcher = new ReferenceMatcher(this.helperClassNames(),
+       *     this.muzzleReferenceMatcher = new ReferenceMatcher(this.getAllHelperClassNames(),
        *                                                        new Reference[]{
        *                                                                       //reference builders
        *                                                                       });

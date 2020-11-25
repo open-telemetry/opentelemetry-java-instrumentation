@@ -71,13 +71,6 @@ public final class TraceAnnotationsInstrumentationModule extends Instrumentation
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TraceAnnotationTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AnnotatedMethodsInstrumentation());
   }

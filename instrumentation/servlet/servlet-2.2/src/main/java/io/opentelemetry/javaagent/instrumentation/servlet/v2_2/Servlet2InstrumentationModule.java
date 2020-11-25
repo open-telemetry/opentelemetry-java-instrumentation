@@ -30,16 +30,6 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
-      packageName + ".ResponseWithStatus",
-      packageName + ".Servlet2HttpServerTracer"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
         new HttpServletResponseInstrumentation(), new ServletAndFilterInstrumentation());

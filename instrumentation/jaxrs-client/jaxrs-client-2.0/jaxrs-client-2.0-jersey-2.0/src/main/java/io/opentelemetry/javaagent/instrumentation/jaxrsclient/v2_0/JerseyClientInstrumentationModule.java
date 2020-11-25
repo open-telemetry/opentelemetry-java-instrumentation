@@ -41,15 +41,6 @@ public final class JerseyClientInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      getClass().getName() + "$WrappedFuture",
-      packageName + ".JaxRsClientTracer",
-      packageName + ".InjectAdapter",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new JerseyClientConnectionErrorInstrumentation());
   }

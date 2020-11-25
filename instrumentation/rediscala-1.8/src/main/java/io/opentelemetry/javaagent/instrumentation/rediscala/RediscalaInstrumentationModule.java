@@ -42,14 +42,6 @@ public final class RediscalaInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      RediscalaInstrumentationModule.class.getName() + "$OnCompleteHandler",
-      packageName + ".RediscalaClientTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RequestInstrumentation());
   }

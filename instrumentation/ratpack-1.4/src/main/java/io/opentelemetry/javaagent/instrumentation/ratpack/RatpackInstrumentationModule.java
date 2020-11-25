@@ -19,18 +19,6 @@ public class RatpackInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ActionWrapper",
-      packageName + ".BlockWrapper",
-      packageName + ".RatpackTracer",
-      packageName + ".TracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContinuationInstrumentation(),

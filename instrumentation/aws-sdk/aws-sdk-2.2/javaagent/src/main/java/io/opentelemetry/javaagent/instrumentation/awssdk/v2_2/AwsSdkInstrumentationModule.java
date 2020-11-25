@@ -20,20 +20,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
     super("aws-sdk", "aws-sdk-2.2");
   }
 
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TracingExecutionInterceptor",
-      packageName + ".TracingExecutionInterceptor$ScopeHolder",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.RequestType",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.SdkRequestDecorator",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.DbRequestDecorator",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor"
-    };
-  }
-
   /**
    * Injects resource file with reference to our {@link TracingExecutionInterceptor} to allow SDK's
    * service loading mechanism to pick it up.

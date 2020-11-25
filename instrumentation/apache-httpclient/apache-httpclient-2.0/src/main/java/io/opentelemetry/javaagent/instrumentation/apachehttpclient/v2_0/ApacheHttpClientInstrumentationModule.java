@@ -37,13 +37,6 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".CommonsHttpClientTracer", packageName + ".HttpHeadersInjectAdapter",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpClientInstrumentation());
   }

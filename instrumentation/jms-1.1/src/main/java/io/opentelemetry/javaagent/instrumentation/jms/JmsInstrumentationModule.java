@@ -21,16 +21,6 @@ public class JmsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".MessageDestination",
-      packageName + ".JmsTracer",
-      packageName + ".MessageExtractAdapter",
-      packageName + ".MessageInjectAdapter"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new JmsMessageConsumerInstrumentation(),

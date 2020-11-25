@@ -23,14 +23,6 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ProcedureCallInstrumentation(), new SessionInstrumentation());
   }

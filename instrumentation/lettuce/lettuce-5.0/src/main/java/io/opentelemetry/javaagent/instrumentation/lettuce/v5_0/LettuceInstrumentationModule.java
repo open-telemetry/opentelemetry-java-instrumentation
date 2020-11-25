@@ -27,23 +27,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter",
-      packageName + ".LettuceAbstractDatabaseClientTracer",
-      packageName + ".LettuceConnectionDatabaseClientTracer",
-      packageName + ".LettuceDatabaseClientTracer",
-      packageName + ".LettuceInstrumentationUtil",
-      packageName + ".LettuceAsyncBiFunction",
-      packageName + ".rx.LettuceMonoCreationAdvice",
-      packageName + ".rx.LettuceMonoDualConsumer",
-      packageName + ".rx.LettuceFluxCreationAdvice",
-      packageName + ".rx.LettuceFluxTerminationRunnable",
-      packageName + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new LettuceAsyncCommandsInstrumentation(),

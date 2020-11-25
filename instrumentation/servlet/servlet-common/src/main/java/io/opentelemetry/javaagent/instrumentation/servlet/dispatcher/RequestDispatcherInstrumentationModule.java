@@ -42,13 +42,6 @@ public final class RequestDispatcherInstrumentationModule extends Instrumentatio
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RequestDispatcherTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RequestDispatcherInstrumentation());
   }

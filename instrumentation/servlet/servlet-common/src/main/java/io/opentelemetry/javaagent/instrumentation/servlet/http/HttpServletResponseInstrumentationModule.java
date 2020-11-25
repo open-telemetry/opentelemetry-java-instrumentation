@@ -37,13 +37,6 @@ public final class HttpServletResponseInstrumentationModule extends Instrumentat
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpServletResponseTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpServletResponseInstrumentation());
   }

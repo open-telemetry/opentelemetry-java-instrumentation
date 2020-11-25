@@ -57,15 +57,6 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      getClass().getName() + "$CoroutineWrapper",
-      getClass().getName() + "$TraceScopeKey",
-      getClass().getName() + "$CoroutineContextWrapper",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new KotlinDebugProbeInstrumentation());
   }

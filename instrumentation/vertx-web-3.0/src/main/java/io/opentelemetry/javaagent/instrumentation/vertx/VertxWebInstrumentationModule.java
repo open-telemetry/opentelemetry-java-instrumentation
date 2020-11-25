@@ -35,13 +35,6 @@ public final class VertxWebInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RoutingContextHandlerWrapper", packageName + ".VertxTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RouteInstrumentation());
   }

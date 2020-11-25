@@ -22,13 +22,6 @@ public class AsyncHttpClientInstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AsyncHttpClientTracer", packageName + ".AsyncHttpClientInjectAdapter"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new RequestInstrumentation(), new ResponseInstrumentation());
   }

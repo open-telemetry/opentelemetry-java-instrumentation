@@ -37,18 +37,6 @@ public final class SpymemcachedInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".MemcacheClientTracer",
-      packageName + ".CompletionListener",
-      packageName + ".SyncCompletionListener",
-      packageName + ".GetCompletionListener",
-      packageName + ".OperationCompletionListener",
-      packageName + ".BulkGetCompletionListener"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new MemcachedClientInstrumentation());
   }

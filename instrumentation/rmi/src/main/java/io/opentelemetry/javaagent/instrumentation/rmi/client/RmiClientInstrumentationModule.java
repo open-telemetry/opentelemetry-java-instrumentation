@@ -35,11 +35,6 @@ public final class RmiClientInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".RmiClientTracer"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ClientInstrumentation());
   }

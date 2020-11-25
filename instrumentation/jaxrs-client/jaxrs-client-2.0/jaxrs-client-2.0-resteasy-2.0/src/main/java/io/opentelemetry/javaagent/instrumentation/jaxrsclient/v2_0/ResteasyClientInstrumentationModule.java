@@ -43,13 +43,6 @@ public final class ResteasyClientInstrumentationModule extends InstrumentationMo
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ResteasyClientTracer", packageName + ".ResteasyInjectAdapter",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ResteasyClientConnectionErrorInstrumentation());
   }

@@ -57,15 +57,6 @@ public abstract class InstrumentationModule {
   protected final boolean enabled;
 
   /**
-   * Deprecated, will be removed.
-   *
-   * @deprecated Will be removed together with {@link #helperClassNames()}
-   */
-  @Deprecated
-  protected final String packageName =
-      getClass().getPackage() == null ? "" : getClass().getPackage().getName();
-
-  /**
    * Creates an instrumentation module. Note that all implementations of {@link
    * InstrumentationModule} must have a default constructor (for SPI), so they have to pass the
    * instrumentation names to the super class constructor.
@@ -296,17 +287,6 @@ public abstract class InstrumentationModule {
    */
   public int getOrder() {
     return 0;
-  }
-
-  /**
-   * Deprecated, will be removed.
-   *
-   * @deprecated This method is replaced by {@link #getMuzzleHelperClassNames()} and {@link
-   *     #additionalHelperClassNames()}, extending it provides no effect.
-   */
-  @Deprecated
-  public String[] helperClassNames() {
-    return EMPTY;
   }
 
   /** Returns resource names to inject into the user's classloader. */

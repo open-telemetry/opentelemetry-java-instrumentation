@@ -37,11 +37,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$Context", getClass().getName() + "$Context$1"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextTestInstrumentation());
   }
