@@ -16,7 +16,7 @@ import java.util.Set;
 public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
   public SpanExporter fromConfig(Properties config) {
-    return new LoggingExporter(config.getProperty("otel.logging.prefix", "Logging Exporter:"));
+    return new LoggingExporter(config.getProperty("otel.exporter.logging.prefix", ""));
   }
 
   @Override

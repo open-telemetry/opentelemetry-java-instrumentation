@@ -13,7 +13,6 @@ import io.opentelemetry.test.annotation.TracedWithSpan
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
     it.setProperty("otel.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
   }
 

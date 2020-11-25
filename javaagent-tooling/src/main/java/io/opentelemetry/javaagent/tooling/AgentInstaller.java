@@ -46,7 +46,7 @@ public class AgentInstaller {
   private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  private static final String EXCLUDED_CLASSES_CONFIG = "otel.trace.classes.exclude";
+  private static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
