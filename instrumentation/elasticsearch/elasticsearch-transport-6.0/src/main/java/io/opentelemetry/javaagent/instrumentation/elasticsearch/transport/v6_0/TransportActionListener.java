@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.setPeer;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
 
-import com.google.common.base.Joiner;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
@@ -45,14 +44,14 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
       if (indices != null && indices.length > 0) {
-        span.setAttribute("elasticsearch.request.indices", Joiner.on(",").join(indices));
+        span.setAttribute("elasticsearch.request.indices", String.join(",", indices));
       }
     }
     if (request instanceof SearchRequest) {
       SearchRequest req = (SearchRequest) request;
       String[] types = req.types();
       if (types != null && types.length > 0) {
-        span.setAttribute("elasticsearch.request.search.types", Joiner.on(",").join(types));
+        span.setAttribute("elasticsearch.request.search.types", String.join(",", types));
       }
     }
     if (request instanceof DocWriteRequest) {

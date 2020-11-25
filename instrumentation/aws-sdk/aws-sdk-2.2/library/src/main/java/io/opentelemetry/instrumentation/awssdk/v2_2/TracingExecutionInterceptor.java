@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAtt
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import java.util.EnumMap;
@@ -23,6 +24,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
+import software.amazon.awssdk.http.SdkHttpRequest;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -84,6 +86,23 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
     }
+  }
+
+  @Override
+  public SdkHttpRequest modifyHttpRequest(
+      Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    io.opentelemetry.context.Context otelContext =
+        executionAttributes.getAttribute(CONTEXT_ATTRIBUTE);
+    // Never null in practice unless another interceptor cleared out the attribute, which
+    // is theoretically possible.
+    if (otelContext == null) {
+      return context.httpRequest();
+    }
+    SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+    return builder.build();
   }
 
   @Override

@@ -39,18 +39,6 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {
-      // TODO: use Java 8 Collectors.joining() instead
-      "com.google.common.base.Preconditions",
-      "com.google.common.base.Joiner",
-      "com.google.common.base.Joiner$1",
-      "com.google.common.base.Joiner$2",
-      "com.google.common.base.Joiner$MapJoiner",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AbstractClientInstrumentation());
   }
