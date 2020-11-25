@@ -20,9 +20,9 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY);
+    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Context parentContext = parentAttr.get();
-    Span span = ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).get();
+    Span span = ctx.channel().attr(AttributeKeys.CLIENT_SPAN).get();
 
     boolean finishSpan = msg instanceof HttpResponse;
 
