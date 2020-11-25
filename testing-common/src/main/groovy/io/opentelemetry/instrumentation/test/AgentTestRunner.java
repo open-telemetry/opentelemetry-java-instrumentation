@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -85,6 +86,14 @@ public abstract class AgentTestRunner extends Specification {
   }
 
   /**
+   * Returns conditions for the classname for a class and throwable of an error for which errors
+   * should be ignored.
+   */
+  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
+    return Collections.emptyList();
+  }
+
+  /**
    * Normally {@code @BeforeClass} is run only on static methods, but spock allows us to run it on
    * instance methods. Note: this means there is a 'special' instance of test class that is not used
    * to run any tests, but instead is just used to run this method once.
@@ -92,10 +101,8 @@ public abstract class AgentTestRunner extends Specification {
   @BeforeClass
   public void setupBeforeTests() {
     TestAgentListenerAccess.reset();
-    if (!skipTransformationConditions().isEmpty()) {
-      skipTransformationConditions()
-          .forEach(TestAgentListenerAccess::addSkipTransformationCondition);
-    }
+    skipTransformationConditions().forEach(TestAgentListenerAccess::addSkipTransformationCondition);
+    skipErrorConditions().forEach(TestAgentListenerAccess::addSkipErrorCondition);
   }
 
   @Before

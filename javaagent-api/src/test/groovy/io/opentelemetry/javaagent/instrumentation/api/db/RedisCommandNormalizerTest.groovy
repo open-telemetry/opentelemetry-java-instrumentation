@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.test.ConfigUtils
 import spock.lang.Specification
 import spock.lang.Unroll
 

@@ -12,6 +12,7 @@ dependencies {
   annotationProcessor deps.autoValue
 
   testImplementation project(':testing-common')
+  testImplementation project(':testing:instrumentation-test-utils')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
 }

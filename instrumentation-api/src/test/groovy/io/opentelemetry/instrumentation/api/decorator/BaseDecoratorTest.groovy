@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.decorator
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.ConfigUtils
 import spock.lang.Shared
 import spock.lang.Specification
 

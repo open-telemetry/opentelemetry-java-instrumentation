@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -33,6 +34,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
     INSTANCE.transformedClassesTypes.clear();
     INSTANCE.instrumentationErrorCount.set(0);
     INSTANCE.skipTransformationConditions.clear();
+    INSTANCE.skipErrorConditions.clear();
   }
 
   public static int getInstrumentationErrorCount() {
@@ -53,6 +55,10 @@ public class TestAgentListener implements AgentBuilder.Listener {
     INSTANCE.skipTransformationConditions.add(condition);
   }
 
+  public static void addSkipErrorCondition(BiFunction<String, Throwable, Boolean> condition) {
+    INSTANCE.skipErrorConditions.add(condition);
+  }
+
   static final TestAgentListener INSTANCE = new TestAgentListener();
 
   private final Set<String> transformedClassesNames =
@@ -61,6 +67,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
       Collections.newSetFromMap(new ConcurrentHashMap<>());
   private final AtomicInteger instrumentationErrorCount = new AtomicInteger(0);
   private final Set<Function<String, Boolean>> skipTransformationConditions =
+      Collections.newSetFromMap(new ConcurrentHashMap<>());
+  private final Set<BiFunction<String, Throwable, Boolean>> skipErrorConditions =
       Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   @Override
@@ -99,6 +107,11 @@ public class TestAgentListener implements AgentBuilder.Listener {
       JavaModule module,
       boolean loaded,
       Throwable throwable) {
+    for (BiFunction<String, Throwable, Boolean> condition : skipErrorConditions) {
+      if (condition.apply(typeName, throwable)) {
+        return;
+      }
+    }
     if (!(throwable instanceof AbortTransformationException)) {
       logger.error(
           "Unexpected instrumentation error when instrumenting {} on {}",

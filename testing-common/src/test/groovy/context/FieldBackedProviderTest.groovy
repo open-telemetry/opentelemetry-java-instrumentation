@@ -5,11 +5,16 @@
 
 package context
 
+import static context.ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
+import static context.ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
+import static context.ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
+import static context.ContextTestInstrumentationModule.KeyClass
+import static context.ContextTestInstrumentationModule.UntransformableKeyClass
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.util.gc.GcUtils
 import net.bytebuddy.agent.ByteBuddyAgent
-import net.bytebuddy.utility.JavaModule
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
@@ -21,13 +26,8 @@ import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.BiFunction
 import java.util.function.Function
-
-import static context.ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.KeyClass
-import static context.ContextTestInstrumentationModule.UntransformableKeyClass
 
 class FieldBackedProviderTest extends AgentTestRunner {
 
@@ -36,14 +36,15 @@ class FieldBackedProviderTest extends AgentTestRunner {
   }
 
   @Override
-  boolean onInstrumentationError(
-    final String typeName,
-    final ClassLoader classLoader,
-    final JavaModule module,
-    final boolean loaded,
-    final Throwable throwable) {
-    // Incorrect* classes assert on incorrect api usage. Error expected.
-    return !(typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
+    return [
+      new BiFunction<String, Throwable, Boolean>() {
+        @Override
+        Boolean apply(String s, Throwable throwable) {
+          return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
+        }
+      }
+    ]
   }
 
   @Override
@@ -232,14 +233,15 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
   }
 
   @Override
-  boolean onInstrumentationError(
-    final String typeName,
-    final ClassLoader classLoader,
-    final JavaModule module,
-    final boolean loaded,
-    final Throwable throwable) {
-    // Incorrect* classes assert on incorrect api usage. Error expected.
-    return !(typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
+    return [
+      new BiFunction<String, Throwable, Boolean>() {
+        @Override
+        Boolean apply(String typeName, Throwable throwable) {
+          return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
+        }
+      }
+    ]
   }
 
   def "Check that structure is not modified when structure modification is disabled"() {
