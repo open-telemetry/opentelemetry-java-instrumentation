@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule {
 
   public KotlinCoroutinesInstrumentationModule() {
-    super("kotlin-coroutines");
+    super("kotlinx-coroutines");
   }
 
   @Override
