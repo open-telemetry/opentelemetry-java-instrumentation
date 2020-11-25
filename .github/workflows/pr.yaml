@@ -64,7 +64,7 @@ jobs:
         uses: nick-invision/retry@v2.2.0
         with:
           command: ./gradlew testJava${{ matrix.java }} --stacktrace -x :smoke-tests:test -Dorg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
-          timeout_minutes: 90
+          timeout_minutes: 180
           max_attempts: 3
 
       - name: Aggregate test reports with ciMate
