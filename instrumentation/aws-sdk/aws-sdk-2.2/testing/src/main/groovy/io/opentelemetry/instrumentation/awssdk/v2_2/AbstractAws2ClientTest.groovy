@@ -148,7 +148,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") == null
+    server.lastRequest.headers.get("traceparent") != null
   }
 
   static dynamoDbRequestDataTable(client) {
@@ -226,7 +226,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") == null
+    server.lastRequest.headers.get("traceparent") != null
 
     where:
     service   | operation           | method | path                  | requestId                              | builder                 | call                                                                                             | body
@@ -314,7 +314,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") == null
+    server.lastRequest.headers.get("traceparent") != null
 
     where:
     service | operation           | method | path                  | requestId                              | builder                  | call                                                                                                                             | body
