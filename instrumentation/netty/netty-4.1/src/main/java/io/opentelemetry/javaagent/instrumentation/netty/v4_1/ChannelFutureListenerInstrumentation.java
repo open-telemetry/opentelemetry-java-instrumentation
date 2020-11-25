@@ -58,8 +58,7 @@ final class ChannelFutureListenerInstrumentation implements TypeInstrumentation 
       if (cause == null) {
         return null;
       }
-      Context parentContext =
-          future.channel().attr(AttributeKeys.CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+      Context parentContext = future.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
       if (parentContext == null) {
         return null;
       }

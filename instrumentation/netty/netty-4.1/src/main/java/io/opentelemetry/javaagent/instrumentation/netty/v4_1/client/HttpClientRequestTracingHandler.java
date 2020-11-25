@@ -29,19 +29,18 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     // TODO pass Context into Tracer.startSpan() and then don't need this scoping
     Scope parentScope = null;
-    Context parentContext =
-        ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
     if (parentContext != null) {
       parentScope = parentContext.makeCurrent();
     }
 
     HttpRequest request = (HttpRequest) msg;
 
-    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(Context.current());
+    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(Context.current());
 
     Span span = tracer().startSpan(request);
     NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
-    ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
+    ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(span);
 
     try (Scope ignored = tracer().startScope(span, request.headers())) {
       ctx.write(msg, prm);
