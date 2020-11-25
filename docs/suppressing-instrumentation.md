@@ -26,6 +26,6 @@ which could have unknown side-effects.
 If you find yourself needing to use this, it would be great if you could drop us an issue explaining why,
 so that we can try to come up with a better solution to address your need.
 
-| System property       | Environment variable  | Purpose                                                                                           |
-|-----------------------|-----------------------|---------------------------------------------------------------------------------------------------|
-| otel.trace.classes.exclude | OTEL_TRACE_CLASSES_EXCLUDE | Suppresses all instrumentation for specific classes, format is "my.package.MyClass,my.package2.*" |
+| System property                | Environment variable           | Purpose                                                                                           |
+|--------------------------------|--------------------------------|---------------------------------------------------------------------------------------------------|
+| otel.javaagent.exclude-classes | OTEL_JAVAAGENT_EXCLUDE_CLASSES | Suppresses all instrumentation for specific classes, format is "my.package.MyClass,my.package2.*" |
