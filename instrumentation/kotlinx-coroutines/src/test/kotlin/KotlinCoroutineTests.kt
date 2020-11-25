@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
@@ -21,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
@@ -145,35 +147,35 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   suspend fun a(iter: Long) {
     var span = tracer.spanBuilder("a").startSpan()
     span.setAttribute("iter", iter)
-    var scope = span.makeCurrent()
-    delay(10)
-    a2(iter)
-    scope.close()
+    withContext(span.asContextElement()) {
+      delay(10)
+      a2(iter)
+    }
     span.end()
   }
   suspend fun a2(iter: Long) {
     var span = tracer.spanBuilder("a2").startSpan()
     span.setAttribute("iter", iter)
-    var scope = span.makeCurrent()
-    delay(10)
-    scope.close()
+    withContext(span.asContextElement()) {
+      delay(10)
+    }
     span.end()
   }
   suspend fun b(iter: Long) {
     var span = tracer.spanBuilder("b").startSpan()
     span.setAttribute("iter", iter)
-    var scope = span.makeCurrent()
-    delay(10)
-    b2(iter)
-    scope.close()
+    withContext(span.asContextElement()) {
+      delay(10)
+      b2(iter)
+    }
     span.end()
   }
   suspend fun b2(iter: Long) {
     var span = tracer.spanBuilder("b2").startSpan()
     span.setAttribute("iter", iter)
-    var scope = span.makeCurrent()
-    delay(10)
-    scope.close()
+    withContext(span.asContextElement()) {
+      delay(10)
+    }
     span.end()
   }
 
