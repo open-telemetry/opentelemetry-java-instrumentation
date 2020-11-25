@@ -32,10 +32,8 @@ buildCache {
 rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
-include ':opentelemetry-sdk-shaded-for-testing'
 include ':opentelemetry-api-shaded-for-instrumenting'
 include ':opentelemetry-ext-annotations-shaded-for-instrumenting'
-include ':opentelemetry-sdk-shaded-for-instrumenting'
 include ':javaagent-bootstrap'
 include ':javaagent-spi'
 include ':javaagent-tooling'

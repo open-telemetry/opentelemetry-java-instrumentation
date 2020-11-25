@@ -28,8 +28,7 @@ afterEvaluate {
     compileOnly project(':javaagent-bootstrap')
     // Apply common dependencies for instrumentation.
     compileOnly(project(':javaagent-tooling')) {
-      // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-      // is brought in for tests by project(:testing-common) below
+      // OpenTelemetry SDK is not needed for compilation
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     }
     implementation deps.bytebuddy
