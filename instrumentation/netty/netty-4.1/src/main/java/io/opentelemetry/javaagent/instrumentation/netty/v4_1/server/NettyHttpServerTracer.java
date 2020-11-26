@@ -42,12 +42,12 @@ public class NettyHttpServerTracer
 
   @Override
   protected void attachServerContext(Context context, Channel channel) {
-    channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(context);
+    channel.attr(AttributeKeys.SERVER_SPAN).set(context);
   }
 
   @Override
   public Context getServerContext(Channel channel) {
-    return channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
+    return channel.attr(AttributeKeys.SERVER_SPAN).get();
   }
 
   @Override
