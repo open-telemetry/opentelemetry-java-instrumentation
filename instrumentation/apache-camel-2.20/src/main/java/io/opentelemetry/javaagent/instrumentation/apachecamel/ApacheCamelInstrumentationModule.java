@@ -38,7 +38,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
     return singletonList(new CamelContextInstrumentation());
   }
 
-  private static final class CamelContextInstrumentation implements TypeInstrumentation {
+  public static class CamelContextInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.camel.CamelContext");

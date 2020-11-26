@@ -31,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 
-final class SessionFactoryInstrumentation implements TypeInstrumentation {
+public class SessionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

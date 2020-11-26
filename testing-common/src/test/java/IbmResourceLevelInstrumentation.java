@@ -28,7 +28,7 @@ public class IbmResourceLevelInstrumentation extends InstrumentationModule {
     return singletonList(new ResourceLevelInstrumentation());
   }
 
-  private static final class ResourceLevelInstrumentation implements TypeInstrumentation {
+  public static class ResourceLevelInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.ibm.as400.resource.ResourceLevel");

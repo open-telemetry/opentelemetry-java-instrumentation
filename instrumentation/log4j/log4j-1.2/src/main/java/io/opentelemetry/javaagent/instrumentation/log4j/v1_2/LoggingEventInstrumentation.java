@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
 
-final class LoggingEventInstrumentation implements TypeInstrumentation {
+public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("org.apache.log4j.spi.LoggingEvent");

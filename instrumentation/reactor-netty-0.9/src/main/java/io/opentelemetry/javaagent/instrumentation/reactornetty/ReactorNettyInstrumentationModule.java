@@ -38,7 +38,7 @@ import reactor.netty.http.client.HttpClientRequest;
  * to Netty.
  */
 @AutoService(InstrumentationModule.class)
-public final class ReactorNettyInstrumentationModule extends InstrumentationModule {
+public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
     super("reactor-netty", "reactor-netty-0.9");
@@ -49,7 +49,7 @@ public final class ReactorNettyInstrumentationModule extends InstrumentationModu
     return singletonList(new HttpClientInstrumentation());
   }
 
-  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+  public static class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("reactor.netty.http.client.HttpClient");

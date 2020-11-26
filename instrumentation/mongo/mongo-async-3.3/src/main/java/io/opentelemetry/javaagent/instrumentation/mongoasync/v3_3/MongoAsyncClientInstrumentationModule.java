@@ -30,7 +30,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class MongoAsyncClientInstrumentationModule extends InstrumentationModule {
+public class MongoAsyncClientInstrumentationModule extends InstrumentationModule {
 
   public MongoAsyncClientInstrumentationModule() {
     super("mongo-async", "mongo-async-3.3", "mongo");

@@ -30,7 +30,7 @@ import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 
 @AutoService(InstrumentationModule.class)
-public final class SpymemcachedInstrumentationModule extends InstrumentationModule {
+public class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
     super("spymemcached", "spymemcached-2.12");
@@ -41,7 +41,7 @@ public final class SpymemcachedInstrumentationModule extends InstrumentationModu
     return singletonList(new MemcachedClientInstrumentation());
   }
 
-  private static final class MemcachedClientInstrumentation implements TypeInstrumentation {
+  public static class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("net.spy.memcached.MemcachedClient");

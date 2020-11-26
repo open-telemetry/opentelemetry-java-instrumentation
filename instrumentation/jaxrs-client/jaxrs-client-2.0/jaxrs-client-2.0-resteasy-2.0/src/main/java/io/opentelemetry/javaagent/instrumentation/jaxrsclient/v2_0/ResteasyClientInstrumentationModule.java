@@ -36,7 +36,7 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
  * because {@link JaxRsClientTracer} used by the latter checks against double client spans.
  */
 @AutoService(InstrumentationModule.class)
-public final class ResteasyClientInstrumentationModule extends InstrumentationModule {
+public class ResteasyClientInstrumentationModule extends InstrumentationModule {
 
   public ResteasyClientInstrumentationModule() {
     super("jaxrs-client", "jaxrs-client-2.0", "resteasy-client", "resteasy-client-2.0");

@@ -43,7 +43,7 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
     return singletonList(new ApiClientInstrumentation());
   }
 
-  private static final class ApiClientInstrumentation implements TypeInstrumentation {
+  public static class ApiClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("io.kubernetes.client.openapi.ApiClient");

@@ -35,7 +35,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * ServletResponse, Throwable, Span, Scope)} can get it from context and set required span
  * attribute.
  */
-final class HttpServletResponseInstrumentation implements TypeInstrumentation {
+public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.servlet.http.HttpServletResponse");

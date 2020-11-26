@@ -37,7 +37,7 @@ public class SparkInstrumentationModule extends InstrumentationModule {
     return singletonList(new RoutesInstrumentation());
   }
 
-  private static final class RoutesInstrumentation implements TypeInstrumentation {
+  public static class RoutesInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("spark.route.Routes");

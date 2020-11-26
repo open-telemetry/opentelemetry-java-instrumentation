@@ -33,7 +33,7 @@ public class OkHttp2InstrumentationModule extends InstrumentationModule {
     return singletonList(new OkHttpClientInstrumentation());
   }
 
-  private static final class OkHttpClientInstrumentation implements TypeInstrumentation {
+  public static class OkHttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("com.squareup.okhttp.OkHttpClient");

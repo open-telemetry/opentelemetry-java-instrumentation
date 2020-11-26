@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice.Local;
  * <p>In the Jersey implementation, <code>UriInfo</code> implements <code>ResourceInfo</code>. The
  * matched resource method can be retrieved from that object
  */
-final class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return ContainerRequestContextAdvice.class.getName();

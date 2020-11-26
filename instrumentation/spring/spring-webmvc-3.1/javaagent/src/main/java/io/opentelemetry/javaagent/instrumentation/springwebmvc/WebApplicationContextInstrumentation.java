@@ -26,7 +26,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
  * This instrumentation adds the HandlerMappingResourceNameFilter definition to the spring context
  * When the context is created, the filter will be added to the beginning of the filter chain.
  */
-final class WebApplicationContextInstrumentation implements TypeInstrumentation {
+public class WebApplicationContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

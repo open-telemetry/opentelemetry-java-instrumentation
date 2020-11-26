@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class Log4j2InstrumentationModule extends InstrumentationModule {
+public class Log4j2InstrumentationModule extends InstrumentationModule {
   public Log4j2InstrumentationModule() {
     super("log4j", "log4j-2.13.2");
   }
@@ -46,7 +46,7 @@ public final class Log4j2InstrumentationModule extends InstrumentationModule {
     return singletonList(new EmptyTypeInstrumentation());
   }
 
-  private static final class EmptyTypeInstrumentation implements TypeInstrumentation {
+  public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       // we cannot use ContextDataProvider here because one of the classes that we inject implements

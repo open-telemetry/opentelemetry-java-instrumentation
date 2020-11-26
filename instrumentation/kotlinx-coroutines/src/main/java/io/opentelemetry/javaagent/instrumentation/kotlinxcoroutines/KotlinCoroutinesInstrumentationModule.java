@@ -33,7 +33,7 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     return singletonList(new CoroutineScopeLaunchInstrumentation());
   }
 
-  private static final class CoroutineScopeLaunchInstrumentation implements TypeInstrumentation {
+  public static class CoroutineScopeLaunchInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("kotlinx.coroutines.BuildersKt");

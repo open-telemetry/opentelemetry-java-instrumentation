@@ -45,7 +45,7 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
     return singletonList(new RouteInstrumentation());
   }
 
-  private static final class RouteInstrumentation implements TypeInstrumentation {
+  public static class RouteInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");

@@ -22,7 +22,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class NonStandardExecutorInstrumentationModule extends InstrumentationModule {
+public class NonStandardExecutorInstrumentationModule extends InstrumentationModule {
 
   public NonStandardExecutorInstrumentationModule() {
     super("executor", "non-standard-executor");
@@ -38,7 +38,7 @@ public final class NonStandardExecutorInstrumentationModule extends Instrumentat
     return singletonMap(Runnable.class.getName(), State.class.getName());
   }
 
-  private static final class OtherExecutorsInstrumentation extends AbstractExecutorInstrumentation {
+  public static class OtherExecutorsInstrumentation extends AbstractExecutorInstrumentation {
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();

@@ -46,7 +46,7 @@ import sun.rmi.transport.Connection;
  * that instruction will essentially be garbage data and will cause the parsing loop to throw
  * exception and shutdown the connection which we do not want
  */
-public final class RmiClientContextInstrumentation implements TypeInstrumentation {
+public class RmiClientContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {

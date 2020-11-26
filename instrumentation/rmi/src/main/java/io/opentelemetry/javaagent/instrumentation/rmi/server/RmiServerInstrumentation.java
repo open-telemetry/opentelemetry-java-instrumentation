@@ -33,7 +33,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class RmiServerInstrumentation extends InstrumentationModule {
+public class RmiServerInstrumentation extends InstrumentationModule {
 
   public RmiServerInstrumentation() {
     super("rmi", "rmi-server");
@@ -44,7 +44,7 @@ public final class RmiServerInstrumentation extends InstrumentationModule {
     return singletonList(new ServerInstrumentation());
   }
 
-  private static final class ServerInstrumentation implements TypeInstrumentation {
+  public static class ServerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return extendsClass(named("java.rmi.server.RemoteServer"));

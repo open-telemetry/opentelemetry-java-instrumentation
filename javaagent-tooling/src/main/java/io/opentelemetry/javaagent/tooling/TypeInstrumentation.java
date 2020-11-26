@@ -16,6 +16,9 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * Interface representing a single type instrumentation. Part of an {@link InstrumentationModule}.
+ *
+ * <p>Classes implementing {@link TypeInstrumentation} should be public and non-final so that it's
+ * possible to extend and reuse them in vendor distributions.
  */
 public interface TypeInstrumentation {
   /**

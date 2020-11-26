@@ -28,7 +28,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class RmiClientInstrumentationModule extends InstrumentationModule {
+public class RmiClientInstrumentationModule extends InstrumentationModule {
 
   public RmiClientInstrumentationModule() {
     super("rmi", "rmi-client");
@@ -39,7 +39,7 @@ public final class RmiClientInstrumentationModule extends InstrumentationModule 
     return singletonList(new ClientInstrumentation());
   }
 
-  private static final class ClientInstrumentation implements TypeInstrumentation {
+  public static class ClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return extendsClass(named("sun.rmi.server.UnicastRef"));

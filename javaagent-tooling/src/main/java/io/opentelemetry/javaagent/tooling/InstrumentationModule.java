@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
  * Instrumentation module groups several connected {@link TypeInstrumentation}s together, sharing
  * classloader matcher, helper classes, muzzle safety checks, etc. Ideally all types in a single
  * instrumented library should live in a single module.
+ *
+ * <p>Classes extending {@link InstrumentationModule} should be public and non-final so that it's
+ * possible to extend and reuse them in vendor distributions.
  */
 public abstract class InstrumentationModule {
   private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);

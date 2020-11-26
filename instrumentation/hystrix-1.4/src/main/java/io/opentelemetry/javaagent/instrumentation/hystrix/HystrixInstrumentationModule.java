@@ -50,7 +50,7 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
     return singletonList(new HystrixCommandInstrumentation());
   }
 
-  private static final class HystrixCommandInstrumentation implements TypeInstrumentation {
+  public static class HystrixCommandInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed(

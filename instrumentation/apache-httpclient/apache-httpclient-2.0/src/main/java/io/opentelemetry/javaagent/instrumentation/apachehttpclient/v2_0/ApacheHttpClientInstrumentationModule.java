@@ -41,7 +41,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     return singletonList(new HttpClientInstrumentation());
   }
 
-  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+  public static class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.commons.httpclient.HttpClient");

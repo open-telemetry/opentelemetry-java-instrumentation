@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 // TODO: Actually bridge correlation context. We currently just stub out withBaggage
 // to have minimum functionality with SDK shim implementations.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/973
-final class BaggageUtilsInstrumentation implements TypeInstrumentation {
+public class BaggageUtilsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.baggage.BaggageUtils");

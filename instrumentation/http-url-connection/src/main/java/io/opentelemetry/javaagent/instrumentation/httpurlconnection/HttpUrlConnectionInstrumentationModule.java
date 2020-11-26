@@ -50,7 +50,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
-  private static final class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+  public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return nameStartsWith("java.net.")

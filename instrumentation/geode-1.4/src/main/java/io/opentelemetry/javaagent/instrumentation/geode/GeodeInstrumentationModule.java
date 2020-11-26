@@ -41,7 +41,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
     return singletonList(new RegionInstrumentation());
   }
 
-  private static final class RegionInstrumentation implements TypeInstrumentation {
+  public static class RegionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.geode.cache.Region");

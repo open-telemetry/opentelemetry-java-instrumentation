@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
+public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {

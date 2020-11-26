@@ -34,7 +34,7 @@ import org.glassfish.jersey.client.ClientRequest;
  * handle these errors at the implementation level.
  */
 @AutoService(InstrumentationModule.class)
-public final class JerseyClientInstrumentationModule extends InstrumentationModule {
+public class JerseyClientInstrumentationModule extends InstrumentationModule {
 
   public JerseyClientInstrumentationModule() {
     super("jaxrs-client", "jaxrs-client-2.0", "jersey-client", "jersey-client-2.0");
@@ -45,8 +45,7 @@ public final class JerseyClientInstrumentationModule extends InstrumentationModu
     return Collections.singletonList(new JerseyClientConnectionErrorInstrumentation());
   }
 
-  private static final class JerseyClientConnectionErrorInstrumentation
-      implements TypeInstrumentation {
+  public static class JerseyClientConnectionErrorInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.glassfish.jersey.client.JerseyInvocation");

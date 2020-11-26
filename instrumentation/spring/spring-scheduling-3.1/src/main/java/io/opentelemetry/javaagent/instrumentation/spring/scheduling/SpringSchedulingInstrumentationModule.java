@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class SpringSchedulingInstrumentationModule extends InstrumentationModule {
+public class SpringSchedulingInstrumentationModule extends InstrumentationModule {
 
   public SpringSchedulingInstrumentationModule() {
     super("spring-scheduling", "spring-scheduling-3.1");
@@ -33,7 +33,7 @@ public final class SpringSchedulingInstrumentationModule extends Instrumentation
     return singletonList(new TaskInstrumentation());
   }
 
-  private static final class TaskInstrumentation implements TypeInstrumentation {
+  public static class TaskInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.springframework.scheduling.config.Task");
