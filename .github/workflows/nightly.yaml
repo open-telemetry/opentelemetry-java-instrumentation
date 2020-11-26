@@ -6,8 +6,8 @@ on:
     - cron: "24 3 * * *"
   workflow_dispatch:
   push:
-    #branches:
-    #  - master
+    branches:
+      - master
 
 jobs:
   build:
