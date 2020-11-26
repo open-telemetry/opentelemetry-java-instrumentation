@@ -228,7 +228,9 @@ tasks.withType(Test).configureEach {
   timeout = Duration.ofMinutes(15)
 
   // Disable all tests if skipTests property was specified
-  enabled = !project.rootProject.hasProperty("skipTests")
+  if (enabled) {
+    enabled = !project.rootProject.hasProperty("skipTests")
+  }
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
