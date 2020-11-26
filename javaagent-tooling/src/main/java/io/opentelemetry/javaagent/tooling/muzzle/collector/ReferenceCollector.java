@@ -28,6 +28,10 @@ import java.util.Queue;
 import java.util.Set;
 import net.bytebuddy.jar.asm.ClassReader;
 
+/**
+ * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
+ * so that bytecode generated based on it would also be deterministic.
+ */
 public class ReferenceCollector {
   private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();

@@ -17,7 +17,11 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** This class represents a reference to a Java class used in an instrumentation advice code. */
+/**
+ * This class represents a reference to a Java class used in an instrumentation advice code. {@link
+ * LinkedHashSet} is used for all sets to guarantee a deterministic order of iteration, so that
+ * bytecode generated based on them would also be deterministic.
+ */
 public final class Reference {
   private final Set<Source> sources;
   private final String className;
