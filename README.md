@@ -398,7 +398,7 @@ Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dotel.javaagent.debug=true`
 
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.

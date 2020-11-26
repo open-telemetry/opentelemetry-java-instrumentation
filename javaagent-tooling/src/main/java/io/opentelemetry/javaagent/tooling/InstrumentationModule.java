@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class InstrumentationModule {
   private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);
+  private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
 
   private static final String[] EMPTY = new String[0];
 
@@ -214,18 +215,20 @@ public abstract class InstrumentationModule {
       if (muzzle != null) {
         boolean isMatch = muzzle.matches(classLoader);
 
-        if (log.isDebugEnabled()) {
-          if (!isMatch) {
-            log.debug(
+        if (!isMatch) {
+          if (muzzleLog.isWarnEnabled()) {
+            muzzleLog.warn(
                 "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
                 mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
             List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
             for (Mismatch mismatch : mismatches) {
-              log.debug("-- {}", mismatch);
+              muzzleLog.warn("-- {}", mismatch);
             }
-          } else {
+          }
+        } else {
+          if (muzzleLog.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 mainInstrumentationName(),
