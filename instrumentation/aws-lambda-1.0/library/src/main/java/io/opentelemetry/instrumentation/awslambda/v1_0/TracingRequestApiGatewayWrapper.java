@@ -12,5 +12,5 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
  * Wrapper for {@link TracingRequestHandler}. Allows for wrapping a lambda proxied through API
  * Gateway, enabling single span tracing and HTTP context propagation.
  */
-public final class TracingRequestApiGatewayWrapper
+public class TracingRequestApiGatewayWrapper
     extends TracingRequestWrapperBase<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {}
