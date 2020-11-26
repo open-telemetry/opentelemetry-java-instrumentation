@@ -21,7 +21,7 @@ public final class TracingHandler implements Handler {
   @Override
   public void handle(Context ctx) {
     Attribute<io.opentelemetry.context.Context> spanAttribute =
-        ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY);
+        ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_SPAN);
     io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.

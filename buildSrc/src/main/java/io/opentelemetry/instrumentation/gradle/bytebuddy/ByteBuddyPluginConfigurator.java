@@ -68,6 +68,7 @@ public class ByteBuddyPluginConfigurator {
   private Task createLanguageTask(AbstractCompile compileTask, String name) {
     ByteBuddySimpleTask task = project.getTasks().create(name, ByteBuddySimpleTask.class);
     task.setGroup("Byte Buddy");
+    task.getOutputs().cacheIf(unused -> true);
 
     File classesDirectory = compileTask.getDestinationDir();
     File rawClassesDirectory =
