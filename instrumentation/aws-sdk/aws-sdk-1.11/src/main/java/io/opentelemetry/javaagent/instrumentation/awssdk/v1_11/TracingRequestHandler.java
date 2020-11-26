@@ -27,11 +27,6 @@ public class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
-  public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    return request;
-  }
-
-  @Override
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
