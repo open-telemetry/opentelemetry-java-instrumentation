@@ -194,43 +194,31 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
-// We default to testing with Java 11 for most tests, but some tests don't support it, where we change
-// the default test task's version so commands like `./gradlew check` can test all projects regardless
-// of Java version.
-if (!isJavaVersionAllowed(JavaVersion.toVersion(DEFAULT_JAVA_VERSION))) {
-  tasks.withType(Test) {
-    javaLauncher = javaToolchains.launcherFor {
-      languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
+def testJavaVersion = rootProject.findProperty('testJavaVersion')
+if (testJavaVersion != null) {
+  def requestedJavaVersion = JavaVersion.toVersion(testJavaVersion)
+  def gradleJavaVersion = JavaVersion.current()
+
+  if (gradleJavaVersion != requestedJavaVersion) {
+    tasks.withType(Test).all {
+      javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
+      }
+      enabled = isJavaVersionAllowed(requestedJavaVersion)
     }
   }
-}
-
-def addTestRule(String testTaskName) {
-  def prefix = testTaskName + "Java"
-  tasks.addRule("Pattern: $prefix<Version>: Runs tests using given java version") { String taskName ->
-    if (taskName.startsWith(prefix)) {
-      def requestedJavaVersion = JavaVersion.toVersion(taskName - prefix)
-      def gradleJavaVersion = JavaVersion.current()
-
-      if (gradleJavaVersion != requestedJavaVersion) {
-        tasks.withType(Test).all {
-          javaLauncher = javaToolchains.launcherFor {
-            languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
-          }
-          enabled = isJavaVersionAllowed(requestedJavaVersion)
-        }
-      }
-
-      task(taskName) {
-        if (project.tasks.findByName(testTaskName) != null) {
-          dependsOn testTaskName
-        }
+} else {
+  // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
+  // the default test task's version so commands like `./gradlew check` can test all projects regardless
+  // of Java version.
+  if (!isJavaVersionAllowed(JavaVersion.toVersion(DEFAULT_JAVA_VERSION))) {
+    tasks.withType(Test) {
+      javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
       }
     }
   }
 }
-
-addTestRule("test")
 
 tasks.withType(Test).configureEach {
   useJUnitPlatform()
@@ -238,9 +226,6 @@ tasks.withType(Test).configureEach {
   // All tests must complete within 15 minutes.
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout = Duration.ofMinutes(15)
-
-  // Disable all tests if skipTests property was specified
-  enabled = !project.rootProject.hasProperty("skipTests")
 
   retry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.

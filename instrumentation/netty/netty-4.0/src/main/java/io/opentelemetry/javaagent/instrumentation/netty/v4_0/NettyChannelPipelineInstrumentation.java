@@ -123,8 +123,7 @@ final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Context context = Java8BytecodeBridge.currentContext();
-      Attribute<Context> attribute =
-          pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT_ATTRIBUTE_KEY);
+      Attribute<Context> attribute = pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT);
       attribute.compareAndSet(null, context);
     }
   }

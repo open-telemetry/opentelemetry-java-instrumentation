@@ -76,7 +76,7 @@ jobs:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         with:
-          command: ./gradlew testJava${{ matrix.java }} --stacktrace -Dorg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
+          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
           timeout_minutes: 180
           max_attempts: 3
 
