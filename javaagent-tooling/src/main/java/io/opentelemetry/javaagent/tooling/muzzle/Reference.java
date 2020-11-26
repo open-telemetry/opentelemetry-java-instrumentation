@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -17,7 +17,11 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** This class represents a reference to a Java class used in an instrumentation advice code. */
+/**
+ * This class represents a reference to a Java class used in an instrumentation advice code. {@link
+ * LinkedHashSet} is used for all sets to guarantee a deterministic order of iteration, so that
+ * bytecode generated based on them would also be deterministic.
+ */
 public final class Reference {
   private final Set<Source> sources;
   private final String className;
@@ -96,7 +100,7 @@ public final class Reference {
   }
 
   private static <T> Set<T> merge(Set<T> set1, Set<T> set2) {
-    Set<T> set = new HashSet<>();
+    Set<T> set = new LinkedHashSet<>();
     set.addAll(set1);
     set.addAll(set2);
     return set;
@@ -112,7 +116,7 @@ public final class Reference {
         merged.set(i, merged.get(i).merge(method));
       }
     }
-    return new HashSet<>(merged);
+    return new LinkedHashSet<>(merged);
   }
 
   private static Set<Field> mergeFields(Set<Field> fields1, Set<Field> fields2) {
@@ -125,7 +129,7 @@ public final class Reference {
         merged.set(i, merged.get(i).merge(field));
       }
     }
-    return new HashSet<>(merged);
+    return new LinkedHashSet<>(merged);
   }
 
   private static Set<Flag> mergeFlags(Set<Flag> flags1, Set<Flag> flags2) {
@@ -344,14 +348,14 @@ public final class Reference {
     public Method(
         Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
       this(
-          new HashSet<>(Arrays.asList(sources)),
-          new HashSet<>(Arrays.asList(flags)),
+          new LinkedHashSet<>(Arrays.asList(sources)),
+          new LinkedHashSet<>(Arrays.asList(flags)),
           name,
           returnType,
           Arrays.asList(parameterTypes));
     }
 
-    public Method(
+    private Method(
         Set<Source> sources,
         Set<Flag> flags,
         String name,
@@ -389,11 +393,11 @@ public final class Reference {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);
       }
 
-      Set<Source> mergedSources = new HashSet<>();
+      Set<Source> mergedSources = new LinkedHashSet<>();
       mergedSources.addAll(sources);
       mergedSources.addAll(anotherMethod.sources);
 
-      Set<Flag> mergedFlags = new HashSet<>();
+      Set<Flag> mergedFlags = new LinkedHashSet<>();
       mergedFlags.addAll(flags);
       mergedFlags.addAll(anotherMethod.flags);
 
@@ -434,8 +438,8 @@ public final class Reference {
     private final Type type;
 
     public Field(Source[] sources, Flag[] flags, String name, Type fieldType) {
-      this.sources = new HashSet<>(Arrays.asList(sources));
-      this.flags = new HashSet<>(Arrays.asList(flags));
+      this.sources = new LinkedHashSet<>(Arrays.asList(sources));
+      this.flags = new LinkedHashSet<>(Arrays.asList(flags));
       this.name = name;
       type = fieldType;
     }
@@ -491,11 +495,11 @@ public final class Reference {
   }
 
   public static class Builder {
-    private final Set<Source> sources = new HashSet<>();
-    private final Set<Flag> flags = new HashSet<>();
+    private final Set<Source> sources = new LinkedHashSet<>();
+    private final Set<Flag> flags = new LinkedHashSet<>();
     private final String className;
     private String superName = null;
-    private final Set<String> interfaces = new HashSet<>();
+    private final Set<String> interfaces = new LinkedHashSet<>();
     private final List<Field> fields = new ArrayList<>();
     private final List<Method> methods = new ArrayList<>();
 
@@ -567,8 +571,8 @@ public final class Reference {
           className,
           superName,
           interfaces,
-          new HashSet<>(fields),
-          new HashSet<>(methods));
+          new LinkedHashSet<>(fields),
+          new LinkedHashSet<>(methods));
     }
   }
 }

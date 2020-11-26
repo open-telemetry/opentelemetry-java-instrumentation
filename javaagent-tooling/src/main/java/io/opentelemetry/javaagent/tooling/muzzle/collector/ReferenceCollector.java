@@ -19,8 +19,8 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +28,12 @@ import java.util.Queue;
 import java.util.Set;
 import net.bytebuddy.jar.asm.ClassReader;
 
+/**
+ * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
+ * so that bytecode generated based on it would also be deterministic.
+ */
 public class ReferenceCollector {
-  private final Map<String, Reference> references = new HashMap<>();
+  private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Set<String> visitedClasses = new HashSet<>();
 
