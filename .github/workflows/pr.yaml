@@ -37,10 +37,15 @@ jobs:
           ./cimate -v "**/TEST-*.xml"
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         java: [ 8, 11, 12, 13, 14, 15 ]
+        os:
+          - ubuntu-latest
+          - ubuntu-20.04
+          - macos-latest
+          - macos-11.0
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
