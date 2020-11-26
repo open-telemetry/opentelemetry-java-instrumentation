@@ -25,7 +25,7 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 
 class Elasticsearch5TransportClientTest extends AgentTestRunner {
-  public static final long TIMEOUT = 10000; // 10 seconds
+  public static final long TIMEOUT = 10000 // 10 seconds
 
   @Shared
   TransportAddress tcpPublishAddress

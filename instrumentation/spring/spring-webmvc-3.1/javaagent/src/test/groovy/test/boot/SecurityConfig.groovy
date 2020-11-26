@@ -36,7 +36,7 @@ class SecurityConfig {
         .antMatchers("/basicsecured/**").authenticated()
         .and()
         .httpBasic()
-        .and().authenticationProvider(applicationContext.getBean(SavingAuthenticationProvider));
+        .and().authenticationProvider(applicationContext.getBean(SavingAuthenticationProvider))
     }
   }
 
