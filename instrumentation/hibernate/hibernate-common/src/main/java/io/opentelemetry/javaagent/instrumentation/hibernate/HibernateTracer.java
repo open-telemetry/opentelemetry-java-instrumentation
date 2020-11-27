@@ -5,26 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HibernateDecorator extends ClientDecorator {
-  public static final HibernateDecorator DECORATE = new HibernateDecorator();
-  // TODO use tracer names *.hibernate-3.3, *.hibernate-4.0, *.hibernate-4.3 respectively in each
-  // module
-  private static final Tracer TRACER =
-      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.hibernate");
+public class HibernateTracer extends BaseTracer {
+  private static final HibernateTracer TRACER = new HibernateTracer();
 
-  public static Tracer tracer() {
+  public static HibernateTracer tracer() {
     return TRACER;
   }
 
-  public String spanNameForOperation(String operationName, Object entity) {
+  public Span startSpan(Context context, String operationName, Object entity) {
+    return startSpan(context, spanNameForOperation(operationName, entity));
+  }
+
+  public Span startSpan(Context context, String spanName) {
+    return tracer.spanBuilder(spanName).setParent(context).startSpan();
+  }
+
+  private String spanNameForOperation(String operationName, Object entity) {
     if (entity != null) {
       String entityName = entityName(entity);
       if (entityName != null) {
@@ -34,7 +38,7 @@ public class HibernateDecorator extends ClientDecorator {
     return operationName;
   }
 
-  public String entityName(Object entity) {
+  String entityName(Object entity) {
     if (entity == null) {
       return null;
     }
@@ -56,5 +60,10 @@ public class HibernateDecorator extends ClientDecorator {
     }
 
     return name;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.javaagent.hibernate";
   }
 }
