@@ -68,7 +68,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
       Span span = contextStore.get(request);
       if (span != null) {
-        NetPeerUtils.setNetPeer(span, remoteHostname, null);
+        NetPeerUtils.INSTANCE.setNetPeer(span, remoteHostname, null);
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");

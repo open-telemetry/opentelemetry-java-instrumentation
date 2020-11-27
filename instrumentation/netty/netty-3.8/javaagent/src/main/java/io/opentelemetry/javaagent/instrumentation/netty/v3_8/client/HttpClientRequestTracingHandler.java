@@ -50,7 +50,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     Span span = tracer().startSpan(request);
-    NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
     channelTraceContext.setClientSpan(span);
 
     try (Scope ignored = tracer().startScope(span, request.headers())) {

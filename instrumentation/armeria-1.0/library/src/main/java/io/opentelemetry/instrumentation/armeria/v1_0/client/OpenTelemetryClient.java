@@ -59,7 +59,7 @@ public class OpenTelemetryClient extends SimpleDecoratingHttpClient {
           .whenComplete()
           .thenAccept(
               log -> {
-                NetPeerUtils.setNetPeer(span, ctx.remoteAddress());
+                NetPeerUtils.INSTANCE.setNetPeer(span, ctx.remoteAddress());
 
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {

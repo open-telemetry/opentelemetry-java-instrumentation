@@ -3,26 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer
+package io.opentelemetry.instrumentation.api.tracer.utils
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.api.tracer.BaseTracerTest
 
 class NetPeerUtilsTest extends BaseTracerTest {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty(
-      "otel.endpoint.peer.service.mapping",
-      "1.2.3.4=catservice,dogs.com=dogsservice")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "test setAttributes"() {
+    setup:
+    def utils = new NetPeerUtils(Config.get())
+
     when:
-    NetPeerUtils.setNetPeer(span, connection)
+    utils.setNetPeer(span, connection)
 
     then:
     if (expectedPeerName) {
@@ -43,8 +37,13 @@ class NetPeerUtilsTest extends BaseTracerTest {
   }
 
   def "test setAttributes with mapped peer"() {
+    setup:
+    def config = Config.create(
+      ["otel.endpoint.peer.service.mapping": "1.2.3.4=catservice,dogs.com=dogsservice"])
+    def utils = new NetPeerUtils(config)
+
     when:
-    NetPeerUtils.setNetPeer(span, connection)
+    utils.setNetPeer(span, connection)
 
     then:
     if (expectedPeerService) {
