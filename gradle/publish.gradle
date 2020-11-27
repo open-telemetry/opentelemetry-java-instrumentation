@@ -1,4 +1,5 @@
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 apply plugin: 'com.jfrog.artifactory'
 apply plugin: 'com.jfrog.bintray'
 
@@ -103,10 +104,6 @@ bintray {
       name = project.version
       released = new Date()
 
-      gpg {
-        sign = true
-      }
-
       mavenCentralSync {
         user = System.getenv("SONATYPE_USER")
         password = System.getenv("SONATYPE_KEY")
@@ -132,4 +129,13 @@ artifactory {
 artifactoryPublish {
   enabled = version.toString().contains('SNAPSHOT')
   publications('maven')
+}
+
+tasks.withType(Sign).configureEach {
+  onlyIf { System.getenv("CI") != null }
+}
+
+signing {
+  useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSWORD"))
+  sign publishing.publications.maven
 }
