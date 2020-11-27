@@ -23,6 +23,7 @@ repositories {
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'io.opentelemetry:opentelemetry-extension-annotations:0.11.0'
+  implementation 'io.opentelemetry:opentelemetry-api:0.11.0'
 }
 
 compileJava {

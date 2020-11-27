@@ -7,8 +7,8 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.api.trace.TraceId
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request
@@ -17,7 +17,7 @@ import spock.lang.Unroll
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk) {
-    "open-telemetry-docker-dev.bintray.io/java/smoke-springboot-jdk$jdk:latest"
+    "open-telemetry-docker-dev.bintray.io/java/smoke-springboot-jdk$jdk:20201120.373623860"
   }
 
   @Unroll
