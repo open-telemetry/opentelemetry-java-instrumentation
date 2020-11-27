@@ -54,7 +54,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       throws IOException {
 
     ApiGatewayProxyRequest proxyRequest = ApiGatewayProxyRequest.forStream(input);
-    Span span = tracer.startSpan(context, Kind.SERVER, proxyRequest.getHeaders());
+    Span span = tracer.startSpan(context, Kind.SERVER, input, proxyRequest.getHeaders());
 
     try (Scope ignored = tracer.startScope(span)) {
       doHandleRequest(proxyRequest.freshStream(), new OutputStreamWrapper(output, span), context);

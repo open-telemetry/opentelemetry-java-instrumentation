@@ -56,10 +56,12 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
 
   @Override
   public final O handleRequest(I input, Context context) {
-    Span span = tracer.startSpan(context, Kind.SERVER, getHeaders(input));
+    Span span = tracer.startSpan(context, Kind.SERVER, input, getHeaders(input));
     Throwable error = null;
     try (Scope ignored = tracer.startScope(span)) {
-      return doHandleRequest(input, context);
+      O output = doHandleRequest(input, context);
+      tracer.onOutput(span, output);
+      return output;
     } catch (Throwable t) {
       error = t;
       throw t;
