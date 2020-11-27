@@ -50,10 +50,10 @@ public class KafkaProducerTracer extends BaseTracer {
 
     Integer partition = record.partition();
     if (partition != null) {
-      span.setAttribute("partition", partition);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
     if (record.value() == null) {
-      span.setAttribute("tombstone", true);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE true);
     }
   }
 

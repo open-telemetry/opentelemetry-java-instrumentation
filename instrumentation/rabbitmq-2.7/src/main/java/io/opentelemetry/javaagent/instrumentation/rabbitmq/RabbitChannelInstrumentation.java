@@ -145,7 +145,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
         Integer deliveryMode = props.getDeliveryMode();
         if (deliveryMode != null) {
-          span.setAttribute("amqp.delivery_mode", deliveryMode);
+          span.setAttribute("rabbitmq.delivery_mode", deliveryMode);
         }
 
         // We need to copy the BasicProperties and provide a header map we can modify

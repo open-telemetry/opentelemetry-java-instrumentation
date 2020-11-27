@@ -96,7 +96,7 @@ public class RabbitTracer extends BaseTracer {
       // or if a plugin is installed on the rabbitmq broker
       long produceTime = properties.getTimestamp().getTime();
       long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
-      span.setAttribute("record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
+      span.setAttribute("rabbitmq.record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
     }
 
     return span;
@@ -110,10 +110,9 @@ public class RabbitTracer extends BaseTracer {
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
     span.updateName(exchangeName + " -> " + routing + " send");
-    span.setAttribute("amqp.command", "basic.publish");
+    span.setAttribute("rabbitmq.command", "basic.publish");
     if (routingKey != null && !routingKey.isEmpty()) {
       span.setAttribute("messaging.rabbitmq.routing_key", routingKey);
-      span.setAttribute("amqp.routing_key", routingKey);
     }
   }
 
@@ -122,8 +121,8 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public void onGet(Span span, String queue) {
-    span.setAttribute("amqp.command", "basic.get");
-    span.setAttribute("amqp.queue", queue);
+    span.setAttribute("rabbitmq.command", "basic.get");
+    span.setAttribute("rabbitmq.queue", queue);
   }
 
   public String spanNameOnDeliver(String queue) {
@@ -137,7 +136,7 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public void onDeliver(Span span, Envelope envelope) {
-    span.setAttribute("amqp.command", "basic.deliver");
+    span.setAttribute("rabbitmq.command", "basic.deliver");
 
     if (envelope != null) {
       String exchange = envelope.getExchange();
@@ -159,7 +158,7 @@ public class RabbitTracer extends BaseTracer {
     if (!name.equals("basic.publish")) {
       span.updateName(name);
     }
-    span.setAttribute("amqp.command", name);
+    span.setAttribute("rabbitmq.command", name);
   }
 
   @Override

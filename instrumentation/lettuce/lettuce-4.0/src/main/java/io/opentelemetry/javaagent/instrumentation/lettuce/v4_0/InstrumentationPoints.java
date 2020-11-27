@@ -43,7 +43,7 @@ public final class InstrumentationPoints {
             if (ex == null) {
               LettuceDatabaseClientTracer.tracer().end(span);
             } else if (ex instanceof CancellationException) {
-              span.setAttribute("db.command.cancelled", true);
+              span.setAttribute("lettuce.command.cancelled", true);
               LettuceDatabaseClientTracer.tracer().end(span);
             } else {
               LettuceDatabaseClientTracer.tracer().endExceptionally(span, ex);

@@ -60,11 +60,11 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   public void onConsume(Span span, long startTimeMillis, ConsumerRecord<?, ?> record) {
     // TODO should we set topic + offset as messaging.message_id?
-    span.setAttribute("partition", record.partition());
-    span.setAttribute("offset", record.offset());
+    span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, record.partition());
+    span.setAttribute("kafka-clients.offset", record.offset());
 
     if (record.value() == null) {
-      span.setAttribute("tombstone", true);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
 
     // don't record a duration if the message was sent from an old Kafka client
@@ -72,7 +72,8 @@ public class KafkaConsumerTracer extends BaseTracer {
       long produceTime = record.timestamp();
       // this attribute shows how much time elapsed between the producer and the consumer of this
       // message, which can be helpful for identifying queue bottlenecks
-      span.setAttribute("record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
+      span.setAttribute(
+          "kafka-clients.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
     }
   }
 

@@ -91,10 +91,10 @@ public class SpringWebMvcTracer extends BaseTracer {
   }
 
   private void onRender(Span span, ModelAndView mv) {
-    span.setAttribute("view.name", mv.getViewName());
+    span.setAttribute("spring-webmvc.view.name", mv.getViewName());
     View view = mv.getView();
     if (view != null) {
-      span.setAttribute("view.type", spanNameForClass(view.getClass()));
+      span.setAttribute("spring-webmvc.view.type", spanNameForClass(view.getClass()));
     }
   }
 

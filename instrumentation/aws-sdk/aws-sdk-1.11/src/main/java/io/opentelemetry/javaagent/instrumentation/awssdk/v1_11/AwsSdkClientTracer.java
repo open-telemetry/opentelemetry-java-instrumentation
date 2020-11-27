@@ -46,17 +46,17 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     Class<?> awsOperation = originalRequest.getClass();
 
-    span.setAttribute("aws.agent", COMPONENT_NAME);
-    span.setAttribute("aws.service", awsServiceName);
-    span.setAttribute("aws.operation", awsOperation.getSimpleName());
-    span.setAttribute("aws.endpoint", request.getEndpoint().toString());
+    span.setAttribute("aws-sdk.agent", COMPONENT_NAME);
+    span.setAttribute("aws-sdk.service", awsServiceName);
+    span.setAttribute("aws-sdk.operation", awsOperation.getSimpleName());
+    span.setAttribute("aws-sdk.endpoint", request.getEndpoint().toString());
 
     if (requestMeta != null) {
-      span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
-      span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
-      span.setAttribute("aws.queue.name", requestMeta.getQueueName());
-      span.setAttribute("aws.stream.name", requestMeta.getStreamName());
-      span.setAttribute("aws.table.name", requestMeta.getTableName());
+      span.setAttribute("aws-sdk.bucket.name", requestMeta.getBucketName());
+      span.setAttribute("aws-sdk.queue.url", requestMeta.getQueueUrl());
+      span.setAttribute("aws-sdk.queue.name", requestMeta.getQueueName());
+      span.setAttribute("aws-sdk.stream.name", requestMeta.getStreamName());
+      span.setAttribute("aws-sdk.table.name", requestMeta.getTableName());
     }
     return span;
   }
@@ -65,7 +65,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   public Span onResponse(Span span, Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
-      span.setAttribute("aws.requestId", awsResp.getRequestId());
+      span.setAttribute("aws-sdk.requestId", awsResp.getRequestId());
     }
     return super.onResponse(span, response);
   }

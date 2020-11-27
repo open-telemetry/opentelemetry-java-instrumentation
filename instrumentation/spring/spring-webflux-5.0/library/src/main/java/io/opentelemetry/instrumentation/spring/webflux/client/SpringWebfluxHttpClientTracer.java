@@ -31,8 +31,8 @@ public class SpringWebfluxHttpClientTracer
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
   public void onCancel(Span span) {
-    span.setAttribute("event", "cancelled");
-    span.setAttribute("message", "The subscription was cancelled");
+    span.setAttribute("spring-webflux.event", "cancelled");
+    span.setAttribute("spring-webflux.message", "The subscription was cancelled");
   }
 
   @Override

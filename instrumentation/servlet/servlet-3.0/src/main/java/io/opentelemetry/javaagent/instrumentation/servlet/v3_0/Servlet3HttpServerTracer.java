@@ -56,7 +56,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
 
   public void onTimeout(Span span, long timeout) {
     span.setStatus(StatusCode.ERROR);
-    span.setAttribute("timeout", timeout);
+    span.setAttribute("servlet.timeout", timeout);
     span.end();
   }
 
