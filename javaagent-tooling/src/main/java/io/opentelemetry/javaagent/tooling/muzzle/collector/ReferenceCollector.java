@@ -16,10 +16,11 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +28,12 @@ import java.util.Queue;
 import java.util.Set;
 import net.bytebuddy.jar.asm.ClassReader;
 
+/**
+ * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
+ * so that bytecode generated based on it would also be deterministic.
+ */
 public class ReferenceCollector {
-  private final Map<String, Reference> references = new HashMap<>();
+  private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Set<String> visitedClasses = new HashSet<>();
 
@@ -55,14 +60,7 @@ public class ReferenceCollector {
       String visitedClassName = instrumentationQueue.remove();
       visitedClasses.add(visitedClassName);
 
-      try (InputStream in =
-          checkNotNull(
-              ReferenceCollector.class
-                  .getClassLoader()
-                  .getResourceAsStream(Utils.getResourceName(visitedClassName)),
-              "Couldn't find class file %s",
-              visitedClassName)) {
-
+      try (InputStream in = getClassFileStream(visitedClassName)) {
         // only start from method bodies for the advice class (skips class/method references)
         ReferenceCollectingClassVisitor cv = new ReferenceCollectingClassVisitor(isAdviceClass);
         ClassReader reader = new ClassReader(in);
@@ -89,6 +87,24 @@ public class ReferenceCollector {
         isAdviceClass = false;
       }
     }
+  }
+
+  private static InputStream getClassFileStream(String className) throws IOException {
+    URLConnection connection =
+        checkNotNull(
+                ReferenceCollector.class
+                    .getClassLoader()
+                    .getResource(Utils.getResourceName(className)),
+                "Couldn't find class file %s",
+                className)
+            .openConnection();
+
+    // Since the JarFile cache is not per class loader, but global with path as key, using cache may
+    // cause the same instance of JarFile being used for consecutive builds, even if the file has
+    // been changed. There is still another cache in ZipFile.Source which checks last modified time
+    // as well, so the zip index is not scanned again on every class.
+    connection.setUseCaches(false);
+    return connection.getInputStream();
   }
 
   private void addReference(String refClassName, Reference reference) {

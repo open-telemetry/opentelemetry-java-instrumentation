@@ -31,6 +31,8 @@ public class AgentInitializer {
       "'[opentelemetry.auto.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel";
+  private static final String SIMPLE_LOGGER_MUZZLE_LOG_LEVEL_PROPERTY =
+      "io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher";
 
   private static final Logger log;
 
@@ -175,6 +177,9 @@ public class AgentInitializer {
 
     if (isDebugMode()) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
+    } else {
+      // by default muzzle warnings are turned off
+      setSystemPropertyDefault(SIMPLE_LOGGER_MUZZLE_LOG_LEVEL_PROPERTY, "OFF");
     }
   }
 

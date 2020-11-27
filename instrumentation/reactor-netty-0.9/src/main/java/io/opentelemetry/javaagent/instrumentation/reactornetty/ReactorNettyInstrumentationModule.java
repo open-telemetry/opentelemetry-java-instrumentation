@@ -38,31 +38,10 @@ import reactor.netty.http.client.HttpClientRequest;
  * to Netty.
  */
 @AutoService(InstrumentationModule.class)
-public final class ReactorNettyInstrumentationModule extends InstrumentationModule {
+public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
     super("reactor-netty", "reactor-netty-0.9");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      ReactorNettyInstrumentationModule.class.getName() + "$MapConnect",
-      ReactorNettyInstrumentationModule.class.getName() + "$OnRequest",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys$1",
-      // these below a transitive dependencies of AttributeKeys from above
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyHttpServerTracer",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyRequestExtractAdapter",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler",
-      "io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler"
-    };
   }
 
   @Override
@@ -70,7 +49,7 @@ public final class ReactorNettyInstrumentationModule extends InstrumentationModu
     return singletonList(new HttpClientInstrumentation());
   }
 
-  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+  public static class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("reactor.netty.http.client.HttpClient");
@@ -103,17 +82,20 @@ public final class ReactorNettyInstrumentationModule extends InstrumentationModu
 
   public static class MapConnect
       implements BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
+
+    static final String CONTEXT_ATTRIBUTE = MapConnect.class.getName() + ".Context";
+
     @Override
     public Mono<? extends Connection> apply(Mono<? extends Connection> m, Bootstrap b) {
-      return m.subscriberContext(s -> s.put("otel_context", Context.current()));
+      return m.subscriberContext(s -> s.put(CONTEXT_ATTRIBUTE, Context.current()));
     }
   }
 
   public static class OnRequest implements BiConsumer<HttpClientRequest, Connection> {
     @Override
     public void accept(HttpClientRequest r, Connection c) {
-      Context context = r.currentContext().get("otel_context");
-      c.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).set(context);
+      Context context = r.currentContext().get(MapConnect.CONTEXT_ATTRIBUTE);
+      c.channel().attr(AttributeKeys.CONNECT_CONTEXT).set(context);
     }
   }
 }

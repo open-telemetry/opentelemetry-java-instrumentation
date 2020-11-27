@@ -19,17 +19,6 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".AwsLambdaInstrumentationHelper",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaTracer",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaMessageTracer",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor",
-      "io.opentelemetry.instrumentation.awslambda.v1_0.ParentContextExtractor$MapGetter"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AwsLambdaRequestHandlerInstrumentation());
   }

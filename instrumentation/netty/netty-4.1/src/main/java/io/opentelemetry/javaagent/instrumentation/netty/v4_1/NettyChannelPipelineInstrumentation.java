@@ -39,7 +39,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
+public class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -131,8 +131,7 @@ final class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
-      Attribute<Context> attribute =
-          pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY);
+      Attribute<Context> attribute = pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT);
       attribute.compareAndSet(null, Java8BytecodeBridge.currentContext());
     }
   }

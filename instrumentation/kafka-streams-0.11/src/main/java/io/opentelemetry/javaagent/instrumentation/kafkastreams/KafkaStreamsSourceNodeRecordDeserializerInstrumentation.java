@@ -22,7 +22,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
-final class KafkaStreamsSourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation {
+public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
+    implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

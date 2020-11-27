@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class FutureInstrumentation implements TypeInstrumentation {
+public class FutureInstrumentation implements TypeInstrumentation {
   private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**

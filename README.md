@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://circleci.com/gh/open-telemetry/opentelemetry-java-instrumentation">
-    <img alt="Build Status" src="https://img.shields.io/circleci/build/github/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
+  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Nightly+build%22">
+    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Nightly%20build?style=for-the-badge">
   </a>
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=for-the-badge">
@@ -397,7 +397,7 @@ Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 To turn on the agent's internal debug logging:
 
-`-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug`
+`-Dotel.javaagent.debug=true`
 
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.

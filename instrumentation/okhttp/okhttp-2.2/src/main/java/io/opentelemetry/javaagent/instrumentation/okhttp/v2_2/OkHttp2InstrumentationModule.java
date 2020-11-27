@@ -29,20 +29,11 @@ public class OkHttp2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".RequestBuilderInjectAdapter",
-      packageName + ".OkHttpClientTracer",
-      packageName + ".TracingInterceptor",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new OkHttpClientInstrumentation());
   }
 
-  private static final class OkHttpClientInstrumentation implements TypeInstrumentation {
+  public static class OkHttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("com.squareup.okhttp.OkHttpClient");

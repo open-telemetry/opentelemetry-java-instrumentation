@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Due to a change in the AmazonHttpClient class, this instrumentation is needed to support newer
  * versions. The {@link AwsHttpClientInstrumentation} class should cover older versions.
  */
-final class RequestExecutorInstrumentation implements TypeInstrumentation {
+public class RequestExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

@@ -21,29 +21,6 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ChannelTraceContext",
-      packageName + ".ChannelTraceContext$Factory",
-      NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdviceUtil",
-      // Util
-      packageName + ".util.CombinedSimpleChannelHandler",
-      // client helpers
-      packageName + ".client.NettyHttpClientTracer",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".client.HttpClientRequestTracingHandler",
-      packageName + ".client.HttpClientResponseTracingHandler",
-      packageName + ".client.HttpClientTracingHandler",
-      // server helpers
-      packageName + ".server.NettyHttpServerTracer",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".server.HttpServerRequestTracingHandler",
-      packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ChannelFutureListenerInstrumentation(),

@@ -33,19 +33,9 @@ import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
 @AutoService(InstrumentationModule.class)
-public final class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
+public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
   public AkkaHttpClientInstrumentationModule() {
     super("akka-http", "akka-http-client");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AkkaHttpClientInstrumentationModule.class.getName() + "$OnCompleteHandler",
-      AkkaHttpClientInstrumentationModule.class.getName() + "$AkkaHttpHeaders",
-      AkkaHttpClientInstrumentationModule.class.getName() + "$InjectAdapter",
-      packageName + ".AkkaHttpClientTracer",
-    };
   }
 
   @Override
@@ -53,7 +43,7 @@ public final class AkkaHttpClientInstrumentationModule extends InstrumentationMo
     return Collections.singletonList(new HttpExtInstrumentation());
   }
 
-  private static final class HttpExtInstrumentation implements TypeInstrumentation {
+  public static class HttpExtInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("akka.http.scaladsl.HttpExt");

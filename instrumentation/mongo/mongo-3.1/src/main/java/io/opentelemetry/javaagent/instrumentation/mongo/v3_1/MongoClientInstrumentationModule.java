@@ -29,18 +29,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class MongoClientInstrumentationModule extends InstrumentationModule {
+public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   public MongoClientInstrumentationModule() {
     super("mongo", "mongo-3.1");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.mongo.MongoClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener"
-    };
   }
 
   @Override

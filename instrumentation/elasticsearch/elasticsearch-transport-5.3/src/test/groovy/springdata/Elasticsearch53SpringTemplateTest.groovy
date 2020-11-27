@@ -31,7 +31,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import spock.lang.Shared
 
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
-  public static final long TIMEOUT = 10000; // 10 seconds
+  public static final long TIMEOUT = 10000 // 10 seconds
 
   // Some ES actions are not caused by clients and seem to just happen from time to time.
   // We will just ignore these actions in traces.

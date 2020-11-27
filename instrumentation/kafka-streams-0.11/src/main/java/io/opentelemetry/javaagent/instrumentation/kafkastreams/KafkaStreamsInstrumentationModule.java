@@ -19,15 +19,6 @@ public class KafkaStreamsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".KafkaStreamsTracer",
-      packageName + ".TextMapExtractAdapter",
-      packageName + ".SpanScopeHolder"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new KafkaStreamsSourceNodeRecordDeserializerInstrumentation(),

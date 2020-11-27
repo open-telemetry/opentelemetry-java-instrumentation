@@ -41,18 +41,11 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".FinatraTracer", FinatraInstrumentationModule.class.getName() + "$Listener"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RouteInstrumentation());
   }
 
-  private static final class RouteInstrumentation implements TypeInstrumentation {
+  public static class RouteInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");

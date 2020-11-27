@@ -12,8 +12,9 @@ muzzle {
 dependencies {
   library group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
+  implementation project(':instrumentation:netty:netty-4.1')
+
   testLibrary group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
-  testInstrumentation project(':instrumentation:netty:netty-4.1')
 
   // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
   // that is compatible with ratpack.

@@ -42,9 +42,13 @@ import org.slf4j.LoggerFactory;
  * Instrumentation module groups several connected {@link TypeInstrumentation}s together, sharing
  * classloader matcher, helper classes, muzzle safety checks, etc. Ideally all types in a single
  * instrumented library should live in a single module.
+ *
+ * <p>Classes extending {@link InstrumentationModule} should be public and non-final so that it's
+ * possible to extend and reuse them in vendor distributions.
  */
 public abstract class InstrumentationModule {
   private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);
+  private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
 
   private static final String[] EMPTY = new String[0];
 
@@ -55,15 +59,6 @@ public abstract class InstrumentationModule {
 
   private final Set<String> instrumentationNames;
   protected final boolean enabled;
-
-  /**
-   * Deprecated, will be removed.
-   *
-   * @deprecated Will be removed together with {@link #helperClassNames()}
-   */
-  @Deprecated
-  protected final String packageName =
-      getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
   /**
    * Creates an instrumentation module. Note that all implementations of {@link
@@ -223,18 +218,20 @@ public abstract class InstrumentationModule {
       if (muzzle != null) {
         boolean isMatch = muzzle.matches(classLoader);
 
-        if (log.isDebugEnabled()) {
-          if (!isMatch) {
-            log.debug(
+        if (!isMatch) {
+          if (muzzleLog.isWarnEnabled()) {
+            muzzleLog.warn(
                 "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
                 mainInstrumentationName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
             List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
             for (Mismatch mismatch : mismatches) {
-              log.debug("-- {}", mismatch);
+              muzzleLog.warn("-- {}", mismatch);
             }
-          } else {
+          }
+        } else {
+          if (muzzleLog.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 mainInstrumentationName(),
@@ -296,17 +293,6 @@ public abstract class InstrumentationModule {
    */
   public int getOrder() {
     return 0;
-  }
-
-  /**
-   * Deprecated, will be removed.
-   *
-   * @deprecated This method is replaced by {@link #getMuzzleHelperClassNames()} and {@link
-   *     #additionalHelperClassNames()}, extending it provides no effect.
-   */
-  @Deprecated
-  public String[] helperClassNames() {
-    return EMPTY;
   }
 
   /** Returns resource names to inject into the user's classloader. */

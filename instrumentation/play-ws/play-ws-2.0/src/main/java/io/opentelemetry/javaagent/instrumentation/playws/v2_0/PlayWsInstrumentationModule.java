@@ -28,16 +28,6 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter",
-      packageName + ".AsyncHandlerWrapper",
-      packageName + ".StreamedAsyncHandlerWrapper"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AsyncHttpClientInstrumentation(ClientAdvice.class.getName()));
   }

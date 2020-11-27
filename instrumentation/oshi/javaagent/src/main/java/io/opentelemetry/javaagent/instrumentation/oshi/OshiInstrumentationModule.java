@@ -32,25 +32,11 @@ public class OshiInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public final String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$1",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$2",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$3",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$4",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$5",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$6",
-      "io.opentelemetry.instrumentation.oshi.SystemMetrics$7"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new SystemInfoInstrumentation());
   }
 
-  private static final class SystemInfoInstrumentation implements TypeInstrumentation {
+  public static class SystemInfoInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("oshi.SystemInfo");

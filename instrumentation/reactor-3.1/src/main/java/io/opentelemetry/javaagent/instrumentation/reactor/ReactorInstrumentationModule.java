@@ -20,19 +20,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class ReactorInstrumentationModule extends InstrumentationModule {
+public class ReactorInstrumentationModule extends InstrumentationModule {
 
   public ReactorInstrumentationModule() {
     super("reactor", "reactor-3.1");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.reactor.TracingOperator$Lifter",
-      "io.opentelemetry.instrumentation.reactor.TracingOperator",
-      "io.opentelemetry.instrumentation.reactor.TracingSubscriber"
-    };
   }
 
   @Override
@@ -40,7 +31,7 @@ public final class ReactorInstrumentationModule extends InstrumentationModule {
     return singletonList(new HooksInstrumentation());
   }
 
-  private static final class HooksInstrumentation implements TypeInstrumentation {
+  public static class HooksInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("reactor.core.publisher.Hooks");

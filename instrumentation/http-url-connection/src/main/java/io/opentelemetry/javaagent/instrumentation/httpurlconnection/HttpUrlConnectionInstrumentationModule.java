@@ -41,16 +41,6 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpUrlConnectionTracer",
-      packageName + ".HeadersInjectAdapter",
-      HttpUrlConnectionInstrumentationModule.class.getName() + "$HttpUrlState",
-      HttpUrlConnectionInstrumentationModule.class.getName() + "$HttpUrlState$1",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpUrlConnectionInstrumentation());
   }
@@ -60,7 +50,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
-  private static final class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+  public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return nameStartsWith("java.net.")

@@ -24,23 +24,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JettyInstrumentationModule extends InstrumentationModule {
+public class JettyInstrumentationModule extends InstrumentationModule {
 
   public JettyInstrumentationModule() {
     super("jetty", "jetty-8.0");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    // order matters here because subclasses (e.g. JettyHttpServerTracer) need to be injected into
-    // the class loader after their super classes (e.g. Servlet3HttpServerTracer)
-    return new String[] {
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
-      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
-      "io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener",
-      packageName + ".JettyHttpServerTracer",
-    };
   }
 
   @Override
@@ -48,7 +35,7 @@ public final class JettyInstrumentationModule extends InstrumentationModule {
     return singletonList(new HandlerInstrumentation());
   }
 
-  private static final class HandlerInstrumentation implements TypeInstrumentation {
+  public static class HandlerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.eclipse.jetty.server.Handler");

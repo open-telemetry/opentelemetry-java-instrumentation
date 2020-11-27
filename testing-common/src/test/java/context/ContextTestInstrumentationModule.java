@@ -37,11 +37,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$Context", getClass().getName() + "$Context$1"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextTestInstrumentation());
   }
@@ -55,7 +50,7 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     return store;
   }
 
-  private static final class ContextTestInstrumentation implements TypeInstrumentation {
+  public static class ContextTestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return nameStartsWith(ContextTestInstrumentationModule.class.getName() + "$");

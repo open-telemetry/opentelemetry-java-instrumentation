@@ -13,18 +13,9 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public final class SpringWebMvcInstrumentationModule extends InstrumentationModule {
+public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
   public SpringWebMvcInstrumentationModule() {
     super("spring-webmvc", "spring-webmvc-3.1");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebMvcTracer",
-      packageName + ".HandlerMappingResourceNameFilter",
-      packageName + ".HandlerMappingResourceNameFilter$BeanDefinition",
-    };
   }
 
   @Override

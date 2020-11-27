@@ -65,18 +65,11 @@ public class TraceConfigInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".TraceAnnotationTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
   }
 
-  private static final class TracerClassInstrumentation implements TypeInstrumentation {
+  public static class TracerClassInstrumentation implements TypeInstrumentation {
     private final String className;
     private final Set<String> methodNames;
 

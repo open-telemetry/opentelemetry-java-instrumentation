@@ -20,11 +20,6 @@ public class Struts2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".Struts2Tracer"};
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ActionInvocationInstrumentation());
   }

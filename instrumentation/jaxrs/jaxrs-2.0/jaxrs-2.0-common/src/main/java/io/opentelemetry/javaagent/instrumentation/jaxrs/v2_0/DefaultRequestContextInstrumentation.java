@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice.Local;
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
  */
-final class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return ContainerRequestContextAdvice.class.getName();

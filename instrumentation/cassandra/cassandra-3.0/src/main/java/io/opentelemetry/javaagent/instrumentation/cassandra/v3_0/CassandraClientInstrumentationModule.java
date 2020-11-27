@@ -30,22 +30,11 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".CassandraQueryNormalizer",
-      packageName + ".CassandraDatabaseClientTracer",
-      packageName + ".TracingSession",
-      packageName + ".TracingSession$1",
-      packageName + ".TracingSession$2",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ClusterManagerInstrumentation());
   }
 
-  private static final class ClusterManagerInstrumentation implements TypeInstrumentation {
+  public static class ClusterManagerInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // Note: Cassandra has a large driver and we instrument single class in it.

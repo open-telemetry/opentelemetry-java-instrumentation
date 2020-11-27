@@ -37,7 +37,7 @@ import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 
-final class SessionInstrumentation implements TypeInstrumentation {
+public class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

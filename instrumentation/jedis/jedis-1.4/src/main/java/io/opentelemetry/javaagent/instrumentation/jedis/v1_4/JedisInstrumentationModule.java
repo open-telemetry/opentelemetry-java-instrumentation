@@ -33,7 +33,7 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
 @AutoService(InstrumentationModule.class)
-public final class JedisInstrumentationModule extends InstrumentationModule {
+public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-1.4");
@@ -46,18 +46,11 @@ public final class JedisInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JedisClientTracer$CommandWithArgs", packageName + ".JedisClientTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ConnectionInstrumentation());
   }
 
-  private static final class ConnectionInstrumentation implements TypeInstrumentation {
+  public static class ConnectionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("redis.clients.jedis.Connection");

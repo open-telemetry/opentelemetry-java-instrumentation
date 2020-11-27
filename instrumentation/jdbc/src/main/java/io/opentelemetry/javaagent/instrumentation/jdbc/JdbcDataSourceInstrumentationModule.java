@@ -27,38 +27,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
+public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
   public JdbcDataSourceInstrumentationModule() {
     super("jdbc-datasource");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".DataSourceTracer",
-      packageName + ".DbInfo",
-      packageName + ".DbInfo$Builder",
-      packageName + ".JdbcConnectionUrlParser",
-      packageName + ".JdbcConnectionUrlParser$1",
-      packageName + ".JdbcConnectionUrlParser$2",
-      packageName + ".JdbcConnectionUrlParser$3",
-      packageName + ".JdbcConnectionUrlParser$4",
-      packageName + ".JdbcConnectionUrlParser$5",
-      packageName + ".JdbcConnectionUrlParser$6",
-      packageName + ".JdbcConnectionUrlParser$7",
-      packageName + ".JdbcConnectionUrlParser$8",
-      packageName + ".JdbcConnectionUrlParser$9",
-      packageName + ".JdbcConnectionUrlParser$10",
-      packageName + ".JdbcConnectionUrlParser$11",
-      packageName + ".JdbcConnectionUrlParser$12",
-      packageName + ".JdbcConnectionUrlParser$13",
-      packageName + ".JdbcConnectionUrlParser$14",
-      packageName + ".JdbcConnectionUrlParser$15",
-      packageName + ".JdbcConnectionUrlParser$16",
-      packageName + ".JdbcConnectionUrlParser$17",
-      packageName + ".JdbcMaps",
-      packageName + ".JdbcUtils",
-    };
   }
 
   @Override
@@ -71,7 +42,7 @@ public final class JdbcDataSourceInstrumentationModule extends InstrumentationMo
     return false;
   }
 
-  private static final class DataSourceInstrumentation implements TypeInstrumentation {
+  public static class DataSourceInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return implementsInterface(named("javax.sql.DataSource"));

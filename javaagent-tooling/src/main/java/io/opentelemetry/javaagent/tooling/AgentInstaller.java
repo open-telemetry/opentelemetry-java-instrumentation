@@ -46,7 +46,7 @@ public class AgentInstaller {
   private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  private static final String EXCLUDED_CLASSES_CONFIG = "otel.trace.classes.exclude";
+  private static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
   // We set this system property when running the agent with unit tests to allow verifying that we
   // don't ignore libraries that we actually attempt to instrument. It means either the list is

@@ -20,7 +20,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class SpanInstrumentation implements TypeInstrumentation {
+public class SpanInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.api.trace.PropagatedSpan");

@@ -9,8 +9,6 @@ import io.opentracing.contrib.dropwizard.Trace
 
 class TracedMethodsExclusionTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    // remove trace annotations in case previous tests have set it
-    it.remove("otel.trace.annotations")
     it.setProperty("otel.trace.methods", "${TestClass.name}[included,excluded]")
     it.setProperty("otel.trace.annotated.methods.exclude", "${TestClass.name}[excluded,annotatedButExcluded]")
   }

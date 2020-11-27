@@ -28,7 +28,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-final class DispatcherServletInstrumentation implements TypeInstrumentation {
+public class DispatcherServletInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

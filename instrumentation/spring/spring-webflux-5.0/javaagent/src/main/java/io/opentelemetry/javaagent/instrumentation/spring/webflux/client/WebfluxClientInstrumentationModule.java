@@ -30,22 +30,11 @@ public class WebfluxClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer",
-      "io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter",
-      "io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter",
-      "io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter$MonoWebClientTrace",
-      "io.opentelemetry.instrumentation.spring.webflux.client.TraceWebClientSubscriber"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new WebClientBuilderInstrumentation());
   }
 
-  private static final class WebClientBuilderInstrumentation implements TypeInstrumentation {
+  public static class WebClientBuilderInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");

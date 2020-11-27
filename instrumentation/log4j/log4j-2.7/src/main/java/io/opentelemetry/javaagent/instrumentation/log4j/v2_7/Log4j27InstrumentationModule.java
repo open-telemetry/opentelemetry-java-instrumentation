@@ -34,13 +34,6 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.log4j.v2_7.SpanDecoratingContextDataInjector"
-    };
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory")
         .and(not(hasClassesNamed("org.apache.logging.log4j.core.util.ContextDataProvider")));
@@ -51,8 +44,7 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
     return singletonList(new ContextDataInjectorFactoryInstrumentation());
   }
 
-  private static final class ContextDataInjectorFactoryInstrumentation
-      implements TypeInstrumentation {
+  public static class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       return named("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory");

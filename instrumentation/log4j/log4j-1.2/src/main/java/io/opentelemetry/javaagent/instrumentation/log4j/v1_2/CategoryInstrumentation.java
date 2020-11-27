@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
 
-final class CategoryInstrumentation implements TypeInstrumentation {
+public class CategoryInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("org.apache.log4j.Category");

@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
-final class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
+public class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

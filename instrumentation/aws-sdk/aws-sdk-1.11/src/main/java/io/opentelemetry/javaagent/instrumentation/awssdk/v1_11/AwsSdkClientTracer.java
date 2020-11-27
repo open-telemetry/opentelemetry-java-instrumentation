@@ -10,8 +10,6 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -63,15 +61,6 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return span;
   }
 
-  /**
-   * Override startScope not to inject context into the request since no need to propagate context
-   * to AWS backend services.
-   */
-  @Override
-  public Scope startScope(Span span, Request<?> request) {
-    return Context.current().with(span).with(CONTEXT_CLIENT_SPAN_KEY, span).makeCurrent();
-  }
-
   @Override
   public Span onResponse(Span span, Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
@@ -121,7 +110,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected Setter<Request<?>> getSetter() {
-    return null;
+    return AwsSdkInjectAdapter.INSTANCE;
   }
 
   @Override

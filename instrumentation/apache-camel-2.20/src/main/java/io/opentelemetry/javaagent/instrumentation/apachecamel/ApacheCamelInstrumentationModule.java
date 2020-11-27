@@ -34,38 +34,11 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.BaseSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DbSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.MessagingSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.HttpSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.InternalSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.KafkaSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.LogSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.RestSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.TimerSpanDecorator",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DecoratorRegistry",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.ActiveSpanManager",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.ActiveSpanManager$SpanWithScope",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelPropagationUtil",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelPropagationUtil$MapGetter",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelPropagationUtil$MapSetter",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelTracer",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelEventNotifier",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelRoutePolicy",
-      "io.opentelemetry.javaagent.instrumentation.apachecamel.CamelTracingService"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new CamelContextInstrumentation());
   }
 
-  private static final class CamelContextInstrumentation implements TypeInstrumentation {
+  public static class CamelContextInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.camel.CamelContext");

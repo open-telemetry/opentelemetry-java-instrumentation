@@ -14,7 +14,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ExecutionInterceptorInstrumentation implements TypeInstrumentation {
+public class AwsSdkInitializationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure

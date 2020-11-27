@@ -36,36 +36,11 @@ public class Elasticsearch53TransportClientInstrumentationModule extends Instrum
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {
-      // TODO: use Java 8 Collectors.joining() instead
-      "com.google.common.base.Preconditions",
-      "com.google.common.base.Joiner",
-      "com.google.common.base.Joiner$1",
-      "com.google.common.base.Joiner$2",
-      "com.google.common.base.Joiner$MapJoiner",
-    };
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "com.google.common.base.Preconditions",
-      "com.google.common.base.Joiner",
-      "com.google.common.base.Joiner$1",
-      "com.google.common.base.Joiner$2",
-      "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer",
-      packageName + ".TransportActionListener",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AbstractClientInstrumentation());
   }
 
-  private static final class AbstractClientInstrumentation implements TypeInstrumentation {
+  public static class AbstractClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // If we want to be more generic, we could instrument the interface instead:

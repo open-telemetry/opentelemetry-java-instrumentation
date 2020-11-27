@@ -1,5 +1,5 @@
 plugins {
-  id 'com.gradle.enterprise' version '3.0'
+  id 'com.gradle.enterprise' version '3.5'
   id 'com.github.burrunan.s3-build-cache' version '1.1'
 }
 
@@ -113,7 +113,7 @@ include ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0'
 include ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1'
 include ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing'
 include ':instrumentation:jaxrs-client:jaxrs-client-1.1'
-include ':instrumentation:jaxrs-client:jaxrs-client-2.0'
+include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common'
 include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-jersey-2.0'
 include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-resteasy-2.0'
 include ':instrumentation:jdbc'

@@ -46,23 +46,11 @@ public class HystrixInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.instrumentation.rxjava.SpanFinishingSubscription",
-      "io.opentelemetry.instrumentation.rxjava.TracedSubscriber",
-      "io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe",
-      packageName + ".HystrixTracer",
-      getClass().getName() + "$HystrixOnSubscribe",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HystrixCommandInstrumentation());
   }
 
-  private static final class HystrixCommandInstrumentation implements TypeInstrumentation {
+  public static class HystrixCommandInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed(

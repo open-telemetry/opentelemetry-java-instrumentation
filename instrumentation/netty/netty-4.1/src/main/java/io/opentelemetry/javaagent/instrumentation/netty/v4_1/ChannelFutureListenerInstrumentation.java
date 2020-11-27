@@ -25,7 +25,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
+public class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -58,8 +58,7 @@ final class ChannelFutureListenerInstrumentation implements TypeInstrumentation 
       if (cause == null) {
         return null;
       }
-      Context parentContext =
-          future.channel().attr(AttributeKeys.PARENT_CONNECT_CONTEXT_ATTRIBUTE_KEY).getAndRemove();
+      Context parentContext = future.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
       if (parentContext == null) {
         return null;
       }

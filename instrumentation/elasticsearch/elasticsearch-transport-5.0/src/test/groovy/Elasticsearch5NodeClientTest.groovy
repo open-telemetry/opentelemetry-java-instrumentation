@@ -20,7 +20,7 @@ import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
 class Elasticsearch5NodeClientTest extends AgentTestRunner {
-  public static final long TIMEOUT = 10000; // 10 seconds
+  public static final long TIMEOUT = 10000 // 10 seconds
 
   @Shared
   Node testNode

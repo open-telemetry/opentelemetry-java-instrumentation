@@ -22,15 +22,6 @@ public class LogbackInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap",
-      "io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap$ConcatenatedSet",
-      "io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap$ConcatenatedSet$ConcatenatedSetIterator"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new LoggerInstrumentation(), new LoggingEventInstrumentation());
   }

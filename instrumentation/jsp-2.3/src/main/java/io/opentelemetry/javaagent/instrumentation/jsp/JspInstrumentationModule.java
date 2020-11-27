@@ -19,13 +19,6 @@ public class JspInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JspTracer",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpJspPageInstrumentation(), new JspCompilationContextInstrumentation());
   }

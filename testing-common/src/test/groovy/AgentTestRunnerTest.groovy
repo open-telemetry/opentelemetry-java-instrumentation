@@ -18,7 +18,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final boolean AGENT_INSTALLED_IN_CLINIT
 
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.trace.classes.exclude",
+    it.setProperty("otel.javaagent.exclude-classes",
       "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
   }
 

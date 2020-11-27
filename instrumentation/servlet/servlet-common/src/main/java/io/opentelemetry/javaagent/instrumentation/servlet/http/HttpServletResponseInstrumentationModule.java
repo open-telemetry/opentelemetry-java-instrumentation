@@ -31,16 +31,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class HttpServletResponseInstrumentationModule extends InstrumentationModule {
+public class HttpServletResponseInstrumentationModule extends InstrumentationModule {
   public HttpServletResponseInstrumentationModule() {
     super("servlet", "servlet-response");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".HttpServletResponseTracer",
-    };
   }
 
   @Override
@@ -48,7 +41,7 @@ public final class HttpServletResponseInstrumentationModule extends Instrumentat
     return singletonList(new HttpServletResponseInstrumentation());
   }
 
-  private static final class HttpServletResponseInstrumentation implements TypeInstrumentation {
+  public static class HttpServletResponseInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("javax.servlet.http.HttpServletResponse");

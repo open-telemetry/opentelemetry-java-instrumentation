@@ -30,7 +30,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class DropwizardViewsInstrumentationModule extends InstrumentationModule {
+public class DropwizardViewsInstrumentationModule extends InstrumentationModule {
   public DropwizardViewsInstrumentationModule() {
     super("dropwizard-views");
   }
@@ -40,12 +40,7 @@ public final class DropwizardViewsInstrumentationModule extends InstrumentationM
     return singletonList(new ViewRendererInstrumentation());
   }
 
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".DropwizardTracer"};
-  }
-
-  private static final class ViewRendererInstrumentation implements TypeInstrumentation {
+  public static class ViewRendererInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("io.dropwizard.views.ViewRenderer");

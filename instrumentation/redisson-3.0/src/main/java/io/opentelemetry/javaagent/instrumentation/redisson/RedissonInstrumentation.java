@@ -25,15 +25,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
 @AutoService(InstrumentationModule.class)
-public final class RedissonInstrumentation extends InstrumentationModule {
+public class RedissonInstrumentation extends InstrumentationModule {
 
   public RedissonInstrumentation() {
     super("redisson", "redisson-3.0");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".RedissonClientTracer"};
   }
 
   @Override
@@ -41,7 +36,7 @@ public final class RedissonInstrumentation extends InstrumentationModule {
     return singletonList(new RedisConnectionInstrumentation());
   }
 
-  private static final class RedisConnectionInstrumentation implements TypeInstrumentation {
+  public static class RedisConnectionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.redisson.client.RedisConnection");

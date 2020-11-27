@@ -23,15 +23,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class PlayInstrumentationModule extends InstrumentationModule {
+public class PlayInstrumentationModule extends InstrumentationModule {
 
   public PlayInstrumentationModule() {
     super("play", "play-2.3");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".PlayTracer", packageName + ".RequestCompleteCallback"};
   }
 
   @Override
@@ -39,7 +34,7 @@ public final class PlayInstrumentationModule extends InstrumentationModule {
     return singletonList(new ActionInstrumentation());
   }
 
-  private static final class ActionInstrumentation implements TypeInstrumentation {
+  public static class ActionInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("play.api.mvc.Action");

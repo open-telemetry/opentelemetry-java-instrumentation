@@ -33,7 +33,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
+public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.ws.rs.Path");

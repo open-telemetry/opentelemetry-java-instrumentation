@@ -42,22 +42,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer",
-      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter",
-      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HostAndRequestAsHttpUriRequest",
-      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientHelper",
-      "io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.WrappingStatusSettingResponseHandler",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpClientInstrumentation());
   }
 
-  private static final class HttpClientInstrumentation implements TypeInstrumentation {
+  public static class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.http.client.HttpClient");

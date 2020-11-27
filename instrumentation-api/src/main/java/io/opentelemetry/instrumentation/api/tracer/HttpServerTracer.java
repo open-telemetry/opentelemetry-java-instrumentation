@@ -30,8 +30,9 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
-  public static final String CONTEXT_ATTRIBUTE =
-      "io.opentelemetry.javaagent.shaded.instrumentation.context";
+  // the class name is part of the attribute name, so that it will be shaded when used in javaagent
+  // instrumentation, and won't conflict with usage outside javaagent instrumentation
+  public static final String CONTEXT_ATTRIBUTE = HttpServerTracer.class.getName() + ".Context";
 
   protected static final String USER_AGENT = "User-Agent";
 

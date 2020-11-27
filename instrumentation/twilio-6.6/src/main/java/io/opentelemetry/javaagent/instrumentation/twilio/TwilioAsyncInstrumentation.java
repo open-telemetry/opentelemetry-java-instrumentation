@@ -33,7 +33,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument the Twilio SDK to identify calls as a separate service. */
-final class TwilioAsyncInstrumentation implements TypeInstrumentation {
+public class TwilioAsyncInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

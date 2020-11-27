@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAtt
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import java.util.EnumMap;
@@ -23,15 +24,20 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
+import software.amazon.awssdk.http.SdkHttpRequest;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
+  // the class name is part of the attribute name, so that it will be shaded when used in javaagent
+  // instrumentation, and won't conflict with usage outside javaagent instrumentation
   static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.Context");
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
 
+  // the class name is part of the attribute name, so that it will be shaded when used in javaagent
+  // instrumentation, and won't conflict with usage outside javaagent instrumentation
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.aws.RequestType");
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestType");
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -80,6 +86,23 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
     }
+  }
+
+  @Override
+  public SdkHttpRequest modifyHttpRequest(
+      Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    io.opentelemetry.context.Context otelContext =
+        executionAttributes.getAttribute(CONTEXT_ATTRIBUTE);
+    // Never null in practice unless another interceptor cleared out the attribute, which
+    // is theoretically possible.
+    if (otelContext == null) {
+      return context.httpRequest();
+    }
+    SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+    return builder.build();
   }
 
   @Override

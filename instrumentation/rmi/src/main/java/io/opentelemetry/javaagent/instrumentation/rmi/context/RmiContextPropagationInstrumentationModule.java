@@ -23,18 +23,6 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$InjectAdapter",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload$ExtractAdapter",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPayload",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.server.ContextDispatcher",
-      "io.opentelemetry.javaagent.instrumentation.rmi.context.server.ContextDispatcher$NoopRemote"
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new RmiClientContextInstrumentation(), new RmiServerContextInstrumentation());
   }
