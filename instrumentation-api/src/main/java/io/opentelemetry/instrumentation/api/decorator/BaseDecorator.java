@@ -6,21 +6,29 @@
 package io.opentelemetry.instrumentation.api.decorator;
 
 import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
-import static io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.ENDPOINT_PEER_SERVICE_MAPPING;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 @Deprecated
 public abstract class BaseDecorator {
+
+  // this whole class is going away very shortly
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1785
+  public static final Map<String, String> ENDPOINT_PEER_SERVICE_MAPPING =
+      Collections.unmodifiableMap(
+          Config.get().getMapProperty("otel.endpoint.peer.service.mapping"));
 
   private static final ClassValue<SpanNames> SPAN_NAMES =
       new ClassValue<SpanNames>() {

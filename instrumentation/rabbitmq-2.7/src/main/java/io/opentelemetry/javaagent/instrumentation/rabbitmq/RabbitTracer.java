@@ -39,7 +39,7 @@ public class RabbitTracer extends BaseTracer {
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
 
-    NetPeerUtils.setNetPeer(span, connection.getAddress(), connection.getPort());
+    NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
 
     return span;
   }
@@ -65,7 +65,7 @@ public class RabbitTracer extends BaseTracer {
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
           (long) response.getBody().length);
     }
-    NetPeerUtils.setNetPeer(span, connection.getAddress(), connection.getPort());
+    NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
     onGet(span, queue);
 
     return span;

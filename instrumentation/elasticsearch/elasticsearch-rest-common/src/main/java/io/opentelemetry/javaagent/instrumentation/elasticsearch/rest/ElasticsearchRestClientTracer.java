@@ -27,7 +27,7 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
 
   public Span onResponse(Span span, Response response) {
     if (response != null && response.getHost() != null) {
-      NetPeerUtils.setNetPeer(span, response.getHost().getHostName(), null);
+      NetPeerUtils.INSTANCE.setNetPeer(span, response.getHost().getHostName(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
     }
     return span;

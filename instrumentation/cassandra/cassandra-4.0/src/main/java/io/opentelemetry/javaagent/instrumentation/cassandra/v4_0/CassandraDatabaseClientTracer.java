@@ -53,7 +53,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     if (coordinator != null) {
       SocketAddress socketAddress = coordinator.getEndPoint().resolve();
       if (socketAddress instanceof InetSocketAddress) {
-        NetPeerUtils.setNetPeer(span, ((InetSocketAddress) socketAddress));
+        NetPeerUtils.INSTANCE.setNetPeer(span, ((InetSocketAddress) socketAddress));
       }
     }
   }
