@@ -16,7 +16,7 @@ dependencies {
   //We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation project(':instrumentation:netty:netty-4.0')
   testInstrumentation project(':instrumentation:netty:netty-4.1')
-  testInstrumentation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
 
   testImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
 

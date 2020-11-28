@@ -6,6 +6,7 @@
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +25,6 @@ import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
-import java.util.concurrent.TimeUnit
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   // Java8BytecodeBridge is needed in order to support Kotlin which generally targets Java 6 bytecode

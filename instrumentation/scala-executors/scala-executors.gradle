@@ -30,7 +30,7 @@ dependencies {
 
   latestDepTestLibrary group: 'org.scala-lang', name: 'scala-library', version: '2.11.+'
 
-  testInstrumentation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
 
   slickTestImplementation project(':testing-common')
   slickTestImplementation deps.scala

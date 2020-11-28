@@ -1,0 +1,6 @@
+ext.skipPublish = true
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation:jdbc:javaagent')
+}

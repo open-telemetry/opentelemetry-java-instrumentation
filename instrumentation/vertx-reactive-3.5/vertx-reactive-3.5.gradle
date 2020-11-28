@@ -15,7 +15,7 @@ dependencies {
   library group: 'io.vertx', name: 'vertx-web', version: vertxVersion
   library group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
 
-  testInstrumentation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1')
   testInstrumentation project(':instrumentation:vertx-web-3.0')
 

@@ -21,7 +21,7 @@ dependencies {
 
   implementation project(':instrumentation:hibernate:hibernate-common')
 
-  testInstrumentation project(':instrumentation:jdbc')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
   // Added to ensure cross compatibility:
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.0')
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.3')
