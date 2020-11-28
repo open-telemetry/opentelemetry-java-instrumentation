@@ -85,7 +85,7 @@ class InstrumentationModuleTest extends Specification {
   def "configure default sys prop as #value"() {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.instrumentation.defaultEnabled", value)
+      it.setProperty("otel.instrumentation.default-enabled", value)
     }
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
@@ -107,7 +107,7 @@ class InstrumentationModuleTest extends Specification {
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.instrumentation.defaultEnabled", "false")
+      it.setProperty("otel.instrumentation.default-enabled", "false")
       it.setProperty("otel.instrumentation.${value}.enabled", "true")
     }
     def target = new TestInstrumentationModule([name, altName])
