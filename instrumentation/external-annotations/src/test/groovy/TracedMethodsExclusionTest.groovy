@@ -18,11 +18,6 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
   }
 
   static class TestClass {
-    //This method is configured to be traced
-    String included() {
-      return "Hello!"
-    }
-
     //This method is not mentioned in any configuration
     String notMentioned() {
       return "Hello!"
@@ -51,19 +46,11 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
   //Baseline and assumption validation
   def "Calling these methods should be traced"() {
     expect:
-    new TestClass().included() == "Hello!"
     new TestClass().annotated() == "Hello!"
 
     and:
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          name "TestClass.included"
-          attributes {
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           name "TestClass.annotated"
           attributes {
@@ -82,7 +69,7 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
     assertTraces(0) {}
   }
 
-  def "Method which is both included and excluded for tracing should NOT be traced"() {
+  def "Method which is both annotated and excluded for tracing should NOT be traced"() {
     expect:
     new TestClass().excluded() == "Hello!"
 
