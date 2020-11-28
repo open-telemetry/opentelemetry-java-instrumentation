@@ -61,12 +61,5 @@ dependencies {
   testCompileOnly deps.autoservice
 }
 
-// See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
-tasks.register("testDisabledFieldInjection", Test) {
-  systemProperties "otel.javaagent.runtime.context.field.injection": "false"
-  includes = ["context/FieldBackedProviderFieldInjectionDisabledTest.class"]
-}
-test.dependsOn(testDisabledFieldInjection)
-test.forkEvery 1
 
 javadoc.enabled = false

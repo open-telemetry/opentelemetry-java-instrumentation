@@ -11,16 +11,10 @@ import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.Constants
-import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
-  private static final boolean AGENT_INSTALLED_IN_CLINIT
-
-  static {
-    AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
-  }
 
   def setupSpec() {
     Config.INSTANCE = Config.create([
@@ -56,8 +50,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     expect:
-    !AGENT_INSTALLED_IN_CLINIT
-    getAgentTransformer() != null
     bootstrapClassesIncorrectlyLoaded == []
   }
 
@@ -120,17 +112,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
           childOf span(0)
         }
       }
-    }
-  }
-
-  private static getAgentTransformer() {
-    Field f
-    try {
-      f = AgentTestRunner.getDeclaredField("activeTransformer")
-      f.setAccessible(true)
-      return f.get(null)
-    } finally {
-      f.setAccessible(false)
     }
   }
 }

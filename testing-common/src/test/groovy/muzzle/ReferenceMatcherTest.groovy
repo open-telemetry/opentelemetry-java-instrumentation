@@ -19,7 +19,6 @@ import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.Missing
 import static muzzle.TestClasses.MethodBodyAdvice
 
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source
@@ -28,8 +27,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
+import spock.lang.Specification
 
-class ReferenceMatcherTest extends AgentTestRunner {
+class ReferenceMatcherTest extends Specification {
 
   @Shared
   ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,

@@ -13,8 +13,6 @@ import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
 
-/* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
-
 class ServerTest extends AgentTestRunner {
   @Shared
   def client = OkHttpUtils.client()
