@@ -78,10 +78,6 @@ public abstract class Config {
    *     did not exist.
    */
   public String getProperty(String name, String defaultValue) {
-    System.out.println("getAllProperties(): " + getAllProperties());
-    System.out.println("name: " + name);
-    System.out.println("normalizePropertyName(name): " + normalizePropertyName(name));
-    System.out.println(getAllProperties().getOrDefault(normalizePropertyName(name), defaultValue));
     return getAllProperties().getOrDefault(normalizePropertyName(name), defaultValue);
   }
 
@@ -127,7 +123,6 @@ public abstract class Config {
 
   private <T> T getTypedProperty(String name, Function<String, T> parser, T defaultValue) {
     String value = getProperty(name);
-    System.out.println("VALUE: " + value);
     if (value == null || value.trim().isEmpty()) {
       return defaultValue;
     }

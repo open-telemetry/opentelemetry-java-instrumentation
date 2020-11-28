@@ -93,7 +93,6 @@ public abstract class InstrumentationModule {
   public InstrumentationModule(List<String> instrumentationNames) {
     checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    System.out.println(defaultEnabled() + " ****************************");
     enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
