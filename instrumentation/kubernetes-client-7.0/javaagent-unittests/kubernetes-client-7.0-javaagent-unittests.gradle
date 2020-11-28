@@ -1,0 +1,6 @@
+ext.skipPublish = true
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation:kubernetes-client-7.0:javaagent')
+}

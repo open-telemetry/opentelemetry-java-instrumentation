@@ -125,7 +125,8 @@ include ':instrumentation:kafka-clients-0.11'
 include ':instrumentation:kafka-streams-0.11'
 include ':instrumentation:khttp-0.1'
 include ':instrumentation:kotlinx-coroutines'
-include ':instrumentation:kubernetes-client-7.0'
+include ':instrumentation:kubernetes-client-7.0:javaagent'
+include ':instrumentation:kubernetes-client-7.0:javaagent-unittests'
 include ':instrumentation:lettuce:lettuce-common'
 include ':instrumentation:lettuce:lettuce-4.0'
 include ':instrumentation:lettuce:lettuce-5.0'
@@ -211,7 +212,9 @@ include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 
 def setBuildFile(project) {
-  if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
+  // javaagent-unittests modules are needed until those projects have library modules
+  // at which time those unittests can be moved to the library modules
+  if (['javaagent', 'javaagent-unittests', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"
