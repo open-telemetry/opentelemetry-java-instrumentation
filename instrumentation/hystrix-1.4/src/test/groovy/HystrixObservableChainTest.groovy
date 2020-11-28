@@ -3,31 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixObservableCommand
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import rx.Observable
 import rx.schedulers.Schedulers
 
 class HystrixObservableChainTest extends AgentTestRunner {
-  static {
-    // Disable so failure testing below doesn't inadvertently change the behavior.
-    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-
-    // Uncomment for debugging:
-    // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  }
-
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.instrumentation.hystrix.tags", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "test command #action"() {
     setup:
