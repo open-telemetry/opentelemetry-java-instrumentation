@@ -16,6 +16,9 @@ import spock.lang.Timeout
 @Timeout(10)
 class HystrixTest extends AgentTestRunner {
   static {
+    // Disable so failure testing below doesn't inadvertently change the behavior.
+    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
+
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
   }
