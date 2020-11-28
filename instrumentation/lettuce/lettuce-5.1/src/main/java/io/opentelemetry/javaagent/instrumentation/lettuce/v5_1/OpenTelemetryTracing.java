@@ -265,7 +265,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     private static void fillEndpoint(SpanAttributeSetter span, OpenTelemetryEndpoint endpoint) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      NetPeerUtils.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
+      NetPeerUtils.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
 
       StringBuilder redisUrl =
           new StringBuilder("redis://").append(endpoint.name != null ? endpoint.name : endpoint.ip);

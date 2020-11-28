@@ -316,7 +316,12 @@ public final class RedisCommandNormalizer {
   private final boolean normalizationEnabled;
 
   public RedisCommandNormalizer(String... instrumentationNames) {
-    this.normalizationEnabled = isQueryNormalizationEnabled(instrumentationNames);
+    this(isQueryNormalizationEnabled(instrumentationNames));
+  }
+
+  // visible for testing
+  RedisCommandNormalizer(boolean normalizationEnabled) {
+    this.normalizationEnabled = normalizationEnabled;
   }
 
   public String normalize(String command, List<?> args) {
