@@ -1,1 +1,4 @@
+group = 'io.opentelemetry.javaagent.instrumentation'
+
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
