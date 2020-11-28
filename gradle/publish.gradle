@@ -1,11 +1,12 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply plugin: 'com.jfrog.artifactory'
 
 publishing {
   repositories {
     maven {
-      url = "https://api.bintray.com/maven/open-telemetry/maven/opentelemetry-java-instrumentation/"
+      url = version.toString().contains('SNAPSHOT')
+        ? "https://oss.jfrog.org/artifactory/oss-snapshot-local/"
+        : "https://api.bintray.com/maven/open-telemetry/maven/opentelemetry-java-instrumentation/"
       credentials {
         username = System.getenv('BINTRAY_USER')
         password = System.getenv('BINTRAY_API_KEY')
@@ -88,25 +89,7 @@ private String artifactPrefix(Project p, String archivesBaseName) {
   return 'opentelemetry-'
 }
 
-// Snapshot publishing.
-artifactory {
-  contextUrl = 'https://oss.jfrog.org'
-  publish {
-    repository {
-      repoKey = 'oss-snapshot-local'
-      username = System.getenv("BINTRAY_USER")
-      password = System.getenv("BINTRAY_API_KEY")
-    }
-  }
-}
-
-tasks.publish.enabled = !version.toString().contains('SNAPSHOT')
 rootProject.tasks.release.finalizedBy tasks.publish
-
-artifactoryPublish {
-  enabled = version.toString().contains('SNAPSHOT')
-  publications('maven')
-}
 
 tasks.withType(Sign).configureEach {
   onlyIf { System.getenv("CI") != null }
