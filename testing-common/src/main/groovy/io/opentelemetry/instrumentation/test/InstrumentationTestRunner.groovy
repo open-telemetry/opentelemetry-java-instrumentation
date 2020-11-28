@@ -24,10 +24,10 @@ import io.opentelemetry.sdk.trace.ReadableSpan
 import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
+import java.lang.reflect.Method
 import org.junit.Before
 import spock.lang.Specification
 
-import java.lang.reflect.Method
 /**
  * A spock test runner which automatically initializes an in-memory exporter that can be used to
  * verify traces.
@@ -125,14 +125,14 @@ abstract class InstrumentationTestRunner extends Specification {
     }
 
     // Wait for returned spans to stabilize.
-    int previousNumSpans = -1;
+    int previousNumSpans = -1
     for (int attempt = 0; attempt < 2000; attempt++) {
-      int numSpans = testExporter.getFinishedSpanItems().size();
+      int numSpans = testExporter.getFinishedSpanItems().size()
       if (numSpans != 0 && numSpans == previousNumSpans) {
-        break;
+        break
       }
-      previousNumSpans = numSpans;
-      Thread.sleep(10);
+      previousNumSpans = numSpans
+      Thread.sleep(10)
     }
 
     return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
@@ -147,19 +147,19 @@ abstract class InstrumentationTestRunner extends Specification {
         .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
         .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
         .setPropagators(propagators)
-        .build());
+        .build())
   }
 
   private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
     if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
-      return tracerProvider;
+      return tracerProvider
     }
     try {
-      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate");
-      unobfuscate.setAccessible(true);
-      return (TracerProvider) unobfuscate.invoke(tracerProvider);
+      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate")
+      unobfuscate.setAccessible(true)
+      return (TracerProvider) unobfuscate.invoke(tracerProvider)
     } catch (Throwable t) {
-      return tracerProvider;
+      return tracerProvider
     }
   }
 }
