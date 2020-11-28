@@ -40,7 +40,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   private final List<TypeInstrumentation> typeInstrumentations;
 
   public MethodInstrumentationModule() {
-    super("trace", "trace-config");
+    super("methods");
 
     Map<String, Set<String>> classMethodsToTrace =
         MethodsConfigurationParser.parse(Config.get().getProperty(TRACE_METHODS_CONFIG));
