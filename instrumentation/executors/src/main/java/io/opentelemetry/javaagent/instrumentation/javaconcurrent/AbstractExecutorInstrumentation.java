@@ -29,7 +29,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
       "otel.instrumentation.executors.include";
 
   private static final String EXECUTORS_INCLUDE_ALL_PROPERTY_NAME =
-      "otel.instrumentation.executors.includeAll";
+      "otel.instrumentation.executors.include-all";
 
   // hopefully these configuration properties can be static after
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1345

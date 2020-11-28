@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
 import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfig
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -613,7 +613,7 @@ class KafkaClientTest extends AgentTestRunner {
 
   private static Config setPropagation(boolean propagationEnabled) {
     return updateConfig {
-      it.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
+      it.setProperty("otel.instrumentation.kafka.client-propagation", Boolean.toString(propagationEnabled))
     }
   }
 }

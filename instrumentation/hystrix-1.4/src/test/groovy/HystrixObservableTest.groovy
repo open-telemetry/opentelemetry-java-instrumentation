@@ -26,7 +26,7 @@ class HystrixObservableTest extends AgentTestRunner {
   }
 
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.hystrix.tags.enabled", "true")
+    it.setProperty("otel.instrumentation.hystrix.tags", "true")
   }
 
   def cleanupSpec() {
