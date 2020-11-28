@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -33,29 +33,17 @@ import net.bytebuddy.matcher.ElementMatcher;
  * super class.
  */
 @AutoService(InstrumentationModule.class)
-public class TraceConfigInstrumentationModule extends InstrumentationModule {
+public class MethodInstrumentationModule extends InstrumentationModule {
 
-  private static final String TRACE_METHODS_CONFIG = "otel.trace.methods";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.trace.annotated.methods.exclude";
+  private static final String TRACE_METHODS_CONFIG = "otel.instrumentation.methods.include";
 
   private final List<TypeInstrumentation> typeInstrumentations;
 
-  public TraceConfigInstrumentationModule() {
+  public MethodInstrumentationModule() {
     super("trace", "trace-config");
 
     Map<String, Set<String>> classMethodsToTrace =
         MethodsConfigurationParser.parse(Config.get().getProperty(TRACE_METHODS_CONFIG));
-
-    Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(
-            Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
-    for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
-      Set<String> tracedMethods = classMethodsToTrace.get(entry.getKey());
-      if (tracedMethods != null) {
-        tracedMethods.removeAll(entry.getValue());
-      }
-    }
 
     typeInstrumentations =
         classMethodsToTrace.entrySet().stream()
@@ -99,7 +87,7 @@ public class TraceConfigInstrumentationModule extends InstrumentationModule {
         }
       }
 
-      return Collections.singletonMap(methodMatchers, TraceAdvice.class.getName());
+      return Collections.singletonMap(methodMatchers, MethodAdvice.class.getName());
     }
   }
 }

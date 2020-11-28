@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.methods.MethodTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
-public class TraceAdvice {
+public class MethodAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(

@@ -3,15 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
 import io.opentelemetry.test.annotation.SayTracedHello
-
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
+    it.setProperty("otel.instrumentation.external-annotations.include",
+      "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
   def specCleanup() {
@@ -42,34 +46,34 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  // WIP(anuraaga): Accessing Config directly in tests causes issues due to shading conflicts.
-  // We'll probably want to move this to an independent test that isn't using AgentTestRunner.
-//  def "test configuration #value"() {
-//    setup:
-//    // Don't use ConfigUtils since that modifies the config in the agent - here we're just
-//    // initializing TraceAnnotationsInstrumentationModule directly so this is not using the agent
-//    // and we need to make sure to modify our (non-shaded) config.
-//    def previousConfig = Config.get()
-//    Config.INSTANCE = Config.create(['otel.trace.annotations': value])
-//
-//    expect:
-//    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
-//
-//    cleanup:
-//    Config.INSTANCE = previousConfig
-//
-//    where:
-//    value                               | expected
-//    null                                | DEFAULT_ANNOTATIONS.toList()
-//    " "                                 | []
-//    "some.Invalid[]"                    | []
-//    "some.package.ClassName "           | ["some.package.ClassName"]
-//    " some.package.Class\$Name"         | ["some.package.Class\$Name"]
-//    "  ClassName  "                     | ["ClassName"]
-//    "ClassName"                         | ["ClassName"]
-//    "Class\$1;Class\$2;"                | ["Class\$1", "Class\$2"]
-//    "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
-//  }
+  def "test configuration #value"() {
+    setup:
+    def previousConfig = ConfigUtils.updateConfig {
+      if (value) {
+        it.setProperty("otel.instrumentation.external-annotations.include", value)
+      } else {
+        it.remove("otel.instrumentation.external-annotations.include")
+      }
+    }
+
+    expect:
+    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
+
+    cleanup:
+    ConfigUtils.setConfig(previousConfig)
+
+    where:
+    value                               | expected
+    null                                | DEFAULT_ANNOTATIONS.toList()
+    " "                                 | []
+    "some.Invalid[]"                    | []
+    "some.package.ClassName "           | ["some.package.ClassName"]
+    " some.package.Class\$Name"         | ["some.package.Class\$Name"]
+    "  ClassName  "                     | ["ClassName"]
+    "ClassName"                         | ["ClassName"]
+    "Class\$1;Class\$2;"                | ["Class\$1", "Class\$2"]
+    "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
+  }
 
   static class AnnotationTracedCallable implements Callable<String> {
     @OuterClass.InterestingMethod

@@ -13,7 +13,8 @@ import io.opentelemetry.test.annotation.TracedWithSpan
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.annotated.methods.exclude", "${TracedWithSpan.name}[ignored]")
+    it.setProperty("otel.instrumentation.opentelemetry-annotations.exclude-methods",
+      "${TracedWithSpan.name}[ignored]")
   }
 
   def cleanupSpec() {
@@ -33,7 +34,6 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
           hasNoParent()
           errored false
           attributes {
-            "providerAttr" "Otel"
           }
         }
       }
@@ -52,7 +52,6 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
           hasNoParent()
           errored false
           attributes {
-            "providerAttr" "Otel"
           }
         }
       }
@@ -72,7 +71,6 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
           hasNoParent()
           errored false
           attributes {
-            "providerAttr" "Otel"
           }
         }
       }
@@ -88,5 +86,4 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
   }
-
 }
