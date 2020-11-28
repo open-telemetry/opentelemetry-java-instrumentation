@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -62,12 +62,13 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
         "org.springframework.cloud.sleuth.annotation.NewSpan"
       };
 
-  private static final String TRACE_ANNOTATIONS_CONFIG = "otel.trace.annotations";
+  private static final String TRACE_ANNOTATIONS_CONFIG =
+      "otel.instrumentation.external-annotations.include";
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.trace.annotated.methods.exclude";
+      "otel.instrumentation.external-annotations.exclude-methods";
 
   public TraceAnnotationsInstrumentationModule() {
-    super("trace", "trace-annotation");
+    super("external-annotations");
   }
 
   @Override
@@ -83,7 +84,7 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
     private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
     public AnnotatedMethodsInstrumentation() {
-      additionalTraceAnnotations = configureAdditionalTraceAnnotations();
+      additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
 
       if (additionalTraceAnnotations.isEmpty()) {
         classLoaderOptimization = none();
@@ -124,8 +125,8 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           TraceAdvice.class.getName());
     }
 
-    private static Set<String> configureAdditionalTraceAnnotations() {
-      String configString = Config.get().getProperty(TRACE_ANNOTATIONS_CONFIG);
+    private static Set<String> configureAdditionalTraceAnnotations(Config config) {
+      String configString = config.getProperty(TRACE_ANNOTATIONS_CONFIG);
       if (configString == null) {
         return Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
       } else if (configString.isEmpty()) {

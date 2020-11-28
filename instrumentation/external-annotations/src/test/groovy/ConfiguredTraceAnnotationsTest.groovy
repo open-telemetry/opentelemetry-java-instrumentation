@@ -3,17 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
+    it.setProperty("otel.instrumentation.external-annotations.include",
+      "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
   def specCleanup() {
@@ -42,35 +40,6 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
         }
       }
     }
-  }
-
-  def "test configuration #value"() {
-    setup:
-    def previousConfig = ConfigUtils.updateConfig {
-      if (value) {
-        it.setProperty("otel.trace.annotations", value)
-      } else {
-        it.remove("otel.trace.annotations")
-      }
-    }
-
-    expect:
-    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
-
-    cleanup:
-    ConfigUtils.setConfig(previousConfig)
-
-    where:
-    value                               | expected
-    null                                | DEFAULT_ANNOTATIONS.toList()
-    " "                                 | []
-    "some.Invalid[]"                    | []
-    "some.package.ClassName "           | ["some.package.ClassName"]
-    " some.package.Class\$Name"         | ["some.package.Class\$Name"]
-    "  ClassName  "                     | ["ClassName"]
-    "ClassName"                         | ["ClassName"]
-    "Class\$1;Class\$2;"                | ["Class\$1", "Class\$2"]
-    "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
   }
 
   static class AnnotationTracedCallable implements Callable<String> {

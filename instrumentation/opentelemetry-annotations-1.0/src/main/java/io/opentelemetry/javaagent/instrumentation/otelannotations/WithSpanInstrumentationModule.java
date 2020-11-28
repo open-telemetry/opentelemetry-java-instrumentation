@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
+package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -32,13 +32,13 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 /** Instrumentation for methods annotated with {@link WithSpan} annotation. */
 @AutoService(InstrumentationModule.class)
-public class WithSpanAnnotationInstrumentationModule extends InstrumentationModule {
+public class WithSpanInstrumentationModule extends InstrumentationModule {
 
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.trace.annotated.methods.exclude";
+      "otel.instrumentation.opentelemetry-annotations.exclude-methods";
 
-  public WithSpanAnnotationInstrumentationModule() {
-    super("with-span-annotation");
+  public WithSpanInstrumentationModule() {
+    super("opentelemetry-annotations");
   }
 
   @Override
