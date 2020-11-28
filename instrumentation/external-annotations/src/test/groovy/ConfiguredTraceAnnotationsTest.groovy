@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.api.config.Config.normalizePropertyName
 import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -51,7 +52,8 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
       if (value) {
         it.setProperty("otel.instrumentation.external-annotations.include", value)
       } else {
-        it.remove("otel.instrumentation.external-annotations.include")
+        // need to remove normalized property name (which has '-' replaced by '.')
+        it.remove(normalizePropertyName("otel.instrumentation.external-annotations.include"))
       }
     }
 
