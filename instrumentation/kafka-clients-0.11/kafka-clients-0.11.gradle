@@ -28,3 +28,12 @@ dependencies {
   latestDepTestLibrary group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.2.+'
   latestDepTestLibrary group: 'org.assertj', name: 'assertj-core', version: '3.+'
 }
+
+tasks.register("testPropagationDisabled", Test) {
+  jvmArgs "-Dotel.instrumentation.kafka.client-propagation=false"
+  include "KafkaClientPropagationDisabledTest.class"
+}
+test {
+  excludes = ["KafkaClientPropagationDisabledTest.class"]
+}
+test.dependsOn(testPropagationDisabled)

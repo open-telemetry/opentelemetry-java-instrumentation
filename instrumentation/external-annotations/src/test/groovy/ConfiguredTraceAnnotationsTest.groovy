@@ -34,22 +34,20 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  // TODO rewrite as unit test
+  // TODO extract as unit test
 //  def "test configuration #value"() {
 //    setup:
-//    def previousConfig = ConfigUtils.updateConfig {
-//      if (value) {
-//        it.setProperty("otel.instrumentation.external-annotations.include", value)
-//      } else {
-//        it.remove("otel.instrumentation.external.annotations.include")
-//      }
+//    if (value) {
+//      Config.INSTANCE = Config.create([
+//        "otel.instrumentation.external-annotations.include": value
+//      ])
 //    }
 //
 //    expect:
 //    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations() == expected.toSet()
 //
 //    cleanup:
-//    ConfigUtils.setConfig(previousConfig)
+//    Config.INSTANCE = Config.DEFAULT
 //
 //    where:
 //    value                               | expected
