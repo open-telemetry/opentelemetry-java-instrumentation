@@ -47,7 +47,6 @@ public abstract class Config {
   }
 
   public static Config create(Map<String, String> allProperties) {
-    System.out.println("allProperties: " + allProperties);
     return new AutoValue_Config(allProperties);
   }
 

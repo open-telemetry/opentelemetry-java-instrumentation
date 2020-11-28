@@ -5,3 +5,7 @@ muzzle {
     coreJdk = true
   }
 }
+
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.methods.include=package.ClassName[method1,method2];MethodTest\$ConfigTracedCallable[call]"
+}
