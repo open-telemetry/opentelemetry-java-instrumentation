@@ -54,7 +54,6 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
       span = tracer().startSpan(tracer().spanNameOnRender(req), Kind.INTERNAL);
-      span.setAttribute("servlet.context", req.getContextPath());
       tracer().onRender(span, req);
       scope = span.makeCurrent();
     }

@@ -85,7 +85,7 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
 
       Span span = tracer().startSpan(that, methodName);
 
-      return new SpanWithScope(span, span.makeCurrent());
+      return new SpanWithScope(span, tracer().startScope(span));
     }
 
     /** Method exit instrumentation. */

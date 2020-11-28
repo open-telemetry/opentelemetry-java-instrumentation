@@ -9,6 +9,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +29,13 @@ public class TwilioTracer extends BaseTracer {
 
   public Span startSpan(Object serviceExecutor, String methodName) {
     return tracer.spanBuilder(spanNameOnServiceExecution(serviceExecutor, methodName)).startSpan();
+  }
+
+  @Override
+  public Scope startScope(Span span) {
+    Context context = Context.current().with(span);
+    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return context.makeCurrent();
   }
 
   /** Decorate trace based on service execution metadata. */

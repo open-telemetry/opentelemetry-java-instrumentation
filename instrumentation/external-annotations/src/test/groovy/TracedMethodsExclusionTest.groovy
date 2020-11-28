@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentracing.contrib.dropwizard.Trace
 

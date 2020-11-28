@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
