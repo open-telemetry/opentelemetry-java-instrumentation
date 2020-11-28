@@ -33,34 +33,6 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  // TODO extract as unit test
-//  def "test configuration #value"() {
-//    setup:
-//    if (value) {
-//      Config.INSTANCE = Config.create([
-//        "otel.instrumentation.external-annotations.include": value
-//      ])
-//    }
-//
-//    expect:
-//    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations() == expected.toSet()
-//
-//    cleanup:
-//    Config.INSTANCE = Config.DEFAULT
-//
-//    where:
-//    value                               | expected
-//    null                                | DEFAULT_ANNOTATIONS.toList()
-//    " "                                 | []
-//    "some.Invalid[]"                    | []
-//    "some.package.ClassName "           | ["some.package.ClassName"]
-//    " some.package.Class\$Name"         | ["some.package.Class\$Name"]
-//    "  ClassName  "                     | ["ClassName"]
-//    "ClassName"                         | ["ClassName"]
-//    "Class\$1;Class\$2;"                | ["Class\$1", "Class\$2"]
-//    "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
-//  }
-
   static class AnnotationTracedCallable implements Callable<String> {
     @OuterClass.InterestingMethod
     @Override

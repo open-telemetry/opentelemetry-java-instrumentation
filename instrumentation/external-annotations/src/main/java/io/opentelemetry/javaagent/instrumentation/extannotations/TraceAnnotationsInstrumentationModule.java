@@ -84,7 +84,7 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
     private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
     public AnnotatedMethodsInstrumentation() {
-      additionalTraceAnnotations = configureAdditionalTraceAnnotations();
+      additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
 
       if (additionalTraceAnnotations.isEmpty()) {
         classLoaderOptimization = none();
@@ -125,8 +125,8 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           TraceAdvice.class.getName());
     }
 
-    private static Set<String> configureAdditionalTraceAnnotations() {
-      String configString = Config.get().getProperty(TRACE_ANNOTATIONS_CONFIG);
+    private static Set<String> configureAdditionalTraceAnnotations(Config config) {
+      String configString = config.getProperty(TRACE_ANNOTATIONS_CONFIG);
       if (configString == null) {
         return Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
       } else if (configString.isEmpty()) {
