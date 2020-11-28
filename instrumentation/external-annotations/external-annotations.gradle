@@ -24,25 +24,16 @@ dependencies {
   }
 }
 
-test {
-  filter {
-    excludeTestsMatching 'TraceProvidersTest'
-  }
-}
-
-// Needs a fresh classloader.
-// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
-def testTraceProviders = tasks.register('testTraceProviders', Test) {
-  filter {
-    includeTestsMatching 'TraceProvidersTest'
-  }
-}
-test.dependsOn(testTraceProviders)
-
-tasks.withType(Test) {
-  // TODO only run ConfiguredTraceAnnotationsTest with this:
+tasks.register("testIncludeProperty", Test) {
   jvmArgs "-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod"
-
-  // TODO only run TracedMethodsExclusionTest with this:
-  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+  include "ConfiguredTraceAnnotationsTest.class"
 }
+tasks.register("testExcludeMethodsProperty", Test) {
+  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+  include "TracedMethodsExclusionTest.class"
+}
+test {
+  excludes = ["ConfiguredTraceAnnotationsTest.class", "TracedMethodsExclusionTest.class"]
+}
+test.dependsOn(testIncludeProperty)
+test.dependsOn(testExcludeMethodsProperty)
