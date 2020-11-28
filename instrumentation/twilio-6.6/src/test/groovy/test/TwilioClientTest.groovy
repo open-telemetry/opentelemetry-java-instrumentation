@@ -5,8 +5,8 @@
 
 package test
 
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.util.concurrent.ListenableFuture
@@ -20,7 +20,6 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import org.apache.http.HttpEntity
@@ -144,7 +143,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -188,7 +187,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "CallCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
@@ -244,7 +243,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -254,7 +253,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -262,20 +261,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -340,7 +325,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -350,7 +335,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -358,34 +343,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored true
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-          }
-        }
-        span(3) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -457,7 +414,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 3) {
         span(0) {
           name "test"
           errored false
@@ -467,7 +424,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -479,7 +436,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(1))
           errored false
           attributes {
@@ -487,34 +444,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(3) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(2))
-          errored true
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-          }
-        }
-        span(4) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(2))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -556,7 +485,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
@@ -584,7 +513,7 @@ class TwilioClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           hasNoParent()
           errored false
           attributes {
@@ -638,7 +567,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -649,7 +578,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -708,13 +637,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }

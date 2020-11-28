@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.tracer;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -85,14 +83,9 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      Span span =
-          tracer()
-              .spanBuilder(DECORATE.spanNameOnServiceExecution(that, methodName))
-              .setSpanKind(CLIENT)
-              .startSpan();
-      DECORATE.afterStart(span);
+      Span span = tracer().startSpan(that, methodName);
 
-      return new SpanWithScope(span, span.makeCurrent());
+      return new SpanWithScope(span, tracer().startScope(span));
     }
 
     /** Method exit instrumentation. */
@@ -110,10 +103,11 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
       try {
         Span span = spanWithScope.getSpan();
 
-        DECORATE.onResult(span, response);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        if (throwable != null) {
+          tracer().endExceptionally(span, throwable);
+        } else {
+          tracer().end(span, response);
+        }
       } finally {
         spanWithScope.closeScope();
       }

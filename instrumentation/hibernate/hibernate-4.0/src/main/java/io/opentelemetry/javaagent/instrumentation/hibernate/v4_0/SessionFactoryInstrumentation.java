@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.tracer;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -57,8 +56,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
     public static void openSession(@Advice.Return SharedSessionContract session) {
 
       Context context = Java8BytecodeBridge.currentContext();
-      Span span = tracer().spanBuilder("Session").setParent(context).startSpan();
-      DECORATE.afterStart(span);
+      Span span = tracer().startSpan(context, "Session");
 
       ContextStore<SharedSessionContract, Context> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Context.class);

@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.tracer;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -42,12 +41,7 @@ public class SessionMethodUtils {
     }
 
     if (createSpan) {
-      Span span =
-          tracer()
-              .spanBuilder(DECORATE.spanNameForOperation(operationName, entity))
-              .setParent(sessionContext)
-              .startSpan();
-      DECORATE.afterStart(span);
+      Span span = tracer().startSpan(sessionContext, operationName, entity);
       return new SpanWithScope(span, sessionContext.with(span).makeCurrent());
     } else {
       return new SpanWithScope(null, sessionContext.makeCurrent());
@@ -67,15 +61,17 @@ public class SessionMethodUtils {
 
     Span span = spanWithScope.getSpan();
     if (span != null) {
-      DECORATE.onError(span, throwable);
       if (operationName != null && entity != null) {
-        String entityName = DECORATE.entityName(entity);
+        String entityName = tracer().entityName(entity);
         if (entityName != null) {
           span.updateName(operationName + " " + entityName);
         }
       }
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable != null) {
+        tracer().endExceptionally(span, throwable);
+      } else {
+        tracer().end(span);
+      }
     }
     spanWithScope.closeScope();
   }

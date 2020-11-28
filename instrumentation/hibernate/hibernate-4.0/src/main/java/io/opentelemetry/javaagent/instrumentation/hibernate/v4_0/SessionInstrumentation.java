@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateDecorator.DECORATE;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTracer.tracer;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
@@ -115,10 +115,11 @@ public class SessionInstrumentation implements TypeInstrumentation {
         return;
       }
       Span sessionSpan = Java8BytecodeBridge.spanFromContext(sessionContext);
-
-      DECORATE.onError(sessionSpan, throwable);
-      DECORATE.beforeFinish(sessionSpan);
-      sessionSpan.end();
+      if (throwable != null) {
+        tracer().endExceptionally(sessionSpan, throwable);
+      } else {
+        tracer().end(sessionSpan);
+      }
     }
   }
 
