@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 public final class KafkaClientConfiguration {
 
   public static boolean isPropagationEnabled() {
-    return Config.get().getBooleanProperty("otel.kafka.client.propagation.enabled", true);
+    return Config.get().getBooleanProperty("otel.instrumentation.kafka.client-propagation", true);
   }
 
   private KafkaClientConfiguration() {}
