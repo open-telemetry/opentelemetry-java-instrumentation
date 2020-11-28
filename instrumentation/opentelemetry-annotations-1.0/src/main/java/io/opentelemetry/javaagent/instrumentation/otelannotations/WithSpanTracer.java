@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.anotations;
+package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.extension.annotations.WithSpan;
@@ -13,14 +13,14 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TraceAnnotationTracer extends BaseTracer {
-  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+public class WithSpanTracer extends BaseTracer {
+  private static final WithSpanTracer TRACER = new WithSpanTracer();
 
-  public static TraceAnnotationTracer tracer() {
+  public static WithSpanTracer tracer() {
     return TRACER;
   }
 
-  private static final Logger log = LoggerFactory.getLogger(TraceAnnotationTracer.class);
+  private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
@@ -52,6 +52,6 @@ public class TraceAnnotationTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.opentelemetry-api";
+    return "io.opentelemetry.javaagent.opentelemetry-annotations";
   }
 }

@@ -3,23 +3,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanTracer.tracer;
 
+import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
-public class TraceAdvice {
+/**
+ * Instrumentation for methods annotated with {@link WithSpan} annotation.
+ *
+ * @see WithSpanInstrumentationModule
+ */
+public class WithSpanAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin Method method,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan(method);
+    WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
+
+    span =
+        tracer()
+            .startSpan(
+                tracer().spanNameForMethodWithAnnotation(applicationAnnotation, method),
+                tracer().extractSpanKind(applicationAnnotation));
     scope = span.makeCurrent();
   }
 
@@ -29,6 +41,7 @@ public class TraceAdvice {
       @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
     scope.close();
+
     if (throwable != null) {
       tracer().endExceptionally(span, throwable);
     } else {

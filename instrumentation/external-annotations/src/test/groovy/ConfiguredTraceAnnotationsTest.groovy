@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
+import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.instrumentation.traceannotation.TraceAnnotationsInstrumentationModule
+import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
+    it.setProperty("otel.instrumentation.external-annotations.include",
+      "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
   def specCleanup() {
@@ -48,9 +49,9 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     setup:
     def previousConfig = ConfigUtils.updateConfig {
       if (value) {
-        it.setProperty("otel.trace.annotations", value)
+        it.setProperty("otel.instrumentation.external-annotations.include", value)
       } else {
-        it.remove("otel.trace.annotations")
+        it.remove("otel.instrumentation.external-annotations.include")
       }
     }
 

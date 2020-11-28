@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
@@ -16,6 +16,6 @@ public class TraceAnnotationTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.external-annotation";
+    return "io.opentelemetry.javaagent.external-annotations";
   }
 }

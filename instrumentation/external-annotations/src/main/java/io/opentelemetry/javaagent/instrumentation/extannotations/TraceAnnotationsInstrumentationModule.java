@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.traceannotation;
+package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -62,12 +62,13 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
         "org.springframework.cloud.sleuth.annotation.NewSpan"
       };
 
-  private static final String TRACE_ANNOTATIONS_CONFIG = "otel.trace.annotations";
+  private static final String TRACE_ANNOTATIONS_CONFIG =
+      "otel.instrumentation.external-annotations.include";
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.trace.annotated.methods.exclude";
+      "otel.instrumentation.external-annotations.exclude-methods";
 
   public TraceAnnotationsInstrumentationModule() {
-    super("trace", "trace-annotation");
+    super("external-annotations");
   }
 
   @Override
