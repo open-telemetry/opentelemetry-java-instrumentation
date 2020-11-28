@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -52,12 +51,12 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
       if (value) {
         it.setProperty("otel.instrumentation.external-annotations.include", value)
       } else {
-        it.remove("otel.instrumentation.external-annotations.include")
+        it.remove("otel.instrumentation.external.annotations.include")
       }
     }
 
     expect:
-    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
+    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations() == expected.toSet()
 
     cleanup:
     ConfigUtils.setConfig(previousConfig)
