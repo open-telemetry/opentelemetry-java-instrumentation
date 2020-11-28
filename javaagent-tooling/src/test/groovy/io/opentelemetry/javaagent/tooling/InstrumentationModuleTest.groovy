@@ -87,7 +87,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure default sys prop as #value"() {
     setup:
-    Config.INSTANCE = Config.create(singletonMap("otel.instrumentation.defaultEnabled", String.valueOf(value)))
+    Config.INSTANCE = Config.create(singletonMap("otel.instrumentation.default-enabled", String.valueOf(value)))
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
 
@@ -108,7 +108,7 @@ class InstrumentationModuleTest extends Specification {
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
     Config.INSTANCE = create([
-      "otel.instrumentation.defaultEnabled"         : "false",
+      "otel.instrumentation.default-enabled"        : "false",
       ("otel.instrumentation." + value + ".enabled"): "true"
     ])
 
