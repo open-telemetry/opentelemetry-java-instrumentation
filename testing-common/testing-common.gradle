@@ -49,7 +49,7 @@ dependencies {
   testImplementation project(':instrumentation-api')
   testImplementation project(':javaagent-api')
   testImplementation project(':javaagent-tooling')
-  testImplementation project(':instrumentation:external-annotations')
+  testImplementation project(':instrumentation:external-annotations:javaagent')
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode
