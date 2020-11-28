@@ -1,6 +1,6 @@
-ext.skipPublish = true
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   testImplementation project(':instrumentation:kubernetes-client-7.0:javaagent')
+  testImplementation group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0'
 }
