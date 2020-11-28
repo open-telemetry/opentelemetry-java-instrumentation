@@ -1,14 +1,19 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply plugin: 'com.jfrog.artifactory'
-apply plugin: 'com.jfrog.bintray'
 
 publishing {
   repositories {
     maven {
-      url = "$rootDir/build/repo"
+      url = version.toString().contains('SNAPSHOT')
+        ? "https://oss.jfrog.org/artifactory/oss-snapshot-local/"
+        : "https://api.bintray.com/maven/open-telemetry/maven/opentelemetry-java-instrumentation/"
+      credentials {
+        username = System.getenv('BINTRAY_USER')
+        password = System.getenv('BINTRAY_API_KEY')
+      }
     }
   }
+
   publications {
     maven(MavenPublication) {
       if (project.tasks.findByName("shadowJar") != null && !findProperty('noShadowPublish')) {
@@ -84,52 +89,7 @@ private String artifactPrefix(Project p, String archivesBaseName) {
   return 'opentelemetry-'
 }
 
-bintray {
-  user = System.getenv('BINTRAY_USER')
-  key = System.getenv('BINTRAY_API_KEY')
-  publications = ['maven']
-  publish = false
-  pkg {
-    repo = 'maven'
-    name = 'opentelemetry-java-instrumentation'
-    licenses = ['Apache-2.0']
-    websiteUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation'
-    issueTrackerUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues'
-    vcsUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation.git'
-    userOrg = 'open-telemetry'
-
-    githubRepo = 'open-telemetry/opentelemetry-java-instrumentation'
-
-    version {
-      name = project.version
-      released = new Date()
-
-      mavenCentralSync {
-        user = System.getenv("SONATYPE_USER")
-        password = System.getenv("SONATYPE_KEY")
-      }
-    }
-  }
-}
-
-bintrayUpload.enabled = !version.toString().contains('SNAPSHOT')
-
-// Snapshot publishing.
-artifactory {
-  contextUrl = 'https://oss.jfrog.org'
-  publish {
-    repository {
-      repoKey = 'oss-snapshot-local'
-      username = System.getenv("BINTRAY_USER")
-      password = System.getenv("BINTRAY_API_KEY")
-    }
-  }
-}
-
-artifactoryPublish {
-  enabled = version.toString().contains('SNAPSHOT')
-  publications('maven')
-}
+rootProject.tasks.release.finalizedBy tasks.publish
 
 tasks.withType(Sign).configureEach {
   onlyIf { System.getenv("CI") != null }
