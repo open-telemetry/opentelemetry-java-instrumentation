@@ -8,38 +8,34 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.api.decorator.ClientDecorator;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Decorate Twilio span's with relevant contextual information. */
-public class TwilioClientDecorator extends ClientDecorator {
+public class TwilioTracer extends BaseTracer {
 
-  private static final Logger log = LoggerFactory.getLogger(TwilioClientDecorator.class);
+  private static final Logger log = LoggerFactory.getLogger(TwilioTracer.class);
 
-  public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
+  public static final TwilioTracer TRACER = new TwilioTracer();
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.twilio");
-
-  public static Tracer tracer() {
+  public static TwilioTracer tracer() {
     return TRACER;
   }
 
-  static final String COMPONENT_NAME = "twilio-sdk";
+  public Span startSpan(Object serviceExecutor, String methodName) {
+    return tracer.spanBuilder(spanNameOnServiceExecution(serviceExecutor, methodName)).startSpan();
+  }
 
   /** Decorate trace based on service execution metadata. */
-  public String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
+  private String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
     return spanNameForClass(serviceExecutor.getClass()) + "." + methodName;
   }
 
   /** Annotate the span with the results of the operation. */
-  public Span onResult(Span span, Object result) {
+  public void end(Span span, Object result) {
 
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
@@ -52,7 +48,8 @@ public class TwilioClientDecorator extends ClientDecorator {
 
     // Nothing to do here, so return
     if (result == null) {
-      return span;
+      span.end();
+      return;
     }
 
     // Provide helpful metadata for some of the more common response types
@@ -85,7 +82,7 @@ public class TwilioClientDecorator extends ClientDecorator {
       setTagIfPresent(span, result, "twilio.status", "getStatus");
     }
 
-    return span;
+    super.end(span);
   }
 
   /**
@@ -104,5 +101,10 @@ public class TwilioClientDecorator extends ClientDecorator {
     } catch (Exception e) {
       // Expected that this won't work for all result types
     }
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.javaagent.twilio";
   }
 }

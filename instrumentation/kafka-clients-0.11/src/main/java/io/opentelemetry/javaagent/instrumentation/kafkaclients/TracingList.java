@@ -13,8 +13,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class TracingList extends TracingIterable implements List<ConsumerRecord<?, ?>> {
   private final List<ConsumerRecord<?, ?>> delegate;
 
-  public TracingList(List<ConsumerRecord<?, ?>> delegate, KafkaConsumerTracer decorator) {
-    super(delegate, decorator);
+  public TracingList(List<ConsumerRecord<?, ?>> delegate, KafkaConsumerTracer tracer) {
+    super(delegate, tracer);
     this.delegate = delegate;
   }
 

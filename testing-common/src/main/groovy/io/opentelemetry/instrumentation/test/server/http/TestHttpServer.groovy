@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.server.http
 
+import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
@@ -249,9 +250,8 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
-        spanBuilder.setParent(
-          OpenTelemetry.getGlobalPropagators().getTextMapPropagator()
-            .extract(Context.root(), req, GETTER))
+        // using Context.root() to avoid inheriting any potentially leaked context here
+        spanBuilder.setParent(getGlobalPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()
       }

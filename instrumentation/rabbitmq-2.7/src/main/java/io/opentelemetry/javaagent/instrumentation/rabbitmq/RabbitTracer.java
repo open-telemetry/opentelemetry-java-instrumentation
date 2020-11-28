@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.TextMapExtractAdapter.GETTER;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 

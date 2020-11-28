@@ -6,6 +6,7 @@
 package test
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -20,14 +21,14 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
 
 class TwilioClientTest extends AgentTestRunner {
   final static String ACCOUNT_SID = "abc"
@@ -143,7 +144,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -187,7 +188,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "CallCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
@@ -253,7 +254,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -349,7 +350,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -466,7 +467,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(0))
           errored false
           attributes {
@@ -478,7 +479,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           childOf(span(1))
           errored false
           attributes {
@@ -555,7 +556,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
@@ -583,7 +584,7 @@ class TwilioClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           hasNoParent()
           errored false
           attributes {
@@ -637,7 +638,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -648,7 +649,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -707,13 +708,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
         span(2) {
           name "MessageCreator.create"
-          kind CLIENT
+          kind INTERNAL
           errored true
           errorEvent(ApiException, "Testing Failure")
         }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.api.trace.Span;
@@ -15,29 +14,18 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
-import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
 public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
-
-  private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
   public static final String CONTEXT_ATTRIBUTE = HttpServerTracer.class.getName() + ".Context";
 
   protected static final String USER_AGENT = "User-Agent";
-
-  private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.internal.failOnContextLeak");
 
   public HttpServerTracer() {
     super();
@@ -240,46 +228,6 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
       }
     }
     return forwarded.substring(start);
-  }
-
-  private <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      debugContextLeak();
-    }
-    // Using Context.ROOT here may be quite unexpected, but the reason is simple.
-    // We want either span context extracted from the carrier or invalid one.
-    // We DO NOT want any span context potentially lingering in the current context.
-    return getGlobalPropagators().getTextMapPropagator().extract(Context.root(), carrier, getter);
-  }
-
-  private void debugContextLeak() {
-    Context current = Context.current();
-    if (current != Context.root()) {
-      log.error("Unexpected non-root current context found when extracting remote context!");
-      Span currentSpan = Span.fromContextOrNull(current);
-      if (currentSpan != null) {
-        log.error("It contains this span: {}", currentSpan);
-      }
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
-      if (locations != null) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = locations.iterator();
-        while (i.hasNext()) {
-          for (StackTraceElement ste : i.next()) {
-            sb.append("\n");
-            sb.append(ste);
-          }
-          if (i.hasNext()) {
-            sb.append("\nwhich was propagated from:");
-          }
-        }
-        log.error("a context leak was detected. it was propagated from:{}", sb);
-      }
-
-      if (FAIL_ON_CONTEXT_LEAK) {
-        throw new IllegalStateException("Context leak detected");
-      }
-    }
   }
 
   private static void setStatus(Span span, int status) {

@@ -15,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.URI;
 import java.net.URISyntaxException;

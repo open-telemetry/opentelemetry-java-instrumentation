@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -61,7 +61,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(T response) {
     if (response.remoteAddress() != null) {
-      BaseDecorator.setPeer(
+      NetPeerUtils.setNetPeer(
           span, response.remoteAddress().getHost(), response.remoteAddress().getAddress());
       span.setAttribute(
           SemanticAttributes.NET_PEER_PORT, (long) response.remoteAddress().getPort());

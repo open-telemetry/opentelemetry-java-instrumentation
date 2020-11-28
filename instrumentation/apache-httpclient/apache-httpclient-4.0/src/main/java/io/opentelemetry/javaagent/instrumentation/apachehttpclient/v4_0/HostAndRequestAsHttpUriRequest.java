@@ -14,7 +14,7 @@ import org.apache.http.RequestLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.AbstractHttpMessage;
 
-/** Wraps HttpHost and HttpRequest into a HttpUriRequest for decorators and injectors. */
+/** Wraps HttpHost and HttpRequest into a HttpUriRequest for tracers and injectors. */
 public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implements HttpUriRequest {
 
   private final String method;

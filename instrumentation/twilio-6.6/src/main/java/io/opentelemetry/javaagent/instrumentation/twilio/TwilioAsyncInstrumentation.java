@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.DECORATE;
-import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioClientDecorator.tracer;
+import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -90,13 +88,7 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
       }
 
       // Don't automatically close the span with the scope if we're executing an async method
-      Span span =
-          tracer()
-              .spanBuilder(DECORATE.spanNameOnServiceExecution(that, methodName))
-              .setSpanKind(CLIENT)
-              .startSpan();
-
-      DECORATE.afterStart(span);
+      Span span = tracer().startSpan(that, methodName);
 
       return new SpanWithScope(span, span.makeCurrent());
     }
@@ -119,9 +111,7 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
         if (throwable != null) {
           // There was an synchronous error,
           // which means we shouldn't wait for a callback to close the span.
-          DECORATE.onError(span, throwable);
-          DECORATE.beforeFinish(span);
-          span.end();
+          tracer().endExceptionally(span, throwable);
         } else {
           // We're calling an async operation, we still need to finish the span when it's
           // complete and report the results; set an appropriate callback
@@ -150,15 +140,13 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
 
     @Override
     public void onSuccess(Object result) {
-      DECORATE.beforeFinish(span);
-      DECORATE.onResult(span, result);
+      tracer().end(span, result);
       span.end();
     }
 
     @Override
     public void onFailure(Throwable t) {
-      DECORATE.onError(span, t);
-      DECORATE.beforeFinish(span);
+      tracer().endExceptionally(span, t);
       span.end();
     }
   }
