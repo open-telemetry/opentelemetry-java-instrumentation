@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
-import static io.opentelemetry.instrumentation.api.decorator.BaseDecorator.extract;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 
 import io.opentelemetry.api.trace.Span;

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.S
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.decorator.BaseDecorator;
 import java.util.Map;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;
@@ -72,7 +71,7 @@ public class AdviceUtils {
       Span span = Span.fromContext(context);
       if (throwable != null) {
         span.setStatus(StatusCode.ERROR);
-        BaseDecorator.addThrowable(span, throwable);
+        span.recordException(throwable);
       }
       span.end();
     }
