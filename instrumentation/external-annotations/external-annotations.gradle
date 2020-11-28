@@ -40,9 +40,9 @@ def testTraceProviders = tasks.register('testTraceProviders', Test) {
 test.dependsOn(testTraceProviders)
 
 tasks.withType(Test) {
-  // run ConfiguredTraceAnnotationsTest with this:
-  jvmArgs "-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod}"
+  // TODO only run ConfiguredTraceAnnotationsTest with this:
+  jvmArgs "-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod"
 
-  // run TracedMethodsExclusionTest with this:
-  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass.name[excluded,annotatedButExcluded]"
+  // TODO only run TracedMethodsExclusionTest with this:
+  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
 }
