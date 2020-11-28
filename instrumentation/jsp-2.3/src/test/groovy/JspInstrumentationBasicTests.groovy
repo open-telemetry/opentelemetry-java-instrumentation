@@ -113,7 +113,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /$jspFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -123,7 +122,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /$jspFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -174,7 +172,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /getQuery.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -184,7 +181,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /getQuery.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -232,7 +228,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /post.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -242,7 +237,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /post.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -299,7 +293,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /$jspFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -321,7 +314,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
             }
           }
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -371,7 +363,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /includes/includeHtml.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -381,7 +372,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /includes/includeHtml.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -425,7 +415,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /includes/includeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -435,7 +424,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /includes/includeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -444,7 +432,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -454,7 +441,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -463,7 +449,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -473,7 +458,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -519,7 +503,6 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           errored true
           errorEvent(JasperException, String)
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }

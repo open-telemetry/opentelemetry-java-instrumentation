@@ -111,7 +111,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /$forwardFromFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -121,7 +120,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /$forwardFromFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -130,7 +128,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /$forwardDestFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -140,7 +137,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /$forwardDestFileName"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/$forwardFromFileName"
             "jsp.requestURL" baseUrl + "/$forwardDestFileName"
           }
@@ -190,7 +186,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToHtml.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -200,7 +195,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /forwards/forwardToHtml.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -244,7 +238,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToIncludeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -254,7 +247,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /forwards/forwardToIncludeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -263,7 +255,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /includes/includeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -273,7 +264,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /includes/includeMulti.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
@@ -283,7 +273,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -293,7 +282,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
@@ -303,7 +291,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -313,7 +300,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
@@ -358,7 +344,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToJspForward.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -368,7 +353,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /forwards/forwardToJspForward.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -377,7 +361,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -387,7 +370,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
           }
@@ -397,7 +379,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /common/loop.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -407,7 +388,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /common/loop.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/common/loop.jsp"
           }
@@ -453,7 +433,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToCompileError.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -464,7 +443,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           errored true
           errorEvent(JasperException, String)
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }
@@ -474,7 +452,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           errored true
           errorEvent(JasperException, String)
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -519,7 +496,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Compile /forwards/forwardToNonExistent.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
@@ -529,7 +505,6 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
           name "Render /forwards/forwardToNonExistent.jsp"
           errored false
           attributes {
-            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
         }

@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
 import org.apache.jasper.JspCompilationContext;
@@ -32,11 +31,6 @@ public class JspTracer extends BaseTracer {
 
   public void onCompile(Span span, JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
-      ServletContext servletContext = jspCompilationContext.getServletContext();
-      if (servletContext != null) {
-        span.setAttribute("servlet.context", servletContext.getContextPath());
-      }
-
       Compiler compiler = jspCompilationContext.getCompiler();
       if (compiler != null) {
         span.setAttribute("jsp.compiler", compiler.getClass().getName());
