@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.api.config.Config.normalizePropertyName
-import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
-import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
@@ -44,36 +40,6 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
         }
       }
     }
-  }
-
-  def "test configuration #value"() {
-    setup:
-    def previousConfig = ConfigUtils.updateConfig {
-      if (value) {
-        it.setProperty("otel.instrumentation.external-annotations.include", value)
-      } else {
-        // need to remove normalized property name (which has '-' replaced by '.')
-        it.remove(normalizePropertyName("otel.instrumentation.external-annotations.include"))
-      }
-    }
-
-    expect:
-    new TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation().additionalTraceAnnotations == expected.toSet()
-
-    cleanup:
-    ConfigUtils.setConfig(previousConfig)
-
-    where:
-    value                               | expected
-    null                                | DEFAULT_ANNOTATIONS.toList()
-    " "                                 | []
-    "some.Invalid[]"                    | []
-    "some.package.ClassName "           | ["some.package.ClassName"]
-    " some.package.Class\$Name"         | ["some.package.Class\$Name"]
-    "  ClassName  "                     | ["ClassName"]
-    "ClassName"                         | ["ClassName"]
-    "Class\$1;Class\$2;"                | ["Class\$1", "Class\$2"]
-    "Duplicate ;Duplicate ;Duplicate; " | ["Duplicate"]
   }
 
   static class AnnotationTracedCallable implements Callable<String> {
