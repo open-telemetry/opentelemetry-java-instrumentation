@@ -5,7 +5,7 @@
 
 package test
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -19,7 +19,6 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.ExecutionException
@@ -245,7 +244,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -263,20 +262,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -341,7 +326,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -359,34 +344,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored true
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-          }
-        }
-        span(3) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(1))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }
@@ -458,7 +415,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 3) {
         span(0) {
           name "test"
           errored false
@@ -488,34 +445,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-          }
-        }
-        span(3) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(2))
-          errored true
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-          }
-        }
-        span(4) {
-          name expectedOperationName("POST")
-          kind CLIENT
-          childOf(span(2))
-          errored false
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" String
-            "${SemanticAttributes.HTTP_URL.key()}" String
-            "${SemanticAttributes.HTTP_METHOD.key()}" String
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
           }
         }
       }

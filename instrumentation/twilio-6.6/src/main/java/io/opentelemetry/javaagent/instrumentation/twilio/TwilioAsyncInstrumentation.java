@@ -90,7 +90,7 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
       // Don't automatically close the span with the scope if we're executing an async method
       Span span = tracer().startSpan(that, methodName);
 
-      return new SpanWithScope(span, span.makeCurrent());
+      return new SpanWithScope(span, tracer().startScope(span));
     }
 
     /** Method exit instrumentation. */
