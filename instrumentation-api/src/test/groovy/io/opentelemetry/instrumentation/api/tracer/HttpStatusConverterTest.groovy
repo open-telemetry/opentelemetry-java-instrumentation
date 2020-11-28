@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.decorator
+package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter
 import spock.lang.Specification
 
 class HttpStatusConverterTest extends Specification {

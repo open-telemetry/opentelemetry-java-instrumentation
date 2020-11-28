@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
