@@ -12,6 +12,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -30,9 +32,6 @@ import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Unroll
-
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 
 class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
@@ -613,7 +612,7 @@ class KafkaClientTest extends AgentTestRunner {
 
   private static setPropagation(boolean propagationEnabled) {
     return updateConfig {
-      it.setProperty("otel.kafka.client.propagation.enabled", Boolean.toString(propagationEnabled))
+      it.setProperty("otel.instrumentation.kafka.client-propagation", Boolean.toString(propagationEnabled))
     }
   }
 }

@@ -14,15 +14,12 @@ import rx.schedulers.Schedulers
 
 class HystrixObservableChainTest extends AgentTestRunner {
   static {
-    // Disable so failure testing below doesn't inadvertently change the behavior.
-    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-
     // Uncomment for debugging:
     // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
   }
 
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.hystrix.tags.enabled", "true")
+    it.setProperty("otel.instrumentation.hystrix.tags", "true")
   }
 
   def cleanupSpec() {
