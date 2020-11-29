@@ -4,14 +4,15 @@
  */
 
 import static application.io.opentelemetry.api.trace.Span.Kind.PRODUCER
+
 import application.io.opentelemetry.api.OpenTelemetry
 import application.io.opentelemetry.api.common.Attributes
-import application.io.opentelemetry.context.Context
-import application.io.opentelemetry.context.Scope
 import application.io.opentelemetry.api.trace.Span
 import application.io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import application.io.opentelemetry.context.Context
+import application.io.opentelemetry.context.Scope
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class TracerTest extends AgentTestRunner {
 

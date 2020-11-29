@@ -4,9 +4,9 @@
  */
 
 import application.io.opentelemetry.api.OpenTelemetry
+import application.io.opentelemetry.api.trace.Span
 import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.context.ContextKey
-import application.io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicReference
 
