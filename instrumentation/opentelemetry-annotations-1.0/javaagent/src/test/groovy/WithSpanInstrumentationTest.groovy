@@ -4,7 +4,7 @@
  */
 
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
@@ -118,6 +118,25 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
         span(0) {
           name "TracedWithSpan.nestedServers"
           kind SERVER
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should not capture multiple client spans"() {
+    setup:
+    new TracedWithSpan().nestedClients()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.nestedClients"
+          kind CLIENT
           hasNoParent()
           errored false
           attributes {

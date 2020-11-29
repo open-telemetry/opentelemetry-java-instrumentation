@@ -34,6 +34,10 @@ public class WithSpanTracer extends BaseTracer {
         && getCurrentServerSpan(context) != null) {
       return io.opentelemetry.api.trace.Span.getInvalid();
     }
+    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT
+        && context.get(CONTEXT_CLIENT_SPAN_KEY) != null) {
+      return io.opentelemetry.api.trace.Span.getInvalid();
+    }
     return startSpan(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
   }
 
@@ -50,7 +54,9 @@ public class WithSpanTracer extends BaseTracer {
     if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER) {
       return context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span).makeCurrent();
     }
-
+    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT) {
+      return context.with(CONTEXT_CLIENT_SPAN_KEY, span).with(span).makeCurrent();
+    }
     return context.with(span).makeCurrent();
   }
 

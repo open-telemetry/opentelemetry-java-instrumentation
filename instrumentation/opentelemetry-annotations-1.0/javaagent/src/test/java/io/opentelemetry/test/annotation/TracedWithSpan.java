@@ -44,4 +44,14 @@ public class TracedWithSpan {
   public String innerServer() {
     return "hello!";
   }
+
+  @WithSpan(kind = Kind.CLIENT)
+  public String nestedClients() {
+    return innerClient();
+  }
+
+  @WithSpan(kind = Kind.CLIENT)
+  public String innerClient() {
+    return "hello!";
+  }
 }
