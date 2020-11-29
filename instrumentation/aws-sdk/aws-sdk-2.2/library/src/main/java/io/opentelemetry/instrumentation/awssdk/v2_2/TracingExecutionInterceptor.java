@@ -137,9 +137,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
-    span.setAttribute("aws-sdk.agent", COMPONENT_NAME);
-    span.setAttribute("aws-sdk.service", awsServiceName);
-    span.setAttribute("aws-sdk.operation", awsOperation);
+    span.setAttribute("aws.agent", COMPONENT_NAME);
+    span.setAttribute("aws.service", awsServiceName);
+    span.setAttribute("aws.operation", awsOperation);
   }
 
   @Override
