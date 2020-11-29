@@ -6,7 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD

@@ -37,9 +37,9 @@ class RestConfig {
 
         // producer - client route
         from("direct:start")
-          .log(LoggingLevel.INFO, "test","SENDING request")
+          .log(LoggingLevel.INFO, "test", "SENDING request")
           .to("rest:get:api/{module}/unit/{unitId}")
-          .log(LoggingLevel.INFO, "test","RECEIVED response: '\${body}'")
+          .log(LoggingLevel.INFO, "test", "RECEIVED response: '\${body}'")
       }
     }
   }

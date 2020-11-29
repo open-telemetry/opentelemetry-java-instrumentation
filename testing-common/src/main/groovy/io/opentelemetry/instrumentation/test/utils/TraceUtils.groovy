@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 

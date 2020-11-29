@@ -6,8 +6,8 @@
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils

@@ -11,7 +11,6 @@ import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
-
 import java.util.concurrent.TimeUnit
 
 class TraceAssert {

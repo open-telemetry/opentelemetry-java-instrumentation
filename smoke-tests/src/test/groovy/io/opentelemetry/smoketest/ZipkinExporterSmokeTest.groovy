@@ -8,7 +8,7 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
 
-class ZipkinExporterSmokeTest extends SmokeTest{
+class ZipkinExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk) {
     "open-telemetry-docker-dev.bintray.io/java/smoke-springboot-jdk$jdk:latest"
@@ -17,7 +17,7 @@ class ZipkinExporterSmokeTest extends SmokeTest{
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_EXPORTER": "zipkin",
+      "OTEL_EXPORTER"                : "zipkin",
       "OTEL_EXPORTER_ZIPKIN_ENDPOINT": "http://collector:9411/api/v2/spans"
     ]
   }

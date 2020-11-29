@@ -6,8 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import spock.lang.Unroll
-
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -15,6 +13,7 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import spock.lang.Unroll
 
 abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 

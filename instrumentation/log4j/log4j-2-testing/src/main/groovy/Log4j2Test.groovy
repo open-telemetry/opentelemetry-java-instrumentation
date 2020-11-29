@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import io.opentelemetry.api.trace.Span
 import org.apache.logging.log4j.LogManager
 
 abstract class Log4j2Test extends InstrumentationSpecification {

@@ -11,6 +11,12 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
+import javax.jms.Message
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -24,13 +30,6 @@ import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
-
-import javax.jms.Message
-import javax.jms.MessageListener
-import javax.jms.Session
-import javax.jms.TextMessage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
 
 class Jms2Test extends AgentTestRunner {
   @Shared
