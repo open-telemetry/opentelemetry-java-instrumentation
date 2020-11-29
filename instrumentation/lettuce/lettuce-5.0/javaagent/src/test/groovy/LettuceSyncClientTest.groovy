@@ -10,9 +10,9 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletionException
 import redis.embedded.RedisServer
 import spock.lang.Shared

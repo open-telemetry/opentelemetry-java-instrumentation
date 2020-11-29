@@ -12,5 +12,5 @@ dependencies {
 
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
-  implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common')
+  implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
 }

@@ -41,8 +41,8 @@ dependencies {
   compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
   compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
 
-  testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation project(':instrumentation:reactor-3.1')
+  testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
+  testImplementation project(':instrumentation:reactor-3.1:javaagent')
 
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
