@@ -18,10 +18,12 @@ class BlockClosureAdapter(block: () => Result) extends Closure[Result] {
   override def call(): Result = block()
 }
 
-class AsyncControllerClosureAdapter(response: Future[Result]) extends Closure[Future[Result]] {
+class AsyncControllerClosureAdapter(response: Future[Result])
+    extends Closure[Future[Result]] {
   override def call(): Future[Result] = response
 }
 
-class AsyncBlockClosureAdapter(block: () => Future[Result]) extends Closure[Future[Result]] {
+class AsyncBlockClosureAdapter(block: () => Future[Result])
+    extends Closure[Future[Result]] {
   override def call(): Future[Result] = block()
 }
