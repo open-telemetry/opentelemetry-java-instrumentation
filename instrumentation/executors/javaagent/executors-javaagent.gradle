@@ -7,6 +7,5 @@ muzzle {
 }
 
 tasks.withType(Test) {
-  // TODO(anuraaga): Understand why updateConfigAndResetInstrumentation doesn't work for executors.
   jvmArgs "-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor"
 }
