@@ -24,21 +24,40 @@ public class WithSpanTracer extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
 
+  public io.opentelemetry.api.trace.Span startSpan(
+      Context context,
+      WithSpan applicationAnnotation,
+      Method method,
+      io.opentelemetry.api.trace.Span.Kind kind) {
+
+    if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER
+        && getCurrentServerSpan(context) != null) {
+      return io.opentelemetry.api.trace.Span.getInvalid();
+    }
+    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT
+        && context.get(CONTEXT_CLIENT_SPAN_KEY) != null) {
+      return io.opentelemetry.api.trace.Span.getInvalid();
+    }
+    return startSpan(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
+  }
+
   /**
    * Creates new scoped context, based on the given context, with the given span.
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
   public Scope startScope(
+      Context context,
       io.opentelemetry.api.trace.Span span,
-      io.opentelemetry.api.trace.Span.Kind kind,
-      Context context) {
-    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context newContext =
-        kind == io.opentelemetry.api.trace.Span.Kind.SERVER
-            ? context.with(CONTEXT_SERVER_SPAN_KEY, span)
-            : context;
-    return newContext.with(span).makeCurrent();
+      io.opentelemetry.api.trace.Span.Kind kind) {
+
+    if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER) {
+      return context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span).makeCurrent();
+    }
+    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT) {
+      return context.with(CONTEXT_CLIENT_SPAN_KEY, span).with(span).makeCurrent();
+    }
+    return context.with(span).makeCurrent();
   }
 
   /**

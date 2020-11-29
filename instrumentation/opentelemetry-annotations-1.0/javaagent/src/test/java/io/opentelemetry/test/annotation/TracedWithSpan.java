@@ -29,4 +29,29 @@ public class TracedWithSpan {
   public String oneOfAKind() {
     return "hello!";
   }
+
+  @WithSpan(kind = Kind.SERVER)
+  public String server() {
+    return otel();
+  }
+
+  @WithSpan(kind = Kind.SERVER)
+  public String nestedServers() {
+    return innerServer();
+  }
+
+  @WithSpan(kind = Kind.SERVER)
+  public String innerServer() {
+    return "hello!";
+  }
+
+  @WithSpan(kind = Kind.CLIENT)
+  public String nestedClients() {
+    return innerClient();
+  }
+
+  @WithSpan(kind = Kind.CLIENT)
+  public String innerClient() {
+    return "hello!";
+  }
 }

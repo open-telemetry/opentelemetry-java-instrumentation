@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoValue;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -23,7 +24,7 @@ public abstract class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
   private static final Pattern PROPERTY_NAME_REPLACEMENTS = Pattern.compile("[^a-zA-Z0-9.]");
 
-  private static final Config DEFAULT = Config.create(Collections.emptyMap());
+  private static final Config DEFAULT = Config.createFromAlreadyNormalized(Collections.emptyMap());
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
   // getMuzzleReferenceMatcher() and the InstrumentationModule constructor uses Config
@@ -46,8 +47,15 @@ public abstract class Config {
     return INSTANCE;
   }
 
-  public static Config create(Map<String, String> allProperties) {
+  public static Config createFromAlreadyNormalized(Map<String, String> allProperties) {
     return new AutoValue_Config(allProperties);
+  }
+
+  // only used by tests
+  static Config create(Map<String, String> allProperties) {
+    Map<String, String> normalized = new HashMap<>(allProperties.size());
+    allProperties.forEach((key, value) -> normalized.put(normalizePropertyName(key), value));
+    return createFromAlreadyNormalized(normalized);
   }
 
   abstract Map<String, String> getAllProperties();
@@ -162,13 +170,5 @@ public abstract class Config {
     Properties properties = new Properties();
     properties.putAll(getAllProperties());
     return properties;
-  }
-
-  static Map<String, String> internalGetConfig() {
-    return INSTANCE.getAllProperties();
-  }
-
-  static void internalSetConfig(Map<String, String> properties) {
-    INSTANCE = Config.create(properties);
   }
 }

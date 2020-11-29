@@ -204,7 +204,7 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
 
   /**
    * A class which will not be transformed by our instrumentation due to {@link
-   * FieldBackedProviderTest#skipTransformationConditions(String, ClassLoader)}.
+   * FieldBackedProviderTest#skipTransformationConditions()}.
    */
   public static class UntransformableKeyClass extends KeyClass {
     @Override

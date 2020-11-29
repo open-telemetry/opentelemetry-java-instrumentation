@@ -28,9 +28,12 @@ public class ExecutorInstrumentationUtils {
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    // TODO Workaround for
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-    return !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
+    // not much point in propagating root context
+    // plus it causes failures under otel.internal.failOnContextLeak=true
+    return Context.current() != Context.root()
+        // TODO Workaround for
+        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
+        && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
         // Don't instrument the executor's own runnables.  These runnables may never return until
         // netty shuts down.
         && (enclosingClass == null

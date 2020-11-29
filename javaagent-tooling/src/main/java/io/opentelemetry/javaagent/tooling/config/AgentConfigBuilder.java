@@ -47,6 +47,6 @@ public final class AgentConfigBuilder extends ConfigBuilder<AgentConfigBuilder> 
   }
 
   Config build() {
-    return Config.create(allProperties);
+    return Config.createFromAlreadyNormalized(allProperties);
   }
 }

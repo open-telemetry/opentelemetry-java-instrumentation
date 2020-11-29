@@ -28,12 +28,10 @@ public class WithSpanAdvice {
       @Advice.Local("otelScope") Scope scope) {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
+    Context context = Context.current();
     Span.Kind kind = tracer().extractSpanKind(applicationAnnotation);
-    span =
-        tracer()
-            .startSpan(
-                tracer().spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
-    scope = tracer().startScope(span, kind, Context.current());
+    span = tracer().startSpan(context, applicationAnnotation, method, kind);
+    scope = tracer().startScope(context, span, kind);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

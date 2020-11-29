@@ -12,10 +12,10 @@ class ConfigTest extends Specification {
     setup:
     def config = Config.create([
       "otel.instrumentation.order.enabled"        : "true",
-      "otel.instrumentation.test.prop.enabled"    : "true",
-      "otel.instrumentation.disabled.prop.enabled": "false",
-      "otel.instrumentation.test.env.enabled"     : "true",
-      "otel.instrumentation.disabled.env.enabled" : "false"
+      "otel.instrumentation.test-prop.enabled"    : "true",
+      "otel.instrumentation.disabled-prop.enabled": "false",
+      "otel.instrumentation.test-env.enabled"     : "true",
+      "otel.instrumentation.disabled-env.enabled" : "false"
     ])
 
     expect:
