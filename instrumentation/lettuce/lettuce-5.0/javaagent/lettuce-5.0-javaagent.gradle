@@ -1,0 +1,20 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "io.lettuce"
+    module = "lettuce-core"
+    versions = "[5.0.0.RELEASE,5.1.0.RELEASE)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+
+  implementation project(':instrumentation:lettuce:lettuce-common:javaagent')
+
+  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testImplementation group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+  testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
+}

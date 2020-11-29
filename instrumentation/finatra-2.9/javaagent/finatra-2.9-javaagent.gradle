@@ -1,0 +1,43 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-scala.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  // We need separate test sources to compile against latest Finatra.
+  latestDepTest
+}
+
+muzzle {
+  // There are some weird library issues below 2.9 so can't assert inverse
+  pass {
+    group = 'com.twitter'
+    module = 'finatra-http_2.11'
+    versions = '[2.9.0,]'
+  }
+
+  pass {
+    group = 'com.twitter'
+    module = 'finatra-http_2.12'
+    versions = '[2.9.0,]'
+  }
+}
+
+dependencies {
+  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
+  // here.
+  compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
+
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+
+  testImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
+  testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.10'
+  // Required for older versions of finatra on JDKs >= 11
+  testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
+
+  latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
+}
+
+compileLatestDepTestGroovy {
+  classpath += files(sourceSets.latestDepTest.scala.classesDirectory)
+}

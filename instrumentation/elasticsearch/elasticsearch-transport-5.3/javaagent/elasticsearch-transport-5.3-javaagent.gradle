@@ -1,0 +1,38 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "transport"
+    versions = "[5.3.0,6.0.0)"
+    assertInverse = true
+  }
+  pass {
+    group = "org.elasticsearch"
+    module = "elasticsearch"
+    versions = "[5.3.0,6.0.0)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
+
+  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent')
+
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+  testInstrumentation project(':instrumentation:spring:spring-data-1.8:javaagent')
+
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
+
+  // Unfortunately this will bump the transport version up to 5.5.0.
+  testLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
+
+  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
+  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
+}

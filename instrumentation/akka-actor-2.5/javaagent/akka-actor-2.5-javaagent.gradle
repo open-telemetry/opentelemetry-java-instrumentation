@@ -1,0 +1,22 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-scala.gradle"
+
+muzzle {
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-actor_2.11'
+    versions = "[2.5.0,)"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:executors:javaagent')
+  compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
+
+  testImplementation deps.scala
+  testImplementation group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
+}
+
+tasks.withType(Test) {
+  jvmArgs '-Dotel.instrumentation.akka-actor.enabled=true'
+}

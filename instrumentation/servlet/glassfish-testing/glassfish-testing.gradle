@@ -7,8 +7,8 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 
 dependencies {
-  testInstrumentation project(':instrumentation:servlet:servlet-3.0')
-  testInstrumentation project(':instrumentation:grizzly-2.0')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
 
   // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
   // that is compatible with Grizzly.

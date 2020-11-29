@@ -1,0 +1,38 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play-ahc-ws-standalone_2.11'
+    versions = '[1.0.0,2.0.0)'
+    assertInverse = true
+  }
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play-ahc-ws-standalone_2.12'
+    versions = '[1.0.0,2.0.0)'
+    assertInverse = true
+  }
+  fail {
+    group = 'com.typesafe.play'
+    module = 'play-ahc-ws-standalone_2.13'
+    versions = '[,]'
+  }
+}
+
+def scalaVersion = '2.12'
+
+dependencies {
+  library group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
+
+  implementation project(':instrumentation:play-ws:play-ws-common:javaagent')
+
+  testImplementation project(':instrumentation:play-ws:play-ws-testing')
+
+  // These are to ensure cross compatibility
+  testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+  testInstrumentation project(':instrumentation:akka-http-10.0:javaagent')
+
+  latestDepTestLibrary group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
+}

@@ -1,0 +1,44 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "transport"
+    versions = "[6.0.0,7.0.0)"
+  }
+  pass {
+    group = "org.elasticsearch"
+    module = "elasticsearch"
+    versions = "[6.0.0,7.0.0)"
+  }
+  fail {
+    group = "org.elasticsearch.client"
+    module = "transport"
+    versions = "[,6.0.0)"
+  }
+  fail {
+    group = "org.elasticsearch"
+    module = "elasticsearch"
+    versions = "[,6.0.0)"
+  }
+}
+
+dependencies {
+  library group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
+
+  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent')
+
+  // Ensure no cross interference
+  testInstrumentation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+
+  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.0.0'
+
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  // Limit tests to <6.5 as the latest versions have a breaking change for the tests.
+  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '(6.1,6.5)'
+  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '(6.1,6.5)'
+}

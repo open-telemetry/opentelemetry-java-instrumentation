@@ -2,8 +2,8 @@ ext.skipPublish = true
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
-  testInstrumentation project(':instrumentation:servlet:servlet-3.0')
+  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
   // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
   // that is compatible with Dropwizard.
