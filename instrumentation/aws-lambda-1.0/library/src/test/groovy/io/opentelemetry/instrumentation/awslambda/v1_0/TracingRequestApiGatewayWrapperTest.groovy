@@ -42,7 +42,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
   def "handler traced with trace propagation"() {
     given:
-    setLambda(TestApiGatewayHandler.getName()+"::handleRequest", TracingRequestApiGatewayWrapper)
+    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper)
     def input = new APIGatewayProxyRequestEvent().withBody("hello").withHeaders(propagationHeaders())
 
     when:

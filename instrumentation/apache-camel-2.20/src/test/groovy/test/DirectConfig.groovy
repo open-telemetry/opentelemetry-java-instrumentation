@@ -22,7 +22,7 @@ class DirectConfig {
       @Override
       void configure() throws Exception {
         from("direct:receiver")
-          .log(LoggingLevel.INFO, "test","RECEIVER got: \${body}")
+          .log(LoggingLevel.INFO, "test", "RECEIVER got: \${body}")
           .delay(simple("2000"))
           .setBody(constant("result"))
       }
@@ -36,9 +36,9 @@ class DirectConfig {
       @Override
       void configure() throws Exception {
         from("direct:input")
-          .log(LoggingLevel.INFO, "test","SENDING request \${body}")
+          .log(LoggingLevel.INFO, "test", "SENDING request \${body}")
           .to("direct:receiver")
-          .log(LoggingLevel.INFO, "test","RECEIVED response \${body}")
+          .log(LoggingLevel.INFO, "test", "RECEIVED response \${body}")
       }
     }
   }

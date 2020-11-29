@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.api.trace.Span
 import java.util.concurrent.Callable
 
 class TraceUtils {

@@ -22,7 +22,7 @@ class MulticastConfig {
       @Override
       void configure() throws Exception {
         from("direct:first")
-          .log(LoggingLevel.INFO, "test","FIRST request: \${body}")
+          .log(LoggingLevel.INFO, "test", "FIRST request: \${body}")
           .delay(simple("1000"))
           .setBody(constant("first"))
       }
@@ -36,7 +36,7 @@ class MulticastConfig {
       @Override
       void configure() throws Exception {
         from("direct:second")
-          .log(LoggingLevel.INFO, "test","SECOND request: \${body}")
+          .log(LoggingLevel.INFO, "test", "SECOND request: \${body}")
           .delay(simple("2000"))
           .setBody(constant("second"))
       }
@@ -50,12 +50,12 @@ class MulticastConfig {
       @Override
       void configure() throws Exception {
         from("direct:input")
-          .log(LoggingLevel.INFO, "test","SENDING request \${body}")
+          .log(LoggingLevel.INFO, "test", "SENDING request \${body}")
           .multicast()
           .parallelProcessing()
           .to("direct:first", "direct:second")
           .end()
-          .log(LoggingLevel.INFO, "test","RECEIVED response \${body}")
+          .log(LoggingLevel.INFO, "test", "RECEIVED response \${body}")
       }
     }
   }
