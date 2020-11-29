@@ -336,6 +336,6 @@ class Aws1ClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP Request"
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 }
