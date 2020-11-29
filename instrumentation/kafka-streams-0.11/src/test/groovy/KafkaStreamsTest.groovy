@@ -6,12 +6,12 @@
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
-import io.opentelemetry.context.Context
-import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.api.trace.propagation.HttpTraceContext
+import io.opentelemetry.context.Context
+import io.opentelemetry.context.propagation.TextMapPropagator
+import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord
