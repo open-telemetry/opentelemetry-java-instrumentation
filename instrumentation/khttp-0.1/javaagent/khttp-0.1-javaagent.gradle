@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = 'khttp'
+    module = 'khttp'
+    versions = "(,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'khttp', name: 'khttp', version: '0.1.0'
+}

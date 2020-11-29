@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.google.http-client"
+    module = "google-http-client"
+
+    // 1.19.0 is the first release.  The versions before are betas and RCs
+    versions = "[1.19.0,)"
+  }
+}
+
+dependencies {
+  library group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
+}

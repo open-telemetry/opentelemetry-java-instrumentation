@@ -1,0 +1,46 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "elasticsearch-rest-client"
+    versions = "[6.4,)"
+    assertInverse = true
+  }
+
+  fail {
+    group = "org.elasticsearch.client"
+    module = "rest"
+    versions = "(,)"
+  }
+}
+
+testSets {
+  latestDepTest
+}
+
+dependencies {
+  compileOnly group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
+
+  implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent')
+
+  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
+  testImplementation project(':instrumentation:apache-httpasyncclient-4.0:javaagent')
+  //TODO: review the following claim, we are not using embedded ES anymore
+  // Netty is used, but it adds complexity to the tests since we're using embedded ES.
+  //testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
+
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  testImplementation group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
+  testImplementation group: 'org.elasticsearch', name: 'elasticsearch', version: '6.4.0'
+  testImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.0'
+
+  // TODO: The tests are incompatible with 7.x.  The instrumentation may be as well.
+  latestDepTestImplementation group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.+'
+  latestDepTestImplementation group: 'org.elasticsearch.client', name: 'transport', version: '6.+'
+  latestDepTestImplementation group: 'org.elasticsearch', name: 'elasticsearch', version: '6.+'
+  latestDepTestImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.+'
+}

@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.netflix.hystrix"
+    module = 'hystrix-core'
+    versions = "[1.4.0,)"
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation:rxjava-1.0:library')
+
+  library group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+  library group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
+}

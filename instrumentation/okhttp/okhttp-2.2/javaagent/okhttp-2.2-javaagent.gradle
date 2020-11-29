@@ -1,0 +1,22 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+/*
+Note: The Interceptor class for OkHttp was not introduced until 2.2+, so we need to make sure the
+instrumentation is not loaded unless the dependency is 2.2+.
+*/
+muzzle {
+  pass {
+    group = "com.squareup.okhttp"
+    module = "okhttp"
+    versions = "[2.2,3)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library(group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0')
+
+  latestDepTestLibrary group: 'com.squareup.okhttp', name: 'okhttp', version: '[2.6,3)'
+}
+
+

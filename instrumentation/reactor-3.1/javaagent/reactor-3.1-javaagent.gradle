@@ -1,0 +1,20 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "io.projectreactor"
+    module = "reactor-core"
+    versions = "[3.1.0.RELEASE,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  implementation project(':instrumentation-core:reactor-3.1')
+
+  testLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+
+  latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
+  // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
+  latestDepTestLibrary group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
+}

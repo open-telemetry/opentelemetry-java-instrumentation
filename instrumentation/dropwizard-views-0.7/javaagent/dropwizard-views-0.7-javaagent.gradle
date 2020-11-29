@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = 'io.dropwizard'
+    module = 'dropwizard-views'
+    versions = "(,)"
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.dropwizard', name: 'dropwizard-views', version: '0.7.0'
+
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-views-freemarker', version: '0.7.0'
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-views-mustache', version: '0.7.0'
+}

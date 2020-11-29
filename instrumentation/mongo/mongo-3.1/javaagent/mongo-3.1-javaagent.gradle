@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.mongodb"
+    module = "mongo-java-driver"
+    versions = "[3.1,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  implementation(project(':instrumentation:mongo:mongo-common:javaagent'))
+
+  library group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
+
+  testImplementation project(':instrumentation:mongo:mongo-testing')
+  testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+}

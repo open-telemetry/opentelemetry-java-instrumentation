@@ -1,0 +1,30 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.squareup.okhttp3"
+    module = "okhttp"
+    versions = "[3.0,)"
+    assertInverse = true
+  }
+}
+
+/*
+Note: there is a bit of dependency exclusion magic goin on.
+We have to exclude all transitive dependencies on 'okhttp' because we would like to force
+specific version. We cannot use . Unfortunately we cannot just force version on
+a dependency because this doesn't work well with version ranges - it doesn't select latest.
+And we cannot use configurations to exclude this dependency from everywhere in one go
+because it looks like exclusions using configurations excludes dependency even if it explicit
+not transitive.
+ */
+dependencies {
+  library(group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0')
+
+  testImplementation(project(':testing-common')) {
+    exclude module: 'okhttp'
+  }
+
+  // 4.x.x-alpha has been released and it looks like there are lots of incompatible changes
+  latestDepTestLibrary group: 'com.squareup.okhttp3', name: 'okhttp', version: '[3.11.0, 4.0.0*)'
+}

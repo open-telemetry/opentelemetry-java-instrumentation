@@ -1,0 +1,153 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+// Includes work from:
+/*
+ * Apache Camel Opentracing Component
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license
+ * agreements. See the NOTICE file distributed with this work for additional information regarding
+ * copyright ownership. The ASF licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at
+ *
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import org.apache.camel.Endpoint;
+import org.apache.camel.Exchange;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+class HttpSpanDecorator extends BaseSpanDecorator {
+
+  private static final String POST_METHOD = "POST";
+  private static final String GET_METHOD = "GET";
+
+  protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
+    // 1. Use method provided in header.
+    Object method = exchange.getIn().getHeader(Exchange.HTTP_METHOD);
+    if (method instanceof String) {
+      return (String) method;
+    }
+
+    // 2. GET if query string is provided in header.
+    if (exchange.getIn().getHeader(Exchange.HTTP_QUERY) != null) {
+      return GET_METHOD;
+    }
+
+    // 3. GET if endpoint is configured with a query string.
+    if (endpoint.getEndpointUri().indexOf('?') != -1) {
+      return GET_METHOD;
+    }
+
+    // 4. POST if there is data to send (body is not null).
+    if (exchange.getIn().getBody() != null) {
+      return POST_METHOD;
+    }
+
+    // 5. GET otherwise.
+    return GET_METHOD;
+  }
+
+  @Override
+  public String getOperationName(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    // Based on HTTP component documentation:
+    String spanName = null;
+    if (shouldSetPathAsName(camelDirection)) {
+      spanName = getPath(exchange, endpoint);
+    }
+    return (spanName == null ? getHttpMethod(exchange, endpoint) : spanName);
+  }
+
+  @Override
+  public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
+    super.pre(span, exchange, endpoint, camelDirection);
+
+    String httpUrl = getHttpUrl(exchange, endpoint);
+    if (httpUrl != null) {
+      span.setAttribute(SemanticAttributes.HTTP_URL, httpUrl);
+    }
+
+    span.setAttribute(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
+
+    Span serverSpan = Context.current().get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
+    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
+      updateServerSpanName(serverSpan, exchange, endpoint);
+    }
+  }
+
+  private boolean shouldSetPathAsName(CamelDirection camelDirection) {
+    return CamelDirection.INBOUND.equals(camelDirection);
+  }
+
+  @Nullable
+  protected String getPath(Exchange exchange, Endpoint endpoint) {
+
+    String httpUrl = getHttpUrl(exchange, endpoint);
+    try {
+      URL url = new URL(httpUrl);
+      return url.getPath();
+    } catch (MalformedURLException e) {
+      return null;
+    }
+  }
+
+  private boolean shouldUpdateServerSpanName(Span serverSpan, CamelDirection camelDirection) {
+    return (serverSpan != null && shouldSetPathAsName(camelDirection));
+  }
+
+  private void updateServerSpanName(Span serverSpan, Exchange exchange, Endpoint endpoint) {
+    String path = getPath(exchange, endpoint);
+    if (path != null) {
+      serverSpan.updateName(path);
+    }
+  }
+
+  protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {
+    Object url = exchange.getIn().getHeader(Exchange.HTTP_URL);
+    if (url instanceof String) {
+      return (String) url;
+    } else {
+      Object uri = exchange.getIn().getHeader(Exchange.HTTP_URI);
+      if (uri instanceof String) {
+        return (String) uri;
+      } else {
+        // Try to obtain from endpoint
+        int index = endpoint.getEndpointUri().lastIndexOf("http:");
+        if (index != -1) {
+          return endpoint.getEndpointUri().substring(index);
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public void post(Span span, Exchange exchange, Endpoint endpoint) {
+    super.post(span, exchange, endpoint);
+
+    if (exchange.hasOut()) {
+      Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
+      if (responseCode instanceof Integer) {
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
+      }
+    }
+  }
+}
