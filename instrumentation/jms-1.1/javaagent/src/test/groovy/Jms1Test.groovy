@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.javaagent.instrumentation.jms.JmsTracer
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
@@ -83,8 +82,8 @@ class Jms1Test extends AgentTestRunner {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | JmsTracer.TEMP_DESTINATION_NAME
-    session.createTemporaryTopic()   | "topic"         | JmsTracer.TEMP_DESTINATION_NAME
+    session.createTemporaryQueue()   | "queue"         | "(temporary)"
+    session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
   def "sending to a MessageListener on #destinationName #destinationType generates a span"() {
@@ -122,8 +121,8 @@ class Jms1Test extends AgentTestRunner {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | JmsTracer.TEMP_DESTINATION_NAME
-    session.createTemporaryTopic()   | "topic"         | JmsTracer.TEMP_DESTINATION_NAME
+    session.createTemporaryQueue()   | "queue"         | "(temporary)"
+    session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
   def "failing to receive message with receiveNoWait on #destinationName #destinationType works"() {
@@ -233,7 +232,7 @@ class Jms1Test extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" receivedMessage.getJMSMessageID()
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-            if (destinationName == JmsTracer.TEMP_DESTINATION_NAME) {
+            if (destinationName == "(temporary)") {
               "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
             }
           }
@@ -249,8 +248,8 @@ class Jms1Test extends AgentTestRunner {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
-    session.createTemporaryQueue()   | "queue"         | JmsTracer.TEMP_DESTINATION_NAME
-    session.createTemporaryTopic()   | "topic"         | JmsTracer.TEMP_DESTINATION_NAME
+    session.createTemporaryQueue()   | "queue"         | "(temporary)"
+    session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
@@ -263,7 +262,7 @@ class Jms1Test extends AgentTestRunner {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-        if (destinationName == JmsTracer.TEMP_DESTINATION_NAME) {
+        if (destinationName == "(temporary)") {
           "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
       }
@@ -292,7 +291,7 @@ class Jms1Test extends AgentTestRunner {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute
           "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" { it == messageId || messageId == "" }
         }
-        if (destinationName == JmsTracer.TEMP_DESTINATION_NAME) {
+        if (destinationName == "(temporary)") {
           "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
       }
