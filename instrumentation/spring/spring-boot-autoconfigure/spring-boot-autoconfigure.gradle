@@ -17,7 +17,7 @@ dependencies {
   implementation project(':instrumentation:spring:spring-webmvc-3.1:library')
   implementation project(':instrumentation:spring:spring-webflux-5.0:library')
 
-  compileOnly deps.opentelemetryAutoAnnotations
+  compileOnly deps.opentelemetryExtAnnotations
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
   compileOnly deps.opentelemetryLogging
   compileOnly deps.opentelemetryJaeger
@@ -32,7 +32,7 @@ dependencies {
   }
 
   testImplementation deps.opentelemetrySdk
-  testImplementation deps.opentelemetryAutoAnnotations
+  testImplementation deps.opentelemetryExtAnnotations
   testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
   testImplementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
   testImplementation deps.opentelemetryLogging

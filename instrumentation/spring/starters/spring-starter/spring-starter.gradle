@@ -9,7 +9,7 @@ dependencies {
   api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
   api group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   api project(':instrumentation:spring:spring-boot-autoconfigure')
-  api deps.opentelemetryAutoAnnotations
+  api deps.opentelemetryExtAnnotations
   api deps.opentelemetryApi
   api deps.opentelemetryLogging
   api deps.opentelemetrySdk
