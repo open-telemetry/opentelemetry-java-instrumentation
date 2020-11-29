@@ -23,7 +23,7 @@ abstract class KafkaClientBaseTest extends AgentTestRunner {
   protected static final SHARED_TOPIC = "shared.topic"
 
   protected isPropagationEnabled() {
-    return true;
+    return true
   }
 
   @Rule

@@ -31,7 +31,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
 
   @Override
   protected isPropagationEnabled() {
-    return false;
+    return false
   }
 
   def "should not read remote context when consuming messages if propagation is disabled"() {
