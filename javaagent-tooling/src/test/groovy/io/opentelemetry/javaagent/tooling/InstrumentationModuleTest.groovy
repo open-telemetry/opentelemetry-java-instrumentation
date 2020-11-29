@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling
 
-
-import static io.opentelemetry.sdk.common.export.ConfigBuilder.NamingConvention.DOT
-
 import io.opentelemetry.instrumentation.api.config.Config
 import net.bytebuddy.agent.builder.AgentBuilder
 import org.junit.Rule
@@ -92,12 +89,6 @@ class InstrumentationModuleTest extends Specification {
     ])
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
-
-    println DOT.normalize([
-      "otel.instrumentation.default-enabled": String.valueOf(value)
-    ])
-
-    println Config.INSTANCE.getProperty("otel.instrumentation.default-enabled")
 
     expect:
     target.enabled == enabled
