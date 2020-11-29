@@ -29,11 +29,11 @@ object AkkaHttpTestSyncWebServer {
           def doCall(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
-              case SUCCESS     => resp.withEntity(endpoint.getBody)
+              case SUCCESS => resp.withEntity(endpoint.getBody)
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR     => resp.withEntity(endpoint.getBody)
+              case ERROR => resp.withEntity(endpoint.getBody)
               case EXCEPTION => throw new Exception(endpoint.getBody)
               case _ =>
                 HttpResponse(status = NOT_FOUND.getStatus)

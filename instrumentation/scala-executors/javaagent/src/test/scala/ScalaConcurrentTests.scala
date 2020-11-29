@@ -5,9 +5,8 @@
 
 import java.util.concurrent.CountDownLatch
 
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -19,8 +18,8 @@ class ScalaConcurrentTests {
     Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def traceWithFutureAndCallbacks() {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
@@ -84,8 +83,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def traceWithPromises() {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
@@ -133,8 +132,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def tracedWithFutureFirstCompletions() {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
@@ -158,8 +157,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def tracedTimeout(): Integer = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
