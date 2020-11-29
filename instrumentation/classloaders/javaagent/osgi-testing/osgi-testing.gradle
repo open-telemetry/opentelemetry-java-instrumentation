@@ -2,8 +2,6 @@ ext.skipPublish = true
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  testImplementation project(':instrumentation:classloaders:javaagent')
-
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dump and are run with
   // core version provided by Eclipse implementation.
