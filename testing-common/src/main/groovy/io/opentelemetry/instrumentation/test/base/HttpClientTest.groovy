@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -445,7 +444,7 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 
   int extraClientSpans() {
