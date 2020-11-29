@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpa
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -27,12 +28,10 @@ public class WithSpanAdvice {
       @Advice.Local("otelScope") Scope scope) {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
-    span =
-        tracer()
-            .startSpan(
-                tracer().spanNameForMethodWithAnnotation(applicationAnnotation, method),
-                tracer().extractSpanKind(applicationAnnotation));
-    scope = span.makeCurrent();
+    Context context = Context.current();
+    Span.Kind kind = tracer().extractSpanKind(applicationAnnotation);
+    span = tracer().startSpan(context, applicationAnnotation, method, kind);
+    scope = tracer().startScope(context, span, kind);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
