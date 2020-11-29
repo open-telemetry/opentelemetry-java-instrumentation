@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_0.server;
 
-import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria .common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
