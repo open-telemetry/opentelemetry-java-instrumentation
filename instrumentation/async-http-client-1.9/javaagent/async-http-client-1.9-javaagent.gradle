@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.ning"
+    module = "async-http-client"
+    versions = "[1.9.0,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'com.ning', name: 'async-http-client', version: '1.9.0'
+}

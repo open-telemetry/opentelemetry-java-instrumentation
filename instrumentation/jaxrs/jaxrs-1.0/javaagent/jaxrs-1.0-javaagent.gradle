@@ -1,0 +1,21 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "javax.ws.rs"
+    module = "jsr311-api"
+    versions = "[0.5,)"
+  }
+  fail {
+    group = "javax.ws.rs"
+    module = "javax.ws.rs-api"
+    versions = "[,]"
+  }
+}
+
+dependencies {
+  compileOnly group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
+
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.7.1'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+}

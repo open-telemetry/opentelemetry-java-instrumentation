@@ -1,0 +1,24 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.rabbitmq"
+    module = 'amqp-client'
+    versions = "[2.7.0,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+
+  testLibrary group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
+
+  testImplementation deps.testcontainers
+}
+
+configurations.testRuntime {
+  resolutionStrategy {
+    force group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  }
+}

@@ -1,0 +1,29 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.hibernate"
+    module = "hibernate-core"
+    versions = "[4.0.0.Final,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
+
+  implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
+
+  testImplementation project(':instrumentation:jdbc:javaagent')
+  // Added to ensure cross compatibility:
+  testImplementation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
+  testImplementation project(':instrumentation:hibernate:hibernate-4.3:javaagent')
+
+  testImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
+  testImplementation "javax.xml.bind:jaxb-api:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
+  testImplementation "javax.activation:activation:1.1.1"
+
+  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-core', version: '4.2.+'
+}

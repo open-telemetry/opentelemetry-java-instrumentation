@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "biz.paluch.redis"
+    module = "lettuce"
+    versions = "[4.0.Final,)"
+    assertInverse = true
+  }
+}
+
+
+dependencies {
+  library group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+
+  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+
+  latestDepTestLibrary group: 'biz.paluch.redis', name: 'lettuce', version: '4.+'
+}

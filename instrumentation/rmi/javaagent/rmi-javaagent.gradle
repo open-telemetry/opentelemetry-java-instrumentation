@@ -1,0 +1,31 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    coreJdk()
+  }
+}
+
+task "rmic", dependsOn: testClasses {
+  def clazz = 'rmi.app.ServerLegacy'
+  String command = """rmic -g -keep -classpath ${sourceSets.test.output.classesDirs.asPath} -d ${buildDir}/classes/java/test ${clazz}"""
+  command.execute().text
+}
+
+test.dependsOn "rmic"
+
+// We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.
+// We also can't seem to use the toolchain without the "--release" option. So disable everything.
+
+java {
+  toolchain {
+    languageVersion = null
+  }
+}
+
+tasks.withType(JavaCompile) {
+  options.release = null
+}
+tasks.withType(GroovyCompile) {
+  options.release = null
+}

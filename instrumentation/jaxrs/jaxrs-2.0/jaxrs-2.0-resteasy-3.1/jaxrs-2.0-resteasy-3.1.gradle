@@ -26,7 +26,7 @@ dependencies {
 
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common')
 
-  testImplementation project(':instrumentation:servlet:servlet-3.0')
+  testImplementation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
 
   testLibrary(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.1.0.Final') {
