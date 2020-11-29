@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import static io.opentelemetry.instrumentation.api.config.Config.create
-import static java.util.Collections.singletonMap
+
+import static io.opentelemetry.sdk.common.export.ConfigBuilder.NamingConvention.DOT
 
 import io.opentelemetry.instrumentation.api.config.Config
 import net.bytebuddy.agent.builder.AgentBuilder
@@ -63,7 +63,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "default disabled can override to enabled #enabled"() {
     setup:
-    Config.INSTANCE = create([
+    Config.INSTANCE = Config.create([
       "otel.instrumentation.test.enabled": Boolean.toString(enabled)
     ])
     def target = new TestInstrumentationModule(["test"]) {
@@ -87,9 +87,17 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure default sys prop as #value"() {
     setup:
-    Config.INSTANCE = Config.create(singletonMap("otel.instrumentation.default-enabled", String.valueOf(value)))
+    Config.INSTANCE = Config.create([
+      "otel.instrumentation.default-enabled": String.valueOf(value)
+    ])
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
+
+    println DOT.normalize([
+      "otel.instrumentation.default-enabled": String.valueOf(value)
+    ])
+
+    println Config.INSTANCE.getProperty("otel.instrumentation.default-enabled")
 
     expect:
     target.enabled == enabled
@@ -107,7 +115,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
-    Config.INSTANCE = create([
+    Config.INSTANCE = Config.create([
       "otel.instrumentation.default-enabled"        : "false",
       ("otel.instrumentation." + value + ".enabled"): "true"
     ])
