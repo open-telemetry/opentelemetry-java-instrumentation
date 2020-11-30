@@ -51,6 +51,10 @@ public class WithSpanTracer extends BaseTracer {
       io.opentelemetry.api.trace.Span span,
       io.opentelemetry.api.trace.Span.Kind kind) {
 
+    if (!span.getSpanContext().isValid()) {
+      // important not to put invalid span into scope
+      return Scope.noop();
+    }
     if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER) {
       return context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span).makeCurrent();
     }
