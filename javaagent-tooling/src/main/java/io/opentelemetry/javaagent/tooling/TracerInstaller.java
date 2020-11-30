@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
+import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
@@ -164,7 +165,7 @@ public class TracerInstaller {
 
   private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-    BatchSpanProcessor spanProcessor =
+    SpanProcessor spanProcessor =
         BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
