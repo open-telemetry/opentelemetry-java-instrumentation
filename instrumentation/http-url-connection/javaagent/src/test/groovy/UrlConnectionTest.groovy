@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 
 class UrlConnectionTest extends AgentTestRunner {
@@ -61,6 +60,6 @@ class UrlConnectionTest extends AgentTestRunner {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 }

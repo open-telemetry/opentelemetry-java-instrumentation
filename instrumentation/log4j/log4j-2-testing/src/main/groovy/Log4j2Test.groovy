@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID
-
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.log4j.v2_13_2.ListAppender
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -31,14 +27,14 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     then:
     events.size() == 2
     events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue(TRACE_ID) == null
-    events[0].getContextData().getValue(SPAN_ID) == null
-    events[0].getContextData().getValue(SAMPLED) == null
+    events[0].getContextData().getValue("traceId") == null
+    events[0].getContextData().getValue("spanId") == null
+    events[0].getContextData().getValue("sampled") == null
 
     events[1].message.formattedMessage == "log message 2"
-    events[1].getContextData().getValue(TRACE_ID) == null
-    events[1].getContextData().getValue(SPAN_ID) == null
-    events[1].getContextData().getValue(SAMPLED) == null
+    events[1].getContextData().getValue("traceId") == null
+    events[1].getContextData().getValue("spanId") == null
+    events[1].getContextData().getValue("sampled") == null
   }
 
   def "ids when span"() {
@@ -63,18 +59,18 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue(TRACE_ID) == span1.spanContext.traceIdAsHexString
-    events[0].getContextData().getValue(SPAN_ID) == span1.spanContext.spanIdAsHexString
-    events[0].getContextData().getValue(SAMPLED) == "true"
+    events[0].getContextData().getValue("traceId") == span1.spanContext.traceIdAsHexString
+    events[0].getContextData().getValue("spanId") == span1.spanContext.spanIdAsHexString
+    events[0].getContextData().getValue("sampled") == "true"
 
     events[1].message.formattedMessage == "log message 2"
-    events[1].getContextData().getValue(TRACE_ID) == null
-    events[1].getContextData().getValue(SPAN_ID) == null
-    events[1].getContextData().getValue(SAMPLED) == null
+    events[1].getContextData().getValue("traceId") == null
+    events[1].getContextData().getValue("spanId") == null
+    events[1].getContextData().getValue("sampled") == null
 
     events[2].message.formattedMessage == "log message 3"
-    events[2].getContextData().getValue(TRACE_ID) == span2.spanContext.traceIdAsHexString
-    events[2].getContextData().getValue(SPAN_ID) == span2.spanContext.spanIdAsHexString
-    events[2].getContextData().getValue(SAMPLED) == "true"
+    events[2].getContextData().getValue("traceId") == span2.spanContext.traceIdAsHexString
+    events[2].getContextData().getValue("spanId") == span2.spanContext.spanIdAsHexString
+    events[2].getContextData().getValue("sampled") == "true"
   }
 }
