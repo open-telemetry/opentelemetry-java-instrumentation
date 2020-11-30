@@ -18,9 +18,8 @@ package io.opentelemetry.smoketest.springboot.controller;
 
 import io.opentelemetry.api.trace.Span;
 import java.net.URI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -35,18 +34,19 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  */
 @RestController
 public class PropagatingController {
-  private static final Logger LOGGER = LoggerFactory.getLogger(PropagatingController.class);
-
   private final RestTemplate restTemplate;
+  private final Environment environment;
 
-  public PropagatingController(RestTemplateBuilder restTemplateBuilder) {
+  public PropagatingController(RestTemplateBuilder restTemplateBuilder, Environment environment) {
     this.restTemplate = restTemplateBuilder.build();
+    this.environment = environment;
   }
 
   @RequestMapping("/front")
   public String front() {
     URI backend = ServletUriComponentsBuilder
         .fromCurrentContextPath()
+        .port(environment.getProperty("local.server.port"))
         .path("/back")
         .build()
         .toUri();
