@@ -26,8 +26,7 @@ import play.api.mvc._
  * This controller creates an `Action` to handle HTTP requests to the
  * application's work page which does busy wait to simulate some work
  */
-class HomeController @Inject()(cc: ControllerComponents)
-  extends AbstractController(cc) {
+class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   val TRACER: Tracer =
     OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
