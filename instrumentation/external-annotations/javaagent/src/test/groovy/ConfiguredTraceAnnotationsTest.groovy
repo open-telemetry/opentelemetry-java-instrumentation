@@ -14,7 +14,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
       "package.Class\$Name;${OuterClass.InterestingMethod.name}")
   }
 
-  def specCleanup() {
+  def cleanupSpec() {
     ConfigUtils.setConfig(PREVIOUS_CONFIG)
   }
 
