@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
-
 import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.javaagent.tooling.config.AgentConfigBuilder
 import net.bytebuddy.agent.builder.AgentBuilder
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
@@ -62,12 +60,9 @@ class InstrumentationModuleTest extends Specification {
 
   def "default disabled can override to enabled #enabled"() {
     setup:
-    Config.INSTANCE = new AgentConfigBuilder()
-      .readProperties(new Properties([
-        "otel.instrumentation.test.enabled": Boolean.toString(enabled)
-      ]))
-      .build()
-
+    Config.INSTANCE = Config.create([
+      "otel.instrumentation.test.enabled": Boolean.toString(enabled)
+    ])
     def target = new TestInstrumentationModule(["test"]) {
       @Override
       protected boolean defaultEnabled() {
@@ -89,12 +84,9 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure default sys prop as #value"() {
     setup:
-    Config.INSTANCE = new AgentConfigBuilder()
-      .readProperties(new Properties([
-        "otel.instrumentation.default-enabled": value
-      ]))
-      .build()
-
+    Config.INSTANCE = Config.create([
+      "otel.instrumentation.default-enabled": String.valueOf(value)
+    ])
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
 
@@ -114,12 +106,10 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
-    Config.INSTANCE = new AgentConfigBuilder()
-      .readProperties(new Properties([
-        "otel.instrumentation.default-enabled"        : "false",
-        ("otel.instrumentation." + value + ".enabled"): "true"
-      ]))
-      .build()
+    Config.INSTANCE = Config.create([
+      "otel.instrumentation.default-enabled"        : "false",
+      ("otel.instrumentation." + value + ".enabled"): "true"
+    ])
 
     def target = new TestInstrumentationModule([name, altName])
     target.instrument(new AgentBuilder.Default())
