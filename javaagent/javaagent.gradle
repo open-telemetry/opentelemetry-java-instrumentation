@@ -95,12 +95,10 @@ tasks.withType(ShadowJar).configureEach {
 }
 
 dependencies {
-  testImplementation project(':javaagent-bootstrap')
-  testImplementation project(':javaagent-api')
-  testImplementation project(':instrumentation-api')
-  testImplementation project(':utils:test-utils')
+  testCompileOnly project(':javaagent-bootstrap')
+  testCompileOnly project(':javaagent-api')
 
-  testImplementation deps.testLogging
+  testImplementation project(':utils:test-utils')
   testImplementation deps.guava
 
   testImplementation 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
