@@ -37,7 +37,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     }
   }
 
-  def "span named '#name' from annotations on class when is not root span"() {
+  def "span named '#paramName' from annotations on class when is not root span"() {
     setup:
     runUnderServerTrace("test") {
       obj.call()
