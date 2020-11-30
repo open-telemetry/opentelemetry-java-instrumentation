@@ -1,0 +1,24 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.config;
+
+enum NamingConvention {
+  DOT {
+    @Override
+    public String normalize(String key) {
+      // many instrumentation names have dashes ('-')
+      return key.toLowerCase().replace('.', '_').replace('-', '_');
+    }
+  },
+  ENV_VAR {
+    @Override
+    public String normalize(String key) {
+      return key.toLowerCase();
+    }
+  };
+
+  abstract String normalize(String key);
+}

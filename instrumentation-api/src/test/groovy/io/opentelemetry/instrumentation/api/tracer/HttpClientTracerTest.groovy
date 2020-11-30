@@ -9,14 +9,15 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
 
   def setupSpec() {
-    Config.INSTANCE = Config.create([
+    Config.INSTANCE = new ConfigBuilder().readProperties([
       "otel.endpoint.peer.service.mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
-    ])
+    ]).build()
   }
 
   def cleanupSpec() {
