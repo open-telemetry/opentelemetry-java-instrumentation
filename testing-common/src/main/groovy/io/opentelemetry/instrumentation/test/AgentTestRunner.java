@@ -70,7 +70,7 @@ public abstract class AgentTestRunner extends Specification {
 
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
-    ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
+    // ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new InMemoryExporter();
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
