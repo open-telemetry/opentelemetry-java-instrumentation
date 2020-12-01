@@ -60,7 +60,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")
-        || name.startsWith("datadog")
+        || name.startsWith("datadog.")
         || name.startsWith("com.intellij.rt.debugger.")
         || name.startsWith("com.p6spy.")
         || name.startsWith("com.dynatrace.")
