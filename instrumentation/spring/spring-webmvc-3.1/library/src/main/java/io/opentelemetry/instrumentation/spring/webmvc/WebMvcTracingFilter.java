@@ -31,7 +31,7 @@ public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered
   public void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    Context ctx = tracer.startSpan(request, request, FILTER_CLASS + "." + FILTER_METHOD);
+    Context ctx = tracer.startSpan(request, request, request, FILTER_CLASS + "." + FILTER_METHOD);
     Span serverSpan = Span.fromContext(ctx);
     try (Scope ignored = tracer.startScope(serverSpan, request)) {
       filterChain.doFilter(request, response);

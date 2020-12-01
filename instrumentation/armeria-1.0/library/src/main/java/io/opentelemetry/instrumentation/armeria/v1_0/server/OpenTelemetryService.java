@@ -59,7 +59,7 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
+    Context context = serverTracer.startSpan(req, ctx, null, spanName, requestStartTimeNanos);
     Span span = Span.fromContext(context);
 
     if (span.isRecording()) {

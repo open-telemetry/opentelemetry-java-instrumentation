@@ -46,7 +46,8 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Context context = tracer().startSpan(request, ctx.getChannel(), "netty.request");
+    Context context =
+        tracer().startSpan(request, ctx.getChannel(), channelTraceContext, "netty.request");
     Span span = Java8BytecodeBridge.spanFromContext(context);
     try (Scope ignored = tracer().startScope(span, channelTraceContext)) {
       ctx.sendUpstream(msg);

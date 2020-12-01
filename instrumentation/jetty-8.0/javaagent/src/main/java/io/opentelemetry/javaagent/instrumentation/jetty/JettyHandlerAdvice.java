@@ -34,7 +34,7 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    Context ctx = tracer().startSpan(request, request, method);
+    Context ctx = tracer().startSpan(request, request, request, method);
     span = Java8BytecodeBridge.spanFromContext(ctx);
     scope = tracer().startScope(span, request);
   }

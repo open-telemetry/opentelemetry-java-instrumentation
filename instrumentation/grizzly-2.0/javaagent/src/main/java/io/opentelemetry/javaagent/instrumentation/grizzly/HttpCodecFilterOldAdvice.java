@@ -31,7 +31,7 @@ public class HttpCodecFilterOldAdvice {
       return;
     }
     HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
-    Context extractedContext = tracer().startSpan(httpRequest, httpRequest, method);
+    Context extractedContext = tracer().startSpan(httpRequest, httpRequest, ctx, method);
     Span span = Java8BytecodeBridge.spanFromContext(extractedContext);
 
     // We don't actually want to attach new context to this thread, as actual request will continue

@@ -35,17 +35,22 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super(tracer);
   }
 
-  public Context startSpan(REQUEST request, CONNECTION connection, Method origin) {
+  public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
     String spanName = spanNameForMethod(origin);
-    return startSpan(request, connection, spanName);
-  }
-
-  public Context startSpan(REQUEST request, CONNECTION connection, String spanName) {
-    return startSpan(request, connection, spanName, -1);
+    return startSpan(request, connection, storage, spanName);
   }
 
   public Context startSpan(
-      REQUEST request, CONNECTION connection, String spanName, long startTimestamp) {
+      REQUEST request, CONNECTION connection, STORAGE storage, String spanName) {
+    return startSpan(request, connection, storage, spanName, -1);
+  }
+
+  public Context startSpan(
+      REQUEST request,
+      CONNECTION connection,
+      STORAGE storage,
+      String spanName,
+      long startTimestamp) {
     Context parentContext = extract(request, getGetter());
     SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
@@ -58,7 +63,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     onRequest(span, request);
     onConnectionAndRequest(span, connection, request);
 
-    return parentContext.with(span);
+    Context context = parentContext.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    attachServerContext(context, storage);
+
+    return context;
   }
 
   /**
@@ -76,10 +84,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
   public Scope startScope(Span span, STORAGE storage, Context context) {
-    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context newContext = context.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
-    attachServerContext(newContext, storage);
-    return newContext.makeCurrent();
+    return context.makeCurrent();
   }
 
   /**

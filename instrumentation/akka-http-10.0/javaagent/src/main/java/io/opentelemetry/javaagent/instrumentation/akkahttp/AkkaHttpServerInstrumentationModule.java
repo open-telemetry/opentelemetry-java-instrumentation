@@ -96,7 +96,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, "akka.request");
+      Context ctx = tracer().startSpan(request, request, null, "akka.request");
       Span span = Java8BytecodeBridge.spanFromContext(ctx);
       try (Scope ignored = tracer().startScope(span, null)) {
         HttpResponse response = userHandler.apply(request);
@@ -122,7 +122,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, "akka.request");
+      Context ctx = tracer().startSpan(request, request, null, "akka.request");
       Span span = Java8BytecodeBridge.spanFromContext(ctx);
       try (Scope ignored = tracer().startScope(span, null)) {
         return userHandler

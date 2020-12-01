@@ -34,7 +34,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    Context context = tracer().startSpan((HttpRequest) msg, channel, "netty.request");
+    Context context = tracer().startSpan((HttpRequest) msg, channel, channel, "netty.request");
     Span span = Java8BytecodeBridge.spanFromContext(context);
     try (Scope ignored = tracer().startScope(span, channel)) {
       ctx.fireChannelRead(msg);
