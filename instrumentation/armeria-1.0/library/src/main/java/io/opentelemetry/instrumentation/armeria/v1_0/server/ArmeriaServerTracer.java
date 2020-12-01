@@ -19,8 +19,7 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaServerTracer
-    extends HttpServerTracer<
-        HttpRequest, RequestLog, ServiceRequestContext, ServiceRequestContext> {
+    extends HttpServerTracer<HttpRequest, RequestLog, ServiceRequestContext, Void> {
 
   ArmeriaServerTracer() {}
 
@@ -30,7 +29,7 @@ public class ArmeriaServerTracer
 
   @Override
   @Nullable
-  public Context getServerContext(ServiceRequestContext ctx) {
+  public Context getServerContext(Void ctx) {
     return null;
   }
 
@@ -93,7 +92,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  protected void attachServerContext(Context context, ServiceRequestContext ctx) {}
+  protected void attachServerContext(Context context, Void ctx) {}
 
   private static class ArmeriaGetter implements Getter<HttpRequest> {
 
