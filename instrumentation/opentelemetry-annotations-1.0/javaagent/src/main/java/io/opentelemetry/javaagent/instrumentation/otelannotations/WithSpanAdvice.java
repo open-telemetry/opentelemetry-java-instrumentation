@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpa
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -23,25 +24,29 @@ public class WithSpanAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin Method method,
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
-    span =
-        tracer()
-            .startSpan(
-                tracer().spanNameForMethodWithAnnotation(applicationAnnotation, method),
-                tracer().extractSpanKind(applicationAnnotation));
-    scope = span.makeCurrent();
+    Span.Kind kind = tracer().extractSpanKind(applicationAnnotation);
+    Context current = Context.current();
+    if (tracer().shouldStartSpan(current, kind)) {
+      context = tracer().startSpan(current, applicationAnnotation, method, kind);
+      scope = context.makeCurrent();
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
+    if (scope == null) {
+      return;
+    }
     scope.close();
 
+    Span span = Span.fromContext(context);
     if (throwable != null) {
       tracer().endExceptionally(span, throwable);
     } else {

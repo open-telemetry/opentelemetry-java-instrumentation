@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.Span.Kind.SERVER
+
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils
@@ -67,7 +71,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.oneOfAKind"
-          kind Span.Kind.PRODUCER
+          kind PRODUCER
           hasNoParent()
           errored false
           attributes {
@@ -77,6 +81,69 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
     }
   }
 
+  def "should capture multiple spans"() {
+    setup:
+    new TracedWithSpan().server()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "TracedWithSpan.server"
+          kind SERVER
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+        span(1) {
+          name "TracedWithSpan.otel"
+          childOf span(0)
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should not capture multiple server spans"() {
+    setup:
+    new TracedWithSpan().nestedServers()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.nestedServers"
+          kind SERVER
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should not capture multiple client spans"() {
+    setup:
+    new TracedWithSpan().nestedClients()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.nestedClients"
+          kind CLIENT
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
 
   def "should ignore method excluded by trace.annotated.methods.exclude configuration"() {
     setup:
