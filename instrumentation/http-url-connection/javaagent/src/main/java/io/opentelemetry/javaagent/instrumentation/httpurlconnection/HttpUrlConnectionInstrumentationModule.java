@@ -111,6 +111,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter HttpUrlState state,
+        @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
@@ -134,9 +135,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
             // We can't call getResponseCode() due to some unwanted side-effects
             // (e.g. breaks getOutputStream).
             if (responseCode > 0) {
-              // Need to explicitly cast to boxed type to make sure correct method is called.
-              // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
-              tracer().end(state.context, responseCode);
+              tracer().end(state.context, new HttpUrlResponse(connection, responseCode));
               state.finished = true;
             }
           }
