@@ -7,11 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -46,12 +44,13 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Context context = tracer().startSpan(request, ctx.getChannel(), "netty.request");
-    Span span = Java8BytecodeBridge.spanFromContext(context);
-    try (Scope ignored = tracer().startScope(span, channelTraceContext)) {
+    Context context =
+        tracer().startSpan(request, ctx.getChannel(), channelTraceContext, "netty.request");
+    try (Scope ignored = context.makeCurrent()) {
       ctx.sendUpstream(msg);
+      // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
     }
   }

@@ -11,10 +11,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -34,12 +32,12 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    Context context = tracer().startSpan((HttpRequest) msg, channel, "netty.request");
-    Span span = Java8BytecodeBridge.spanFromContext(context);
-    try (Scope ignored = tracer().startScope(span, channel)) {
+    Context context = tracer().startSpan((HttpRequest) msg, channel, channel, "netty.request");
+    try (Scope ignored = context.makeCurrent()) {
       ctx.fireChannelRead(msg);
+      // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
     }
   }
