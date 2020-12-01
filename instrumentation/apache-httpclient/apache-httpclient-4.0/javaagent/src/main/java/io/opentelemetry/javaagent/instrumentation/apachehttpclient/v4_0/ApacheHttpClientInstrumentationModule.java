@@ -176,7 +176,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
       }
     }
   }
@@ -222,7 +222,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
       }
     }
   }
@@ -263,7 +263,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
       }
     }
   }
@@ -316,7 +316,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
       }
     }
   }
