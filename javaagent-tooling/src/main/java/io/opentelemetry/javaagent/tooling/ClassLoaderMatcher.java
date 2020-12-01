@@ -59,6 +59,9 @@ public final class ClassLoaderMatcher {
       if (canSkipClassLoaderByName(cl)) {
         return true;
       }
+      if (canSkipClassLoaderByPackagePrefix(cl)) {
+        return true;
+      }
       Boolean v = skipCache.getIfPresent(cl);
       if (v != null) {
         return v;
@@ -90,6 +93,18 @@ public final class ClassLoaderMatcher {
         default:
           return false;
       }
+    }
+
+    private static boolean canSkipClassLoaderByPackagePrefix(ClassLoader loader) {
+      String name = loader.getClass().getName();
+      if (name.startsWith("datadog.")
+          || name.startsWith("com.dynatrace.")
+          || name.startsWith("com.appdynamics.")
+          || name.startsWith("com.newrelic.")
+          || name.startsWith("com.nr.agent.")) {
+        return true;
+      }
+      return false;
     }
 
     /**
