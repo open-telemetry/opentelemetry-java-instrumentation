@@ -59,8 +59,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super(tracer);
   }
 
-  public boolean shouldStartSpan(Context context) {
-    return context.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+  public boolean shouldStartSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
   public Context startSpan(Context parentContext, REQUEST request, CARRIER carrier) {
