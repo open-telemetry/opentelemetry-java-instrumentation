@@ -26,31 +26,32 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       ctx.write(msg, prm);
       return;
     }
-
-    // TODO pass Context into Tracer.startSpan() and then don't need this scoping
-    Scope parentScope = null;
-    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
-    if (parentContext != null) {
-      parentScope = parentContext.makeCurrent();
-    }
-
     HttpRequest request = (HttpRequest) msg;
 
-    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(Context.current());
+    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
+    if (parentContext == null) {
+      parentContext = Context.current();
+    }
 
-    Span span = tracer().startSpan(request);
-    NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
-    ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(span);
-
-    try (Scope ignored = tracer().startScope(span, request.headers())) {
+    if (!tracer().shouldStartSpan(parentContext)) {
       ctx.write(msg, prm);
+      return;
+    }
+
+    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+
+    Context context = tracer().startSpan(parentContext, request, request.headers());
+    // TODO (trask) move this setNetPeer() call into the Tracer
+    NetPeerUtils.setNetPeer(
+        Span.fromContext(context), (InetSocketAddress) ctx.channel().remoteAddress());
+    ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(context);
+
+    try (Scope ignored = context.makeCurrent()) {
+      ctx.write(msg, prm);
+      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
-    } finally {
-      if (null != parentScope) {
-        parentScope.close();
-      }
     }
   }
 }

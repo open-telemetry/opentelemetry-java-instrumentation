@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -49,10 +48,10 @@ public class AwsHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, optional = true) Request<?> request,
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+        ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
         if (scope != null) {
-          request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-          tracer().endExceptionally(scope.getSpan(), throwable);
+          request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+          tracer().endExceptionally(scope.getContext(), throwable);
           scope.closeScope();
         }
       }

@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -28,6 +30,17 @@ public class ApacheHttpAsyncClientTracer
 
   public static ApacheHttpAsyncClientTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext) {
+    Span span = super.startSpan(DEFAULT_SPAN_NAME, Span.Kind.CLIENT);
+    return parentContext.with(span);
+  }
+
+  public void inject(Context context, HttpRequest request) {
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request, getSetter());
   }
 
   @Override

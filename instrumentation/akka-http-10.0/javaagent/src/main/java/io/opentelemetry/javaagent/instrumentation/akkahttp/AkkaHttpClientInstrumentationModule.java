@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -14,10 +15,10 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -70,9 +71,9 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
@@ -80,13 +81,19 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
       with way of continuing to reusing it.
        */
       callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() == 0) {
-        span = tracer().startSpan(request);
-        // Request is immutable, so we have to assign new value once we update headers
-        AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        scope = tracer().startScope(span, headers);
-        request = headers.getRequest();
+      if (callDepth.getAndIncrement() != 0) {
+        return;
       }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
+
+      // Request is immutable, so we have to assign new value once we update headers
+      AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
+      context = tracer().startSpan(parentContext, request, headers);
+      scope = context.makeCurrent();
+      request = headers.getRequest();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -95,33 +102,33 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
         @Advice.This HttpExt thiz,
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {
-          responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
+          responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
         } else {
-          tracer().endExceptionally(span, throwable);
+          tracer().endExceptionally(context, throwable);
         }
       }
     }
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final Span span;
+    private final Context context;
 
-    public OnCompleteHandler(Span span) {
-      this.span = span;
+    public OnCompleteHandler(Context context) {
+      this.context = context;
     }
 
     @Override
     public Void apply(Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        tracer().end(span, result.get());
+        tracer().end(context, result.get());
       } else {
-        tracer().endExceptionally(span, result.failed().get());
+        tracer().endExceptionally(context, result.failed().get());
       }
       return null;
     }

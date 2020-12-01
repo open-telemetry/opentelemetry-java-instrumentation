@@ -10,24 +10,29 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.OkHttpClien
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
 
 public class TracingInterceptor implements Interceptor {
   @Override
   public Response intercept(Chain chain) throws IOException {
-    Span span = tracer().startSpan(chain.request());
+    Context parentContext = Context.current();
+    if (!tracer().shouldStartSpan(parentContext)) {
+      return chain.proceed(chain.request());
+    }
+
     Request.Builder requestBuilder = chain.request().newBuilder();
+    Context context = tracer().startSpan(parentContext, chain.request(), requestBuilder);
 
     Response response;
-    try (Scope scope = tracer().startScope(span, requestBuilder)) {
+    try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(requestBuilder.build());
     } catch (Exception e) {
-      tracer().endExceptionally(span, e);
+      tracer().endExceptionally(context, e);
       throw e;
     }
-    tracer().end(span, response);
+    tracer().end(context, response);
     return response;
   }
 }

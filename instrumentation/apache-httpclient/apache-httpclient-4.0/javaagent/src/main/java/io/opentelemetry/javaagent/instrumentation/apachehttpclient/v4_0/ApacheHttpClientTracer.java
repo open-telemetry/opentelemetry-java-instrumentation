@@ -10,20 +10,27 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.H
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class ApacheHttpClientTracer
+public class ApacheHttpClientTracer
     extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 
   public static ApacheHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public CallDepth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
   }
 
   @Override

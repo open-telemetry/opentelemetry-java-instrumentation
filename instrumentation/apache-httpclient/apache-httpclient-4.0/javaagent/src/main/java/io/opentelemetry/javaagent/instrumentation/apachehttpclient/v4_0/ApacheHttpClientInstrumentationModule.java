@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;
@@ -16,8 +18,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -30,7 +33,6 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -147,90 +149,129 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(@Advice.Argument(0) HttpUriRequest request) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
-      if (callDepth > 0) {
-        return null;
+    public static void methodEnter(
+        @Advice.Argument(0) HttpUriRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = tracer().getCallDepth();
+      if (callDepth.getAndIncrement() != 0) {
+        return;
+      }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
 
-      return ApacheHttpClientHelper.doMethodEnter(request);
+      context = tracer().startSpan(parentContext, request, request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable) {
-      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+      }
     }
   }
 
   public static class UriRequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
+    public static void methodEnter(
         @Advice.Argument(0) HttpUriRequest request,
         @Advice.Argument(
                 value = 1,
                 optional = true,
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
-            Object handler) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
-      if (callDepth > 0) {
-        return null;
+            Object handler,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = tracer().getCallDepth();
+      if (callDepth.getAndIncrement() != 0) {
+        return;
+      }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
 
-      SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
+      context = tracer().startSpan(parentContext, request, request);
+      scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler =
-            new WrappingStatusSettingResponseHandler(
-                spanWithScope.getSpan(), (ResponseHandler) handler);
+        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler) handler);
       }
-      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable) {
-      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+      }
     }
   }
 
   public static class RequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) HttpRequest request) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
-      if (callDepth > 0) {
-        return null;
+    public static void methodEnter(
+        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(1) HttpRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = tracer().getCallDepth();
+      if (callDepth.getAndIncrement() != 0) {
+        return;
+      }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
 
+      HttpUriRequest httpUriRequest;
       if (request instanceof HttpUriRequest) {
-        return ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request);
+        httpUriRequest = (HttpUriRequest) request;
       } else {
-        return ApacheHttpClientHelper.doMethodEnter(
-            new HostAndRequestAsHttpUriRequest(host, request));
+        httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
       }
+      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable) {
-      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+      }
     }
   }
 
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
+    public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
         @Advice.Argument(
@@ -238,36 +279,45 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 optional = true,
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
-            Object handler) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
-      if (callDepth > 0) {
-        return null;
+            Object handler,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = tracer().getCallDepth();
+      if (callDepth.getAndIncrement() != 0) {
+        return;
+      }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
 
-      SpanWithScope spanWithScope;
-
+      HttpUriRequest httpUriRequest;
       if (request instanceof HttpUriRequest) {
-        spanWithScope = ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request);
+        httpUriRequest = (HttpUriRequest) request;
       } else {
-        spanWithScope =
-            ApacheHttpClientHelper.doMethodEnter(new HostAndRequestAsHttpUriRequest(host, request));
+        httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
       }
+      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler =
-            new WrappingStatusSettingResponseHandler(
-                spanWithScope.getSpan(), (ResponseHandler) handler);
+        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler) handler);
       }
-      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable) {
-      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        ApacheHttpClientHelper.doMethodExit(context, scope, result, throwable);
+      }
     }
   }
 }

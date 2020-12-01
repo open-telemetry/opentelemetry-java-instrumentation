@@ -14,8 +14,8 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -27,7 +27,7 @@ public class AkkaHttpClientTracer
     return TRACER;
   }
 
-  public Depth getCallDepth() {
+  public CallDepth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpExt.class);
   }
 

@@ -38,30 +38,33 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    // TODO pass Context into Tracer.startSpan() and then don't need this scoping
-    Scope parentScope = null;
     Context parentContext = channelTraceContext.getConnectionContext();
     if (parentContext != null) {
-      parentScope = parentContext.makeCurrent();
       channelTraceContext.setConnectionContext(null);
+    } else {
+      parentContext = Context.current();
     }
-    channelTraceContext.setClientParentContext(Context.current());
+
+    if (!tracer().shouldStartSpan(parentContext)) {
+      ctx.sendDownstream(msg);
+      return;
+    }
+
+    channelTraceContext.setClientParentContext(parentContext);
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Span span = tracer().startSpan(request);
-    NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-    channelTraceContext.setClientSpan(span);
+    Context context = tracer().startSpan(parentContext, request, request.headers());
+    // TODO (trask) move this setNetPeer() call into the Tracer
+    NetPeerUtils.setNetPeer(
+        Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    channelTraceContext.setContext(context);
 
-    try (Scope ignored = tracer().startScope(span, request.headers())) {
+    try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
-    } finally {
-      if (parentScope != null) {
-        parentScope.close();
-      }
     }
   }
 }

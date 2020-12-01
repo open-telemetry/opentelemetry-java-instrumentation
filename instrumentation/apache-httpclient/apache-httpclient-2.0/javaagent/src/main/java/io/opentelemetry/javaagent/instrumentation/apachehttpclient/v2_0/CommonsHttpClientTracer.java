@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
@@ -29,7 +29,7 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
     return "io.opentelemetry.javaagent.apache-httpclient";
   }
 
-  public Depth getCallDepth() {
+  public CallDepth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -17,7 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -79,7 +80,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HttpUrlState methodEnter(
-        @Advice.This HttpURLConnection thiz,
+        @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -90,17 +91,21 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
       ContextStore<HttpURLConnection, HttpUrlState> contextStore =
           InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
-      HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
+      HttpUrlState state = contextStore.putIfAbsent(connection, HttpUrlState::new);
 
       synchronized (state) {
-        if (!state.hasSpan() && !state.isFinished()) {
-          Span span = state.start(thiz);
-          if (!connected) {
-            scope = tracer().startScope(span, thiz);
+        if (!state.initialized) {
+          Context parentContext = currentContext();
+          if (tracer().shouldStartSpan(parentContext)) {
+            state.context = tracer().startSpan(parentContext, connection, connection);
+            if (!connected) {
+              scope = state.context.makeCurrent();
+            }
           }
+          state.initialized = true;
         }
-        return state;
       }
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -120,62 +125,30 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       CallDepthThreadLocalMap.reset(HttpURLConnection.class);
 
       synchronized (state) {
-        if (state.hasSpan() && !state.isFinished()) {
+        if (state.context != null && !state.finished) {
           if (throwable != null) {
-            state.finishSpan(throwable);
+            tracer().endExceptionally(state.context, throwable);
+            state.finished = true;
           } else if ("getInputStream".equals(methodName)) {
-            state.finishSpan(responseCode);
+            // responseCode field is sometimes not populated.
+            // We can't call getResponseCode() due to some unwanted side-effects
+            // (e.g. breaks getOutputStream).
+            if (responseCode > 0) {
+              // Need to explicitly cast to boxed type to make sure correct method is called.
+              // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
+              tracer().end(state.context, responseCode);
+              state.finished = true;
+            }
           }
         }
       }
     }
   }
 
+  // state is always accessed under synchronized block
   public static class HttpUrlState {
-
-    public static final ContextStore.Factory<HttpUrlState> FACTORY =
-        new ContextStore.Factory<HttpUrlState>() {
-          @Override
-          public HttpUrlState create() {
-            return new HttpUrlState();
-          }
-        };
-
-    private volatile Span span = null;
-    private volatile boolean finished = false;
-
-    public Span start(HttpURLConnection connection) {
-      span = tracer().startSpan(connection);
-      return span;
-    }
-
-    public boolean hasSpan() {
-      return span != null;
-    }
-
-    public boolean isFinished() {
-      return finished;
-    }
-
-    public void finishSpan(Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
-      span = null;
-      finished = true;
-    }
-
-    public void finishSpan(int responseCode) {
-      /*
-       * responseCode field is sometimes not populated.
-       * We can't call getResponseCode() due to some unwanted side-effects
-       * (e.g. breaks getOutputStream).
-       */
-      if (responseCode > 0) {
-        // Need to explicitly cast to boxed type to make sure correct method is called.
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/946
-        tracer().end(span, (Integer) responseCode);
-        span = null;
-        finished = true;
-      }
-    }
+    public boolean initialized;
+    public Context context;
+    public boolean finished;
   }
 }

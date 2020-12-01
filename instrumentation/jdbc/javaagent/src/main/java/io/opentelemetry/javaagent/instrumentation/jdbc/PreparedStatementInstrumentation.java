@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.PreparedStatement;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.This PreparedStatement statement,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
       callDepth = tracer().getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
@@ -67,7 +67,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() == 0 && scope != null) {
         scope.close();
         if (throwable == null) {

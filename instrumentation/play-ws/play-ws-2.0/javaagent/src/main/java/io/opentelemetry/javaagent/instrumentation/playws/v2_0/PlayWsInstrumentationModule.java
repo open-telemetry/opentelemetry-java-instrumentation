@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -37,28 +37,29 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
-        @Advice.Local("otelSpan") Span span) {
+        @Advice.Local("otelContext") Context context) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
 
-      span = tracer().startSpan(request);
-      // TODO (trask) expose inject separate from startScope, e.g. for async cases
-      Scope scope = tracer().startScope(span, request.getHeaders());
-      scope.close();
+      context = tracer().startSpan(parentContext, request, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
-            new StreamedAsyncHandlerWrapper((StreamedAsyncHandler<?>) asyncHandler, span);
+            new StreamedAsyncHandlerWrapper(
+                (StreamedAsyncHandler<?>) asyncHandler, context, parentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, context, parentContext);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable, @Advice.Local("otelSpan") Span span) {
-
-      if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
+      if (context != null && throwable != null) {
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
