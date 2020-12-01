@@ -47,9 +47,16 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public Context startSpan(
       REQUEST request,
       CONNECTION connection,
-      STORAGE storage,
+      @Nullable STORAGE storage,
       String spanName,
       long startTimestamp) {
+
+    // not checking if inside of nested SERVER span because of concerns about context leaking
+    // and so always starting with a clean context here
+
+    // also we can't conditionally start a span in this method, because the caller won't know
+    // whether to call end() or not on the Span in the Context
+
     Context parentContext = extract(request, getGetter());
     SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
