@@ -14,10 +14,8 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -97,13 +95,12 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
     @Override
     public HttpResponse apply(HttpRequest request) {
       Context ctx = tracer().startSpan(request, request, null, "akka.request");
-      Span span = Java8BytecodeBridge.spanFromContext(ctx);
-      try (Scope ignored = tracer().startScope(span, null)) {
+      try (Scope ignored = ctx.makeCurrent()) {
         HttpResponse response = userHandler.apply(request);
-        tracer().end(span, response);
+        tracer().end(ctx, response);
         return response;
       } catch (Throwable t) {
-        tracer().endExceptionally(span, t);
+        tracer().endExceptionally(ctx, t);
         throw t;
       }
     }
@@ -123,28 +120,27 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
       Context ctx = tracer().startSpan(request, request, null, "akka.request");
-      Span span = Java8BytecodeBridge.spanFromContext(ctx);
-      try (Scope ignored = tracer().startScope(span, null)) {
+      try (Scope ignored = ctx.makeCurrent()) {
         return userHandler
             .apply(request)
             .transform(
                 new AbstractFunction1<HttpResponse, HttpResponse>() {
                   @Override
                   public HttpResponse apply(HttpResponse response) {
-                    tracer().end(span, response);
+                    tracer().end(ctx, response);
                     return response;
                   }
                 },
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
                   public Throwable apply(Throwable t) {
-                    tracer().endExceptionally(span, t);
+                    tracer().endExceptionally(ctx, t);
                     return t;
                   }
                 },
                 executionContext);
       } catch (Throwable t) {
-        tracer().endExceptionally(span, t);
+        tracer().endExceptionally(ctx, t);
         throw t;
       }
     }

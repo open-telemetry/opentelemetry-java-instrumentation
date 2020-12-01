@@ -101,10 +101,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return super.unwrapThrowable(result);
   }
 
-  public void setPrincipal(Span span, HttpServletRequest request) {
+  public void setPrincipal(Context context, HttpServletRequest request) {
     Principal principal = request.getUserPrincipal();
     if (principal != null) {
-      span.setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
+      Span.fromContext(context).setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
     }
   }
 

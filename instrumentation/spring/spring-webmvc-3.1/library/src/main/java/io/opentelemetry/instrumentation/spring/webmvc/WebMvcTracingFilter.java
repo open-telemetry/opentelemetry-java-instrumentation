@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -32,12 +31,11 @@ public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     Context ctx = tracer.startSpan(request, request, request, FILTER_CLASS + "." + FILTER_METHOD);
-    Span serverSpan = Span.fromContext(ctx);
-    try (Scope ignored = tracer.startScope(serverSpan, request)) {
+    try (Scope ignored = ctx.makeCurrent()) {
       filterChain.doFilter(request, response);
-      tracer.end(serverSpan, response);
+      tracer.end(ctx, response);
     } catch (Throwable t) {
-      tracer.endExceptionally(serverSpan, t, response);
+      tracer.endExceptionally(ctx, t, response);
       throw t;
     }
   }

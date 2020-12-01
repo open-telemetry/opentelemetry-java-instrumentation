@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -70,60 +69,44 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   /**
-   * Creates new scoped context, based on the current context, with the given span.
-   *
-   * <p>Attaches new context to the request to avoid creating duplicate server spans.
-   */
-  public Scope startScope(Span span, STORAGE storage) {
-    return startScope(span, storage, Context.current());
-  }
-
-  /**
-   * Creates new scoped context, based on the given context, with the given span.
-   *
-   * <p>Attaches new context to the request to avoid creating duplicate server spans.
-   */
-  public Scope startScope(Span span, STORAGE storage, Context context) {
-    return context.makeCurrent();
-  }
-
-  /**
-   * Convenience method. Delegates to {@link #end(Span, Object, long)}, passing {@code timestamp}
+   * Convenience method. Delegates to {@link #end(Context, Object, long)}, passing {@code timestamp}
    * value of {@code -1}.
    */
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, RESPONSE response) {
-    end(span, response, -1);
+  public void end(Context context, RESPONSE response) {
+    end(context, response, -1);
   }
 
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, RESPONSE response, long timestamp) {
+  public void end(Context context, RESPONSE response, long timestamp) {
+    Span span = Span.fromContext(context);
     setStatus(span, responseStatus(response));
     endSpan(span, timestamp);
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object)}, passing
+   * Convenience method. Delegates to {@link #endExceptionally(Context, Throwable, Object)}, passing
    * {@code response} value of {@code null}.
    */
-  @Override
-  public void endExceptionally(Span span, Throwable throwable) {
-    endExceptionally(span, throwable, null);
+  public void endExceptionally(Context context, Throwable throwable) {
+    endExceptionally(context, throwable, null);
   }
 
   /**
-   * Convenience method. Delegates to {@link #endExceptionally(Span, Throwable, Object, long)},
+   * Convenience method. Delegates to {@link #endExceptionally(Context, Throwable, Object, long)},
    * passing {@code timestamp} value of {@code -1}.
    */
-  public void endExceptionally(Span span, Throwable throwable, RESPONSE response) {
-    endExceptionally(span, throwable, response, -1);
+  public void endExceptionally(Context context, Throwable throwable, RESPONSE response) {
+    endExceptionally(context, throwable, response, -1);
   }
 
   /**
    * If {@code response} is {@code null}, the {@code http.status_code} will be set to {@code 500}
    * and the {@link Span} status will be set to {@link io.opentelemetry.api.trace.StatusCode#ERROR}.
    */
-  public void endExceptionally(Span span, Throwable throwable, RESPONSE response, long timestamp) {
+  public void endExceptionally(
+      Context context, Throwable throwable, RESPONSE response, long timestamp) {
+    Span span = Span.fromContext(context);
     onError(span, unwrapThrowable(throwable));
     if (response == null) {
       setStatus(span, 500);

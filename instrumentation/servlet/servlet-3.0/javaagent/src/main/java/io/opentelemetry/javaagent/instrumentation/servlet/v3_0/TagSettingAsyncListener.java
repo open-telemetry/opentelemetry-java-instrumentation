@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -16,24 +16,24 @@ public class TagSettingAsyncListener implements AsyncListener {
       new Servlet3HttpServerTracer();
 
   private final AtomicBoolean responseHandled;
-  private final Span span;
+  private final Context context;
 
-  public TagSettingAsyncListener(AtomicBoolean responseHandled, Span span) {
+  public TagSettingAsyncListener(AtomicBoolean responseHandled, Context context) {
     this.responseHandled = responseHandled;
-    this.span = span;
+    this.context = context;
   }
 
   @Override
   public void onComplete(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
-      servletHttpServerTracer.end(span, (HttpServletResponse) event.getSuppliedResponse());
+      servletHttpServerTracer.end(context, (HttpServletResponse) event.getSuppliedResponse());
     }
   }
 
   @Override
   public void onTimeout(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
-      servletHttpServerTracer.onTimeout(span, event.getAsyncContext().getTimeout());
+      servletHttpServerTracer.onTimeout(context, event.getAsyncContext().getTimeout());
     }
   }
 
@@ -41,7 +41,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   public void onError(AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
       servletHttpServerTracer.endExceptionally(
-          span, event.getThrowable(), (HttpServletResponse) event.getSuppliedResponse());
+          context, event.getThrowable(), (HttpServletResponse) event.getSuppliedResponse());
     }
   }
 

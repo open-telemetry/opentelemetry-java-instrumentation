@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -37,13 +36,12 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       return;
     }
 
-    Span span = Span.fromContext(context);
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
     }
-    tracer().end(span, (HttpResponse) msg.getMessage());
+    tracer().end(context, (HttpResponse) msg.getMessage());
   }
 }
