@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config
 
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder
+
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -26,9 +26,7 @@ class ConfigInitializerTest extends Specification {
     spiConfiguration.put("property4", "spi-4")
 
     when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, new Properties())
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, new Properties())
 
     then:
     config.getProperty("property1") == "spi-1"
@@ -51,9 +49,7 @@ class ConfigInitializerTest extends Specification {
     configurationFile.put("property3", "cf-3")
 
     when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "cf-1"
@@ -79,9 +75,7 @@ class ConfigInitializerTest extends Specification {
     environmentVariables.set("property2", "env-2")
 
     when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "env-1"
@@ -109,9 +103,7 @@ class ConfigInitializerTest extends Specification {
     System.setProperty("property1", "sp-1")
 
     when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "sp-1"
@@ -133,9 +125,7 @@ class ConfigInitializerTest extends Specification {
     System.setProperty("otel.some-system_property", "value")
 
     when:
-    def config = new ConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("otel.some.property.from.spi") == "value"
