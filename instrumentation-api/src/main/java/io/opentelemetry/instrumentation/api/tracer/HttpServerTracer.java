@@ -55,7 +55,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // and so always starting with a clean context here
 
     // also we can't conditionally start a span in this method, because the caller won't know
-    // whether to call end() or not on the Span in the Context
+    // whether to call end() or not on the Span in the returned Context
 
     Context parentContext = extract(request, getGetter());
     SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
