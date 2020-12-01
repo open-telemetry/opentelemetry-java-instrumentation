@@ -115,22 +115,22 @@ class ConfigInitializerTest extends Specification {
   def "should normalize property names"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put("otel_some-property.from-spi", "value")
+    spiConfiguration.put("otel.some-property.from-spi", "value")
 
     def configurationFile = new Properties()
-    configurationFile.put("otel.some-property_from.file", "value")
+    configurationFile.put("otel.some-property.from-file", "value")
 
     environmentVariables.set("OTEL_SOME_ENV_VAR", "value")
 
-    System.setProperty("otel.some-system_property", "value")
+    System.setProperty("otel.some-system-property", "value")
 
     when:
     def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("otel.some.property.from.spi") == "value"
-    config.getProperty("otel.some.property.from.file") == "value"
-    config.getProperty("otel.some.env.var") == "value"
-    config.getProperty("otel.some.system.property") == "value"
+    config.getProperty("otel.some-property.from-spi") == "value"
+    config.getProperty("otel.some-property.from-file") == "value"
+    config.getProperty("otel.some-env-var") == "value"
+    config.getProperty("otel.some-system-property") == "value"
   }
 }

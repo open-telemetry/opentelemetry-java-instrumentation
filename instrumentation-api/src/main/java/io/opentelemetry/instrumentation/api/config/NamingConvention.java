@@ -11,13 +11,13 @@ enum NamingConvention {
     @Override
     public String normalize(String key) {
       // many instrumentation names have dashes ('-')
-      return key.toLowerCase().replace('.', '_').replace('-', '_');
+      return key.toLowerCase().replace('-', '.');
     }
   },
   ENV_VAR {
     @Override
     public String normalize(String key) {
-      return key.toLowerCase();
+      return key.toLowerCase().replace('_', '.');
     }
   };
 
