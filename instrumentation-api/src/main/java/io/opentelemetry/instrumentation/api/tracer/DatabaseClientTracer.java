@@ -99,7 +99,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   protected void setNetSemanticConvention(Span span, CONNECTION connection) {
-    NetPeerUtils.setNetPeer(span, peerAddress(connection));
+    NetPeerUtils.INSTANCE.setNetPeer(span, peerAddress(connection));
   }
 
   protected void onStatement(Span span, String statement) {

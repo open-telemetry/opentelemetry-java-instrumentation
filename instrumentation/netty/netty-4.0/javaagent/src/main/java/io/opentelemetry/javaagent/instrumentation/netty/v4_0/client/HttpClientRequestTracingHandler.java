@@ -39,7 +39,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(Context.current());
 
     Span span = tracer().startSpan(request);
-    NetPeerUtils.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
+    NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
     ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(span);
 
     try (Scope scope = tracer().startScope(span, request.headers())) {
