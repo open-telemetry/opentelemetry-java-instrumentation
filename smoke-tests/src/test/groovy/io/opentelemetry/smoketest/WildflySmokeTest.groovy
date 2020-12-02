@@ -5,35 +5,63 @@
 
 package io.opentelemetry.smoketest
 
-
+import io.opentelemetry.proto.trace.v1.Span
+import java.util.jar.Attributes
+import java.util.jar.JarFile
 import okhttp3.Request
 
 class WildflySmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk) {
-    "jboss/wildfly:latest"
+    "ghcr.io/open-telemetry/java-test-containers:wildfly-21.0.0.Final-jdk$jdk"
   }
 
-  //We don't have support for Wildfly Undertow server yet.
-  //So this test just verifies that Wildfly has come up.
-  def "wildfly smoke test"() {
+  def "wildfly smoke test on JDK #jdk"(int jdk) {
     setup:
-    startTarget(11) // does not actually matter
-    String url = "http://localhost:${target.getMappedPort(8080)}"
+    startTarget(jdk)
+    String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
+    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
+    TraceInspector traces = new TraceInspector(waitForTraces())
+    Set<String> traceIds = traces.traceIds
+    String responseBody = response.body().string();
 
-    then:
-    def responseBodyStr = response.body().string()
-    responseBodyStr != null
-    responseBodyStr.contains("Your WildFly instance is running.")
-    response.body().contentType().toString().contains("text/html")
-    response.code() == 200
+    then: "There is one trace"
+    traceIds.size() == 1
+
+    and: "trace id is present in the HTTP headers as reported by the called endpoint"
+    responseBody.contains(traceIds.find())
+
+    and: "Server spans in the distributed trace"
+    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 2
+
+    and: "Expected span names"
+    traces.countSpansByName('/greeting') == 1
+    traces.countSpansByName('/headers') == 1
+
+    and: "The span for the initial web request"
+    traces.countFilteredAttributes("http.url", url) == 1
+
+    and: "Client and server spans for the remote call"
+    traces.countFilteredAttributes("http.url", "http://localhost:8080/headers") == 2
+
+    and: "Number of spans tagged with current otel library version"
+    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
+
+    and:
+    traces.findResourceAttribute("os.name")
+      .map { it.stringValue }
+      .findAny()
+      .isPresent()
 
     cleanup:
     stopTarget()
+
+    where:
+    jdk << [8, 11, 15]
   }
 
 }
