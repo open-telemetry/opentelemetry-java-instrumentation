@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 public abstract class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
 
-  private static final Config DEFAULT = Config.createFromAlreadyNormalized(Collections.emptyMap());
+  private static final Config DEFAULT = Config.create(Collections.emptyMap());
 
   // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
   // getMuzzleReferenceMatcher() and the InstrumentationModule constructor uses Config
@@ -44,7 +44,7 @@ public abstract class Config {
     return INSTANCE;
   }
 
-  public static Config createFromAlreadyNormalized(Map<String, String> allProperties) {
+  public static Config create(Map<String, String> allProperties) {
     return new AutoValue_Config(allProperties);
   }
 
