@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest;
 
 import com.google.protobuf.ByteString;
@@ -8,7 +13,6 @@ import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.Collection;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
