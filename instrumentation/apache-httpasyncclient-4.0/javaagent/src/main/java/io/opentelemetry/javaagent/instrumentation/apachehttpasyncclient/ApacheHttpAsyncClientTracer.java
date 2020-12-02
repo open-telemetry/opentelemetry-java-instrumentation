@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.api.trace.Span;
@@ -32,8 +33,13 @@ public class ApacheHttpAsyncClientTracer
   }
 
   public Context startSpan(Context parentContext) {
-    Span span = super.startSpan(DEFAULT_SPAN_NAME, Span.Kind.CLIENT);
-    return parentContext.with(span);
+    Span span =
+        tracer
+            .spanBuilder(DEFAULT_SPAN_NAME)
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .startSpan();
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   @Override

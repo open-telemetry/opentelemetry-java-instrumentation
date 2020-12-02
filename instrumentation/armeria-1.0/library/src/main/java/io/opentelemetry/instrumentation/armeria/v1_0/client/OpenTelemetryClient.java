@@ -53,8 +53,7 @@ public class OpenTelemetryClient extends SimpleDecoratingHttpClient {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context parentContext = Context.current();
-    Context context = clientTracer.startSpan(parentContext, ctx, ctx, requestStartTimeNanos);
+    Context context = clientTracer.startSpan(Context.current(), ctx, ctx, requestStartTimeNanos);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {

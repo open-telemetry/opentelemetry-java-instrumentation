@@ -112,10 +112,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.endExceptionally(span, throwable, -1);
   }
 
-  /**
-   * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
-   * Context}, or an invalid {@link Span} otherwise.
-   */
   private Span internalStartSpan(
       Context parentContext, REQUEST request, String name, long startTimeNanos) {
     SpanBuilder spanBuilder =

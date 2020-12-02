@@ -25,14 +25,13 @@ public class ResponseAdvice {
     // After response was handled by user provided handler.
     ContextStore<AsyncHandler, Pair> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Pair.class);
-    Pair<Context, Context> contextWithParent = contextStore.get(handler);
-    if (contextWithParent != null) {
-      contextStore.put(handler, null);
+    Pair<Context, Context> parentAndChildContext = contextStore.get(handler);
+    if (parentAndChildContext == null) {
+      return null;
     }
-    if (contextWithParent.hasRight()) {
-      AsyncHttpClientTracer.tracer().end(contextWithParent.getRight(), response);
-    }
-    return contextWithParent.hasLeft() ? contextWithParent.getLeft().makeCurrent() : null;
+    contextStore.put(handler, null);
+    AsyncHttpClientTracer.tracer().end(parentAndChildContext.getRight(), response);
+    return parentAndChildContext.getLeft().makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
