@@ -62,6 +62,7 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
     def context = Mock(Context)
     context.getFunctionName() >> "my_function"
     context.getAwsRequestId() >> "1-22-333"
+    context.getInvokedFunctionArn() >> "arn:aws:lambda:us-east-1:123456789:function:test"
     def input = new ByteArrayInputStream("hello\n".getBytes(Charset.defaultCharset()))
     def output = new ByteArrayOutputStream()
 
@@ -74,6 +75,8 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
           name("my_function")
           kind SERVER
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
@@ -86,6 +89,7 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
     def context = Mock(Context)
     context.getFunctionName() >> "my_function"
     context.getAwsRequestId() >> "1-22-333"
+    context.getInvokedFunctionArn() >> "arn:aws:lambda:us-east-1:123456789:function:test"
     def input = new ByteArrayInputStream("bye".getBytes(Charset.defaultCharset()))
     def output = new ByteArrayOutputStream()
 
@@ -106,6 +110,8 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
