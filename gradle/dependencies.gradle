@@ -51,6 +51,7 @@ ext {
     opentelemetryPrometheus    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-prometheus', version: versions.opentelemetryOther),
     opentelemetryLogging       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-logging', version: versions.opentelemetryOther),
     opentelemetryProto         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryAnother),
+    opentelemetryResources     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-resources', version: versions.opentelemetry),
     opentelemetrySdkTesting    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-testing', version: versions.opentelemetryAnother),
 
     // General

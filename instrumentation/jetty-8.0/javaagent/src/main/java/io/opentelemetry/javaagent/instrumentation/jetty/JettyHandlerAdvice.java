@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,7 +23,7 @@ public class JettyHandlerAdvice {
       @Advice.Origin Method method,
       @Advice.This Object source,
       @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
     Context attachedContext = tracer().getServerContext(request);
@@ -34,9 +32,8 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    Context ctx = tracer().startSpan(request, request, method);
-    span = Java8BytecodeBridge.spanFromContext(ctx);
-    scope = tracer().startScope(span, request);
+    context = tracer().startSpan(request, request, request, method);
+    scope = context.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -44,22 +41,22 @@ public class JettyHandlerAdvice {
       @Advice.Argument(2) HttpServletRequest request,
       @Advice.Argument(3) HttpServletResponse response,
       @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     if (scope == null) {
       return;
     }
     scope.close();
 
-    if (span == null) {
+    if (context == null) {
       // an existing span was found
       return;
     }
 
-    tracer().setPrincipal(span, request);
+    tracer().setPrincipal(context, request);
 
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable, response);
+      tracer().endExceptionally(context, throwable, response);
       return;
     }
 
@@ -68,7 +65,9 @@ public class JettyHandlerAdvice {
     // In case of async servlets wait for the actual response to be ready
     if (request.isAsyncStarted()) {
       try {
-        request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
+        request
+            .getAsyncContext()
+            .addListener(new TagSettingAsyncListener(responseHandled, context));
       } catch (IllegalStateException e) {
         // org.eclipse.jetty.server.Request may throw an exception here if request became
         // finished after check above. We just ignore that exception and move on.
@@ -77,7 +76,7 @@ public class JettyHandlerAdvice {
 
     // Check again in case the request finished before adding the listener.
     if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      tracer().end(span, response);
+      tracer().end(context, response);
     }
   }
 }

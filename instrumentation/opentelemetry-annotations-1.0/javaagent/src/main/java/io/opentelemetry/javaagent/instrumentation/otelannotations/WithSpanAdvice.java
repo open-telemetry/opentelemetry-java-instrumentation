@@ -24,23 +24,29 @@ public class WithSpanAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin Method method,
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
-    Context context = Context.current();
     Span.Kind kind = tracer().extractSpanKind(applicationAnnotation);
-    span = tracer().startSpan(context, applicationAnnotation, method, kind);
-    scope = tracer().startScope(context, span, kind);
+    Context current = Context.current();
+    if (tracer().shouldStartSpan(current, kind)) {
+      context = tracer().startSpan(current, applicationAnnotation, method, kind);
+      scope = context.makeCurrent();
+    }
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
+    if (scope == null) {
+      return;
+    }
     scope.close();
 
+    Span span = Span.fromContext(context);
     if (throwable != null) {
       tracer().endExceptionally(span, throwable);
     } else {

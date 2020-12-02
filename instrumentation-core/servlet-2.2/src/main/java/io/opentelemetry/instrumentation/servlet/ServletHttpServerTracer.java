@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
@@ -26,19 +25,12 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
   public Context startSpan(HttpServletRequest request) {
-    return startSpan(request, request, getSpanName(request));
-  }
-
-  @Override
-  public Scope startScope(Span span, HttpServletRequest request) {
-    Context context = Context.current();
-    // if we start returning Context from startSpan() then we can add ServletContextPath there
-    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1481)
+    Context context = startSpan(request, request, request, getSpanName(request));
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
     }
-    return super.startScope(span, request, context);
+    return context;
   }
 
   @Override
@@ -109,10 +101,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return super.unwrapThrowable(result);
   }
 
-  public void setPrincipal(Span span, HttpServletRequest request) {
+  public void setPrincipal(Context context, HttpServletRequest request) {
     Principal principal = request.getUserPrincipal();
     if (principal != null) {
-      span.setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
+      Span.fromContext(context).setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
     }
   }
 

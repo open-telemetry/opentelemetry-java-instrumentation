@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.config
 
+
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-class AgentConfigBuilderTest extends Specification {
+class ConfigInitializerTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
@@ -25,9 +26,7 @@ class AgentConfigBuilderTest extends Specification {
     spiConfiguration.put("property4", "spi-4")
 
     when:
-    def config = new AgentConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, new Properties())
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, new Properties())
 
     then:
     config.getProperty("property1") == "spi-1"
@@ -50,9 +49,7 @@ class AgentConfigBuilderTest extends Specification {
     configurationFile.put("property3", "cf-3")
 
     when:
-    def config = new AgentConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "cf-1"
@@ -78,9 +75,7 @@ class AgentConfigBuilderTest extends Specification {
     environmentVariables.set("property2", "env-2")
 
     when:
-    def config = new AgentConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "env-1"
@@ -108,9 +103,7 @@ class AgentConfigBuilderTest extends Specification {
     System.setProperty("property1", "sp-1")
 
     when:
-    def config = new AgentConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
     config.getProperty("property1") == "sp-1"
@@ -122,24 +115,22 @@ class AgentConfigBuilderTest extends Specification {
   def "should normalize property names"() {
     given:
     def spiConfiguration = new Properties()
-    spiConfiguration.put("otel_some-property.from-spi", "value")
+    spiConfiguration.put("otel.some-property.from-spi", "value")
 
     def configurationFile = new Properties()
-    configurationFile.put("otel.some-property_from.file", "value")
+    configurationFile.put("otel.some-property.from-file", "value")
 
     environmentVariables.set("OTEL_SOME_ENV_VAR", "value")
 
-    System.setProperty("otel.some-system_property", "value")
+    System.setProperty("otel.some-system-property", "value")
 
     when:
-    def config = new AgentConfigBuilder()
-      .readPropertiesFromAllSources(spiConfiguration, configurationFile)
-      .build()
+    def config = ConfigInitializer.create(spiConfiguration, configurationFile)
 
     then:
-    config.getProperty("otel.some.property.from.spi") == "value"
-    config.getProperty("otel.some.property.from.file") == "value"
-    config.getProperty("otel.some.env.var") == "value"
-    config.getProperty("otel.some.system.property") == "value"
+    config.getProperty("otel.some-property.from-spi") == "value"
+    config.getProperty("otel.some-property.from-file") == "value"
+    config.getProperty("otel.some-env-var") == "value"
+    config.getProperty("otel.some-system-property") == "value"
   }
 }
