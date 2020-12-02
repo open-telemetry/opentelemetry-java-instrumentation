@@ -59,10 +59,9 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = serverTracer.startSpan(req, ctx, spanName, requestStartTimeNanos);
-    Span span = Span.fromContext(context);
+    Context context = serverTracer.startSpan(req, ctx, null, spanName, requestStartTimeNanos);
 
-    if (span.isRecording()) {
+    if (Span.fromContext(context).isRecording()) {
       ctx.log()
           .whenComplete()
           .thenAccept(
@@ -70,14 +69,14 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {
                   serverTracer.endExceptionally(
-                      span, log.responseCause(), log, requestEndTimeNanos);
+                      context, log.responseCause(), log, requestEndTimeNanos);
                 } else {
-                  serverTracer.end(span, log, requestEndTimeNanos);
+                  serverTracer.end(context, log, requestEndTimeNanos);
                 }
               });
     }
 
-    try (Scope ignored = span.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       return unwrap().serve(ctx, req);
     }
   }

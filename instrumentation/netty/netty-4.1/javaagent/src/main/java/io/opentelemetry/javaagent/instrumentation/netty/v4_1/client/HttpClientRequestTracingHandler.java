@@ -42,7 +42,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Context context = tracer().startSpan(parentContext, request, request.headers());
     // TODO (trask) move this setNetPeer() call into the Tracer
-    NetPeerUtils.setNetPeer(
+    NetPeerUtils.INSTANCE.setNetPeer(
         Span.fromContext(context), (InetSocketAddress) ctx.channel().remoteAddress());
     ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(context);
 

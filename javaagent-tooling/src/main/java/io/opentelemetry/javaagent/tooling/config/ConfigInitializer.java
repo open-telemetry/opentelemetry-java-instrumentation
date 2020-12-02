@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.spi.config.PropertySource;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import java.io.File;
@@ -26,10 +27,17 @@ public final class ConfigInitializer {
   private static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIG";
 
   public static void initialize() {
-    Config.internalInitializeConfig(
-        new AgentConfigBuilder()
-            .readPropertiesFromAllSources(loadSpiConfiguration(), loadConfigurationFile())
-            .build());
+    Config.internalInitializeConfig(create(loadSpiConfiguration(), loadConfigurationFile()));
+  }
+
+  // visible for testing
+  static Config create(Properties spiConfiguration, Properties configurationFile) {
+    return new ConfigBuilder()
+        .readProperties(spiConfiguration)
+        .readProperties(configurationFile)
+        .readEnvironmentVariables()
+        .readSystemProperties()
+        .build();
   }
 
   /** Retrieves all default configuration overloads using SPI and initializes Config. */

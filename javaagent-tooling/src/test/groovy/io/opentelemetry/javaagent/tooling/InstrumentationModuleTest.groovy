@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
+import io.opentelemetry.instrumentation.api.config.Config
+import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import net.bytebuddy.agent.builder.AgentBuilder
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
@@ -58,11 +59,11 @@ class InstrumentationModuleTest extends Specification {
     }
   }
 
-  def "default disabled can override to enabled"() {
+  def "default disabled can override to enabled #enabled"() {
     setup:
-    def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.instrumentation.test.enabled", "$enabled")
-    }
+    Config.INSTANCE = new ConfigBuilder().readProperties([
+      "otel.instrumentation.test.enabled": Boolean.toString(enabled)
+    ]).build()
     def target = new TestInstrumentationModule(["test"]) {
       @Override
       protected boolean defaultEnabled() {
@@ -76,7 +77,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    ConfigUtils.setConfig(previousConfig)
+    Config.INSTANCE = Config.DEFAULT
 
     where:
     enabled << [true, false]
@@ -84,9 +85,9 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure default sys prop as #value"() {
     setup:
-    def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.instrumentation.default-enabled", value)
-    }
+    Config.INSTANCE = new ConfigBuilder().readProperties([
+      "otel.instrumentation.default-enabled": String.valueOf(value)
+    ]).build()
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
 
@@ -95,7 +96,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    ConfigUtils.setConfig(previousConfig)
+    Config.INSTANCE = Config.DEFAULT
 
     where:
     value   | enabled
@@ -106,10 +107,11 @@ class InstrumentationModuleTest extends Specification {
 
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
-    def previousConfig = ConfigUtils.updateConfig {
-      it.setProperty("otel.instrumentation.default-enabled", "false")
-      it.setProperty("otel.instrumentation.${value}.enabled", "true")
-    }
+    Config.INSTANCE = new ConfigBuilder().readProperties([
+      "otel.instrumentation.default-enabled"        : "false",
+      ("otel.instrumentation." + value + ".enabled"): "true"
+    ]).build()
+
     def target = new TestInstrumentationModule([name, altName])
     target.instrument(new AgentBuilder.Default())
 
@@ -118,7 +120,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    ConfigUtils.setConfig(previousConfig)
+    Config.INSTANCE = Config.DEFAULT
 
     where:
     value             | enabled | name          | altName

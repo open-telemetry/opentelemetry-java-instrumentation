@@ -56,7 +56,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     Context context = tracer().startSpan(parentContext, request, request.headers());
     // TODO (trask) move this setNetPeer() call into the Tracer
-    NetPeerUtils.setNetPeer(
+    NetPeerUtils.INSTANCE.setNetPeer(
         Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
     channelTraceContext.setContext(context);
 

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 @AutoValue
 public abstract class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
-  private static final Pattern PROPERTY_NAME_REPLACEMENTS = Pattern.compile("[^a-zA-Z0-9.]");
 
   private static final Config DEFAULT = Config.create(Collections.emptyMap());
 
@@ -77,7 +75,7 @@ public abstract class Config {
    *     did not exist.
    */
   public String getProperty(String name, String defaultValue) {
-    return getAllProperties().getOrDefault(normalizePropertyName(name), defaultValue);
+    return getAllProperties().getOrDefault(NamingConvention.DOT.normalize(name), defaultValue);
   }
 
   /**
@@ -131,13 +129,6 @@ public abstract class Config {
       log.debug("Cannot parse {}", value, t);
       return defaultValue;
     }
-  }
-
-  // some instrumentation names have '-' or '_' character -- this does not work well with
-  // environment variables (where we replace every non-alphanumeric character with '.'), so we're
-  // replacing those with a dot
-  public static String normalizePropertyName(String propertyName) {
-    return PROPERTY_NAME_REPLACEMENTS.matcher(propertyName.toLowerCase()).replaceAll(".");
   }
 
   public boolean isInstrumentationEnabled(

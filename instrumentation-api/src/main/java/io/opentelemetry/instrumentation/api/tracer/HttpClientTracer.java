@@ -159,7 +159,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     try {
       URI url = url(request);
       if (url != null) {
-        NetPeerUtils.setNetPeer(span, url.getHost(), null, url.getPort());
+        NetPeerUtils.INSTANCE.setNetPeer(span, url.getHost(), null, url.getPort());
         span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {

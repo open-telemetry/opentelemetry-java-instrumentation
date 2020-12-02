@@ -10,13 +10,13 @@ import spock.lang.Specification
 class ConfigTest extends Specification {
   def "verify instrumentation config"() {
     setup:
-    def config = Config.create([
+    def config = new ConfigBuilder().readProperties([
       "otel.instrumentation.order.enabled"        : "true",
-      "otel.instrumentation.test.prop.enabled"    : "true",
-      "otel.instrumentation.disabled.prop.enabled": "false",
-      "otel.instrumentation.test.env.enabled"     : "true",
-      "otel.instrumentation.disabled.env.enabled" : "false"
-    ])
+      "otel.instrumentation.test-prop.enabled"    : "true",
+      "otel.instrumentation.disabled-prop.enabled": "false",
+      "otel.instrumentation.test-env.enabled"     : "true",
+      "otel.instrumentation.disabled-env.enabled" : "false"
+    ]).build()
 
     expect:
     config.isInstrumentationEnabled(instrumentationNames, defaultEnabled) == expected
@@ -44,7 +44,9 @@ class ConfigTest extends Specification {
 
   def "should get string property"() {
     given:
-    def config = Config.create(["property.string": "whatever"])
+    def config = new ConfigBuilder().readProperties([
+      "property.string": "whatever"
+    ]).build()
 
     expect:
     config.getProperty("property.string") == "whatever"
@@ -55,7 +57,9 @@ class ConfigTest extends Specification {
 
   def "should get boolean property"() {
     given:
-    def config = Config.create(["property.bool": "false"])
+    def config = new ConfigBuilder().readProperties([
+      "property.bool": "false"
+    ]).build()
 
     expect:
     !config.getBooleanProperty("property.bool", true)
@@ -64,7 +68,9 @@ class ConfigTest extends Specification {
 
   def "should get list property"() {
     given:
-    def config = Config.create(["property.list": "one, two, three"])
+    def config = new ConfigBuilder().readProperties([
+      "property.list": "one, two, three"
+    ]).build()
 
     expect:
     config.getListProperty("property.list") == ["one", "two", "three"]
@@ -75,7 +81,9 @@ class ConfigTest extends Specification {
 
   def "should get map property"() {
     given:
-    def config = Config.create(["property.map": "one=1, two=2"])
+    def config = new ConfigBuilder().readProperties([
+      "property.map": "one=1, two=2"
+    ]).build()
 
     expect:
     config.getMapProperty("property.map") == ["one": "1", "two": "2"]
@@ -84,7 +92,9 @@ class ConfigTest extends Specification {
 
   def "should return empty map when map property value is invalid"() {
     given:
-    def config = Config.create(["property.map": "one=1, broken!"])
+    def config = new ConfigBuilder().readProperties([
+      "property.map": "one=1, broken!"
+    ]).build()
 
     expect:
     config.getMapProperty("property.map").isEmpty()

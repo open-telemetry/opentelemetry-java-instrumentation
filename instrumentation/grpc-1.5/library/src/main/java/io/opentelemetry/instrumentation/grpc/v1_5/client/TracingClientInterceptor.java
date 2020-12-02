@@ -71,7 +71,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     SocketAddress address = result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     if (address instanceof InetSocketAddress) {
       InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-      NetPeerUtils.setNetPeer(span, inetSocketAddress);
+      NetPeerUtils.INSTANCE.setNetPeer(span, inetSocketAddress);
     }
 
     return new TracingClientCall<>(result, span, context, tracer);
