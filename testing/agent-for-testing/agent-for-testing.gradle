@@ -73,8 +73,8 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach {
-  // jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
-  // jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dnet.bytebuddy.raw=true"
   jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
 
