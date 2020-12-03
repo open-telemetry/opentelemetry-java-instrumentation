@@ -1,6 +1,8 @@
-FROM jetty:@version@-jre11-slim as jetty
+ARG version
+ARG jdk
+FROM jetty:${version}-jre11-slim as jetty
 
-FROM adoptopenjdk:@jdk@
+FROM adoptopenjdk:${jdk}
 ENV JETTY_HOME /usr/local/jetty
 ENV JETTY_BASE /var/lib/jetty
 ENV TMPDIR /tmp/jetty
@@ -15,7 +17,6 @@ COPY --from=jetty docker-entrypoint.sh generate-jetty-start.sh /
 
 COPY app.war $JETTY_BASE/webapps/ROOT.war
 
-#USER jetty
 EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["java","-jar","/usr/local/jetty/start.jar"]

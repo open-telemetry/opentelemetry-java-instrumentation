@@ -1,6 +1,8 @@
-FROM open-liberty:@version@-full-java11-openj9 as liberty
+ARG version
+ARG jdk
+FROM open-liberty:${version}-full-java11-openj9 as liberty
 
-FROM adoptopenjdk:@jdk@
+FROM adoptopenjdk:${jdk}
 ENV CONFIG /config
 ENV LIBERTY /opt/ol
 ENV PATH=/opt/ol/wlp/bin:/opt/ol/docker/:/opt/ol/helpers/build:$PATH \

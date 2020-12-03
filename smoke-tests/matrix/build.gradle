@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
   id "war"
@@ -18,19 +17,13 @@ dependencies {
   implementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
-static def dockerFileName(String template) {
-  template.replace("-dockerfile.template", ".dockerfile")
-}
-
-def dockerWorkingDir = new File(project.buildDir, "docker")
-
 def buildMatrixTask = tasks.create("buildMatrix") {
   group = "build"
   description = "Builds all Docker images for the test matrix"
 }
 
 Set<String> matrix = []
-def pushMatrixTask = tasks.create("pushMatrix", DockerPushImage) {
+tasks.create("pushMatrix", DockerPushImage) {
   group = "publishing"
   description = "Push all Docker images for the test matrix"
   dependsOn(buildMatrixTask)
@@ -62,19 +55,18 @@ def targets = [
   ]
 ]
 
+def dockerWorkingDir = new File(project.buildDir, "docker")
+
 targets.each { server, data ->
   data.forEach { version, jdks ->
     jdks.forEach { jdk ->
-      def template = "$server-dockerfile.template"
+      def dockerfile = "${server}.dockerfile"
 
       def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk", Copy) {
         def warTask = project.tasks.war
         it.dependsOn(warTask)
         it.into(dockerWorkingDir)
-        it.from("src") {
-          filter(ReplaceTokens, "tokens": ["version": version, "jdk": jdk])
-          rename { f -> dockerFileName(f) }
-        }
+        it.from("src")
         it.from(warTask.archiveFile) {
           rename { _ -> "app.war" }
         }
@@ -89,7 +81,8 @@ targets.each { server, data ->
 
         it.inputDir.set(dockerWorkingDir)
         it.images.add(image)
-        it.dockerFile.set(new File(dockerWorkingDir, dockerFileName(template)))
+        it.dockerFile.set(new File(dockerWorkingDir, dockerfile))
+        it.buildArgs.set(["version": version, "jdk": jdk])
       }
 
       buildMatrixTask.dependsOn(buildTask)
