@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -26,14 +25,13 @@ public class ResponseAdvice {
     // After response was handled by user provided handler.
     ContextStore<AsyncHandler, Pair> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Pair.class);
-    Pair<Context, Span> spanWithParent = contextStore.get(handler);
-    if (null != spanWithParent) {
-      contextStore.put(handler, null);
+    Pair<Context, Context> parentAndChildContext = contextStore.get(handler);
+    if (parentAndChildContext == null) {
+      return null;
     }
-    if (spanWithParent.hasRight()) {
-      AsyncHttpClientTracer.tracer().end(spanWithParent.getRight(), response);
-    }
-    return spanWithParent.hasLeft() ? spanWithParent.getLeft().makeCurrent() : null;
+    contextStore.put(handler, null);
+    AsyncHttpClientTracer.tracer().end(parentAndChildContext.getRight(), response);
+    return parentAndChildContext.getLeft().makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

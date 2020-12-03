@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -16,9 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -72,34 +72,32 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
-
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() == 0) {
-        span = tracer().startSpan(httpRequest);
-        if (span.getSpanContext().isValid()) {
-          scope = tracer().startScope(span, httpRequest);
-        }
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
+
+      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return HttpResponse<?> result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable == null) {
-          tracer().end(span, result);
-        } else {
-          tracer().endExceptionally(span, result, throwable);
-        }
+      scope.close();
+      if (throwable == null) {
+        tracer().end(context, result);
+      } else {
+        tracer().endExceptionally(context, result, throwable);
       }
     }
   }
@@ -109,34 +107,32 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
-
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() == 0) {
-        span = tracer().startSpan(httpRequest);
-        if (span.getSpanContext().isValid()) {
-          scope = tracer().startScope(span, httpRequest);
-        }
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
+
+      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") Depth callDepth) {
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable != null) {
-          tracer().endExceptionally(span, null, throwable);
-        } else {
-          future = future.whenComplete(new ResponseConsumer(span));
-        }
+      scope.close();
+      if (throwable != null) {
+        tracer().endExceptionally(context, null, throwable);
+      } else {
+        future = future.whenComplete(new ResponseConsumer(context));
       }
     }
   }

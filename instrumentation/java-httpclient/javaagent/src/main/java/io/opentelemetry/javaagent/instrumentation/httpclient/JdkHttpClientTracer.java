@@ -11,10 +11,7 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
@@ -31,10 +28,6 @@ public class JdkHttpClientTracer
 
   public static JdkHttpClientTracer tracer() {
     return TRACER;
-  }
-
-  public Depth getCallDepth() {
-    return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
   }
 
   @Override

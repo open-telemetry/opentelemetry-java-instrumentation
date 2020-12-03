@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -18,15 +17,15 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
-  private final Span span;
-  private final Context invocationContext;
+  private final Context context;
+  private final Context parentContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler delegate, Span span, Context invocationContext) {
+  public AsyncHandlerWrapper(AsyncHandler delegate, Context context, Context parentContext) {
     this.delegate = delegate;
-    this.span = span;
-    this.invocationContext = invocationContext;
+    this.context = context;
+    this.parentContext = parentContext;
   }
 
   @Override
@@ -50,20 +49,18 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public Object onCompleted() throws Exception {
-    Response response = builder.build();
-    tracer().end(span, response);
+    tracer().end(context, builder.build());
 
-    try (Scope scope = invocationContext.makeCurrent()) {
+    try (Scope scope = parentContext.makeCurrent()) {
       return delegate.onCompleted();
     }
   }
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(span, throwable);
-    span.end();
+    tracer().endExceptionally(context, throwable);
 
-    try (Scope scope = invocationContext.makeCurrent()) {
+    try (Scope scope = parentContext.makeCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

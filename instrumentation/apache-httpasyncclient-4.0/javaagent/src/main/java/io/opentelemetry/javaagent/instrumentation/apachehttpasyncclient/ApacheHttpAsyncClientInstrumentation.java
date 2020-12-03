@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpClientTracer.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -15,11 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.io.IOException;
 import java.util.Map;
@@ -66,36 +65,41 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   public static class ClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Span methodEnter(
+    public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
-        @Advice.Argument(2) HttpContext context,
-        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
+        @Advice.Argument(2) HttpContext httpContext,
+        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
+        @Advice.Local("otelContext") Context context) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      Span clientSpan = tracer().startSpan(DEFAULT_SPAN_NAME, Kind.CLIENT);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
 
-      requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
+      context = tracer().startSpan(parentContext);
+
+      requestProducer = new DelegatingRequestProducer(context, requestProducer);
       futureCallback =
-          new TraceContinuedFutureCallback<>(parentContext, clientSpan, context, futureCallback);
-
-      return clientSpan;
+          new TraceContinuedFutureCallback<>(parentContext, context, httpContext, futureCallback);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter Span span, @Advice.Return Object result, @Advice.Thrown Throwable throwable) {
-      if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context) {
+      if (context != null && throwable != null) {
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    Span span;
+    Context context;
     HttpAsyncRequestProducer delegate;
 
-    public DelegatingRequestProducer(Span span, HttpAsyncRequestProducer delegate) {
-      this.span = span;
+    public DelegatingRequestProducer(Context context, HttpAsyncRequestProducer delegate) {
+      this.context = context;
       this.delegate = delegate;
     }
 
@@ -107,13 +111,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
+      OpenTelemetry.getGlobalPropagators()
+          .getTextMapPropagator()
+          .inject(context, request, tracer().getSetter());
+      Span span = Span.fromContext(context);
       span.updateName(tracer().spanNameForRequest(request));
       tracer().onRequest(span, request);
-
-      // TODO (trask) expose inject separate from startScope, e.g. for async cases
-      Scope scope = tracer().startScope(span, request);
-      scope.close();
-
       return request;
     }
 
@@ -150,22 +153,25 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
     private final Context parentContext;
-    private final Span clientSpan;
-    private final HttpContext context;
+    private final Context context;
+    private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        Context parentContext, Span clientSpan, HttpContext context, FutureCallback<T> delegate) {
+        Context parentContext,
+        Context context,
+        HttpContext httpContext,
+        FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.clientSpan = clientSpan;
       this.context = context;
+      this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
 
     @Override
     public void completed(T result) {
-      tracer().end(clientSpan, getResponse(context));
+      tracer().end(context, getResponse(httpContext));
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -179,7 +185,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public void failed(Exception ex) {
       // end span before calling delegate
-      tracer().endExceptionally(clientSpan, getResponse(context), ex);
+      tracer().endExceptionally(context, getResponse(httpContext), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -193,7 +199,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public void cancelled() {
       // end span before calling delegate
-      tracer().end(clientSpan, getResponse(context));
+      tracer().end(context, getResponse(httpContext));
 
       if (parentContext == null) {
         cancelDelegate();

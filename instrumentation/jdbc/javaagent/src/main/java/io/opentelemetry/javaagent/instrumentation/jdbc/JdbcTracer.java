@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normaliz
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
@@ -62,7 +62,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
     return info.getShortUrl();
   }
 
-  public Depth getCallDepth() {
+  public CallDepth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(Statement.class);
   }
 

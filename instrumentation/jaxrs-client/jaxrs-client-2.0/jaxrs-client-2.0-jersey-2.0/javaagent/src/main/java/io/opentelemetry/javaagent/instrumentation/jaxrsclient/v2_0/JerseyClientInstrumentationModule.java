@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -71,9 +71,9 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
         @Advice.FieldValue("requestContext") ClientRequest context,
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          tracer().endExceptionally((Span) prop, throwable);
+        Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
+        if (prop instanceof Context) {
+          tracer().endExceptionally((Context) prop, throwable);
         }
       }
     }

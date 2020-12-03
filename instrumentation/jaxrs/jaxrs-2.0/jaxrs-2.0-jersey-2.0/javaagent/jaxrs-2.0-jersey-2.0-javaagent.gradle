@@ -6,7 +6,7 @@ muzzle {
   pass {
     group = "org.glassfish.jersey.core"
     module = "jersey-server"
-    versions = "[2.0,]"
+    versions = "[2.0,3.0.0)"
   }
 }
 

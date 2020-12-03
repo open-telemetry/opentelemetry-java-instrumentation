@@ -6,14 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.handlers.HandlerContextKey;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import java.util.Objects;
 
 public class RequestMeta {
   // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
   // safely.
-  public static final HandlerContextKey<SpanWithScope> SPAN_SCOPE_PAIR_CONTEXT_KEY =
-      new HandlerContextKey<>("io.opentelemetry.auto.SpanWithScope");
+  public static final HandlerContextKey<ContextScopePair> CONTEXT_SCOPE_PAIR_CONTEXT_KEY =
+      new HandlerContextKey<>(RequestMeta.class.getName() + ".ContextSpanPair");
 
   private String bucketName;
   private String queueUrl;

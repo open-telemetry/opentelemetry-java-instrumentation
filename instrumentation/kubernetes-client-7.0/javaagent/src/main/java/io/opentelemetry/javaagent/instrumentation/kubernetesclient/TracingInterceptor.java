@@ -19,22 +19,18 @@ public class TracingInterceptor implements Interceptor {
   @Override
   public Response intercept(Chain chain) throws IOException {
 
-    KubernetesRequestDigest digest = KubernetesRequestDigest.parse(chain.request());
-
-    Span span = tracer().startSpan(digest);
-    tracer().onRequest(span, chain.request());
-
-    Context context = Context.current().with(span);
+    Context context = tracer().startSpan(Context.current(), chain.request());
+    tracer().onRequest(Span.fromContext(context), chain.request());
 
     Response response;
-    try (Scope scope = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(chain.request());
     } catch (Exception e) {
-      tracer().endExceptionally(span, e);
+      tracer().endExceptionally(context, e);
       throw e;
     }
 
-    tracer().end(span, response);
+    tracer().end(context, response);
     return response;
   }
 }

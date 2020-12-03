@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -17,13 +19,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -82,21 +82,22 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       ContextStore<HttpRequest, Context> contextStore =
           InstrumentationContext.get(HttpRequest.class, Context.class);
-      Context context = contextStore.get(request);
+      context = contextStore.get(request);
 
       if (context == null) {
-        span = tracer().startSpan(request);
-        scope = tracer().startScope(span, request.getHeaders());
-        // TODO (trask) ideally we could pass current context into startScope to avoid extra lookup
-        contextStore.put(request, Java8BytecodeBridge.currentContext());
+        Context parentContext = currentContext();
+        if (tracer().shouldStartSpan(parentContext)) {
+          context = tracer().startSpan(parentContext, request, request.getHeaders());
+          contextStore.put(request, context);
+          scope = context.makeCurrent();
+        }
       } else {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        span = Java8BytecodeBridge.spanFromContext(context);
         scope = context.makeCurrent();
       }
     }
@@ -105,20 +106,22 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
       scope.close();
-
       if (throwable == null) {
-        tracer().end(span, response);
+        tracer().end(context, response);
       } else {
-        tracer().endExceptionally(span, response, throwable);
+        tracer().endExceptionally(context, response, throwable);
       }
       // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
       // for a failed request.  Thus, check the response code
       if (response != null && !response.isSuccessStatusCode()) {
-        span.setStatus(StatusCode.ERROR);
+        spanFromContext(context).setStatus(StatusCode.ERROR);
       }
     }
   }
@@ -128,28 +131,36 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
 
-      span = tracer().startSpan(request);
-      scope = tracer().startScope(span, request.getHeaders());
+      context = tracer().startSpan(parentContext, request, request.getHeaders());
 
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation
       ContextStore<HttpRequest, Context> contextStore =
           InstrumentationContext.get(HttpRequest.class, Context.class);
-      contextStore.put(request, Java8BytecodeBridge.currentContext());
+      contextStore.put(request, context);
+
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

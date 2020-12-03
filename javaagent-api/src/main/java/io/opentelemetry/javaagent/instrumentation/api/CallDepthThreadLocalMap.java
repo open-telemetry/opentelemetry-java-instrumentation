@@ -30,7 +30,7 @@ public class CallDepthThreadLocalMap {
         }
       };
 
-  public static Depth getCallDepth(Class<?> k) {
+  public static CallDepth getCallDepth(Class<?> k) {
     return TLS.get(k).get();
   }
 
@@ -43,29 +43,13 @@ public class CallDepthThreadLocalMap {
   }
 
   public static void reset(Class<?> k) {
-    TLS.get(k).get().depth = 0;
+    TLS.get(k).get().reset();
   }
 
-  public static final class Depth {
-    private int depth;
-
-    private Depth() {
-      this.depth = 0;
-    }
-
-    public int getAndIncrement() {
-      return this.depth++;
-    }
-
-    public int decrementAndGet() {
-      return --this.depth;
-    }
-  }
-
-  private static final class ThreadLocalDepth extends ThreadLocal<Depth> {
+  private static final class ThreadLocalDepth extends ThreadLocal<CallDepth> {
     @Override
-    protected Depth initialValue() {
-      return new Depth();
+    protected CallDepth initialValue() {
+      return new CallDepth();
     }
   }
 }

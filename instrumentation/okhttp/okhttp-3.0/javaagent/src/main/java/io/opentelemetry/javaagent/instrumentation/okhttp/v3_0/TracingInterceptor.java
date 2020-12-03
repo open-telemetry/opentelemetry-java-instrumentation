@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttpClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import okhttp3.Interceptor;
@@ -18,17 +18,22 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(Chain chain) throws IOException {
-    Span span = tracer().startSpan(chain.request());
+    Context parentContext = Context.current();
+    if (!tracer().shouldStartSpan(parentContext)) {
+      return chain.proceed(chain.request());
+    }
+
+    Request.Builder requestBuilder = chain.request().newBuilder();
+    Context context = tracer().startSpan(parentContext, chain.request(), requestBuilder);
 
     Response response;
-    Request.Builder requestBuilder = chain.request().newBuilder();
-    try (Scope ignored = tracer().startScope(span, requestBuilder)) {
+    try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(requestBuilder.build());
     } catch (Exception e) {
-      tracer().endExceptionally(span, e);
+      tracer().endExceptionally(context, e);
       throw e;
     }
-    tracer().end(span, response);
+    tracer().end(context, response);
     return response;
   }
 }

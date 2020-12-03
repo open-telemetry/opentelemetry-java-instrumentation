@@ -17,7 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-class ApacheHttpClientTracer
+public class ApacheHttpClientTracer
     extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
