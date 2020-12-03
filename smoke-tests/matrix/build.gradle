@@ -1,0 +1,93 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+plugins {
+  id "war"
+  id "com.bmuschko.docker-remote-api" version "6.6.1"
+}
+
+compileJava {
+  options.release.set(8)
+}
+
+repositories {
+  jcenter()
+}
+dependencies {
+  implementation("javax.servlet:javax.servlet-api:3.0.1")
+}
+
+def buildMatrixTask = tasks.create("buildMatrix") {
+  group = "build"
+  description = "Builds all Docker images for the test matrix"
+}
+
+Set<String> matrix = []
+tasks.create("pushMatrix", DockerPushImage) {
+  group = "publishing"
+  description = "Push all Docker images for the test matrix"
+  dependsOn(buildMatrixTask)
+  images.set(matrix)
+}
+
+def targets = [
+  "jetty"  : [
+    "9.4.35"      : ["8", "11", "15"],
+    "10.0.0.beta3": ["11", "15"],
+  ],
+  "tomcat" : [
+    "7.0.107"   : ["8"],
+    "8.5.60"    : ["8", "11"],
+    "9.0.40"    : ["8", "11"],
+    "10.0.0-M10": ["8", "11"]
+  ],
+  "payara" : [
+    "5.2020.6"      : ["8"],
+    "5.2020.6-jdk11": ["11"]
+  ],
+  "wildfly": [
+    "13.0.0.Final": ["8", "11", "15"],
+    "17.0.1.Final": ["8", "11", "15"],
+    "21.0.0.Final": ["8", "11", "15"]
+  ],
+  "liberty": [
+    "20.0.0.12": ["8", "11", "15", "8-jdk-openj9", "11-jdk-openj9", "15-jdk-openj9"]
+  ]
+]
+
+def dockerWorkingDir = new File(project.buildDir, "docker")
+
+targets.each { server, data ->
+  data.forEach { version, jdks ->
+    jdks.forEach { jdk ->
+      def dockerfile = "${server}.dockerfile"
+
+      def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk", Copy) {
+        def warTask = project.tasks.war
+        it.dependsOn(warTask)
+        it.into(dockerWorkingDir)
+        it.from("src")
+        it.from(warTask.archiveFile) {
+          rename { _ -> "app.war" }
+        }
+      }
+
+      def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk"
+      matrix.add(image)
+      def buildTask = tasks.register("${server}Image-$version-jdk$jdk", DockerBuildImage) {
+        it.dependsOn(prepareTask)
+        group = "build"
+        description = "Builds Docker image with $server $version on JDK $jdk"
+
+        it.inputDir.set(dockerWorkingDir)
+        it.images.add(image)
+        it.dockerFile.set(new File(dockerWorkingDir, dockerfile))
+        it.buildArgs.set(["version": version, "jdk": jdk])
+      }
+
+      buildMatrixTask.dependsOn(buildTask)
+    }
+  }
+}
+
+assemble.dependsOn(buildMatrixTask)
