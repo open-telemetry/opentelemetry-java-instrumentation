@@ -20,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -152,12 +151,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpUriRequest request,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -172,12 +166,13 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
     }
   }
 
@@ -193,12 +188,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 readOnly = false)
             Object handler,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -218,12 +208,13 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
     }
   }
 
@@ -233,12 +224,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -259,12 +245,13 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
     }
   }
 
@@ -281,12 +268,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 readOnly = false)
             Object handler,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -312,12 +294,13 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
       }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
     }
   }
 }

@@ -86,8 +86,8 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
       if (scope == null) {
         return;
       }
-      scope.close();
 
+      scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       } else {

@@ -7,12 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
@@ -27,10 +24,6 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.apache-httpclient";
-  }
-
-  public CallDepth getCallDepth() {
-    return CallDepthThreadLocalMap.getCallDepth(HttpClient.class);
   }
 
   @Override

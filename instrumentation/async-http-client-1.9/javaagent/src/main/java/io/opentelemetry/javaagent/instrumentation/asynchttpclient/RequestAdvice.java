@@ -39,6 +39,6 @@ public class RequestAdvice {
     if (scope != null) {
       scope.close();
     }
-    // span closed in ClientResponseAdvice
+    // span ended in ClientResponseAdvice
   }
 }

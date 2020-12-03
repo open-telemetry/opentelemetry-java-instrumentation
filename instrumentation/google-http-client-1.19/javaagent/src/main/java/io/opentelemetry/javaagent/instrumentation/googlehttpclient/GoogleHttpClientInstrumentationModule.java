@@ -111,8 +111,8 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
       if (scope == null) {
         return;
       }
-      scope.close();
 
+      scope.close();
       if (throwable == null) {
         tracer().end(context, response);
       } else {
@@ -157,8 +157,8 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
       if (scope == null) {
         return;
       }
-      scope.close();
 
+      scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       }

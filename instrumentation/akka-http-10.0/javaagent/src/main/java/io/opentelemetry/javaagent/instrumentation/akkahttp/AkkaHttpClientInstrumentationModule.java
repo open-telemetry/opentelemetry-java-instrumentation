@@ -18,7 +18,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -72,18 +71,13 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Local("otelScope") Scope scope) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -103,15 +97,16 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable == null) {
-          responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
-        } else {
-          tracer().endExceptionally(context, throwable);
-        }
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      if (throwable == null) {
+        responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
+      } else {
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

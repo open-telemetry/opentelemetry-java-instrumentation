@@ -19,7 +19,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -74,12 +73,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -94,16 +88,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Return HttpResponse<?> result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable == null) {
-          tracer().end(context, result);
-        } else {
-          tracer().endExceptionally(context, result, throwable);
-        }
+      scope.close();
+      if (throwable == null) {
+        tracer().end(context, result);
+      } else {
+        tracer().endExceptionally(context, result, throwable);
       }
     }
   }
@@ -114,12 +108,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() != 0) {
-        return;
-      }
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -134,15 +123,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable != null) {
-          tracer().endExceptionally(context, null, throwable);
-        } else {
-          future = future.whenComplete(new ResponseConsumer(context));
-        }
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      if (throwable != null) {
+        tracer().endExceptionally(context, null, throwable);
+      } else {
+        future = future.whenComplete(new ResponseConsumer(context));
       }
     }
   }
