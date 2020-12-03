@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.splunk.opentelemetry.appservers.javaee;
+package io.opentelemetry.smoketest.matrix;
 
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
@@ -20,5 +20,4 @@ public class JspServlet extends HttpServlet {
     RequestDispatcher resultView = req.getRequestDispatcher("test.jsp");
     resultView.forward(req, resp);
   }
-
 }

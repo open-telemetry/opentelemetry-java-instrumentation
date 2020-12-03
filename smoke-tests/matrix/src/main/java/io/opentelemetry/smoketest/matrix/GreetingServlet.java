@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.splunk.opentelemetry.appservers.javaee;
+package io.opentelemetry.smoketest.matrix;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,11 +30,7 @@ public class GreetingServlet extends HttpServlet {
       String responseBody = buffer.toString("UTF-8");
       ServletOutputStream outputStream = resp.getOutputStream();
       outputStream.print(
-          bytesRead
-              + " bytes read by "
-              + urlConnection.getClass().getName()
-              + "\n"
-              + responseBody);
+          bytesRead + " bytes read by " + urlConnection.getClass().getName() + "\n" + responseBody);
       outputStream.flush();
     }
   }
