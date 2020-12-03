@@ -61,7 +61,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         @Advice.Local("otelFunctionScope") Scope functionScope,
         @Advice.Local("otelMessageSpan") Span messageSpan,
         @Advice.Local("otelMessageScope") Scope messageScope) {
-      functionSpan = functionTracer().startSpan(context, Kind.SERVER);
+      functionSpan = functionTracer().startSpan(context, arg, Kind.SERVER);
       functionScope = functionTracer().startScope(functionSpan);
       if (arg instanceof SQSEvent) {
         messageSpan = messageTracer().startSpan(context, (SQSEvent) arg);
