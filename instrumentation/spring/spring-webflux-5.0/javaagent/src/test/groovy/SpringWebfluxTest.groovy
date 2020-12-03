@@ -83,13 +83,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -149,13 +149,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -237,13 +237,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -298,7 +298,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           errored true
           errorEvent(ResponseStatusException, String)
           attributes {
-            "handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
+            "spring-webflux.handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
           }
         }
       }
@@ -340,8 +340,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(POST && /echo)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(POST && /echo)"
+            "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(EchoHandlerFunction.getName())
             }
           }
@@ -399,13 +399,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -455,8 +455,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(GET && /double-greet-redirect)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(GET && /double-greet-redirect)"
+            "spring-webflux.handler.type" { String tagVal ->
               return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 || tagVal.contains("Lambda"))
             }
@@ -484,8 +484,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(GET && /double-greet)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(GET && /double-greet)"
+            "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
             }
           }
@@ -536,13 +536,13 @@ class SpringWebfluxTest extends AgentTestRunner {
             attributes {
               if (annotatedMethod == null) {
                 // Functional API
-                "request.predicate" "(GET && $urlPathWithVariables)"
-                "handler.type" { String tagVal ->
+                "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+                "spring-webflux.handler.type" { String tagVal ->
                   return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 }
               } else {
                 // Annotation API
-                "handler.type" TestController.getName()
+                "spring-webflux.handler.type" TestController.getName()
               }
             }
           }

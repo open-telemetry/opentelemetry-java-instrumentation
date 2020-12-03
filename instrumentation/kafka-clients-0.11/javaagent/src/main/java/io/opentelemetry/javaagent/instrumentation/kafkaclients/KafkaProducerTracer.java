@@ -53,7 +53,7 @@ public class KafkaProducerTracer extends BaseTracer {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
     if (record.value() == null) {
-      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE true);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
   }
 

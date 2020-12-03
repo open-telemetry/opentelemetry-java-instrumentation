@@ -437,7 +437,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SADD SKEY ? ?"
-            "db.command.cancelled" true
+            "lettuce.command.cancelled" true
           }
         }
       }

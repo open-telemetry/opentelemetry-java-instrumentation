@@ -149,9 +149,9 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
           }
         }
         // STREAMING span 1
@@ -165,8 +165,8 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" STREAM_PENDING
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
-            "partition" { it >= 0 }
-            "offset" 0
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-streams.offset" 0
             "asdf" "testing"
           }
         }
@@ -194,9 +194,9 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
             "testing" 123
           }
         }

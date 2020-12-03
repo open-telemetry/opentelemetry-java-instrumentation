@@ -213,7 +213,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
       childOf((SpanData) parent)
       attributes {
         if (isCancelled) {
-          "canceled" true
+          "jaxrs.canceled" true
         }
       }
     }
