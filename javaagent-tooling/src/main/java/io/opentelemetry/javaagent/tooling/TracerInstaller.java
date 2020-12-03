@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
+import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
@@ -33,8 +34,8 @@ public class TracerInstaller {
   private static final Logger log = LoggerFactory.getLogger(TracerInstaller.class);
 
   private static final String EXPORTER_JAR_CONFIG = "otel.exporter.jar";
-  private static final String EXPORTERS_CONFIG = "otel.exporter";
-  private static final String PROPAGATORS_CONFIG = "otel.propagators";
+  private static final String EXPORTERS_CONFIG = "otel.exporter"; // this name is from spec
+  private static final String PROPAGATORS_CONFIG = "otel.propagators"; // this name is from spec
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
@@ -164,7 +165,7 @@ public class TracerInstaller {
 
   private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-    BatchSpanProcessor spanProcessor =
+    SpanProcessor spanProcessor =
         BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());

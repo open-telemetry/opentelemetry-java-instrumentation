@@ -37,10 +37,10 @@ afterEvaluate {
     implementation deps.slf4j
 
     // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
-    testImplementation project(':instrumentation:executors')
+    testImplementation project(':instrumentation:executors:javaagent')
     // FIXME: we should enable this, but currently this fails tests for google http client
-    //testImplementation project(':instrumentation:http-url-connection')
-    testImplementation project(':instrumentation:classloaders')
+    //testImplementation project(':instrumentation:http-url-connection:javaagent')
+    testImplementation project(':instrumentation:classloaders:javaagent')
 
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice

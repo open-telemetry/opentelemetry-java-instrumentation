@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer.utils;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.net.InetAddress;
@@ -17,14 +18,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class NetPeerUtils {
 
-  // TODO: make it private once BaseDecorator is no more
-  public static final Map<String, String> ENDPOINT_PEER_SERVICE_MAPPING =
-      Collections.unmodifiableMap(
-          Config.get().getMapProperty("otel.endpoint.peer.service.mapping"));
+  public static final NetPeerUtils INSTANCE = new NetPeerUtils(Config.get());
 
-  private NetPeerUtils() {}
+  private final Map<String, String> endpointPeerServiceMapping;
 
-  public static void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
+  // visible for testing
+  NetPeerUtils(Config config) {
+    this.endpointPeerServiceMapping =
+        Collections.unmodifiableMap(config.getMapProperty("otel.endpoint.peer.service.mapping"));
+  }
+
+  public void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
@@ -37,12 +41,12 @@ public final class NetPeerUtils {
     }
   }
 
-  public static void setNetPeer(Span span, InetAddress remoteAddress, int port) {
+  public void setNetPeer(Span span, InetAddress remoteAddress, int port) {
     setNetPeer(
         span::setAttribute, remoteAddress.getHostName(), remoteAddress.getHostAddress(), port);
   }
 
-  public static void setNetPeer(Span span, String nameOrIp, int port) {
+  public void setNetPeer(Span span, String nameOrIp, int port) {
     try {
       InetSocketAddress address = new InetSocketAddress(nameOrIp, port);
       setNetPeer(span, address);
@@ -52,16 +56,15 @@ public final class NetPeerUtils {
     }
   }
 
-  public static void setNetPeer(Span span, String peerName, String peerIp) {
+  public void setNetPeer(Span span, String peerName, String peerIp) {
     setNetPeer(span::setAttribute, peerName, peerIp, -1);
   }
 
-  public static void setNetPeer(Span span, String peerName, String peerIp, int port) {
+  public void setNetPeer(Span span, String peerName, String peerIp, int port) {
     setNetPeer(span::setAttribute, peerName, peerIp, port);
   }
 
-  public static void setNetPeer(
-      SpanAttributeSetter span, String peerName, String peerIp, int port) {
+  public void setNetPeer(SpanAttributeSetter span, String peerName, String peerIp, int port) {
     if (peerName != null && !peerName.equals(peerIp)) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }
@@ -81,12 +84,12 @@ public final class NetPeerUtils {
     }
   }
 
-  private static String mapToPeer(String endpoint) {
+  private String mapToPeer(String endpoint) {
     if (endpoint == null) {
       return null;
     }
 
-    return ENDPOINT_PEER_SERVICE_MAPPING.get(endpoint);
+    return endpointPeerServiceMapping.get(endpoint);
   }
 
   /**

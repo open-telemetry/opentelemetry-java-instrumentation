@@ -26,7 +26,7 @@ class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
 
   def "handler string traced"() {
     given:
-    setLambda(TestRequestHandlerString.getName()+"::handleRequest", TracingRequestWrapper)
+    setLambda(TestRequestHandlerString.getName() + "::handleRequest", TracingRequestWrapper)
 
     when:
     def result = wrapper.handleRequest("hello", context)
@@ -48,7 +48,7 @@ class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
 
   def "handler with exception"() {
     given:
-    setLambda(TestRequestHandlerString.getName()+"::handleRequest", TracingRequestWrapper)
+    setLambda(TestRequestHandlerString.getName() + "::handleRequest", TracingRequestWrapper)
 
     when:
     def thrown

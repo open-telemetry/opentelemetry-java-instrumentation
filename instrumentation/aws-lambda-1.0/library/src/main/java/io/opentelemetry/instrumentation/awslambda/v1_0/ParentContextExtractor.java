@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
+import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 public class ParentContextExtractor {
 
@@ -20,12 +20,6 @@ public class ParentContextExtractor {
         .getTextMapPropagator()
         .extract(
             io.opentelemetry.context.Context.current(), lowercaseMap(headers), MapGetter.INSTANCE);
-  }
-
-  private static Map<String, String> lowercaseMap(Map<String, String> source) {
-    return source.entrySet().stream()
-        .filter(e -> e.getKey() != null)
-        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Entry::getValue));
   }
 
   // lower-case map getter used for extraction

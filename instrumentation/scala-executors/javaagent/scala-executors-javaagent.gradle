@@ -1,0 +1,40 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-scala.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = 'org.scala-lang'
+    module = "scala-library"
+    versions = "[2.8.0,2.12.0)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  slickTest {
+    filter {
+      // this is needed because "test.dependsOn slickTest", and so without this,
+      // running a single test in the default test set will fail
+      setFailOnNoMatchingTests(false)
+    }
+  }
+}
+
+compileSlickTestGroovy {
+  classpath += files(sourceSets.slickTest.scala.classesDirectory)
+}
+
+dependencies {
+  library group: 'org.scala-lang', name: 'scala-library', version: '2.8.0'
+
+  latestDepTestLibrary group: 'org.scala-lang', name: 'scala-library', version: '2.11.+'
+
+  slickTestImplementation project(':instrumentation:jdbc:javaagent')
+  slickTestImplementation deps.scala
+  slickTestImplementation group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
+  slickTestImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
+}
+
+// Run Slick library tests along with the rest of tests
+test.dependsOn slickTest

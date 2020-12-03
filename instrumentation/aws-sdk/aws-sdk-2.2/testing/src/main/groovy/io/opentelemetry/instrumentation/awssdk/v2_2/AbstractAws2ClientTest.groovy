@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import static com.google.common.collect.ImmutableMap.of
-import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
@@ -409,6 +409,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   }
 
   String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpClientTracer.DEFAULT_SPAN_NAME
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 }

@@ -24,7 +24,11 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
     @Override
     APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
       if (input.getBody() == "hello") {
-        return new APIGatewayProxyResponseEvent().withBody("world")
+        return new APIGatewayProxyResponseEvent()
+          .withStatusCode(200)
+          .withBody("world")
+      } else if (input.getBody() == "empty") {
+        return new APIGatewayProxyResponseEvent()
       }
       throw new RuntimeException("bad request")
     }
@@ -42,8 +46,21 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
   def "handler traced with trace propagation"() {
     given:
-    setLambda(TestApiGatewayHandler.getName()+"::handleRequest", TracingRequestApiGatewayWrapper)
-    def input = new APIGatewayProxyRequestEvent().withBody("hello").withHeaders(propagationHeaders())
+    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper)
+
+    def headers = ImmutableMap.builder()
+      .putAll(propagationHeaders())
+      .put("User-Agent", "Test Client")
+      .put("host", "localhost:123")
+      .put("X-FORWARDED-PROTO", "http")
+      .build()
+    def input = new APIGatewayProxyRequestEvent()
+      .withHttpMethod("GET")
+      .withResource("/hello/{param}")
+      .withPath("/hello/world")
+      .withBody("hello")
+      .withQueryStringParamters(["a": "b", "c": "d"])
+      .withHeaders(headers)
 
     when:
     APIGatewayProxyResponseEvent result = wrapper.handleRequest(input, context)
@@ -55,10 +72,41 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
         span(0) {
           parentSpanId("0000000000000456")
           traceId("4fd0b6131f19f39af59518d127b0cafe")
+          name("/hello/{param}")
+          kind SERVER
+          attributes {
+            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
+            "$SemanticAttributes.HTTP_METHOD.key" "GET"
+            "$SemanticAttributes.HTTP_USER_AGENT.key" "Test Client"
+            "$SemanticAttributes.HTTP_URL.key" "http://localhost:123/hello/world?a=b&c=d"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+          }
+        }
+      }
+    }
+  }
+
+  def "test empty request & response"() {
+    given:
+    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper)
+
+    def input = new APIGatewayProxyRequestEvent()
+      .withBody("empty")
+
+    when:
+    APIGatewayProxyResponseEvent result = wrapper.handleRequest(input, context)
+
+    then:
+    result.body == null
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
           name("my_function")
           kind SERVER
           attributes {
-            "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
+            "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
+            "$SemanticAttributes.FAAS_TRIGGER.key" "http"
           }
         }
       }

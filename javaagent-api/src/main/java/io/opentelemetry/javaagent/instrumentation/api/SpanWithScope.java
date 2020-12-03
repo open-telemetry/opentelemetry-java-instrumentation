@@ -63,7 +63,7 @@ import io.opentelemetry.context.Scope;
  *   <li>The new pattern is more efficient since it doesn't require instantiating the {@code
  *       SpanWithScope} holder object
  *   <li>The new pattern extends nicely in the common case where we also need to pass {@link
- *       CallDepthThreadLocalMap.Depth} between the methods
+ *       CallDepth} between the methods
  * </ul>
  *
  * @deprecated see above

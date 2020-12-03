@@ -1,0 +1,41 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  // We have two independent covariants, so we have to test them independently.
+  pass {
+    group = 'org.springframework.data'
+    module = 'spring-data-commons'
+    versions = "[1.8.0.RELEASE,]"
+    extraDependency "org.springframework:spring-aop:1.2"
+    assertInverse = true
+  }
+  pass {
+    group = 'org.springframework'
+    module = 'spring-aop'
+    versions = "[1.2,]"
+    extraDependency "org.springframework.data:spring-data-commons:1.8.0.RELEASE"
+    assertInverse = true
+  }
+}
+
+// DQH - API changes that impact instrumentation occurred in spring-data-commons in March 2014.
+// For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
+// For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
+dependencies {
+  library group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE'
+  compileOnly(group: 'org.springframework', name: 'spring-aop', version: '1.2')
+
+  testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+  testLibrary group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
+  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+
+  // JPA dependencies
+  testImplementation project(':instrumentation:jdbc:javaagent')
+  testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
+  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '(,2.4.0)'
+  latestDepTestLibrary group: 'org.springframework', name: 'spring-context', version: '+'
+}
+

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getSpanFromAttributes;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getContextFromAttributes;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
@@ -108,8 +108,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getSpanContext().isValid()) {
+    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
+    if (otelContext != null) {
+      Span span = Span.fromContext(otelContext);
       tracer().onRequest(span, context.httpRequest());
       SdkRequestDecorator decorator = decorator(executionAttributes);
       if (decorator != null) {
@@ -145,12 +146,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getSpanContext().isValid()) {
+    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
+    if (otelContext != null) {
       clearAttributes(executionAttributes);
+      Span span = Span.fromContext(otelContext);
       tracer().afterExecution(span, context.httpRequest());
       onSdkResponse(span, context.response());
-      tracer().end(span, context.httpResponse());
+      tracer().end(otelContext, context.httpResponse());
     }
   }
 
@@ -163,10 +165,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    Span span = getSpanFromAttributes(executionAttributes);
-    if (span.getSpanContext().isValid()) {
+    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
+    if (otelContext != null) {
       clearAttributes(executionAttributes);
-      tracer().endExceptionally(span, context.exception());
+      tracer().endExceptionally(otelContext, context.exception());
     }
   }
 

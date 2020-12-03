@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db
 
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -14,20 +13,13 @@ class RedisCommandNormalizerTest extends Specification {
 
   def "should not normalize anything when turned off"() {
     given:
-    def previousConfig = ConfigUtils.updateConfig({
-      it.setProperty("otel.instrumentation.redis.query.normalizer.enabled", "false")
-    })
-
-    def normalizer = new RedisCommandNormalizer("redis-instrumentation", "redis")
+    def normalizer = new RedisCommandNormalizer(false)
 
     when:
     def result = normalizer.normalize("AUTH", ["user", "password"])
 
     then:
     result == "AUTH user password"
-
-    cleanup:
-    ConfigUtils.setConfig(previousConfig)
   }
 
   @Unroll

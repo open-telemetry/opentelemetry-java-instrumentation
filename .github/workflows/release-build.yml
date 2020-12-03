@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Wait for checks
+        uses: jitterbit/await-check-suites@v1
+        with:
+          timeoutSeconds: 3600
       - uses: actions/setup-java@v1
         with:
           java-version: 11
@@ -21,9 +25,11 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: assemble final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           GRGIT_USER: ${{ github.actor }}
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}

@@ -12,10 +12,8 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.decorator.HttpStatusConverter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,60 +59,63 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super(tracer);
   }
 
-  public Span startSpan(REQUEST request) {
-    return startSpan(request, -1);
+  public boolean shouldStartSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  public Span startSpan(REQUEST request, long startTimeNanos) {
-    return internalStartSpan(request, spanNameForRequest(request), startTimeNanos);
+  public Context startSpan(Context parentContext, REQUEST request, CARRIER carrier) {
+    return startSpan(parentContext, request, carrier, -1);
   }
 
-  public Scope startScope(Span span, CARRIER carrier) {
-    Context context = Context.current().with(span);
-
+  public Context startSpan(
+      Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
+    Span span =
+        internalStartSpan(parentContext, request, spanNameForRequest(request), startTimeNanos);
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
+    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
-    return context.makeCurrent();
+    return context;
   }
 
-  public void end(Span span, RESPONSE response) {
-    end(span, response, -1);
+  public void end(Context context, RESPONSE response) {
+    end(context, response, -1);
   }
 
-  public void end(Span span, RESPONSE response, long endTimeNanos) {
+  public void end(Context context, RESPONSE response, long endTimeNanos) {
+    Span span = Span.fromContext(context);
     onResponse(span, response);
     super.end(span, endTimeNanos);
   }
 
-  public void endExceptionally(Span span, RESPONSE response, Throwable throwable) {
-    endExceptionally(span, response, throwable, -1);
+  public void end(Context context) {
+    Span span = Span.fromContext(context);
+    super.end(span);
+  }
+
+  public void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
+    endExceptionally(context, response, throwable, -1);
   }
 
   public void endExceptionally(
-      Span span, RESPONSE response, Throwable throwable, long endTimeNanos) {
+      Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
+    Span span = Span.fromContext(context);
     onResponse(span, response);
     super.endExceptionally(span, throwable, endTimeNanos);
   }
 
-  /**
-   * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
-   * Context}, or an invalid {@link Span} otherwise.
-   */
-  private Span internalStartSpan(REQUEST request, String name, long startTimeNanos) {
-    Context context = Context.current();
-    Span clientSpan = context.get(CONTEXT_CLIENT_SPAN_KEY);
+  public void endExceptionally(Context context, Throwable throwable) {
+    Span span = Span.fromContext(context);
+    super.endExceptionally(span, throwable, -1);
+  }
 
-    if (clientSpan != null) {
-      // We don't want to create two client spans for a given client call, suppress inner spans.
-      return Span.getInvalid();
-    }
-
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(context);
+  private Span internalStartSpan(
+      Context parentContext, REQUEST request, String name, long startTimeNanos) {
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }
@@ -154,7 +155,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     try {
       URI url = url(request);
       if (url != null) {
-        NetPeerUtils.setNetPeer(span, url.getHost(), null, url.getPort());
+        NetPeerUtils.INSTANCE.setNetPeer(span, url.getHost(), null, url.getPort());
         span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {

@@ -1,0 +1,33 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.hibernate"
+    module = "hibernate-core"
+    versions = "[4.3.0.Final,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+
+  implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
+
+  testImplementation project(':instrumentation:jdbc:javaagent')
+  // Added to ensure cross compatibility:
+  testImplementation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
+  testImplementation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
+
+  testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  //First version to work with Java 14
+  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+
+  // TODO(anuraaga): Investigate why these tests don't pass on 5 or 6
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1042
+  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-core', version: '4.+'
+  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.+'
+
+  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '(,2.4.0)'
+}

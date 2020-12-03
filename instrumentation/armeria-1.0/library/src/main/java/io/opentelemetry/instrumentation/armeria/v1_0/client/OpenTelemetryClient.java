@@ -13,6 +13,7 @@ import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.util.concurrent.TimeUnit;
@@ -52,26 +53,27 @@ public class OpenTelemetryClient extends SimpleDecoratingHttpClient {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Span span = clientTracer.startSpan(ctx, requestStartTimeNanos);
+    Context context = clientTracer.startSpan(Context.current(), ctx, ctx, requestStartTimeNanos);
 
+    Span span = Span.fromContext(context);
     if (span.isRecording()) {
       ctx.log()
           .whenComplete()
           .thenAccept(
               log -> {
-                NetPeerUtils.setNetPeer(span, ctx.remoteAddress());
+                NetPeerUtils.INSTANCE.setNetPeer(span, ctx.remoteAddress());
 
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {
                   clientTracer.endExceptionally(
-                      span, log, log.responseCause(), requestEndTimeNanos);
+                      context, log, log.responseCause(), requestEndTimeNanos);
                 } else {
-                  clientTracer.end(span, log, requestEndTimeNanos);
+                  clientTracer.end(context, log, requestEndTimeNanos);
                 }
               });
     }
 
-    try (Scope ignored = clientTracer.startScope(span, ctx)) {
+    try (Scope ignored = context.makeCurrent()) {
       return unwrap().execute(ctx, req);
     }
   }

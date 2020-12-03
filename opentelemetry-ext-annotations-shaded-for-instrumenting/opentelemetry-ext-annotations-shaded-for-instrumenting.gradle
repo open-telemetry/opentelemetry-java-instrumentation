@@ -5,7 +5,7 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  implementation deps.opentelemetryAutoAnnotations
+  implementation deps.opentelemetryExtAnnotations
   implementation deps.opentelemetryContext
 }
 

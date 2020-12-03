@@ -15,11 +15,11 @@ import static muzzle.TestClasses.MethodBodyAdvice
 
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
+import spock.lang.Specification
 
-class ReferenceCollectorTest extends AgentTestRunner {
+class ReferenceCollectorTest extends Specification {
   def "method body creates references"() {
     setup:
     def collector = new ReferenceCollector()

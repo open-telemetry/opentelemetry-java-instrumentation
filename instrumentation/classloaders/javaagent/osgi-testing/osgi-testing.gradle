@@ -1,0 +1,11 @@
+ext.skipPublish = true
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  // TODO: we should separate core and Eclipse tests at some point,
+  // but right now core-specific tests are quite dump and are run with
+  // core version provided by Eclipse implementation.
+  //testImplementation group: 'org.osgi', name: 'org.osgi.core', version: '4.0.0'
+  testImplementation group: 'org.eclipse.platform', name: 'org.eclipse.osgi', version: '3.13.200'
+  testImplementation group: 'org.apache.felix', name: 'org.apache.felix.framework', version: '6.0.2'
+}

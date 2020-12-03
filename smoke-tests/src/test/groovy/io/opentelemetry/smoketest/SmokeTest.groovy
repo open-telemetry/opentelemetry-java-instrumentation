@@ -61,7 +61,7 @@ abstract class SmokeTest extends Specification {
   private GenericContainer collector
 
   def setupSpec() {
-    backend = new GenericContainer<>("open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend:latest")
+    backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
       .withExposedPorts(8080)
       .waitingFor(Wait.forHttp("/health").forPort(8080))
       .withNetwork(network)

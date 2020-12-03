@@ -22,6 +22,10 @@ dependencies {
   implementation deps.opentelemetryContext
   implementation deps.opentelemetrySdk
   implementation deps.opentelemetryTraceProps
+  implementation(deps.opentelemetryResources) {
+    // exclude sdk-common to avoid bumping guava version
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
+  }
 
   implementation group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   implementation deps.bytebuddy
