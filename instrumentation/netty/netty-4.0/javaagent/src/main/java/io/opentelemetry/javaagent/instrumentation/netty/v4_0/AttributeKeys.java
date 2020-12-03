@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import io.netty.util.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +30,7 @@ public class AttributeKeys {
   public static final AttributeKey<Context> SERVER_SPAN =
       attributeKey(AttributeKeys.class.getName() + ".server-span");
 
-  public static final AttributeKey<Span> CLIENT_SPAN =
+  public static final AttributeKey<Context> CLIENT_SPAN =
       attributeKey(AttributeKeys.class.getName() + ".client-span");
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =

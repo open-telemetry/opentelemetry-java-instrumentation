@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -19,6 +21,27 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
 
   public static KubernetesClientTracer tracer() {
     return TRACER;
+  }
+
+  /**
+   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
+   * KubernetesRequestDigest.
+   */
+  public Context startSpan(Context parentContext, Request request) {
+    KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
+    Span span =
+        tracer
+            .spanBuilder(digest.toString())
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .setAttribute("namespace", digest.getResourceMeta().getNamespace())
+            .setAttribute("name", digest.getResourceMeta().getName())
+            .startSpan();
+    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request, getSetter());
+    return context;
   }
 
   @Override
@@ -61,18 +84,5 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
   @Override
   protected Span onRequest(Span span, Request request) {
     return super.onRequest(span, request);
-  }
-
-  /**
-   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
-   * KubernetesRequestDigest.
-   */
-  public Span startSpan(KubernetesRequestDigest digest) {
-    return tracer
-        .spanBuilder(digest.toString())
-        .setSpanKind(CLIENT)
-        .setAttribute("namespace", digest.getResourceMeta().getNamespace())
-        .setAttribute("name", digest.getResourceMeta().getName())
-        .startSpan();
   }
 }

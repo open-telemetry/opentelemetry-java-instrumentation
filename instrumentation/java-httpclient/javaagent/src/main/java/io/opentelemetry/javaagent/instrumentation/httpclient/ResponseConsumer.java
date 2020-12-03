@@ -7,23 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 
 public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> {
-  private final Span span;
+  private final Context context;
 
-  public ResponseConsumer(Span span) {
-    this.span = span;
+  public ResponseConsumer(Context context) {
+    this.context = context;
   }
 
   @Override
   public void accept(HttpResponse<?> httpResponse, Throwable throwable) {
     if (throwable == null) {
-      tracer().end(span, httpResponse);
+      tracer().end(context, httpResponse);
     } else {
-      tracer().endExceptionally(span, httpResponse, throwable);
+      tracer().endExceptionally(context, httpResponse, throwable);
     }
   }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
@@ -21,7 +20,6 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
-  private Span clientSpan;
   private Context clientParentContext;
   private Context context;
 
@@ -31,14 +29,6 @@ public class ChannelTraceContext {
 
   public void setConnectionContext(Context connectionContinuation) {
     this.connectionContext = connectionContinuation;
-  }
-
-  public Span getClientSpan() {
-    return clientSpan;
-  }
-
-  public void setClientSpan(Span clientSpan) {
-    this.clientSpan = clientSpan;
   }
 
   public Context getClientParentContext() {
@@ -67,13 +57,12 @@ public class ChannelTraceContext {
     }
     ChannelTraceContext other = (ChannelTraceContext) obj;
     return Objects.equals(connectionContext, other.connectionContext)
-        && Objects.equals(clientSpan, other.clientSpan)
         && Objects.equals(clientParentContext, other.clientParentContext)
         && Objects.equals(context, other.context);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionContext, clientSpan, clientParentContext, context);
+    return Objects.hash(connectionContext, clientParentContext, context);
   }
 }

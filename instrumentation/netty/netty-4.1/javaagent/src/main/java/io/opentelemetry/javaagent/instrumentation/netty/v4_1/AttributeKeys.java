@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.netty.util.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 
 public class AttributeKeys {
@@ -20,7 +19,7 @@ public class AttributeKeys {
   public static final AttributeKey<Context> SERVER_SPAN =
       AttributeKey.valueOf(AttributeKeys.class, "server-span");
 
-  public static final AttributeKey<Span> CLIENT_SPAN =
+  public static final AttributeKey<Context> CLIENT_SPAN =
       AttributeKey.valueOf(AttributeKeys.class, "client-span");
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =

@@ -9,12 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjec
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap.Depth;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import khttp.KHttp;
 import khttp.responses.Response;
 
 public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
@@ -22,10 +19,6 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, St
 
   public static KHttpTracer tracer() {
     return TRACER;
-  }
-
-  public Depth getCallDepth() {
-    return CallDepthThreadLocalMap.getCallDepth(KHttp.class);
   }
 
   @Override

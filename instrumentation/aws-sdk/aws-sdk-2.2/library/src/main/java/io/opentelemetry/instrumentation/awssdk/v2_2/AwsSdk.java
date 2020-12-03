@@ -62,15 +62,6 @@ public class AwsSdk {
    * Returns the {@link Span} stored in the {@link ExecutionAttributes}, or {@code null} if there is
    * no span set.
    */
-  public static Span getSpanFromAttributes(ExecutionAttributes attributes) {
-    Context context = getContextFromAttributes(attributes);
-    return context == null ? Span.getInvalid() : Span.fromContext(context);
-  }
-
-  /**
-   * Returns the {@link Span} stored in the {@link ExecutionAttributes}, or {@code null} if there is
-   * no span set.
-   */
   public static Context getContextFromAttributes(ExecutionAttributes attributes) {
     return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }

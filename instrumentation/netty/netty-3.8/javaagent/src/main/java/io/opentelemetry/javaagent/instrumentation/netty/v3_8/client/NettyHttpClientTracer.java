@@ -8,9 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -26,20 +23,6 @@ public class NettyHttpClientTracer
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
-  }
-
-  @Override
-  public Scope startScope(Span span, HttpHeaders headers) {
-    if (!headers.contains("amz-sdk-invocation-id")) {
-      return super.startScope(span, headers);
-    } else {
-      // TODO (trask) if we move injection up to aws-sdk layer, and start suppressing nested netty
-      //  spans, do we still need this condition?
-      // AWS calls are often signed, so we can't add headers without breaking the signature.
-      Context context = Context.current().with(span);
-      context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
-      return context.makeCurrent();
-    }
   }
 
   @Override

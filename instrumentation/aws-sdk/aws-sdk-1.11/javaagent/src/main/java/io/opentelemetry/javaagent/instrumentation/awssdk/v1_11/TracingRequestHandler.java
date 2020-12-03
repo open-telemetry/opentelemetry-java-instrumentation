@@ -6,16 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 
 /** Tracing Request Handler. */
 public class TracingRequestHandler extends RequestHandler2 {
@@ -30,28 +29,32 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    Span span = tracer().startSpan(request, requestMeta);
-    Scope scope = tracer().startScope(span, request);
-    request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, scope));
+    Context parentContext = Context.current();
+    if (tracer().shouldStartSpan(parentContext)) {
+      Context context = tracer().startSpan(parentContext, request, requestMeta);
+      Scope scope = context.makeCurrent();
+      request.addHandlerContext(
+          CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new ContextScopePair(context, scope));
+    }
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
     if (scope != null) {
-      request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      tracer().end(scope.getSpan(), response);
+      tracer().end(scope.getContext(), response);
     }
   }
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
-    SpanWithScope scope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
     if (scope != null) {
-      request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
       scope.closeScope();
-      tracer().endExceptionally(scope.getSpan(), response, e);
+      tracer().endExceptionally(scope.getContext(), response, e);
     }
   }
 }

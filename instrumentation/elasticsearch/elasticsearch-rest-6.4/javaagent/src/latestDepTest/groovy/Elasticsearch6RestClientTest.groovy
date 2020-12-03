@@ -85,30 +85,16 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     result.status == "green"
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           name "GET _cluster/health"
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
-            "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key()}" "GET _cluster/health"
-          }
-        }
-        span(1) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
+            "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
           }
         }
       }

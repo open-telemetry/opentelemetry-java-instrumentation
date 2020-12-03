@@ -14,7 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class HttpUrlConnectionTracer
-    extends HttpClientTracer<HttpURLConnection, HttpURLConnection, Integer> {
+    extends HttpClientTracer<HttpURLConnection, HttpURLConnection, HttpUrlResponse> {
 
   private static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
 
@@ -33,8 +33,8 @@ public class HttpUrlConnectionTracer
   }
 
   @Override
-  protected Integer status(Integer status) {
-    return status;
+  protected Integer status(HttpUrlResponse response) {
+    return response.status();
   }
 
   @Override
@@ -43,8 +43,8 @@ public class HttpUrlConnectionTracer
   }
 
   @Override
-  protected String responseHeader(Integer integer, String name) {
-    return null;
+  protected String responseHeader(HttpUrlResponse response, String name) {
+    return response.header(name);
   }
 
   @Override

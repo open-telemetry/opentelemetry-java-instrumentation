@@ -10,6 +10,7 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -39,8 +40,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return qualifiedOperation(awsServiceName, awsOperation);
   }
 
-  public Span startSpan(Request<?> request, RequestMeta requestMeta) {
-    Span span = super.startSpan(request);
+  public Context startSpan(Context parentContext, Request<?> request, RequestMeta requestMeta) {
+    Context context = super.startSpan(parentContext, request, request);
+    Span span = Span.fromContext(context);
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
@@ -58,7 +60,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       span.setAttribute("aws.stream.name", requestMeta.getStreamName());
       span.setAttribute("aws.table.name", requestMeta.getTableName());
     }
-    return span;
+    return context;
   }
 
   @Override

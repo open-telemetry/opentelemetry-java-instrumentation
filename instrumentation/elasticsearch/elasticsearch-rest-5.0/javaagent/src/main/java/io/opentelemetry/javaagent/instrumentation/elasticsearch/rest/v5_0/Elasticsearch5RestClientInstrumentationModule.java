@@ -71,7 +71,6 @@ public class Elasticsearch5RestClientInstrumentationModule extends Instrumentati
       span = tracer().startSpan(null, method + " " + endpoint);
       scope = tracer().startScope(span);
 
-      tracer().onRequest(span, method, endpoint);
       responseListener = new RestResponseListener(responseListener, span);
     }
 
