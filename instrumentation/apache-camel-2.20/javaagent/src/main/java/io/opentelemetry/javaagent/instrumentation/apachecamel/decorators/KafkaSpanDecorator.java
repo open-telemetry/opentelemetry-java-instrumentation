@@ -59,9 +59,9 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     span.setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
 
-    String partition = getValue(exchange, PARTITION, Integer.class);
+    Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
-      span.setAttribute("apache-camel.kafka.partition", partition);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
 
     String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
