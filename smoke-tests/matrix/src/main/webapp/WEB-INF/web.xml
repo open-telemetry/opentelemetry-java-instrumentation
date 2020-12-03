@@ -11,6 +11,10 @@
         <servlet-name>Greeting</servlet-name>
         <servlet-class>com.splunk.opentelemetry.appservers.javaee.GreetingServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>Jsp</servlet-name>
+        <servlet-class>com.splunk.opentelemetry.appservers.javaee.JspServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Headers</servlet-name>
         <url-pattern>/headers</url-pattern>
@@ -18,5 +22,9 @@
     <servlet-mapping>
         <servlet-name>Greeting</servlet-name>
         <url-pattern>/greeting</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Jsp</servlet-name>
+        <url-pattern>/jsp</url-pattern>
     </servlet-mapping>
 </web-app>
