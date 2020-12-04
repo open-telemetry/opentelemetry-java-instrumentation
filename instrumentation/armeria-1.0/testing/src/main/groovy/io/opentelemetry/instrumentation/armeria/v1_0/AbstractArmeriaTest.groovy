@@ -58,15 +58,15 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
           errored code != 200
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             // TODO(anuraaga): peer name shouldn't be set to IP
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
-            "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "http"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}${path}"
+            "${SemanticAttributes.HTTP_METHOD.key}" method.name()
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" code
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "http"
           }
         }
         span(1) {
@@ -78,14 +78,14 @@ abstract class AbstractArmeriaTest extends InstrumentationSpecification {
             errorEvent(IllegalStateException, "illegal")
           }
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "${server.httpUri()}${path}"
-            "${SemanticAttributes.HTTP_METHOD.key()}" method.name()
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" code
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "h2c"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}${path}"
+            "${SemanticAttributes.HTTP_METHOD.key}" method.name()
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" code
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "h2c"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
       }

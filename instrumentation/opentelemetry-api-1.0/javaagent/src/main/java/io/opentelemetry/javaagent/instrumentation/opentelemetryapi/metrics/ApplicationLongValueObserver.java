@@ -76,6 +76,14 @@ class ApplicationLongValueObserver implements LongValueObserver {
     }
 
     @Override
+    public LongValueObserver.Builder setCallback(Callback<LongResult> callback) {
+      agentBuilder.setCallback(
+          result ->
+              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+      return this;
+    }
+
+    @Override
     public LongValueObserver build() {
       return new ApplicationLongValueObserver(agentBuilder.build());
     }

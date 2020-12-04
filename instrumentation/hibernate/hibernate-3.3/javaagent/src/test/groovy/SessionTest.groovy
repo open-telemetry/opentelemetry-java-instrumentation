@@ -64,11 +64,11 @@ class SessionTest extends AbstractHibernateTest {
             kind CLIENT
             childOf span(1)
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-              "${SemanticAttributes.DB_NAME.key()}" "db1"
-              "${SemanticAttributes.DB_USER.key()}" "sa"
-              "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-              "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+              "${SemanticAttributes.DB_NAME.key}" "db1"
+              "${SemanticAttributes.DB_USER.key}" "sa"
+              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
             }
           }
           span(3) {
@@ -139,11 +139,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(2)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
       }
@@ -205,11 +205,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(3) {
@@ -223,11 +223,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(3)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
       }
@@ -337,11 +337,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(2)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
       }
@@ -409,11 +409,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(3) {
@@ -496,11 +496,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(4)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^insert /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(6) {
@@ -508,11 +508,11 @@ class SessionTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(4)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^delete /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(7) {

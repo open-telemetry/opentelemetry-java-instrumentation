@@ -98,8 +98,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           errored true
           errorEvent IndexNotFoundException, "no such index"
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -147,8 +147,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "CreateIndexAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -160,8 +160,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "ClusterHealthAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "ClusterHealthAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -172,8 +172,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "SearchAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -186,8 +186,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "IndexAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -204,8 +204,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "PutMappingAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -216,8 +216,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "RefreshAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -232,8 +232,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "SearchAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -310,8 +310,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           name "SearchAction"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

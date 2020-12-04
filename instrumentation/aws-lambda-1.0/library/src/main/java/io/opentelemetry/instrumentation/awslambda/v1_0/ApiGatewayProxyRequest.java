@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,20 +20,24 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 abstract class ApiGatewayProxyRequest {
 
-  private static boolean noHttpPropagationNeeded() {
-    List<String> fields = OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
-    return (fields.isEmpty() || xrayPropagationFieldsOnly(fields));
+  private static final boolean noHttpPropagationNeeded;
+
+  static {
+    Collection<String> fields =
+        OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
+    noHttpPropagationNeeded = fields.isEmpty() || xrayPropagationFieldsOnly(fields);
   }
 
-  private static boolean xrayPropagationFieldsOnly(List<String> fields) {
+  private static boolean xrayPropagationFieldsOnly(Collection<String> fields) {
     // ugly but faster than typical convert-to-set-and-check-contains-only
     return (fields.size() == 1)
-        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(fields.get(0)));
+        && (ParentContextExtractor.AWS_TRACE_HEADER_PROPAGATOR_KEY.equalsIgnoreCase(
+            fields.iterator().next()));
   }
 
   static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
 
-    if (noHttpPropagationNeeded()) {
+    if (noHttpPropagationNeeded) {
       return new NoopRequest(source);
     }
 

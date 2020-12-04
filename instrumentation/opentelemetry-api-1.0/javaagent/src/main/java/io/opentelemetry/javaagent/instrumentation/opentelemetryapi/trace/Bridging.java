@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.opentelemetry.api.common.AttributeConsumer;
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.trace.Span;
@@ -107,13 +106,11 @@ public class Bridging {
     final io.opentelemetry.api.common.AttributesBuilder agentAttributes =
         io.opentelemetry.api.common.Attributes.builder();
     applicationAttributes.forEach(
-        new AttributeConsumer() {
-          @Override
-          public <T> void accept(AttributeKey<T> key, T value) {
-            io.opentelemetry.api.common.AttributeKey<T> agentKey = toAgent(key);
-            if (agentKey != null) {
-              agentAttributes.put(agentKey, value);
-            }
+        (key, value) -> {
+          @SuppressWarnings({"unchecked", "rawtypes"})
+          io.opentelemetry.api.common.AttributeKey agentKey = toAgent(key);
+          if (agentKey != null) {
+            agentAttributes.put(agentKey, value);
           }
         });
     return agentAttributes.build();
@@ -121,34 +118,25 @@ public class Bridging {
 
   // TODO optimize this by storing shaded AttributeKey inside of application AttributeKey instead of
   // creating every time
-  @SuppressWarnings("unchecked")
-  public static <T> io.opentelemetry.api.common.AttributeKey<T> toAgent(
-      AttributeKey<T> applicationKey) {
+  @SuppressWarnings({"rawtypes"})
+  public static io.opentelemetry.api.common.AttributeKey toAgent(AttributeKey applicationKey) {
     switch (applicationKey.getType()) {
       case STRING:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.stringKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.stringKey(applicationKey.getKey());
       case BOOLEAN:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.booleanKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.booleanKey(applicationKey.getKey());
       case LONG:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.longKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.longKey(applicationKey.getKey());
       case DOUBLE:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.doubleKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.doubleKey(applicationKey.getKey());
       case STRING_ARRAY:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.stringArrayKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.stringArrayKey(applicationKey.getKey());
       case BOOLEAN_ARRAY:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.booleanArrayKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.booleanArrayKey(applicationKey.getKey());
       case LONG_ARRAY:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
-        return (io.opentelemetry.api.common.AttributeKey<T>)
-            io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
+        return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
       default:
         log.debug("unexpected attribute key type: {}", applicationKey.getType());
         return null;
