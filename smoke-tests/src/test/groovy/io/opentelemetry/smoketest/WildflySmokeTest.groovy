@@ -5,35 +5,38 @@
 
 package io.opentelemetry.smoketest
 
-
 import okhttp3.Request
 
-class WildflySmokeTest extends SmokeTest {
+class WildflySmokeTest extends AppServerTest {
 
-  protected String getTargetImage(int jdk) {
-    "jboss/wildfly:latest"
+  protected String getTargetImage(int jdk, String serverVersion) {
+    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk"
   }
 
-  //We don't have support for Wildfly Undertow server yet.
-  //So this test just verifies that Wildfly has come up.
-  def "wildfly smoke test"() {
+  def "JSP smoke test on WildFly"() {
     setup:
-    startTarget(11) // does not actually matter
-    String url = "http://localhost:${target.getMappedPort(8080)}"
+    startTarget(11, "21.0.0.Final")
+    String url = "http://localhost:${target.getMappedPort(8080)}/jsp"
     def request = new Request.Builder().url(url).get().build()
 
     when:
     def response = CLIENT.newCall(request).execute()
+    TraceInspector traces = new TraceInspector(waitForTraces())
+    Set<String> traceIds = traces.traceIds
+    String responseBody = response.body().string()
 
     then:
-    def responseBodyStr = response.body().string()
-    responseBodyStr != null
-    responseBodyStr.contains("Your WildFly instance is running.")
-    response.body().contentType().toString().contains("text/html")
-    response.code() == 200
-
-    cleanup:
-    stopTarget()
+    response.successful
+    responseBody.contains("Successful JSP test")
   }
 
+  @Override
+  List<List<Object>> getTestParams() {
+    //TODO introduce new configuration parameter to run all permutations of appServer/jdk
+    return [
+      ["13.0.0.Final", 8],
+      ["17.0.1.Final", 11],
+      ["21.0.0.Final", 11]
+    ]
+  }
 }
