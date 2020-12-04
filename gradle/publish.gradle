@@ -4,12 +4,18 @@ apply plugin: 'signing'
 publishing {
   repositories {
     maven {
-      url = version.toString().contains('SNAPSHOT')
-        ? "https://oss.jfrog.org/artifactory/oss-snapshot-local/"
-        : "https://api.bintray.com/maven/open-telemetry/maven/opentelemetry-java-instrumentation/"
-      credentials {
-        username = System.getenv('BINTRAY_USER')
-        password = System.getenv('BINTRAY_API_KEY')
+      if (version.toString().contains('SNAPSHOT')) {
+        url = "https://oss.jfrog.org/artifactory/oss-snapshot-local/"
+        credentials {
+          username = System.getenv('BINTRAY_USER')
+          password = System.getenv('BINTRAY_API_KEY')
+        }
+      } else {
+        url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        credentials {
+          username = System.getenv('SONATYPE_USER')
+          password = System.getenv('SONATYPE_KEY')
+        }
       }
     }
   }
