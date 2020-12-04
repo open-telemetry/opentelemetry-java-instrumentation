@@ -19,10 +19,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -126,26 +127,46 @@ public class SessionInstrumentation implements TypeInstrumentation {
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startMethod(
+    public static void startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
-        @Advice.Argument(0) Object entity) {
+        @Advice.Argument(0) Object entity,
+        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelScope") Scope scope) {
 
-      boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
       ContextStore<SharedSessionContract, Context> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Context.class);
-      return SessionMethodUtils.startScopeFrom(
-          contextStore, session, "Session." + name, entity, startSpan);
+      Context sessionContext = contextStore.get(session);
+
+      if (sessionContext == null) {
+        return; // No state found. We aren't in a Session.
+      }
+
+      if (CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class) > 0) {
+        return; // This method call is being traced already.
+      }
+
+      if (!SCOPE_ONLY_METHODS.contains(name)) {
+        Span span = tracer().startSpan(sessionContext, "Session." + name, entity);
+        spanContext = sessionContext.with(span);
+        scope = spanContext.makeCurrent();
+      } else {
+        scope = sessionContext.makeCurrent();
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returned,
-        @Advice.Origin("#m") String name) {
+        @Advice.Origin("#m") String name,
+        @Advice.Local("otelContext") Context spanContext,
+        @Advice.Local("otelScope") Scope scope) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
+      if (scope != null) {
+        scope.close();
+        SessionMethodUtils.end(spanContext, throwable, "Session." + name, returned);
+      }
     }
   }
 

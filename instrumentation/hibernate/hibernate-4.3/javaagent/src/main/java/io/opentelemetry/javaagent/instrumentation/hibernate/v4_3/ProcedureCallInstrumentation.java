@@ -12,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -46,20 +46,33 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startMethod(
-        @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
+    public static void startMethod(
+        @Advice.This ProcedureCall call,
+        @Advice.Origin("#m") String name,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
       ContextStore<ProcedureCall, Context> contextStore =
           InstrumentationContext.get(ProcedureCall.class, Context.class);
 
-      return SessionMethodUtils.startScopeFrom(
-          contextStore, call, "ProcedureCall." + name, call.getProcedureName(), true);
+      context =
+          SessionMethodUtils.startSpanFrom(
+              contextStore, call, "ProcedureCall." + name, call.getProcedureName());
+      if (context != null) {
+        scope = context.makeCurrent();
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+
+      if (scope != null) {
+        scope.close();
+        SessionMethodUtils.end(context, throwable, null, null);
+      }
     }
   }
 }

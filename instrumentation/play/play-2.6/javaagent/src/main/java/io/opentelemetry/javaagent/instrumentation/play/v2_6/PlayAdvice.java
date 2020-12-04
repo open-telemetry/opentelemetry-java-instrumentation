@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.tr
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -19,36 +19,35 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) Request<?> req) {
-    Span span = tracer().startSpan("play.request", Kind.INTERNAL);
-
-    return new SpanWithScope(span, span.makeCurrent());
+  public static void onEnter(
+      @Advice.Argument(0) Request<?> req,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    span = tracer().startSpan("play.request", Kind.INTERNAL);
+    scope = span.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopTraceOnResponse(
-      @Advice.Enter SpanWithScope playControllerScope,
       @Advice.This Object thisAction,
       @Advice.Thrown Throwable throwable,
       @Advice.Argument(0) Request<?> req,
-      @Advice.Return(readOnly = false) Future<Result> responseFuture) {
-    Span playControllerSpan = playControllerScope.getSpan();
-
+      @Advice.Return(readOnly = false) Future<Result> responseFuture,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
     // Call onRequest on return after tags are populated.
-    tracer().updateSpanName(playControllerSpan, req);
+    tracer().updateSpanName(span, req);
 
+    scope.close();
+    // span finished in RequestCompleteCallback
     if (throwable == null) {
       responseFuture.onComplete(
-          new RequestCompleteCallback(playControllerSpan),
-          ((Action<?>) thisAction).executionContext());
+          new RequestCompleteCallback(span), ((Action<?>) thisAction).executionContext());
     } else {
-      tracer().endExceptionally(playControllerSpan, throwable);
+      tracer().endExceptionally(span, throwable);
     }
-    playControllerScope.closeScope();
-    // span finished in RequestCompleteCallback
 
-    Span rootSpan = BaseTracer.getCurrentServerSpan();
     // set the span name on the upstream akka/netty span
-    tracer().updateSpanName(rootSpan, req);
+    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 }
