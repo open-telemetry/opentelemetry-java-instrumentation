@@ -125,7 +125,7 @@ class RabbitMQTest extends AgentTestRunner {
     }
   }
 
-  def "test rabbit consume #messageCount messages"() {
+  def "test rabbit consume #messageCount messages and setTimestamp=#setTimestamp"() {
     setup:
     channel.exchangeDeclare(exchangeName, "direct", false)
     String queueName = (messageCount % 2 == 0) ?
@@ -369,7 +369,7 @@ class RabbitMQTest extends AgentTestRunner {
           "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         }
         if (expectTimestamp) {
-          "record.queue_time_ms" { it instanceof Long && it >= 0 }
+          "rabbitmq.record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
 
         switch (attribute("rabbitmq.command")) {
