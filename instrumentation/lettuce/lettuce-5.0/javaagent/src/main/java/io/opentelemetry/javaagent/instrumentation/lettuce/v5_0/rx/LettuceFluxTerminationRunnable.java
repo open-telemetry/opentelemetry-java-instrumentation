@@ -20,7 +20,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
   private Span span = null;
   private int numResults = 0;
-  private FluxOnSubscribeConsumer onSubscribeConsumer;
+  private final FluxOnSubscribeConsumer onSubscribeConsumer;
 
   public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
@@ -32,9 +32,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
     if (span != null) {
-      span.setAttribute("db.command.results.count", numResults);
+      span.setAttribute("lettuce.command.results.count", numResults);
       if (isCommandCancelled) {
-        span.setAttribute("db.command.cancelled", true);
+        span.setAttribute("lettuce.command.cancelled", true);
       }
       if (throwable == null) {
         tracer().end(span);

@@ -150,7 +150,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       kind INTERNAL
       errored false
       attributes {
-        "view.type" RedirectView.simpleName
+        "spring-webmvc.view.type" RedirectView.simpleName
       }
     }
   }

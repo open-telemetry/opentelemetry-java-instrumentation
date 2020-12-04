@@ -107,9 +107,9 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
           }
         }
         basicSpan(it, 3, "producer callback", span(0))
@@ -197,9 +197,9 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
           }
         }
         basicSpan(it, 3, "producer callback", span(0))
@@ -267,7 +267,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "tombstone" true
+            "${SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE.key}" true
           }
         }
         // CONSUMER span 0
@@ -282,10 +282,10 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
-            "tombstone" true
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE.key}" true
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
           }
         }
       }
@@ -342,7 +342,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" SHARED_TOPIC
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "partition" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
           }
         }
         span(1) {
@@ -356,9 +356,9 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
-            "partition" { it >= 0 }
-            "offset" 0
-            "record.queue_time_ms" { it >= 0 }
+            "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
+            "kafka-clients.offset" 0
+            "kafka-clients.record.queue_time_ms" { it >= 0 }
           }
         }
       }

@@ -44,8 +44,8 @@ public class KafkaStreamsTracer extends BaseTracer {
 
   public void onConsume(Span span, StampedRecord record) {
     if (record != null) {
-      span.setAttribute("partition", record.partition());
-      span.setAttribute("offset", record.offset());
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, record.partition());
+      span.setAttribute("kafka-streams.offset", record.offset());
     }
   }
 

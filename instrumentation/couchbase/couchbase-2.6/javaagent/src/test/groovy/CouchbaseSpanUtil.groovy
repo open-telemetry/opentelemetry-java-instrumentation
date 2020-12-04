@@ -34,7 +34,7 @@ class CouchbaseSpanUtil {
         }
 
         // Because of caching, not all requests hit the server so this tag may be absent
-        "local.address" { it == null || String }
+        "couchbase.local.address" { it == null || String }
 
         // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not
         // We assign a spanName of 'Bucket.query' and this is shared with n1ql queries

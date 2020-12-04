@@ -139,7 +139,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onCancel() {
       try (Scope ignored = span.makeCurrent()) {
         delegate().onCancel();
-        span.setAttribute("canceled", true);
+        span.setAttribute("grpc.canceled", true);
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
         throw e;

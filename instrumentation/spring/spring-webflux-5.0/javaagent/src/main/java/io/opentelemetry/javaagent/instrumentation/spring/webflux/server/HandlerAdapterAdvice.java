@@ -42,7 +42,7 @@ public class HandlerAdapterAdvice {
       }
 
       span.updateName(operationName);
-      span.setAttribute("handler.type", handlerType);
+      span.setAttribute("spring-webflux.handler.type", handlerType);
 
       spanWithScope = new SpanWithScope(span, context.makeCurrent());
     }

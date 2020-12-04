@@ -125,7 +125,7 @@ class RabbitMQTest extends AgentTestRunner {
     }
   }
 
-  def "test rabbit consume #messageCount messages"() {
+  def "test rabbit consume #messageCount messages and setTimestamp=#setTimestamp"() {
     setup:
     channel.exchangeDeclare(exchangeName, "direct", false)
     String queueName = (messageCount % 2 == 0) ?
@@ -326,7 +326,7 @@ class RabbitMQTest extends AgentTestRunner {
     trace.span(index) {
       name spanName
 
-      switch (trace.span(index).attributes.get(AttributeKey.stringKey("amqp.command"))) {
+      switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {
         case "basic.publish":
           kind PRODUCER
           break
@@ -369,30 +369,30 @@ class RabbitMQTest extends AgentTestRunner {
           "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         }
         if (expectTimestamp) {
-          "record.queue_time_ms" { it instanceof Long && it >= 0 }
+          "rabbitmq.record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
 
-        switch (attribute("amqp.command")) {
+        switch (attribute("rabbitmq.command")) {
           case "basic.publish":
-            "amqp.command" "basic.publish"
-            "amqp.routing_key" {
+            "rabbitmq.command" "basic.publish"
+            "rabbitmq.routing_key" {
               it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
             }
-            "amqp.delivery_mode" { it == null || it == 2 }
+            "rabbitmq.delivery_mode" { it == null || it == 2 }
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             break
           case "basic.get":
-            "amqp.command" "basic.get"
+            "rabbitmq.command" "basic.get"
             //TODO why this queue name is not a destination for semantic convention
-            "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
+            "rabbitmq.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" { it == null || it instanceof Long }
             break
           case "basic.deliver":
-            "amqp.command" "basic.deliver"
+            "rabbitmq.command" "basic.deliver"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             break
           default:
-            "amqp.command" { it == null || it == resource }
+            "rabbitmq.command" { it == null || it == resource }
         }
       }
     }

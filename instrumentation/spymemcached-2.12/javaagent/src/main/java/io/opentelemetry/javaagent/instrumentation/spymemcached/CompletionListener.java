@@ -14,8 +14,8 @@ import net.spy.memcached.MemcachedConnection;
 
 public abstract class CompletionListener<T> {
 
-  static final String DB_COMMAND_CANCELLED = "db.command.cancelled";
-  static final String MEMCACHED_RESULT = "memcaced.result";
+  static final String DB_COMMAND_CANCELLED = "lettuce.command.cancelled";
+  static final String MEMCACHED_RESULT = "memcached.result";
   static final String HIT = "hit";
   static final String MISS = "miss";
 

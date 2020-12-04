@@ -207,7 +207,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "db.command.results.count" 157
+            "lettuce.command.results.count" 157
           }
         }
       }
@@ -228,8 +228,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "db.command.cancelled" true
-            "db.command.results.count" 2
+            "lettuce.command.cancelled" true
+            "lettuce.command.results.count" 2
           }
         }
       }

@@ -32,7 +32,7 @@ public class LettuceAsyncBiFunction<T, U extends Throwable, R>
   @Override
   public R apply(T t, Throwable throwable) {
     if (throwable instanceof CancellationException) {
-      span.setAttribute("db.command.cancelled", true);
+      span.setAttribute("lettuce.command.cancelled", true);
       tracer().end(span);
     } else {
       tracer().endExceptionally(span, throwable);

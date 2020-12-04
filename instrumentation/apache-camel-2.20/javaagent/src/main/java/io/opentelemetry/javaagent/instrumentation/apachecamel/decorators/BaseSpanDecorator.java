@@ -92,7 +92,7 @@ class BaseSpanDecorator implements SpanDecorator {
 
   @Override
   public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    span.setAttribute("camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
+    span.setAttribute("apache-camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
   }
 
   @Override

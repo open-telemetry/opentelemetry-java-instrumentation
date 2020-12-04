@@ -33,8 +33,8 @@ public class SpringWebfluxHttpClientTracer
 
   public void onCancel(Context context) {
     Span span = Span.fromContext(context);
-    span.setAttribute("event", "cancelled");
-    span.setAttribute("message", "The subscription was cancelled");
+    span.setAttribute("spring-webflux.event", "cancelled");
+    span.setAttribute("spring-webflux.message", "The subscription was cancelled");
   }
 
   @Override
