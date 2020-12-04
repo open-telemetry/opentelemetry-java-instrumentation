@@ -69,7 +69,7 @@ class RestCamelTest extends AgentTestRunner {
           name "start"
           kind INTERNAL
           attributes {
-            "camel.uri" "direct://start"
+            "apache-camel.uri" "direct://start"
           }
         }
         it.span(1) {
@@ -78,7 +78,7 @@ class RestCamelTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-            "camel.uri" "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"
+            "apache-camel.uri" "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"
           }
         }
         it.span(2) {
@@ -101,14 +101,14 @@ class RestCamelTest extends AgentTestRunner {
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
-            "camel.uri" String
+            "apache-camel.uri" String
           }
         }
         it.span(4) {
           name "moduleUnit"
           kind INTERNAL
           attributes {
-            "camel.uri" "direct://moduleUnit"
+            "apache-camel.uri" "direct://moduleUnit"
           }
         }
       }

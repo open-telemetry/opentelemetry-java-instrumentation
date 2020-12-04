@@ -48,7 +48,7 @@ class MulticastDirectCamelTest extends AgentTestRunner {
           kind INTERNAL
           hasNoParent()
           attributes {
-            "camel.uri" "direct://input"
+            "apache-camel.uri" "direct://input"
           }
         }
         it.span(1) {
@@ -56,7 +56,7 @@ class MulticastDirectCamelTest extends AgentTestRunner {
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
-            "camel.uri" "direct://second"
+            "apache-camel.uri" "direct://second"
           }
         }
         it.span(2) {
@@ -64,7 +64,7 @@ class MulticastDirectCamelTest extends AgentTestRunner {
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
-            "camel.uri" "direct://first"
+            "apache-camel.uri" "direct://first"
           }
         }
       }
