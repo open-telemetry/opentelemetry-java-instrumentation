@@ -24,11 +24,10 @@ public class NoopTracerManagement implements TracerSdkManagement {
   public static void logCannotUseTracerManagementWarning() {
     if (!messageAlreadyLogged.getAndSet(true)) {
       String message =
-          "direct usage of the OpenTelemetry SDK, e.g. using OpenTelemetrySdk.getTracerProvider()"
-              + " instead of OpenTelemetry.getGlobalTracerProvider(), is not supported when running agent"
-              + " (see https://github.com/open-telemetry/opentelemetry-java-instrumentation#troubleshooting"
-              + " for how to run with debug logging, which will log stack trace with this message). "
-              + "Returning a no-op management interface.";
+          "direct usage of the OpenTelemetry SDK, e.g. using OpenTelemetrySdk.getGlobalTracerManagement()"
+              + " is not supported when running agent (see https://github.com/open-telemetry/opentelemetry-java-instrumentation#troubleshooting"
+              + " for how to run with debug logging, which will log stack trace with this message)."
+              + " Returning a no-op management interface.";
       if (log.isDebugEnabled()) {
         log.debug(message, new Exception("stack trace"));
       } else {
