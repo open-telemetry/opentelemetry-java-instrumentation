@@ -21,8 +21,7 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   @Override
   protected String[] additionalHelperClassNames() {
     return new String[] {
-      "io.opentelemetry.javaagent.tooling.Constants",
-      "io.opentelemetry.javaagent.instrumentation.javaclassloader.ClassLoaderInstrumentation$Holder"
+      "io.opentelemetry.javaagent.tooling.Constants"
     };
   }
 

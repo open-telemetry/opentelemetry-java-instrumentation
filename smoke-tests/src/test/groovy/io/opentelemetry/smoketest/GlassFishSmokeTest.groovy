@@ -18,14 +18,14 @@ class GlassFishSmokeTest extends AppServerTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return Map.of("HZ_PHONE_HOME_ENABLED", "false");
+    return ["HZ_PHONE_HOME_ENABLED": "false"]
   }
 
   @Override
   protected WaitStrategy getWaitStrategy() {
     return Wait
       .forLogMessage(".*app was successfully deployed.*", 1)
-      .withStartupTimeout(Duration.ofMinutes(3));
+      .withStartupTimeout(Duration.ofMinutes(3))
   }
 
   @Override

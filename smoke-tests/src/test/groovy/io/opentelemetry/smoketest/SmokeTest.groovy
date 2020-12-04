@@ -94,9 +94,9 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
       .withEnv(extraEnv)
 
-    WaitStrategy waitStrategy = getWaitStrategy();
+    WaitStrategy waitStrategy = getWaitStrategy()
     if (waitStrategy != null) {
-      target = target.waitingFor(waitStrategy);
+      target = target.waitingFor(waitStrategy)
     }
 
     target.start()
@@ -104,7 +104,7 @@ abstract class SmokeTest extends Specification {
   }
 
   protected WaitStrategy getWaitStrategy() {
-    return null;
+    return null
   }
 
   def cleanup() {

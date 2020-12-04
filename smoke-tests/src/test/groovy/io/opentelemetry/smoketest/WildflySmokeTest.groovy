@@ -23,7 +23,6 @@ class WildflySmokeTest extends AppServerTest {
     when:
     def response = CLIENT.newCall(request).execute()
     TraceInspector traces = new TraceInspector(waitForTraces())
-    Set<String> traceIds = traces.traceIds
     String responseBody = response.body().string()
 
     then:
