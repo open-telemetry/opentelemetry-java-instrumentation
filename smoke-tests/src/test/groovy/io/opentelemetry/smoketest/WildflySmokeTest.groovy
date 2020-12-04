@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest
 
+import io.opentelemetry.proto.trace.v1.Span
 import okhttp3.Request
 
 class WildflySmokeTest extends AppServerTest {
@@ -28,6 +29,11 @@ class WildflySmokeTest extends AppServerTest {
     then:
     response.successful
     responseBody.contains("Successful JSP test")
+
+    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
+
+    traces.countSpansByName('/jsp') == 1
+
   }
 
   @Override
