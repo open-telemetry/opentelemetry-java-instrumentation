@@ -5,7 +5,7 @@
 
 package test
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -142,7 +142,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -186,7 +186,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "CallCreator.create"
-          kind INTERNAL
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
@@ -252,7 +252,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           childOf(span(0))
           errored false
           attributes {
@@ -334,7 +334,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           childOf(span(0))
           errored false
           attributes {
@@ -413,7 +413,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -423,20 +423,8 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind INTERNAL
+          kind CLIENT
           childOf(span(0))
-          errored false
-          attributes {
-            "twilio.type" "com.twilio.rest.api.v2010.account.Message"
-            "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
-            "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name "MessageCreator.create"
-          kind INTERNAL
-          childOf(span(1))
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -484,7 +472,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
@@ -512,7 +500,7 @@ class TwilioClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           hasNoParent()
           errored false
           attributes {
@@ -556,7 +544,7 @@ class TwilioClientTest extends AgentTestRunner {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored false
@@ -566,18 +554,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind INTERNAL
-          errored false
-          attributes {
-            "twilio.type" "com.twilio.rest.api.v2010.account.Message"
-            "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
-            "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            "twilio.status" "sent"
-          }
-        }
-        span(2) {
-          name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           errored false
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
@@ -627,7 +604,7 @@ class TwilioClientTest extends AgentTestRunner {
     expect:
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name "test"
           errored true
@@ -636,13 +613,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           name "MessageCreator.createAsync"
-          kind INTERNAL
-          errored true
-          errorEvent(ApiException, "Testing Failure")
-        }
-        span(2) {
-          name "MessageCreator.create"
-          kind INTERNAL
+          kind CLIENT
           errored true
           errorEvent(ApiException, "Testing Failure")
         }
