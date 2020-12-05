@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -13,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -70,26 +71,26 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
     public static void onEnter(
         @Advice.Argument(0) Action action,
         @Advice.Argument(1) ActionRequest actionRequest,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      span = tracer().startSpan(null, action);
-      scope = tracer().startScope(span);
-      tracer().onRequest(span, action.getClass(), actionRequest.getClass());
-      actionListener = new TransportActionListener<>(actionRequest, actionListener, span);
+      context = tracer().startSpan(currentContext(), null, action);
+      scope = context.makeCurrent();
+      tracer().onRequest(context, action.getClass(), actionRequest.getClass());
+      actionListener = new TransportActionListener<>(actionRequest, actionListener, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

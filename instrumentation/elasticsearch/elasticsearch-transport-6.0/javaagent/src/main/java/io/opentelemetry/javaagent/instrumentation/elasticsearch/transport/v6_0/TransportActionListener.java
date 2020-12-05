@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
@@ -30,16 +31,17 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
   private final ActionListener<T> listener;
-  private final Span span;
+  private final Context context;
 
   public TransportActionListener(
-      ActionRequest actionRequest, ActionListener<T> listener, Span span) {
+      ActionRequest actionRequest, ActionListener<T> listener, Context context) {
     this.listener = listener;
-    this.span = span;
+    this.context = context;
     onRequest(actionRequest);
   }
 
   private void onRequest(ActionRequest request) {
+    Span span = Span.fromContext(context);
     if (request instanceof IndicesRequest) {
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
@@ -64,6 +66,8 @@ public class TransportActionListener<T extends ActionResponse> implements Action
 
   @Override
   public void onResponse(T response) {
+    Span span = Span.fromContext(context);
+
     if (response.remoteAddress() != null) {
       NetPeerUtils.INSTANCE.setNetPeer(
           span,
@@ -114,13 +118,13 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
     }
 
-    tracer().end(span);
+    tracer().end(context);
     listener.onResponse(response);
   }
 
   @Override
   public void onFailure(Exception e) {
-    tracer().endExceptionally(span, e);
+    tracer().endExceptionally(context, e);
     listener.onFailure(e);
   }
 }

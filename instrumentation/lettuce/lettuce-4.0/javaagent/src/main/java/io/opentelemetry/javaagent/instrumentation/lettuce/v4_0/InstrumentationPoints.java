@@ -15,6 +15,7 @@ import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -25,27 +26,28 @@ public final class InstrumentationPoints {
 
   public static void afterCommand(
       RedisCommand<?, ?, ?> command,
-      Span span,
+      Context context,
       Throwable throwable,
       AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
             if (ex == null) {
-              tracer().end(span);
+              tracer().end(context);
             } else if (ex instanceof CancellationException) {
+              Span span = Span.fromContext(context);
               span.setAttribute("lettuce.command.cancelled", true);
-              tracer().end(span);
+              tracer().end(context);
             } else {
-              tracer().endExceptionally(span, ex);
+              tracer().endExceptionally(context, ex);
             }
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 

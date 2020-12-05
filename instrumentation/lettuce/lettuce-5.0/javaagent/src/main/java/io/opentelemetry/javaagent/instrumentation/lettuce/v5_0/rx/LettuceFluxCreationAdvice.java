@@ -25,14 +25,14 @@ public class LettuceFluxCreationAdvice {
   public static void monitorSpan(
       @Advice.Enter RedisCommand command, @Advice.Return(readOnly = false) Flux<?> publisher) {
 
-    boolean finishSpanOnClose = !expectsResponse(command);
+    boolean expectsResponse = expectsResponse(command);
     LettuceFluxTerminationRunnable handler =
-        new LettuceFluxTerminationRunnable(command, finishSpanOnClose);
+        new LettuceFluxTerminationRunnable(command, expectsResponse);
     publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
     // don't register extra callbacks to finish the spans if the command being instrumented is one
     // of those that return
     // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
-    if (!finishSpanOnClose) {
+    if (expectsResponse) {
       publisher = publisher.doOnEach(handler);
       publisher = publisher.doOnCancel(handler);
     }
