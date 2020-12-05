@@ -14,7 +14,7 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   static final int NUM_TRIES = 1000
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
 
-  protected String getTargetImage(int jdk) {
+  protected String getTargetImage(int jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201128.1734635"
   }
 

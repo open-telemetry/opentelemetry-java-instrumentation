@@ -27,6 +27,7 @@ dependencies {
 
 test {
   dependsOn ':javaagent:shadowJar'
+  maxParallelForks = 2
 
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
