@@ -5,24 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceDatabaseClientTracer.tracer;
+
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-    return InstrumentationPoints.beforeCommand(command);
+  public static void onEnter(
+      @Advice.Argument(0) RedisCommand<?, ?, ?> command,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    span = tracer().startSpan(null, command);
+    scope = tracer().startScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
       @Advice.Argument(0) RedisCommand<?, ?, ?> command,
-      @Advice.Enter SpanWithScope spanWithScope,
       @Advice.Thrown Throwable throwable,
-      @Advice.Return AsyncCommand<?, ?, ?> asyncCommand) {
-    InstrumentationPoints.afterCommand(command, spanWithScope, throwable, asyncCommand);
+      @Advice.Return AsyncCommand<?, ?, ?> asyncCommand,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    scope.close();
+    InstrumentationPoints.afterCommand(command, span, throwable, asyncCommand);
   }
 }

@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -56,7 +55,7 @@ public class StreamTaskStartInstrumentation implements TypeInstrumentation {
 
       Span span = tracer().startSpan(record);
 
-      holder.setSpanWithScope(new SpanWithScope(span, span.makeCurrent()));
+      holder.set(span, span.makeCurrent());
     }
   }
 }
