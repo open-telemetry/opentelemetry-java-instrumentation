@@ -22,8 +22,8 @@ import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -71,60 +71,61 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
 
   public static class RouteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope nameSpan(
+    public static void nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") Class<?> clazz) {
+        @Advice.FieldValue("clazz") Class<?> clazz,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
       Span serverSpan = BaseTracer.getCurrentServerSpan();
       if (serverSpan != null) {
         serverSpan.updateName(routeInfo.path());
       }
 
-      Span span = tracer().startSpan(clazz);
-
-      return new SpanWithScope(span, span.makeCurrent());
+      span = tracer().startSpan(clazz);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Some<Future<Response>> responseOption) {
+        @Advice.Return Some<Future<Response>> responseOption,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
-      if (spanWithScope == null) {
+      if (scope == null) {
         return;
       }
 
-      Span span = spanWithScope.getSpan();
       if (throwable != null) {
+        scope.close();
         tracer().endExceptionally(span, throwable);
-        spanWithScope.closeScope();
         return;
       }
 
-      responseOption.get().addEventListener(new Listener(spanWithScope));
+      responseOption.get().addEventListener(new Listener(span, scope));
     }
   }
 
   public static class Listener implements FutureEventListener<Response> {
-    private final SpanWithScope spanWithScope;
+    private final Span span;
+    private final Scope scope;
 
-    public Listener(SpanWithScope spanWithScope) {
-      this.spanWithScope = spanWithScope;
+    public Listener(Span span, Scope scope) {
+      this.span = span;
+      this.scope = scope;
     }
 
     @Override
     public void onSuccess(Response response) {
-      Span span = spanWithScope.getSpan();
+      scope.close();
       tracer().end(span);
-      spanWithScope.closeScope();
     }
 
     @Override
     public void onFailure(Throwable cause) {
-      Span span = spanWithScope.getSpan();
+      scope.close();
       tracer().endExceptionally(span, cause);
-      spanWithScope.closeScope();
     }
   }
 }

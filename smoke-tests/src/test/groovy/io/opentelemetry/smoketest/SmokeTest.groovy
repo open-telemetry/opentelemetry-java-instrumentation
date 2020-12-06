@@ -25,6 +25,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.output.ToStringConsumer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.wait.strategy.WaitStrategy
 import org.testcontainers.utility.MountableFile
 import spock.lang.Shared
 import spock.lang.Specification
@@ -45,7 +46,7 @@ abstract class SmokeTest extends Specification {
   @Shared
   protected GenericContainer target
 
-  protected abstract String getTargetImage(int jdk)
+  protected abstract String getTargetImage(int jdk, String serverVersion)
 
   /**
    * Subclasses can override this method to customise target application's environment
@@ -79,9 +80,9 @@ abstract class SmokeTest extends Specification {
     collector.start()
   }
 
-  def startTarget(int jdk) {
+  def startTarget(int jdk, String serverVersion = null) {
     def output = new ToStringConsumer()
-    target = new GenericContainer<>(getTargetImage(jdk))
+    target = new GenericContainer<>(getTargetImage(jdk, serverVersion))
       .withExposedPorts(8080)
       .withNetwork(network)
       .withLogConsumer(output)
@@ -92,8 +93,18 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_BSP_SCHEDULE_DELAY_MILLIS", "10")
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
       .withEnv(extraEnv)
+
+    WaitStrategy waitStrategy = getWaitStrategy()
+    if (waitStrategy != null) {
+      target = target.waitingFor(waitStrategy)
+    }
+
     target.start()
     output
+  }
+
+  protected WaitStrategy getWaitStrategy() {
+    return null
   }
 
   def cleanup() {

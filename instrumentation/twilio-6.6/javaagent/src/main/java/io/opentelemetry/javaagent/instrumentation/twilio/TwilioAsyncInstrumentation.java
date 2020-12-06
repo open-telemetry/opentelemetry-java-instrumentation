@@ -22,8 +22,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -75,52 +75,48 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.This Object that, @Advice.Origin("#m") String methodName) {
+    public static void methodEnter(
+        @Advice.This Object that,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
       // case of async operations where we want visibility into how long the task was delayed from
       // starting. Our call depth checker does not span threads, so the async case is handled
       // automatically for us.
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Twilio.class);
-      if (callDepth > 0) {
-        return null;
+      if (CallDepthThreadLocalMap.incrementCallDepth(Twilio.class) > 0) {
+        return;
       }
 
       // Don't automatically close the span with the scope if we're executing an async method
-      Span span = tracer().startSpan(that, methodName);
-
-      return new SpanWithScope(span, tracer().startScope(span));
+      span = tracer().startSpan(that, methodName);
+      scope = tracer().startScope(span);
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return ListenableFuture<?> response) {
-      if (spanWithScope == null) {
+        @Advice.Return ListenableFuture<?> response,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(Twilio.class);
 
-      // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
-      try {
-        Span span = spanWithScope.getSpan();
-
-        if (throwable != null) {
-          // There was an synchronous error,
-          // which means we shouldn't wait for a callback to close the span.
-          tracer().endExceptionally(span, throwable);
-        } else {
-          // We're calling an async operation, we still need to finish the span when it's
-          // complete and report the results; set an appropriate callback
-          Futures.addCallback(
-              response, new SpanFinishingCallback<>(span), Twilio.getExecutorService());
-        }
-      } finally {
-        spanWithScope.closeScope();
-        // span finished in SpanFinishingCallback
+      // span finished in SpanFinishingCallback
+      scope.close();
+      if (throwable != null) {
+        // There was an synchronous error,
+        // which means we shouldn't wait for a callback to close the span.
+        tracer().endExceptionally(span, throwable);
+      } else {
+        // We're calling an async operation, we still need to finish the span when it's
+        // complete and report the results; set an appropriate callback
+        Futures.addCallback(
+            response, new SpanFinishingCallback<>(span), Twilio.getExecutorService());
       }
     }
   }

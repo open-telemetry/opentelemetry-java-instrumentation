@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -48,24 +48,33 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
   public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startMethod(
-        @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
+    public static void startMethod(
+        @Advice.This Criteria criteria,
+        @Advice.Origin("#m") String name,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
       ContextStore<Criteria, Context> contextStore =
           InstrumentationContext.get(Criteria.class, Context.class);
 
-      return SessionMethodUtils.startScopeFrom(
-          contextStore, criteria, "Criteria." + name, null, true);
+      context = SessionMethodUtils.startSpanFrom(contextStore, criteria, "Criteria." + name, null);
+      if (context != null) {
+        scope = context.makeCurrent();
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object entity,
-        @Advice.Origin("#m") String name) {
+        @Advice.Origin("#m") String name,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, "Criteria." + name, entity);
+      if (scope != null) {
+        SessionMethodUtils.end(context, throwable, "Criteria." + name, entity);
+        scope.close();
+      }
     }
   }
 }

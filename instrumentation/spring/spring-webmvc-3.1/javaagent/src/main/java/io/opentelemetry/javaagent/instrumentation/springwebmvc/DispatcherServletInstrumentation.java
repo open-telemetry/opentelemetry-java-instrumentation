@@ -14,8 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.List;
@@ -84,21 +84,25 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) ModelAndView mv) {
-      Span span = tracer().startSpan(mv);
-      return new SpanWithScope(span, span.makeCurrent());
+    public static void onEnter(
+        @Advice.Argument(0) ModelAndView mv,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      span = tracer().startSpan(mv);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      Span span = spanWithScope.getSpan();
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      scope.close();
       if (throwable == null) {
         tracer().end(span);
       } else {
         tracer().endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
     }
   }
 

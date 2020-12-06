@@ -17,8 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -63,31 +63,34 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope nameSpan(@Advice.This Object target, @Advice.Origin Method method) {
+    public static void nameSpan(
+        @Advice.This Object target,
+        @Advice.Origin Method method,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
-        return null;
+        return;
       }
-
-      Span span = tracer().startSpan(target.getClass(), method);
-
-      return new SpanWithScope(span, span.makeCurrent());
+      span = tracer().startSpan(target.getClass(), method);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(Path.class);
 
-      Span span = spanWithScope.getSpan();
+      scope.close();
       if (throwable == null) {
         tracer().end(span);
       } else {
         tracer().endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
     }
   }
 }

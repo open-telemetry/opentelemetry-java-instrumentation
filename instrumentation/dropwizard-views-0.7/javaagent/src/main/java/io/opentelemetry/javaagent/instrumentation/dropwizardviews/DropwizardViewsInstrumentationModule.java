@@ -18,8 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -65,27 +65,30 @@ public class DropwizardViewsInstrumentationModule extends InstrumentationModule 
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(0) View view) {
-      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        return null;
+    public static void onEnter(
+        @Advice.Argument(0) View view,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
+        span = tracer().startSpan("Render " + view.getTemplateName());
+        scope = span.makeCurrent();
       }
-      Span span = tracer().startSpan("Render " + view.getTemplateName());
-      return new SpanWithScope(span, span.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      Span span = spanWithScope.getSpan();
+      scope.close();
       if (throwable == null) {
         tracer().end(span);
       } else {
         tracer().endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
     }
   }
 }
