@@ -35,7 +35,7 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
 
   @Override
   public void setPropagators(ContextPropagators contextPropagators) {
-    throw new UnsupportedOperationException("To be implemented?");
+    // TODO(anuraaga): Implement this somehow.
   }
 
   @Override

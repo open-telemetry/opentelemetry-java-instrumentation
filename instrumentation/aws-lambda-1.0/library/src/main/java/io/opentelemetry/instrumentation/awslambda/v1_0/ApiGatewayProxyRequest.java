@@ -20,12 +20,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 abstract class ApiGatewayProxyRequest {
 
-  private static final boolean noHttpPropagationNeeded;
-
-  static {
+  // TODO(anuraaga): We should create a RequestFactory type of class instead of evaluating this
+  // for every request.
+  private static boolean noHttpPropagationNeeded() {
     Collection<String> fields =
         OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
-    noHttpPropagationNeeded = fields.isEmpty() || xrayPropagationFieldsOnly(fields);
+    return fields.isEmpty() || xrayPropagationFieldsOnly(fields);
   }
 
   private static boolean xrayPropagationFieldsOnly(Collection<String> fields) {
@@ -37,7 +37,7 @@ abstract class ApiGatewayProxyRequest {
 
   static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
 
-    if (noHttpPropagationNeeded) {
+    if (noHttpPropagationNeeded()) {
       return new NoopRequest(source);
     }
 
