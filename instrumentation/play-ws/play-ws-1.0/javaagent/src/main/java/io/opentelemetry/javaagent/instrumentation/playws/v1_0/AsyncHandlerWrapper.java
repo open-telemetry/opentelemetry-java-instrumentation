@@ -5,27 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
-
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseHeaders;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseStatus;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class AsyncHandlerWrapper implements AsyncHandler {
-  private final AsyncHandler delegate;
-  private final Context context;
-  private final Context parentContext;
+public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
+  private final AsyncHandler<T> delegate;
+  private final HttpClientOperation<Response> operation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler delegate, Context context, Context parentContext) {
+  public AsyncHandlerWrapper(AsyncHandler<T> delegate, HttpClientOperation<Response> operation) {
     this.delegate = delegate;
-    this.context = context;
-    this.parentContext = parentContext;
+    this.operation = operation;
   }
 
   @Override
@@ -48,19 +44,17 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public Object onCompleted() throws Exception {
-    tracer().end(context, builder.build());
-
-    try (Scope scope = parentContext.makeCurrent()) {
+  public T onCompleted() throws Exception {
+    operation.end(builder.build());
+    try (Scope ignored = operation.makeParentCurrent()) {
       return delegate.onCompleted();
     }
   }
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(context, throwable);
-
-    try (Scope scope = parentContext.makeCurrent()) {
+    operation.endExceptionally(throwable);
+    try (Scope ignored = operation.makeParentCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

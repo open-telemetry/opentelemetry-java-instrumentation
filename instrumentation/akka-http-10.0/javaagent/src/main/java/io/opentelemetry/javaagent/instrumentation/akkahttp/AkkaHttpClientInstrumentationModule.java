@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -15,9 +14,9 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -70,7 +69,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -78,15 +77,11 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
 
       // Request is immutable, so we have to assign new value once we update headers
       AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-      context = tracer().startSpan(parentContext, request, headers);
-      scope = context.makeCurrent();
+      operation = tracer().startOperation(request, headers);
+      scope = operation.makeCurrent();
       request = headers.getRequest();
     }
 
@@ -96,34 +91,30 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
         @Advice.This HttpExt thiz,
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
       if (throwable == null) {
-        responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
+        responseFuture.onComplete(new OnCompleteHandler(operation), thiz.system().dispatcher());
       } else {
-        tracer().endExceptionally(context, throwable);
+        operation.endExceptionally(throwable);
       }
     }
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final Context context;
+    private final HttpClientOperation<HttpResponse> operation;
 
-    public OnCompleteHandler(Context context) {
-      this.context = context;
+    public OnCompleteHandler(HttpClientOperation<HttpResponse> operation) {
+      this.operation = operation;
     }
 
     @Override
     public Void apply(Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        tracer().end(context, result.get());
+        operation.end(result.get());
       } else {
-        tracer().endExceptionally(context, result.failed().get());
+        operation.endExceptionally(result.failed().get());
       }
       return null;
     }

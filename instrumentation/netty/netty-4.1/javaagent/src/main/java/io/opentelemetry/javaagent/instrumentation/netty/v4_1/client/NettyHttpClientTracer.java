@@ -8,11 +8,19 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +31,30 @@ public class NettyHttpClientTracer
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpResponse> startOperation(ChannelHandlerContext ctx, Object msg) {
+    if (!(msg instanceof HttpRequest)) {
+      return HttpClientOperation.noop();
+    }
+
+    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
+    if (parentContext == null) {
+      parentContext = Context.current();
+    }
+
+    if (!tracer().shouldStartSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
+
+    HttpRequest request = (HttpRequest) msg;
+    Context context = startSpan(parentContext, request, request.headers(), -1);
+
+    // TODO (trask) set this directly in span builder
+    NetPeerUtils.INSTANCE.setNetPeer(
+        Span.fromContext(context), (InetSocketAddress) ctx.channel().remoteAddress());
+
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   @Override

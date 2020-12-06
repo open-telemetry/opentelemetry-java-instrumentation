@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -19,9 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -42,7 +39,8 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("com.google.api.client.http.HttpRequest", Context.class.getName());
+    return singletonMap(
+        "com.google.api.client.http.HttpRequest", HttpClientOperation.class.getName());
   }
 
   @Override
@@ -82,47 +80,31 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
 
-      ContextStore<HttpRequest, Context> contextStore =
-          InstrumentationContext.get(HttpRequest.class, Context.class);
-      context = contextStore.get(request);
-
-      if (context == null) {
-        Context parentContext = currentContext();
-        if (tracer().shouldStartSpan(parentContext)) {
-          context = tracer().startSpan(parentContext, request, request.getHeaders());
-          contextStore.put(request, context);
-          scope = context.makeCurrent();
-        }
-      } else {
-        // span was created by GoogleHttpClientAsyncAdvice instrumentation below
-        scope = context.makeCurrent();
+      ContextStore<HttpRequest, HttpClientOperation> storage =
+          InstrumentationContext.get(HttpRequest.class, HttpClientOperation.class);
+      operation = storage.get(request);
+      if (operation != null) {
+        // this is the synchronous operation inside of an async operation, so make it current
+        // and end it in method exit
+        scope = operation.makeCurrent();
+        return;
       }
+
+      operation = tracer().startOperation(request, request.getHeaders());
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, response);
-      } else {
-        tracer().endExceptionally(context, response, throwable);
-      }
-      // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
-      // for a failed request.  Thus, check the response code
-      if (response != null && !response.isSuccessStatusCode()) {
-        spanFromContext(context).setStatus(StatusCode.ERROR);
-      }
+      operation.endMaybeExceptionally(response, throwable);
     }
   }
 
@@ -131,36 +113,24 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
-
+      operation = tracer().startOperation(request, request.getHeaders());
+      scope = operation.makeCurrent();
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation
-      ContextStore<HttpRequest, Context> contextStore =
-          InstrumentationContext.get(HttpRequest.class, Context.class);
-      contextStore.put(request, context);
-
-      scope = context.makeCurrent();
+      InstrumentationContext.get(HttpRequest.class, HttpClientOperation.class)
+          .put(request, operation);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        operation.endExceptionally(throwable);
       }
     }
   }

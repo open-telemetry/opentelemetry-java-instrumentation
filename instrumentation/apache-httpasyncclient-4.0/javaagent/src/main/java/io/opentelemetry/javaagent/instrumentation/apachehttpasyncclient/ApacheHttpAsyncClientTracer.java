@@ -32,14 +32,19 @@ public class ApacheHttpAsyncClientTracer
     return TRACER;
   }
 
-  public Context startSpan(Context parentContext) {
+  public ApacheAsyncOperation startOperation() {
+    Context parentContext = Context.current();
+    if (!shouldStartSpan(parentContext)) {
+      return ApacheAsyncOperation.noop();
+    }
     Span span =
         tracer
             .spanBuilder(DEFAULT_SPAN_NAME)
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return new DefaultApacheAsyncOperation(context, parentContext);
   }
 
   @Override

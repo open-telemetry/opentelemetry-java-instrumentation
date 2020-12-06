@@ -12,6 +12,8 @@ import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,8 +42,16 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return qualifiedOperation(awsServiceName, awsOperation);
   }
 
-  public Context startSpan(Context parentContext, Request<?> request, RequestMeta requestMeta) {
-    Context context = super.startSpan(parentContext, request, request);
+  public HttpClientOperation<Response<?>> startOperation(
+      Request<?> request, RequestMeta requestMeta) {
+
+    Context parentContext = Context.current();
+    if (!shouldStartSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
+    Context context = startSpan(parentContext, request, request, -1);
+
+    // TODO (trask) add these attributes directly in span builder
     Span span = Span.fromContext(context);
 
     String awsServiceName = request.getServiceName();
@@ -60,7 +70,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       span.setAttribute("aws.stream.name", requestMeta.getStreamName());
       span.setAttribute("aws.table.name", requestMeta.getTableName());
     }
-    return context;
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   @Override

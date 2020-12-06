@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class ChannelTraceContext {
   public static class Factory implements ContextStore.Factory<ChannelTraceContext> {
@@ -20,8 +22,8 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
-  private Context clientParentContext;
-  private Context context;
+  private HttpClientOperation<HttpResponse> operation; // used for client instrumentation
+  private Context context; // used for server instrumentation
 
   public Context getConnectionContext() {
     return connectionContext;
@@ -31,12 +33,12 @@ public class ChannelTraceContext {
     this.connectionContext = connectionContinuation;
   }
 
-  public Context getClientParentContext() {
-    return clientParentContext;
+  public HttpClientOperation<HttpResponse> getOperation() {
+    return operation;
   }
 
-  public void setClientParentContext(Context clientParentContext) {
-    this.clientParentContext = clientParentContext;
+  public void setOperation(HttpClientOperation<HttpResponse> operation) {
+    this.operation = operation;
   }
 
   public Context getContext() {
@@ -57,12 +59,11 @@ public class ChannelTraceContext {
     }
     ChannelTraceContext other = (ChannelTraceContext) obj;
     return Objects.equals(connectionContext, other.connectionContext)
-        && Objects.equals(clientParentContext, other.clientParentContext)
-        && Objects.equals(context, other.context);
+        && Objects.equals(operation, other.operation);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionContext, clientParentContext, context);
+    return Objects.hash(connectionContext, operation);
   }
 }

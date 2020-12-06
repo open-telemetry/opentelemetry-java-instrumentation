@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -15,8 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -68,31 +67,20 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This ClientInvocation invocation,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (tracer().shouldStartSpan(parentContext)) {
-        context = tracer().startSpan(parentContext, invocation, invocation);
-        scope = context.makeCurrent();
-      }
+      operation = tracer().startOperation(invocation, invocation);
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context, response);
-      }
+      operation.endMaybeExceptionally(response, throwable);
     }
   }
 }

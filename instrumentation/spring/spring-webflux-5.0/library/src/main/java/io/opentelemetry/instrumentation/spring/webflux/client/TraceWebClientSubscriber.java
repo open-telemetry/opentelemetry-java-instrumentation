@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
-
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;
@@ -22,14 +21,14 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   final reactor.util.context.Context context;
 
-  private final io.opentelemetry.context.Context tracingContext;
+  private final HttpClientOperation<ClientResponse> operation;
 
   public TraceWebClientSubscriber(
       CoreSubscriber<? super ClientResponse> actual,
-      io.opentelemetry.context.Context tracingContext) {
+      HttpClientOperation<ClientResponse> operation) {
     this.actual = actual;
-    this.tracingContext = tracingContext;
     this.context = actual.currentContext();
+    this.operation = operation;
   }
 
   @Override
@@ -39,26 +38,24 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   @Override
   public void onNext(ClientResponse response) {
-    try (Scope ignored = tracingContext.makeCurrent()) {
-      this.actual.onNext(response);
-    } finally {
-      tracer().end(tracingContext, response);
+    operation.end(response);
+    try (Scope ignored = operation.makeParentCurrent()) {
+      actual.onNext(response);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (Scope ignored = tracingContext.makeCurrent()) {
-      this.actual.onError(t);
-    } finally {
-      tracer().endExceptionally(tracingContext, t);
+    operation.endExceptionally(t);
+    try (Scope ignored = operation.makeParentCurrent()) {
+      actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignored = tracingContext.makeCurrent()) {
-      this.actual.onComplete();
+    try (Scope ignored = operation.makeParentCurrent()) {
+      actual.onComplete();
     }
   }
 

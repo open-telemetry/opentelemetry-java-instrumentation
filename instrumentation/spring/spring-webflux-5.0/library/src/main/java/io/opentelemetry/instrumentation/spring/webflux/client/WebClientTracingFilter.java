@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -49,22 +49,17 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
-      Context parentContext = Context.current();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
       ClientRequest.Builder builder = ClientRequest.from(request);
-      Context context = tracer().startSpan(parentContext, request, builder);
-      try (Scope ignored = context.makeCurrent()) {
+      HttpClientOperation<ClientResponse> operation = tracer().startOperation(request, builder);
+      try (Scope ignored = operation.makeCurrent()) {
         this.next
             .exchange(builder.build())
             .doOnCancel(
                 () -> {
-                  tracer().onCancel(context);
-                  tracer().end(context);
+                  tracer().onCancel(operation.getSpan());
+                  operation.end(null);
                 })
-            .subscribe(new TraceWebClientSubscriber(subscriber, context));
+            .subscribe(new TraceWebClientSubscriber(subscriber, operation));
       }
     }
   }

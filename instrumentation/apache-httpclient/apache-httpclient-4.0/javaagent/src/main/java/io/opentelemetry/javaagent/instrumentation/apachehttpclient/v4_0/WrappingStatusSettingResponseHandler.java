@@ -5,28 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
-
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 
-public class WrappingStatusSettingResponseHandler implements ResponseHandler {
-  final Context context;
-  final ResponseHandler handler;
+public class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
+  final HttpClientOperation<HttpResponse> operation;
+  final ResponseHandler<T> handler;
 
-  public WrappingStatusSettingResponseHandler(Context context, ResponseHandler handler) {
-    this.context = context;
+  public static <T> WrappingStatusSettingResponseHandler<T> of(
+      HttpClientOperation<HttpResponse> operation, ResponseHandler<T> handler) {
+    return new WrappingStatusSettingResponseHandler<>(operation, handler);
+  }
+
+  public WrappingStatusSettingResponseHandler(
+      HttpClientOperation<HttpResponse> operation, ResponseHandler<T> handler) {
+    this.operation = operation;
     this.handler = handler;
   }
 
   @Override
-  public Object handleResponse(HttpResponse response) throws IOException {
-    if (context != null) {
-      tracer().onResponse(Span.fromContext(context), response);
-    }
+  public T handleResponse(HttpResponse response) throws IOException {
+    // TODO (trask) suppress second call to end
+    operation.end(response);
     return handler.handleResponse(response);
   }
 }

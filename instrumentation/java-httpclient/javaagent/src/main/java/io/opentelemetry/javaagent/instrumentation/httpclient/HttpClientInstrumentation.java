@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -17,8 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -72,33 +71,20 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
-      scope = context.makeCurrent();
+      operation = tracer().startOperation(httpRequest, httpRequest);
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return HttpResponse<?> result,
+        @Advice.Return HttpResponse<?> response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, result);
-      } else {
-        tracer().endExceptionally(context, result, throwable);
-      }
+      operation.endMaybeExceptionally(response, throwable);
     }
   }
 
@@ -107,32 +93,23 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
-      scope = context.makeCurrent();
+      operation = tracer().startOperation(httpRequest, httpRequest);
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(context, null, throwable);
+        operation.endExceptionally(throwable);
       } else {
-        future = future.whenComplete(new ResponseConsumer(context));
+        future = future.whenComplete(new ResponseConsumer(operation));
       }
     }
   }

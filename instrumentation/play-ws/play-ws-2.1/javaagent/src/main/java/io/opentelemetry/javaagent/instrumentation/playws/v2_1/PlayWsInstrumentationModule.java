@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -18,6 +17,7 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
+import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
@@ -37,29 +37,24 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
-        @Advice.Local("otelContext") Context context) {
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
+        @Advice.Local("otelOperation") HttpClientOperation<Response> operation) {
+      operation = tracer().startOperation(request, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
-            new StreamedAsyncHandlerWrapper(
-                (StreamedAsyncHandler<?>) asyncHandler, context, parentContext);
+            new StreamedAsyncHandlerWrapper<>((StreamedAsyncHandler<?>) asyncHandler, operation);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, context, parentContext);
+        asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, operation);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
-      if (context != null && throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelOperation") HttpClientOperation<Response> operation) {
+      if (throwable != null) {
+        operation.endExceptionally(throwable);
       }
     }
   }

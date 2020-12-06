@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -71,9 +70,9 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
         @Advice.FieldValue("requestContext") ClientRequest context,
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
-        if (prop instanceof Context) {
-          tracer().endExceptionally((Context) prop, throwable);
+        Object operationObj = context.getProperty(ClientTracingFilter.OPERATION_PROPERTY_NAME);
+        if (operationObj instanceof HttpClientOperation) {
+          ((HttpClientOperation<?>) operationObj).endExceptionally(throwable);
         }
       }
     }

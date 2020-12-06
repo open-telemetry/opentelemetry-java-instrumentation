@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -18,8 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -38,7 +37,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class HttpUrlConnectionInstrumentationModule extends InstrumentationModule {
 
   public HttpUrlConnectionInstrumentationModule() {
-    super("httpurlconnection");
+    super("http-url-connection");
   }
 
   @Override
@@ -48,7 +47,9 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
+    return singletonMap(
+        "java.net.HttpURLConnection",
+        "io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionOperation");
   }
 
   public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
@@ -79,75 +80,60 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
   public static class HttpUrlConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HttpUrlState methodEnter(
+    public static void methodEnter(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelOperation") HttpUrlConnectionOperation operation,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
-      if (callDepth > 0) {
-        return null;
+      callDepth = CallDepthThreadLocalMap.getCallDepth(HttpURLConnection.class);
+      if (callDepth.getAndIncrement() > 0) {
+        // only want the rest of the instrumentation rules (which are complex enough) to apply to
+        // top-level HttpURLConnection calls
+        return;
       }
 
-      ContextStore<HttpURLConnection, HttpUrlState> contextStore =
-          InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
-      HttpUrlState state = contextStore.putIfAbsent(connection, HttpUrlState::new);
+      // putting into storage for a couple of reasons:
+      // - to start an operation in connect() and end it in getInputStream()
+      // - to avoid creating new operation on multiple subsequent calls to getInputStream()
+      ContextStore<HttpURLConnection, HttpUrlConnectionOperation> storage =
+          InstrumentationContext.get(HttpURLConnection.class, HttpUrlConnectionOperation.class);
+      operation = storage.get(connection);
 
-      synchronized (state) {
-        if (!state.initialized) {
-          Context parentContext = currentContext();
-          if (tracer().shouldStartSpan(parentContext)) {
-            state.context = tracer().startSpan(parentContext, connection, connection);
-            if (!connected) {
-              scope = state.context.makeCurrent();
-            }
-          }
-          state.initialized = true;
-        }
+      if (operation == null) {
+        operation = tracer().startOperation(connection);
+        storage.put(connection, operation);
       }
-      return state;
+
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter HttpUrlState state,
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelOperation") HttpUrlConnectionOperation operation,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
-      if (scope != null) {
-        scope.close();
-      }
-      if (state == null) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CallDepthThreadLocalMap.reset(HttpURLConnection.class);
+      scope.close();
 
-      synchronized (state) {
-        if (state.context != null && !state.finished) {
-          if (throwable != null) {
-            tracer().endExceptionally(state.context, throwable);
-            state.finished = true;
-          } else if ("getInputStream".equals(methodName)) {
-            // responseCode field is sometimes not populated.
-            // We can't call getResponseCode() due to some unwanted side-effects
-            // (e.g. breaks getOutputStream).
-            if (responseCode > 0) {
-              tracer().end(state.context, new HttpUrlResponse(connection, responseCode));
-              state.finished = true;
-            }
-          }
+      if (!operation.finished()) {
+        if (throwable != null) {
+          operation.endExceptionally(throwable);
+        } else if (methodName.equals("getInputStream") && responseCode > 0) {
+          // responseCode field is sometimes not populated.
+          // We can't call getResponseCode() due to some unwanted side-effects
+          // (e.g. breaks getOutputStream).
+          operation.end(new HttpUrlResponse(connection, responseCode));
         }
       }
     }
-  }
-
-  // state is always accessed under synchronized block
-  public static class HttpUrlState {
-    public boolean initialized;
-    public Context context;
-    public boolean finished;
   }
 }

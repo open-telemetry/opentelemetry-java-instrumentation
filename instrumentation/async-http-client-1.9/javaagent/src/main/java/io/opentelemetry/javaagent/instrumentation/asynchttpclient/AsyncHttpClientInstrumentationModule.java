@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.Pair;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,6 @@ public class AsyncHttpClientInstrumentationModule
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("com.ning.http.client.AsyncHandler", Pair.class.getName());
+    return singletonMap("com.ning.http.client.AsyncHandler", HttpClientOperation.class.getName());
   }
 }

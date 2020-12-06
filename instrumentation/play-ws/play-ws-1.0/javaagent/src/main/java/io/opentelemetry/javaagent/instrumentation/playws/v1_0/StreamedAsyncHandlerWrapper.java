@@ -5,22 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import org.reactivestreams.Publisher;
+import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
+import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
-public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
-    implements StreamedAsyncHandler {
-  private final StreamedAsyncHandler streamedDelegate;
+public class StreamedAsyncHandlerWrapper<T> extends AsyncHandlerWrapper<T>
+    implements StreamedAsyncHandler<T> {
+  private final StreamedAsyncHandler<T> streamedDelegate;
 
   public StreamedAsyncHandlerWrapper(
-      StreamedAsyncHandler delegate, Context context, Context parentContext) {
-    super(delegate, context, parentContext);
+      StreamedAsyncHandler<T> delegate, HttpClientOperation<Response> operation) {
+    super(delegate, operation);
     streamedDelegate = delegate;
   }
 
   @Override
-  public State onStream(Publisher publisher) {
+  public State onStream(Publisher<HttpResponseBodyPart> publisher) {
     return streamedDelegate.onStream(publisher);
   }
 }

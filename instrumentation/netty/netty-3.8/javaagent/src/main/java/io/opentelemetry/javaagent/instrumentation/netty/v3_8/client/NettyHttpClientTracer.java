@@ -8,11 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -23,6 +32,36 @@ public class NettyHttpClientTracer
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpResponse> startOperation(
+      ChannelHandlerContext ctx, MessageEvent msg, ChannelTraceContext channelTraceContext) {
+
+    if (!(msg.getMessage() instanceof HttpRequest)) {
+      ctx.sendDownstream(msg);
+      return HttpClientOperation.noop();
+    }
+
+    Context parentContext = channelTraceContext.getConnectionContext();
+    if (parentContext != null) {
+      channelTraceContext.setConnectionContext(null);
+    } else {
+      parentContext = Context.current();
+    }
+
+    if (!tracer().shouldStartSpan(parentContext)) {
+      ctx.sendDownstream(msg);
+      return HttpClientOperation.noop();
+    }
+
+    HttpRequest request = (HttpRequest) msg.getMessage();
+    Context context = startSpan(parentContext, request, request.headers(), -1);
+
+    // TODO (trask) move this setNetPeer() call into the Tracer
+    NetPeerUtils.INSTANCE.setNetPeer(
+        Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   @Override

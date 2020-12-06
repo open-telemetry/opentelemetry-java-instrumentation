@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
-
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import java.net.InetSocketAddress;
 import java.util.List;
 import play.shaded.ahc.io.netty.channel.Channel;
@@ -19,17 +17,15 @@ import play.shaded.ahc.org.asynchttpclient.HttpResponseStatus;
 import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
-public class AsyncHandlerWrapper implements AsyncHandler {
-  private final AsyncHandler delegate;
-  private final Context context;
-  private final Context parentContext;
+public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
+  private final AsyncHandler<T> delegate;
+  private final HttpClientOperation<Response> operation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler delegate, Context context, Context parentContext) {
+  public AsyncHandlerWrapper(AsyncHandler<T> delegate, HttpClientOperation<Response> operation) {
     this.delegate = delegate;
-    this.context = context;
-    this.parentContext = parentContext;
+    this.operation = operation;
   }
 
   @Override
@@ -52,20 +48,18 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public Object onCompleted() throws Exception {
+  public T onCompleted() throws Exception {
     Response response = builder.build();
-    tracer().end(context, response);
-
-    try (Scope ignored = parentContext.makeCurrent()) {
+    operation.end(response);
+    try (Scope ignored = operation.makeParentCurrent()) {
       return delegate.onCompleted();
     }
   }
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(context, throwable);
-
-    try (Scope ignored = parentContext.makeCurrent()) {
+    operation.endExceptionally(throwable);
+    try (Scope ignored = operation.makeParentCurrent()) {
       delegate.onThrowable(throwable);
     }
   }
@@ -81,7 +75,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onHostnameResolutionSuccess(String name, List list) {
+  public void onHostnameResolutionSuccess(String name, List<InetSocketAddress> list) {
     delegate.onHostnameResolutionSuccess(name, list);
   }
 

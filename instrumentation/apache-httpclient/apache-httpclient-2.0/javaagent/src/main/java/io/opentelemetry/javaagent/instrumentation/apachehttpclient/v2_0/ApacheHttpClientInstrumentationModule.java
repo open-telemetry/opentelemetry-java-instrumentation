@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonList;
@@ -17,8 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -67,33 +66,20 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(1) HttpMethod httpMethod,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpMethod> operation,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
-
-      context = tracer().startSpan(parentContext, httpMethod, httpMethod);
-      scope = context.makeCurrent();
+      operation = tracer().startOperation(httpMethod, httpMethod);
+      scope = operation.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(1) HttpMethod httpMethod,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpMethod> operation,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, httpMethod);
-      } else {
-        tracer().endExceptionally(context, httpMethod, throwable);
-      }
+      operation.endMaybeExceptionally(httpMethod, throwable);
     }
   }
 }

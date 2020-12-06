@@ -59,15 +59,33 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super(tracer);
   }
 
-  public boolean shouldStartSpan(Context parentContext) {
+  // if this resulting operation needs to be manually propagated, that should be done outside of
+  // this method
+  public HttpClientOperation<RESPONSE> startOperation(REQUEST request, CARRIER carrier) {
+    return startOperation(request, carrier, -1);
+  }
+
+  // if this resulting operation needs to be manually propagated, that should be done outside of
+  // this method
+  public HttpClientOperation<RESPONSE> startOperation(
+      REQUEST request, CARRIER carrier, long startTimeNanos) {
+    Context parentContext = Context.current();
+    if (!shouldStartSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
+    Context context = startSpan(parentContext, request, carrier, startTimeNanos);
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
+  }
+
+  /** @deprecated use {@link #startOperation(Object, Object)} */
+  @Deprecated
+  protected boolean shouldStartSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  public Context startSpan(Context parentContext, REQUEST request, CARRIER carrier) {
-    return startSpan(parentContext, request, carrier, -1);
-  }
-
-  public Context startSpan(
+  /** @deprecated use {@link #startOperation(Object, Object)} */
+  @Deprecated
+  protected Context startSpan(
       Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
     Span span =
         internalStartSpan(parentContext, request, spanNameForRequest(request), startTimeNanos);
@@ -81,32 +99,44 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return context;
   }
 
+  /** @deprecated use {@link HttpClientOperation#end(Object)} */
+  @Deprecated
   public void end(Context context, RESPONSE response) {
     end(context, response, -1);
   }
 
-  public void end(Context context, RESPONSE response, long endTimeNanos) {
+  /** @deprecated use {@link HttpClientOperation#end(Object)} */
+  @Deprecated
+  void end(Context context, RESPONSE response, long endTimeNanos) {
     Span span = Span.fromContext(context);
     onResponse(span, response);
     super.end(span, endTimeNanos);
   }
 
-  public void end(Context context) {
+  /** @deprecated use {@link HttpClientOperation#end(Object)} */
+  @Deprecated
+  void end(Context context) {
     Span span = Span.fromContext(context);
     super.end(span);
   }
 
-  public void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
+  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
+  @Deprecated
+  void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
     endExceptionally(context, response, throwable, -1);
   }
 
-  public void endExceptionally(
+  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
+  @Deprecated
+  void endExceptionally(
       Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
     Span span = Span.fromContext(context);
     onResponse(span, response);
     super.endExceptionally(span, throwable, endTimeNanos);
   }
 
+  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
+  @Deprecated
   public void endExceptionally(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
     super.endExceptionally(span, throwable, -1);
