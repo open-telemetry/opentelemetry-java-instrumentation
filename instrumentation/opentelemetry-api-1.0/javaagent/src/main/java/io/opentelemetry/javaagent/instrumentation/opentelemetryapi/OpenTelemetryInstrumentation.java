@@ -34,6 +34,11 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   public static class GetGlobalOpenTelemetryAdvice {
 
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    public static Object onEnter() {
+      return null;
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
