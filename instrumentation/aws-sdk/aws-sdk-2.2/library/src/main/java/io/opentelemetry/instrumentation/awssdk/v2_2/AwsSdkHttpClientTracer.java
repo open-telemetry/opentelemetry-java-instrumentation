@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -77,15 +78,9 @@ final class AwsSdkHttpClientTracer
     return super.onRequest(span, sdkHttpRequest);
   }
 
-  public Span getOrCreateSpan(String name, Tracer tracer, Kind kind) {
+  public Context startSpan(String name, Tracer tracer, Kind kind) {
     io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
-    Span clientSpan = context.get(BaseTracer.CONTEXT_CLIENT_SPAN_KEY);
-
-    if (clientSpan != null) {
-      // We don't want to create two client spans for a given client call, suppress inner spans.
-      return Span.getInvalid();
-    }
-
-    return tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();
+    Span clientSpan = tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();
+    return context.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
   }
 }

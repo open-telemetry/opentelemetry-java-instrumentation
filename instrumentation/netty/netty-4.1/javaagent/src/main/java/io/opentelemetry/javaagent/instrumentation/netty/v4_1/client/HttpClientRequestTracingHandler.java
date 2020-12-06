@@ -33,7 +33,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       parentContext = Context.current();
     }
 
-    if (!tracer().shouldStartSpan(parentContext)) {
+    if (!tracer().shouldStartSpan(parentContext, request)) {
       ctx.write(msg, prm);
       return;
     }

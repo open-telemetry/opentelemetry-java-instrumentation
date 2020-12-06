@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.Netty
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -63,6 +64,21 @@ public class NettyHttpClientTracer
   @Override
   protected Setter<HttpHeaders> getSetter() {
     return SETTER;
+  }
+
+  public boolean shouldStartSpan(Context parentContext, HttpRequest request) {
+    if (!super.shouldStartSpan(parentContext)) {
+      return false;
+    }
+    // The AWS SDK uses Netty for asynchronous clients. We have not found how to propagate Context
+    // from the SDK instrumentation, which executes on an application thread, to Netty
+    // instrumentation, which executs on event loops. If it's possible, it may require instrumenting
+    // internal classes. Using a header which is more or less guaranteed to always exist is arguably
+    // more stable.
+    if (request.headers().contains("amz-sdk-invocation-id")) {
+      return false;
+    }
+    return true;
   }
 
   @Override
