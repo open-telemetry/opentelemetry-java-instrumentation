@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.BulkGetFuture;
@@ -13,8 +14,9 @@ import net.spy.memcached.internal.BulkGetFuture;
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
     implements net.spy.memcached.internal.BulkGetCompletionListener {
 
-  public BulkGetCompletionListener(MemcachedConnection connection, String methodName) {
-    super(connection, methodName);
+  public BulkGetCompletionListener(
+      Context parentContext, MemcachedConnection connection, String methodName) {
+    super(parentContext, connection, methodName);
   }
 
   @Override

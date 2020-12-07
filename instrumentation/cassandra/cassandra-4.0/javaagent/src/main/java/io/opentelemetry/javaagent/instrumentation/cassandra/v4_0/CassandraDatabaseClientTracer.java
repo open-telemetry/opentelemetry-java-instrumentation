@@ -10,6 +10,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
@@ -48,11 +49,12 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     return null;
   }
 
-  public void onResponse(Span span, ExecutionInfo executionInfo) {
+  public void onResponse(Context context, ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       SocketAddress socketAddress = coordinator.getEndPoint().resolve();
       if (socketAddress instanceof InetSocketAddress) {
+        Span span = Span.fromContext(context);
         NetPeerUtils.INSTANCE.setNetPeer(span, ((InetSocketAddress) socketAddress));
       }
     }
