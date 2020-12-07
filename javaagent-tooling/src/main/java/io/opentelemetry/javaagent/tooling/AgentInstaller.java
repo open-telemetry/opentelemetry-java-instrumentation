@@ -82,7 +82,7 @@ public class AgentInstaller {
       boolean skipAdditionalLibraryMatcher,
       AgentBuilder.Listener... listeners) {
 
-    Iterable<ComponentInstaller> componentInstallers = loadExtensionsProviders();
+    Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
     for (ComponentInstaller componentInstaller : componentInstallers) {
       log.info("Installing component provider {}", componentInstaller.getClass().getName());
       componentInstaller.beforeByteBuddyAgent();
@@ -141,8 +141,6 @@ public class AgentInstaller {
     }
 
     agentBuilder = customizeByteBuddyAgent(agentBuilder);
-    log.debug("Installed {} instrumenter(s)", numInstrumenters);
-    ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
 
     /*
      * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
@@ -186,10 +184,12 @@ public class AgentInstaller {
       }
     }
 
+    log.debug("Installed {} instrumenter(s)", numInstrumenters);
+    ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     return resettableClassFileTransformer;
   }
 
-  private static Iterable<ComponentInstaller> loadExtensionsProviders() {
+  private static Iterable<ComponentInstaller> loadComponentProviders() {
     return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
   }
 

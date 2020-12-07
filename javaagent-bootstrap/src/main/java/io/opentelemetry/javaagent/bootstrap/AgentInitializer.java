@@ -43,26 +43,17 @@ public class AgentInitializer {
     log = LoggerFactory.getLogger(AgentInitializer.class);
   }
 
-  // fields must be managed under class lock
-  private static ClassLoader AGENT_CLASSLOADER = null;
-
-  public static void initialize(Instrumentation inst, URL bootstrapURL) {
-    startAgent(inst, bootstrapURL);
-  }
-
+  // called via reflection from OpenTelemetryAgent
   private static synchronized void startAgent(Instrumentation inst, URL bootstrapUrl) {
-    if (AGENT_CLASSLOADER == null) {
-      try {
-        ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
-        Class<?> agentInstallerClass =
-            agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
-        Method agentInstallerMethod =
-            agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
-        agentInstallerMethod.invoke(null, inst);
-        AGENT_CLASSLOADER = agentClassLoader;
-      } catch (Throwable ex) {
-        log.error("Throwable thrown while installing the agent", ex);
-      }
+    try {
+      ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
+      Class<?> agentInstallerClass =
+          agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
+      Method agentInstallerMethod =
+          agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
+      agentInstallerMethod.invoke(null, inst);
+    } catch (Throwable ex) {
+      log.error("Throwable thrown while installing the agent", ex);
     }
   }
 

@@ -60,7 +60,8 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
       // loader,
       // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
       // later
-      Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
+      Thread.currentThread()
+          .setContextClassLoader(OpenTelemetryComponentInstaller.class.getClassLoader());
       OpenTelemetry.getGlobalTracerProvider();
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);

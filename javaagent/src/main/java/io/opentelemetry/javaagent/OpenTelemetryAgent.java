@@ -60,7 +60,7 @@ public class OpenTelemetryAgent {
           ClassLoader.getSystemClassLoader()
               .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
       Method startMethod =
-          agentInitializerClass.getMethod("initialize", Instrumentation.class, URL.class);
+          agentInitializerClass.getMethod("startAgent", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapUrl);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
