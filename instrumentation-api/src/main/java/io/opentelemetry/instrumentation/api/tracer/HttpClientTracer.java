@@ -77,13 +77,11 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
-  /** @deprecated use {@link #startOperation(Object, Object)} */
   @Deprecated
   protected boolean shouldStartSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  /** @deprecated use {@link #startOperation(Object, Object)} */
   @Deprecated
   protected Context startSpan(
       Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
@@ -99,13 +97,11 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return context;
   }
 
-  /** @deprecated use {@link HttpClientOperation#end(Object)} */
   @Deprecated
   public void end(Context context, RESPONSE response) {
     end(context, response, -1);
   }
 
-  /** @deprecated use {@link HttpClientOperation#end(Object)} */
   @Deprecated
   void end(Context context, RESPONSE response, long endTimeNanos) {
     Span span = Span.fromContext(context);
@@ -113,20 +109,17 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.end(span, endTimeNanos);
   }
 
-  /** @deprecated use {@link HttpClientOperation#end(Object)} */
   @Deprecated
   void end(Context context) {
     Span span = Span.fromContext(context);
     super.end(span);
   }
 
-  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
   @Deprecated
   void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
     endExceptionally(context, response, throwable, -1);
   }
 
-  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
   @Deprecated
   void endExceptionally(
       Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
@@ -135,7 +128,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.endExceptionally(span, throwable, endTimeNanos);
   }
 
-  /** @deprecated use {@link HttpClientOperation#endExceptionally(Throwable)} */
   @Deprecated
   public void endExceptionally(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
