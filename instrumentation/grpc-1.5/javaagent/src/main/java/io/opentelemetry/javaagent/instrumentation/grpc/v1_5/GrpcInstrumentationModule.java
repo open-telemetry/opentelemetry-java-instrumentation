@@ -10,7 +10,9 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @AutoService(InstrumentationModule.class)
 public class GrpcInstrumentationModule extends InstrumentationModule {
@@ -22,5 +24,10 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new GrpcClientBuilderBuildInstrumentation(), new GrpcServerBuilderInstrumentation());
+  }
+
+  @Override
+  protected Map<String, String> contextStore() {
+    return Collections.singletonMap("io.grpc.ServerBuilder", Boolean.class.getName());
   }
 }
