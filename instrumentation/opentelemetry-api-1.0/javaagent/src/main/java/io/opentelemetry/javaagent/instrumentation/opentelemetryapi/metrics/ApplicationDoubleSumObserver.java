@@ -77,6 +77,14 @@ class ApplicationDoubleSumObserver implements DoubleSumObserver {
     }
 
     @Override
+    public DoubleSumObserver.Builder setCallback(Callback<DoubleResult> callback) {
+      agentBuilder.setCallback(
+          result ->
+              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+      return this;
+    }
+
+    @Override
     public DoubleSumObserver build() {
       return new ApplicationDoubleSumObserver(agentBuilder.build());
     }

@@ -11,7 +11,7 @@ import okhttp3.Request
 class ZipkinExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201128.1734635"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201204.400701583"
   }
 
   @Override

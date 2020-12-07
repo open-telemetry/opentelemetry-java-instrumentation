@@ -411,18 +411,18 @@ abstract class HttpClientTest extends AgentTestRunner {
         errorEvent(exception.class, exception.message)
       }
       attributes {
-        "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-        "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-        "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_FLAVOR.key()}" httpFlavor
+        "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+        "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
+        "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
+        "${SemanticAttributes.HTTP_METHOD.key}" method
+        "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
         if (userAgent) {
-          "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
+          "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
         }
         if (status) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
+          "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
         }
       }
     }

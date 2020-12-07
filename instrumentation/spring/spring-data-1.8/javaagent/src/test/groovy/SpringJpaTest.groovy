@@ -70,11 +70,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -101,11 +101,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^insert /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -132,11 +132,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
         span(2) { // update
@@ -144,11 +144,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^update /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^update /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -173,11 +173,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -202,11 +202,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
         span(2) { // delete
@@ -214,11 +214,11 @@ class SpringJpaTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^delete /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }

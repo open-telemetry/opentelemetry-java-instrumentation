@@ -98,14 +98,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -157,14 +157,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -213,14 +213,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/post.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/post.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key}" "POST"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -268,24 +268,24 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+              "${SemanticAttributes.EXCEPTION_TYPE.key}" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
             }
           }
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -304,13 +304,13 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key()}" { String tagExceptionType ->
+              "${SemanticAttributes.EXCEPTION_TYPE.key}" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { String tagErrorMsg ->
+              "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
             }
           }
           attributes {
@@ -348,14 +348,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -400,14 +400,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -487,14 +487,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           errored true
           errorEvent(JasperException, String)
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -538,14 +538,14 @@ class JspInstrumentationBasicTests extends AgentTestRunner {
           kind SERVER
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$staticFile"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" "http://localhost:$port/$jspWebappContext/$staticFile"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
       }

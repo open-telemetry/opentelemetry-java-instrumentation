@@ -12,8 +12,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import io.opentelemetry.api.common.AttributeConsumer;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -119,11 +117,8 @@ public class InMemoryExporter implements SpanProcessor {
     final StringBuilder attributes = new StringBuilder();
     sd.getAttributes()
         .forEach(
-            new AttributeConsumer() {
-              @Override
-              public <T> void accept(AttributeKey<T> key, T value) {
-                attributes.append(String.format("Attribute %s=%s", key, value));
-              }
+            (key, value) -> {
+              attributes.append(String.format("Attribute %s=%s", key, value));
             });
     return attributes.toString();
   }

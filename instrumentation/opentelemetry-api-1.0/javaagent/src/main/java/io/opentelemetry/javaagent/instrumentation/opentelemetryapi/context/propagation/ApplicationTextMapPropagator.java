@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.prop
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import java.util.List;
+import java.util.Collection;
 
 class ApplicationTextMapPropagator implements TextMapPropagator {
 
@@ -20,7 +20,7 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
   }
 
   @Override
-  public List<String> fields() {
+  public Collection<String> fields() {
     return agentTextMapPropagator.fields();
   }
 
