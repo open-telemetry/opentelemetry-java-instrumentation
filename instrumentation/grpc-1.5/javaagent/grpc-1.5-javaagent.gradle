@@ -20,7 +20,7 @@ muzzle {
   pass {
     group = "io.grpc"
     module = "grpc-core"
-    versions = "[1.5.0, 1.33.0)" // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1453
+    versions = "[1.5.0,)"
   }
 }
 
@@ -34,12 +34,6 @@ dependencies {
   testLibrary group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
-
-  // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1453
-  latestDepTestLibrary group: 'io.grpc', name: 'grpc-core', version: '1.32.+'
-  latestDepTestLibrary group: 'io.grpc', name: 'grpc-netty', version: '1.32.+'
-  latestDepTestLibrary group: 'io.grpc', name: 'grpc-protobuf', version: '1.32.+'
-  latestDepTestLibrary group: 'io.grpc', name: 'grpc-stub', version: '1.32.+'
 
   testImplementation project(':instrumentation:grpc-1.5:testing')
 }
