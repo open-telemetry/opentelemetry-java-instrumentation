@@ -17,7 +17,7 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer smoke test on JDK #jdk"(String appServer, int jdk) {
     setup:
     startTarget(jdk, appServer)
-    String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
+    String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -37,14 +37,14 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 2
 
     and: "Expected span names"
-    traces.countSpansByName('/greeting') == 1
-    traces.countSpansByName('/headers') == 1
+    traces.countSpansByName('/app/greeting') == 1
+    traces.countSpansByName('/app/headers') == 1
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
 
     and: "Client and server spans for the remote call"
-    traces.countFilteredAttributes("http.url", "http://localhost:8080/headers") == 2
+    traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 2
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
