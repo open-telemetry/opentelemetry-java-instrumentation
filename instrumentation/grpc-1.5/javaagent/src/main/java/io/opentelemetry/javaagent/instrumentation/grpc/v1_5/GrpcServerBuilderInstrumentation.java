@@ -67,7 +67,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         @SuppressWarnings("rawtypes")
         ContextStore<ServerBuilder, Boolean> instrumentationContext =
             InstrumentationContext.get(ServerBuilder.class, Boolean.class);
-        instrumentationContext.put(serverBuilder, true);
+        instrumentationContext.put(serverBuilder, /* alreadyRegistered= */ true);
       }
     }
   }
@@ -78,7 +78,8 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
       ContextStore<ServerBuilder, Boolean> instrumentationContext =
           InstrumentationContext.get(ServerBuilder.class, Boolean.class);
-      if (Boolean.TRUE.equals(instrumentationContext.get(serverBuilder))) {
+      boolean alreadyRegistered = instrumentationContext.get(serverBuilder);
+      if (Boolean.TRUE.equals(alreadyRegistered)) {
         return;
       }
       serverBuilder.intercept(TracingServerInterceptor.newInterceptor());
