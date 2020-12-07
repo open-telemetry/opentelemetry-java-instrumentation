@@ -73,7 +73,7 @@ public class NettyHttpClientTracer
     // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
     // beginning transport. This means we MUST suppress Netty spans we would normally create or
     // they will inject their own trace header, which does not match what was present when the
-    // signature was computed, breaking the SDK request completely We have not found how to
+    // signature was computed, breaking the SDK request completely. We have not found how to
     // cleanly propagate context from the SDK instrumentation, which executes on an application
     // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
     // require instrumenting internal classes. Using a header which is more or less guaranteed to
