@@ -96,7 +96,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     logVersionInfo();
   }
 
-  private synchronized void installExporters(List<String> exporters, Properties config) {
+  private static synchronized void installExporters(List<String> exporters, Properties config) {
     for (String exporterName : exporters) {
       SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
       if (spanExporterFactory != null) {
@@ -121,7 +121,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     }
   }
 
-  private MetricExporterFactory findMetricExporterFactory(String exporterName) {
+  private static MetricExporterFactory findMetricExporterFactory(String exporterName) {
     ServiceLoader<MetricExporterFactory> serviceLoader =
         ServiceLoader.load(
             MetricExporterFactory.class, OpenTelemetryComponentInstaller.class.getClassLoader());
@@ -134,7 +134,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     return null;
   }
 
-  private MetricServer findMetricServer(String exporterName) {
+  private static MetricServer findMetricServer(String exporterName) {
     ServiceLoader<MetricServer> serviceLoader =
         ServiceLoader.load(
             MetricServer.class, OpenTelemetryComponentInstaller.class.getClassLoader());
@@ -147,7 +147,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     return null;
   }
 
-  private SpanExporterFactory findSpanExporterFactory(String exporterName) {
+  private static SpanExporterFactory findSpanExporterFactory(String exporterName) {
     ServiceLoader<SpanExporterFactory> serviceLoader =
         ServiceLoader.load(
             SpanExporterFactory.class, OpenTelemetryComponentInstaller.class.getClassLoader());
@@ -189,7 +189,8 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     }
   }
 
-  private void installExporter(MetricExporterFactory metricExporterFactory, Properties config) {
+  private static void installExporter(
+      MetricExporterFactory metricExporterFactory, Properties config) {
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
         .readProperties(config)
@@ -200,7 +201,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
 
-  private void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
+  private static void installExporter(SpanExporterFactory spanExporterFactory, Properties config) {
     SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     SpanProcessor spanProcessor =
         BatchSpanProcessor.builder(spanExporter).readProperties(config).build();
@@ -208,7 +209,7 @@ public class OpenTelemetryComponentInstaller implements ComponentInstaller {
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
-  private void installMetricServer(MetricServer metricServer, Properties config) {
+  private static void installMetricServer(MetricServer metricServer, Properties config) {
     MetricProducer metricProducer = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer();
     metricServer.start(metricProducer, config);
     log.info("Installed metric server: " + metricServer.getClass().getName());
