@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
@@ -19,13 +20,15 @@ public abstract class CompletionListener<T> {
   static final String HIT = "hit";
   static final String MISS = "miss";
 
-  private final Span span;
+  private final Context context;
 
-  public CompletionListener(MemcachedConnection connection, String methodName) {
-    span = tracer().startSpan(connection, methodName);
+  public CompletionListener(
+      Context parentContext, MemcachedConnection connection, String methodName) {
+    context = tracer().startSpan(parentContext, connection, methodName);
   }
 
   protected void closeAsyncSpan(T future) {
+    Span span = Span.fromContext(context);
     try {
       processResult(span, future);
     } catch (CancellationException e) {
@@ -51,7 +54,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    tracer().endExceptionally(span, thrown);
+    tracer().endExceptionally(context, thrown);
   }
 
   protected abstract void processResult(Span span, T future)

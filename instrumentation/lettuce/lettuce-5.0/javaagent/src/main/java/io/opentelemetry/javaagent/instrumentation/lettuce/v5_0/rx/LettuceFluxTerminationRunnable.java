@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDat
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -18,12 +19,12 @@ import reactor.core.publisher.SignalType;
 
 public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
 
-  private Span span = null;
-  private int numResults = 0;
+  private Context context;
+  private int numResults;
   private final FluxOnSubscribeConsumer onSubscribeConsumer;
 
-  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
-    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
+  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean expectsResponse) {
+    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, expectsResponse);
   }
 
   public FluxOnSubscribeConsumer getOnSubscribeConsumer() {
@@ -31,7 +32,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   }
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
-    if (span != null) {
+    if (context != null) {
+      Span span = Span.fromContext(context);
       span.setAttribute("lettuce.command.results.count", numResults);
       if (isCommandCancelled) {
         span.setAttribute("lettuce.command.cancelled", true);
@@ -68,22 +70,22 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     private final LettuceFluxTerminationRunnable owner;
     private final RedisCommand<?, ?, ?> command;
-    private final boolean finishSpanOnClose;
+    private final boolean expectsResponse;
 
     public FluxOnSubscribeConsumer(
         LettuceFluxTerminationRunnable owner,
         RedisCommand<?, ?, ?> command,
-        boolean finishSpanOnClose) {
+        boolean expectsResponse) {
       this.owner = owner;
       this.command = command;
-      this.finishSpanOnClose = finishSpanOnClose;
+      this.expectsResponse = expectsResponse;
     }
 
     @Override
     public void accept(Subscription subscription) {
-      owner.span = tracer().startSpan(null, command);
-      if (finishSpanOnClose) {
-        tracer().end(owner.span);
+      owner.context = tracer().startSpan(Context.current(), null, command);
+      if (!expectsResponse) {
+        tracer().end(owner.context);
       }
     }
   }
