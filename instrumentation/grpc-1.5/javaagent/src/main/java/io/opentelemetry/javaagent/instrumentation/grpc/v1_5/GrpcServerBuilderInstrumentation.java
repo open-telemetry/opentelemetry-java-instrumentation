@@ -28,6 +28,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
 
+  // Computing the name at runtime is the simplest way to make sure the String doesn't get shaded.
+  private static final String LIBRARY_INSTRUMENTATION_INTERCEPTOR_NAME =
+      "library.io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor"
+          .substring("library.".length());
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("io.grpc.ServerBuilder");
@@ -60,10 +65,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This ServerBuilder<?> serverBuilder,
         @Advice.Argument(0) ServerInterceptor interceptor) {
       // Check against unshaded name.
-      if (interceptor
-          .getClass()
-          .getName()
-          .equals("io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor")) {
+      if (interceptor.getClass().getName().equals(LIBRARY_INSTRUMENTATION_INTERCEPTOR_NAME)) {
         @SuppressWarnings("rawtypes")
         ContextStore<ServerBuilder, Boolean> instrumentationContext =
             InstrumentationContext.get(ServerBuilder.class, Boolean.class);
