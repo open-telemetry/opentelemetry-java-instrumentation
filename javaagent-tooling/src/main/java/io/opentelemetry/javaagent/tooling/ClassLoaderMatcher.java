@@ -89,6 +89,8 @@ public final class ClassLoaderMatcher {
         case AGENT_CLASSLOADER_NAME:
         case EXPORTER_CLASSLOADER_NAME:
           return true;
+        default:
+          // noop
       }
       // check by package prefix
       if (name.startsWith("datadog.")
