@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -27,15 +28,18 @@ public class TwilioTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(Object serviceExecutor, String methodName) {
-    return tracer.spanBuilder(spanNameOnServiceExecution(serviceExecutor, methodName)).startSpan();
+  public boolean shouldStartSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  @Override
-  public Scope startScope(Span span) {
-    Context context = Context.current().with(span);
-    context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
-    return context.makeCurrent();
+  public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {
+    Span span =
+        tracer
+            .spanBuilder(spanNameOnServiceExecution(serviceExecutor, methodName))
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .startSpan();
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   /** Decorate trace based on service execution metadata. */
@@ -44,7 +48,7 @@ public class TwilioTracer extends BaseTracer {
   }
 
   /** Annotate the span with the results of the operation. */
-  public void end(Span span, Object result) {
+  public void end(Context context, Object result) {
 
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
@@ -54,6 +58,8 @@ public class TwilioTracer extends BaseTracer {
         log.debug("Error unwrapping result", e);
       }
     }
+
+    Span span = Span.fromContext(context);
 
     // Nothing to do here, so return
     if (result == null) {
@@ -92,6 +98,10 @@ public class TwilioTracer extends BaseTracer {
     }
 
     super.end(span);
+  }
+
+  public void endExceptionally(Context context, Throwable throwable) {
+    super.endExceptionally(Span.fromContext(context), throwable);
   }
 
   /**
