@@ -47,18 +47,18 @@ class RmiTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "hello"
           }
         }
         span(2) {
           name "rmi.app.Server/hello"
           kind SERVER
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Server"
-            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Server"
+            "${SemanticAttributes.RPC_METHOD.key}" "hello"
           }
         }
       }
@@ -110,9 +110,9 @@ class RmiTest extends AgentTestRunner {
           errored true
           errorEvent(RuntimeException, String)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key()}" "exceptional"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "exceptional"
 
           }
         }
@@ -122,9 +122,9 @@ class RmiTest extends AgentTestRunner {
           errored true
           errorEvent(RuntimeException, String)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Server"
-            "${SemanticAttributes.RPC_METHOD.key()}" "exceptional"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Server"
+            "${SemanticAttributes.RPC_METHOD.key}" "exceptional"
           }
         }
       }
@@ -155,9 +155,9 @@ class RmiTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "hello"
           }
         }
         span(2) {
@@ -165,9 +165,9 @@ class RmiTest extends AgentTestRunner {
           name "rmi.app.ServerLegacy/hello"
           kind SERVER
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "java_rmi"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "rmi.app.ServerLegacy"
-            "${SemanticAttributes.RPC_METHOD.key()}" "hello"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
+            "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.ServerLegacy"
+            "${SemanticAttributes.RPC_METHOD.key}" "hello"
           }
         }
       }

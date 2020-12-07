@@ -89,11 +89,11 @@ class ProcedureCallTest extends AgentTestRunner {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "{call TEST_PROC()}"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "{call TEST_PROC()}"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
         span(3) {

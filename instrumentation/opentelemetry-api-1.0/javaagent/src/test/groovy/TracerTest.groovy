@@ -234,8 +234,8 @@ class TracerTest extends AgentTestRunner {
           event(0) {
             eventName("exception")
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key()}" "java.lang.IllegalStateException"
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              "${SemanticAttributes.EXCEPTION_TYPE.key}" "java.lang.IllegalStateException"
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
             }
           }
           attributes {
@@ -262,8 +262,8 @@ class TracerTest extends AgentTestRunner {
           event(0) {
             eventName("exception")
             attributes {
-              "${SemanticAttributes.EXCEPTION_TYPE.key()}" "java.lang.IllegalStateException"
-              "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+              "${SemanticAttributes.EXCEPTION_TYPE.key}" "java.lang.IllegalStateException"
+              "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
               "dog" "bark"
             }
           }

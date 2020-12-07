@@ -91,12 +91,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
         span(2) {
@@ -105,12 +105,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
       }
@@ -165,12 +165,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
         span(2) {
@@ -179,12 +179,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
       }
@@ -223,11 +223,11 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
       }
@@ -282,11 +282,11 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "POST"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
           }
         }
       }

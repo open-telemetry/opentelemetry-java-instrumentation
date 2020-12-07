@@ -86,10 +86,10 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "GET _cluster/health"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
+            "${SemanticAttributes.NET_PEER_NAME.key}" httpTransportAddress.address
+            "${SemanticAttributes.NET_PEER_PORT.key}" httpTransportAddress.port
           }
         }
       }
