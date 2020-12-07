@@ -78,9 +78,9 @@ final class AwsSdkHttpClientTracer
     return super.onRequest(span, sdkHttpRequest);
   }
 
-  public Context startSpan(String name, Tracer tracer, Kind kind) {
-    io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
-    Span clientSpan = tracer.spanBuilder(name).setSpanKind(kind).setParent(context).startSpan();
-    return context.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+  public Context startSpan(Context parentContext, String name, Tracer tracer, Kind kind) {
+    Span clientSpan =
+        tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
+    return parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
   }
 }

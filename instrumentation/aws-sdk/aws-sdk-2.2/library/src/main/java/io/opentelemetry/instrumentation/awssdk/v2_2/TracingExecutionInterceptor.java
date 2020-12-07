@@ -80,8 +80,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
+    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.current();
+    if (!tracer().shouldStartSpan(parentContext)) {
+      return;
+    }
     io.opentelemetry.context.Context otelContext =
-        tracer().startSpan(spanName(executionAttributes), AwsSdk.tracer(), kind);
+        tracer().startSpan(parentContext, spanName(executionAttributes), AwsSdk.tracer(), kind);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
@@ -99,13 +103,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    io.opentelemetry.context.Context otelContext =
-        executionAttributes.getAttribute(CONTEXT_ATTRIBUTE);
-    // Never null in practice unless another interceptor cleared out the attribute, which
-    // is theoretically possible.
+    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
     if (otelContext == null) {
       return context.httpRequest();
     }
+
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
     AwsXRayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
     return builder.build();
@@ -115,16 +117,18 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
-    if (otelContext != null) {
-      Span span = Span.fromContext(otelContext);
-      tracer().onRequest(span, context.httpRequest());
-      SdkRequestDecorator decorator = decorator(executionAttributes);
-      if (decorator != null) {
-        decorator.decorate(span, context.request(), executionAttributes);
-      }
-      decorateWithGenericRequestData(span, context.request());
-      decorateWithExAttributesData(span, executionAttributes);
+    if (otelContext == null) {
+      return;
     }
+
+    Span span = Span.fromContext(otelContext);
+    tracer().onRequest(span, context.httpRequest());
+    SdkRequestDecorator decorator = decorator(executionAttributes);
+    if (decorator != null) {
+      decorator.decorate(span, context.request(), executionAttributes);
+    }
+    decorateWithGenericRequestData(span, context.request());
+    decorateWithExAttributesData(span, executionAttributes);
   }
 
   private void decorateWithGenericRequestData(Span span, SdkRequest request) {
