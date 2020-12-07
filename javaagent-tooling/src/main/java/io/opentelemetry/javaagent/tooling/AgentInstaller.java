@@ -140,8 +140,6 @@ public class AgentInstaller {
       }
     }
 
-    agentBuilder = customizeByteBuddyAgent(agentBuilder);
-
     /*
      * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
      *
@@ -161,7 +159,7 @@ public class AgentInstaller {
      * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
      * logging facility.
      */
-    if (isJavaBefore9WithJFR() && isAppUsingCustomLogManager()) {
+    if (AgentInitializer.isJavaBefore9WithJFR() && AgentInitializer.isAppUsingCustomLogManager()) {
       log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
       for (ComponentInstaller componentInstaller : componentInstallers) {
         registerClassLoadCallback(
@@ -185,6 +183,7 @@ public class AgentInstaller {
     }
 
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
+    agentBuilder = customizeByteBuddyAgent(agentBuilder);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     return resettableClassFileTransformer;
   }
@@ -406,64 +405,6 @@ public class AgentInstaller {
         }
       }
     }
-  }
-
-  private static boolean isJavaBefore9WithJFR() {
-    // AgentInitializer is in bootstrap classloader
-    if (!AgentInitializer.isJavaBefore9()) {
-      return false;
-    }
-    // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
-    // nothing to do with JDK but this should be safe because only thing this does is to delay
-    // tracer install
-    String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
-    return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
-  }
-
-  /**
-   * Search for java or agent-tracer sysprops which indicate that a custom log manager will be used.
-   * Also search for any app classes known to set a custom log manager.
-   *
-   * @return true if we detect a custom log manager being used.
-   */
-  public static boolean isAppUsingCustomLogManager() {
-    String tracerCustomLogManSysprop = "otel.app.customlogmanager";
-    String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
-    String customLogManagerEnv =
-        System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
-
-    if (customLogManagerProp != null || customLogManagerEnv != null) {
-      log.debug("Prop - customlogmanager: " + customLogManagerProp);
-      log.debug("Env - customlogmanager: " + customLogManagerEnv);
-      // Allow setting to skip these automatic checks:
-      return Boolean.parseBoolean(customLogManagerProp)
-          || Boolean.parseBoolean(customLogManagerEnv);
-    }
-
-    String jbossHome = System.getenv("JBOSS_HOME");
-    if (jbossHome != null) {
-      log.debug("Env - jboss: " + jbossHome);
-      // JBoss/Wildfly is known to set a custom log manager after startup.
-      // Originally we were checking for the presence of a jboss class,
-      // but it seems some non-jboss applications have jboss classes on the classpath.
-      // This would cause jmxfetch initialization to be delayed indefinitely.
-      // Checking for an environment variable required by jboss instead.
-      return true;
-    }
-
-    String logManagerProp = System.getProperty("java.util.logging.manager");
-    if (logManagerProp != null) {
-      boolean onSysClasspath =
-          ClassLoader.getSystemResource(logManagerProp.replaceAll("\\.", "/") + ".class") != null;
-      log.debug("Prop - logging.manager: " + logManagerProp);
-      log.debug("logging.manager on system classpath: " + onSysClasspath);
-      // Some applications set java.util.logging.manager but never actually initialize the logger.
-      // Check to see if the configured manager is on the system classpath.
-      // If so, it should be safe to initialize jmxfetch which will setup the log manager.
-      return !onSysClasspath;
-    }
-
-    return false;
   }
 
   protected abstract static class ClassLoadCallBack implements Runnable {
