@@ -15,7 +15,7 @@ COPY --from=jetty $TMPDIR $TMPDIR
 WORKDIR $JETTY_BASE
 COPY --from=jetty docker-entrypoint.sh generate-jetty-start.sh /
 
-COPY app.war $JETTY_BASE/webapps/ROOT.war
+COPY app.war $JETTY_BASE/webapps/
 
 EXPOSE 8080
 ENTRYPOINT ["/docker-entrypoint.sh"]
