@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,7 +40,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
-        new AwsHttpClientInstrumentation(), new AwsSdkInitializationInstrumentation());
+    return Collections.singletonList(new AwsSdkInitializationInstrumentation());
   }
 }
