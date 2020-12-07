@@ -21,7 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Map;
 
@@ -58,86 +58,86 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query) {
-    Span span = tracer().startSpan(session, query);
+    Context context = tracer().startSpan(Context.current(), session, query);
     ResultSet resultSet;
-    try (Scope ignored = tracer().startScope(span)) {
+    try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
     } catch (Throwable t) {
-      tracer().endExceptionally(span, t);
+      tracer().endExceptionally(context, t);
       throw t;
     }
-    tracer().end(span, resultSet.getExecutionInfo());
+    tracer().end(context, resultSet.getExecutionInfo());
     return resultSet;
   }
 
   @Override
   public ResultSet execute(String query, Object... values) {
-    Span span = tracer().startSpan(session, query);
+    Context context = tracer().startSpan(Context.current(), session, query);
     ResultSet resultSet;
-    try (Scope ignored = tracer().startScope(span)) {
+    try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      tracer().endExceptionally(span, t);
+      tracer().endExceptionally(context, t);
       throw t;
     }
-    tracer().end(span, resultSet.getExecutionInfo());
+    tracer().end(context, resultSet.getExecutionInfo());
     return resultSet;
   }
 
   @Override
   public ResultSet execute(String query, Map<String, Object> values) {
-    Span span = tracer().startSpan(session, query);
+    Context context = tracer().startSpan(Context.current(), session, query);
     ResultSet resultSet;
-    try (Scope ignored = tracer().startScope(span)) {
+    try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      tracer().endExceptionally(span, t);
+      tracer().endExceptionally(context, t);
       throw t;
     }
-    tracer().end(span, resultSet.getExecutionInfo());
+    tracer().end(context, resultSet.getExecutionInfo());
     return resultSet;
   }
 
   @Override
   public ResultSet execute(Statement statement) {
-    Span span = tracer().startSpan(session, getQuery(statement));
+    Context context = tracer().startSpan(Context.current(), session, getQuery(statement));
     ResultSet resultSet;
-    try (Scope ignored = tracer().startScope(span)) {
+    try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
     } catch (Throwable t) {
-      tracer().endExceptionally(span, t);
+      tracer().endExceptionally(context, t);
       throw t;
     }
-    tracer().end(span, resultSet.getExecutionInfo());
+    tracer().end(context, resultSet.getExecutionInfo());
     return resultSet;
   }
 
   @Override
   public ResultSetFuture executeAsync(String query) {
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query);
-      addCallbackToEndSpan(future, span);
+      addCallbackToEndSpan(future, context);
       return future;
     }
   }
 
   @Override
   public ResultSetFuture executeAsync(String query, Object... values) {
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
-      addCallbackToEndSpan(future, span);
+      addCallbackToEndSpan(future, context);
       return future;
     }
   }
 
   @Override
   public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
-      addCallbackToEndSpan(future, span);
+      addCallbackToEndSpan(future, context);
       return future;
     }
   }
@@ -145,10 +145,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(Statement statement) {
     String query = getQuery(statement);
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(statement);
-      addCallbackToEndSpan(future, span);
+      addCallbackToEndSpan(future, context);
       return future;
     }
   }
@@ -209,18 +209,18 @@ public class TracingSession implements Session {
     return query == null ? "" : query;
   }
 
-  private void addCallbackToEndSpan(ResultSetFuture future, final Span span) {
+  private void addCallbackToEndSpan(ResultSetFuture future, Context context) {
     Futures.addCallback(
         future,
         new FutureCallback<ResultSet>() {
           @Override
           public void onSuccess(ResultSet result) {
-            tracer().end(span, result.getExecutionInfo());
+            tracer().end(context, result.getExecutionInfo());
           }
 
           @Override
           public void onFailure(Throwable t) {
-            tracer().endExceptionally(span, t);
+            tracer().endExceptionally(context, t);
           }
         },
         directExecutor());

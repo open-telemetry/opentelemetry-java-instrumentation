@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normalizeAndExtractInfo;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
@@ -66,15 +66,16 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
     return CallDepthThreadLocalMap.getCallDepth(Statement.class);
   }
 
-  public Span startSpan(PreparedStatement statement) {
-    return startSpan(statement, JdbcMaps.preparedStatements.get(statement));
+  public Context startSpan(Context parentContext, PreparedStatement statement) {
+    return startSpan(parentContext, statement, JdbcMaps.preparedStatements.get(statement));
   }
 
-  public Span startSpan(Statement statement, String query) {
-    return startSpan(statement, normalizeAndExtractInfo(query));
+  public Context startSpan(Context parentContext, Statement statement, String query) {
+    return startSpan(parentContext, statement, normalizeAndExtractInfo(query));
   }
 
-  public Span startSpan(Statement statement, SqlStatementInfo queryInfo) {
+  private Context startSpan(
+      Context parentContext, Statement statement, SqlStatementInfo queryInfo) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
@@ -82,7 +83,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
 
     DbInfo dbInfo = extractDbInfo(connection);
 
-    return startSpan(dbInfo, queryInfo);
+    return startSpan(parentContext, dbInfo, queryInfo);
   }
 
   @Override

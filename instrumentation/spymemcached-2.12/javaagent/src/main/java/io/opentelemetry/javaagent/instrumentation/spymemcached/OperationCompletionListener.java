@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.OperationFuture;
@@ -13,8 +14,9 @@ import net.spy.memcached.internal.OperationFuture;
 public class OperationCompletionListener
     extends CompletionListener<OperationFuture<? extends Object>>
     implements net.spy.memcached.internal.OperationCompletionListener {
-  public OperationCompletionListener(MemcachedConnection connection, String methodName) {
-    super(connection, methodName);
+  public OperationCompletionListener(
+      Context parentContext, MemcachedConnection connection, String methodName) {
+    super(parentContext, connection, methodName);
   }
 
   @Override

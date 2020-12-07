@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -14,9 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.Statement;
 import java.util.Map;
@@ -50,32 +50,31 @@ public class StatementInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) String sql,
         @Advice.This Statement statement,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-
-      callDepth = tracer().getCallDepth();
-      if (callDepth.getAndIncrement() == 0) {
-        span = tracer().startSpan(statement, sql);
-        if (span != null) {
-          scope = tracer().startScope(span);
-        }
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
+
+      context = tracer().startSpan(parentContext, statement, sql);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && scope != null) {
-        scope.close();
-        if (throwable == null) {
-          tracer().end(span);
-        } else {
-          tracer().endExceptionally(span, throwable);
-        }
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      if (throwable == null) {
+        tracer().end(context);
+      } else {
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
