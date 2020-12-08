@@ -26,7 +26,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AwsLambdaTracer extends BaseTracer {
@@ -49,7 +48,7 @@ public class AwsLambdaTracer extends BaseTracer {
 
   private final HttpSpanAttributes httpSpanAttributes = new HttpSpanAttributes();
   // cached accountId value
-  private volatile AtomicReference<String> accountId;
+  private volatile String accountId;
 
   public AwsLambdaTracer() {}
 
@@ -125,20 +124,20 @@ public class AwsLambdaTracer extends BaseTracer {
 
   @Nullable
   private String getAccountId(@Nullable String arn) {
+    if (arn == null) {
+      return null;
+    }
     if (accountId == null) {
       synchronized (this) {
         if (accountId == null) {
-          accountId = new AtomicReference<>();
-          if (arn != null) {
-            String[] arnParts = arn.split(":");
-            if (arnParts.length >= 5) {
-              accountId.set(arnParts[4]);
-            }
+          String[] arnParts = arn.split(":");
+          if (arnParts.length >= 5) {
+            accountId = arnParts[4];
           }
         }
       }
     }
-    return accountId.get();
+    return accountId;
   }
 
   private String spanName(Context context, Object input) {
