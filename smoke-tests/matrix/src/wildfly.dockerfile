@@ -43,4 +43,4 @@ EXPOSE 8080
 # This will boot WildFly in the standalone mode and bind to all interface
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
 
-COPY app.war /opt/jboss/wildfly/standalone/deployments/ROOT.war
+COPY app.war /opt/jboss/wildfly/standalone/deployments/

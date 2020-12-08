@@ -78,6 +78,14 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
     }
 
     @Override
+    public DoubleValueObserver.Builder setCallback(Callback<DoubleResult> callback) {
+      agentBuilder.setCallback(
+          result ->
+              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+      return this;
+    }
+
+    @Override
     public DoubleValueObserver build() {
       return new ApplicationDoubleValueObserver(agentBuilder.build());
     }

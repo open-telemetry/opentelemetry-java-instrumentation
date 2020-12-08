@@ -38,11 +38,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "SELECT test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -64,11 +64,11 @@ class SpringJpaTest extends AgentTestRunner {
             name "test"
             kind CLIENT
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-              "${SemanticAttributes.DB_NAME.key()}" "test"
-              "${SemanticAttributes.DB_USER.key()}" "sa"
-              "${SemanticAttributes.DB_STATEMENT.key()}" "call next value for hibernate_sequence"
-              "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+              "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+              "${SemanticAttributes.DB_NAME.key}" "test"
+              "${SemanticAttributes.DB_USER.key}" "sa"
+              "${SemanticAttributes.DB_STATEMENT.key}" "call next value for hibernate_sequence"
+              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
             }
           }
         }
@@ -78,11 +78,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "INSERT test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -101,11 +101,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "SELECT test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -114,11 +114,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "UPDATE test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "update Customer set firstName=?, lastName=? where id=?"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "update Customer set firstName=?, lastName=? where id=?"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -137,11 +137,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "SELECT test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -158,11 +158,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "SELECT test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
@@ -171,11 +171,11 @@ class SpringJpaTest extends AgentTestRunner {
           name "DELETE test.Customer"
           kind CLIENT
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "hsqldb"
-            "${SemanticAttributes.DB_NAME.key()}" "test"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" "delete from Customer where id=?"
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+            "${SemanticAttributes.DB_NAME.key}" "test"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" "delete from Customer where id=?"
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }

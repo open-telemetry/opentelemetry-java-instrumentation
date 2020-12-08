@@ -10,14 +10,13 @@ import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEv
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.api.common.AttributeConsumer
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.api.common.ReadableAttributes
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import java.util.regex.Pattern
 
 class SpanAssert {
@@ -123,16 +122,16 @@ class SpanAssert {
   }
 
   def status(StatusCode status) {
-    assert span.status.canonicalCode == status
+    assert span.status.statusCode == status
     checked.status = true
   }
 
   def errored(boolean errored) {
     if (errored) {
       // comparing only canonical code, since description may be different
-      assert span.status.canonicalCode == StatusCode.ERROR
+      assert span.status.statusCode == StatusCode.ERROR
     } else {
-      assert span.status.canonicalCode == StatusCode.UNSET
+      assert span.status.statusCode == StatusCode.UNSET
     }
     checked.status = true
   }
@@ -149,10 +148,10 @@ class SpanAssert {
     event(index) {
       eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
       attributes {
-        "${SemanticAttributes.EXCEPTION_TYPE.key()}" errorType.canonicalName
-        "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" String
+        "${SemanticAttributes.EXCEPTION_TYPE.key}" errorType.canonicalName
+        "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
         if (message != null) {
-          "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" message
+          "${SemanticAttributes.EXCEPTION_MESSAGE.key}" message
         }
       }
     }
@@ -173,14 +172,11 @@ class SpanAssert {
     assert assertedEventIndexes.size() == span.events.size()
   }
 
-  private Map<String, Object> toMap(ReadableAttributes attributes) {
+  private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
-    attributes.forEach(new AttributeConsumer() {
-      @Override
-      <T> void accept(AttributeKey<T> key, T value) {
-        map.put(key.key, value)
-      }
-    })
+    attributes.forEach {key, value ->
+      map.put(key.key, value)
+    }
     return map
   }
 }

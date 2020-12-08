@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -21,9 +22,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -78,20 +78,15 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.This Object that,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
-      // Ensure that we only create a span for the top-level Twilio client method; except in the
-      // case of async operations where we want visibility into how long the task was delayed from
-      // starting. Our call depth checker does not span threads, so the async case is handled
-      // automatically for us.
-      if (CallDepthThreadLocalMap.incrementCallDepth(Twilio.class) > 0) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      // Don't automatically close the span with the scope if we're executing an async method
-      span = tracer().startSpan(that, methodName);
-      scope = tracer().startScope(span);
+      context = tracer().startSpan(parentContext, that, methodName);
+      scope = context.makeCurrent();
     }
 
     /** Method exit instrumentation. */
@@ -99,24 +94,22 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return ListenableFuture<?> response,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Twilio.class);
 
-      // span finished in SpanFinishingCallback
       scope.close();
       if (throwable != null) {
         // There was an synchronous error,
         // which means we shouldn't wait for a callback to close the span.
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
         // We're calling an async operation, we still need to finish the span when it's
         // complete and report the results; set an appropriate callback
         Futures.addCallback(
-            response, new SpanFinishingCallback<>(span), Twilio.getExecutorService());
+            response, new SpanFinishingCallback<>(context), Twilio.getExecutorService());
       }
     }
   }
@@ -128,22 +121,20 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
   public static class SpanFinishingCallback<T> implements FutureCallback<T> {
 
     /** Span that we should finish and annotate when the future is complete. */
-    private final Span span;
+    private final Context context;
 
-    public SpanFinishingCallback(Span span) {
-      this.span = span;
+    public SpanFinishingCallback(Context context) {
+      this.context = context;
     }
 
     @Override
     public void onSuccess(Object result) {
-      tracer().end(span, result);
-      span.end();
+      tracer().end(context, result);
     }
 
     @Override
     public void onFailure(Throwable t) {
-      tracer().endExceptionally(span, t);
-      span.end();
+      tracer().endExceptionally(context, t);
     }
   }
 }

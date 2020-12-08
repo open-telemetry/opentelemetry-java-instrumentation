@@ -43,11 +43,11 @@ public class NettyHttpClientTracer
       parentContext = Context.current();
     }
 
-    if (!tracer().shouldStartSpan(parentContext)) {
+    HttpRequest request = (HttpRequest) msg;
+
+    if (!tracer().shouldStartSpan(parentContext, request)) {
       return HttpClientOperation.noop();
     }
-
-    HttpRequest request = (HttpRequest) msg;
     Context context = startSpan(parentContext, request, request.headers(), -1);
 
     // TODO (trask) set this directly in span builder
@@ -95,6 +95,24 @@ public class NettyHttpClientTracer
   @Override
   protected Setter<HttpHeaders> getSetter() {
     return SETTER;
+  }
+
+  public boolean shouldStartSpan(Context parentContext, HttpRequest request) {
+    if (!super.shouldStartSpan(parentContext)) {
+      return false;
+    }
+    // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
+    // beginning transport. This means we MUST suppress Netty spans we would normally create or
+    // they will inject their own trace header, which does not match what was present when the
+    // signature was computed, breaking the SDK request completely. We have not found how to
+    // cleanly propagate context from the SDK instrumentation, which executes on an application
+    // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
+    // require instrumenting internal classes. Using a header which is more or less guaranteed to
+    // always exist is arguably more stable.
+    if (request.headers().contains("amz-sdk-invocation-id")) {
+      return false;
+    }
+    return true;
   }
 
   @Override

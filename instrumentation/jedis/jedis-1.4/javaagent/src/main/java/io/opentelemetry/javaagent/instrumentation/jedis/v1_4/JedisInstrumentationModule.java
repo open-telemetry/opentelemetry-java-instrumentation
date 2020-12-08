@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -16,9 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -84,32 +84,31 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     public static void onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Command command,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
-      if (callDepth > 0) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      span = tracer().startSpan(connection, new CommandWithArgs(command));
-      scope = tracer().startScope(span);
+      context = tracer().startSpan(parentContext, connection, new CommandWithArgs(command));
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
-      CallDepthThreadLocalMap.reset(Connection.class);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -121,32 +120,31 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         @Advice.This Connection connection,
         @Advice.Argument(0) Command command,
         @Advice.Argument(1) byte[][] args,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
-      if (callDepth > 0) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      span = tracer().startSpan(connection, new CommandWithArgs(command, args));
-      scope = tracer().startScope(span);
+      context = tracer().startSpan(parentContext, connection, new CommandWithArgs(command, args));
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      scope.close();
-      CallDepthThreadLocalMap.reset(Connection.class);
 
+      scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

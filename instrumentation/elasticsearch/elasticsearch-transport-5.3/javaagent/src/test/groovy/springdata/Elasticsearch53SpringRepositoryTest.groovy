@@ -81,8 +81,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           errored false
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -117,8 +117,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -135,8 +135,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "PutMappingAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -146,8 +146,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -177,8 +177,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -212,8 +212,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "IndexAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -230,8 +230,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -253,8 +253,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "GetAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -287,8 +287,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "DeleteAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "DeleteAction"
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -304,8 +304,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "RefreshAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -328,8 +328,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key()}" "SearchAction"
+            "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
+            "${SemanticAttributes.DB_OPERATION.key}" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

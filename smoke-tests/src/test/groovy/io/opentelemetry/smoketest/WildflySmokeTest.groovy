@@ -11,13 +11,13 @@ import okhttp3.Request
 class WildflySmokeTest extends AppServerTest {
 
   protected String getTargetImage(int jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk"
+    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk-20201207.405832649"
   }
 
   def "JSP smoke test on WildFly"() {
     setup:
     startTarget(11, "21.0.0.Final")
-    String url = "http://localhost:${target.getMappedPort(8080)}/jsp"
+    String url = "http://localhost:${target.getMappedPort(8080)}/app/jsp"
     def request = new Request.Builder().url(url).get().build()
 
     when:
@@ -31,7 +31,7 @@ class WildflySmokeTest extends AppServerTest {
 
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
-    traces.countSpansByName('/jsp') == 1
+    traces.countSpansByName('/app/jsp') == 1
 
   }
 

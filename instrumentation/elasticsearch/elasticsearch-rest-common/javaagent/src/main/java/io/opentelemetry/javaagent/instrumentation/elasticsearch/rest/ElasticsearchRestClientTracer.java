@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
@@ -19,12 +20,12 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
     return TRACER;
   }
 
-  public Span onResponse(Span span, Response response) {
+  public void onResponse(Context context, Response response) {
     if (response != null && response.getHost() != null) {
+      Span span = Span.fromContext(context);
       NetPeerUtils.INSTANCE.setNetPeer(span, response.getHost().getHostName(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
     }
-    return span;
   }
 
   @Override

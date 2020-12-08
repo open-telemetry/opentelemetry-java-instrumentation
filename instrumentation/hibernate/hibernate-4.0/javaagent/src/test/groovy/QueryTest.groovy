@@ -51,11 +51,11 @@ class QueryTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" String
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(3) {
@@ -88,11 +88,11 @@ class QueryTest extends AbstractHibernateTest {
             kind CLIENT
             childOf span(1)
             attributes {
-              "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-              "${SemanticAttributes.DB_NAME.key()}" "db1"
-              "${SemanticAttributes.DB_USER.key()}" "sa"
-              "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-              "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+              "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+              "${SemanticAttributes.DB_NAME.key}" "db1"
+              "${SemanticAttributes.DB_USER.key}" "sa"
+              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
             }
           }
         }
@@ -160,11 +160,11 @@ class QueryTest extends AbstractHibernateTest {
           kind CLIENT
           childOf span(1)
           attributes {
-            "${SemanticAttributes.DB_SYSTEM.key()}" "h2"
-            "${SemanticAttributes.DB_NAME.key()}" "db1"
-            "${SemanticAttributes.DB_USER.key()}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
-            "${SemanticAttributes.DB_CONNECTION_STRING.key()}" "h2:mem:"
+            "${SemanticAttributes.DB_SYSTEM.key}" "h2"
+            "${SemanticAttributes.DB_NAME.key}" "db1"
+            "${SemanticAttributes.DB_USER.key}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
           }
         }
         span(3) {

@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
@@ -28,12 +27,17 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
-  public Span startSpan(CONNECTION connection, QUERY query) {
+  public boolean shouldStartSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+  }
+
+  public Context startSpan(Context parentContext, CONNECTION connection, QUERY query) {
     String normalizedQuery = normalizeQuery(query);
 
     Span span =
         tracer
             .spanBuilder(spanName(connection, query, normalizedQuery))
+            .setParent(parentContext)
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .startSpan();
@@ -44,20 +48,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
     onStatement(span, normalizedQuery);
 
-    return span;
-  }
-
-  /**
-   * Creates new scoped context with the given span.
-   *
-   * <p>Attaches new context to the request to avoid creating duplicate client spans.
-   */
-  @Override
-  public Scope startScope(Span span) {
-    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context clientSpanContext = Context.current().with(CONTEXT_CLIENT_SPAN_KEY, span);
-    Context newContext = clientSpanContext.with(span);
-    return newContext.makeCurrent();
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   @Override
@@ -70,13 +61,12 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return context.get(CONTEXT_CLIENT_SPAN_KEY);
   }
 
-  @Override
-  public void end(Span span) {
-    span.end();
+  public void end(Context context) {
+    Span.fromContext(context).end();
   }
 
-  @Override
-  public void endExceptionally(Span span, Throwable throwable) {
+  public void endExceptionally(Context context, Throwable throwable) {
+    Span span = Span.fromContext(context);
     onError(span, throwable);
     end(span);
   }

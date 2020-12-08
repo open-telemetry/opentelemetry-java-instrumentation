@@ -10,8 +10,6 @@ import static io.opentelemetry.sdk.trace.data.SpanData.Event
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.api.common.AttributeConsumer
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 
 class EventAssert {
@@ -51,12 +49,9 @@ class EventAssert {
 
   private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
-    attributes.forEach(new AttributeConsumer() {
-      @Override
-      <T> void accept(AttributeKey<T> key, T value) {
-        map.put(key.key, value)
-      }
-    })
+    attributes.forEach {key, value ->
+      map.put(key.key, value)
+    }
     return map
   }
 }
