@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
 public class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
   private static final HttpClientOperation<Object> INSTANCE = new NoopHttpClientOperation<>();
@@ -45,4 +46,8 @@ public class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RE
   public Span getSpan() {
     return Span.getInvalid();
   }
+
+  @Override
+  public <REQUEST> void inject(
+      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator) {}
 }

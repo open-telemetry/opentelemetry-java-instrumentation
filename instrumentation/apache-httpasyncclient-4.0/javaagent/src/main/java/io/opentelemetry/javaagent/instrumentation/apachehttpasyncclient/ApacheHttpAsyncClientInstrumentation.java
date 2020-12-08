@@ -67,7 +67,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
-        @Advice.Local("otelOperation") ApacheAsyncOperation operation) {
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation) {
       operation = tracer().startOperation();
       requestProducer = new DelegatingRequestProducer(operation, requestProducer);
       futureCallback = new TraceContinuedFutureCallback<>(operation, httpContext, futureCallback);
@@ -77,7 +77,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") ApacheAsyncOperation operation) {
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation) {
       if (throwable != null) {
         operation.endExceptionally(throwable);
       }
@@ -85,11 +85,11 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    ApacheAsyncOperation operation;
+    HttpClientOperation<HttpResponse> operation;
     HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(
-        ApacheAsyncOperation operation, HttpAsyncRequestProducer delegate) {
+        HttpClientOperation<HttpResponse> operation, HttpAsyncRequestProducer delegate) {
       this.operation = operation;
       this.delegate = delegate;
     }
@@ -102,7 +102,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      operation.inject(request);
+      operation.inject(request, tracer().getSetter());
       Span span = operation.getSpan();
       span.updateName(tracer().spanNameForRequest(request));
       tracer().onRequest(span, request);

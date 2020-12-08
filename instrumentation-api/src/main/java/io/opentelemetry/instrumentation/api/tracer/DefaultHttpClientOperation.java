@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
 public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
 
@@ -62,7 +63,9 @@ public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation
     return Span.fromContext(context);
   }
 
-  protected Context getContext() {
-    return context;
+  @Override
+  public <REQUEST> void inject(
+      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator) {
+    propagator.inject(context, request, setter);
   }
 }

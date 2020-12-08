@@ -11,6 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.H
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,11 +34,12 @@ public class ApacheHttpAsyncClientTracer
     return TRACER;
   }
 
-  public ApacheAsyncOperation startOperation() {
+  public HttpClientOperation<HttpResponse> startOperation() {
     Context parentContext = Context.current();
     if (!shouldStartSpan(parentContext)) {
-      return ApacheAsyncOperation.noop();
+      return HttpClientOperation.noop();
     }
+    // TODO (trask) refactor out span creation to re-use super method
     Span span =
         tracer
             .spanBuilder(DEFAULT_SPAN_NAME)
@@ -44,7 +47,7 @@ public class ApacheHttpAsyncClientTracer
             .setParent(parentContext)
             .startSpan();
     Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-    return new DefaultApacheAsyncOperation(context, parentContext);
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   @Override
