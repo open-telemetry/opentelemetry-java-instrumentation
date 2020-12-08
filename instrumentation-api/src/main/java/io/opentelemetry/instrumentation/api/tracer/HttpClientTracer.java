@@ -77,7 +77,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     Span span = spanBuilder(parentContext, request, startTimeNanos).startSpan();
     Context context = withClientSpan(parentContext, span);
     inject(carrier, context);
-    return newOperation(parentContext, context);
+    return newOperation(context, parentContext);
   }
 
   protected boolean shouldStartSpan(Context parentContext) {
@@ -128,7 +128,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   protected DefaultHttpClientOperation<RESPONSE> newOperation(
-      Context parentContext, Context context) {
+      Context context, Context parentContext) {
     return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 

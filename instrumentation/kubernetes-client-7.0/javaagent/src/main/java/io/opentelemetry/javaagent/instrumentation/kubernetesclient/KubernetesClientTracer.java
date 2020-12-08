@@ -43,7 +43,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .startSpan();
     Context context = withClientSpan(parentContext, span);
     inject(request, context);
-    return newOperation(parentContext, context);
+    return newOperation(context, parentContext);
   }
 
   @Override
