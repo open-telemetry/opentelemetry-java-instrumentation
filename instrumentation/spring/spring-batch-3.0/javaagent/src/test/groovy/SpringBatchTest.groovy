@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.context.support.ClassPathXmlApplicationContext
 
 abstract class SpringBatchTest extends AgentTestRunner {
 
@@ -76,5 +77,30 @@ class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfi
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new AnnotationConfigApplicationContext(SpringBatchApplication)
+  }
+}
+
+class XmlConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {
+  static final Config PREVIOUS_CONFIG = updateConfig {
+    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
+  }
+
+  def additionalCleanup() {
+    setConfig(PREVIOUS_CONFIG)
+  }
+
+  @Override
+  ConfigurableApplicationContext createApplicationContext() {
+    new ClassPathXmlApplicationContext("spring-batch.xml")
+  }
+}
+
+class JsrConfigBatchJobTest extends SpringBatchTest implements JavaxBatchConfigTrait {
+  static final Config PREVIOUS_CONFIG = updateConfig {
+    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
+  }
+
+  def additionalCleanup() {
+    setConfig(PREVIOUS_CONFIG)
   }
 }
