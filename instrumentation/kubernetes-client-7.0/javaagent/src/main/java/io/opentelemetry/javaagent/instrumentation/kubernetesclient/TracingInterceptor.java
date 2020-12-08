@@ -17,8 +17,7 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(Chain chain) throws IOException {
-    HttpClientOperation<Response> operation =
-        tracer().startOperation(chain.request(), chain.request());
+    HttpClientOperation<Response> operation = tracer().startOperation(chain.request());
 
     Response response;
     try (Scope ignored = operation.makeCurrent()) {

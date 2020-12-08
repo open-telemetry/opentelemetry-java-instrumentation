@@ -20,7 +20,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
+import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;

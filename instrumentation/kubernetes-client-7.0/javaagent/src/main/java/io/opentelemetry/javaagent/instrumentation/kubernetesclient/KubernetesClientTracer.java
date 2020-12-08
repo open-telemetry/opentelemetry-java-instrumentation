@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
@@ -27,7 +27,11 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
    * This method is used to generate an acceptable CLIENT span (operation) name based on a given
    * KubernetesRequestDigest.
    */
-  public Context startSpan(Context parentContext, Request request) {
+  public HttpClientOperation<Response> startOperation(Request request) {
+    Context parentContext = Context.current();
+    if (!shouldStartSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     Span span =
         tracer
@@ -37,11 +41,9 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .setAttribute("namespace", digest.getResourceMeta().getNamespace())
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
-    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-    OpenTelemetry.getGlobalPropagators()
-        .getTextMapPropagator()
-        .inject(context, request, getSetter());
-    return context;
+    Context context = withClientSpan(parentContext, span);
+    inject(request, context);
+    return newOperation(parentContext, context);
   }
 
   @Override
@@ -78,11 +80,5 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.kubernetes-client";
-  }
-
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  protected Span onRequest(Span span, Request request) {
-    return super.onRequest(span, request);
   }
 }

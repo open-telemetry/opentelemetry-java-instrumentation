@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer.utils;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.net.InetAddress;
@@ -29,10 +27,18 @@ public final class NetPeerUtils {
   }
 
   public void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
+    setNetPeer(span::setAttribute, remoteConnection);
+  }
+
+  public void setNetPeer(SpanAttributeSetter span, @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
-        setNetPeer(span, remoteAddress, remoteConnection.getPort());
+        setNetPeer(
+            span,
+            remoteAddress.getHostName(),
+            remoteAddress.getHostAddress(),
+            remoteConnection.getPort());
       } else {
         // Failed DNS lookup, the host string is the name.
         setNetPeer(
@@ -46,7 +52,7 @@ public final class NetPeerUtils {
         span::setAttribute, remoteAddress.getHostName(), remoteAddress.getHostAddress(), port);
   }
 
-  public void setNetPeer(Span span, String nameOrIp, int port) {
+  public void setNetPeer(SpanAttributeSetter span, String nameOrIp, int port) {
     try {
       InetSocketAddress address = new InetSocketAddress(nameOrIp, port);
       setNetPeer(span, address);
@@ -90,13 +96,5 @@ public final class NetPeerUtils {
     }
 
     return endpointPeerServiceMapping.get(endpoint);
-  }
-
-  /**
-   * This helper interface allows setting attributes on both {@link Span} and {@link SpanBuilder}.
-   */
-  @FunctionalInterface
-  public interface SpanAttributeSetter {
-    <T> void setAttribute(AttributeKey<T> key, @Nullable T value);
   }
 }

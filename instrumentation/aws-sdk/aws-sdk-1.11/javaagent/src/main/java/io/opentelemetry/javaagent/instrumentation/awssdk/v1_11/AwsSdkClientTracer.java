@@ -10,9 +10,9 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -49,28 +49,28 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     if (!shouldStartSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
-    Context context = startSpan(parentContext, request, request, -1);
-
-    // TODO (trask) add these attributes directly in span builder
-    Span span = Span.fromContext(context);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, request);
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     Class<?> awsOperation = originalRequest.getClass();
 
-    span.setAttribute("aws.agent", COMPONENT_NAME);
-    span.setAttribute("aws.service", awsServiceName);
-    span.setAttribute("aws.operation", awsOperation.getSimpleName());
-    span.setAttribute("aws.endpoint", request.getEndpoint().toString());
+    spanBuilder.setAttribute("aws.agent", COMPONENT_NAME);
+    spanBuilder.setAttribute("aws.service", awsServiceName);
+    spanBuilder.setAttribute("aws.operation", awsOperation.getSimpleName());
+    spanBuilder.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
     if (requestMeta != null) {
-      span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
-      span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
-      span.setAttribute("aws.queue.name", requestMeta.getQueueName());
-      span.setAttribute("aws.stream.name", requestMeta.getStreamName());
-      span.setAttribute("aws.table.name", requestMeta.getTableName());
+      spanBuilder.setAttribute("aws.bucket.name", requestMeta.getBucketName());
+      spanBuilder.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
+      spanBuilder.setAttribute("aws.queue.name", requestMeta.getQueueName());
+      spanBuilder.setAttribute("aws.stream.name", requestMeta.getStreamName());
+      spanBuilder.setAttribute("aws.table.name", requestMeta.getTableName());
     }
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
+    Span span = spanBuilder.startSpan();
+    Context context = withClientSpan(parentContext, span);
+    inject(request, context);
+    return newOperation(context, parentContext);
   }
 
   @Override

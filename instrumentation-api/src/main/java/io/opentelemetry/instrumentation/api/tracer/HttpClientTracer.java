@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
@@ -73,28 +74,50 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     if (!shouldStartSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
-    Context context = startSpan(parentContext, request, carrier, startTimeNanos);
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
+    Span span = spanBuilder(parentContext, request, startTimeNanos).startSpan();
+    Context context = withClientSpan(parentContext, span);
+    inject(carrier, context);
+    return newOperation(parentContext, context);
   }
 
-  @Deprecated
   protected boolean shouldStartSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  @Deprecated
-  protected Context startSpan(
-      Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
-    Span span =
-        internalStartSpan(parentContext, request, spanNameForRequest(request), startTimeNanos);
+  protected SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
+    return spanBuilder(parentContext, request, -1);
+  }
+
+  protected SpanBuilder spanBuilder(Context parentContext, REQUEST request, long startTimeNanos) {
+    SpanBuilder spanBuilder =
+        tracer
+            .spanBuilder(spanNameForRequest(request))
+            .setSpanKind(Kind.CLIENT)
+            .setParent(parentContext);
+    if (startTimeNanos > 0) {
+      spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
+    }
+    onRequest(spanBuilder::setAttribute, request);
+    return spanBuilder;
+  }
+
+  protected Context withClientSpan(Context parentContext, Span span) {
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+  }
+
+  protected void inject(CARRIER carrier, Context context) {
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
-          "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
+          "getSetter() not defined but calling startScope(),"
+              + " either getSetter must be implemented or the scope should be setup manually");
     }
-    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return context;
+  }
+
+  protected DefaultHttpClientOperation<RESPONSE> newOperation(
+      Context parentContext, Context context) {
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   @Deprecated
@@ -134,19 +157,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.endExceptionally(span, throwable, -1);
   }
 
-  private Span internalStartSpan(
-      Context parentContext, REQUEST request, String name, long startTimeNanos) {
-    SpanBuilder spanBuilder =
-        tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(parentContext);
-    if (startTimeNanos > 0) {
-      spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
-    }
-    Span span = spanBuilder.startSpan();
-    onRequest(span, request);
-    return span;
-  }
-
-  protected Span onRequest(Span span, REQUEST request) {
+  protected void onRequest(SpanAttributeSetter span, REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
@@ -156,10 +167,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       setFlavor(span, request);
       setUrl(span, request);
     }
-    return span;
   }
 
-  private void setFlavor(Span span, REQUEST request) {
+  private void setFlavor(SpanAttributeSetter span, REQUEST request) {
     String flavor = flavor(request);
     if (flavor == null) {
       return;
@@ -173,7 +183,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
-  private void setUrl(Span span, REQUEST request) {
+  private void setUrl(SpanAttributeSetter span, REQUEST request) {
     try {
       URI url = url(request);
       if (url != null) {

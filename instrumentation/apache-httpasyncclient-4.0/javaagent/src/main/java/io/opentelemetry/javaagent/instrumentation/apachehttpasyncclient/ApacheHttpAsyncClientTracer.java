@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.H
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -39,15 +38,14 @@ public class ApacheHttpAsyncClientTracer
     if (!shouldStartSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
-    // TODO (trask) refactor out span creation to re-use super method
     Span span =
         tracer
             .spanBuilder(DEFAULT_SPAN_NAME)
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
+    Context context = withClientSpan(parentContext, span);
+    return newOperation(context, parentContext);
   }
 
   @Override
@@ -116,9 +114,7 @@ public class ApacheHttpAsyncClientTracer
     return super.spanNameForRequest(httpRequest);
   }
 
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  public Span onRequest(Span span, HttpRequest httpRequest) {
-    return super.onRequest(span, httpRequest);
+  void onRequest(Span span, HttpRequest httpRequest) {
+    super.onRequest(span::setAttribute, httpRequest);
   }
 }

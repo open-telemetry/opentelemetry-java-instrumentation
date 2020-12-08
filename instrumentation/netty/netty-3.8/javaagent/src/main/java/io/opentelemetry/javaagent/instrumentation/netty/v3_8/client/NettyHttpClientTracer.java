@@ -8,10 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -53,13 +52,14 @@ public class NettyHttpClientTracer
     }
 
     HttpRequest request = (HttpRequest) msg.getMessage();
-    Context context = startSpan(parentContext, request, request.headers(), -1);
 
-    // TODO (trask) move this setNetPeer() call into the Tracer
+    SpanBuilder spanBuilder = spanBuilder(parentContext, request);
     NetPeerUtils.INSTANCE.setNetPeer(
-        Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+        spanBuilder::setAttribute, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
+    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
+    inject(request.headers(), context);
+    return newOperation(context, parentContext);
   }
 
   @Override

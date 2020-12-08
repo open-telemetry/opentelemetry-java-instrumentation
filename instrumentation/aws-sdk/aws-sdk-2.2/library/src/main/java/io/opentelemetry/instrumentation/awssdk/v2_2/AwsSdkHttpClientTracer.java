@@ -11,8 +11,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -37,9 +35,8 @@ final class AwsSdkHttpClientTracer
     }
     Span clientSpan =
         tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
-    Context context =
-        parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
+    Context context = withClientSpan(parentContext, clientSpan);
+    return newOperation(context, parentContext);
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -87,9 +84,7 @@ final class AwsSdkHttpClientTracer
     return "io.opentelemetry.javaagent.aws-sdk";
   }
 
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    return super.onRequest(span, sdkHttpRequest);
+  void onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
+    super.onRequest(span::setAttribute, sdkHttpRequest);
   }
 }
