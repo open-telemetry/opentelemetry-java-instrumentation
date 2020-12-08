@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.springframework.batch"
+    module = "spring-batch-core"
+    versions = "[3.0.0.RELEASE,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.springframework.batch', name: 'spring-batch-core', version: '3.0.0.RELEASE'
+
+  testImplementation group: 'javax.inject', name: 'javax.inject', version: '1'
+}

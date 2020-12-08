@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.instrumentation.api.config.Config;
 
 /**
@@ -14,16 +16,9 @@ import io.opentelemetry.instrumentation.api.config.Config;
 public final class QueryNormalizationConfig {
 
   public static boolean isQueryNormalizationEnabled(String... instrumentationNames) {
-    for (String instrumentationName : instrumentationNames) {
-      if (!Config.get().getBooleanProperty(propertyName(instrumentationName), true)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static String propertyName(String instrumentationName) {
-    return "otel.instrumentation." + instrumentationName + ".query.normalizer.enabled";
+    return Config.get()
+        .getInstrumentationBooleanProperty(
+            asList(instrumentationNames), "query.normalizer.enabled", true);
   }
 
   private QueryNormalizationConfig() {}
