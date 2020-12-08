@@ -63,8 +63,8 @@ public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation
     return Span.fromContext(context);
   }
 
-  @Override
-  public <REQUEST> void inject(
+  // TODO (trask) should we just expose full context?
+  protected <REQUEST> void inject(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator) {
     propagator.inject(context, request, setter);
   }

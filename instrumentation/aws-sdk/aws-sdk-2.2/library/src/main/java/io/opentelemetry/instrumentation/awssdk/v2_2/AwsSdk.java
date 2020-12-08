@@ -10,10 +10,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInter
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -59,11 +57,11 @@ public class AwsSdk {
   }
 
   /**
-   * Returns the {@link HttpClientOperation} stored in the {@link ExecutionAttributes}, or {@code
-   * null} if there is no operation set.
+   * Returns the {@link AwsSdkOperation} stored in the {@link ExecutionAttributes}, or {@code null}
+   * if there is no operation set.
    */
-  public static HttpClientOperation<SdkHttpResponse> getOperationFromAttributes(
-      ExecutionAttributes attributes) {
-    return attributes.getAttribute(OPERATION_ATTRIBUTE);
+  public static AwsSdkOperation getOperationOrNoop(ExecutionAttributes attributes) {
+    AwsSdkOperation operation = attributes.getAttribute(OPERATION_ATTRIBUTE);
+    return operation != null ? operation : AwsSdkOperation.noop();
   }
 }

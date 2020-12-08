@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 
 public interface HttpClientOperation<RESPONSE> {
 
@@ -41,21 +39,4 @@ public interface HttpClientOperation<RESPONSE> {
   }
 
   Span getSpan();
-
-  /**
-   * Instrumenters should inject context during {@link HttpClientTracer#startOperation} if possible,
-   * but some may need to inject context later.
-   *
-   * <p>This overload uses the globally configured propagators.
-   */
-  default <REQUEST> void inject(REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
-    inject(request, setter, OpenTelemetry.getGlobalPropagators().getTextMapPropagator());
-  }
-
-  /**
-   * Instrumenters should inject context during {@link HttpClientTracer#startOperation} if possible,
-   * but some may need to inject context later.
-   */
-  <REQUEST> void inject(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator);
 }

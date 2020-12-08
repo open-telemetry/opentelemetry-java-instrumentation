@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
@@ -27,16 +26,15 @@ final class AwsSdkHttpClientTracer
     return TRACER;
   }
 
-  public HttpClientOperation<SdkHttpResponse> startOperation(
-      String name, Tracer tracer, Kind kind) {
+  public AwsSdkOperation startOperation(String name, Tracer tracer, Kind kind) {
     Context parentContext = Context.current();
     if (!shouldStartSpan(parentContext)) {
-      return HttpClientOperation.noop();
+      return AwsSdkOperation.noop();
     }
     Span clientSpan =
         tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
     Context context = withClientSpan(parentContext, clientSpan);
-    return newOperation(context, parentContext);
+    return new DefaultAwsSdkOperation(context, parentContext);
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
