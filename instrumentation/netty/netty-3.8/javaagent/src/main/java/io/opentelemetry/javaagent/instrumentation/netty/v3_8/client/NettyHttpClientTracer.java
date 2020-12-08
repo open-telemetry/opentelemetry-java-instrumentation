@@ -38,7 +38,6 @@ public class NettyHttpClientTracer
       ChannelHandlerContext ctx, MessageEvent msg, ChannelTraceContext channelTraceContext) {
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      ctx.sendDownstream(msg);
       return HttpClientOperation.noop();
     }
 
@@ -50,7 +49,6 @@ public class NettyHttpClientTracer
     }
 
     if (!tracer().shouldStartSpan(parentContext)) {
-      ctx.sendDownstream(msg);
       return HttpClientOperation.noop();
     }
 
