@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -47,9 +48,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap(
-        "java.net.HttpURLConnection",
-        "io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionOperation");
+    return singletonMap("java.net.HttpURLConnection", HttpClientOperation.class.getName());
   }
 
   public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
@@ -83,7 +82,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     public static void methodEnter(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelOperation") HttpUrlConnectionOperation operation,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpUrlResponse> operation,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -97,12 +96,12 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       // putting into storage for a couple of reasons:
       // - to start an operation in connect() and end it in getInputStream()
       // - to avoid creating new operation on multiple subsequent calls to getInputStream()
-      ContextStore<HttpURLConnection, HttpUrlConnectionOperation> storage =
-          InstrumentationContext.get(HttpURLConnection.class, HttpUrlConnectionOperation.class);
+      ContextStore<HttpURLConnection, HttpClientOperation> storage =
+          InstrumentationContext.get(HttpURLConnection.class, HttpClientOperation.class);
       operation = storage.get(connection);
 
       if (operation == null) {
-        operation = tracer().startOperation(connection);
+        operation = tracer().startOperation(connection, connection);
         storage.put(connection, operation);
       }
 
@@ -115,7 +114,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelOperation") HttpUrlConnectionOperation operation,
+        @Advice.Local("otelOperation") HttpClientOperation<HttpUrlResponse> operation,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -124,7 +123,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       }
       scope.close();
 
-      if (!operation.finished()) {
+      if (operation.getSpan().isRecording()) {
         if (throwable != null) {
           operation.endExceptionally(throwable);
         } else if (methodName.equals("getInputStream") && responseCode > 0) {
