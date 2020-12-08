@@ -30,6 +30,7 @@ class TracingRequestWrapperTestBase extends InstrumentationSpecification impleme
     context = Mock(Context)
     context.getFunctionName() >> "my_function"
     context.getAwsRequestId() >> "1-22-333"
+    context.getInvokedFunctionArn() >> "arn:aws:lambda:us-east-1:123456789:function:test"
 
     AgentTestRunner.setGlobalPropagators(DefaultContextPropagators.builder()
       .addTextMapPropagator(B3Propagator.getInstance()).build())
