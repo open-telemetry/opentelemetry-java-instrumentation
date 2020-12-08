@@ -101,6 +101,18 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return spanBuilder;
   }
 
+  protected void onRequest(SpanAttributeSetter span, REQUEST request) {
+    assert span != null;
+    if (request != null) {
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
+
+      setFlavor(span, request);
+      setUrl(span, request);
+    }
+  }
+
   protected Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
@@ -120,30 +132,20 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
-  @Deprecated
-  public void end(Context context, RESPONSE response) {
+  void end(Context context, RESPONSE response) {
     end(context, response, -1);
   }
 
-  @Deprecated
   void end(Context context, RESPONSE response, long endTimeNanos) {
     Span span = Span.fromContext(context);
     onResponse(span, response);
     super.end(span, endTimeNanos);
   }
 
-  @Deprecated
-  void end(Context context) {
-    Span span = Span.fromContext(context);
-    super.end(span);
-  }
-
-  @Deprecated
   void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
     endExceptionally(context, response, throwable, -1);
   }
 
-  @Deprecated
   void endExceptionally(
       Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
     Span span = Span.fromContext(context);
@@ -151,22 +153,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.endExceptionally(span, throwable, endTimeNanos);
   }
 
-  @Deprecated
-  public void endExceptionally(Context context, Throwable throwable) {
+  void endExceptionally(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
     super.endExceptionally(span, throwable, -1);
-  }
-
-  protected void onRequest(SpanAttributeSetter span, REQUEST request) {
-    assert span != null;
-    if (request != null) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
-
-      setFlavor(span, request);
-      setUrl(span, request);
-    }
   }
 
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {
