@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getContextFromAttributes;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getOperationFromAttributes;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,14 +28,15 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
-      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
+  static final ExecutionAttribute<HttpClientOperation<SdkHttpResponse>> OPERATION_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
@@ -80,13 +82,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.current();
-    if (!tracer().shouldStartSpan(parentContext)) {
+    HttpClientOperation<SdkHttpResponse> operation =
+        tracer().startOperation(spanName(executionAttributes), AwsSdk.tracer(), kind);
+    if (operation == HttpClientOperation.<SdkHttpResponse>noop()) {
       return;
     }
-    io.opentelemetry.context.Context otelContext =
-        tracer().startSpan(parentContext, spanName(executionAttributes), AwsSdk.tracer(), kind);
-    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
+    executionAttributes.putAttribute(OPERATION_ATTRIBUTE, operation);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
@@ -96,32 +97,35 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         .equals(ClientType.SYNC)) {
       // We can only activate context for synchronous clients, which allows downstream
       // instrumentation like Apache to know about the SDK span.
-      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, otelContext.makeCurrent());
+      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, operation.makeCurrent());
     }
   }
 
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
-    if (otelContext == null) {
+    HttpClientOperation<SdkHttpResponse> operation =
+        getOperationFromAttributes(executionAttributes);
+    if (operation == null) {
       return context.httpRequest();
     }
 
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-    AwsXRayPropagator.getInstance().inject(otelContext, builder, AwsSdkInjectAdapter.INSTANCE);
+
+    operation.inject(builder, AwsSdkInjectAdapter.INSTANCE, AwsXRayPropagator.getInstance());
     return builder.build();
   }
 
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
-    if (otelContext == null) {
+    HttpClientOperation<SdkHttpResponse> operation =
+        getOperationFromAttributes(executionAttributes);
+    if (operation == null) {
       return;
     }
 
-    Span span = Span.fromContext(otelContext);
+    Span span = operation.getSpan();
     tracer().onRequest(span, context.httpRequest());
     SdkRequestDecorator decorator = decorator(executionAttributes);
     if (decorator != null) {
@@ -160,13 +164,15 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (scope != null) {
       scope.close();
     }
-    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
-    if (otelContext != null) {
+    HttpClientOperation<SdkHttpResponse> operation =
+        getOperationFromAttributes(executionAttributes);
+    if (operation != null) {
       clearAttributes(executionAttributes);
-      Span span = Span.fromContext(otelContext);
+      Span span = operation.getSpan();
+      // TODO (trask) move below into operation?
       tracer().afterExecution(span, context.httpRequest());
       onSdkResponse(span, context.response());
-      tracer().end(otelContext, context.httpResponse());
+      operation.end(context.httpResponse());
     }
   }
 
@@ -179,15 +185,16 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    io.opentelemetry.context.Context otelContext = getContextFromAttributes(executionAttributes);
-    if (otelContext != null) {
+    HttpClientOperation<SdkHttpResponse> operation =
+        getOperationFromAttributes(executionAttributes);
+    if (operation != null) {
       clearAttributes(executionAttributes);
-      tracer().endExceptionally(otelContext, context.exception());
+      operation.endExceptionally(context.exception());
     }
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
-    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
+    executionAttributes.putAttribute(OPERATION_ATTRIBUTE, null);
     executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, null);
   }
 

@@ -12,6 +12,8 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.DefaultHttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
@@ -25,6 +27,19 @@ final class AwsSdkHttpClientTracer
 
   static AwsSdkHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<SdkHttpResponse> startOperation(
+      String name, Tracer tracer, Kind kind) {
+    Context parentContext = Context.current();
+    if (!shouldStartSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
+    Span clientSpan =
+        tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
+    Context context =
+        parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+    return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -76,11 +91,5 @@ final class AwsSdkHttpClientTracer
   @Override
   protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
     return super.onRequest(span, sdkHttpRequest);
-  }
-
-  public Context startSpan(Context parentContext, String name, Tracer tracer, Kind kind) {
-    Span clientSpan =
-        tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
-    return parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
   }
 }

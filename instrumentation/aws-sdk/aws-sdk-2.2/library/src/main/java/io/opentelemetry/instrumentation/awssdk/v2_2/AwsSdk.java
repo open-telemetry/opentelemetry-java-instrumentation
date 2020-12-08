@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.OPERATION_ATTRIBUTE;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -59,10 +59,11 @@ public class AwsSdk {
   }
 
   /**
-   * Returns the {@link Span} stored in the {@link ExecutionAttributes}, or {@code null} if there is
-   * no span set.
+   * Returns the {@link HttpClientOperation} stored in the {@link ExecutionAttributes}, or {@code
+   * null} if there is no operation set.
    */
-  public static Context getContextFromAttributes(ExecutionAttributes attributes) {
-    return attributes.getAttribute(CONTEXT_ATTRIBUTE);
+  public static HttpClientOperation<SdkHttpResponse> getOperationFromAttributes(
+      ExecutionAttributes attributes) {
+    return attributes.getAttribute(OPERATION_ATTRIBUTE);
   }
 }
