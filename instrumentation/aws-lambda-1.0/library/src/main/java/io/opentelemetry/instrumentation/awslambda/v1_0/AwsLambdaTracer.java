@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AwsLambdaTracer extends BaseTracer {
@@ -47,6 +48,8 @@ public class AwsLambdaTracer extends BaseTracer {
   }
 
   private final HttpSpanAttributes httpSpanAttributes = new HttpSpanAttributes();
+  // cached accountId value
+  private volatile AtomicReference<String> accountId;
 
   public AwsLambdaTracer() {}
 
@@ -101,10 +104,10 @@ public class AwsLambdaTracer extends BaseTracer {
     String arn = getFunctionArn(context);
     if (arn != null) {
       span.setAttribute(FAAS_ID, arn);
-      String[] arnParts = arn.split(":");
-      if (arnParts.length >= 5) {
-        span.setAttribute(CLOUD_ACCOUNT_ID, arnParts[4]);
-      }
+    }
+    String accountId = getAccountId(arn);
+    if (accountId != null) {
+      span.setAttribute(CLOUD_ACCOUNT_ID, accountId);
     }
   }
 
@@ -118,6 +121,24 @@ public class AwsLambdaTracer extends BaseTracer {
     } catch (Throwable throwable) {
       return null;
     }
+  }
+
+  @Nullable
+  private String getAccountId(@Nullable String arn) {
+    if (accountId == null) {
+      synchronized (this) {
+        if (accountId == null) {
+          accountId = new AtomicReference<>();
+          if (arn != null) {
+            String[] arnParts = arn.split(":");
+            if (arnParts.length >= 5) {
+              accountId.set(arnParts[4]);
+            }
+          }
+        }
+      }
+    }
+    return accountId.get();
   }
 
   private String spanName(Context context, Object input) {
