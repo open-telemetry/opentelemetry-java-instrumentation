@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.lang.invoke.MethodHandle;
@@ -72,10 +71,6 @@ public class SpringWebfluxHttpClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.spring-webflux";
-  }
-
-  public Tracer getTracer() {
-    return tracer;
   }
 
   // rawStatusCode() method was introduced in webflux 5.1

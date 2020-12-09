@@ -61,16 +61,10 @@ public class JdkHttpClientTracer
   }
 
   @Override
-  protected Span onResponse(Span span, HttpResponse<?> httpResponse) {
-    span = super.onResponse(span, httpResponse);
-
-    if (httpResponse != null) {
-      span.setAttribute(
-          SemanticAttributes.HTTP_FLAVOR,
-          httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
-    }
-
-    return span;
+  protected void onResponse(Span span, HttpResponse<?> httpResponse) {
+    super.onResponse(span, httpResponse);
+    span.setAttribute(
+        SemanticAttributes.HTTP_FLAVOR, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
   }
 
   @Override
@@ -90,6 +84,7 @@ public class JdkHttpClientTracer
     return throwable;
   }
 
+  // TODO (trask) how to make this fit into Operations/Tracers better?
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 

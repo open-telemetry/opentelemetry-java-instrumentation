@@ -42,7 +42,7 @@ public class NettyHttpClientTracer
       parentContext = Context.current();
     }
 
-    if (!tracer().shouldStartSpan(parentContext)) {
+    if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
 

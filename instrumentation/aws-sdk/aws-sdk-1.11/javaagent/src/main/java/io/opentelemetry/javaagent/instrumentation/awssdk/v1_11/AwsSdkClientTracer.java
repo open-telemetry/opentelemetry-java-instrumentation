@@ -36,7 +36,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       Request<?> request, RequestMeta requestMeta) {
 
     Context parentContext = Context.current();
-    if (!shouldStartSpan(parentContext)) {
+    if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
     SpanBuilder spanBuilder = spanBuilder(parentContext, request);
@@ -64,12 +64,12 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   @Override
-  public Span onResponse(Span span, Response<?> response) {
+  public void onResponse(Span span, Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
-    return super.onResponse(span, response);
+    super.onResponse(span, response);
   }
 
   private String qualifiedOperation(String service, Class<?> operation) {

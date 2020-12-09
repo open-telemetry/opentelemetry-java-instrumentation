@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
@@ -106,8 +105,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
       operation.inject(request);
-      Span span = operation.getSpan();
-      span.updateName(tracer().spanNameForRequest(request));
       operation.onRequest(request);
       return request;
     }

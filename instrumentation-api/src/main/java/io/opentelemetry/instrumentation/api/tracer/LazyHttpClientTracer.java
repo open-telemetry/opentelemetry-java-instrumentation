@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 
 public abstract class LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE>
@@ -19,12 +20,22 @@ public abstract class LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE>
 
   public final LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> startOperation(String name) {
     Context parentContext = Context.current();
-    if (!shouldStartSpan(parentContext)) {
+    if (inClientSpan(parentContext)) {
       return LazyHttpClientOperation.noop();
     }
     Span clientSpan =
         tracer.spanBuilder(name).setSpanKind(CLIENT).setParent(parentContext).startSpan();
     Context context = withClientSpan(parentContext, clientSpan);
     return LazyHttpClientOperation.create(context, parentContext, this);
+  }
+
+  @Override
+  protected final void onRequest(SpanBuilder spanBuilder, REQUEST request) {
+    // LazyHttpClientTracer does not have request available at start
+    throw new IllegalStateException();
+  }
+
+  protected void onRequest(Span span, REQUEST request) {
+    super.onRequest(span::setAttribute, request);
   }
 }

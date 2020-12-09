@@ -71,41 +71,40 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   // this method
   public final HttpClientOperation<RESPONSE> startOperation(
       REQUEST request, CARRIER carrier, long startTimeNanos) {
-    checkNotNull(request);
-    checkNotNull(carrier);
     return internalStartOperation(request, carrier, startTimeNanos);
   }
 
   private HttpClientOperation<RESPONSE> internalStartOperation(
       REQUEST request, CARRIER carrier, long startTimeNanos) {
     Context parentContext = Context.current();
-    if (!shouldStartSpan(parentContext)) {
+    if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
-    Span span = spanBuilder(parentContext, request, startTimeNanos).startSpan();
-    Context context = withClientSpan(parentContext, span);
+    String spanName = spanNameForRequest(request);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
+    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     inject(carrier, context);
     return newOperation(context, parentContext);
   }
 
-  // TODO (trask) pass in request, e.g. to allow for subclass to suppress spans by URL?
-  protected boolean shouldStartSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+  protected final boolean inClientSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
   }
 
-  // if you need to override, use the method below
   protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
-    return spanBuilder(parentContext, request, -1);
+    return spanBuilder(parentContext, request, spanNameForRequest(request));
+  }
+
+  // override onRequest() if you want to capture more request attributes
+  protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request, String spanName) {
+    return spanBuilder(parentContext, request, spanName, -1);
   }
 
   // override onRequest() if you want to capture more request attributes
   protected final SpanBuilder spanBuilder(
-      Context parentContext, REQUEST request, long startTimeNanos) {
+      Context parentContext, REQUEST request, String spanName, long startTimeNanos) {
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(spanNameForRequest(request))
-            .setSpanKind(Kind.CLIENT)
-            .setParent(parentContext);
+        tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }
@@ -136,23 +135,12 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return HttpClientOperation.create(context, parentContext, this);
   }
 
-  // TODO (trask) we don't have use case yet, but seems reasonable to want to override
-  // TODO (trask) make this not public
-  public String spanNameForRequest(REQUEST request) {
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
-    }
-    String method = method(request);
-    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
+    onRequest(spanBuilder::setAttribute, request);
   }
 
-  // TODO (trask) is using lambda a perf concern?
-  //  is it better to have two methods, one for SpanBuilder and and one for Span?
-  //  most subclasses will know which one they use, and override only that one
-  //  (or is that a reason against due to confusion of which one to override?)
-  //  btw, what is the reason to add attributes to the builder instead of directly afterwards on
-  //  the span?
-  protected void onRequest(SpanAttributeSetter span, REQUEST request) {
+  // package protected to be accessible to LazyHttpClientTracer
+  void onRequest(SpanAttributeSetter span, REQUEST request) {
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
       span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
@@ -165,7 +153,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   // TODO (trask) should this and onRequest() above take Context instead of Span?
   //  to be more generally useful somehow?
-  protected Span onResponse(Span span, RESPONSE response) {
+  // TODO (trask) could make this not public for now, only 2 subclasses are using, and those uses
+  //  could be inlined into advice
+  protected void onResponse(Span span, RESPONSE response) {
     Integer status = status(response);
     if (status != null) {
       span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
@@ -174,7 +164,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
         span.setStatus(statusCode);
       }
     }
-    return span;
   }
 
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {
@@ -203,9 +192,11 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     }
   }
 
-  private static void checkNotNull(Object obj) {
-    if (obj == null) {
-      throw new NullPointerException();
+  private String spanNameForRequest(REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
     }
+    String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 }

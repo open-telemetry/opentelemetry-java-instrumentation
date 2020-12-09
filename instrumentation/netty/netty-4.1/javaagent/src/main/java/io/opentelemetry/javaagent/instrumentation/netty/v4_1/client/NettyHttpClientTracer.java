@@ -44,7 +44,7 @@ public class NettyHttpClientTracer
 
     HttpRequest request = (HttpRequest) msg;
 
-    if (!tracer().shouldStartSpan(parentContext, request)) {
+    if (suppressOperation(parentContext, request)) {
       return HttpClientOperation.noop();
     }
 
@@ -55,6 +55,24 @@ public class NettyHttpClientTracer
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     inject(request.headers(), context);
     return newOperation(context, parentContext);
+  }
+
+  private boolean suppressOperation(Context parentContext, HttpRequest request) {
+    if (inClientSpan(parentContext)) {
+      return true;
+    }
+    // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
+    // beginning transport. This means we MUST suppress Netty spans we would normally create or
+    // they will inject their own trace header, which does not match what was present when the
+    // signature was computed, breaking the SDK request completely. We have not found how to
+    // cleanly propagate context from the SDK instrumentation, which executes on an application
+    // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
+    // require instrumenting internal classes. Using a header which is more or less guaranteed to
+    // always exist is arguably more stable.
+    if (request.headers().contains("amz-sdk-invocation-id")) {
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -95,24 +113,6 @@ public class NettyHttpClientTracer
   @Override
   protected Setter<HttpHeaders> getSetter() {
     return SETTER;
-  }
-
-  public boolean shouldStartSpan(Context parentContext, HttpRequest request) {
-    if (!super.shouldStartSpan(parentContext)) {
-      return false;
-    }
-    // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
-    // beginning transport. This means we MUST suppress Netty spans we would normally create or
-    // they will inject their own trace header, which does not match what was present when the
-    // signature was computed, breaking the SDK request completely. We have not found how to
-    // cleanly propagate context from the SDK instrumentation, which executes on an application
-    // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
-    // require instrumenting internal classes. Using a header which is more or less guaranteed to
-    // always exist is arguably more stable.
-    if (request.headers().contains("amz-sdk-invocation-id")) {
-      return false;
-    }
-    return true;
   }
 
   @Override

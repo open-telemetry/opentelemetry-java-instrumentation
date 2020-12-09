@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
@@ -29,20 +27,16 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
    */
   public HttpClientOperation<Response> startOperation(Request request) {
     Context parentContext = Context.current();
-    if (!shouldStartSpan(parentContext)) {
+    if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     Span span =
-        tracer
-            .spanBuilder(digest.toString())
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
+        spanBuilder(parentContext, request, digest.toString())
             .setAttribute("namespace", digest.getResourceMeta().getNamespace())
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
     Context context = withClientSpan(parentContext, span);
-    inject(request, context);
     return newOperation(context, parentContext);
   }
 
