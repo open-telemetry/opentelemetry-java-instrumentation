@@ -93,12 +93,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   }
 
   @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
+    super.onException(span, unwrapThrowable(throwable));
+  }
+
+  private static Throwable unwrapThrowable(Throwable throwable) {
     Throwable result = throwable;
     if (throwable instanceof ServletException && throwable.getCause() != null) {
       result = throwable.getCause();
     }
-    return super.unwrapThrowable(result);
+    return result;
   }
 
   public void setPrincipal(Context context, HttpServletRequest request) {

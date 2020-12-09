@@ -32,16 +32,6 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   public AwsSdkClientTracer() {}
 
-  @Override
-  public String spanNameForRequest(Request<?> request) {
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
-    }
-    String awsServiceName = request.getServiceName();
-    Class<?> awsOperation = request.getOriginalRequest().getClass();
-    return qualifiedOperation(awsServiceName, awsOperation);
-  }
-
   public HttpClientOperation<Response<?>> startOperation(
       Request<?> request, RequestMeta requestMeta) {
 

@@ -35,7 +35,11 @@ public class RatpackTracer extends BaseTracer {
   }
 
   @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
+    super.onException(span, unwrapThrowable(throwable));
+  }
+
+  private static Throwable unwrapThrowable(Throwable throwable) {
     if (throwable instanceof Error && throwable.getCause() != null) {
       return throwable.getCause();
     } else {

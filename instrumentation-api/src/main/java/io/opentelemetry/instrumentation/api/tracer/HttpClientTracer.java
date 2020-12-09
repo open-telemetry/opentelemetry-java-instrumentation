@@ -132,30 +132,16 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return new DefaultHttpClientOperation<>(context, parentContext, this);
   }
 
-  void end(Context context, RESPONSE response) {
-    end(context, response, -1);
-  }
-
-  void end(Context context, RESPONSE response, long endTimeNanos) {
-    Span span = Span.fromContext(context);
-    onResponse(span, response);
-    super.end(span, endTimeNanos);
-  }
-
-  void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
-    endExceptionally(context, response, throwable, -1);
-  }
-
-  void endExceptionally(
-      Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
-    Span span = Span.fromContext(context);
-    onResponse(span, response);
-    super.endExceptionally(span, throwable, endTimeNanos);
-  }
-
-  void endExceptionally(Context context, Throwable throwable) {
-    Span span = Span.fromContext(context);
-    super.endExceptionally(span, throwable, -1);
+  protected Span onResponse(Span span, RESPONSE response) {
+    assert span != null;
+    if (response != null) {
+      Integer status = status(response);
+      if (status != null) {
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
+        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
+      }
+    }
+    return span;
   }
 
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {
@@ -184,19 +170,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     }
   }
 
-  protected Span onResponse(Span span, RESPONSE response) {
-    assert span != null;
-    if (response != null) {
-      Integer status = status(response);
-      if (status != null) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
-      }
-    }
-    return span;
-  }
-
-  protected String spanNameForRequest(REQUEST request) {
+  private String spanNameForRequest(REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

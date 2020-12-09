@@ -34,7 +34,11 @@ public class PlayTracer extends BaseTracer {
   }
 
   @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
+    super.onException(span, unwrapThrowable(throwable));
+  }
+
+  private static Throwable unwrapThrowable(Throwable throwable) {
     // This can be moved to instanceof check when using Java 8.
     if (throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
         && throwable.getCause() != null) {

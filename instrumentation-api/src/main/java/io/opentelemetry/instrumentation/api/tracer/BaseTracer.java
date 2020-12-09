@@ -140,16 +140,14 @@ public abstract class BaseTracer {
 
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     span.setStatus(StatusCode.ERROR);
-    onError(span, unwrapThrowable(throwable));
+    onException(span, throwable);
     end(span, endTimeNanos);
   }
 
-  protected void onError(Span span, Throwable throwable) {
-    addThrowable(span, throwable);
-  }
-
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    return throwable instanceof ExecutionException ? throwable.getCause() : throwable;
+  protected void onException(Span span, Throwable throwable) {
+    Throwable unwrapped =
+        throwable instanceof ExecutionException ? throwable.getCause() : throwable;
+    addThrowable(span, unwrapped);
   }
 
   public void addThrowable(Span span, Throwable throwable) {

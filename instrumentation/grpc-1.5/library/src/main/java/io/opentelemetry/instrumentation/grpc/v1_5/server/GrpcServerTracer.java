@@ -40,9 +40,9 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
-    super.onError(span, grpcStatus.getCause());
+    super.onException(span, grpcStatus.getCause());
     span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
   }
 

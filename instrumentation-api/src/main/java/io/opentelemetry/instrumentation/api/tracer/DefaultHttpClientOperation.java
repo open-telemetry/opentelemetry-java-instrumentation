@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -26,46 +29,73 @@ public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation
   }
 
   @Override
-  public Scope makeCurrent() {
+  public final Scope makeCurrent() {
     return context.makeCurrent();
   }
 
   @Override
-  public Scope makeParentCurrent() {
+  public final Scope makeParentCurrent() {
     return parentContext.makeCurrent();
   }
 
   @Override
-  public void end(RESPONSE response) {
-    tracer.end(context, response);
+  public final void end(RESPONSE response) {
+    checkNotNull(response);
+    end(response, -1);
   }
 
   @Override
-  public void end(RESPONSE response, long endTimeNanos) {
-    tracer.end(context, response, endTimeNanos);
+  public final void end(RESPONSE response, long endTimeNanos) {
+    checkNotNull(response);
+    Span span = getSpan();
+    tracer.onResponse(span, response);
+    endSpan(span, endTimeNanos);
   }
 
   @Override
-  public void endExceptionally(Throwable throwable) {
-    tracer.endExceptionally(context, throwable);
+  public final void endExceptionally(Throwable throwable) {
+    checkNotNull(throwable);
+    endExceptionally(null, throwable);
   }
 
   @Override
-  public void endExceptionally(RESPONSE response, Throwable throwable) {
-    tracer.endExceptionally(context, response, throwable);
+  public final void endExceptionally(RESPONSE response, Throwable throwable) {
+    checkNotNull(throwable);
+    endExceptionally(response, throwable, -1);
   }
 
   @Override
-  public void endExceptionally(RESPONSE response, Throwable throwable, long endTimeNanos) {}
+  public final void endExceptionally(RESPONSE response, Throwable throwable, long endTimeNanos) {
+    checkNotNull(throwable);
+    Span span = getSpan();
+    span.setStatus(StatusCode.ERROR);
+    tracer.onResponse(span, response);
+    tracer.onException(span, throwable);
+    endSpan(span, endTimeNanos);
+  }
 
   @Override
-  public Span getSpan() {
+  public final Span getSpan() {
     return Span.fromContext(context);
   }
 
   // TODO (trask) should we just expose full context?
-  protected <REQUEST> void inject(
+  protected final <REQUEST> void inject(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator) {
     propagator.inject(context, request, setter);
+  }
+
+  private static void endSpan(Span span, long endTimeNanos) {
+    if (endTimeNanos > 0) {
+      span.end(endTimeNanos, NANOSECONDS);
+    } else {
+      span.end();
+    }
+  }
+
+  private static void checkNotNull(Object obj) {
+    if (obj == null) {
+      throw new NullPointerException();
+    }
   }
 }

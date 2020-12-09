@@ -89,9 +89,4 @@ public class ApacheHttpAsyncClientTracer
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.apache-httpasyncclient";
   }
-
-  @Override
-  public String spanNameForRequest(HttpRequest httpRequest) {
-    return super.spanNameForRequest(httpRequest);
-  }
 }

@@ -114,7 +114,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public void endExceptionally(
       Context context, Throwable throwable, RESPONSE response, long timestamp) {
     Span span = Span.fromContext(context);
-    onError(span, unwrapThrowable(throwable));
+    onException(span, throwable);
     if (response == null) {
       setStatus(span, 500);
     } else {

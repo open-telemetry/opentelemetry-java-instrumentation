@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 
+// Operation has convenience overloads, Tracer has extension points
+// Usage should be consolidated to one or the other
 public interface HttpClientOperation<RESPONSE> {
 
   static <RESPONSE> HttpClientOperation<RESPONSE> noop() {

@@ -79,11 +79,15 @@ public class JdkHttpClientTracer
   }
 
   @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
+    super.onException(span, unwrapThrowable(throwable));
+  }
+
+  private static Throwable unwrapThrowable(Throwable throwable) {
     if (throwable instanceof CompletionException) {
       return throwable.getCause();
     }
-    return super.unwrapThrowable(throwable);
+    return throwable;
   }
 
   public HttpHeaders inject(HttpHeaders original) {

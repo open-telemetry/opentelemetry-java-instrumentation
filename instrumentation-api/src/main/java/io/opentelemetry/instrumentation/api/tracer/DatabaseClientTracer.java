@@ -67,7 +67,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   public void endExceptionally(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
-    onError(span, throwable);
+    onException(span, throwable);
     end(span);
   }
 
@@ -80,7 +80,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
+  protected void onException(Span span, Throwable throwable) {
     if (throwable != null) {
       span.setStatus(StatusCode.ERROR);
       addThrowable(
