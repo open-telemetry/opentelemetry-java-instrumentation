@@ -19,7 +19,7 @@ jobs:
           java-version: 11
 
       - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: springboot-smoke
 
