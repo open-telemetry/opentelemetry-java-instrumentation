@@ -5,9 +5,6 @@ on:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"
   workflow_dispatch:
-  push:
-    branches:
-      - master
 
 jobs:
   build:
@@ -40,7 +37,7 @@ jobs:
         continue-on-error: true
         env:
           CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "PR / jdk11"
+          CIMATE_CI_KEY: "Night / jdk11"
         run: |
           wget -q https://get.cimate.io/release/linux/cimate
           chmod +x cimate

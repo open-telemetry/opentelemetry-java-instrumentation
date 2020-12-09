@@ -1,0 +1,89 @@
+name: CI build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk11
+
+      - name: Build
+        uses: nick-invision/retry@v2.2.0
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        with:
+          command: ./gradlew build --stacktrace
+          timeout_minutes: 90
+          max_attempts: 3
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "Main / jdk11"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 15 ]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - id: setup-test-java
+        name: Set up JDK ${{ matrix.java }} for running tests
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.5
+        with:
+          job-id: jdk${{ matrix.java }}
+
+      - name: Test
+        uses: nick-invision/retry@v2.2.0
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        with:
+          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+          timeout_minutes: 180
+          max_attempts: 3
+
+      - name: Aggregate test reports with ciMate
+        if: always()
+        continue-on-error: true
+        env:
+          CIMATE_PROJECT_ID: mz1jo49x
+          CIMATE_CI_KEY: "Main / jdk${{matrix.java}}"
+        run: |
+          wget -q https://get.cimate.io/release/linux/cimate
+          chmod +x cimate
+          ./cimate -v "**/TEST-*.xml"
