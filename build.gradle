@@ -3,6 +3,7 @@ import nebula.plugin.release.git.opinion.Strategies
 plugins {
   id 'idea'
 
+  id "de.marcphilipp.nexus-publish" version "0.4.0" apply false
   id "io.codearte.nexus-staging" version "0.22.0"
   id "nebula.release" version "15.3.0"
 
@@ -30,10 +31,9 @@ nebulaRelease {
 }
 
 nexusStaging {
-  // We publish to two package groups so need to close each group individually until staging profile
-  // is set up. We'll run the command twice with the two groups.
-  // TODO(anuraaga): https://issues.sonatype.org/browse/OSSRH-62444
-  packageGroup = findProperty("mavenCentralGroup")
+  packageGroup = "io.opentelemetry"
+  username = System.getenv('SONATYPE_USER')
+  password = System.getenv('SONATYPE_KEY')
 }
 
 allprojects {
