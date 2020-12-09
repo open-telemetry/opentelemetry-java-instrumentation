@@ -114,7 +114,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       OpenTelemetry.getGlobalPropagators()
           .getTextMapPropagator()
           .inject(context, request, tracer().getSetter());
-      Span span = Span.fromContext(context);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              context);
       span.updateName(tracer().spanNameForRequest(request));
       tracer().onRequest(span, request);
       return request;

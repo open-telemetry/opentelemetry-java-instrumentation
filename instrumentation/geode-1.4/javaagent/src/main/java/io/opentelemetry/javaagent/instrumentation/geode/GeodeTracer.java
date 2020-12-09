@@ -9,12 +9,12 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
 
-public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
+public class GeodeTracer extends DatabaseClientInstrumenter<Region<?, ?>, String> {
   private static final GeodeTracer TRACER = new GeodeTracer();
 
   public static GeodeTracer tracer() {

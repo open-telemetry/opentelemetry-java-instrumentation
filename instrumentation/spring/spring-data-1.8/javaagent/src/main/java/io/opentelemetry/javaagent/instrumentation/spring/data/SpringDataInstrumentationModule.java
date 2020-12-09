@@ -102,7 +102,9 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
         return methodInvocation.proceed();
       }
 
-      Span span = tracer().startSpan(invokedMethod);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              tracer().startOperation(invokedMethod));
 
       Object result;
       try (Scope ignored = span.makeCurrent()) {

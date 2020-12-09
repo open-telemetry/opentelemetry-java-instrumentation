@@ -24,12 +24,12 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DecoratorRegistry;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
 
-class CamelTracer extends BaseTracer {
+class CamelTracer extends BaseInstrumenter {
 
   public static final CamelTracer TRACER = new CamelTracer();
 

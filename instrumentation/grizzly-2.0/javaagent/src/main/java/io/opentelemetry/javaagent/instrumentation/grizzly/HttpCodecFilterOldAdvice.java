@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerInstrumenter.tracer;
 
 import io.opentelemetry.context.Context;
 import java.lang.reflect.Method;
@@ -32,6 +32,6 @@ public class HttpCodecFilterOldAdvice {
 
     // We don't want to attach the new context to this thread, as actual request will continue on
     // some other thread where we will read and attach it via tracer().getServerContext(ctx).
-    tracer().startSpan(httpRequest, httpRequest, ctx, method);
+    tracer().startOperation(httpRequest, httpRequest, ctx, method);
   }
 }

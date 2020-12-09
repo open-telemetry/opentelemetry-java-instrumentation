@@ -67,7 +67,9 @@ public class RmiClientInstrumentationModule extends InstrumentationModule {
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return;
       }
-      span = tracer().startSpan(method);
+      span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              tracer().startOperation(method));
       scope = span.makeCurrent();
     }
 

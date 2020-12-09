@@ -8,17 +8,17 @@ package io.opentelemetry.instrumentation.spring.webmvc;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-class SpringWebMvcServerTracer
-    extends HttpServerTracer<
+class SpringWebMvcServerInstrumenter
+    extends HttpServerInstrumenter<
         HttpServletRequest, HttpServletResponse, HttpServletRequest, HttpServletRequest> {
 
-  public SpringWebMvcServerTracer(Tracer tracer) {
-    super(tracer);
+  public SpringWebMvcServerInstrumenter(Tracer tracer) {
+    super(tracer, null);
   }
 
   @Override

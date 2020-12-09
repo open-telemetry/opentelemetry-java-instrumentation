@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import ratpack.handling.Context;
 
-public class RatpackTracer extends BaseTracer {
+public class RatpackTracer extends BaseInstrumenter {
   private static final RatpackTracer TRACER = new RatpackTracer();
 
   public static RatpackTracer tracer() {

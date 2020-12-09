@@ -33,7 +33,9 @@ public class LettuceAsyncBiFunction<T, U extends Throwable, R>
   @Override
   public R apply(T t, Throwable throwable) {
     if (throwable instanceof CancellationException) {
-      Span span = Span.fromContext(context);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              context);
       span.setAttribute("lettuce.command.cancelled", true);
       tracer().end(context);
     } else {

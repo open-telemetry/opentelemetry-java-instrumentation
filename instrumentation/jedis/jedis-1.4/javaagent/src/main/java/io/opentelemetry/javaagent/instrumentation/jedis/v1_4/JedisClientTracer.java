@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
@@ -15,7 +15,7 @@ import java.util.List;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
-public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs> {
+public class JedisClientTracer extends DatabaseClientInstrumenter<Connection, CommandWithArgs> {
   private static final JedisClientTracer TRACER = new JedisClientTracer();
 
   public static JedisClientTracer tracer() {

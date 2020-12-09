@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class FinatraTracer extends BaseTracer {
+public class FinatraTracer extends BaseInstrumenter {
   private static final FinatraTracer TRACER = new FinatraTracer();
 
   public static FinatraTracer tracer() {

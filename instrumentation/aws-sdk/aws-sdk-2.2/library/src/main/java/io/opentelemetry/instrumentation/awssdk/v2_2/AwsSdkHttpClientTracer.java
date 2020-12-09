@@ -11,15 +11,14 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkHttpClientTracer
-    extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
+    extends HttpClientInstrumenter<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
 
   private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
 
@@ -81,6 +80,9 @@ final class AwsSdkHttpClientTracer
   public Context startSpan(Context parentContext, String name, Tracer tracer, Kind kind) {
     Span clientSpan =
         tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
-    return parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+    return parentContext
+        .with(clientSpan)
+        .with(
+            io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
   }
 }

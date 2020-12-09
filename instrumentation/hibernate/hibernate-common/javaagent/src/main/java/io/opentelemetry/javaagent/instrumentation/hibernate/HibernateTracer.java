@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HibernateTracer extends BaseTracer {
+public class HibernateTracer extends BaseInstrumenter {
   private static final HibernateTracer TRACER = new HibernateTracer();
 
   public static HibernateTracer tracer() {

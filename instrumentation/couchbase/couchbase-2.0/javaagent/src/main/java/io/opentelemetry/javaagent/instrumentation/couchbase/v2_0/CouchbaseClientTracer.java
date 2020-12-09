@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
-public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
+public class CouchbaseClientTracer extends DatabaseClientInstrumenter<Void, Method> {
   private static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
 
   public static CouchbaseClientTracer tracer() {

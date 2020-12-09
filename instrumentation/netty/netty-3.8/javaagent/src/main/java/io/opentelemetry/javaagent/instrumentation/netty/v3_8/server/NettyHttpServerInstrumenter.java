@@ -9,7 +9,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -17,11 +17,11 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-public class NettyHttpServerTracer
-    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, ChannelTraceContext> {
-  private static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+public class NettyHttpServerInstrumenter
+    extends HttpServerInstrumenter<HttpRequest, HttpResponse, Channel, ChannelTraceContext> {
+  private static final NettyHttpServerInstrumenter TRACER = new NettyHttpServerInstrumenter();
 
-  public static NettyHttpServerTracer tracer() {
+  public static NettyHttpServerInstrumenter tracer() {
     return TRACER;
   }
 

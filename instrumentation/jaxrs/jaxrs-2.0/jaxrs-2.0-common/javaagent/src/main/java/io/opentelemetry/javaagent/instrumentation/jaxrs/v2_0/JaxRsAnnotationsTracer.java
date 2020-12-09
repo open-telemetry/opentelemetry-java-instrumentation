@@ -9,8 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.ne
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class JaxRsAnnotationsTracer extends BaseTracer {
+public class JaxRsAnnotationsTracer extends BaseInstrumenter {
   public static final String ABORT_FILTER_CLASS =
       "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.class";
   public static final String ABORT_HANDLED =
@@ -40,7 +41,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // well.
     Context context = Context.current();
     Span span = tracer.spanBuilder("jax-rs.request").setParent(context).startSpan();
-    updateSpanNames(context, span, BaseTracer.getCurrentServerSpan(context), target, method);
+    updateSpanNames(context, span, Tracer.getCurrentServerSpan(context), target, method);
     return span;
   }
 
@@ -51,7 +52,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       updateSpanName(span, pathBasedSpanName);
     } else {
       updateSpanName(serverSpan, pathBasedSpanName);
-      updateSpanName(span, tracer().spanNameForMethod(target, method));
+      updateSpanName(span, Tracer.spanNameForMethod(target, method));
     }
   }
 

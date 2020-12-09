@@ -157,7 +157,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request);
+      context = tracer().startOperation(parentContext, request, request);
       scope = context.makeCurrent();
     }
 
@@ -194,7 +194,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request);
+      context = tracer().startOperation(parentContext, request, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -236,7 +236,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       } else {
         httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
       }
-      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      context = tracer().startOperation(parentContext, httpUriRequest, httpUriRequest);
       scope = context.makeCurrent();
     }
 
@@ -280,7 +280,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       } else {
         httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
       }
-      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      context = tracer().startOperation(parentContext, httpUriRequest, httpUriRequest);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code

@@ -174,7 +174,7 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public ResultSet execute(@NonNull String query) {
 
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(query);
@@ -194,7 +194,7 @@ public class TracingCqlSession implements CqlSession {
   public ResultSet execute(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(statement);
@@ -214,7 +214,7 @@ public class TracingCqlSession implements CqlSession {
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
@@ -232,7 +232,7 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(

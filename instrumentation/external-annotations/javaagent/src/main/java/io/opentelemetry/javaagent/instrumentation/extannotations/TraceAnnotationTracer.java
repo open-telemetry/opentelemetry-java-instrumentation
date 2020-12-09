@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class TraceAnnotationTracer extends BaseTracer {
+public class TraceAnnotationTracer extends BaseInstrumenter {
   private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
 
   public static TraceAnnotationTracer tracer() {

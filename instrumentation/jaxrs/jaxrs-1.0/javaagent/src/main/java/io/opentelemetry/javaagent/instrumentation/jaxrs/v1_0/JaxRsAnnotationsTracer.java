@@ -9,8 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.ne
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class JaxRsAnnotationsTracer extends BaseTracer {
+public class JaxRsAnnotationsTracer extends BaseInstrumenter {
 
   private static final JaxRsAnnotationsTracer TRACER = new JaxRsAnnotationsTracer();
 
@@ -33,14 +34,14 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   public Span startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
     Context context = Context.current();
-    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+    Span serverSpan = Tracer.getCurrentServerSpan(context);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String spanName;
     if (serverSpan == null) {
       spanName = pathBasedSpanName;
     } else {
-      spanName = spanNameForMethod(target, method);
+      spanName = Tracer.spanNameForMethod(target, method);
       updateServerSpanName(context, serverSpan, pathBasedSpanName);
     }
 

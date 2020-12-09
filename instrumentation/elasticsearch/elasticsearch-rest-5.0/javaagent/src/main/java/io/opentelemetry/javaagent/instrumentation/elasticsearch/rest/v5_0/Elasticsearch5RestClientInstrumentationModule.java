@@ -69,7 +69,7 @@ public class Elasticsearch5RestClientInstrumentationModule extends Instrumentati
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      context = tracer().startSpan(currentContext(), null, method + " " + endpoint);
+      context = tracer().startOperation(currentContext(), null, method + " " + endpoint);
       scope = context.makeCurrent();
 
       responseListener = new RestResponseListener(responseListener, context);

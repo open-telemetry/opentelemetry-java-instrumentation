@@ -72,7 +72,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (tracer().shouldStartSpan(parentContext)) {
-        context = tracer().startSpan(parentContext, invocation, invocation);
+        context = tracer().startOperation(parentContext, invocation, invocation);
         scope = context.makeCurrent();
       }
     }

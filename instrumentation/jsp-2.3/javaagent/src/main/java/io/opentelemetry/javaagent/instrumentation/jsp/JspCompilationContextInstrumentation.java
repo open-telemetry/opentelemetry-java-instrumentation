@@ -43,7 +43,11 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), Kind.INTERNAL);
+      span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              tracer()
+                  .startOperation(
+                      tracer().spanNameOnCompile(jspCompilationContext), Kind.INTERNAL));
       scope = span.makeCurrent();
     }
 

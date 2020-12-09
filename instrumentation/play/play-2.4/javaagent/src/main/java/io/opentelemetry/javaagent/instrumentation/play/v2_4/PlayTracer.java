@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import play.api.mvc.Request;
 import scala.Option;
 
-public class PlayTracer extends BaseTracer {
+public class PlayTracer extends BaseInstrumenter {
   private static final PlayTracer TRACER = new PlayTracer();
 
   public static PlayTracer tracer() {

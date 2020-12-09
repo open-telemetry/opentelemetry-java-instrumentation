@@ -23,7 +23,9 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     if (runnable == null) {
       return;
     }
-    Span span = tracer().startSpan(tracer().spanNameOnRun(runnable), Kind.INTERNAL);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            tracer().startOperation(tracer().spanNameOnRun(runnable), Kind.INTERNAL));
 
     try (Scope ignored = span.makeCurrent()) {
       runnable.run();

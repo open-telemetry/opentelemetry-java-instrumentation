@@ -59,7 +59,7 @@ public class RedissonInstrumentation extends InstrumentationModule {
         @Advice.Argument(0) Object arg,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), connection, arg);
+      context = tracer().startOperation(currentContext(), connection, arg);
       scope = context.makeCurrent();
     }
 

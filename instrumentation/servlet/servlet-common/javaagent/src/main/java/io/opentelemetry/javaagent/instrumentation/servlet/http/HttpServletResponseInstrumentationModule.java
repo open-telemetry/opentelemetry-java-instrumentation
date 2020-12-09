@@ -70,7 +70,9 @@ public class HttpServletResponseInstrumentationModule extends InstrumentationMod
       // Don't want to generate a new top-level span
       if (callDepth.getAndIncrement() == 0
           && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        span = tracer().startSpan(method);
+        span =
+            io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                tracer().startOperation(method));
         scope = span.makeCurrent();
       }
     }

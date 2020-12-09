@@ -21,7 +21,7 @@ public class LettuceAsyncCommandsAdvice {
       @Advice.Argument(0) RedisCommand<?, ?, ?> command,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    context = tracer().startSpan(currentContext(), null, command);
+    context = tracer().startOperation(currentContext(), null, command);
     scope = context.makeCurrent();
   }
 

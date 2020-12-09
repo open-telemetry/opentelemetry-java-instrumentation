@@ -91,7 +91,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         return;
       }
 
-      context = tracer().startSpan(parentContext, connection, new CommandWithArgs(command));
+      context = tracer().startOperation(parentContext, connection, new CommandWithArgs(command));
       scope = context.makeCurrent();
     }
 
@@ -127,7 +127,8 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         return;
       }
 
-      context = tracer().startSpan(parentContext, connection, new CommandWithArgs(command, args));
+      context =
+          tracer().startOperation(parentContext, connection, new CommandWithArgs(command, args));
       scope = context.makeCurrent();
     }
 

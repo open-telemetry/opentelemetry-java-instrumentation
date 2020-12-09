@@ -11,12 +11,13 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
+public class KubernetesClientTracer extends HttpClientInstrumenter<Request, Request, Response> {
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   public static KubernetesClientTracer tracer() {
@@ -37,7 +38,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .setAttribute("namespace", digest.getResourceMeta().getNamespace())
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
-    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context context = parentContext.with(span).with(Tracer.CONTEXT_CLIENT_SPAN_KEY, span);
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request, getSetter());

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.dispatcher;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class RequestDispatcherTracer extends BaseTracer {
+public class RequestDispatcherTracer extends BaseInstrumenter {
   private static final RequestDispatcherTracer TRACER = new RequestDispatcherTracer();
 
   public static RequestDispatcherTracer tracer() {

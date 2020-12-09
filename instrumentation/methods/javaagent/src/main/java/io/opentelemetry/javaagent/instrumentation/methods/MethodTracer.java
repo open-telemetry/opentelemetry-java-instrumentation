@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class MethodTracer extends BaseTracer {
+public class MethodTracer extends BaseInstrumenter {
   private static final MethodTracer TRACER = new MethodTracer();
 
   public static MethodTracer tracer() {

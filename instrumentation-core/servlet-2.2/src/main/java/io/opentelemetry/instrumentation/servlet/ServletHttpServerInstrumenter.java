@@ -9,8 +9,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -19,13 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ServletHttpServerTracer<RESPONSE>
-    extends HttpServerTracer<HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
+public abstract class ServletHttpServerInstrumenter<RESPONSE>
+    extends HttpServerInstrumenter<
+        HttpServletRequest, RESPONSE, HttpServletRequest, HttpServletRequest> {
 
-  private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+  private static final Logger log = LoggerFactory.getLogger(ServletHttpServerInstrumenter.class);
 
   public Context startSpan(HttpServletRequest request) {
-    Context context = startSpan(request, request, request, getSpanName(request));
+    Context context = startOperation(request, request, request, getSpanName(request));
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);

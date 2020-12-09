@@ -75,7 +75,9 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
       }
       // TODO pass Context into Tracer.startSpan() and then don't need this scoping
       Scope parentScope = parentContext.makeCurrent();
-      Span errorSpan = NettyHttpClientTracer.tracer().startSpan("CONNECT", Kind.CLIENT);
+      Span errorSpan =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              NettyHttpClientTracer.tracer().startOperation("CONNECT", Kind.CLIENT));
       NettyHttpClientTracer.tracer().endExceptionally(errorSpan, cause);
       return parentScope;
     }

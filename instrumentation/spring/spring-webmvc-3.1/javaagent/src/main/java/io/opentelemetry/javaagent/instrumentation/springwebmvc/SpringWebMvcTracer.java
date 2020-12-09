@@ -7,8 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.Controller;
 
-public class SpringWebMvcTracer extends BaseTracer {
+public class SpringWebMvcTracer extends BaseInstrumenter {
 
   private static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
 
@@ -74,7 +75,7 @@ public class SpringWebMvcTracer extends BaseTracer {
       methodName = "<annotation>";
     }
 
-    return spanNameForMethod(clazz, methodName);
+    return Tracer.spanNameForMethod(clazz, methodName);
   }
 
   private String spanNameOnRender(ModelAndView mv) {
@@ -90,11 +91,11 @@ public class SpringWebMvcTracer extends BaseTracer {
     return "Render <unknown>";
   }
 
-  private void onRender(Span span, ModelAndView mv) {
+  private static void onRender(Span span, ModelAndView mv) {
     span.setAttribute("spring-webmvc.view.name", mv.getViewName());
     View view = mv.getView();
     if (view != null) {
-      span.setAttribute("spring-webmvc.view.type", spanNameForClass(view.getClass()));
+      span.setAttribute("spring-webmvc.view.type", Tracer.spanNameForClass(view.getClass()));
     }
   }
 

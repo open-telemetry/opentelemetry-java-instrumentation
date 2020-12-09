@@ -23,7 +23,7 @@ import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -77,12 +77,14 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      Span serverSpan = BaseTracer.getCurrentServerSpan();
+      Span serverSpan = Tracer.getCurrentServerSpan();
       if (serverSpan != null) {
         serverSpan.updateName(routeInfo.path());
       }
 
-      span = tracer().startSpan(clazz);
+      span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              tracer().startOperation(clazz));
       scope = span.makeCurrent();
     }
 

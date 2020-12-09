@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.RpcClientInstrumenter;
 import java.lang.reflect.Method;
 
-public class RmiClientTracer extends RpcClientTracer {
+public class RmiClientTracer extends RpcClientInstrumenter {
   private static final RmiClientTracer TRACER = new RmiClientTracer();
 
   public static RmiClientTracer tracer() {
@@ -21,7 +21,7 @@ public class RmiClientTracer extends RpcClientTracer {
   }
 
   @Override
-  public Span startSpan(Method method) {
+  public Context startOperation(Method method) {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
 
@@ -31,7 +31,7 @@ public class RmiClientTracer extends RpcClientTracer {
     spanBuilder.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
     spanBuilder.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
 
-    return spanBuilder.startSpan();
+    return Context.current().with(spanBuilder.startSpan());
   }
 
   @Override

@@ -41,7 +41,8 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   private void onRequest(ActionRequest request) {
-    Span span = Span.fromContext(context);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
     if (request instanceof IndicesRequest) {
       IndicesRequest req = (IndicesRequest) request;
       String[] indices = req.indices();
@@ -66,7 +67,8 @@ public class TransportActionListener<T extends ActionResponse> implements Action
 
   @Override
   public void onResponse(T response) {
-    Span span = Span.fromContext(context);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
 
     if (response.remoteAddress() != null) {
       NetPeerUtils.INSTANCE.setNetPeer(

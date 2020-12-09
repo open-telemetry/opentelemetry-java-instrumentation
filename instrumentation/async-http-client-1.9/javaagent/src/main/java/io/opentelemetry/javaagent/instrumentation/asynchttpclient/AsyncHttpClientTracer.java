@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Response> {
+public class AsyncHttpClientTracer extends HttpClientInstrumenter<Request, Request, Response> {
 
   private static final AsyncHttpClientTracer TRACER = new AsyncHttpClientTracer();
 

@@ -10,11 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.RequestBuil
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
+public class OkHttpClientTracer extends HttpClientInstrumenter<Request, Request.Builder, Response> {
   private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   public static OkHttpClientTracer tracer() {

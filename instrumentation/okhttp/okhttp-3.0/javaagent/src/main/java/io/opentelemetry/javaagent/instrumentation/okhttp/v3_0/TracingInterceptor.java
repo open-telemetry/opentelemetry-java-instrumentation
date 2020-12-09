@@ -24,7 +24,7 @@ public class TracingInterceptor implements Interceptor {
     }
 
     Request.Builder requestBuilder = chain.request().newBuilder();
-    Context context = tracer().startSpan(parentContext, chain.request(), requestBuilder);
+    Context context = tracer().startOperation(parentContext, chain.request(), requestBuilder);
 
     Response response;
     try (Scope ignored = context.makeCurrent()) {

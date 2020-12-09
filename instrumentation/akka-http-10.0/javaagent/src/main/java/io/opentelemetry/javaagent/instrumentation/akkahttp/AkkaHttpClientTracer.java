@@ -11,13 +11,13 @@ import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class AkkaHttpClientTracer
-    extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
+    extends HttpClientInstrumenter<HttpRequest, AkkaHttpHeaders, HttpResponse> {
   private static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
 
   public static AkkaHttpClientTracer tracer() {

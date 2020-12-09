@@ -97,7 +97,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         if (!state.initialized) {
           Context parentContext = currentContext();
           if (tracer().shouldStartSpan(parentContext)) {
-            state.context = tracer().startSpan(parentContext, connection, connection);
+            state.context = tracer().startOperation(parentContext, connection, connection);
             if (!connected) {
               scope = state.context.makeCurrent();
             }

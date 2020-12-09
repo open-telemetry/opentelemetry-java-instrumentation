@@ -11,12 +11,12 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapExt
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
-public class KafkaConsumerTracer extends BaseTracer {
+public class KafkaConsumerTracer extends BaseInstrumenter {
   private static final KafkaConsumerTracer TRACER = new KafkaConsumerTracer();
 
   public static KafkaConsumerTracer tracer() {

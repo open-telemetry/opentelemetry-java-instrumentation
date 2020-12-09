@@ -9,10 +9,11 @@ import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 
-public class Struts2Tracer extends BaseTracer {
+public class Struts2Tracer extends BaseInstrumenter {
 
   private static final Struts2Tracer TRACER = new Struts2Tracer();
 
@@ -25,7 +26,7 @@ public class Struts2Tracer extends BaseTracer {
     Class<?> actionClass = action.getClass();
 
     String method = actionInvocation.getProxy().getMethod();
-    String spanName = spanNameForMethod(actionClass, method);
+    String spanName = Tracer.spanNameForMethod(actionClass, method);
 
     Span strutsSpan = tracer.spanBuilder(spanName).startSpan();
 
@@ -39,7 +40,7 @@ public class Struts2Tracer extends BaseTracer {
 
   // Handle cases where action parameters are encoded into URL path
   public void updateServerSpanName(Context context, ActionProxy actionProxy) {
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = Tracer.getCurrentServerSpan();
     if (serverSpan == null) {
       return;
     }

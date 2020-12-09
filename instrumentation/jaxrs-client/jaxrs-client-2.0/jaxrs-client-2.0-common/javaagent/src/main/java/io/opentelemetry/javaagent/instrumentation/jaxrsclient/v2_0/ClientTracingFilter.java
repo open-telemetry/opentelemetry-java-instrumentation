@@ -23,7 +23,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(ClientRequestContext requestContext) {
     Context parentContext = Context.current();
     if (tracer().shouldStartSpan(parentContext)) {
-      Context context = tracer().startSpan(parentContext, requestContext, requestContext);
+      Context context = tracer().startOperation(parentContext, requestContext, requestContext);
       requestContext.setProperty(CONTEXT_PROPERTY_NAME, context);
     }
   }

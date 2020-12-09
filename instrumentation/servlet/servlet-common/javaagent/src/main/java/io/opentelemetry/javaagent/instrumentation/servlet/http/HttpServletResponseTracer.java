@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.http;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class HttpServletResponseTracer extends BaseTracer {
+public class HttpServletResponseTracer extends BaseInstrumenter {
   private static final HttpServletResponseTracer TRACER = new HttpServletResponseTracer();
 
   public static HttpServletResponseTracer tracer() {

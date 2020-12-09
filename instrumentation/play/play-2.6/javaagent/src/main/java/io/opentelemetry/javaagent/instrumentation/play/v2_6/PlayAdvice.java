@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.play.v2_6.PlayTracer.tr
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -23,7 +23,9 @@ public class PlayAdvice {
       @Advice.Argument(0) Request<?> req,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan("play.request", Kind.INTERNAL);
+    span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            tracer().startOperation("play.request", Kind.INTERNAL));
     scope = span.makeCurrent();
   }
 
@@ -48,6 +50,6 @@ public class PlayAdvice {
     }
 
     // set the span name on the upstream akka/netty span
-    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
+    tracer().updateSpanName(Tracer.getCurrentServerSpan(), req);
   }
 }

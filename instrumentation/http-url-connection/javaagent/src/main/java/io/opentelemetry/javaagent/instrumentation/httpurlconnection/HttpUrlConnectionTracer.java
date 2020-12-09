@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class HttpUrlConnectionTracer
-    extends HttpClientTracer<HttpURLConnection, HttpURLConnection, HttpUrlResponse> {
+    extends HttpClientInstrumenter<HttpURLConnection, HttpURLConnection, HttpUrlResponse> {
 
   private static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
 

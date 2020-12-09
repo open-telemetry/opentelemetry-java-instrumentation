@@ -24,11 +24,12 @@ public abstract class CompletionListener<T> {
 
   public CompletionListener(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    context = tracer().startSpan(parentContext, connection, methodName);
+    context = tracer().startOperation(parentContext, connection, methodName);
   }
 
   protected void closeAsyncSpan(T future) {
-    Span span = Span.fromContext(context);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
     try {
       processResult(span, future);
     } catch (CancellationException e) {

@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
+public abstract class RpcServerInstrumenter<REQUEST> extends BaseInstrumenter {
 
-  protected RpcServerTracer() {}
+  protected RpcServerInstrumenter() {}
 
-  protected RpcServerTracer(Tracer tracer) {
+  protected RpcServerInstrumenter(Tracer tracer) {
     super(tracer);
   }
 

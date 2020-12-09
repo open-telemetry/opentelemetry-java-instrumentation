@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -63,7 +64,9 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         return null;
       }
       Scope parentScope = parentContext.makeCurrent();
-      Span errorSpan = NettyHttpClientTracer.tracer().startSpan("CONNECT", Kind.CLIENT);
+      Span errorSpan =
+          Java8BytecodeBridge.spanFromContext(
+              NettyHttpClientTracer.tracer().startOperation("CONNECT", Kind.CLIENT));
       NettyHttpClientTracer.tracer().endExceptionally(errorSpan, cause);
       return parentScope;
     }

@@ -19,12 +19,12 @@ import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class RabbitTracer extends BaseTracer {
+public class RabbitTracer extends BaseInstrumenter {
 
   private static final RabbitTracer TRACER = new RabbitTracer();
 
@@ -34,7 +34,9 @@ public class RabbitTracer extends BaseTracer {
 
   public Span startSpan(String method, Connection connection) {
     Span.Kind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
-    Span span = startSpan(method, kind);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            startOperation(method, kind));
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
 

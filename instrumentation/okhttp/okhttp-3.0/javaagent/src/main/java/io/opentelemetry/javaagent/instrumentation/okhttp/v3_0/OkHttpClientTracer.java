@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
+public class OkHttpClientTracer extends HttpClientInstrumenter<Request, Request.Builder, Response> {
   private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   public static OkHttpClientTracer tracer() {

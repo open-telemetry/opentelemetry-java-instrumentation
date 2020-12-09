@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
@@ -17,21 +17,23 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
+public abstract class DatabaseClientInstrumenter<CONNECTION, QUERY> extends BaseInstrumenter {
 
   protected static final String DB_QUERY = "DB Query";
 
   protected final Tracer tracer;
 
-  public DatabaseClientTracer() {
+  public DatabaseClientInstrumenter() {
     tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+    return parentContext.get(
+            io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_CLIENT_SPAN_KEY)
+        == null;
   }
 
-  public Context startSpan(Context parentContext, CONNECTION connection, QUERY query) {
+  public Context startOperation(Context parentContext, CONNECTION connection, QUERY query) {
     String normalizedQuery = normalizeQuery(query);
 
     Span span =
@@ -48,7 +50,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     }
     onStatement(span, normalizedQuery);
 
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return parentContext
+        .with(span)
+        .with(io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   @Override
@@ -58,7 +62,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   public Span getClientSpan() {
     Context context = Context.current();
-    return context.get(CONTEXT_CLIENT_SPAN_KEY);
+    return context.get(io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_CLIENT_SPAN_KEY);
   }
 
   public void end(Context context) {

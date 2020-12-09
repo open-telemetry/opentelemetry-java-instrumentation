@@ -30,7 +30,8 @@ public class KHttpAdvice {
     }
 
     headers = asWritable(headers);
-    context = tracer().startSpan(parentContext, new RequestWrapper(method, uri, headers), headers);
+    context =
+        tracer().startOperation(parentContext, new RequestWrapper(method, uri, headers), headers);
     scope = context.makeCurrent();
   }
 

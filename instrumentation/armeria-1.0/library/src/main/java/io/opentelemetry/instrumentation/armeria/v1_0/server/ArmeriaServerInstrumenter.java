@@ -12,18 +12,18 @@ import io.netty.util.AsciiString;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ArmeriaServerTracer
-    extends HttpServerTracer<HttpRequest, RequestLog, ServiceRequestContext, Void> {
+public class ArmeriaServerInstrumenter
+    extends HttpServerInstrumenter<HttpRequest, RequestLog, ServiceRequestContext, Void> {
 
-  ArmeriaServerTracer() {}
+  ArmeriaServerInstrumenter() {}
 
-  ArmeriaServerTracer(Tracer tracer) {
+  ArmeriaServerInstrumenter(Tracer tracer) {
     super(tracer);
   }
 

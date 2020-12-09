@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.server.NettyHttpServerInstrumenter.tracer;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -45,7 +45,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     HttpRequest request = (HttpRequest) msg.getMessage();
 
     Context context =
-        tracer().startSpan(request, ctx.getChannel(), channelTraceContext, "netty.request");
+        tracer().startOperation(request, ctx.getChannel(), channelTraceContext, "netty.request");
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendUpstream(msg);
       // the span is ended normally in HttpServerResponseTracingHandler

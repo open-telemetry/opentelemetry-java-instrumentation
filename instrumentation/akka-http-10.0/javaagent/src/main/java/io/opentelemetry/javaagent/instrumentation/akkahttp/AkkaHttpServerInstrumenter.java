@@ -10,13 +10,13 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 
-public class AkkaHttpServerTracer
-    extends HttpServerTracer<HttpRequest, HttpResponse, HttpRequest, Void> {
-  private static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
+public class AkkaHttpServerInstrumenter
+    extends HttpServerInstrumenter<HttpRequest, HttpResponse, HttpRequest, Void> {
+  private static final AkkaHttpServerInstrumenter TRACER = new AkkaHttpServerInstrumenter();
 
-  public static AkkaHttpServerTracer tracer() {
+  public static AkkaHttpServerInstrumenter tracer() {
     return TRACER;
   }
 

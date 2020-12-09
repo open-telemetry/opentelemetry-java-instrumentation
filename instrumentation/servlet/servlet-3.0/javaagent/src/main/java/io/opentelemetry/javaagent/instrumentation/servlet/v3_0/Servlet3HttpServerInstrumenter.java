@@ -8,15 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
+import io.opentelemetry.instrumentation.servlet.ServletHttpServerInstrumenter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServletResponse> {
+public class Servlet3HttpServerInstrumenter
+    extends ServletHttpServerInstrumenter<HttpServletResponse> {
 
-  private static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
+  private static final Servlet3HttpServerInstrumenter TRACER = new Servlet3HttpServerInstrumenter();
 
-  public static Servlet3HttpServerTracer tracer() {
+  public static Servlet3HttpServerInstrumenter tracer() {
     return TRACER;
   }
 
@@ -55,7 +56,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   public void onTimeout(Context context, long timeout) {
-    Span span = Span.fromContext(context);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
     span.setStatus(StatusCode.ERROR);
     span.setAttribute("servlet.timeout", timeout);
     span.end();
@@ -74,7 +76,11 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   In this case we have to put the span from the request into current context before continuing.
   */
   public static boolean needsRescoping(Context attachedContext) {
-    return !sameTrace(Span.fromContext(Context.current()), Span.fromContext(attachedContext));
+    return !sameTrace(
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            Context.current()),
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            attachedContext));
   }
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {

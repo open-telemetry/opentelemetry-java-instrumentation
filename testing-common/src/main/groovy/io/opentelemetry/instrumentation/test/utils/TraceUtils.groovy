@@ -7,14 +7,15 @@ package io.opentelemetry.instrumentation.test.utils
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter
+import io.opentelemetry.instrumentation.api.tracer.Tracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Callable
 
 class TraceUtils {
 
-  private static final BaseTracer tracer = new BaseTracer() {
+  private static final BaseInstrumenter tracer = new BaseInstrumenter() {
     @Override
     protected String getInstrumentationName() {
       return "io.opentelemetry.auto"
@@ -25,8 +26,8 @@ class TraceUtils {
     try {
       //TODO following two lines are duplicated from io.opentelemetry.instrumentation.api.decorator.HttpServerTracer
       //Find a way to put this management into one place.
-      def span = tracer.startSpan(rootOperationName, Span.Kind.SERVER)
-      Context newContext = Context.current().with(BaseTracer.CONTEXT_SERVER_SPAN_KEY, span).with(span)
+      def span = Span.fromContext(tracer.startOperation(rootOperationName, Span.Kind.SERVER))
+      Context newContext = Context.current().with(Tracer.CONTEXT_SERVER_SPAN_KEY, span).with(span)
 
       try {
         def result = newContext.makeCurrent().withCloseable {
@@ -45,7 +46,7 @@ class TraceUtils {
 
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      final Span span = tracer.startSpan(rootOperationName, Span.Kind.INTERNAL)
+      final Span span = Span.fromContext(tracer.startOperation(rootOperationName, Span.Kind.INTERNAL))
 
       try {
         def result = span.makeCurrent().withCloseable {

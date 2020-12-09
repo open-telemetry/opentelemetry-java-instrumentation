@@ -18,11 +18,11 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes.FaasTriggerValues;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.util.Collections;
 import java.util.Map;
 
-public class AwsLambdaTracer extends BaseTracer {
+public class AwsLambdaTracer extends BaseInstrumenter {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 
@@ -97,7 +97,9 @@ public class AwsLambdaTracer extends BaseTracer {
   public Scope startScope(Span span) {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     io.opentelemetry.context.Context newContext =
-        io.opentelemetry.context.Context.current().with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+        io.opentelemetry.context.Context.current()
+            .with(io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_SERVER_SPAN_KEY, span)
+            .with(span);
     return newContext.makeCurrent();
   }
 

@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import javax.ws.rs.core.Response;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
 public class ResteasyClientTracer
-    extends HttpClientTracer<ClientInvocation, ClientInvocation, Response> {
+    extends HttpClientInstrumenter<ClientInvocation, ClientInvocation, Response> {
   private static final ResteasyClientTracer TRACER = new ResteasyClientTracer();
 
   public static ResteasyClientTracer tracer() {

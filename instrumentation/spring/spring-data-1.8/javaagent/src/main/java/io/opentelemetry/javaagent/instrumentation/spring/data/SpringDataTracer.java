@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public final class SpringDataTracer extends BaseTracer {
+public final class SpringDataTracer extends BaseInstrumenter {
   private static final SpringDataTracer TRACER = new SpringDataTracer();
 
   public static SpringDataTracer tracer() {

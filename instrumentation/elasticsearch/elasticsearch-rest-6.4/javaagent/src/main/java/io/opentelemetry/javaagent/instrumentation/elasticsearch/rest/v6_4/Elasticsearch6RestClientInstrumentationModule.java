@@ -69,7 +69,8 @@ public class Elasticsearch6RestClientInstrumentationModule extends Instrumentati
 
       context =
           tracer()
-              .startSpan(currentContext(), null, request.getMethod() + " " + request.getEndpoint());
+              .startOperation(
+                  currentContext(), null, request.getMethod() + " " + request.getEndpoint());
       scope = context.makeCurrent();
 
       responseListener = new RestResponseListener(responseListener, context);

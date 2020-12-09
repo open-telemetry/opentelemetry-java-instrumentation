@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerInstrumenter.tracer;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -94,7 +94,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public HttpResponse apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, null, "akka.request");
+      Context ctx = tracer().startOperation(request, request, null, "akka.request");
       try (Scope ignored = ctx.makeCurrent()) {
         HttpResponse response = userHandler.apply(request);
         tracer().end(ctx, response);
@@ -119,7 +119,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Future<HttpResponse> apply(HttpRequest request) {
-      Context ctx = tracer().startSpan(request, request, null, "akka.request");
+      Context ctx = tracer().startOperation(request, request, null, "akka.request");
       try (Scope ignored = ctx.makeCurrent()) {
         return userHandler
             .apply(request)

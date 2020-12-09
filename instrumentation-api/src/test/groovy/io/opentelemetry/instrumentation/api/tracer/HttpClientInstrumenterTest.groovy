@@ -10,9 +10,10 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter
 import spock.lang.Shared
 
-class HttpClientTracerTest extends BaseTracerTest {
+class HttpClientInstrumenterTest extends BaseInstrumenterTest {
 
   def setupSpec() {
     Config.INSTANCE = new ConfigBuilder().readProperties([
@@ -162,7 +163,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   @Override
   def newTracer() {
-    return new HttpClientTracer<Map, Map, Map>() {
+    return new HttpClientInstrumenter<Map, Map, Map>() {
 
       @Override
       protected String method(Map m) {

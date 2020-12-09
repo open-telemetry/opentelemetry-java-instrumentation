@@ -21,7 +21,7 @@ public class ConnectionFutureAdvice {
       @Advice.Argument(1) RedisURI redisUri,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    context = tracer().startSpan(currentContext(), redisUri, "CONNECT");
+    context = tracer().startOperation(currentContext(), redisUri, "CONNECT");
     scope = context.makeCurrent();
   }
 

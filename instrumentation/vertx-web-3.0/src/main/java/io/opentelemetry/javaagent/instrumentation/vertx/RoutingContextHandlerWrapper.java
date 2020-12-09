@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.VertxTracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -27,7 +26,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   @Override
   public void handle(RoutingContext context) {
     try {
-      Span serverSpan = tracer().getCurrentServerSpan();
+      Span serverSpan = Tracer.getCurrentServerSpan();
       if (serverSpan != null) {
         // TODO should update only SERVER span using
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/465

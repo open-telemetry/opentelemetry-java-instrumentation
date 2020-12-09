@@ -3,48 +3,56 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO In search for a better home package
-public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
+public abstract class HttpServerInstrumenter<REQUEST, RESPONSE, CONNECTION, STORAGE>
+    extends BaseInstrumenter {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  public static final String CONTEXT_ATTRIBUTE = HttpServerTracer.class.getName() + ".Context";
+  public static final String CONTEXT_ATTRIBUTE =
+      HttpServerInstrumenter.class.getName() + ".Context";
 
   protected static final String USER_AGENT = "User-Agent";
 
-  public HttpServerTracer() {
+  public HttpServerInstrumenter() {
     super();
   }
 
-  public HttpServerTracer(Tracer tracer) {
+  public HttpServerInstrumenter(Tracer tracer) {
     super(tracer);
   }
 
-  public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
-    String spanName = spanNameForMethod(origin);
-    return startSpan(request, connection, storage, spanName);
+  public HttpServerInstrumenter(Tracer tracer, Meter meter) {
+    super(tracer, meter);
   }
 
-  public Context startSpan(
+  public Context startOperation(
+      REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
+    String spanName = io.opentelemetry.instrumentation.api.tracer.Tracer.spanNameForMethod(origin);
+    return startOperation(request, connection, storage, spanName);
+  }
+
+  public Context startOperation(
       REQUEST request, CONNECTION connection, STORAGE storage, String spanName) {
-    return startSpan(request, connection, storage, spanName, -1);
+    return startOperation(request, connection, storage, spanName, -1);
   }
 
-  public Context startSpan(
+  public Context startOperation(
       REQUEST request,
       CONNECTION connection,
       @Nullable STORAGE storage,
@@ -58,18 +66,15 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // whether to call end() or not on the Span in the returned Context
 
     Context parentContext = extract(request, getGetter());
-    SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
-
-    if (startTimestamp >= 0) {
-      builder.setStartTimestamp(startTimestamp, TimeUnit.NANOSECONDS);
-    }
-
-    Span span = builder.startSpan();
+    Span span = tracer.startSpan(spanName, SERVER, parentContext, startTimestamp);
     onConnection(span, connection);
     onRequest(span, request);
     onConnectionAndRequest(span, connection, request);
 
-    Context context = parentContext.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    Context context =
+        parentContext
+            .with(io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_SERVER_SPAN_KEY, span)
+            .with(span);
     attachServerContext(context, storage);
 
     return context;
@@ -125,7 +130,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : attachedContext.get(CONTEXT_SERVER_SPAN_KEY);
+    return attachedContext == null
+        ? null
+        : attachedContext.get(
+            io.opentelemetry.instrumentation.api.tracer.Tracer.CONTEXT_SERVER_SPAN_KEY);
   }
 
   /**

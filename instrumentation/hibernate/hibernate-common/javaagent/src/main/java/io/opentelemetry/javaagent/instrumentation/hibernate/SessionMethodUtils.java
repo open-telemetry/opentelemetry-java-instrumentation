@@ -50,7 +50,8 @@ public class SessionMethodUtils {
       return;
     }
 
-    Span span = Span.fromContext(context);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
     if (operationName != null && entity != null) {
       String entityName = tracer().entityName(entity);
       if (entityName != null) {

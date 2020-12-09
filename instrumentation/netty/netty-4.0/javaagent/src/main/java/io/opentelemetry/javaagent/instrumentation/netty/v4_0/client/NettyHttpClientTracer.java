@@ -12,13 +12,13 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+    extends HttpClientInstrumenter<HttpRequest, HttpHeaders, HttpResponse> {
   private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   public static NettyHttpClientTracer tracer() {

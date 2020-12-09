@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -28,14 +26,16 @@ public class HandlerAdapterAdvice {
 
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
     if (handler != null && context != null) {
-      Span span = Span.fromContext(context);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              context);
       String handlerType;
       String operationName;
 
       if (handler instanceof HandlerMethod) {
         // Special case for requests mapped with annotations
         HandlerMethod handlerMethod = (HandlerMethod) handler;
-        operationName = tracer().spanNameForMethod(handlerMethod.getMethod());
+        operationName = Tracer.spanNameForMethod(handlerMethod.getMethod());
         handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
       } else {
         operationName = AdviceUtils.parseOperationName(handler);
@@ -49,7 +49,7 @@ public class HandlerAdapterAdvice {
     }
 
     if (context != null) {
-      Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
+      Span serverSpan = context.get(Tracer.CONTEXT_SERVER_SPAN_KEY);
       PathPattern bestPattern =
           exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (serverSpan != null && bestPattern != null) {

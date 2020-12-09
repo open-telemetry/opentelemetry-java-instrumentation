@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2HttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2HttpServerInstrumenter.tracer;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;

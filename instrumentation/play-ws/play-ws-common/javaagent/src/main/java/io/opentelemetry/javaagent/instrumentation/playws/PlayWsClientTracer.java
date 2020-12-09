@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 import static io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class PlayWsClientTracer extends HttpClientTracer<Request, HttpHeaders, Response> {
+public class PlayWsClientTracer extends HttpClientInstrumenter<Request, HttpHeaders, Response> {
   private static final PlayWsClientTracer TRACER = new PlayWsClientTracer();
 
   public static PlayWsClientTracer tracer() {

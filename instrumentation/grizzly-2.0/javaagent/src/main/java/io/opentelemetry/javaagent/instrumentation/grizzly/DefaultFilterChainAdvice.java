@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerInstrumenter.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import net.bytebuddy.asm.Advice;

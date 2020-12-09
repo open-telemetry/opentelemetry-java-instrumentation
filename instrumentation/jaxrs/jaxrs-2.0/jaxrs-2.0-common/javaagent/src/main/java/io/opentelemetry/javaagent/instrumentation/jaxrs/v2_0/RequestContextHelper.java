@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotat
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -22,7 +22,7 @@ public final class RequestContextHelper {
     if (method != null && resourceClass != null) {
       requestContext.setProperty(JaxRsAnnotationsTracer.ABORT_HANDLED, true);
       Context context = Java8BytecodeBridge.currentContext();
-      Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+      Span serverSpan = Tracer.getCurrentServerSpan(context);
       Span currentSpan = Java8BytecodeBridge.spanFromContext(context);
 
       // if there's no current span or it's the same as the server (servlet) span we need to start

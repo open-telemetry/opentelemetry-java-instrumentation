@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerInstrumenter.tracer;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -32,7 +32,7 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    context = tracer().startSpan(request, request, request, method);
+    context = tracer().startOperation(request, request, request, method);
     scope = context.makeCurrent();
   }
 

@@ -72,7 +72,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       context =
-          tracer().startSpan(currentContext(), connection, new CommandWithArgs(command, args));
+          tracer().startOperation(currentContext(), connection, new CommandWithArgs(command, args));
       scope = context.makeCurrent();
     }
 

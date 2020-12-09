@@ -25,6 +25,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.EventObject;
 import org.apache.camel.management.event.ExchangeSendingEvent;
 import org.apache.camel.management.event.ExchangeSentEvent;
@@ -59,7 +60,8 @@ final class CamelEventNotifier extends EventNotifierSupport {
 
     String name =
         sd.getOperationName(ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
-    Span span = CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind());
+    Context context = CamelTracer.TRACER.startOperation(name, sd.getInitiatorSpanKind());
+    Span span = Java8BytecodeBridge.spanFromContext(context);
     sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
     CamelPropagationUtil.injectParent(Context.current(), ese.getExchange().getIn().getHeaders());
     ActiveSpanManager.activate(ese.getExchange(), span);

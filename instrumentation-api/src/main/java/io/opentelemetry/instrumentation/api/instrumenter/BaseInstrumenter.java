@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
@@ -26,45 +26,45 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseTracer {
-  private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
+public abstract class BaseInstrumenter {
+  private static final Logger log = LoggerFactory.getLogger(HttpServerInstrumenter.class);
 
   private static final boolean FAIL_ON_CONTEXT_LEAK =
       Boolean.getBoolean("otel.internal.failOnContextLeak");
 
-  // Keeps track of the server span for the current trace.
-  // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
-  // or other non-server root.
-  public static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-server-span-key");
+  protected final io.opentelemetry.instrumentation.api.tracer.Tracer tracer;
+  protected final Meter meter;
 
-  // Keeps track of the client span in a subtree corresponding to a client request.
-  // Visible for testing
-  public static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-auto-client-span-key");
-
-  protected final Tracer tracer;
-
-  public BaseTracer() {
-    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
+  public BaseInstrumenter() {
+    tracer =
+        new io.opentelemetry.instrumentation.api.tracer.Tracer(
+            OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion()));
+    meter = OpenTelemetry.getGlobalMeter(getInstrumentationName(), getVersion());
   }
 
-  public BaseTracer(Tracer tracer) {
-    this.tracer = tracer;
+  public BaseInstrumenter(Tracer tracer) {
+    this.tracer = new io.opentelemetry.instrumentation.api.tracer.Tracer(tracer);
+    this.meter = OpenTelemetry.getGlobalMeter(getInstrumentationName(), getVersion());
   }
 
-  public Span startSpan(Class<?> clazz) {
-    String spanName = spanNameForClass(clazz);
-    return startSpan(spanName, Kind.INTERNAL);
+  public BaseInstrumenter(Tracer tracer, Meter meter) {
+    this.tracer = new io.opentelemetry.instrumentation.api.tracer.Tracer(tracer);
+    this.meter = meter;
   }
 
-  public Span startSpan(Method method) {
-    String spanName = spanNameForMethod(method);
-    return startSpan(spanName, Kind.INTERNAL);
+  public Context startOperation(Class<?> clazz) {
+    String spanName = io.opentelemetry.instrumentation.api.tracer.Tracer.spanNameForClass(clazz);
+    return startOperation(spanName, Kind.INTERNAL);
   }
 
-  public Span startSpan(String spanName, Kind kind) {
-    return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
+  public Context startOperation(Method method) {
+    String spanName = io.opentelemetry.instrumentation.api.tracer.Tracer.spanNameForMethod(method);
+    return startOperation(spanName, Kind.INTERNAL);
+  }
+
+  public Context startOperation(String spanName, Kind kind) {
+    Span span = tracer.startSpan(spanName, kind);
+    return Context.current().with(span);
   }
 
   public Scope startScope(Span span) {
@@ -79,47 +79,6 @@ public abstract class BaseTracer {
 
   protected String getVersion() {
     return InstrumentationVersion.VERSION;
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   */
-  public String spanNameForMethod(Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @param method the method to get the name from, nullable
-   * @return the span name from the class and method
-   */
-  protected String spanNameForMethod(Class<?> clazz, Method method) {
-    return spanNameForMethod(clazz, null == method ? null : method.getName());
-  }
-
-  protected String spanNameForMethod(Class<?> cl, String methodName) {
-    return spanNameForClass(cl) + "." + methodName;
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given class
-   * reference. Anonymous classes are named based on their parent.
-   */
-  public String spanNameForClass(Class<?> clazz) {
-    if (!clazz.isAnonymousClass()) {
-      return clazz.getSimpleName();
-    }
-    String className = clazz.getName();
-    if (clazz.getPackage() != null) {
-      String pkgName = clazz.getPackage().getName();
-      if (!pkgName.isEmpty()) {
-        className = clazz.getName().replace(pkgName, "").substring(1);
-      }
-    }
-    return className;
   }
 
   public void end(Span span) {
@@ -194,15 +153,5 @@ public abstract class BaseTracer {
         throw new IllegalStateException("Context leak detected");
       }
     }
-  }
-
-  /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan() {
-    return getCurrentServerSpan(Context.current());
-  }
-
-  /** Returns span of type SERVER from the given context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan(Context context) {
-    return context.get(CONTEXT_SERVER_SPAN_KEY);
   }
 }

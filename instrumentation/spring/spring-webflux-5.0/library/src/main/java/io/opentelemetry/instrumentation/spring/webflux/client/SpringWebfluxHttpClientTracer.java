@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -21,7 +21,7 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 public class SpringWebfluxHttpClientTracer
-    extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
+    extends HttpClientInstrumenter<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
@@ -83,7 +83,7 @@ public class SpringWebfluxHttpClientTracer
   }
 
   public Tracer getTracer() {
-    return tracer;
+    return tracer.getTracer();
   }
 
   // rawStatusCode() method was introduced in webflux 5.1

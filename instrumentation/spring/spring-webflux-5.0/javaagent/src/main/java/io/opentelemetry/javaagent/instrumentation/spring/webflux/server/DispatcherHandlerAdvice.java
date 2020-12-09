@@ -28,7 +28,9 @@ public class DispatcherHandlerAdvice {
       @Advice.Local("otelScope") Scope otelScope,
       @Advice.Local("otelContext") Context otelContext) {
 
-    Span span = tracer().startSpan("DispatcherHandler.handle", Kind.INTERNAL);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            tracer().startOperation("DispatcherHandler.handle", Kind.INTERNAL));
 
     otelContext = Java8BytecodeBridge.currentContext().with(span);
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the

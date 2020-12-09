@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
@@ -17,7 +17,7 @@ import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
-public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, Object> {
+public class RedissonClientTracer extends DatabaseClientInstrumenter<RedisConnection, Object> {
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
   private static final RedissonClientTracer TRACER = new RedissonClientTracer();

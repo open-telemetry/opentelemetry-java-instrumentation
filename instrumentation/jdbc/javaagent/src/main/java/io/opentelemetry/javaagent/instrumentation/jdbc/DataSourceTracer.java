@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class DataSourceTracer extends BaseTracer {
+public class DataSourceTracer extends BaseInstrumenter {
   private static final DataSourceTracer TRACER = new DataSourceTracer();
 
   public static DataSourceTracer tracer() {

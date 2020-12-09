@@ -12,8 +12,8 @@ import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
-  private static final Servlet3HttpServerTracer servletHttpServerTracer =
-      new Servlet3HttpServerTracer();
+  private static final Servlet3HttpServerInstrumenter servletHttpServerTracer =
+      new Servlet3HttpServerInstrumenter();
 
   private final AtomicBoolean responseHandled;
   private final Context context;

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -16,15 +16,15 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GrizzlyHttpServerTracer
-    extends HttpServerTracer<
+public class GrizzlyHttpServerInstrumenter
+    extends HttpServerInstrumenter<
         HttpRequestPacket, HttpResponsePacket, HttpRequestPacket, FilterChainContext> {
 
-  private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerTracer.class);
+  private static final Logger log = LoggerFactory.getLogger(GrizzlyHttpServerInstrumenter.class);
 
-  private static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+  private static final GrizzlyHttpServerInstrumenter TRACER = new GrizzlyHttpServerInstrumenter();
 
-  public static GrizzlyHttpServerTracer tracer() {
+  public static GrizzlyHttpServerInstrumenter tracer() {
     return TRACER;
   }
 

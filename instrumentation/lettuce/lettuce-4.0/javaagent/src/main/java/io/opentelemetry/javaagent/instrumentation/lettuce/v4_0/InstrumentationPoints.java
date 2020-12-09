@@ -37,7 +37,9 @@ public final class InstrumentationPoints {
             if (ex == null) {
               tracer().end(context);
             } else if (ex instanceof CancellationException) {
-              Span span = Span.fromContext(context);
+              Span span =
+                  io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+                      .spanFromContext(context);
               span.setAttribute("lettuce.command.cancelled", true);
               tracer().end(context);
             } else {

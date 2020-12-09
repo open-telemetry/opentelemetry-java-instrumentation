@@ -85,7 +85,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
 
       // Request is immutable, so we have to assign new value once we update headers
       AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-      context = tracer().startSpan(parentContext, request, headers);
+      context = tracer().startOperation(parentContext, request, headers);
       scope = context.makeCurrent();
       request = headers.getRequest();
     }

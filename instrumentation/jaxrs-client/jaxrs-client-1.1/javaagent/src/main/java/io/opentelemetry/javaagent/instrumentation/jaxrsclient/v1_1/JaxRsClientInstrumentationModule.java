@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Tracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -75,7 +75,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
       boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       Context parentContext = currentContext();
       if (isRootClientHandler && tracer().shouldStartSpan(parentContext)) {
-        context = tracer().startSpan(parentContext, request, request);
+        context = tracer().startOperation(parentContext, request, request);
         scope = context.makeCurrent();
       }
     }

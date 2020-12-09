@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
@@ -25,7 +24,11 @@ public class WrappingStatusSettingResponseHandler implements ResponseHandler {
   @Override
   public Object handleResponse(HttpResponse response) throws IOException {
     if (context != null) {
-      tracer().onResponse(Span.fromContext(context), response);
+      tracer()
+          .onResponse(
+              io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                  context),
+              response);
     }
     return handler.handleResponse(response);
   }

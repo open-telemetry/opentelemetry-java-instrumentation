@@ -12,16 +12,16 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-public class NettyHttpServerTracer
-    extends HttpServerTracer<HttpRequest, HttpResponse, Channel, Channel> {
-  private static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
+public class NettyHttpServerInstrumenter
+    extends HttpServerInstrumenter<HttpRequest, HttpResponse, Channel, Channel> {
+  private static final NettyHttpServerInstrumenter TRACER = new NettyHttpServerInstrumenter();
 
-  public static NettyHttpServerTracer tracer() {
+  public static NettyHttpServerInstrumenter tracer() {
     return TRACER;
   }
 

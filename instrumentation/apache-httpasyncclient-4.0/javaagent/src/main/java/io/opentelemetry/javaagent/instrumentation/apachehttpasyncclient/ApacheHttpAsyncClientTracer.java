@@ -11,7 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.H
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -24,7 +25,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ApacheHttpAsyncClientTracer
-    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
+    extends HttpClientInstrumenter<HttpRequest, HttpRequest, HttpResponse> {
 
   private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
@@ -39,7 +40,7 @@ public class ApacheHttpAsyncClientTracer
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return parentContext.with(span).with(Tracer.CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   @Override

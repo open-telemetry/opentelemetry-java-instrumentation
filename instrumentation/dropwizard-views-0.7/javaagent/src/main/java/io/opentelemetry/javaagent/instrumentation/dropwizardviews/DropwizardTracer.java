@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class DropwizardTracer extends BaseTracer {
+public class DropwizardTracer extends BaseInstrumenter {
   private static final DropwizardTracer TRACER = new DropwizardTracer();
 
   public static DropwizardTracer tracer() {
@@ -16,7 +16,8 @@ public class DropwizardTracer extends BaseTracer {
   }
 
   public Span startSpan(String spanName) {
-    return super.startSpan(spanName, Span.Kind.INTERNAL);
+    return io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+        super.startOperation(spanName, Span.Kind.INTERNAL));
   }
 
   @Override

@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import java.util.Map;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;
@@ -26,7 +25,7 @@ public class AdviceUtils {
   public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
 
   public static String parseOperationName(Object handler) {
-    String className = tracer().spanNameForClass(handler.getClass());
+    String className = Tracer.spanNameForClass(handler.getClass());
     String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
 
@@ -68,7 +67,9 @@ public class AdviceUtils {
 
   static void finishSpanIfPresent(io.opentelemetry.context.Context context, Throwable throwable) {
     if (context != null) {
-      Span span = Span.fromContext(context);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              context);
       if (throwable != null) {
         span.setStatus(StatusCode.ERROR);
         span.recordException(throwable);

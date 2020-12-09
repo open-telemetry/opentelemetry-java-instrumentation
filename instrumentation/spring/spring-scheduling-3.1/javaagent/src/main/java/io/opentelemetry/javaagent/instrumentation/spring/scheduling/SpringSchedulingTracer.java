@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
-public class SpringSchedulingTracer extends BaseTracer {
+public class SpringSchedulingTracer extends BaseInstrumenter {
   private static final SpringSchedulingTracer TRACER = new SpringSchedulingTracer();
 
   public static SpringSchedulingTracer tracer() {
@@ -23,9 +24,9 @@ public class SpringSchedulingTracer extends BaseTracer {
   public String spanNameOnRun(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-      return spanNameForMethod(scheduledMethodRunnable.getMethod());
+      return Tracer.spanNameForMethod(scheduledMethodRunnable.getMethod());
     } else {
-      return spanNameForClass(runnable.getClass()) + "/run";
+      return Tracer.spanNameForClass(runnable.getClass()) + "/run";
     }
   }
 }

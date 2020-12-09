@@ -10,10 +10,10 @@ import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExt
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
-public class KafkaStreamsTracer extends BaseTracer {
+public class KafkaStreamsTracer extends BaseInstrumenter {
   private static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
 
   public static KafkaStreamsTracer tracer() {

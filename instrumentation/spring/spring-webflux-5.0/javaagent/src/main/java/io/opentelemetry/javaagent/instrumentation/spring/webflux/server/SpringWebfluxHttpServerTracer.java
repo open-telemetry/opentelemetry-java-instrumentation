@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class SpringWebfluxHttpServerTracer extends BaseTracer {
+public class SpringWebfluxHttpServerTracer extends BaseInstrumenter {
   private static final SpringWebfluxHttpServerTracer TRACER = new SpringWebfluxHttpServerTracer();
 
   public static SpringWebfluxHttpServerTracer tracer() {

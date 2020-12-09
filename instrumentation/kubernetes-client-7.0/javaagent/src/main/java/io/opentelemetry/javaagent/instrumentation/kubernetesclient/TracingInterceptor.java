@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
@@ -20,7 +19,11 @@ public class TracingInterceptor implements Interceptor {
   public Response intercept(Chain chain) throws IOException {
 
     Context context = tracer().startSpan(Context.current(), chain.request());
-    tracer().onRequest(Span.fromContext(context), chain.request());
+    tracer()
+        .onRequest(
+            io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                context),
+            chain.request());
 
     Response response;
     try (Scope ignored = context.makeCurrent()) {

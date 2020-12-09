@@ -25,7 +25,9 @@ public final class TracingHandler implements Handler {
     io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
-    Span ratpackSpan = tracer().startSpan("ratpack.handler", Kind.INTERNAL);
+    Span ratpackSpan =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            tracer().startOperation("ratpack.handler", Kind.INTERNAL));
     ctx.getExecution().add(ratpackSpan);
 
     ctx.getResponse()
@@ -33,7 +35,11 @@ public final class TracingHandler implements Handler {
             response -> {
               if (serverSpanContext != null) {
                 // Rename the netty span name with the ratpack route.
-                tracer().onContext(Span.fromContext(serverSpanContext), ctx);
+                tracer()
+                    .onContext(
+                        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+                            .spanFromContext(serverSpanContext),
+                        ctx);
               }
               tracer().onContext(ratpackSpan, ctx);
               tracer().end(ratpackSpan);

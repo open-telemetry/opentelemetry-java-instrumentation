@@ -12,13 +12,15 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
+import io.opentelemetry.instrumentation.api.tracer.Tracer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TwilioTracer extends BaseTracer {
+public class TwilioTracer extends BaseInstrumenter {
 
   private static final Logger log = LoggerFactory.getLogger(TwilioTracer.class);
 
@@ -29,7 +31,7 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+    return parentContext.get(Tracer.CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
   public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {
@@ -39,12 +41,12 @@ public class TwilioTracer extends BaseTracer {
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return parentContext.with(span).with(Tracer.CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
   /** Decorate trace based on service execution metadata. */
-  private String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
-    return spanNameForClass(serviceExecutor.getClass()) + "." + methodName;
+  private static String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
+    return Tracer.spanNameForClass(serviceExecutor.getClass()) + "." + methodName;
   }
 
   /** Annotate the span with the results of the operation. */
@@ -59,7 +61,7 @@ public class TwilioTracer extends BaseTracer {
       }
     }
 
-    Span span = Span.fromContext(context);
+    Span span = Java8BytecodeBridge.spanFromContext(context);
 
     // Nothing to do here, so return
     if (result == null) {
@@ -101,7 +103,9 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public void endExceptionally(Context context, Throwable throwable) {
-    super.endExceptionally(Span.fromContext(context), throwable);
+    super.endExceptionally(
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context),
+        throwable);
   }
 
   /**

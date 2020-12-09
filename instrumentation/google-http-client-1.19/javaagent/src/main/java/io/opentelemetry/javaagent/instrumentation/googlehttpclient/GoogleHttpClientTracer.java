@@ -9,12 +9,12 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class GoogleHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+    extends HttpClientInstrumenter<HttpRequest, HttpHeaders, HttpResponse> {
   private static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
 
   public static GoogleHttpClientTracer tracer() {

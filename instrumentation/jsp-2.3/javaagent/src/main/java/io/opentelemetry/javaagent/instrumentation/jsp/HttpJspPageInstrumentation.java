@@ -53,7 +53,9 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) HttpServletRequest req,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(tracer().spanNameOnRender(req), Kind.INTERNAL);
+      span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              tracer().startOperation(tracer().spanNameOnRender(req), Kind.INTERNAL));
       tracer().onRender(span, req);
       scope = span.makeCurrent();
     }

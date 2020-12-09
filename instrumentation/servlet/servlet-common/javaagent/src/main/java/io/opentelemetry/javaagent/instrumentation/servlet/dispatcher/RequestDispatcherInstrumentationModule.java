@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.dispatcher;
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.api.instrumenter.HttpServerInstrumenter.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -116,7 +116,9 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
       }
 
       try (Scope ignored = parent.makeCurrent()) {
-        span = tracer().startSpan(method);
+        span =
+            io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                tracer().startOperation(method));
 
         // save the original servlet span before overwriting the request attribute, so that it can
         // be

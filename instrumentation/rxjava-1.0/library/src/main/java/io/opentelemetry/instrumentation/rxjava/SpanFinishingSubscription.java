@@ -7,15 +7,15 @@ package io.opentelemetry.instrumentation.rxjava;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;
 
 public class SpanFinishingSubscription implements Subscription {
-  private final BaseTracer tracer;
+  private final BaseInstrumenter tracer;
   private final AtomicReference<Context> contextRef;
 
-  public SpanFinishingSubscription(BaseTracer tracer, AtomicReference<Context> contextRef) {
+  public SpanFinishingSubscription(BaseInstrumenter tracer, AtomicReference<Context> contextRef) {
     this.tracer = tracer;
     this.contextRef = contextRef;
   }

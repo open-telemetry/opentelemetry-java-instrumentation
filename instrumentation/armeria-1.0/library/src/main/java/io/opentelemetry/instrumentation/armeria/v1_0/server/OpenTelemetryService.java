@@ -26,26 +26,26 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   /** Creates a new tracing {@link HttpService} decorator using the default {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator() {
-    return newDecorator(new ArmeriaServerTracer());
+    return newDecorator(new ArmeriaServerInstrumenter());
   }
 
   /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator(Tracer tracer) {
-    return newDecorator(new ArmeriaServerTracer(tracer));
+    return newDecorator(new ArmeriaServerInstrumenter(tracer));
   }
 
   /**
    * Creates a new tracing {@link HttpService} decorator using the specified {@link
-   * ArmeriaServerTracer}.
+   * ArmeriaServerInstrumenter}.
    */
   public static Function<? super HttpService, OpenTelemetryService> newDecorator(
-      ArmeriaServerTracer serverTracer) {
+      ArmeriaServerInstrumenter serverTracer) {
     return new Decorator(serverTracer);
   }
 
-  private final ArmeriaServerTracer serverTracer;
+  private final ArmeriaServerInstrumenter serverTracer;
 
-  private OpenTelemetryService(HttpService delegate, ArmeriaServerTracer serverTracer) {
+  private OpenTelemetryService(HttpService delegate, ArmeriaServerInstrumenter serverTracer) {
     super(delegate);
     this.serverTracer = serverTracer;
   }
@@ -59,7 +59,7 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = serverTracer.startSpan(req, ctx, null, spanName, requestStartTimeNanos);
+    Context context = serverTracer.startOperation(req, ctx, null, spanName, requestStartTimeNanos);
 
     if (Span.fromContext(context).isRecording()) {
       ctx.log()
@@ -101,9 +101,9 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   private static class Decorator implements Function<HttpService, OpenTelemetryService> {
 
-    private final ArmeriaServerTracer serverTracer;
+    private final ArmeriaServerInstrumenter serverTracer;
 
-    private Decorator(ArmeriaServerTracer serverTracer) {
+    private Decorator(ArmeriaServerInstrumenter serverTracer) {
       this.serverTracer = serverTracer;
     }
 

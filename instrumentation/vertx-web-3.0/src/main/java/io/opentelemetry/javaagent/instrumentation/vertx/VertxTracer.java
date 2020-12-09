@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 
-public class VertxTracer extends BaseTracer {
+public class VertxTracer extends BaseInstrumenter {
   private static final VertxTracer TRACER = new VertxTracer();
 
   public static VertxTracer tracer() {

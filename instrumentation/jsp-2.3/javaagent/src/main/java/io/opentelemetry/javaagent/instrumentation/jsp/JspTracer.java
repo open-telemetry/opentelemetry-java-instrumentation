@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
@@ -16,7 +16,7 @@ import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
-public class JspTracer extends BaseTracer {
+public class JspTracer extends BaseInstrumenter {
   private static final JspTracer TRACER = new JspTracer();
 
   public static JspTracer tracer() {

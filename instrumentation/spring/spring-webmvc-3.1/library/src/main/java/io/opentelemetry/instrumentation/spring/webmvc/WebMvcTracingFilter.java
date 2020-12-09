@@ -20,22 +20,23 @@ public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered
 
   private static final String FILTER_CLASS = "WebMVCTracingFilter";
   private static final String FILTER_METHOD = "doFilterInteral";
-  private final SpringWebMvcServerTracer tracer;
+  private final SpringWebMvcServerInstrumenter instrumenter;
 
-  public WebMvcTracingFilter(Tracer tracer) {
-    this.tracer = new SpringWebMvcServerTracer(tracer);
+  public WebMvcTracingFilter(Tracer instrumenter) {
+    this.instrumenter = new SpringWebMvcServerInstrumenter(instrumenter);
   }
 
   @Override
   public void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    Context ctx = tracer.startSpan(request, request, request, FILTER_CLASS + "." + FILTER_METHOD);
+    Context ctx =
+        instrumenter.startOperation(request, request, request, FILTER_CLASS + "." + FILTER_METHOD);
     try (Scope ignored = ctx.makeCurrent()) {
       filterChain.doFilter(request, response);
-      tracer.end(ctx, response);
+      instrumenter.end(ctx, response);
     } catch (Throwable t) {
-      tracer.endExceptionally(ctx, t, response);
+      instrumenter.endExceptionally(ctx, t, response);
       throw t;
     }
   }

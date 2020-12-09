@@ -27,7 +27,7 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
 
   @Override
   public void accept(R r) {
-    context = tracer().startSpan(Context.current(), null, command);
+    context = tracer().startOperation(Context.current(), null, command);
     if (finishSpanOnClose) {
       tracer().end(context);
     }

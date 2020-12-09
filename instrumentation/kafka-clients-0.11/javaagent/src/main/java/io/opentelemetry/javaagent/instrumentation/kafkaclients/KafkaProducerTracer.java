@@ -9,12 +9,12 @@ import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
 
-public class KafkaProducerTracer extends BaseTracer {
+public class KafkaProducerTracer extends BaseInstrumenter {
   private static final KafkaProducerTracer TRACER = new KafkaProducerTracer();
 
   public static KafkaProducerTracer tracer() {
@@ -22,7 +22,9 @@ public class KafkaProducerTracer extends BaseTracer {
   }
 
   public Span startProducerSpan(ProducerRecord<?, ?> record) {
-    Span span = startSpan(spanNameOnProduce(record), PRODUCER);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            startOperation(spanNameOnProduce(record), PRODUCER));
     onProduce(span, record);
     return span;
   }

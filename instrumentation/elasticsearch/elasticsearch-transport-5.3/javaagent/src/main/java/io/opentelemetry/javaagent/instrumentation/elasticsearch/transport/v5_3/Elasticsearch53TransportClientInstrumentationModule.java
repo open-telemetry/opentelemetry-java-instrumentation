@@ -73,7 +73,7 @@ public class Elasticsearch53TransportClientInstrumentationModule extends Instrum
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      context = tracer().startSpan(currentContext(), null, action);
+      context = tracer().startOperation(currentContext(), null, action);
       scope = context.makeCurrent();
 
       tracer().onRequest(context, action.getClass(), actionRequest.getClass());

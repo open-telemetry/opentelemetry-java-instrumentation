@@ -12,7 +12,7 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +30,8 @@ import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
-public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
+public class MongoClientTracer
+    extends DatabaseClientInstrumenter<CommandStartedEvent, BsonDocument> {
   private static final MongoClientTracer TRACER = new MongoClientTracer();
 
   private final int maxNormalizedQueryLength;

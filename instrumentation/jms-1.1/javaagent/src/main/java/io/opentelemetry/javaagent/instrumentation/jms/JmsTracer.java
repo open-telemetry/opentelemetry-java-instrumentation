@@ -18,7 +18,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -30,7 +30,7 @@ import javax.jms.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JmsTracer extends BaseTracer {
+public class JmsTracer extends BaseInstrumenter {
   private static final Logger log = LoggerFactory.getLogger(JmsTracer.class);
 
   // From the spec
@@ -56,7 +56,10 @@ public class JmsTracer extends BaseTracer {
       //  (and fix the context leak that it is currently detecting when running Jms2Test)
       Context context =
           getGlobalPropagators().getTextMapPropagator().extract(Context.root(), message, GETTER);
-      SpanContext spanContext = Span.fromContext(context).getSpanContext();
+      SpanContext spanContext =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                  context)
+              .getSpanContext();
       if (spanContext.isValid()) {
         spanBuilder.setParent(context);
       }

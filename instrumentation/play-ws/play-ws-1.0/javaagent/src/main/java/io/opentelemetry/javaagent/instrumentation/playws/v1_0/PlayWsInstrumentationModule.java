@@ -45,7 +45,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
+      context = tracer().startOperation(parentContext, request, request.getHeaders());
       scope = context.makeCurrent();
 
       if (asyncHandler instanceof StreamedAsyncHandler) {

@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.Netty
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -18,7 +18,7 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class NettyHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+    extends HttpClientInstrumenter<HttpRequest, HttpHeaders, HttpResponse> {
   private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   public static NettyHttpClientTracer tracer() {

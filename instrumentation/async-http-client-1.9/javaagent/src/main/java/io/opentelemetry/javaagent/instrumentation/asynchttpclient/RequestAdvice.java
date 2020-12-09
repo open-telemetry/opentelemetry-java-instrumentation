@@ -28,7 +28,7 @@ public class RequestAdvice {
       return;
     }
 
-    Context context = tracer().startSpan(parentContext, request, request);
+    Context context = tracer().startOperation(parentContext, request, request);
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
         .put(handler, Pair.of(parentContext, context));
     scope = context.makeCurrent();

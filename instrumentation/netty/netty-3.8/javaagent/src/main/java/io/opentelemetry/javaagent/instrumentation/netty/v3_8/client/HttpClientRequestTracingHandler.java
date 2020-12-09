@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -54,10 +53,11 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Context context = tracer().startSpan(parentContext, request, request.headers());
+    Context context = tracer().startOperation(parentContext, request, request.headers());
     // TODO (trask) move this setNetPeer() call into the Tracer
     NetPeerUtils.INSTANCE.setNetPeer(
-        Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context),
+        (InetSocketAddress) ctx.getChannel().getRemoteAddress());
     channelTraceContext.setContext(context);
 
     try (Scope ignored = context.makeCurrent()) {

@@ -11,13 +11,13 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
+public class CassandraDatabaseClientTracer extends DatabaseClientInstrumenter<CqlSession, String> {
   private static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
 
   public static CassandraDatabaseClientTracer tracer() {
@@ -54,7 +54,9 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     if (coordinator != null) {
       SocketAddress socketAddress = coordinator.getEndPoint().resolve();
       if (socketAddress instanceof InetSocketAddress) {
-        Span span = Span.fromContext(context);
+        Span span =
+            io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+                context);
         NetPeerUtils.INSTANCE.setNetPeer(span, ((InetSocketAddress) socketAddress));
       }
     }

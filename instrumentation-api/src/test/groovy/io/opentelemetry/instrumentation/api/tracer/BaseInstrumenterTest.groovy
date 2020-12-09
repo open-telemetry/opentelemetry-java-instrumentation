@@ -7,11 +7,12 @@ package io.opentelemetry.instrumentation.api.tracer
 
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter
 import spock.lang.Shared
 import spock.lang.Specification
 
 // TODO add tests for BaseTracer
-class BaseTracerTest extends Specification {
+class BaseInstrumenterTest extends Specification {
   @Shared
   def tracer = newTracer()
 
@@ -21,7 +22,7 @@ class BaseTracerTest extends Specification {
   def span = Mock(Span)
 
   def newTracer() {
-    return new BaseTracer() {
+    return new BaseInstrumenter() {
       @Override
       protected String getInstrumentationName() {
         return "BaseTracerTest"

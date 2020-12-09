@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDat
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
     if (context != null) {
-      Span span = Span.fromContext(context);
+      Span span = Java8BytecodeBridge.spanFromContext(context);
       span.setAttribute("lettuce.command.results.count", numResults);
       if (isCommandCancelled) {
         span.setAttribute("lettuce.command.cancelled", true);
@@ -83,7 +84,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     @Override
     public void accept(Subscription subscription) {
-      owner.context = tracer().startSpan(Context.current(), null, command);
+      owner.context = tracer().startOperation(Context.current(), null, command);
       if (!expectsResponse) {
         tracer().end(owner.context);
       }

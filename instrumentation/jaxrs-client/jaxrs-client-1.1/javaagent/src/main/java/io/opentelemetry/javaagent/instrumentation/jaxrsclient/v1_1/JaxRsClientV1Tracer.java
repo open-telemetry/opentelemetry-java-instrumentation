@@ -10,11 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.Inject
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 
 public class JaxRsClientV1Tracer
-    extends HttpClientTracer<ClientRequest, ClientRequest, ClientResponse> {
+    extends HttpClientInstrumenter<ClientRequest, ClientRequest, ClientResponse> {
   private static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   public static JaxRsClientV1Tracer tracer() {

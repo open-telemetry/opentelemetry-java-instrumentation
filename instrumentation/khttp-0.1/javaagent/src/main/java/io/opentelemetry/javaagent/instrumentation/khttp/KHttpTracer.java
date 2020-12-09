@@ -8,13 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.khttp;
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import khttp.responses.Response;
 
-public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
+public class KHttpTracer
+    extends HttpClientInstrumenter<RequestWrapper, Map<String, String>, Response> {
   private static final KHttpTracer TRACER = new KHttpTracer();
 
   public static KHttpTracer tracer() {

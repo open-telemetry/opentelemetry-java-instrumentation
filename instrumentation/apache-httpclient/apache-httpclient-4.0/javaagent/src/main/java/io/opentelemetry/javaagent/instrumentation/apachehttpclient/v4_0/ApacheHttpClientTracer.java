@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.H
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;
@@ -18,7 +18,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ApacheHttpClientTracer
-    extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
+    extends HttpClientInstrumenter<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 

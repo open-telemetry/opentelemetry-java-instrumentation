@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connecti
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normalizeAndExtractInfo;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
@@ -20,7 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
+public class JdbcTracer extends DatabaseClientInstrumenter<DbInfo, SqlStatementInfo> {
   private static final JdbcTracer TRACER = new JdbcTracer();
 
   public static JdbcTracer tracer() {
@@ -83,7 +83,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
 
     DbInfo dbInfo = extractDbInfo(connection);
 
-    return startSpan(parentContext, dbInfo, queryInfo);
+    return startOperation(parentContext, dbInfo, queryInfo);
   }
 
   @Override

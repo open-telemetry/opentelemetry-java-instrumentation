@@ -79,7 +79,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      context = tracer().startOperation(parentContext, httpRequest, httpRequest);
       scope = context.makeCurrent();
     }
 
@@ -114,7 +114,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpRequest, httpRequest);
+      context = tracer().startOperation(parentContext, httpRequest, httpRequest);
       scope = context.makeCurrent();
     }
 

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.io.IOException;
 import java.net.URI;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +16,8 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
+class RestTemplateTracer
+    extends HttpClientInstrumenter<HttpRequest, HttpHeaders, ClientHttpResponse> {
 
   private static final RestTemplateTracer TRACER = new RestTemplateTracer();
 

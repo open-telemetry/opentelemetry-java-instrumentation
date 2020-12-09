@@ -19,7 +19,9 @@ public class TraceAdvice {
       @Advice.Origin Method method,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan(method);
+    span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+            tracer().startOperation(method));
     scope = span.makeCurrent();
   }
 

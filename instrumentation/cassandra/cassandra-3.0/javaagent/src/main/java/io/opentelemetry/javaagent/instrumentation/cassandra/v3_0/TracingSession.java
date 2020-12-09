@@ -58,7 +58,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
@@ -72,7 +72,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query, Object... values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
@@ -86,7 +86,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query, Map<String, Object> values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
@@ -100,7 +100,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(Statement statement) {
-    Context context = tracer().startSpan(Context.current(), session, getQuery(statement));
+    Context context = tracer().startOperation(Context.current(), session, getQuery(statement));
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
@@ -114,7 +114,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query);
       addCallbackToEndSpan(future, context);
@@ -124,7 +124,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query, Object... values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
       addCallbackToEndSpan(future, context);
@@ -134,7 +134,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
       addCallbackToEndSpan(future, context);
@@ -145,7 +145,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(Statement statement) {
     String query = getQuery(statement);
-    Context context = tracer().startSpan(Context.current(), session, query);
+    Context context = tracer().startOperation(Context.current(), session, query);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(statement);
       addCallbackToEndSpan(future, context);

@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.CompletionException;
 
 public class JdkHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
+    extends HttpClientInstrumenter<HttpRequest, HttpRequest, HttpResponse<?>> {
   private static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
 
   public static JdkHttpClientTracer tracer() {

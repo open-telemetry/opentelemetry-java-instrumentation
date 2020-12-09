@@ -92,7 +92,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
       if (context == null) {
         Context parentContext = currentContext();
         if (tracer().shouldStartSpan(parentContext)) {
-          context = tracer().startSpan(parentContext, request, request.getHeaders());
+          context = tracer().startOperation(parentContext, request, request.getHeaders());
           contextStore.put(request, context);
           scope = context.makeCurrent();
         }
@@ -138,7 +138,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
+      context = tracer().startOperation(parentContext, request, request.getHeaders());
 
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation

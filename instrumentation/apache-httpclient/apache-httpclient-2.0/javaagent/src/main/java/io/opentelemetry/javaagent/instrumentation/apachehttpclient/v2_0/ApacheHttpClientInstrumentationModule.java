@@ -74,7 +74,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpMethod, httpMethod);
+      context = tracer().startOperation(parentContext, httpMethod, httpMethod);
       scope = context.makeCurrent();
     }
 

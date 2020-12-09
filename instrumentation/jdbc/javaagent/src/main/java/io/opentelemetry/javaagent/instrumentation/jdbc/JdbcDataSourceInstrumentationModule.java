@@ -67,7 +67,9 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
         return;
       }
 
-      span = tracer().startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
+      span =
+          Java8BytecodeBridge.spanFromContext(
+              tracer().startOperation(ds.getClass().getSimpleName() + ".getConnection", CLIENT));
       scope = span.makeCurrent();
     }
 

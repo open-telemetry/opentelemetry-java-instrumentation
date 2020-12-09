@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
@@ -14,7 +14,8 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
 
-public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod, HttpMethod> {
+public class CommonsHttpClientTracer
+    extends HttpClientInstrumenter<HttpMethod, HttpMethod, HttpMethod> {
   private static final CommonsHttpClientTracer TRACER = new CommonsHttpClientTracer();
 
   public static CommonsHttpClientTracer tracer() {

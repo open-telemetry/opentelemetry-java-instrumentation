@@ -12,10 +12,10 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.RpcServerInstrumenter;
 import java.lang.reflect.Method;
 
-public class RmiServerTracer extends RpcServerTracer {
+public class RmiServerTracer extends RpcServerInstrumenter {
   private static final RmiServerTracer TRACER = new RmiServerTracer();
 
   public static RmiServerTracer tracer() {

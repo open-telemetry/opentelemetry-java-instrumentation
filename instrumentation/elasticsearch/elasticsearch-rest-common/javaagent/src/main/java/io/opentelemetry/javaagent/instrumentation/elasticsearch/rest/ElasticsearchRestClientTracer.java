@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.DatabaseClientInstrumenter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
 import org.elasticsearch.client.Response;
 
-public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, String> {
+public class ElasticsearchRestClientTracer extends DatabaseClientInstrumenter<Void, String> {
   private static final ElasticsearchRestClientTracer TRACER = new ElasticsearchRestClientTracer();
 
   public static ElasticsearchRestClientTracer tracer() {
@@ -22,7 +22,9 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
 
   public void onResponse(Context context, Response response) {
     if (response != null && response.getHost() != null) {
-      Span span = Span.fromContext(context);
+      Span span =
+          io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(
+              context);
       NetPeerUtils.INSTANCE.setNetPeer(span, response.getHost().getHostName(), null);
       span.setAttribute(SemanticAttributes.NET_PEER_PORT, (long) response.getHost().getPort());
     }

@@ -8,13 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.InjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 
 public class JaxRsClientTracer
-    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, ClientResponseContext> {
+    extends HttpClientInstrumenter<
+        ClientRequestContext, ClientRequestContext, ClientResponseContext> {
   private static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
 
   public static JaxRsClientTracer tracer() {

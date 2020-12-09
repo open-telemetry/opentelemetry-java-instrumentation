@@ -10,13 +10,13 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ArmeriaClientTracer
-    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
+    extends HttpClientInstrumenter<ClientRequestContext, ClientRequestContext, RequestLog> {
 
   ArmeriaClientTracer() {}
 

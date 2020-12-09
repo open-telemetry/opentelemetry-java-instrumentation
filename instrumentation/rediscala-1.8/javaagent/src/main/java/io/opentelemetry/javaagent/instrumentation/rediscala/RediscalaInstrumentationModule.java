@@ -82,7 +82,7 @@ public class RediscalaInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), cmd, cmd);
+      context = tracer().startOperation(currentContext(), cmd, cmd);
       scope = context.makeCurrent();
     }
 

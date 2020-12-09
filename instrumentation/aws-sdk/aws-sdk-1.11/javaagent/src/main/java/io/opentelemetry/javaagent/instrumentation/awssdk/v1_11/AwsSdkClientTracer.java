@@ -12,11 +12,12 @@ import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpClientInstrumenter;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
+public class AwsSdkClientTracer
+    extends HttpClientInstrumenter<Request<?>, Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -41,8 +42,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   public Context startSpan(Context parentContext, Request<?> request, RequestMeta requestMeta) {
-    Context context = super.startSpan(parentContext, request, request);
-    Span span = Span.fromContext(context);
+    Context context = super.startOperation(parentContext, request, request);
+    Span span =
+        io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext(context);
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();

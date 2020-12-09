@@ -21,7 +21,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandStarted(CommandStartedEvent event) {
-    Context context = tracer().startSpan(Context.current(), event, event.getCommand());
+    Context context = tracer().startOperation(Context.current(), event, event.getCommand());
     contextMap.put(event.getRequestId(), context);
   }
 

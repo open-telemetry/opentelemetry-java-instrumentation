@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.rxjava;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.instrumenter.BaseInstrumenter;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
@@ -16,9 +16,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   private final AtomicReference<Context> contextRef;
   private final Subscriber<T> delegate;
-  private final BaseTracer tracer;
+  private final BaseInstrumenter tracer;
 
-  public TracedSubscriber(Context context, Subscriber<T> delegate, BaseTracer tracer) {
+  public TracedSubscriber(Context context, Subscriber<T> delegate, BaseInstrumenter tracer) {
     contextRef = new AtomicReference<>(context);
     this.delegate = delegate;
     this.tracer = tracer;
