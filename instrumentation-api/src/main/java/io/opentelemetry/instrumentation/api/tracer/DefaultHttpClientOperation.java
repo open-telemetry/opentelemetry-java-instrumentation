@@ -12,16 +12,16 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-class DefaultHttpClientOperation<REQUEST, CARRIER, RESPONSE>
+class DefaultHttpClientOperation<
+        REQUEST, CARRIER, RESPONSE, TRACER extends HttpClientTracer<REQUEST, CARRIER, RESPONSE>>
     implements HttpClientOperation<RESPONSE> {
 
   protected final Context context;
   // TODO separate implementation when parentContext is not needed (memory optimization)?
   protected final Context parentContext;
-  protected final HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer;
+  protected final TRACER tracer;
 
-  DefaultHttpClientOperation(
-      Context context, Context parentContext, HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
+  DefaultHttpClientOperation(Context context, Context parentContext, TRACER tracer) {
     this.context = context;
     this.parentContext = parentContext;
     this.tracer = tracer;

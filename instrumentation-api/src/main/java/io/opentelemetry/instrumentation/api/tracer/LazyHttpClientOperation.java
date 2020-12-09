@@ -16,7 +16,9 @@ public interface LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>
   }
 
   static <REQUEST, CARRIER, RESPONSE> LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> create(
-      Context context, Context parentContext, HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
+      Context context,
+      Context parentContext,
+      LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
     return new DefaultLazyHttpClientOperation<>(context, parentContext, tracer);
   }
 

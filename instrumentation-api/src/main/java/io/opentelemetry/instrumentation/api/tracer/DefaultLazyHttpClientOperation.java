@@ -8,17 +8,20 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.context.Context;
 
 class DefaultLazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>
-    extends DefaultHttpClientOperation<REQUEST, CARRIER, RESPONSE>
+    extends DefaultHttpClientOperation<
+        REQUEST, CARRIER, RESPONSE, LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE>>
     implements LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> {
 
   DefaultLazyHttpClientOperation(
-      Context context, Context parentContext, HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
+      Context context,
+      Context parentContext,
+      LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
     super(context, parentContext, tracer);
   }
 
   @Override
   public void onRequest(REQUEST request) {
-    tracer.onRequest(getSpan()::setAttribute, request);
+    tracer.onRequest(getSpan(), request);
   }
 
   @Override
