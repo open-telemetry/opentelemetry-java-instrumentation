@@ -35,6 +35,7 @@ publishing {
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'
+        description = 'Instrumentation of Java libraries using OpenTelemetry.'
         packaging = 'jar'
         url = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation'
 
@@ -86,6 +87,7 @@ private String artifactPrefix(Project p, String archivesBaseName) {
 }
 
 rootProject.tasks.release.finalizedBy tasks.publishToSonatype
+rootProject.tasks.closeAndReleaseRepository.dependsOn tasks.publishToSonatype
 
 tasks.withType(Sign).configureEach {
   onlyIf { System.getenv("CI") != null }
