@@ -1,9 +1,3 @@
-ext {
-  // TODO remove once Scala/akka supports Java 15
-  // https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
-  maxJavaVersionForTests = JavaVersion.VERSION_14
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
