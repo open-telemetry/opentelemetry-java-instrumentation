@@ -34,7 +34,14 @@ nexusStaging {
   packageGroup = "io.opentelemetry"
   username = System.getenv('SONATYPE_USER')
   password = System.getenv('SONATYPE_KEY')
+
+  // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets
+  // the timeout for waiting for the repository to close to a comfortable 50 minutes.
+  numberOfRetries = 300
+  delayBetweenRetriesInMillis = 10000
 }
+
+tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
 allprojects {
   apply from: "$rootDir/gradle/dependencies.gradle"
