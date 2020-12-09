@@ -5,20 +5,17 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
+import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientTracer;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkHttpClientTracer
-    extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
+    extends LazyHttpClientTracer<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> {
 
   private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
 
@@ -26,21 +23,9 @@ final class AwsSdkHttpClientTracer
     return TRACER;
   }
 
-  public AwsSdkOperation startOperation(String name, Tracer tracer, Kind kind) {
-    Context parentContext = Context.current();
-    if (!shouldStartSpan(parentContext)) {
-      return AwsSdkOperation.noop();
-    }
-    Span clientSpan =
-        tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
-    Context context = withClientSpan(parentContext, clientSpan);
-    return new DefaultAwsSdkOperation(context, parentContext);
-  }
-
-  // Certain headers in the request like User-Agent are only available after execution.
-  Span afterExecution(Span span, SdkHttpRequest request) {
-    span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
-    return span;
+  @Override
+  protected TextMapPropagator getTextMapPropagator() {
+    return AwsXRayPropagator.getInstance();
   }
 
   @Override
@@ -69,8 +54,8 @@ final class AwsSdkHttpClientTracer
   }
 
   @Override
-  protected Setter<SdkHttpRequest> getSetter() {
-    return null;
+  protected Setter<SdkHttpRequest.Builder> getSetter() {
+    return AwsSdkInjectAdapter.INSTANCE;
   }
 
   private static String header(SdkHttpHeaders headers, String name) {
@@ -80,9 +65,5 @@ final class AwsSdkHttpClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.aws-sdk";
-  }
-
-  void onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    super.onRequest(span::setAttribute, sdkHttpRequest);
   }
 }

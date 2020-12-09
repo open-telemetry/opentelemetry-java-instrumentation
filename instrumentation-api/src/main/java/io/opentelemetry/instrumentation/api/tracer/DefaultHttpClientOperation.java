@@ -11,18 +11,17 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
+class DefaultHttpClientOperation<REQUEST, CARRIER, RESPONSE>
+    implements HttpClientOperation<RESPONSE> {
 
-  private final Context context;
+  protected final Context context;
   // TODO separate implementation when parentContext is not needed (memory optimization)?
-  private final Context parentContext;
-  // TODO (trask) move end/endExceptionally/etc to here and remove tracer reference
-  private final HttpClientTracer<?, ?, RESPONSE> tracer;
+  protected final Context parentContext;
+  protected final HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer;
 
-  public DefaultHttpClientOperation(
-      Context context, Context parentContext, HttpClientTracer<?, ?, RESPONSE> tracer) {
+  DefaultHttpClientOperation(
+      Context context, Context parentContext, HttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
     this.context = context;
     this.parentContext = parentContext;
     this.tracer = tracer;
@@ -55,7 +54,7 @@ public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation
   @Override
   public final void endExceptionally(Throwable throwable) {
     checkNotNull(throwable);
-    endExceptionally(null, throwable);
+    endExceptionally(null, throwable, -1);
   }
 
   @Override
@@ -68,21 +67,17 @@ public class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation
   public final void endExceptionally(RESPONSE response, Throwable throwable, long endTimeNanos) {
     checkNotNull(throwable);
     Span span = getSpan();
-    span.setStatus(StatusCode.ERROR);
-    tracer.onResponse(span, response);
+    if (response != null) {
+      tracer.onResponse(span, response);
+    }
     tracer.onException(span, throwable);
+    span.setStatus(StatusCode.ERROR);
     endSpan(span, endTimeNanos);
   }
 
   @Override
   public final Span getSpan() {
     return Span.fromContext(context);
-  }
-
-  // TODO (trask) should we just expose full context?
-  protected final <REQUEST> void inject(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, TextMapPropagator propagator) {
-    propagator.inject(context, request, setter);
   }
 
   private static void endSpan(Span span, long endTimeNanos) {

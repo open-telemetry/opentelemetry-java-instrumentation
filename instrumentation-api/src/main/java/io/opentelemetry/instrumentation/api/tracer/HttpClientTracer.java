@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
@@ -62,13 +63,20 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  public HttpClientOperation<RESPONSE> startOperation(REQUEST request, CARRIER carrier) {
+  public final HttpClientOperation<RESPONSE> startOperation(REQUEST request, CARRIER carrier) {
     return startOperation(request, carrier, -1);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  public HttpClientOperation<RESPONSE> startOperation(
+  public final HttpClientOperation<RESPONSE> startOperation(
+      REQUEST request, CARRIER carrier, long startTimeNanos) {
+    checkNotNull(request);
+    checkNotNull(carrier);
+    return internalStartOperation(request, carrier, startTimeNanos);
+  }
+
+  private HttpClientOperation<RESPONSE> internalStartOperation(
       REQUEST request, CARRIER carrier, long startTimeNanos) {
     Context parentContext = Context.current();
     if (!shouldStartSpan(parentContext)) {
@@ -80,15 +88,19 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return newOperation(context, parentContext);
   }
 
+  // TODO (trask) pass in request, e.g. to allow for subclass to suppress spans by URL?
   protected boolean shouldStartSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
   }
 
-  protected SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
+  // if you need to override, use the method below
+  protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
     return spanBuilder(parentContext, request, -1);
   }
 
-  protected SpanBuilder spanBuilder(Context parentContext, REQUEST request, long startTimeNanos) {
+  // override onRequest() if you want to capture more request attributes
+  protected final SpanBuilder spanBuilder(
+      Context parentContext, REQUEST request, long startTimeNanos) {
     SpanBuilder spanBuilder =
         tracer
             .spanBuilder(spanNameForRequest(request))
@@ -101,8 +113,46 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return spanBuilder;
   }
 
+  protected final Context withClientSpan(Context parentContext, Span span) {
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+  }
+
+  protected final void inject(CARRIER carrier, Context context) {
+    Setter<CARRIER> setter = getSetter();
+    if (setter == null) {
+      throw new IllegalStateException(
+          "getSetter() not defined but calling startScope(),"
+              + " either getSetter must be implemented or the scope should be setup manually");
+    }
+    getTextMapPropagator().inject(context, carrier, setter);
+  }
+
+  protected TextMapPropagator getTextMapPropagator() {
+    return OpenTelemetry.getGlobalPropagators().getTextMapPropagator();
+  }
+
+  protected final HttpClientOperation<RESPONSE> newOperation(
+      Context context, Context parentContext) {
+    return HttpClientOperation.create(context, parentContext, this);
+  }
+
+  // TODO (trask) we don't have use case yet, but seems reasonable to want to override
+  // TODO (trask) make this not public
+  public String spanNameForRequest(REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
+  // TODO (trask) is using lambda a perf concern?
+  //  is it better to have two methods, one for SpanBuilder and and one for Span?
+  //  most subclasses will know which one they use, and override only that one
+  //  (or is that a reason against due to confusion of which one to override?)
+  //  btw, what is the reason to add attributes to the builder instead of directly afterwards on
+  //  the span?
   protected void onRequest(SpanAttributeSetter span, REQUEST request) {
-    assert span != null;
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
       span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
@@ -113,32 +163,15 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     }
   }
 
-  protected Context withClientSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-  }
-
-  protected void inject(CARRIER carrier, Context context) {
-    Setter<CARRIER> setter = getSetter();
-    if (setter == null) {
-      throw new IllegalStateException(
-          "getSetter() not defined but calling startScope(),"
-              + " either getSetter must be implemented or the scope should be setup manually");
-    }
-    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-  }
-
-  protected DefaultHttpClientOperation<RESPONSE> newOperation(
-      Context context, Context parentContext) {
-    return new DefaultHttpClientOperation<>(context, parentContext, this);
-  }
-
+  // TODO (trask) should this and onRequest() above take Context instead of Span?
+  //  to be more generally useful somehow?
   protected Span onResponse(Span span, RESPONSE response) {
-    assert span != null;
-    if (response != null) {
-      Integer status = status(response);
-      if (status != null) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
+    Integer status = status(response);
+    if (status != null) {
+      span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
+      StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+      if (statusCode == StatusCode.ERROR) {
+        span.setStatus(statusCode);
       }
     }
     return span;
@@ -170,11 +203,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     }
   }
 
-  private String spanNameForRequest(REQUEST request) {
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
+  private static void checkNotNull(Object obj) {
+    if (obj == null) {
+      throw new NullPointerException();
     }
-    String method = method(request);
-    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 }

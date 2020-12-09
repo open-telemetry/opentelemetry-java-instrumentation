@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import java.util.List;
@@ -56,8 +57,10 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
             .exchange(builder.build())
             .doOnCancel(
                 () -> {
-                  tracer().onCancel(operation.getSpan());
-                  operation.end(null);
+                  Span span = operation.getSpan();
+                  span.setAttribute("spring-webflux.event", "cancelled");
+                  span.setAttribute("spring-webflux.message", "The subscription was cancelled");
+                  span.end();
                 })
             .subscribe(new TraceWebClientSubscriber(subscriber, operation));
       }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 // Operation has convenience overloads, Tracer has extension points
@@ -14,6 +15,11 @@ public interface HttpClientOperation<RESPONSE> {
 
   static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
     return NoopHttpClientOperation.noop();
+  }
+
+  static <RESPONSE> HttpClientOperation<RESPONSE> create(
+      Context context, Context parentContext, HttpClientTracer<?, ?, RESPONSE> tracer) {
+    return new DefaultHttpClientOperation<>(context, parentContext, tracer);
   }
 
   Scope makeCurrent();

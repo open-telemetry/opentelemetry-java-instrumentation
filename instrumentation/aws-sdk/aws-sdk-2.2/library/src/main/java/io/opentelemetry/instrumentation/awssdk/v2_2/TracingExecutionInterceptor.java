@@ -10,8 +10,10 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTrace
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,14 +28,17 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<AwsSdkOperation> OPERATION_ATTRIBUTE =
-      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
+  static final ExecutionAttribute<
+          LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse>>
+      OPERATION_ATTRIBUTE =
+          new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
@@ -60,12 +65,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return result;
   }
 
-  private final Kind kind;
-
-  TracingExecutionInterceptor(Kind kind) {
-    this.kind = kind;
-  }
-
   @Nullable
   private SdkRequestDecorator decorator(ExecutionAttributes executionAttributes) {
     RequestType type = getTypeFromAttributes(executionAttributes);
@@ -79,8 +78,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    AwsSdkOperation operation =
-        tracer().startOperation(spanName(executionAttributes), AwsSdk.tracer(), kind);
+    // TODO (trask) this type name is horrible
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+        tracer().startOperation(spanName(executionAttributes));
     if (!operation.getSpan().isRecording()) {
       return;
     }
@@ -101,7 +101,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    AwsSdkOperation operation = getOperationOrNoop(executionAttributes);
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+        getOperationOrNoop(executionAttributes);
     if (operation.getSpan().isRecording()) {
       SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
       operation.inject(builder);
@@ -114,7 +115,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    AwsSdkOperation operation = getOperationOrNoop(executionAttributes);
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+        getOperationOrNoop(executionAttributes);
     operation.onRequest(context.httpRequest());
 
     SdkRequestDecorator decorator = decorator(executionAttributes);
@@ -155,13 +157,18 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (scope != null) {
       scope.close();
     }
-    AwsSdkOperation operation = getOperationOrNoop(executionAttributes);
+    HttpClientOperation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
-    // TODO (trask) move below into operation?
     Span span = operation.getSpan();
-    tracer().afterExecution(span, context.httpRequest());
+    onUserAgentHeaderAvailable(span, context.httpRequest());
     onSdkResponse(span, context.response());
     operation.end(context.httpResponse());
+  }
+
+  // Certain headers in the request like User-Agent are only available after execution.
+  private void onUserAgentHeaderAvailable(Span span, SdkHttpRequest request) {
+    span.setAttribute(
+        SemanticAttributes.HTTP_USER_AGENT, tracer().requestHeader(request, "User-Agent"));
   }
 
   private void onSdkResponse(Span span, SdkResponse response) {
@@ -173,7 +180,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    AwsSdkOperation operation = getOperationOrNoop(executionAttributes);
+    HttpClientOperation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
     operation.endExceptionally(context.exception());
   }

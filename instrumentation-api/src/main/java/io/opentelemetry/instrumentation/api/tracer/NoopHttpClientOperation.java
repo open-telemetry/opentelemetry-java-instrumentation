@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 
-public class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
+class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
   private static final HttpClientOperation<Object> INSTANCE = new NoopHttpClientOperation<>();
 
   @SuppressWarnings("unchecked")

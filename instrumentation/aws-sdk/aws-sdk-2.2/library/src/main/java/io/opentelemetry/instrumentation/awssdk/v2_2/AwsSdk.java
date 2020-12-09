@@ -8,10 +8,12 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.OPERATION_ATTRIBUTE;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -38,30 +40,22 @@ public class AwsSdk {
 
   /**
    * Returns an {@link ExecutionInterceptor} that can be used with an {@link
-   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
-   * kind {@link Kind#CLIENT}. If you also instrument the HTTP calls made by the SDK, e.g., by
-   * adding Apache HTTP client or Netty instrumentation, you may want to use {@link
-   * #newInterceptor(Kind)} with {@link Kind#INTERNAL} instead.
+   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests.
    */
   public static ExecutionInterceptor newInterceptor() {
-    return newInterceptor(Kind.CLIENT);
+    return new TracingExecutionInterceptor();
   }
 
   /**
-   * Returns an {@link ExecutionInterceptor} that can be used with an {@link
-   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
-   * provided {@link Kind}.
+   * Returns the {@link LazyHttpClientOperation} stored in the {@link ExecutionAttributes}, or
+   * {@code null} if there is no operation set.
    */
-  public static ExecutionInterceptor newInterceptor(Kind kind) {
-    return new TracingExecutionInterceptor(kind);
+  public static LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse>
+      getOperationOrNoop(ExecutionAttributes attributes) {
+    return orDefault(attributes.getAttribute(OPERATION_ATTRIBUTE), LazyHttpClientOperation.noop());
   }
 
-  /**
-   * Returns the {@link AwsSdkOperation} stored in the {@link ExecutionAttributes}, or {@code null}
-   * if there is no operation set.
-   */
-  public static AwsSdkOperation getOperationOrNoop(ExecutionAttributes attributes) {
-    AwsSdkOperation operation = attributes.getAttribute(OPERATION_ATTRIBUTE);
-    return operation != null ? operation : AwsSdkOperation.noop();
+  private static <T> T orDefault(T value, T defaultValue) {
+    return value != null ? value : defaultValue;
   }
 }

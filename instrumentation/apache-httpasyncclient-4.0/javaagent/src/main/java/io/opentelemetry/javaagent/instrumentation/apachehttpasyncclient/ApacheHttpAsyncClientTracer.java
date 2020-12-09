@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -21,7 +21,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ApacheHttpAsyncClientTracer
-    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
+    extends LazyHttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
 
   private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
